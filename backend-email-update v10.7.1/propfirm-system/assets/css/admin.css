@@ -10,24 +10,24 @@
 #fxsim-mt5-modal,
 #fxsim-stats-grid,
 #fxsim-health-grid {
-  --a-bg:        #070c18;
-  --a-bg2:       #0b1220;
-  --a-card:      #0f1a2e;
-  --a-card2:     #13203a;
-  --a-border:    #1e3050;
-  --a-border2:   #253a5e;
-  --a-accent:    #6c63ff;
-  --a-accent2:   #4f46e5;
-  --a-accent-dim:rgba(108,99,255,.12);
-  --a-accent-glow:rgba(108,99,255,.28);
-  --a-green:     #10d8a0;
-  --a-green-dim: rgba(16,216,160,.1);
-  --a-red:       #ff5370;
-  --a-red-dim:   rgba(255,83,112,.1);
-  --a-yellow:    #ffd166;
-  --a-text:      #e8edf8;
-  --a-text-dim:  #7a8fb0;
-  --a-text-muted:#3e5275;
+  --a-bg:        #0f172a; /* Slate 900 */
+  --a-bg2:       #1e293b; /* Slate 800 */
+  --a-card:      #1e293b; /* Slate 800 */
+  --a-card2:     #334155; /* Slate 700 */
+  --a-border:    #334155; /* Slate 700 */
+  --a-border2:   #475569; /* Slate 600 */
+  --a-accent:    #3b82f6; /* Blue 500 */
+  --a-accent2:   #2563eb; /* Blue 600 */
+  --a-accent-dim:rgba(59, 130, 246, .12);
+  --a-accent-glow:rgba(59, 130, 246, .28);
+  --a-green:     #10b981; /* Emerald 500 */
+  --a-green-dim: rgba(16, 185, 129, .1);
+  --a-red:       #ef4444; /* Red 500 */
+  --a-red-dim:   rgba(239, 68, 68, .1);
+  --a-yellow:    #f59e0b; /* Amber 500 */
+  --a-text:      #f8fafc; /* Slate 50 */
+  --a-text-dim:  #94a3b8; /* Slate 400 */
+  --a-text-muted:#64748b; /* Slate 500 */
   --a-font:      'DM Sans', sans-serif;
   --a-mono:      'JetBrains Mono', monospace;
   --a-r:         10px;
@@ -542,20 +542,20 @@ body.fxsim-admin-light .wrap.fxsim-admin,
 body.fxsim-admin-light #fxsim-stats-grid,
 body.fxsim-admin-light #fxsim-health-grid,
 body.fxsim-admin-light #fxsim-mt5-modal {
-  --a-bg:          #f4f7fc;
-  --a-bg2:         #edf1f8;
+  --a-bg:          #f8fafc; /* Slate 50 */
+  --a-bg2:         #f1f5f9; /* Slate 100 */
   --a-card:        #ffffff;
-  --a-card2:       #f0f4fb;
-  --a-border:      #d0d8e8;
-  --a-border2:     #b8c5da;
-  --a-text:        #1a2540;
-  --a-text-dim:    #4a5a78;
-  --a-text-muted:  #8a9ab8;
-  --a-accent:      #6c63ff;
-  --a-accent2:     #4f46e5;
-  --a-accent-dim:  rgba(108,99,255,.1);
-  --a-accent-glow: rgba(108,99,255,.22);
-  --a-shadow:      0 4px 24px rgba(100,120,180,.12);
+  --a-card2:       #f8fafc;
+  --a-border:      #e2e8f0; /* Slate 200 */
+  --a-border2:     #cbd5e1; /* Slate 300 */
+  --a-text:        #0f172a; /* Slate 900 */
+  --a-text-dim:    #334155; /* Slate 700 */
+  --a-text-muted:  #64748b; /* Slate 500 */
+  --a-accent:      #3b82f6; /* Blue 500 */
+  --a-accent2:     #2563eb; /* Blue 600 */
+  --a-accent-dim:  rgba(59,130,246,.1);
+  --a-accent-glow: rgba(59,130,246,.22);
+  --a-shadow:      0 4px 24px rgba(15,23,42,.08);
 }
 body.fxsim-admin-light #fxsim-admin-theme-btn { background: #fff; border-color: #d0d8e8; }
 
