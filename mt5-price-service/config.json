@@ -1,0 +1,18 @@
+{
+  "propfirm_url": "https://api.launchapropfirm.com",
+  "feed_key": "asdf1122",
+  "symbol_suffix": "",
+  "symbol_overrides": {
+    "XAUUSD": "XAUUSD",
+    "BTCUSD": "BTCUSD",
+    "US30": "US30",
+    "NAS100": "NAS100",
+    "SPX500": "US500",
+    "GER40": "GER40",
+    "UK100": "UK100",
+    "USOIL": "USOIL",
+    "XBRUSD": "UKOIL"
+  },
+  "interval_sec": 1.0,
+  "source_id": "mt5-local"
+}

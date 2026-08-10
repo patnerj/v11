@@ -1,0 +1,2383 @@
+/* ── PropFirm System — Terminal CSS v3.0 ─────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ── Design Tokens (Premium Rebrand) ─────────────────────────────────────── */
+:root {
+  /* Base */
+  --bg:           #060a12;
+  --bg2:          #080d18;
+  --card:         #0c1220;
+  --card2:        #101828;
+  --card3:        #141e30;
+  --overlay:      rgba(6,10,18,0.96);
+
+  /* Borders */
+  --border:       #1a2640;
+  --border2:      #213050;
+  --border3:      #283a5e;
+
+  /* Brand accent — violet/indigo (premium fintech feel) */
+  --accent:       #7c6ef5;
+  --accent2:      #5f52e8;
+  --accent3:      #9b8ff9;
+  --accent-dim:   rgba(124,110,245,0.12);
+  --accent-glow:  rgba(124,110,245,0.30);
+
+  /* Secondary — electric teal for prices/live data */
+  --teal:         #00c9b8;
+  --teal-dim:     rgba(0,201,184,0.10);
+
+  /* Status */
+  --green:        #12d498;
+  --green-dim:    rgba(18,212,152,0.10);
+  --red:          #f0475c;
+  --red-dim:      rgba(240,71,92,0.10);
+  --yellow:       #f5c842;
+  --yellow-dim:   rgba(245,200,66,0.10);
+
+  /* Text */
+  --text:         #e4ecf7;
+  --text-dim:     #7e9ab8;
+  --text-muted:   #3e5577;
+
+  /* Typography */
+  --font:         'Inter', sans-serif;
+  --mono:         'JetBrains Mono', monospace;
+
+  /* Radii */
+  --r-sm: 5px; --r-md: 9px; --r-lg: 13px; --r-xl: 18px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.45);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.65);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.75);
+  --shadow-glow: 0 0 32px var(--accent-glow);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes fx-spin      { to { transform:rotate(360deg) } }
+@keyframes fx-blink     { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes fx-ticker    { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+@keyframes fx-fadein    { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+@keyframes fx-slidedown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+@keyframes fx-pulse     { 0%,100%{box-shadow:0 0 0 0 var(--accent-glow)} 50%{box-shadow:0 0 0 6px transparent} }
+@keyframes fx-shimmer   { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+@keyframes fx-pnl-flash { 0%{background:rgba(124,110,245,.18)} 100%{background:transparent} }
+@keyframes fx-count-up  { from{opacity:0;transform:scale(.8)} to{opacity:1;transform:none} }
+
+/* ── Margin level colors ─────────────────────────────────────────────────── */
+.fx-margin-danger  { color:var(--red)    !important; animation:fx-blink 1s infinite }
+.fx-margin-warning { color:var(--yellow) !important }
+.fx-margin-ok      { color:var(--green)  !important }
+
+/* ── PropFirm page: ensure plugin containers always display ──────────────── */
+/* ── Theme/Astra conflict overrides ─────────────────────────────────────── */
+/* Neutralise any WP theme that injects colors, fonts, or backgrounds        */
+body.propfirm-page,
+body.propfirm-page-trading {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+}
+/* Hide theme header/footer on plugin pages */
+body.propfirm-page .site-header,
+body.propfirm-page .site-footer,
+body.propfirm-page #masthead,
+body.propfirm-page #colophon,
+body.propfirm-page .ast-above-header,
+body.propfirm-page .ast-primary-header,
+body.propfirm-page .ast-below-header,
+body.propfirm-page .ast-footer-overlay,
+body.propfirm-page header.site-header,
+body.propfirm-page footer.site-footer,
+body.propfirm-page .wp-block-template-part,
+body.propfirm-page-trading .site-header,
+body.propfirm-page-trading .site-footer,
+body.propfirm-page-trading #masthead,
+body.propfirm-page-trading #colophon,
+body.propfirm-page-trading .ast-above-header,
+body.propfirm-page-trading .ast-primary-header { display: none !important; }
+/* Ensure content fills full width */
+body.propfirm-page .entry-content,
+body.propfirm-page .ast-container,
+body.propfirm-page .container,
+body.propfirm-page main,
+body.propfirm-page .site-content,
+body.propfirm-page #content,
+body.propfirm-page .content-area,
+body.propfirm-page article,
+body.propfirm-page .entry {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  float: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+/* Fix white backgrounds Astra injects */
+body.propfirm-page,
+body.propfirm-page .fxsim-landing,
+body.propfirm-page .fxsim-auth-wrap,
+body.propfirm-page .fxsim-dash,
+body.propfirm-page #fxsim-terminal,
+body.propfirm-page #fxsim-dashboard,
+body.propfirm-page #fxsim-challenges,
+body.propfirm-page .ast-page-builder-template,
+body.propfirm-page #page { background: var(--bg) !important; }
+/* Typography resets — prevent Astra injecting light text on dark */
+body.propfirm-page p,
+body.propfirm-page h1, body.propfirm-page h2, body.propfirm-page h3,
+body.propfirm-page a { color: inherit; font-family: var(--font) !important; }
+body.propfirm-page a:not(.fxsim-btn-primary):not(.fxdb-btn-primary):not(.fxdb-nav-link):not(.fxsim-nav-link) {
+  color: var(--accent);
+}
+/* Visible headings — prevent invisible text from theme CSS */
+body.propfirm-page .fxsim-dash h1,
+body.propfirm-page .fxsim-dash h2,
+body.propfirm-page .fxsim-dash h3 { color: var(--text) !important; }
+/* Remove Astra's padding on entry content */
+body.propfirm-page .entry-content > *:first-child { margin-top: 0 !important; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  TRADING TERMINAL                                                          */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+html body #fxsim-terminal,
+body.propfirm-page-trading #fxsim-terminal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9000 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: grid !important;
+}
+
+#fxsim-terminal {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+#fxsim-watchlist {
+  background:var(--card);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.fx-sidebar-header {
+  padding:13px 12px 9px;
+  border-bottom:1px solid var(--border);
+  display:flex; flex-direction:column; gap:5px;
+  background:var(--bg2);
+}
+.fx-logo {
+  font-size:15px; font-weight:800; letter-spacing:-.3px;
+  color:var(--accent);
+  text-shadow:0 0 22px var(--accent-glow);
+}
+.fx-user-info { font-size:10px; color:var(--text-muted); font-family:var(--mono) }
+.fx-logout-link {
+  font-size:10px; color:var(--text-muted); text-decoration:none;
+  padding:2px 7px; border:1px solid var(--border2); border-radius:var(--r-sm);
+  align-self:flex-start; transition:all .15s;
+}
+.fx-logout-link:hover { color:var(--red); border-color:var(--red) }
+
+.fx-search-wrap { padding:7px 10px }
+.fx-search-wrap input {
+  width:100%; background:var(--card2); border:1px solid var(--border);
+  border-radius:var(--r-sm); color:var(--text); padding:5px 9px;
+  font-size:11px; outline:none; font-family:var(--font); transition:border-color .15s;
+}
+.fx-search-wrap input::placeholder { color:var(--text-muted) }
+.fx-search-wrap input:focus { border-color:var(--accent) }
+
+#fx-watchlist-list { flex:1; overflow-y:auto }
+
+.fx-wl-category {
+  padding:7px 10px 3px; font-size:9px; font-weight:700; letter-spacing:1.8px;
+  color:var(--text-muted); text-transform:uppercase; background:var(--bg);
+  position:sticky; top:0; z-index:1; border-bottom:1px solid var(--border);
+}
+.fx-wl-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 10px; cursor:pointer; border-bottom:1px solid rgba(20,32,56,.5);
+  transition:background .12s; border-left:2px solid transparent;
+}
+.fx-wl-item:hover { background:var(--card2) }
+.fx-wl-item.active { background:var(--accent-dim); border-left-color:var(--accent) }
+.fx-wl-sym { font-size:12px; font-weight:700; letter-spacing:.3px }
+.fx-wl-prices { text-align:right }
+.fx-wl-bid { font-size:11px; font-family:var(--mono); color:var(--red) }
+.fx-wl-ask { font-size:11px; font-family:var(--mono); color:var(--green) }
+.fx-wl-chg { font-size:9px; color:var(--text-muted); font-family:var(--mono) }
+.fx-wl-chg.up   { color:var(--green) }
+.fx-wl-chg.down { color:var(--red) }
+
+/* ── Main ────────────────────────────────────────────────────────────────── */
+#fxsim-main { display:grid; grid-template-rows:1fr auto; overflow:hidden }
+#fx-top-row { display:grid; grid-template-columns:1fr 272px; overflow:hidden }
+
+/* ── Chart ───────────────────────────────────────────────────────────────── */
+#fx-chart-wrap {
+  display:flex; flex-direction:column;
+  border-right:1px solid var(--border); overflow:hidden; position:relative;
+}
+.fx-chart-toolbar {
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  height:40px; border-bottom:1px solid var(--border);
+  background:var(--bg2); flex-shrink:0;
+}
+#fx-active-symbol-label {
+  font-size:14px; font-weight:800; color:var(--accent); min-width:72px;
+  font-family:var(--mono); letter-spacing:.5px;
+  text-shadow:0 0 16px var(--accent-glow);
+}
+#fx-active-price-display {
+  font-family:var(--mono); font-size:15px; font-weight:600; color:var(--text);
+}
+.fx-tf-btns { display:flex; gap:3px; margin-left:auto }
+.fx-tf-btn {
+  background:transparent; border:1px solid var(--border2); color:var(--text-muted);
+  font-size:10px; padding:3px 7px; border-radius:var(--r-sm); cursor:pointer;
+  font-family:var(--mono); font-weight:600; transition:all .12s;
+}
+.fx-tf-btn:hover { color:var(--accent); border-color:var(--accent) }
+.fx-tf-btn.active { background:var(--accent-dim); color:var(--accent); border-color:var(--accent) }
+#fx-tradingview-chart { flex:1; min-height:0 }
+#fx-tradingview-chart iframe { width:100%; height:100%; border:0 }
+
+/* Chart order overlay */
+#fx-chart-orders {
+  position:absolute; right:10px; top:48px; width:185px;
+  background:var(--overlay); border:1px solid var(--border2); border-radius:var(--r-md);
+  padding:10px 12px; z-index:10; backdrop-filter:blur(12px);
+  font-size:11px; box-shadow:var(--shadow-md);
+}
+.fx-co-title {
+  font-size:9px; color:var(--text-muted); text-transform:uppercase;
+  letter-spacing:1.2px; margin-bottom:7px; font-weight:700;
+}
+.fx-co-item {
+  padding:5px 0; border-bottom:1px solid var(--border);
+  display:flex; flex-direction:column; gap:3px;
+}
+.fx-co-item:last-child { border-bottom:none }
+.fx-co-header { display:flex; justify-content:space-between; align-items:center }
+.fx-co-type-buy  { color:var(--green); font-weight:700; font-size:11px }
+.fx-co-type-sell { color:var(--red);   font-weight:700; font-size:11px }
+.fx-co-line { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10px; color:var(--text-muted) }
+.fx-co-dot-entry { width:8px; height:2px; background:var(--accent); border-radius:1px }
+.fx-co-dot-sl    { width:8px; height:0; border-top:2px dashed var(--red) }
+.fx-co-dot-tp    { width:8px; height:0; border-top:2px dashed var(--green) }
+.fx-co-pnl-pos { color:var(--green); font-family:var(--mono); font-size:11px; font-weight:600 }
+.fx-co-pnl-neg { color:var(--red);   font-family:var(--mono); font-size:11px; font-weight:600 }
+
+/* ── Order Panel ─────────────────────────────────────────────────────────── */
+#fx-order-panel {
+  background:var(--card); padding:12px 12px 10px;
+  display:flex; flex-direction:column; gap:9px;
+  overflow-y:auto; border-left:1px solid var(--border);
+}
+.fx-panel-title {
+  font-size:9px; font-weight:700; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:1.8px;
+  padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.fx-field-group { display:flex; flex-direction:column; gap:4px }
+.fx-field-group label {
+  font-size:9px; color:var(--text-muted); text-transform:uppercase;
+  letter-spacing:1px; font-weight:700;
+}
+.fx-field-group input {
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:var(--r-sm); color:var(--text); padding:6px 9px;
+  font-size:12px; font-family:var(--mono); outline:none; width:100%;
+  transition:border-color .15s,box-shadow .15s;
+}
+.fx-field-group input::placeholder { color:var(--text-muted) }
+.fx-field-group input:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim) }
+
+.fx-selected-symbol {
+  background:var(--accent-dim); border:1px solid var(--accent); border-radius:var(--r-sm);
+  padding:6px 9px; font-size:13px; font-weight:800; color:var(--accent);
+  font-family:var(--mono); letter-spacing:.5px;
+}
+.fx-price-row { display:grid; grid-template-columns:1fr auto 1fr; gap:4px; align-items:center }
+.fx-price-box {
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:var(--r-sm); padding:5px 7px; text-align:center;
+}
+.fx-price-box label {
+  display:block; font-size:8px; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:2px; font-weight:700;
+}
+.fx-price-box span { font-family:var(--mono); font-size:12px; font-weight:600 }
+.fx-sell-price span { color:var(--red) }
+.fx-buy-price  span { color:var(--green) }
+.fx-spread-badge { font-size:9px; color:var(--text-muted); text-align:center; font-family:var(--mono) }
+
+.fx-lot-row { display:flex; gap:5px; align-items:center }
+.fx-lot-btn {
+  background:var(--card2); border:1px solid var(--border2); color:var(--text-dim);
+  width:28px; height:28px; border-radius:var(--r-sm); cursor:pointer;
+  font-size:16px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition:all .12s; line-height:1;
+}
+.fx-lot-btn:hover { color:var(--accent); border-color:var(--accent); background:var(--accent-dim) }
+.fx-lot-row input { flex:1 }
+
+.fx-order-preview {
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:var(--r-sm); padding:7px 9px;
+  display:flex; flex-direction:column; gap:3px;
+}
+.fx-order-preview div { display:flex; justify-content:space-between; font-size:11px }
+.fx-order-preview span { color:var(--text-muted) }
+.fx-order-preview strong { color:var(--text-dim); font-family:var(--mono) }
+
+.fx-order-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px }
+.fx-btn-sell,.fx-btn-buy {
+  padding:13px 6px; border:1px solid; border-radius:var(--r-md);
+  cursor:pointer; font-size:12px; font-weight:700; text-align:center;
+  line-height:1.4; transition:all .18s cubic-bezier(.4,0,.2,1);
+  font-family:var(--font); position:relative; overflow:hidden; letter-spacing:.2px;
+}
+.fx-btn-sell { background:rgba(240,71,92,.1); color:var(--red); border-color:rgba(240,71,92,.35) }
+.fx-btn-sell:hover {
+  background:linear-gradient(135deg, var(--red), #c0392b);
+  color:#fff; border-color:var(--red);
+  box-shadow:0 4px 20px rgba(240,71,92,.4);
+  transform:translateY(-1px);
+}
+.fx-btn-buy { background:rgba(18,212,152,.1); color:var(--green); border-color:rgba(18,212,152,.35) }
+.fx-btn-buy:hover {
+  background:linear-gradient(135deg, var(--green), #0faa78);
+  color:#060a12; border-color:var(--green);
+  box-shadow:0 4px 20px rgba(18,212,152,.4);
+  transform:translateY(-1px);
+}
+.fx-btn-sell small,.fx-btn-buy small { font-family:var(--mono); font-weight:400; font-size:10px; display:block; opacity:.7; margin-top:1px; }
+
+.fx-order-msg { padding:7px 9px; border-radius:var(--r-sm); font-size:11px }
+.fx-order-msg.success { background:var(--green-dim); border:1px solid var(--green); color:var(--green) }
+.fx-order-msg.error   { background:var(--red-dim);   border:1px solid var(--red);   color:var(--red) }
+
+.fx-account-summary {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:9px 11px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.fx-acc-row { display:flex; justify-content:space-between; font-size:11px }
+.fx-acc-row span { color:var(--text-muted) }
+.fx-acc-row strong { font-family:var(--mono); color:var(--text-dim) }
+
+/* ── Bottom Panel ────────────────────────────────────────────────────────── */
+#fx-bottom-panel {
+  border-top:1px solid var(--border); background:var(--card);
+  display:flex; flex-direction:column; height:235px; flex-shrink:0;
+}
+.fx-tabs {
+  display:flex; align-items:center; border-bottom:1px solid var(--border);
+  background:var(--bg2); padding:0 10px; height:34px; flex-shrink:0;
+}
+.fx-tab {
+  background:none; border:none; border-bottom:2px solid transparent;
+  color:var(--text-muted); padding:0 12px; height:100%;
+  font-size:11px; font-weight:600; cursor:pointer; transition:all .12s;
+  font-family:var(--font); display:flex; align-items:center; gap:5px; letter-spacing:.2px;
+}
+.fx-tab:hover { color:var(--text) }
+.fx-tab.active { color:var(--accent); border-bottom-color:var(--accent) }
+.fx-badge {
+  background:var(--accent); color:var(--bg); font-size:9px; font-weight:800;
+  border-radius:10px; padding:1px 5px; min-width:16px; text-align:center;
+}
+.fx-tab-actions { margin-left:auto }
+.fx-refresh-btn {
+  background:none; border:1px solid var(--border2); color:var(--text-muted);
+  padding:3px 9px; border-radius:var(--r-sm); cursor:pointer; font-size:10px;
+  transition:all .12s; font-family:var(--font);
+}
+.fx-refresh-btn:hover { color:var(--accent); border-color:var(--accent) }
+.fx-tab-content { display:none; overflow:auto; flex:1 }
+.fx-tab-content.active { display:block }
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+.fx-table { width:100%; border-collapse:collapse; font-size:11px; font-family:var(--mono) }
+.fx-table th {
+  padding:5px 10px; text-align:left; font-size:9px; font-weight:700;
+  color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;
+  border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--card); z-index:1;
+}
+.fx-table td { padding:6px 10px; border-bottom:1px solid rgba(20,32,56,.4); color:var(--text-dim); white-space:nowrap }
+.fx-table tr:hover td { background:var(--card2) }
+.fx-table tr.fx-empty td { text-align:center; color:var(--text-muted); padding:18px; font-family:var(--font) }
+.fx-pnl-pos { color:var(--green) !important; font-weight:600 }
+.fx-pnl-neg { color:var(--red)   !important; font-weight:600 }
+.fx-type-buy  { color:var(--green) !important; font-weight:700 }
+.fx-type-sell { color:var(--red)   !important; font-weight:700 }
+
+.fx-sltp-wrap { display:flex; gap:3px; align-items:center }
+.fx-sltp-input {
+  background:transparent; border:none; border-bottom:1px dashed var(--border2);
+  color:var(--text-dim); font-family:var(--mono); font-size:11px; width:72px;
+  outline:none; padding:1px 3px; transition:border-color .15s;
+}
+.fx-sltp-input:focus { border-bottom-color:var(--accent); color:var(--text) }
+.fx-sltp-save {
+  background:none; border:1px solid var(--accent); color:var(--accent);
+  font-size:9px; padding:1px 5px; border-radius:3px; cursor:pointer; display:none;
+}
+.fx-sltp-save.visible { display:block }
+.fx-close-btn {
+  background:none; border:1px solid var(--red); color:var(--red);
+  font-size:9px; padding:2px 7px; border-radius:3px; cursor:pointer; transition:all .12s;
+}
+.fx-close-btn:hover { background:var(--red); color:#fff }
+
+/* ── Stats ───────────────────────────────────────────────────────────────── */
+.fx-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px }
+.fx-stat-tile {
+  background:var(--card2); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:10px 12px; display:flex; flex-direction:column; gap:4px;
+}
+.fx-stat-tile span { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700 }
+.fx-stat-tile strong { font-size:17px; font-weight:700; font-family:var(--mono); color:var(--text) }
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+#fx-loading-overlay {
+  position:absolute; inset:0; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:9999; gap:14px; transition:opacity .4s;
+}
+#fx-loading-overlay p { color:var(--text-muted); font-size:13px }
+.fx-spinner {
+  width:34px; height:34px; border:2px solid var(--border2); border-top-color:var(--accent);
+  border-radius:50%; animation:fx-spin .7s linear infinite;
+  box-shadow:0 0 16px var(--accent-glow);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  AUTH PAGES                                                                */
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  AUTH PAGES — Premium glassmorphism                                        */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+.fxsim-auth-wrap {
+  min-height: 100vh; background: var(--bg); display: flex;
+  align-items: center; justify-content: center; padding: 24px;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 30% -10%, rgba(124,110,245,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, rgba(18,212,152,.07) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 10% 80%, rgba(0,201,184,.05) 0%, transparent 50%);
+}
+.fxsim-auth-box {
+  background: rgba(12,18,32,.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(124,110,245,.2);
+  border-radius: 20px; padding: 44px 40px; width: 100%; max-width: 420px;
+  box-shadow: 0 8px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
+  animation: fx-fadein .4s ease;
+}
+.fxsim-auth-box .fxsim-logo {
+  font-size: 20px; font-weight: 800; color: var(--accent);
+  text-shadow: 0 0 28px var(--accent-glow); margin-bottom: 22px; display: block;
+  letter-spacing: -.3px;
+}
+.fxsim-auth-box h2 {
+  font-size: 24px; font-weight: 700; color: var(--text);
+  margin-bottom: 6px; letter-spacing: -.4px;
+}
+.fxsim-auth-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 28px; line-height: 1.6 }
+.fxsim-field { margin-bottom: 16px }
+.fxsim-field label {
+  display: block; font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 7px;
+}
+.fxsim-field input, .fxsim-field select {
+  width: 100%; background: rgba(8,13,24,.7);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md); color: var(--text); padding: 11px 14px; font-size: 14px;
+  outline: none; transition: border-color .15s, box-shadow .15s; font-family: var(--font);
+}
+.fxsim-field input::placeholder, .fxsim-field select::placeholder { color: var(--text-muted) }
+.fxsim-field input:focus, .fxsim-field select:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.fxsim-remember { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted); margin-bottom:18px; cursor:pointer }
+.fxsim-btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #fff; font-size: 14px; font-weight: 700; border: none; border-radius: var(--r-md);
+  padding: 13px; cursor: pointer; text-align: center; text-decoration: none;
+  transition: all .18s cubic-bezier(.4,0,.2,1); font-family: var(--font);
+  box-shadow: 0 4px 18px var(--accent-glow); margin-top: 4px; letter-spacing: .2px;
+}
+.fxsim-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px var(--accent-glow);
+  filter: brightness(1.1);
+}
+.fxsim-btn-primary:active { transform: translateY(0); }
+.fxsim-btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(124,110,245,.1); border: 1px solid rgba(124,110,245,.3);
+  color: var(--accent); font-size: 13px; font-weight: 600; border-radius: var(--r-md);
+  padding: 10px 20px; text-decoration: none; transition: all .15s; font-family: var(--font);
+  cursor: pointer;
+}
+.fxsim-btn-ghost:hover { background: rgba(124,110,245,.2); border-color: var(--accent); transform: translateY(-1px); }
+.fxsim-btn-secondary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--text-dim); font-size: 14px; font-weight: 600; border-radius: var(--r-md);
+  padding: 11px 24px; text-decoration: none; transition: all .15s; font-family: var(--font);
+}
+.fxsim-btn-secondary:hover { border-color: var(--accent); color: var(--accent) }
+.fxsim-auth-link { margin-top: 22px; text-align: center; font-size: 13px; color: var(--text-muted) }
+.fxsim-auth-link a { color: var(--accent); text-decoration: none; font-weight: 600 }
+.fxsim-auth-link a:hover { text-decoration: underline }
+.fxsim-alert { padding: 11px 14px; border-radius: var(--r-md); font-size: 12px; margin-bottom: 14px; }
+.fxsim-alert-error { background: var(--red-dim); border: 1px solid var(--red); color: var(--red) }
+.fxsim-alert-success { background: var(--green-dim); border: 1px solid var(--green); color: var(--green) }
+.w-full { width: 100% !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  LANDING PAGE                                                              */
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  LANDING PAGE                                                              */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+.fxsim-landing { background:var(--bg); color:var(--text); font-family:var(--font); overflow-x:hidden }
+
+.fxsim-nav {
+  position:sticky; top:0; z-index:200;
+  background:rgba(6,10,18,.92); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(124,110,245,.12); padding:0 48px;
+  height:66px; display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 1px 0 rgba(255,255,255,.04);
+}
+.fxsim-nav-logo { font-size:18px; font-weight:800; color:var(--accent); text-shadow:0 0 22px var(--accent-glow); letter-spacing:-.3px; }
+.fxsim-nav-links { display:flex; gap:4px; align-items:center }
+.fxsim-nav-link { color:var(--text-muted); text-decoration:none; font-size:14px; font-weight:500; padding:7px 14px; border-radius:var(--r-md); transition:all .15s; border:1px solid transparent; }
+.fxsim-nav-link:hover { color:var(--text); background:var(--card2); border-color:var(--border); }
+.fxsim-nav-cta {
+  background:linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  color:#fff !important; font-weight:700 !important;
+  box-shadow:0 2px 14px var(--accent-glow); border:none !important;
+}
+.fxsim-nav-cta:hover { filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 4px 22px var(--accent-glow); }
+
+.fxsim-hero {
+  min-height:calc(100vh - 66px); display:flex; align-items:center;
+  justify-content:center; text-align:center; padding:80px 24px; position:relative; overflow:hidden;
+}
+.fxsim-hero::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 90% 65% at 50% 0%, rgba(124,110,245,.1) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 15% 85%, rgba(18,212,152,.06) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 30% at 85% 60%, rgba(0,201,184,.04) 0%, transparent 50%);
+  pointer-events:none;
+}
+.fxsim-hero::after {
+  content:''; position:absolute; inset:0;
+  background-image:linear-gradient(rgba(124,110,245,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(124,110,245,.025) 1px,transparent 1px);
+  background-size:64px 64px; pointer-events:none;
+  mask-image:radial-gradient(ellipse 90% 75% at 50% 50%, black 20%, transparent 80%);
+}
+.fxsim-hero-content { max-width:760px; position:relative; z-index:1; animation:fx-fadein .6s ease }
+.fxsim-hero-badge {
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--accent-dim); border:1px solid rgba(124,110,245,.4); color:var(--accent3);
+  font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  padding:5px 16px; border-radius:20px; margin-bottom:28px;
+}
+.fxsim-hero-badge::before { content:'●'; font-size:7px; animation:fx-blink 2s infinite }
+.fxsim-hero h1 {
+  font-size:clamp(36px,6vw,68px); font-weight:800; line-height:1.06;
+  letter-spacing:-2.5px; color:var(--text); margin-bottom:22px;
+}
+.fxsim-hero h1 .hl { color:var(--accent); text-shadow:0 0 36px var(--accent-glow) }
+.fxsim-hero-sub { font-size:17px; color:var(--text-dim); line-height:1.75; max-width:540px; margin:0 auto 40px }
+.fxsim-hero-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:56px }
+.fxsim-btn-hero {
+  display:inline-flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  color:#fff; font-size:15px; font-weight:700; border:none; border-radius:var(--r-lg);
+  padding:14px 32px; text-decoration:none; transition:all .18s; font-family:var(--font);
+  box-shadow:0 4px 24px var(--accent-glow);
+}
+.fxsim-btn-hero:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 8px 36px var(--accent-glow) }
+.fxsim-btn-hero-ghost {
+  display:inline-flex; align-items:center; gap:8px; background:transparent;
+  color:var(--text-dim); font-size:15px; font-weight:600; border:1px solid var(--border2);
+  border-radius:var(--r-lg); padding:13px 30px; text-decoration:none; transition:all .15s; font-family:var(--font);
+}
+.fxsim-btn-hero-ghost:hover { border-color:var(--accent); color:var(--accent) }
+
+.fxsim-hero-stats { display:flex; justify-content:center; gap:48px; flex-wrap:wrap }
+.fxsim-hero-stat { text-align:center }
+.fxsim-hero-stat strong { display:block; font-size:30px; font-weight:800; color:var(--accent); font-family:var(--mono); text-shadow:0 0 22px var(--accent-glow); letter-spacing:-1px }
+.fxsim-hero-stat span { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.2px; font-weight:600 }
+
+.fxsim-ticker-wrap {
+  background:var(--card); border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+  padding:14px 0; overflow:hidden; position:relative;
+}
+.fxsim-ticker-wrap::before,.fxsim-ticker-wrap::after {
+  content:''; position:absolute; top:0; bottom:0; width:100px; z-index:1;
+}
+.fxsim-ticker-wrap::before { left:0;  background:linear-gradient(90deg,var(--bg),transparent) }
+.fxsim-ticker-wrap::after  { right:0; background:linear-gradient(-90deg,var(--bg),transparent) }
+.fxsim-ticker { display:flex; gap:48px; animation:fx-ticker 22s linear infinite; white-space:nowrap; width:max-content }
+.fxsim-ticker-item { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px }
+.fxsim-ticker-sym { font-weight:700; color:var(--text) }
+.fxsim-ticker-price { color:var(--text-muted) }
+.fxsim-ticker-up   { color:var(--green); font-size:10px }
+.fxsim-ticker-down { color:var(--red);   font-size:10px }
+
+.fxsim-section { padding:96px 24px; max-width:1100px; margin:0 auto }
+.fxsim-section-label { font-size:10px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:var(--accent); margin-bottom:10px; display:block }
+.fxsim-section-title { font-size:clamp(26px,3.5vw,40px); font-weight:800; letter-spacing:-1px; color:var(--text); margin-bottom:14px; line-height:1.12 }
+.fxsim-section-sub { font-size:16px; color:var(--text-muted); line-height:1.75; max-width:560px; margin-bottom:52px }
+
+.fxsim-feature-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px }
+.fxsim-feature-card {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-xl);
+  padding:28px 24px; transition:all .2s; position:relative; overflow:hidden;
+}
+.fxsim-feature-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0; transition:opacity .2s;
+}
+.fxsim-feature-card:hover { border-color:var(--border2); transform:translateY(-3px); box-shadow:var(--shadow-md),0 0 28px rgba(124,110,245,.06) }
+.fxsim-feature-card:hover::before { opacity:1 }
+.fxsim-feat-icon {
+  width:44px; height:44px; background:var(--accent-dim); border:1px solid var(--accent);
+  border-radius:var(--r-md); display:flex; align-items:center; justify-content:center;
+  font-size:20px; margin-bottom:16px;
+}
+.fxsim-feature-card h3 { font-size:16px; font-weight:700; color:var(--text); margin-bottom:8px; letter-spacing:-.2px }
+.fxsim-feature-card p { font-size:13px; color:var(--text-muted); line-height:1.7 }
+
+.fxsim-pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; max-width:920px; margin:0 auto }
+.fxsim-price-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r-xl); padding:32px 28px; position:relative }
+.fxsim-price-card.featured { border-color:var(--accent); box-shadow:0 0 36px rgba(124,110,245,.1) }
+.fxsim-price-tag { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:var(--bg); font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:4px 14px; border-radius:20px; white-space:nowrap }
+.fxsim-price-name { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.8px; margin-bottom:14px }
+.fxsim-price-amount { font-size:44px; font-weight:800; color:var(--text); font-family:var(--mono); letter-spacing:-2px; margin-bottom:4px; line-height:1 }
+.fxsim-price-period { font-size:13px; color:var(--text-muted); margin-bottom:26px }
+.fxsim-price-features { list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:28px }
+.fxsim-price-features li { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim) }
+.fxsim-price-features li::before { content:'✓'; color:var(--green); font-weight:700; font-size:12px; flex-shrink:0 }
+
+.fxsim-testimonials { background:var(--card); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:80px 24px }
+.fxsim-testimonial-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; max-width:1000px; margin:0 auto }
+.fxsim-testimonial { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-xl); padding:24px; transition:border-color .2s }
+.fxsim-testimonial:hover { border-color:var(--border2) }
+.fxsim-stars { color:var(--yellow); font-size:13px; letter-spacing:2px; margin-bottom:12px }
+.fxsim-testimonial-text { font-size:14px; line-height:1.75; color:var(--text-dim); margin-bottom:18px }
+.fxsim-testimonial-author { display:flex; align-items:center; gap:10px }
+.fxsim-testimonial-avatar { width:36px; height:36px; background:var(--accent-dim); border:1px solid var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--accent); flex-shrink:0 }
+.fxsim-testimonial-name { font-size:13px; font-weight:700; color:var(--text) }
+.fxsim-testimonial-role { font-size:11px; color:var(--text-muted) }
+
+.fxsim-cta-section { padding:100px 24px; text-align:center; position:relative; overflow:hidden }
+.fxsim-cta-section::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 65% 75% at 50% 50%, rgba(124,110,245,.06) 0%, transparent 70%); pointer-events:none }
+.fxsim-cta-section h2 { font-size:clamp(28px,4vw,44px); font-weight:800; letter-spacing:-1px; color:var(--text); margin-bottom:14px; position:relative }
+.fxsim-cta-section p { font-size:16px; color:var(--text-muted); margin-bottom:32px; position:relative }
+
+.fxsim-footer { background:var(--card); border-top:1px solid var(--border); padding:28px 40px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px }
+.fxsim-footer-logo { font-size:14px; font-weight:800; color:var(--accent) }
+.fxsim-footer-text { font-size:12px; color:var(--text-muted) }
+.fxsim-footer-links { display:flex; gap:16px }
+.fxsim-footer-links a { font-size:12px; color:var(--text-muted); text-decoration:none; transition:color .15s }
+.fxsim-footer-links a:hover { color:var(--accent) }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width:4px; height:4px }
+::-webkit-scrollbar-track { background:var(--bg) }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px }
+::-webkit-scrollbar-thumb:hover { background:var(--text-muted) }
+.w-full { width:100% }
+
+/* ── Sidebar navigation (added for terminal nav) ─────────────────────────── */
+.fx-sidebar-nav {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  margin:6px 0 2px;
+}
+.fx-snav-link {
+  display:block;
+  font-size:11px;
+  color:var(--text-muted);
+  text-decoration:none;
+  padding:5px 8px;
+  border-radius:var(--r-sm);
+  transition:all .12s;
+  font-weight:500;
+}
+.fx-snav-link:hover { background:var(--card2); color:var(--text) }
+.fx-snav-active     { color:var(--accent) !important; background:var(--accent-dim) !important }
+.fx-snav-logout:hover { color:var(--red) !important; background:var(--red-dim) !important }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  LANDING PAGE — NEW SECTIONS (trust, steps, plans, payout)                */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Trust strip ─────────────────────────────────────────────────────────── */
+.fxsim-trust-strip {
+  background:var(--card2);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:14px 24px;
+  overflow:hidden;
+}
+.fxsim-trust-inner {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+  font-size:13px;
+  font-weight:600;
+  color:var(--text-dim);
+}
+.fxsim-trust-sep { color:var(--border2); }
+
+/* ── How it works — steps ─────────────────────────────────────────────────── */
+.fxsim-steps-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+  gap:20px;
+  max-width:900px;
+  margin:0 auto;
+}
+.fxsim-step-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:32px 26px;
+  text-align:center;
+  transition:all .2s;
+  position:relative;
+  overflow:hidden;
+}
+.fxsim-step-card:hover {
+  border-color:var(--border2);
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-md);
+}
+.fxsim-step-featured {
+  border-color:var(--accent);
+  box-shadow:0 0 32px rgba(124,110,245,.08);
+}
+.fxsim-step-featured::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:2px;
+  background:linear-gradient(90deg, var(--accent), var(--green));
+}
+.fxsim-step-number {
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:2px;
+  color:var(--accent);
+  text-transform:uppercase;
+  margin-bottom:14px;
+  font-family:var(--mono);
+}
+.fxsim-step-icon {
+  font-size:32px;
+  margin-bottom:14px;
+  display:block;
+}
+.fxsim-step-card h3 {
+  font-size:17px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:10px;
+  letter-spacing:-.2px;
+}
+.fxsim-step-card p {
+  font-size:14px;
+  color:var(--text-muted);
+  line-height:1.7;
+}
+
+/* ── Challenge Plans grid ─────────────────────────────────────────────────── */
+.fxsim-plans-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(270px, 1fr));
+  gap:20px;
+}
+.fxsim-plan-card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:32px 26px;
+  position:relative;
+  transition:all .2s;
+  display:flex;
+  flex-direction:column;
+}
+.fxsim-plan-card:hover {
+  border-color:var(--border2);
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-md);
+}
+.fxsim-plan-featured {
+  border-color:var(--accent);
+  box-shadow:0 0 36px rgba(124,110,245,.12);
+  background:var(--card);
+}
+.fxsim-plan-badge {
+  position:absolute;
+  top:-13px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--accent);
+  color:var(--bg);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  padding:4px 16px;
+  border-radius:20px;
+  white-space:nowrap;
+}
+.fxsim-plan-size {
+  font-size:40px;
+  font-weight:800;
+  color:var(--text);
+  font-family:var(--mono);
+  letter-spacing:-2px;
+  line-height:1;
+  margin-bottom:6px;
+}
+.fxsim-plan-name {
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  margin-bottom:10px;
+}
+.fxsim-plan-price {
+  font-size:22px;
+  font-weight:700;
+  color:var(--accent);
+  margin-bottom:22px;
+  font-family:var(--mono);
+}
+.fxsim-plan-rules {
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  margin-bottom:24px;
+  flex:1;
+}
+.fxsim-plan-rules li {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
+  color:var(--text-dim);
+  padding-bottom:9px;
+  border-bottom:1px solid var(--border);
+}
+.fxsim-plan-rules li:last-child { border-bottom:none; }
+.fxsim-plan-rules li strong { color:var(--text); font-weight:700; }
+.fxsim-plan-split span,
+.fxsim-plan-split strong { color:var(--green) !important; }
+
+/* ── Payout section ───────────────────────────────────────────────────────── */
+.fxsim-payout-row {
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:48px;
+  align-items:center;
+  max-width:1100px;
+  margin:0 auto;
+}
+@media(max-width:860px) { .fxsim-payout-row { grid-template-columns:1fr; } }
+
+.fxsim-payout-points {
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.fxsim-payout-point {
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+}
+.fxsim-pp-icon {
+  font-size:22px;
+  flex-shrink:0;
+  margin-top:2px;
+}
+.fxsim-payout-point strong {
+  display:block;
+  font-size:15px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:4px;
+}
+.fxsim-payout-point p {
+  font-size:13px;
+  color:var(--text-muted);
+  line-height:1.6;
+  margin:0;
+}
+
+.fxsim-payout-card-wrap {
+  display:flex;
+  justify-content:center;
+}
+.fxsim-payout-example {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--r-xl);
+  padding:28px 28px;
+  width:100%;
+  max-width:320px;
+  box-shadow:var(--shadow-md), 0 0 40px rgba(124,110,245,.05);
+}
+.fxsim-pe-label {
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  color:var(--text-muted);
+  margin-bottom:6px;
+}
+.fxsim-pe-account {
+  font-size:16px;
+  font-weight:700;
+  color:var(--accent);
+  font-family:var(--mono);
+  margin-bottom:20px;
+}
+.fxsim-pe-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:14px;
+  padding:8px 0;
+  color:var(--text-dim);
+}
+.fxsim-pe-row strong {
+  font-family:var(--mono);
+  font-weight:700;
+  color:var(--text);
+}
+.fxsim-pe-divider {
+  height:1px;
+  background:var(--border2);
+  margin:6px 0;
+}
+.fxsim-pe-big {
+  font-size:16px;
+  font-weight:700;
+}
+.fxsim-pe-big strong { font-size:20px; }
+
+/* ── Responsive landing ───────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .fxsim-nav { padding:0 16px; }
+  .fxsim-nav-links .fxsim-nav-link:not(.fxsim-nav-cta) { display:none; }
+  .fxsim-hero h1 { font-size:clamp(30px,8vw,52px); }
+  .fxsim-hero-stats { gap:24px; }
+  .fxsim-trust-inner { gap:12px; font-size:12px; }
+  .fxsim-trust-sep { display:none; }
+  .fxsim-plans-grid { grid-template-columns:1fr; }
+  .fxsim-payout-row { gap:32px; }
+}
+
+/* payout text column — flex child of fxsim-payout-row grid */
+.fxsim-payout-text { display:flex; flex-direction:column; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  TERMINAL MOBILE RESPONSIVE                                                */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  #fxsim-terminal {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  #fxsim-watchlist {
+    display: none; /* hidden by default on mobile */
+  }
+  #fx-top-row {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+  #fx-order-panel {
+    max-height: 45vh;
+    overflow-y: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+  #fx-bottom-panel { height: 200px; }
+  .fx-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .fx-chart-toolbar { gap: 6px; padding: 0 8px; height: 36px; }
+  #fx-active-symbol-label { font-size: 12px; min-width: 55px; }
+  #fx-active-price-display { font-size: 13px; }
+  .fx-tf-btns { display: none; } /* hide TF on very small screens */
+  #fx-order-panel { padding: 8px; gap: 6px; }
+  .fx-order-btns { gap: 4px; }
+  .fx-btn-sell, .fx-btn-buy { padding: 8px 4px; font-size: 11px; }
+  .fx-stats-grid { grid-template-columns: repeat(2, 1fr); padding: 8px; gap: 6px; }
+  .fx-stat-tile strong { font-size: 14px; }
+  #fx-bottom-panel { height: 180px; }
+  .fx-table th, .fx-table td { padding: 4px 6px; font-size: 10px; }
+  /* Mobile watchlist toggle button */
+  .fx-mobile-watchlist-toggle {
+    display: flex !important;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;      /* was left:16px — FABs belong bottom-right by convention */
+    z-index: 9100;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(124,110,245,.5);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .fx-mobile-watchlist-toggle:active {
+    transform: scale(.93);
+    box-shadow: 0 2px 10px rgba(124,110,245,.4);
+  }
+  #fxsim-watchlist.mobile-open {
+    display: flex !important;
+    position: fixed;
+    inset: 0;
+    z-index: 9050;
+    width: 100vw;
+  }
+}
+
+/* Mobile watchlist toggle — hidden on desktop */
+.fx-mobile-watchlist-toggle { display: none; }
+
+/* ── Risk Calculator ─────────────────────────────────────────────────────── */
+.fx-risk-calc {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  padding: 10px 11px;
+}
+.fx-risk-calc .fx-field-group input {
+  font-size: 13px;
+  padding: 5px 8px;
+}
+
+/* ── Partial close button ────────────────────────────────────────────────── */
+.fx-partial-btn {
+  background: none;
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all .12s;
+  margin-left: 3px;
+}
+.fx-partial-btn:hover { background: var(--yellow); color: #000; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  MODULE 1 — PENDING ORDERS UI                                              */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Mode toggle (Market / Pending) ─────────────────────────────────────── */
+.fx-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 3px;
+  margin-bottom: 10px;
+}
+
+.fx-mode-btn {
+  background: none;
+  border: none;
+  border-radius: calc(var(--r-md) - 2px);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 0;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  transition: background .12s, color .12s;
+}
+
+.fx-mode-btn.active {
+  background: var(--card);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.fx-mode-btn:not(.active):hover { color: var(--text-dim); }
+
+/* ── Pending-only fields container ──────────────────────────────────────── */
+.fx-pending-fields {
+  display: flex;       /* overridden to none when hidden */
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--border2);
+  margin-top: 2px;
+}
+
+/* ── Order type select ───────────────────────────────────────────────────── */
+.fx-select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 8px;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .12s;
+}
+
+.fx-select:focus { border-color: var(--accent); }
+
+/* ── Datetime input ──────────────────────────────────────────────────────── */
+.fx-datetime-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 8px;
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .12s;
+  /* Remove default browser chrome on dark backgrounds */
+  color-scheme: dark;
+}
+
+.fx-datetime-input:focus { border-color: var(--accent); }
+
+/* ── Label hint (secondary label text) ──────────────────────────────────── */
+.fx-label-hint {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 400;
+  margin-left: 3px;
+}
+
+/* ── Pending submit button ───────────────────────────────────────────────── */
+.fx-btn-pending-submit {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  border-radius: var(--r-md);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 10px 0;
+  text-transform: uppercase;
+  width: 100%;
+  transition: opacity .12s, transform .08s;
+}
+
+.fx-btn-pending-submit:hover:not(:disabled)   { opacity: .88; }
+.fx-btn-pending-submit:active:not(:disabled)  { transform: scale(.98); }
+.fx-btn-pending-submit:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* ── Cancel pending order button (in table) ──────────────────────────────── */
+.fx-cancel-pending-btn {
+  background: none;
+  border: 1px solid var(--red);
+  border-radius: 3px;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+
+.fx-cancel-pending-btn:hover:not(:disabled) {
+  background: var(--red);
+  color: #fff;
+}
+
+.fx-cancel-pending-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* ── Weekend warning banner ──────────────────────────────────────────────── */
+.fx-weekend-warning {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 0;  /* full-width strip above tabs */
+  line-height: 1.4;
+}
+
+.fx-weekend-warning--alert {
+  background: rgba(255, 71, 87, .12);
+  border-bottom: 1px solid var(--red);
+  color: #ff6b7a;
+}
+
+.fx-weekend-warning--info {
+  background: rgba(0, 212, 255, .07);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* ── Mobile responsive adjustments ──────────────────────────────────────── */
+@media (max-width: 900px) {
+  .fx-pending-fields { gap: 6px; }
+  .fx-mode-toggle    { margin-bottom: 8px; }
+}
+
+@media (max-width: 640px) {
+  .fx-mode-btn        { font-size: 10px; padding: 4px 0; }
+  .fx-select          { font-size: 11px; }
+  .fx-btn-pending-submit { font-size: 11px; padding: 8px 0; }
+  .fx-cancel-pending-btn { font-size: 9px; padding: 2px 5px; }
+  /* Pending table: compress columns on small screens */
+  #fx-pending-table th:nth-child(8),  /* Margin Held */
+  #fx-pending-table td:nth-child(8),
+  #fx-pending-table th:nth-child(9),  /* Expires */
+  #fx-pending-table td:nth-child(9)   { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  TRUST & REALISM MODULE — Mobile terminal polish + UX improvements        */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Mobile: larger touch targets, better font sizes ────────────────────── */
+@media (max-width: 900px) {
+  /* Spread display more visible */
+  #fx-spread-display { font-size: 13px; }
+
+  /* Order panel scrolls instead of clipping content */
+  #fx-order-panel {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tabs: smaller gap, scrollable on small screens */
+  .fx-tabs { overflow-x: auto; padding: 0 6px; gap: 0; }
+  .fx-tab  { padding: 0 10px; font-size: 10px; white-space: nowrap; }
+
+  /* Bottom panel taller on mobile so table is usable */
+  #fx-bottom-panel { height: 260px; }
+
+  /* Table: use smaller font but keep readable */
+  .fx-table th, .fx-table td { font-size: 11px; padding: 5px 6px; }
+
+  /* Hide secondary table columns on tablet */
+  .fx-table th:nth-child(5),  /* SL */
+  .fx-table td:nth-child(5),
+  .fx-table th:nth-child(6),  /* TP */
+  .fx-table td:nth-child(6)   { display: none; }
+}
+
+@media (max-width: 640px) {
+  /* Terminal fills viewport with no page chrome */
+  #fxsim-terminal { height: 100dvh; } /* dvh respects mobile browser chrome */
+
+  /* Chart takes most of screen */
+  #fx-top-row {
+    grid-template-rows: 1fr auto;
+  }
+  #fx-order-panel {
+    max-height: 48vh;
+    border-top: 1px solid var(--border2);
+  }
+
+  /* Account summary: wrap to 2-col on mobile */
+  #fx-account-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 6px 8px;
+  }
+  .fx-acc-tile { padding: 4px 6px; border-radius: 4px; }
+  .fx-acc-label { font-size: 9px; }
+  .fx-acc-val   { font-size: 13px; }
+
+  /* LOT input: full-width with number pad */
+  #fx-lot-input { font-size: 16px; } /* 16px prevents iOS zoom */
+  .fx-sl-tp-row input { font-size: 16px; }
+  #fx-pending-price   { font-size: 16px; }
+  #fx-pending-expiry  { font-size: 14px; }
+
+  /* Bid/ask prices: larger for quick reading */
+  #fx-bid-price, #fx-ask-price { font-size: 15px; }
+
+  /* Buy/Sell buttons: full height, easier to tap */
+  .fx-btn-sell, .fx-btn-buy { padding: 12px 4px; min-height: 50px; }
+  .fx-btn-pending-submit     { min-height: 44px; }
+
+  /* Hide chart toolbar extras on very small screens */
+  .fx-chart-toolbar .fx-one-click-btns { display: none; }
+
+  /* Weekend warning: compact */
+  .fx-weekend-warning { font-size: 11px; padding: 6px 10px; }
+
+  /* Mode toggle: keep compact */
+  .fx-mode-toggle { margin-bottom: 6px; }
+  .fx-mode-btn    { font-size: 10px; padding: 4px 0; }
+
+  /* Table: hide more columns */
+  .fx-table th:nth-child(4),  /* Lots */
+  .fx-table td:nth-child(4),
+  .fx-table th:nth-child(5),
+  .fx-table td:nth-child(5),
+  .fx-table th:nth-child(6),
+  .fx-table td:nth-child(6)   { display: none; }
+
+  /* Position rows: close button always visible */
+  .fx-close-btn { padding: 4px 8px; font-size: 10px; min-width: 44px; min-height: 32px; }
+}
+
+/* ── Terminal UX: visual feedback improvements ───────────────────────────── */
+
+/* Loading skeleton pulse on initial data load */
+@keyframes fx-skeleton {
+  0%,100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+.fx-loading-skeleton {
+  background: var(--card2);
+  border-radius: 4px;
+  animation: fx-skeleton 1.4s ease-in-out infinite;
+}
+
+/* Position PnL: smooth color transition when value changes */
+.fx-pnl-pos, .fx-pnl-neg {
+  transition: color 0.3s ease;
+}
+
+/* Live PnL indicator — subtle pulse when price just updated */
+@keyframes fx-pnl-flash {
+  0%   { background: rgba(124,110,245,.12); }
+  100% { background: transparent; }
+}
+.fx-pnl-updated {
+  animation: fx-pnl-flash 0.5s ease-out forwards;
+}
+
+/* Account equity bar: gradient matches PnL direction */
+.fx-equity-positive .fx-acc-val { color: var(--green); }
+.fx-equity-negative .fx-acc-val { color: var(--red); }
+
+/* Bid/Ask spread indicator: red when spread is wide */
+#fx-spread-display.fx-spread-wide { color: var(--yellow) !important; }
+
+/* Order panel: highlight active symbol name */
+#fx-order-symbol strong { letter-spacing: 0.5px; }
+
+/* Bottom tabs: scroll indicator on mobile */
+@media (max-width: 640px) {
+  .fx-tabs::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to right, transparent, var(--bg2));
+    pointer-events: none;
+  }
+  .fx-tabs { position: relative; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  UI OVERHAUL — nav, auth, typography, animations, dark mode, all pages    */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ──────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ── Global resets for ALL plugin pages ────────────────────────────────── */
+body.propfirm-page {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+body.propfirm-page *,
+body.propfirm-page *::before,
+body.propfirm-page *::after {
+  box-sizing: border-box;
+}
+/* Kill Astra white backgrounds aggressively */
+body.propfirm-page #page,
+body.propfirm-page #content,
+body.propfirm-page .site-content,
+body.propfirm-page .ast-container,
+body.propfirm-page .entry-content,
+body.propfirm-page .post-content,
+body.propfirm-page article,
+body.propfirm-page .ast-page-builder-template,
+body.propfirm-page main#main,
+body.propfirm-page .fxsim-rules-page {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+/* Force dark text everywhere on plugin pages */
+body.propfirm-page h1,
+body.propfirm-page h2,
+body.propfirm-page h3,
+body.propfirm-page h4,
+body.propfirm-page h5,
+body.propfirm-page p,
+body.propfirm-page span,
+body.propfirm-page li,
+body.propfirm-page label {
+  color: inherit !important;
+  font-family: var(--font) !important;
+}
+
+/* ── PROFESSIONAL NAV BAR ────────────────────────────────────────────────── */
+.fxdb-nav {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  height: 60px;
+  background: rgba(6,10,18,.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(124,110,245,.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  gap: 12px;
+  box-shadow: 0 1px 32px rgba(0,0,0,.5);
+}
+.fxdb-nav-logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -.4px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.fxdb-nav-logo span {
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.fxdb-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: flex-end;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 8px;
+}
+.fxdb-nav-links::-webkit-scrollbar { display: none; }
+.fxdb-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all .18s ease;
+  white-space: nowrap;
+  letter-spacing: .1px;
+}
+.fxdb-nav-link:hover {
+  color: var(--text);
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.07);
+  transform: none;
+}
+.fxdb-nav-link.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: rgba(124,110,245,.25);
+  font-weight: 600;
+}
+.fxdb-nav-logout {
+  color: var(--text-muted) !important;
+  margin-left: 4px;
+}
+.fxdb-nav-logout:hover {
+  color: var(--red) !important;
+  background: var(--red-dim) !important;
+  border-color: rgba(240,71,92,.25) !important;
+}
+/* Hamburger mobile */
+.fxdb-nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 8px;
+  border: none;
+  background: none;
+  flex-shrink: 0;
+}
+.fxdb-nav-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-dim);
+  border-radius: 2px;
+  transition: all .2s;
+}
+
+/* ── AUTH PAGES (login / register / reset / verify) ─────────────────────── */
+body.propfirm-page-login,
+body.propfirm-page-register,
+body.propfirm-page-reset-password,
+body.propfirm-page-verify-2fa {
+  background: var(--bg) !important;
+}
+.fxsim-auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 30% -10%, rgba(124,110,245,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, rgba(18,212,152,.06) 0%, transparent 55%);
+}
+.fxsim-auth-box {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xl);
+  padding: 44px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+  animation: fx-fadein .35s ease;
+  position: relative;
+}
+.fxsim-auth-box::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 50%;
+  transform: translateX(-50%);
+  width: 80px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: 2px;
+}
+.fxsim-logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -.3px;
+  display: block;
+  margin-bottom: 24px;
+  text-shadow: 0 0 32px var(--accent-glow);
+}
+.fxsim-auth-box h2 {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  margin-bottom: 6px !important;
+  letter-spacing: -.4px;
+  line-height: 1.2;
+}
+.fxsim-auth-sub {
+  color: var(--text-dim) !important;
+  font-size: 14px !important;
+  margin-bottom: 28px !important;
+  line-height: 1.5;
+}
+.fxsim-field {
+  margin-bottom: 16px;
+}
+.fxsim-field label {
+  display: block;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-dim) !important;
+  margin-bottom: 6px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+.fxsim-field input,
+.fxsim-field select,
+.fxsim-field textarea {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 11px 14px;
+  transition: border-color .18s, box-shadow .18s;
+  outline: none;
+  -webkit-appearance: none;
+}
+.fxsim-field input:focus,
+.fxsim-field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.fxsim-field input::placeholder { color: var(--text-muted); }
+.fxsim-btn-primary,
+a.fxsim-btn-primary,
+button.fxsim-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff !important;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  border: none;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  margin-top: 8px;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.fxsim-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px var(--accent-glow);
+  filter: brightness(1.1);
+}
+.fxsim-btn-primary:active { transform: translateY(0); }
+.fxsim-alert {
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  animation: fx-fadein .2s ease;
+}
+.fxsim-alert-error  { background: var(--red-dim);    border: 1px solid rgba(240,71,92,.3);  color: #f0475c; }
+.fxsim-alert-success{ background: var(--green-dim);  border: 1px solid rgba(18,212,152,.3); color: var(--green); }
+.fxsim-auth-link {
+  margin-top: 20px !important;
+  text-align: center;
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+}
+.fxsim-auth-link a {
+  color: var(--accent) !important;
+  text-decoration: none;
+  font-weight: 500;
+}
+.fxsim-auth-link a:hover { text-decoration: underline; }
+.w-full { width: 100% !important; }
+
+/* ── CHALLENGE RULES PAGE ────────────────────────────────────────────────── */
+.fxsim-rules-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  color: var(--text) !important;
+  background: var(--bg) !important;
+}
+.fxsim-rules-page * { color: inherit; }
+.fxsim-rules-header { text-align: center; margin-bottom: 56px; }
+.fxsim-rules-header h1 {
+  font-size: clamp(26px,4vw,42px) !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, var(--text), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px !important;
+  letter-spacing: -.8px;
+  color: var(--text) !important;
+}
+.fxsim-rules-header p {
+  color: var(--text-dim) !important;
+  font-size: 16px !important;
+  line-height: 1.6;
+}
+.fxsim-rules-section { margin-bottom: 56px; }
+.fxsim-rules-section h2 {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  margin-bottom: 24px !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border2);
+}
+.fxsim-rules-steps { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 20px; }
+.fxsim-rules-step {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  transition: transform .2s, border-color .2s;
+  animation: fx-fadein .4s ease both;
+}
+.fxsim-rules-step:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+.fxsim-rules-step-num {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 17px; margin-bottom: 14px;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.fxsim-rules-step h3 { font-size: 15px !important; font-weight: 700 !important; color: var(--text) !important; margin-bottom: 8px !important; }
+.fxsim-rules-step p  { font-size: 13px !important; color: var(--text-dim) !important; line-height: 1.6; margin: 0 !important; }
+.fxsim-rules-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border2);
+  box-shadow: var(--shadow-sm);
+}
+.fxsim-rules-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fxsim-rules-table th {
+  background: var(--card2);
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 2px solid var(--border2);
+  font-weight: 700;
+  color: var(--text-dim);
+  font-size: 12px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.fxsim-rules-table th:first-child { text-align: left; min-width: 180px; }
+.fxsim-rules-table td {
+  padding: 11px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.fxsim-rules-table tr:last-child td { border-bottom: none; }
+.fxsim-rules-table tr:hover td { background: rgba(124,110,245,.04); }
+.fxsim-rules-label { text-align: left !important; font-weight: 600; color: var(--text) !important; }
+.fxsim-rules-highlight { color: var(--accent) !important; font-weight: 800; font-size: 15px; }
+.fxsim-rules-plan-name { font-size: 14px; font-weight: 800; color: var(--text) !important; }
+.fxsim-rules-plan-size { font-size: 12px; color: var(--text-muted) !important; margin-top: 2px; }
+.fxsim-rules-plan-price { font-size: 18px; font-weight: 800; color: var(--accent) !important; margin-top: 6px; }
+.fxsim-rules-free { color: var(--green) !important; }
+.fxsim-rules-yes  { color: var(--green) !important; font-size: 12px; }
+.fxsim-rules-no   { color: var(--text-muted) !important; font-size: 12px; }
+.fxsim-rules-general { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 16px; }
+.fxsim-rules-rule {
+  display: flex; gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  transition: border-color .2s;
+}
+.fxsim-rules-rule:hover { border-color: var(--accent); }
+.fxsim-rules-rule-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.fxsim-rules-rule strong { display: block; font-size: 14px; margin-bottom: 6px; color: var(--text) !important; font-weight: 700; }
+.fxsim-rules-rule p { font-size: 13px !important; color: var(--text-dim) !important; line-height: 1.5; margin: 0 !important; }
+.fxsim-rules-cta { text-align: center; padding: 40px 0 20px; }
+
+/* ── NO-ACTIVE-CHALLENGE INTERACTIVE PAGE ───────────────────────────────── */
+.fxsim-no-challenge-page {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(124,110,245,.08) 0%, transparent 60%);
+}
+.fxsim-no-challenge-inner {
+  text-align: center;
+  max-width: 560px;
+  animation: fx-fadein .5s ease;
+}
+.fxsim-no-challenge-icon {
+  width: 88px; height: 88px;
+  background: linear-gradient(135deg, var(--accent-dim), rgba(18,212,152,.1));
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  margin: 0 auto 28px;
+  box-shadow: 0 0 48px var(--accent-glow);
+  animation: fx-pulse 2s ease-in-out infinite;
+}
+@keyframes fx-pulse {
+  0%,100% { box-shadow: 0 0 24px var(--accent-glow); }
+  50% { box-shadow: 0 0 48px var(--accent-glow), 0 0 80px var(--accent-glow); }
+}
+.fxsim-no-challenge-inner h2 {
+  font-size: 28px !important; font-weight: 900 !important;
+  color: var(--text) !important;
+  letter-spacing: -.5px; margin-bottom: 12px !important;
+}
+.fxsim-no-challenge-inner p {
+  color: var(--text-dim) !important; font-size: 15px !important;
+  line-height: 1.7; margin-bottom: 32px !important;
+}
+.fxsim-no-challenge-steps {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 36px;
+}
+.fxsim-ncs {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 18px 14px;
+  font-size: 12px;
+  color: var(--text-dim) !important;
+  transition: all .2s;
+}
+.fxsim-ncs:hover { border-color: var(--accent); transform: translateY(-2px); }
+.fxsim-ncs-num {
+  font-size: 22px; font-weight: 800; color: var(--accent) !important;
+  display: block; margin-bottom: 6px;
+}
+.fxsim-ncs strong { display: block; color: var(--text) !important; margin-bottom: 4px; font-size: 13px; }
+.fxsim-no-challenge-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* ── VERIFY SUCCESS / ERROR BANNER on dashboard ─────────────────────────── */
+.fxsim-verify-banner {
+  padding: 14px 24px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fx-slidedown .3s ease;
+}
+.fxsim-verify-banner.success {
+  background: rgba(18,212,152,.08);
+  border-bottom: 2px solid var(--green);
+  color: var(--green);
+}
+.fxsim-verify-banner.error {
+  background: var(--red-dim);
+  border-bottom: 2px solid var(--red);
+  color: var(--red);
+}
+
+/* ── ADMIN PANEL IMPROVEMENTS ────────────────────────────────────────────── */
+.fxsim-admin .fxsim-stat-card,
+.fxsim-admin .fxsim-akpi {
+  transition: transform .18s, box-shadow .18s;
+}
+.fxsim-admin .fxsim-stat-card:hover,
+.fxsim-admin .fxsim-akpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.12);
+}
+/* Smooth table rows */
+#wpwrap .wp-list-table tbody tr {
+  transition: background .12s;
+}
+
+/* ── DARK MODE TOGGLE IMPROVED ───────────────────────────────────────────── */
+.fxdb-theme-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  transition: all .18s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.fxdb-theme-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ── LIGHT MODE ─────────────────────────────────────────────────────────── */
+:root[data-theme="light"] {
+  --bg:        #f2f4f8;
+  --bg2:       #e8ebf2;
+  --card:      #ffffff;
+  --card2:     #f0f3f9;
+  --card3:     #e8edf5;
+  --border:    #d0d8e8;
+  --border2:   #c2cce0;
+  --text:      #0f1724;
+  --text-dim:  #3a4a64;
+  --text-muted:#6b7fa0;
+  --overlay:   rgba(242,244,248,.96);
+}
+:root[data-theme="light"] .fxdb-nav {
+  background: rgba(255,255,255,.95);
+  border-bottom-color: #d0d8e8;
+  box-shadow: 0 1px 16px rgba(0,0,0,.08);
+}
+:root[data-theme="light"] .fxsim-auth-wrap,
+:root[data-theme="light"] .fxsim-rules-page,
+:root[data-theme="light"] body.propfirm-page {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+:root[data-theme="light"] .fxsim-auth-box {
+  background: #fff;
+  border-color: #d0d8e8;
+}
+:root[data-theme="light"] .fxsim-field input {
+  background: #f8fafd;
+  border-color: #cdd5e4;
+  color: var(--text);
+}
+:root[data-theme="light"] .fxsim-rules-table th { background: #f0f3f9; color: #3a4a64; }
+:root[data-theme="light"] .fxsim-rules-step,
+:root[data-theme="light"] .fxsim-rules-rule { background: #fff; border-color: #d0d8e8; }
+:root[data-theme="light"] .fxdb-table th { background: #f0f3f9; }
+:root[data-theme="light"] .fxdb-table td { border-bottom-color: #e4e9f2; }
+
+/* ── MOBILE NAV ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .fxdb-nav { padding: 0 16px; height: 56px; }
+  .fxdb-nav-links {
+    display: none;
+    position: fixed;
+    top: 56px; left: 0; right: 0;
+    background: rgba(6,10,18,.97);
+    backdrop-filter: blur(20px);
+    flex-direction: column;
+    padding: 16px;
+    gap: 4px;
+    border-bottom: 1px solid var(--border2);
+    z-index: 899;
+  }
+  .fxdb-nav-links.open { display: flex; animation: fx-slidedown .2s ease; }
+  .fxdb-nav-link { width: 100%; justify-content: flex-start; padding: 10px 14px; }
+  .fxdb-nav-hamburger { display: flex; }
+  .fxsim-rules-page { padding: 24px 16px; }
+  .fxsim-rules-table th, .fxsim-rules-table td { padding: 8px 10px; font-size: 12px; }
+  .fxsim-no-challenge-steps { grid-template-columns: 1fr; }
+  .fxsim-auth-box { padding: 32px 24px; }
+}
+@media (max-width: 480px) {
+  .fxsim-no-challenge-steps { grid-template-columns: 1fr; gap: 10px; }
+  .fxsim-auth-box { padding: 28px 18px; }
+  .fxdb-nav-logo { font-size: 15px; }
+}
+
+/* ── Terminal sidebar nav improvements ──────────────────────────────────── */
+.fx-sidebar-header {
+  background: linear-gradient(180deg, var(--card2) 0%, var(--card) 100%);
+  border-bottom-color: var(--border2);
+}
+.fx-logo {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  color: var(--accent) !important;
+  text-shadow: 0 0 20px var(--accent-glow);
+}
+.fx-snav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border-radius: var(--r-md);
+  transition: all .15s ease;
+  border: 1px solid transparent;
+}
+.fx-snav-link:hover {
+  background: var(--card2);
+  color: var(--text);
+  border-color: var(--border2);
+}
+.fx-snav-link.fx-snav-active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: rgba(124,110,245,.2);
+  font-weight: 600;
+}
+.fx-snav-logout { color: var(--text-muted) !important; margin-top: 4px; }
+.fx-snav-logout:hover { color: var(--red) !important; background: var(--red-dim) !important; border-color: rgba(240,71,92,.2) !important; }
+
+/* ── Watchlist symbol rows ───────────────────────────────────────────────── */
+.fx-symbol-row {
+  transition: background .12s ease;
+}
+.fx-symbol-row:hover, .fx-symbol-row.active {
+  background: var(--accent-dim);
+  border-left-color: var(--accent);
+}
+
+/* ── Bid/ask buttons ─────────────────────────────────────────────────────── */
+.fx-btn-buy, .fx-btn-sell {
+  transition: all .15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.fx-btn-buy::after, .fx-btn-sell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,.1);
+  opacity: 0;
+  transition: opacity .15s;
+}
+.fx-btn-buy:hover::after, .fx-btn-sell:hover::after { opacity: 1; }
+
+/* ── Bottom tabs ─────────────────────────────────────────────────────────── */
+.fx-tab {
+  transition: color .15s ease, border-color .15s ease;
+}
+
+/* ── Position row PnL ────────────────────────────────────────────────────── */
+.fx-pnl-pos { color: var(--green) !important; font-weight: 700; font-family: var(--mono); }
+.fx-pnl-neg { color: var(--red) !important; font-weight: 700; font-family: var(--mono); }
+
+/* ── Account summary tiles ───────────────────────────────────────────────── */
+.fx-acc-tile { transition: background .15s ease; }
+.fx-acc-tile:hover { background: var(--card3); }
+
+/* ── Force register/login page full-viewport centering (override Astra) ─── */
+body.propfirm-page-login .fxsim-auth-wrap,
+body.propfirm-page-register .fxsim-auth-wrap,
+body.propfirm-page-reset-password .fxsim-auth-wrap,
+body.propfirm-page-verify-2fa .fxsim-auth-wrap {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1 !important;
+  overflow-y: auto !important;
+  background: var(--bg) !important;
+}
+
+/* ── Favicon / logo - show from settings ────────────────────────────────── */
+.fxdb-nav-logo img,
+.fx-logo img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* ── Pinned logout button — always visible outside scrollable nav-links ──── */
+.fxdb-nav-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  transition: all .18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+.fxdb-nav-logout-btn:hover {
+  color: var(--red);
+  border-color: rgba(240,71,92,.4);
+  background: var(--red-dim);
+}
+/* Hide old logout from nav-links (it was moved to pinned) */
+.fxdb-nav-links .fxdb-nav-logout { display: none !important; }
+
+/* ── Dark/Light toggle — complete variable cascade fix ───────────────────── */
+/* Default (dark) — these are the base :root values. Always explicit. */
+:root {
+  color-scheme: dark;
+}
+/* Light mode — triggered by JS setting data-theme="light" on <html> */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+/* Ensure fxdb-dash body matches theme */
+:root[data-theme="light"] .fxdb-body,
+:root[data-theme="light"] .fxsim-dash,
+:root[data-theme="light"] #fxsim-dashboard,
+:root[data-theme="light"] #fxsim-challenges,
+:root[data-theme="light"] #fxsim-statistics {
+  background: var(--bg) !important;
+}
+/* Theme button icon update via CSS (belt+suspenders backup for JS) */
+:root[data-theme="light"] .fxdb-theme-btn::after { content: '🌙'; }
+:root:not([data-theme="light"]) .fxdb-theme-btn::after { content: '☀'; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  PHASE B — Icon system, consistent nav, theme toggle, no-emoji            */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── SVG icon base ───────────────────────────────────────────────────────── */
+.fxi {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: inherit;
+}
+
+/* ── Nav logo with icon ──────────────────────────────────────────────────── */
+.fxdb-nav-logo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  border-radius: 7px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.fxdb-nav-logo-text {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+}
+
+/* ── Nav links with icons ────────────────────────────────────────────────── */
+.fxdb-nav-link {
+  gap: 6px; /* icon + label gap */
+}
+.fxdb-nav-link .fxi {
+  opacity: .7;
+  transition: opacity .15s;
+}
+.fxdb-nav-link:hover .fxi,
+.fxdb-nav-link.active .fxi {
+  opacity: 1;
+}
+
+/* ── Theme toggle — icon-only, shows correct icon per theme ─────────────── */
+.fxdb-theme-btn {
+  padding: 7px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.fxdb-theme-icon-dark,
+.fxdb-theme-icon-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  transition: opacity .2s, transform .2s;
+}
+.fxdb-theme-btn { position: relative; }
+/* Dark mode: show sun (click to go light) */
+:root:not([data-theme="light"]) .fxdb-theme-icon-dark  { opacity: 1; transform: scale(1); }
+:root:not([data-theme="light"]) .fxdb-theme-icon-light { opacity: 0; transform: scale(0.5); }
+/* Light mode: show moon (click to go dark) */
+:root[data-theme="light"] .fxdb-theme-icon-dark  { opacity: 0; transform: scale(0.5); }
+:root[data-theme="light"] .fxdb-theme-icon-light { opacity: 1; transform: scale(1); }
+
+/* ── Logout button with icon ─────────────────────────────────────────────── */
+.fxdb-nav-logout-btn {
+  gap: 6px;
+}
+.fxdb-nav-logout-btn .fxi { opacity: .7; }
+.fxdb-nav-logout-btn:hover .fxi { opacity: 1; }
+
+/* ── Remove old emoji-based overrides ───────────────────────────────────── */
+.fxdb-theme-btn::after { display: none !important; }
+
+/* ── Notification bell icon ─────────────────────────────────────────────── */
+.fxdb-notif-btn {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.fxdb-notif-badge {
+  position: absolute;
+  top: 3px; right: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  v8.2 — Mobile Terminal UX Polish                                         */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Toolbar: prevent symbol/price from being cut off on narrow screens ─── */
+@media (max-width: 640px) {
+  .fx-chart-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fx-chart-toolbar::-webkit-scrollbar { display: none; }
+
+  /* Keep symbol label compact but legible */
+  #fx-active-symbol-label { min-width: 50px; font-size: 11px; }
+  #fx-active-price-display { font-size: 12px; }
+
+  /* Order panel: stack SL/TP on separate row for easier touch */
+  .fx-lot-row { flex-wrap: wrap; }
+  .fx-sltp-wrap { flex-direction: column; align-items: stretch; gap: 6px; }
+  .fx-sltp-input {
+    width: 100%;
+    padding: 8px 10px;      /* larger touch target */
+    font-size: 13px;
+  }
+
+  /* Buy/Sell buttons: equal width, taller touch targets */
+  .fx-btn-sell, .fx-btn-buy {
+    flex: 1;
+    min-height: 44px;       /* iOS HIG minimum touch target */
+    font-size: 12px;
+    padding: 10px 6px;
+  }
+
+  /* Bottom panel tabs: scrollable row, no overflow clipping */
+  .fx-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .fx-tabs::-webkit-scrollbar { display: none; }
+  .fx-tab { flex-shrink: 0; padding: 6px 14px; font-size: 11px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  v8.2 — 375px Viewport Stabilization                                      */
+/*  Append-only: does NOT alter existing breakpoints.                        */
+/*  Targets iPhone SE / Android 375px — the tightest common viewport.        */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 375px) {
+
+  /* ── Terminal root: use dvh so browser chrome doesn't hide content ─────── */
+  #fxsim-terminal { height: 100dvh; }
+
+  /* ── Toolbar: more compact, still scrollable from 640px rules ──────────── */
+  .fx-chart-toolbar { height: 34px; gap: 4px; padding: 0 8px; }
+  #fx-active-symbol-label  { font-size: 10px; min-width: 44px; }
+  #fx-active-price-display { font-size: 11px; }
+
+  /* ── Order panel: tighter padding, full-width scrollable ───────────────── */
+  #fx-order-panel { padding: 6px 8px; gap: 5px; }
+  .fx-panel-title { font-size: 8px; padding-bottom: 4px; }
+
+  /* Price row: keep 3-col but tighten so it fits 359px inner width ─────── */
+  .fx-price-row { gap: 2px; }
+  .fx-price-box { padding: 4px 5px; }
+  .fx-price-box span { font-size: 11px; }
+
+  /* Lot row: inputs fill width, stepper buttons stay square ─────────────── */
+  .fx-lot-btn { width: 32px; height: 32px; font-size: 14px; }
+  #fx-lot-input { font-size: 16px; } /* 16px prevents iOS zoom on focus */
+
+  /* SL/TP inputs: already stacked vertically via 640px rules ────────────── */
+  #fx-sl-input, #fx-tp-input { font-size: 16px; padding: 7px 8px; }
+
+  /* Buy/Sell buttons: tall enough for reliable touch ────────────────────── */
+  .fx-btn-sell, .fx-btn-buy { min-height: 48px; font-size: 11px; padding: 10px 4px; }
+
+  /* ── Bottom panel: resolve the 180px vs 260px height conflict ──────────── */
+  /* The 640px rules leave this at 180px (too short). Set an explicit value   */
+  /* that shows at least 3 table rows + the tab bar at 375px.                */
+  #fx-bottom-panel { height: 220px; }
+
+  /* Tabs: already scrollable from 640px rules — just tighten spacing ──────── */
+  .fx-tab { padding: 0 10px; font-size: 10px; }
+
+  /* Table: compact font, keep essential columns visible ─────────────────── */
+  .fx-table th, .fx-table td { font-size: 10px; padding: 4px 5px; }
+
+  /* Performance stats grid: 2-col on this width ─────────────────────────── */
+  .fx-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 6px; }
+  .fx-stat-tile strong { font-size: 13px; }
+
+  /* Account summary tiles: 2-col, compact ───────────────────────────────── */
+  #fx-account-summary { grid-template-columns: 1fr 1fr; gap: 3px; padding: 5px 6px; }
+  .fx-acc-label { font-size: 8px; }
+  .fx-acc-val   { font-size: 12px; }
+
+  /* FAB: raise above bottom panel so it doesn't overlap table rows ────────── */
+  /* Bottom panel = 220px, FAB = 48px, desired clearance = 12px              */
+  /* → bottom: 220 + 12 = 232px. Use safe 16px clearance → 236px.           */
+  .fx-mobile-watchlist-toggle { bottom: 236px; right: 12px; width: 44px; height: 44px; font-size: 18px; }
+
+  /* Risk calculator: compact ─────────────────────────────────────────────── */
+  .fx-risk-calc { padding: 7px 8px; }
+  .fx-risk-calc .fx-field-group input { font-size: 14px; padding: 5px 7px; }
+
+  /* Mode toggle: tighter ─────────────────────────────────────────────────── */
+  .fx-mode-btn { font-size: 10px; padding: 5px 0; }
+}

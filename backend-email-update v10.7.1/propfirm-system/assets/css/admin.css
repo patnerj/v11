@@ -1,0 +1,615 @@
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  PropFirm System — Admin Panel  (Dark Fintech Theme)                      */
+/* ══════════════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Admin design tokens — scoped ONLY to .fxsim-admin, never :root ─────── */
+/* Scoping prevents these dark vars from bleeding into WP admin sidebar/menus */
+.fxsim-admin,
+.wrap.fxsim-admin,
+#fxsim-mt5-modal,
+#fxsim-stats-grid,
+#fxsim-health-grid {
+  --a-bg:        #070c18;
+  --a-bg2:       #0b1220;
+  --a-card:      #0f1a2e;
+  --a-card2:     #13203a;
+  --a-border:    #1e3050;
+  --a-border2:   #253a5e;
+  --a-accent:    #6c63ff;
+  --a-accent2:   #4f46e5;
+  --a-accent-dim:rgba(108,99,255,.12);
+  --a-accent-glow:rgba(108,99,255,.28);
+  --a-green:     #10d8a0;
+  --a-green-dim: rgba(16,216,160,.1);
+  --a-red:       #ff5370;
+  --a-red-dim:   rgba(255,83,112,.1);
+  --a-yellow:    #ffd166;
+  --a-text:      #e8edf8;
+  --a-text-dim:  #7a8fb0;
+  --a-text-muted:#3e5275;
+  --a-font:      'DM Sans', sans-serif;
+  --a-mono:      'JetBrains Mono', monospace;
+  --a-r:         10px;
+  --a-shadow:    0 4px 24px rgba(0,0,0,.6);
+}
+
+/* ── WP override — dark admin body ──────────────────────────────────────── */
+.fxsim-admin,
+.wrap.fxsim-admin { font-family: var(--a-font) !important; color: var(--a-text); }
+
+/* ── Page heading ────────────────────────────────────────────────────────── */
+.fxsim-admin h1 {
+  font-size: 22px; font-weight: 700; margin: 0 0 24px;
+  color: var(--a-text); letter-spacing: -.3px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* ── KPI stat grid ───────────────────────────────────────────────────────── */
+.fxsim-admin-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 24px;
+}
+.fxsim-stat-card {
+  background: var(--a-card); border: 1px solid var(--a-border);
+  border-radius: var(--a-r); padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative; overflow: hidden;
+}
+.fxsim-stat-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--a-accent-dim) 0%, transparent 60%);
+  opacity: 0; transition: opacity .2s;
+}
+.fxsim-stat-card:hover { border-color: var(--a-accent); box-shadow: 0 0 0 1px var(--a-accent), var(--a-shadow); }
+.fxsim-stat-card:hover::before { opacity: 1; }
+.fxsim-stat-label {
+  font-size: 11px; color: var(--a-text-muted); text-transform: uppercase;
+  letter-spacing: 1px; font-weight: 600;
+}
+.fxsim-stat-val { font-size: 28px; font-weight: 700; color: var(--a-text); line-height: 1; }
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.fxsim-admin-toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+
+/* ── WP table overrides ──────────────────────────────────────────────────── */
+#the-list tr, .wp-list-table tr { transition: background .12s; }
+#the-list tr:hover, .wp-list-table tr:hover td { background: rgba(108,99,255,.06) !important; }
+
+/* ── Modern data table ───────────────────────────────────────────────────── */
+.fxsim-admin table.wp-list-table,
+.fxsim-admin .widefat {
+  border: 1px solid var(--a-border) !important;
+  border-radius: var(--a-r); border-collapse: separate;
+  border-spacing: 0; overflow: hidden;
+  background: var(--a-card) !important;
+}
+.fxsim-admin .widefat th {
+  background: var(--a-card2) !important;
+  color: var(--a-text-dim) !important;
+  font-size: 11px !important; text-transform: uppercase; letter-spacing: .8px;
+  font-weight: 600 !important; padding: 12px 14px !important;
+  border-bottom: 1px solid var(--a-border) !important;
+}
+.fxsim-admin .widefat td {
+  background: transparent !important; color: var(--a-text) !important;
+  padding: 11px 14px !important; font-size: 13px !important;
+  border-bottom: 1px solid var(--a-border) !important;
+  vertical-align: middle;
+}
+.fxsim-admin .widefat tr:last-child td { border-bottom: none !important; }
+.fxsim-admin .widefat.striped > tbody > :nth-child(odd) > td,
+.fxsim-admin .widefat.striped tr:nth-child(odd) td {
+  background: rgba(255,255,255,.018) !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.fxsim-admin .button-primary,
+.fxsim-admin .button.button-primary {
+  background: var(--a-accent) !important; border-color: var(--a-accent) !important;
+  color: #fff !important; border-radius: 7px !important;
+  font-weight: 600 !important; font-size: 13px !important;
+  padding: 6px 16px !important; transition: all .15s !important;
+  box-shadow: 0 0 0 0 var(--a-accent-glow) !important;
+  font-family: var(--a-font) !important;
+}
+.fxsim-admin .button-primary:hover { background: var(--a-accent2) !important; box-shadow: 0 0 0 4px var(--a-accent-glow) !important; transform: translateY(-1px); }
+.fxsim-admin .button { border-radius: 7px !important; font-family: var(--a-font) !important; font-size: 13px !important; }
+.fxsim-admin .button-small { padding: 4px 10px !important; font-size: 12px !important; }
+
+/* ── Form inputs ─────────────────────────────────────────────────────────── */
+.fxsim-admin input[type="text"],
+.fxsim-admin input[type="number"],
+.fxsim-admin input[type="email"],
+.fxsim-admin input[type="password"],
+.fxsim-admin textarea,
+.fxsim-admin select {
+  background: var(--a-bg2) !important; border: 1px solid var(--a-border) !important;
+  color: var(--a-text) !important; border-radius: 7px !important;
+  font-family: var(--a-font) !important; font-size: 13px !important;
+  padding: 8px 12px !important; transition: border-color .15s, box-shadow .15s !important;
+}
+.fxsim-admin input:focus,
+.fxsim-admin textarea:focus,
+.fxsim-admin select:focus {
+  border-color: var(--a-accent) !important;
+  box-shadow: 0 0 0 3px var(--a-accent-dim) !important; outline: none !important;
+}
+.fxsim-admin select option { background: var(--a-card2); color: var(--a-text); }
+
+/* ── Tool cards ──────────────────────────────────────────────────────────── */
+.fxsim-tool-card {
+  background: var(--a-card); border: 1px solid var(--a-border);
+  border-radius: var(--a-r); padding: 22px 24px; margin-bottom: 16px;
+  max-width: 800px; transition: border-color .2s;
+}
+.fxsim-tool-card:hover { border-color: var(--a-border2); }
+.fxsim-tool-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--a-text); }
+.fxsim-tool-card .description { color: var(--a-text-dim); font-size: 13px; margin: 0 0 14px; }
+
+/* ── Analytics tabs ──────────────────────────────────────────────────────── */
+.fxsim-analytics-tabs {
+  display: flex; gap: 2px; margin: 0 0 22px;
+  background: var(--a-card); border: 1px solid var(--a-border);
+  border-radius: 10px; padding: 4px;
+}
+.fxsim-atab {
+  background: none; border: none; border-radius: 8px;
+  padding: 8px 20px; font-size: 13px; font-weight: 600;
+  color: var(--a-text-dim); cursor: pointer; transition: all .15s;
+  font-family: var(--a-font);
+}
+.fxsim-atab:hover { color: var(--a-text); background: var(--a-card2); }
+.fxsim-atab.active { color: #fff; background: var(--a-accent); box-shadow: 0 2px 12px var(--a-accent-glow); }
+.fxsim-atab-content { display: none; }
+.fxsim-atab-content.active { display: block; animation: a-fadein .2s ease; }
+@keyframes a-fadein { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+
+/* ── Analytics KPIs ──────────────────────────────────────────────────────── */
+.fxsim-analytics-kpis { display: flex; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.fxsim-akpi {
+  background: var(--a-card); border: 1px solid var(--a-border);
+  border-radius: var(--a-r); padding: 16px 20px; min-width: 160px;
+  display: flex; flex-direction: column; gap: 5px; transition: all .15s;
+}
+.fxsim-akpi:hover { border-color: var(--a-accent); transform: translateY(-2px); box-shadow: var(--a-shadow); }
+.fxsim-akpi span { font-size: 10px; color: var(--a-text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.fxsim-akpi strong { font-size: 24px; font-weight: 700; color: var(--a-text); }
+
+/* ── Analytics charts ────────────────────────────────────────────────────── */
+.fxsim-analytics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.fxsim-achart-card {
+  background: var(--a-card); border: 1px solid var(--a-border);
+  border-radius: var(--a-r); padding: 20px 22px;
+}
+.fxsim-achart-title { font-size: 13px; font-weight: 700; color: var(--a-text-dim); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.fxsim-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  z-index: 99999; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); animation: a-fadein .15s ease;
+}
+.fxsim-modal-box {
+  background: var(--a-card); border: 1px solid var(--a-border2);
+  border-radius: 14px; padding: 28px 32px; min-width: 380px; max-width: 92vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7); color: var(--a-text);
+}
+.fxsim-modal-box h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; color: var(--a-text); }
+.fxsim-modal-box label { display: block; font-size: 12px; font-weight: 600; color: var(--a-text-dim); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.fxsim-modal-box input, .fxsim-modal-box select, .fxsim-modal-box textarea {
+  display: block; width: 100%; padding: 9px 12px;
+  background: var(--a-bg2); border: 1px solid var(--a-border);
+  border-radius: 7px; color: var(--a-text); font-family: var(--a-font); font-size: 13px;
+  transition: border-color .15s;
+}
+.fxsim-modal-box input:focus { border-color: var(--a-accent); outline: none; box-shadow: 0 0 0 3px var(--a-accent-dim); }
+.fxsim-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+/* ── Health cards ────────────────────────────────────────────────────────── */
+#fxsim-health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 12px; margin-top: 14px; }
+.fxsim-stat-card .fxsim-health-detail { font-size: 11px; color: var(--a-text-muted); margin-top: 4px; display: block; }
+
+/* ── Toggle ──────────────────────────────────────────────────────────────── */
+.fxsim-toggle { display: inline-flex; align-items: center; cursor: pointer; }
+.fxsim-toggle input { display: none; }
+.fxsim-toggle-track {
+  width: 44px; height: 24px; background: var(--a-card2);
+  border: 1px solid var(--a-border); border-radius: 12px;
+  position: relative; transition: all .2s;
+}
+.fxsim-toggle-track::after {
+  content: ''; position: absolute; width: 16px; height: 16px;
+  background: var(--a-text-muted); border-radius: 50%;
+  top: 3px; left: 3px; transition: transform .2s, background .2s;
+}
+.fxsim-toggle input:checked + .fxsim-toggle-track { background: var(--a-green); border-color: var(--a-green); }
+.fxsim-toggle input:checked + .fxsim-toggle-track::after { transform: translateX(20px); background: #fff; }
+
+/* ── Blink ───────────────────────────────────────────────────────────────── */
+@keyframes fx-blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) { .fxsim-analytics-row { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .fxsim-analytics-tabs { flex-wrap: wrap; }
+  .fxsim-akpi strong { font-size: 20px; }
+  .fxsim-modal-box { padding: 20px 18px; min-width: unset; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  ADMIN PANEL — interactive, smooth, professional                          */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Stat cards hover ───────────────────────────────────────────────────── */
+.fxsim-stat-card {
+  transition: transform .18s ease, box-shadow .18s ease;
+  cursor: default;
+}
+.fxsim-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.12);
+}
+
+/* ── Analytics KPIs ─────────────────────────────────────────────────────── */
+.fxsim-akpi {
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.fxsim-akpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.1);
+}
+.fxsim-akpi strong { color: #1a1a2e; }
+
+/* ── WP table row hover ─────────────────────────────────────────────────── */
+#wpwrap .wp-list-table tbody tr {
+  transition: background .12s ease;
+}
+#wpwrap .wp-list-table.striped tbody tr:hover td {
+  background: rgba(124,110,245,.04) !important;
+}
+
+/* ── Admin buttons ──────────────────────────────────────────────────────── */
+#wpwrap .button {
+  transition: all .15s ease;
+}
+#wpwrap .button-primary {
+  background: linear-gradient(135deg, #7c6ef5, #5f52e8) !important;
+  border-color: #5f52e8 !important;
+  box-shadow: 0 2px 10px rgba(124,110,245,.4) !important;
+}
+#wpwrap .button-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(124,110,245,.5) !important;
+}
+
+/* ── Modals ─────────────────────────────────────────────────────────────── */
+.fxsim-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.fxsim-modal-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  animation: admin-fadein .2s ease;
+  width: 100%;
+}
+@keyframes admin-fadein {
+  from { opacity: 0; transform: translateY(-10px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Analytics tabs ─────────────────────────────────────────────────────── */
+.fxsim-atab {
+  transition: all .15s ease;
+  border-bottom-width: 3px;
+}
+.fxsim-atab.active {
+  color: #7c6ef5;
+  border-bottom-color: #7c6ef5;
+}
+
+/* ── Chart cards ─────────────────────────────────────────────────────────── */
+.fxsim-achart-card {
+  transition: box-shadow .18s ease;
+}
+.fxsim-achart-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+
+/* ── Settings inputs ────────────────────────────────────────────────────── */
+#wpwrap input[type="text"],
+#wpwrap input[type="email"],
+#wpwrap input[type="number"],
+#wpwrap input[type="password"],
+#wpwrap select,
+#wpwrap textarea {
+  transition: border-color .15s, box-shadow .15s;
+}
+#wpwrap input[type="text"]:focus,
+#wpwrap input[type="email"]:focus,
+#wpwrap input[type="number"]:focus,
+#wpwrap input[type="password"]:focus,
+#wpwrap select:focus,
+#wpwrap textarea:focus {
+  border-color: #7c6ef5 !important;
+  box-shadow: 0 0 0 2px rgba(124,110,245,.15) !important;
+  outline: none;
+}
+
+/* ── Toggle switch ──────────────────────────────────────────────────────── */
+.fxsim-toggle-track { transition: background .2s ease; }
+
+/* ── Health status color ────────────────────────────────────────────────── */
+.fxsim-health-detail { animation: admin-fadein .3s ease; }
+
+/* ── Responsive admin ────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .fxsim-analytics-row { grid-template-columns: 1fr; }
+  .fxsim-analytics-kpis { gap: 10px; }
+}
+
+/* ── Explicit light background for native WP elements OUTSIDE .fxsim-admin ── */
+/* Prevents any inherited dark vars from affecting WP menus, notices, etc.     */
+#wpcontent,
+#wpbody-content,
+.wp-header-end,
+.notice,
+.update-nag {
+  background-color: transparent;
+  color: inherit;
+}
+
+/* Ensure .fxsim-admin content areas get dark background */
+.fxsim-admin,
+.wrap.fxsim-admin {
+  background: var(--a-bg);
+  min-height: 200px;
+  padding: 20px;
+  border-radius: var(--a-r);
+}
+
+/* Fix: WP list tables inside fxsim-admin keep dark theme */
+.fxsim-admin .wp-list-table,
+.fxsim-admin .wp-list-table th,
+.fxsim-admin .wp-list-table td {
+  background-color: var(--a-card) !important;
+  color: var(--a-text) !important;
+  border-color: var(--a-border) !important;
+}
+.fxsim-admin .wp-list-table th {
+  background-color: var(--a-card2) !important;
+  color: var(--a-text-dim) !important;
+}
+.fxsim-admin .wp-list-table.striped tbody tr:nth-child(odd) td {
+  background-color: var(--a-bg2) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  PHASE 8 — Admin UI Consistency                                           */
+/*  Overrides hardcoded inline-style whites/greys on whitelabel + settings   */
+/*  pages so they blend with the dark admin theme. CSS-only, no PHP changes. */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light-mode "card" containers embedded in dark pages ─────────────────── */
+/* settings.php and whitelabel.php use style="background:#fff;border:1px solid #ddd" */
+/* We override these inside .fxsim-admin to match the dark card palette.      */
+.fxsim-admin div[style*="background:#fff"],
+.fxsim-admin div[style*="background: #fff"],
+.fxsim-admin div[style*="background:white"] {
+  background: var(--a-card) !important;
+  border-color: var(--a-border) !important;
+  color: var(--a-text) !important;
+}
+
+/* Inline code blocks inside settings cards */
+.fxsim-admin code {
+  background: var(--a-bg2) !important;
+  color: var(--a-accent) !important;
+  border: 1px solid var(--a-border) !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--a-mono);
+  font-size: 12px;
+}
+
+/* Inline <pre>-style code blocks (cron command) */
+.fxsim-admin code[style*="display:block"],
+.fxsim-admin code[style*="display: block"] {
+  display: block !important;
+  background: var(--a-bg) !important;
+  color: var(--a-green) !important;
+  border: 1px solid var(--a-border) !important;
+  padding: 10px 14px !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+/* Description / muted text that was hardcoded #666 or #888 */
+.fxsim-admin p[style*="color:#666"],
+.fxsim-admin p[style*="color: #666"],
+.fxsim-admin p[style*="color:#888"],
+.fxsim-admin p[style*="color: #888"],
+.fxsim-admin span[style*="color:#888"],
+.fxsim-admin span[style*="color: #888"] {
+  color: var(--a-text-dim) !important;
+}
+
+/* Stripe / info banner (was #fff3cd yellow) — restyle as dark accent notice */
+.fxsim-admin div[style*="background:#fff3cd"],
+.fxsim-admin div[style*="background: #fff3cd"] {
+  background: rgba(108,99,255,.1) !important;
+  border-color: rgba(108,99,255,.35) !important;
+  color: var(--a-text) !important;
+  border-radius: var(--a-r) !important;
+}
+.fxsim-admin div[style*="background:#fff3cd"] strong,
+.fxsim-admin div[style*="background: #fff3cd"] strong {
+  color: var(--a-accent) !important;
+}
+
+/* Inline table inside settings cards */
+.fxsim-admin table[style*="width:100%"] td,
+.fxsim-admin table[style*="width: 100%"] td {
+  color: var(--a-text) !important;
+  border-color: var(--a-border) !important;
+}
+
+/* form-table headings (<th>) */
+.fxsim-admin .form-table th {
+  color: var(--a-text-dim) !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* .description paragraphs */
+.fxsim-admin p.description,
+.fxsim-admin .description {
+  color: var(--a-text-dim) !important;
+  font-size: 13px;
+}
+
+/* ── Section headings — unified style ────────────────────────────────────── */
+.fxsim-admin h2 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--a-text) !important;
+  border-bottom: 1px solid var(--a-border) !important;
+  padding-bottom: 10px !important;
+  margin-top: 28px !important;
+  margin-bottom: 16px !important;
+  letter-spacing: -.2px;
+}
+.fxsim-admin h2:first-of-type { margin-top: 8px !important; }
+
+/* h2 emoji prefix gets accent color */
+.fxsim-admin h2:first-child { margin-top: 0 !important; }
+
+/* ── Unified settings card wrapper ───────────────────────────────────────── */
+/* Applied via CSS — any div directly inside .fxsim-admin with a style border */
+.fxsim-admin .fxsim-settings-card {
+  background: var(--a-card);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-r);
+  padding: 20px 24px;
+  max-width: 680px;
+  margin-bottom: 20px;
+  transition: border-color .2s;
+}
+.fxsim-admin .fxsim-settings-card:hover { border-color: var(--a-border2); }
+
+/* ── Admin day/night toggle button ───────────────────────────────────────── */
+#fxsim-admin-theme-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: var(--a-card);
+  border: 1px solid var(--a-border);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.5);
+  transition: all .2s;
+  color: var(--a-text);
+}
+#fxsim-admin-theme-btn:hover {
+  border-color: var(--a-accent);
+  box-shadow: 0 4px 20px var(--a-accent-glow);
+  transform: scale(1.08);
+}
+
+/* ── Admin light mode — data-theme="light" on <body.fxsim-admin-light> ───── */
+body.fxsim-admin-light .fxsim-admin,
+body.fxsim-admin-light .wrap.fxsim-admin,
+body.fxsim-admin-light #fxsim-stats-grid,
+body.fxsim-admin-light #fxsim-health-grid,
+body.fxsim-admin-light #fxsim-mt5-modal {
+  --a-bg:          #f4f7fc;
+  --a-bg2:         #edf1f8;
+  --a-card:        #ffffff;
+  --a-card2:       #f0f4fb;
+  --a-border:      #d0d8e8;
+  --a-border2:     #b8c5da;
+  --a-text:        #1a2540;
+  --a-text-dim:    #4a5a78;
+  --a-text-muted:  #8a9ab8;
+  --a-accent:      #6c63ff;
+  --a-accent2:     #4f46e5;
+  --a-accent-dim:  rgba(108,99,255,.1);
+  --a-accent-glow: rgba(108,99,255,.22);
+  --a-shadow:      0 4px 24px rgba(100,120,180,.12);
+}
+body.fxsim-admin-light #fxsim-admin-theme-btn { background: #fff; border-color: #d0d8e8; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  v8.2 — Admin UI Residual Polish                                          */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light-mode: ensure code/pre blocks invert correctly ─────────────────── */
+body.fxsim-admin-light .fxsim-admin code {
+  background: var(--a-bg2) !important;
+  color: var(--a-accent) !important;
+  border-color: var(--a-border) !important;
+}
+body.fxsim-admin-light .fxsim-admin code[style*="display:block"],
+body.fxsim-admin-light .fxsim-admin code[style*="display: block"] {
+  background: var(--a-bg) !important;
+  color: var(--a-accent2) !important;
+  border-color: var(--a-border) !important;
+}
+
+/* ── Light-mode: WP list table rows ──────────────────────────────────────── */
+body.fxsim-admin-light .fxsim-admin .wp-list-table,
+body.fxsim-admin-light .fxsim-admin .wp-list-table th,
+body.fxsim-admin-light .fxsim-admin .wp-list-table td {
+  background-color: var(--a-card) !important;
+  color: var(--a-text) !important;
+  border-color: var(--a-border) !important;
+}
+body.fxsim-admin-light .fxsim-admin .wp-list-table th {
+  background-color: var(--a-card2) !important;
+  color: var(--a-text-dim) !important;
+}
+body.fxsim-admin-light .fxsim-admin .wp-list-table.striped tbody tr:nth-child(odd) td {
+  background-color: var(--a-bg2) !important;
+}
+
+/* ── Consistent spacing for all admin section wrappers ───────────────────── */
+.fxsim-admin > h2:not(:first-child),
+.wrap.fxsim-admin > h2:not(:first-child) {
+  margin-top: 32px !important;
+}
+
+/* ── Admin stat card label readability ───────────────────────────────────── */
+.fxsim-stat-card .fxsim-stat-val  { color: var(--a-text)     !important; }
+.fxsim-stat-card .fxsim-stat-key  { color: var(--a-text-dim) !important; }
+
+/* ── Responsive admin grid adjustments ───────────────────────────────────── */
+@media (max-width: 782px) {
+  /* WP stacks meta boxes at <782px; ensure our grids do too */
+  .fxsim-admin-stats            { grid-template-columns: repeat(2, 1fr) !important; }
+  .fxsim-analytics-kpis         { flex-direction: column; }
+  .fxsim-analytics-row          { grid-template-columns: 1fr; }
+  .fxsim-akpi                   { min-width: unset; }
+}
+@media (max-width: 480px) {
+  .fxsim-admin-stats            { grid-template-columns: 1fr !important; }
+}

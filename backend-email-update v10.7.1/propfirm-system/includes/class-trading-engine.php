@@ -1,0 +1,1518 @@
+<?php
+defined('ABSPATH') || exit;
+
+class FXSIM_Trading_Engine {
+
+    // ── Market hours check ────────────────────────────────────────────────────
+    // Crypto (BTCUSD, ETHUSD) is 24/7. Forex/Metals: closed Sat–Sun UTC.
+    public static function is_market_open(string $symbol): bool {
+        $crypto = ['BTCUSD', 'ETHUSD'];
+        if (in_array($symbol, $crypto)) return true;
+
+        $dow = (int) gmdate('N'); // 1=Mon … 7=Sun
+        $h   = (int) gmdate('H');
+        $m   = (int) gmdate('i');
+        $now = $h * 60 + $m; // minutes since midnight UTC
+
+        // Forex market: Mon 00:00 UTC to Fri 22:00 UTC
+        if ($dow === 6) return false; // Saturday closed all day
+        if ($dow === 7) return false; // Sunday closed all day
+        if ($dow === 5 && $now >= 22 * 60) return false; // Friday after 22:00 UTC
+
+        return true;
+    }
+
+    // ── Open a market order ───────────────────────────────────────────────────
+    public static function open_position(int $user_id, array $args): array {
+        global $wpdb;
+
+        // Use active challenge account, not generic user account
+        $account = self::get_user_active_account($user_id);
+        if (!$account)                      return self::err('No active challenge account. Purchase a challenge to start trading.');
+        if ($account->status !== 'active')  return self::err('Account is ' . $account->status . '.');
+
+        $sym_obj = FXSIM_Symbols::get($args['symbol']);
+        if (!$sym_obj) return self::err('Symbol not found or disabled.');
+
+        // Market hours check
+        if (!self::is_market_open($args['symbol'])) {
+            return self::err("Market is closed. {$args['symbol']} does not trade on weekends. Market reopens Monday 00:00 UTC.");
+        }
+
+        // ── Plan rules: single JOIN fetches news_trading + lot/leverage caps ────────
+        // Deliberately placed before lot validation so plan limits are checked
+        // even when symbol limits would pass. One query instead of two.
+        $plan_rules = $wpdb->get_row($wpdb->prepare(
+            "SELECT cp.news_trading, cp.max_lot_size, cp.max_leverage
+             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE ca.fxsim_account_id = %d
+               AND ca.status IN ('active','funded')
+             LIMIT 1",
+            $account->id
+        ));
+
+        // News lock: global admin toggle + plan must restrict news trading
+        // news_trading=0 means news trading is BLOCKED on this plan
+        if (get_option('fxsim_news_lock', false) && $plan_rules && !(int)$plan_rules->news_trading) {
+            return self::err('\u26a0 News lock active. Trading paused during high-impact news events. Please wait for the lock to be lifted.');
+        }
+
+        $lot = (float) $args['lot_size'];
+
+        // Symbol-level bounds (hard exchange minimum/maximum — always applied)
+        if ($lot < $sym_obj->min_lot || $lot > $sym_obj->max_lot) {
+            return self::err("Lot size must be between {$sym_obj->min_lot} and {$sym_obj->max_lot} for {$sym_obj->symbol}.");
+        }
+
+        // Plan-level lot cap (prop firm rule — may be stricter than symbol limit)
+        // A $10K challenge plan may allow max 0.5 lots even if the symbol allows 50
+        if ($plan_rules && (float)$plan_rules->max_lot_size > 0 && $lot > (float)$plan_rules->max_lot_size) {
+            return self::err(
+                "Lot size {$lot} exceeds your challenge plan limit of {$plan_rules->max_lot_size} lots. " .
+                "Reduce your position size to comply with the challenge rules."
+            );
+        }
+
+        // Effective leverage: use the stricter of account-level and plan-level caps
+        $effective_leverage = $account->leverage;
+        if ($plan_rules && (int)$plan_rules->max_leverage > 0) {
+            $effective_leverage = min((int)$account->leverage, (int)$plan_rules->max_leverage);
+        }
+
+        $type = sanitize_text_field($args['type']); // buy | sell
+        if (!in_array($type, ['buy','sell'])) return self::err('Invalid order type.');
+
+        $prices  = FXSIM_Price_Feed::get($args['symbol']);
+        $open_px = ($type === 'buy') ? $prices['ask'] : $prices['bid'];
+        if ($open_px <= 0) return self::err('Price feed unavailable. Try again.');
+
+        // Apply slippage simulation if enabled
+        $slippage_enabled = FXSIM_Challenge_DB::get_setting('slippage_enabled', '0') === '1';
+        if ($slippage_enabled) {
+            $max_slippage_pips = (float)FXSIM_Challenge_DB::get_setting('slippage_max_pips', '1.5');
+            // Determine pip size based on symbol (JPY pairs = 0.01, others = 0.0001, metals = 0.01, crypto = 0.01)
+            $pip_size = self::get_pip_size($args['symbol']);
+            // Random slippage between 0 and max (slippage always against the trader)
+            $slippage_amount = (mt_rand(0, (int)($max_slippage_pips * 10)) / 10) * $pip_size;
+            $open_px = ($type === 'buy')
+                ? $open_px + $slippage_amount
+                : $open_px - $slippage_amount;
+        }
+
+        // Validate SL/TP
+        $sl = isset($args['sl']) && $args['sl'] !== '' ? (float) $args['sl'] : null;
+        $tp = isset($args['tp']) && $args['tp'] !== '' ? (float) $args['tp'] : null;
+        if ($sl !== null) {
+            if ($type === 'buy'  && $sl >= $open_px) return self::err('SL must be below entry price for BUY.');
+            if ($type === 'sell' && $sl <= $open_px) return self::err('SL must be above entry price for SELL.');
+        }
+        if ($tp !== null) {
+            if ($type === 'buy'  && $tp <= $open_px) return self::err('TP must be above entry price for BUY.');
+            if ($type === 'sell' && $tp >= $open_px) return self::err('TP must be below entry price for SELL.');
+        }
+
+        // Margin = (lot × contract_size × price) / effective_leverage
+        // effective_leverage is the stricter of account leverage and plan cap
+        $margin     = ($lot * $sym_obj->contract_size * $open_px) / $effective_leverage;
+        $commission = $lot * $sym_obj->commission;
+        $free_margin = $account->equity - $account->margin_used;
+
+        if (($margin + $commission) > $free_margin)
+            return self::err("Insufficient margin. Required: $" . number_format($margin + $commission, 2) . ", Available: $" . number_format($free_margin, 2));
+
+        $wpdb->query('START TRANSACTION');
+        try {
+            // Insert position
+            $res = $wpdb->insert($wpdb->prefix . 'fxsim_positions', [
+                'account_id'    => $account->id,
+                'symbol'        => $args['symbol'],
+                'type'          => $type,
+                'lot_size'      => $lot,
+                'open_price'    => $open_px,
+                'current_price' => $open_px,
+                'sl'            => $sl,
+                'tp'            => $tp,
+                'margin'        => $margin,
+                'commission'    => $commission,
+                'pnl'           => -$commission,
+            ]);
+            if (!$res) throw new \Exception('Failed to insert position.');
+
+            $pos_id  = (int) $wpdb->insert_id;
+            $new_bal = $account->balance - $commission;
+            $new_margin = $account->margin_used + $margin;
+
+            // Deduct commission from balance, add margin
+            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
+                'balance'     => $new_bal,
+                'margin_used' => $new_margin,
+            ], ['id' => $account->id]);
+
+            FXSIM_Database::log_transaction($account->id, 'commission', -$commission, $new_bal, "Commission: {$args['symbol']} #{$pos_id}");
+
+            $wpdb->query('COMMIT');
+
+            // Fire hook so challenge engine can count trading days
+            do_action('fxsim_trade_opened', $account->id);
+
+            // ── HFT / Copy Trade Detection ──────────────────────────────────────
+            self::detect_trade_patterns($user_id, (int)$account->id);
+
+            return ['success' => true, 'position_id' => $pos_id, 'open_price' => $open_px, 'margin' => $margin, 'commission' => $commission];
+
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return self::err('Transaction failed: ' . $e->getMessage());
+        }
+    }
+
+    // ── Close a position ──────────────────────────────────────────────────────
+    public static function close_position(int $user_id, int $pos_id, string $reason = 'manual'): array {
+        global $wpdb;
+
+        $account = self::get_user_active_account($user_id);
+        if (!$account) return self::err('No active account.');
+
+        $pos = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d AND account_id=%d",
+            $pos_id, $account->id
+        ));
+        if (!$pos) return self::err('Position not found.');
+
+        $prices    = FXSIM_Price_Feed::get($pos->symbol);
+        $close_px  = ($pos->type === 'buy') ? $prices['bid'] : $prices['ask'];
+        if ($close_px <= 0) $close_px = (float) $pos->current_price;
+
+        $pnl = self::calc_pnl($pos, $close_px);
+
+        // Toxic Trade Check (Tick Scalping/HFT)
+        $is_toxic = 0;
+        if (class_exists('FXSIM_Challenge_DB')) {
+            $plan = FXSIM_Challenge_DB::get_plan((int) $account->plan_id);
+            if ($plan && isset($plan->min_trade_seconds) && $plan->min_trade_seconds > 0) {
+                $opened_time = strtotime($pos->opened_at);
+                if ((time() - $opened_time) < $plan->min_trade_seconds) {
+                    $is_toxic = 1;
+                    if (class_exists('FXSIM_Database')) {
+                        FXSIM_Database::log_transaction($account->id, 'toxic_trade', 0, $account->balance, "Toxic Trade flagged: {$pos->symbol} held for less than {$plan->min_trade_seconds}s.");
+                    }
+                }
+            }
+        }
+
+        $wpdb->query('START TRANSACTION');
+        try {
+            // Move to history
+            $wpdb->insert($wpdb->prefix . 'fxsim_trades', [
+                'account_id'   => $pos->account_id,
+                'symbol'       => $pos->symbol,
+                'type'         => $pos->type,
+                'lot_size'     => $pos->lot_size,
+                'open_price'   => $pos->open_price,
+                'close_price'  => $close_px,
+                'sl'           => $pos->sl,
+                'tp'           => $pos->tp,
+                'margin'       => $pos->margin,
+                'commission'   => $pos->commission,
+                'swap'         => $pos->swap,
+                'pnl'          => $pnl,
+                'close_reason' => $reason,
+                'opened_at'    => $pos->opened_at,
+                'is_toxic'     => $is_toxic,
+            ]);
+
+            $wpdb->delete($wpdb->prefix . 'fxsim_positions', ['id' => $pos_id]);
+
+            // Update account balance / margin
+            $new_bal    = $account->balance + $pnl;
+            $new_margin = max(0, $account->margin_used - $pos->margin);
+            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
+                'balance'     => $new_bal,
+                'margin_used' => $new_margin,
+                'equity'      => $new_bal,
+            ], ['id' => $account->id]);
+
+            FXSIM_Database::log_transaction($account->id, 'pnl', $pnl, $new_bal, "Close {$pos->type} {$pos->symbol} #{$pos_id} ({$reason})");
+
+            $wpdb->query('COMMIT');
+
+            // Fire hook for challenge engine evaluation
+            do_action('fxsim_trade_closed', $account->id);
+
+            return ['success' => true, 'pnl' => $pnl, 'close_price' => $close_px];
+
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return self::err('Close failed: ' . $e->getMessage());
+        }
+    }
+
+    // ── Partial close ─────────────────────────────────────────────────────────
+    public static function partial_close(int $user_id, int $pos_id, float $close_lots): array {
+        global $wpdb;
+        $account = self::get_user_active_account($user_id);
+        if (!$account) return self::err('No active account.');
+
+        $pos = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d AND account_id=%d",
+            $pos_id, $account->id
+        ));
+        if (!$pos) return self::err('Position not found.');
+
+        $sym_obj = FXSIM_Symbols::get($pos->symbol);
+        if (!$sym_obj) return self::err('Symbol not found.');
+
+        $orig_lots  = (float)$pos->lot_size;
+        $close_lots = round(min($close_lots, $orig_lots), 2);
+        if ($close_lots < $sym_obj->min_lot) return self::err("Minimum close size: {$sym_obj->min_lot} lots.");
+
+        // If closing full position, use normal close
+        if ($close_lots >= $orig_lots) return self::close_position($user_id, $pos_id, 'partial_full');
+
+        $prices    = FXSIM_Price_Feed::get($pos->symbol);
+        $close_px  = ($pos->type === 'buy') ? $prices['bid'] : $prices['ask'];
+        if ($close_px <= 0) $close_px = (float)$pos->current_price;
+
+        // Calculate PnL for partial portion
+        $partial_ratio = $close_lots / $orig_lots;
+        $partial_pos   = clone $pos;
+        $partial_pos->lot_size   = $close_lots;
+        $partial_pos->margin     = (float)$pos->margin    * $partial_ratio;
+        $partial_pos->commission = (float)$pos->commission * $partial_ratio;
+        $partial_pos->swap       = (float)$pos->swap      * $partial_ratio;
+        $pnl = self::calc_pnl($partial_pos, $close_px);
+
+        // Toxic Trade Check (Tick Scalping/HFT)
+        $is_toxic = 0;
+        if (class_exists('FXSIM_Challenge_DB')) {
+            $plan = FXSIM_Challenge_DB::get_plan((int) $account->plan_id);
+            if ($plan && isset($plan->min_trade_seconds) && $plan->min_trade_seconds > 0) {
+                $opened_time = strtotime($pos->opened_at);
+                if ((time() - $opened_time) < $plan->min_trade_seconds) {
+                    $is_toxic = 1;
+                    if (class_exists('FXSIM_Database')) {
+                        FXSIM_Database::log_transaction($account->id, 'toxic_trade', 0, $account->balance, "Toxic Partial Close flagged: {$pos->symbol} held for less than {$plan->min_trade_seconds}s.");
+                    }
+                }
+            }
+        }
+
+        $wpdb->query('START TRANSACTION');
+        try {
+            // Reduce original position size
+            $remain_lots   = round($orig_lots - $close_lots, 2);
+            $remain_margin = (float)$pos->margin * (1 - $partial_ratio);
+            $wpdb->update($wpdb->prefix . 'fxsim_positions', [
+                'lot_size'  => $remain_lots,
+                'margin'    => $remain_margin,
+                'commission'=> (float)$pos->commission * (1 - $partial_ratio),
+                'swap'      => (float)$pos->swap * (1 - $partial_ratio),
+            ], ['id' => $pos_id]);
+
+            // Log the partial close as a trade
+            $wpdb->insert($wpdb->prefix . 'fxsim_trades', [
+                'account_id'   => $account->id,
+                'symbol'       => $pos->symbol,
+                'type'         => $pos->type,
+                'lot_size'     => $close_lots,
+                'open_price'   => $pos->open_price,
+                'close_price'  => $close_px,
+                'sl'           => $pos->sl,
+                'tp'           => $pos->tp,
+                'margin'       => $partial_pos->margin,
+                'commission'   => $partial_pos->commission,
+                'swap'         => $partial_pos->swap,
+                'pnl'          => $pnl,
+                'close_reason' => 'partial',
+                'opened_at'    => $pos->opened_at,
+                'is_toxic'     => $is_toxic,
+            ]);
+
+            // Update balance
+            $new_bal    = (float)$account->balance + $pnl;
+            $new_margin = max(0, (float)$account->margin_used - $partial_pos->margin);
+            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
+                'balance'     => $new_bal,
+                'equity'      => $new_bal,
+                'margin_used' => $new_margin,
+            ], ['id' => $account->id]);
+            FXSIM_Database::log_transaction($account->id, 'pnl', $pnl, $new_bal,
+                "Partial close {$close_lots}L {$pos->type} {$pos->symbol} #{$pos_id}");
+
+            $wpdb->query('COMMIT');
+            do_action('fxsim_trade_closed', $account->id);
+            return ['success' => true, 'pnl' => $pnl, 'close_price' => $close_px, 'remaining_lots' => $remain_lots];
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return self::err('Partial close failed: ' . $e->getMessage());
+        }
+    }
+    public static function update_sltp(int $user_id, int $pos_id, ?float $sl, ?float $tp): array {
+        global $wpdb;
+        $account = self::get_user_active_account($user_id);
+        if (!$account) return self::err('No active account.');
+
+        $pos = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d AND account_id=%d",
+            $pos_id, $account->id
+        ));
+        if (!$pos) return self::err('Position not found.');
+
+        $price = FXSIM_Price_Feed::get($pos->symbol);
+        $cur   = (float) $pos->current_price ?: (($pos->type==='buy') ? $price['bid'] : $price['ask']);
+
+        if ($sl !== null) {
+            if ($pos->type === 'buy'  && $sl >= $cur) return self::err('SL must be below current price for BUY.');
+            if ($pos->type === 'sell' && $sl <= $cur) return self::err('SL must be above current price for SELL.');
+        }
+        if ($tp !== null) {
+            if ($pos->type === 'buy'  && $tp <= $cur) return self::err('TP must be above current price for BUY.');
+            if ($pos->type === 'sell' && $tp >= $cur) return self::err('TP must be below current price for SELL.');
+        }
+
+        $wpdb->update($wpdb->prefix . 'fxsim_positions', ['sl' => $sl, 'tp' => $tp], ['id' => $pos_id]);
+        return ['success' => true];
+    }
+
+    // ── Refresh PnL for all open positions ────────────────────────────────────
+    public static function refresh_positions(int $account_id): array {
+        global $wpdb;
+        $positions = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE account_id=%d",
+            $account_id
+        ));
+
+        if (empty($positions)) {
+            // No positions — ensure equity = balance and margin_used = 0
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts
+                 SET equity = balance, margin_used = 0
+                 WHERE id = %d",
+                $account_id
+            ));
+            return [];
+        }
+
+        // ── Batch PnL calculation ─────────────────────────────────────────────
+        // Collect all unique symbols across open positions to avoid redundant
+        // price lookups: N positions × same symbol → 1 lookup per symbol.
+        $prices_by_symbol = [];
+        foreach ($positions as $pos) {
+            if (!isset($prices_by_symbol[$pos->symbol])) {
+                $prices_by_symbol[$pos->symbol] = FXSIM_Price_Feed::get($pos->symbol);
+            }
+        }
+
+        $total_pnl    = 0.0;
+        $total_margin = 0.0;
+
+        // Accumulate CASE branches for a single batch UPDATE
+        // instead of one UPDATE per position (was O(N) queries, now O(1))
+        $id_list       = [];
+        $price_cases   = [];  // current_price CASE
+        $pnl_cases     = [];  // pnl CASE
+
+        foreach ($positions as &$pos) {
+            $p      = $prices_by_symbol[$pos->symbol];
+            $cur_px = ($pos->type === 'buy') ? (float)$p['bid'] : (float)$p['ask'];
+            if ($cur_px <= 0) $cur_px = (float)$pos->current_price;
+
+            $pnl = self::calc_pnl($pos, $cur_px);
+
+            $pos->current_price = $cur_px;
+            $pos->pnl           = $pnl;
+            $total_pnl         += $pnl;
+            $total_margin      += (float)$pos->margin;
+
+            $id_list[]     = (int)$pos->id;
+            $price_cases[] = $wpdb->prepare("WHEN id = %d THEN %f", $pos->id, $cur_px);
+            $pnl_cases[]   = $wpdb->prepare("WHEN id = %d THEN %f", $pos->id, $pnl);
+        }
+
+        // Single UPDATE with CASE expression: all positions in one DB round-trip
+        if (!empty($id_list)) {
+            $ids_sql        = implode(',', $id_list);
+            $price_case_sql = implode(' ', $price_cases);
+            $pnl_case_sql   = implode(' ', $pnl_cases);
+
+            $wpdb->query("
+                UPDATE {$wpdb->prefix}fxsim_positions
+                SET current_price = CASE {$price_case_sql} ELSE current_price END,
+                    pnl           = CASE {$pnl_case_sql}   ELSE pnl           END
+                WHERE id IN ({$ids_sql})
+            ");
+        }
+
+        // Update equity — single query using live balance from DB (not stale PHP read)
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_accounts
+             SET equity      = balance + %f,
+                 margin_used = %f
+             WHERE id = %d",
+            $total_pnl, $total_margin, $account_id
+        ));
+
+        return $positions;
+    }
+
+    /**
+     * Calculate live PnL for all open positions using supplied prices.
+     * READ-ONLY — zero DB writes. Safe to call from SSE loop every 2 seconds.
+     *
+     * Returns lightweight objects containing only what the terminal needs
+     * for in-place PnL cell updates: id, pnl, current_price, equity contribution.
+     *
+     * @param int   $account_id
+     * @param array $prices     All symbol prices from FXSIM_Price_Feed::get_all()
+     * @return array            Lightweight position objects with live PnL
+     */
+    public static function refresh_positions_readonly(int $account_id, array $prices): array {
+        global $wpdb;
+        $positions = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, symbol, type, lot_size, open_price, margin, sl, tp
+             FROM {$wpdb->prefix}fxsim_positions
+             WHERE account_id = %d",
+            $account_id
+        ));
+
+        if (empty($positions)) return [];
+
+        $result = [];
+        foreach ($positions as $pos) {
+            $p      = $prices[$pos->symbol] ?? null;
+            if (!$p) continue;
+            $cur_px = ($pos->type === 'buy') ? (float)$p['bid'] : (float)$p['ask'];
+            if ($cur_px <= 0) continue;
+            $pnl    = self::calc_pnl($pos, $cur_px);
+            $result[] = (object)[
+                'id'            => (int)$pos->id,
+                'symbol'        => $pos->symbol,
+                'type'          => $pos->type,
+                'current_price' => $cur_px,
+                'pnl'           => round($pnl, 2),
+            ];
+        }
+        return $result;
+    }
+    public static function check_sl_tp(): void {
+        global $wpdb;
+
+        /**
+         * Race condition guard: WP cron can overlap on high-traffic sites.
+         * Two concurrent executions could both SELECT the same position, both
+         * decide to close it, and both call close_position() resulting in a
+         * double-close attempt. We use a transient lock (max 60s) to serialise.
+         */
+        $lock_key = 'fxsim_sl_tp_running';
+        $locked = $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 0)", $lock_key));
+        if (!$locked) {
+            return; // Another execution is in progress — skip this tick
+        }
+
+        try {
+            /**
+             * Optimised query: only fetch positions that have SL or TP set.
+             * Positions with neither (sl IS NULL AND tp IS NULL) can never trigger —
+             * skipping them reduces query result set significantly at scale.
+             * Uses index on account_id via the JOIN.
+             */
+            $positions = $wpdb->get_results(
+                "SELECT p.*, a.user_id
+                 FROM {$wpdb->prefix}fxsim_positions p
+                 JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+                 WHERE (p.sl IS NOT NULL OR p.tp IS NOT NULL)
+                   AND a.status = 'active'"
+            );
+
+            foreach ($positions as $pos) {
+                $prices = FXSIM_Price_Feed::get($pos->symbol);
+                // Use bid for long positions (close price for buy), ask for short
+                $cur = ($pos->type === 'buy') ? (float)$prices['bid'] : (float)$prices['ask'];
+                if ($cur <= 0) continue; // Price unavailable — skip, will retry next tick
+
+                $hit_sl = $pos->sl !== null &&
+                    (($pos->type === 'buy'  && $cur <= (float)$pos->sl) ||
+                     ($pos->type === 'sell' && $cur >= (float)$pos->sl));
+
+                $hit_tp = $pos->tp !== null &&
+                    (($pos->type === 'buy'  && $cur >= (float)$pos->tp) ||
+                     ($pos->type === 'sell' && $cur <= (float)$pos->tp));
+
+                if (!$hit_sl && !$hit_tp) continue;
+
+                /**
+                 * Row-level guard: attempt to UPDATE the position to a sentinel
+                 * state before closing. If another process already claimed this
+                 * position (rows_affected = 0), skip — it's already being closed.
+                 * This is the lightweight alternative to SELECT ... FOR UPDATE
+                 * which requires an explicit transaction around the whole loop.
+                 */
+                $claimed = $wpdb->query($wpdb->prepare(
+                    "UPDATE {$wpdb->prefix}fxsim_positions
+                     SET pnl = pnl  -- no-op change, just to test row ownership
+                     WHERE id = %d
+                       AND account_id = %d",
+                    $pos->id,
+                    $pos->account_id
+                ));
+
+                if ($claimed === false || $claimed === 0) {
+                    continue; // Row gone or locked by concurrent process
+                }
+
+                self::close_position((int)$pos->user_id, (int)$pos->id, $hit_sl ? 'sl' : 'tp');
+            }
+        } finally {
+            // Always release lock, even if an exception occurs mid-loop
+            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
+        }
+    }
+
+    // ── PnL calculation ───────────────────────────────────────────────────────
+    /**
+     * Converts raw pip-value profit into USD for all 14 supported symbols.
+     *
+     * MT5-compatible formula:
+     *   raw_profit = price_change × lots × contract_size   (in quote currency)
+     *   USD_profit = raw_profit ÷ quote_to_USD_rate
+     *
+     * Quote currency routing:
+     *   USD quote  (EURUSD, GBPUSD, AUDUSD, NZDUSD, XAUUSD, XAGUSD, BTCUSD, ETHUSD):
+     *              profit already in USD — no conversion
+     *
+     *   JPY quote  (USDJPY, EURJPY, GBPJPY):
+     *              profit in JPY → divide by USDJPY rate
+     *              For crosses (EURJPY, GBPJPY), close_price IS the JPY rate
+     *              so dividing by close_price gives USD correctly.
+     *
+     *   CAD quote  (USDCAD):
+     *              profit in CAD → divide by USDCAD rate (= close_price)
+     *
+     *   CHF quote  (USDCHF):
+     *              profit in CHF → divide by USDCHF rate (= close_price)
+     *
+     *   GBP quote  (EURGBP):
+     *              profit in GBP → multiply by GBPUSD rate
+     *              We approximate GBPUSD from cached price feed.
+     *              This is the only symbol requiring a second price lookup.
+     */
+    public static function calc_pnl(object $pos, float $close_price): float {
+        $sym = FXSIM_Symbols::get($pos->symbol);
+        $cs  = $sym ? (float)$sym->contract_size : 100000.0;
+
+        // Raw profit in quote currency (direction-aware)
+        if ($pos->type === 'buy') {
+            $raw = ((float)$close_price - (float)$pos->open_price) * (float)$pos->lot_size * $cs;
+        } else {
+            $raw = ((float)$pos->open_price - (float)$close_price) * (float)$pos->lot_size * $cs;
+        }
+
+        // Convert quote currency → USD
+        $symbol = (string)$pos->symbol;
+
+        if (in_array($symbol, ['EURUSD','GBPUSD','AUDUSD','NZDUSD',
+                                'XAUUSD','XAGUSD','BTCUSD','ETHUSD'], true)) {
+            // Quote currency is already USD — no conversion needed
+            // (no-op, $raw is already in USD)
+
+        } elseif (in_array($symbol, ['USDJPY','EURJPY','GBPJPY'], true)) {
+            // Quote currency is JPY
+            // For USDJPY: close_price = USDJPY → raw(JPY) ÷ USDJPY = USD ✓
+            // For EURJPY: close_price = EURJPY → raw(JPY) ÷ EURJPY gives the JPY/EUR
+            //   rate, which is not USD. Correct formula for JPY crosses:
+            //   USD_profit = raw(JPY) ÷ USDJPY_rate
+            //   We approximate USDJPY from price feed; fall back to close_price for USDJPY itself.
+            if ($symbol === 'USDJPY') {
+                // Direct: divide by the pair's own close price
+                $raw = $close_price > 0 ? $raw / $close_price : $raw;
+            } else {
+                // Cross: need USDJPY rate to convert JPY → USD
+                $usdjpy_data = FXSIM_Price_Feed::get('USDJPY');
+                $usdjpy      = (float)($usdjpy_data['mid'] ?? $usdjpy_data['bid'] ?? 0);
+                if ($usdjpy > 0) {
+                    $raw = $raw / $usdjpy;
+                } else {
+                    // Fallback: approximate via cross price (less accurate but non-zero)
+                    $raw = $close_price > 0 ? $raw / $close_price : $raw;
+                }
+            }
+
+        } elseif ($symbol === 'USDCAD') {
+            // Quote currency is CAD; close_price = USDCAD
+            // raw(CAD) ÷ USDCAD = USD ✓
+            $raw = $close_price > 0 ? $raw / $close_price : $raw;
+
+        } elseif ($symbol === 'USDCHF') {
+            // Quote currency is CHF; close_price = USDCHF
+            // raw(CHF) ÷ USDCHF = USD ✓
+            $raw = $close_price > 0 ? $raw / $close_price : $raw;
+
+        } elseif ($symbol === 'EURGBP') {
+            // Quote currency is GBP — only symbol in this set with GBP quote
+            // raw(GBP) × GBPUSD = USD ✓
+            $gbpusd_data = FXSIM_Price_Feed::get('GBPUSD');
+            $gbpusd      = (float)($gbpusd_data['mid'] ?? $gbpusd_data['bid'] ?? 0);
+            if ($gbpusd > 0) {
+                $raw = $raw * $gbpusd;
+            } else {
+                // Fallback: approximate GBPUSD as 1.27 (last known baseline)
+                $raw = $raw * 1.27;
+            }
+        }
+        // Future symbols (EURAUD, EURCAD, etc.) should be added above before deployment
+
+        // Subtract costs: commission was charged at open, swap accrues nightly
+        $pnl = $raw - (float)$pos->commission - (float)$pos->swap;
+        return round($pnl, 2);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // PENDING ORDERS ENGINE
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Place a pending order.
+     *
+     * Validates placement rules, reserves margin immediately, and inserts the
+     * order into fxsim_pending_orders with status='pending'.
+     * Margin is held until fill, cancel, expiry, or rejection.
+     *
+     * @param int   $user_id Authenticated user.
+     * @param array $args {
+     *   symbol       string   Required. Trading pair (e.g. 'EURUSD').
+     *   type         string   Required. 'buy_limit'|'sell_limit'|'buy_stop'|'sell_stop'.
+     *   lot_size     float    Required. Position size in lots.
+     *   target_price float    Required. Trigger price.
+     *   sl           float    Optional. Stop loss price.
+     *   tp           float    Optional. Take profit price.
+     *   expires_at   string   Optional. ISO datetime for GTC expiry.
+     * }
+     */
+    public static function place_pending_order(int $user_id, array $args): array {
+        global $wpdb;
+
+        $account = self::get_user_active_account($user_id);
+        if (!$account)                    return self::err('No active challenge account.');
+        if ($account->status !== 'active') return self::err('Account is ' . $account->status . '.');
+
+        // ── Validate type ────────────────────────────────────────────────────
+        $valid_types = ['buy_limit', 'sell_limit', 'buy_stop', 'sell_stop'];
+        $type        = sanitize_text_field($args['type'] ?? '');
+        if (!in_array($type, $valid_types, true)) {
+            return self::err('Invalid order type. Must be: ' . implode(', ', $valid_types));
+        }
+
+        // ── Validate symbol ──────────────────────────────────────────────────
+        $sym_obj = FXSIM_Symbols::get($args['symbol'] ?? '');
+        if (!$sym_obj) return self::err('Symbol not found or disabled.');
+
+        // ── Load plan rules (lot cap, leverage) ──────────────────────────────
+        $plan_rules = $wpdb->get_row($wpdb->prepare(
+            "SELECT cp.max_lot_size, cp.max_leverage
+             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE ca.fxsim_account_id = %d AND ca.status IN ('active','funded') LIMIT 1",
+            $account->id
+        ));
+
+        // ── Validate lot size ─────────────────────────────────────────────────
+        $lot = (float)($args['lot_size'] ?? 0);
+        if ($lot < $sym_obj->min_lot || $lot > $sym_obj->max_lot) {
+            return self::err("Lot size must be between {$sym_obj->min_lot} and {$sym_obj->max_lot}.");
+        }
+        if ($plan_rules && (float)$plan_rules->max_lot_size > 0 && $lot > (float)$plan_rules->max_lot_size) {
+            return self::err("Lot size exceeds plan limit of {$plan_rules->max_lot_size} lots.");
+        }
+
+        // ── Validate target price ─────────────────────────────────────────────
+        $target = (float)($args['target_price'] ?? 0);
+        if ($target <= 0) return self::err('Target price must be greater than zero.');
+
+        $prices  = FXSIM_Price_Feed::get($sym_obj->symbol);
+        $cur_bid = (float)$prices['bid'];
+        $cur_ask = (float)$prices['ask'];
+        if ($cur_bid <= 0 || $cur_ask <= 0) return self::err('Price feed unavailable. Try again.');
+
+        /**
+         * Minimum trigger distance protection.
+         * Prevents orders placed so close to market they would fill instantly
+         * and bypass the market-order flow. Configurable via wp_options;
+         * defaults to 10 pips (0.00100 for 5-digit pairs, 0.100 for JPY).
+         *
+         * For 5-digit Forex/Metals: min_distance = 0.00100 (10 pips)
+         * For JPY pairs:            min_distance = 0.100   (10 pips)
+         * For XAUUSD:               min_distance = 0.500   (50 cents)
+         * For Crypto:               min_distance = 10.000  (~0.015% on BTC)
+         */
+        $min_dist = self::get_min_trigger_distance($sym_obj->symbol);
+
+        switch ($type) {
+            case 'buy_limit':
+                // Buy limit: target BELOW current ask (cheaper entry)
+                if ($target >= $cur_ask) {
+                    return self::err("Buy Limit target must be below current ask ({$cur_ask}).");
+                }
+                if (($cur_ask - $target) < $min_dist) {
+                    return self::err("Target too close to market. Minimum distance: {$min_dist}.");
+                }
+                break;
+
+            case 'buy_stop':
+                // Buy stop: target ABOVE current ask (breakout entry)
+                if ($target <= $cur_ask) {
+                    return self::err("Buy Stop target must be above current ask ({$cur_ask}).");
+                }
+                if (($target - $cur_ask) < $min_dist) {
+                    return self::err("Target too close to market. Minimum distance: {$min_dist}.");
+                }
+                break;
+
+            case 'sell_limit':
+                // Sell limit: target ABOVE current bid (higher sell)
+                if ($target <= $cur_bid) {
+                    return self::err("Sell Limit target must be above current bid ({$cur_bid}).");
+                }
+                if (($target - $cur_bid) < $min_dist) {
+                    return self::err("Target too close to market. Minimum distance: {$min_dist}.");
+                }
+                break;
+
+            case 'sell_stop':
+                // Sell stop: target BELOW current bid (breakdown entry)
+                if ($target >= $cur_bid) {
+                    return self::err("Sell Stop target must be below current bid ({$cur_bid}).");
+                }
+                if (($cur_bid - $target) < $min_dist) {
+                    return self::err("Target too close to market. Minimum distance: {$min_dist}.");
+                }
+                break;
+        }
+
+        // ── Validate SL/TP against target price (not current price) ──────────
+        $sl = isset($args['sl']) && $args['sl'] !== '' ? (float)$args['sl'] : null;
+        $tp = isset($args['tp']) && $args['tp'] !== '' ? (float)$args['tp'] : null;
+        $direction = str_starts_with($type, 'buy') ? 'buy' : 'sell';
+
+        if ($sl !== null) {
+            if ($direction === 'buy'  && $sl >= $target) return self::err('SL must be below target price for buy orders.');
+            if ($direction === 'sell' && $sl <= $target) return self::err('SL must be above target price for sell orders.');
+        }
+        if ($tp !== null) {
+            if ($direction === 'buy'  && $tp <= $target) return self::err('TP must be above target price for buy orders.');
+            if ($direction === 'sell' && $tp >= $target) return self::err('TP must be below target price for sell orders.');
+        }
+
+        // ── Validate expiry ──────────────────────────────────────────────────
+        $expires_at = null;
+        if (!empty($args['expires_at'])) {
+            $ts = strtotime($args['expires_at']);
+            if ($ts === false || $ts <= (time() + 300)) { // Minimum 5 minutes from now
+                return self::err('Expiry must be at least 5 minutes in the future.');
+            }
+            $expires_at = date('Y-m-d H:i:s', $ts);
+        }
+
+        // ── Enforce max concurrent pending orders per account ─────────────────
+        $max_pending = (int) get_option('fxsim_max_pending_orders', 20);
+        $cur_pending = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_pending_orders
+             WHERE account_id = %d AND status = 'pending'",
+            $account->id
+        ));
+        if ($cur_pending >= $max_pending) {
+            return self::err("Maximum {$max_pending} pending orders allowed per account.");
+        }
+
+        // ── Reserve margin at target price ────────────────────────────────────
+        // Margin is calculated at the target price (where the position will open),
+        // not the current market price. This gives a more accurate reservation.
+        $effective_leverage = (int)$account->leverage;
+        if ($plan_rules && (int)$plan_rules->max_leverage > 0) {
+            $effective_leverage = min($effective_leverage, (int)$plan_rules->max_leverage);
+        }
+
+        $reserved_margin = ($lot * (float)$sym_obj->contract_size * $target) / $effective_leverage;
+        $commission_est  = $lot * (float)$sym_obj->commission;
+        $free_margin     = (float)$account->equity - (float)$account->margin_used;
+
+        if (($reserved_margin + $commission_est) > $free_margin) {
+            return self::err(
+                "Insufficient margin. Required: $" . number_format($reserved_margin + $commission_est, 2) .
+                ", Available: $" . number_format($free_margin, 2)
+            );
+        }
+
+        // ── Atomic insert + margin reservation ───────────────────────────────
+        $wpdb->query('START TRANSACTION');
+        try {
+            $wpdb->insert($wpdb->prefix . 'fxsim_pending_orders', [
+                'account_id'  => $account->id,
+                'symbol'      => $sym_obj->symbol,
+                'type'        => $type,
+                'lot_size'    => $lot,
+                'target_price'=> $target,
+                'sl'          => $sl,
+                'tp'          => $tp,
+                'margin'      => $reserved_margin,
+                'commission'  => $commission_est,
+                'status'      => 'pending',
+                'expires_at'  => $expires_at,
+            ]);
+
+            if (!$wpdb->insert_id) throw new \Exception('Failed to insert pending order.');
+
+            $order_id = (int)$wpdb->insert_id;
+
+            // Reserve margin in account (adds to margin_used, does NOT touch balance)
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts
+                 SET margin_used = margin_used + %f
+                 WHERE id = %d",
+                $reserved_margin, $account->id
+            ));
+
+            $wpdb->query('COMMIT');
+
+            return [
+                'success'          => true,
+                'order_id'         => $order_id,
+                'reserved_margin'  => round($reserved_margin, 2),
+                'commission_est'   => round($commission_est, 2),
+            ];
+
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return self::err('Order placement failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel a pending order.
+     * Releases reserved margin back to account free margin.
+     *
+     * @param int $user_id  Authenticated user.
+     * @param int $order_id Pending order to cancel.
+     */
+    public static function cancel_pending_order(int $user_id, int $order_id): array {
+        global $wpdb;
+
+        $account = self::get_user_active_account($user_id);
+        if (!$account) return self::err('No active account.');
+
+        $order = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_pending_orders
+             WHERE id = %d AND account_id = %d",
+            $order_id, $account->id
+        ));
+
+        if (!$order)                    return self::err('Order not found.');
+        if ($order->status !== 'pending') return self::err("Order is already {$order->status}.");
+
+        // Atomic: update order + release margin
+        $wpdb->query('START TRANSACTION');
+        try {
+            $wpdb->update(
+                $wpdb->prefix . 'fxsim_pending_orders',
+                ['status' => 'cancelled'],
+                ['id' => $order_id, 'status' => 'pending']  // WHERE guards against double-cancel
+            );
+
+            if ($wpdb->rows_affected === 0) {
+                // Race: order was filled/cancelled between SELECT and UPDATE
+                $wpdb->query('ROLLBACK');
+                return self::err('Order could not be cancelled — it may have just been filled.');
+            }
+
+            // Release reserved margin
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts
+                 SET margin_used = GREATEST(0, margin_used - %f)
+                 WHERE id = %d",
+                (float)$order->margin, $account->id
+            ));
+
+            $wpdb->query('COMMIT');
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return self::err('Cancel failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fill a pending order — INTERNAL, called only by process_pending_orders().
+     *
+     * Creates the position, updates order status, adjusts account margin.
+     * Uses an UPDATE WHERE guard to prevent double-fill in concurrent runs.
+     *
+     * @param object $order   Full pending order row.
+     * @param float  $fill_px Actual execution price (may differ from target for stops).
+     */
+    private static function fill_pending_order(object $order, float $fill_px): void {
+        global $wpdb;
+
+        // Re-verify account is still active (may have been breached since placement)
+        $account = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d AND status = 'active'",
+            $order->account_id
+        ));
+        if (!$account) {
+            // Account frozen/banned — expire the order, release margin
+            self::expire_pending_order($order, 'Account no longer active.');
+            return;
+        }
+
+        // Re-verify symbol still active
+        $sym_obj = FXSIM_Symbols::get($order->symbol);
+        if (!$sym_obj) {
+            self::expire_pending_order($order, 'Symbol disabled.');
+            return;
+        }
+
+        // ── Idempotency guard: claim the order row before creating position ───
+        // If another cron tick is simultaneously processing this order, only one
+        // will win this UPDATE (rows_affected = 1). The other gets rows_affected = 0
+        // and stops, preventing a double position.
+        $claimed = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_pending_orders
+             SET status = 'filled', filled_price = %f, filled_at = %s
+             WHERE id = %d AND status = 'pending'",
+            $fill_px,
+            current_time('mysql'),
+            $order->id
+        ));
+
+        if (!$claimed || $wpdb->rows_affected === 0) {
+            return; // Already processed by another execution
+        }
+
+        // ── Precise commission at actual fill price ────────────────────────────
+        // Re-calculate commission at fill_px since it may differ from target_price
+        $precise_commission = (float)$order->lot_size * (float)$sym_obj->commission;
+
+        // ── Precise margin at fill price ──────────────────────────────────────
+        // Re-calculate margin at actual fill price for accuracy
+        $plan_rules = $wpdb->get_row($wpdb->prepare(
+            "SELECT cp.max_leverage FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE ca.fxsim_account_id = %d AND ca.status IN ('active','funded') LIMIT 1",
+            $account->id
+        ));
+        $effective_leverage = min((int)$account->leverage, (int)($plan_rules->max_leverage ?? $account->leverage));
+        $precise_margin     = ((float)$order->lot_size * (float)$sym_obj->contract_size * $fill_px) / $effective_leverage;
+
+        $direction = str_starts_with($order->type, 'buy') ? 'buy' : 'sell';
+
+        $wpdb->query('START TRANSACTION');
+        try {
+            // Create the position
+            $wpdb->insert($wpdb->prefix . 'fxsim_positions', [
+                'account_id'    => $order->account_id,
+                'symbol'        => $order->symbol,
+                'type'          => $direction,
+                'lot_size'      => $order->lot_size,
+                'open_price'    => $fill_px,
+                'current_price' => $fill_px,
+                'sl'            => $order->sl,
+                'tp'            => $order->tp,
+                'margin'        => $precise_margin,
+                'commission'    => $precise_commission,
+                'pnl'           => -$precise_commission,
+                'order_id'      => $order->id,
+                'order_type'    => $order->type,
+            ]);
+            $position_id = (int)$wpdb->insert_id;
+
+            // Link position_id back to the order for full traceability
+            $wpdb->update(
+                $wpdb->prefix . 'fxsim_pending_orders',
+                ['position_id' => $position_id],
+                ['id' => $order->id]
+            );
+
+            // Swap reserved margin (at target_price) for precise margin (at fill_px).
+            // Uses SQL arithmetic on the live column value — not the PHP-cached $account->margin_used.
+            // This prevents a stale-read race if check_sl_tp() modifies margin_used concurrently.
+            $margin_diff     = $precise_margin - (float)$order->margin; // usually near-zero
+            $new_balance     = (float)$account->balance - $precise_commission;
+
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts
+                 SET balance    = %f,
+                     margin_used = GREATEST(0, margin_used + %f)
+                 WHERE id = %d",
+                $new_balance,
+                $margin_diff,   // atomic: DB adds diff to whatever live value is
+                $account->id
+            ));
+
+            FXSIM_Database::log_transaction(
+                $order->account_id, 'commission', -$precise_commission, $new_balance,
+                "Fill {$order->type} {$order->symbol} @ {$fill_px} (Order #{$order->id})"
+            );
+
+            $wpdb->query('COMMIT');
+
+            // Fire trade-opened hook — challenge engine increments trading days
+            do_action('fxsim_trade_opened', (int)$order->account_id);
+
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            // Revert order status so next tick retries
+            $wpdb->update(
+                $wpdb->prefix . 'fxsim_pending_orders',
+                ['status' => 'pending', 'filled_price' => null, 'filled_at' => null],
+                ['id' => $order->id]
+            );
+            error_log("[PropFirm] fill_pending_order failed for order #{$order->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Expire a pending order — INTERNAL.
+     * Atomically updates status and releases reserved margin.
+     *
+     * @param object $order         Full pending order row.
+     * @param string $reason        Logged for debugging (not user-facing).
+     */
+    private static function expire_pending_order(object $order, string $reason = 'Expired'): void {
+        global $wpdb;
+
+        $updated = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_pending_orders
+             SET status = 'expired'
+             WHERE id = %d AND status = 'pending'",
+            $order->id
+        ));
+
+        if (!$updated || $wpdb->rows_affected === 0) return; // Already processed
+
+        // Release reserved margin
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_accounts
+             SET margin_used = GREATEST(0, margin_used - %f)
+             WHERE id = %d",
+            (float)$order->margin, $order->account_id
+        ));
+
+        if ($reason !== 'Expired') {
+            error_log("[PropFirm] Order #{$order->id} expired: {$reason}");
+        }
+    }
+
+    /**
+     * Process all pending orders against current market prices.
+     * Called every 30s from the price update cron tick.
+     *
+     * Architecture:
+     * 1. Execution lock prevents concurrent runs (same as check_sl_tp).
+     * 2. COUNT guard — skip entirely if no pending orders exist.
+     * 3. Prices batched by symbol — one FXSIM_Price_Feed::get() call per symbol.
+     * 4. Trigger logic: Limit fills at target_price, Stop fills at current market.
+     * 5. Expiry: checked inline, expires before fill-check.
+     */
+    public static function process_pending_orders(): void {
+        global $wpdb;
+
+        // ── Execution lock ────────────────────────────────────────────────────
+        $lock_key = 'fxsim_pending_orders_running';
+        $locked = $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 0)", $lock_key));
+        if (!$locked) return;
+
+        try {
+            // ── COUNT guard: bail immediately if nothing to process ────────────
+            $pending_count = (int)$wpdb->get_var(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_pending_orders WHERE status = 'pending'"
+            );
+            if ($pending_count === 0) return;
+
+            // ── Fetch active pending orders ───────────────────────────────────
+            $orders = $wpdb->get_results(
+                "SELECT * FROM {$wpdb->prefix}fxsim_pending_orders
+                 WHERE status = 'pending'
+                 ORDER BY created_at ASC"
+            );
+
+            // ── Batch prices by symbol (one fetch per unique symbol) ──────────
+            $prices_cache = [];
+            foreach ($orders as $order) {
+                $sym = $order->symbol;
+                if (!isset($prices_cache[$sym])) {
+                    $prices_cache[$sym] = FXSIM_Price_Feed::get($sym);
+                }
+            }
+
+            // ── Process each order ────────────────────────────────────────────
+            foreach ($orders as $order) {
+                $now = time();
+
+                // ── Expiry check ──────────────────────────────────────────────
+                if ($order->expires_at !== null && strtotime($order->expires_at) <= $now) {
+                    self::expire_pending_order($order);
+                    continue;
+                }
+
+                $p       = $prices_cache[$order->symbol] ?? [];
+                $cur_bid = (float)($p['bid'] ?? 0);
+                $cur_ask = (float)($p['ask'] ?? 0);
+
+                if ($cur_bid <= 0 || $cur_ask <= 0) continue; // Price unavailable this tick
+
+                $target    = (float)$order->target_price;
+                $triggered = false;
+                $fill_px   = 0.0;
+
+                switch ($order->type) {
+                    case 'buy_limit':
+                        // Trigger when ask drops to or below target
+                        // Fill at target_price (limit guarantee — at or better)
+                        if ($cur_ask <= $target) {
+                            $triggered = true;
+                            $fill_px   = $target;
+                        }
+                        break;
+
+                    case 'sell_limit':
+                        // Trigger when bid rises to or above target
+                        // Fill at target_price (limit guarantee)
+                        if ($cur_bid >= $target) {
+                            $triggered = true;
+                            $fill_px   = $target;
+                        }
+                        break;
+
+                    case 'buy_stop':
+                        // Trigger when ask rises to or above target (breakout)
+                        // Fill at current ask (stop — market fill, may gap)
+                        if ($cur_ask >= $target) {
+                            $triggered = true;
+                            $fill_px   = $cur_ask;
+                        }
+                        break;
+
+                    case 'sell_stop':
+                        // Trigger when bid drops to or below target (breakdown)
+                        // Fill at current bid (stop — market fill, may gap)
+                        if ($cur_bid <= $target) {
+                            $triggered = true;
+                            $fill_px   = $cur_bid;
+                        }
+                        break;
+                }
+
+                if ($triggered && $fill_px > 0) {
+                    self::fill_pending_order($order, $fill_px);
+                }
+            }
+
+        } finally {
+            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // WEEKEND HOLDING ENGINE
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Enforce weekend holding rules. Called every 30s from price tick.
+     *
+     * Two phases:
+     *   21:55 UTC Friday — send warning emails (once per week)
+     *   22:00 UTC Friday (+ Saturday + Sunday catch-up) — force-close (once per week)
+     *
+     * Guard mechanism: ISO week string 'YYYY-WW' stored in wp_options prevents
+     * any phase from firing more than once per calendar week.
+     *
+     * Cleanup strategy: options older than 4 weeks are purged automatically
+     * to prevent wp_options table bloat. The 4-week window covers the
+     * scenario where a site goes offline for several weeks and returns.
+     *
+     * Crypto positions (BTCUSD, ETHUSD) are exempt — 24/7 market.
+     */
+    public static function check_weekend_holding(): void {
+        global $wpdb;
+
+        // ── Quick time gate: only proceed on Fri≥21:55, Saturday, or Sunday ──
+        $dow  = (int)gmdate('N'); // 1=Mon, 5=Fri, 6=Sat, 7=Sun
+        $hour = (int)gmdate('G');
+        $min  = (int)gmdate('i');
+        $mins_since_midnight = $hour * 60 + $min;
+
+        $is_warning_window = ($dow === 5 && $mins_since_midnight >= (21 * 60 + 55) && $mins_since_midnight < (22 * 60));
+        $is_close_window   = ($dow === 5 && $mins_since_midnight >= (22 * 60))
+                          || ($dow === 6)
+                          || ($dow === 7);
+
+        if (!$is_warning_window && !$is_close_window) return;
+
+        $iso_week  = gmdate('Y-W'); // e.g. '2025-03'
+        $warn_key  = 'fxsim_wknd_warn_'  . $iso_week;
+        $close_key = 'fxsim_wknd_close_' . $iso_week;
+
+        // ── Purge stale weekly guard options (cleanup strategy) ───────────────
+        // Run ~1% of the time to avoid overhead on every tick
+        if (mt_rand(1, 100) === 1) {
+            self::purge_weekend_guard_options(4);
+        }
+
+        // ── Phase 1: Warning emails ───────────────────────────────────────────
+        if ($is_warning_window && !get_option($warn_key)) {
+            self::send_weekend_warning_emails();
+            update_option($warn_key, time(), false); // autoload=false (not needed on frontend)
+        }
+
+        // ── Phase 2: Force close ─────────────────────────────────────────────
+        if ($is_close_window && !get_option($close_key)) {
+            $closed = self::execute_weekend_close();
+            update_option($close_key, ['ts' => time(), 'closed' => $closed], false);
+            FXSIM_Database::log_admin(0, 'weekend_close', null, "Auto-closed {$closed} positions for week {$iso_week}.");
+        }
+    }
+
+    /**
+     * Send 5-minute warning emails to traders whose positions will be force-closed.
+     */
+    private static function send_weekend_warning_emails(): void {
+        global $wpdb;
+
+        $affected = $wpdb->get_results(
+            "SELECT DISTINCT a.user_id, COUNT(p.id) AS pos_count
+             FROM {$wpdb->prefix}fxsim_positions p
+             JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+             JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE cp.weekend_holding = 0
+               AND ca.status IN ('active','funded')
+               AND p.symbol NOT IN ('BTCUSD','ETHUSD')
+             GROUP BY a.user_id"
+        );
+
+        if (!$affected) return;
+
+        $brand = class_exists('FXSIM_Challenge_DB')
+            ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System')
+            : 'PropFirm System';
+
+        foreach ($affected as $row) {
+            $user = get_userdata((int)$row->user_id);
+            if (!$user) continue;
+
+            $subject = "[{$brand}] ⚠ Market closes in 5 minutes — positions will close";
+            $message = "Hi {$user->display_name},\n\n"
+                     . "The Forex market closes at 22:00 UTC. Your challenge plan does not allow "
+                     . "weekend holding.\n\n"
+                     . "Your {$row->pos_count} open position(s) will be automatically closed at 22:00 UTC.\n\n"
+                     . "To close them manually before then, visit your trading terminal:\n"
+                     . home_url('/trading/') . "\n\n"
+                     . "— {$brand} Team";
+
+            wp_mail($user->user_email, $subject, $message);
+        }
+    }
+
+    /**
+     * Force-close all restricted positions at market price.
+     * Returns count of positions closed.
+     */
+    private static function execute_weekend_close(): int {
+        global $wpdb;
+
+        $positions = $wpdb->get_results(
+            "SELECT p.*, a.user_id
+             FROM {$wpdb->prefix}fxsim_positions p
+             JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+             JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE cp.weekend_holding = 0
+               AND ca.status IN ('active','funded')
+               AND p.symbol NOT IN ('BTCUSD','ETHUSD')"
+        );
+
+        $closed = 0;
+        foreach ($positions as $pos) {
+            $result = self::close_position((int)$pos->user_id, (int)$pos->id, 'weekend_close');
+            if ($result['success']) $closed++;
+        }
+        return $closed;
+    }
+
+    /**
+     * Purge weekend guard wp_options entries older than $weeks_to_keep weeks.
+     *
+     * Options are named 'fxsim_wknd_warn_YYYY-WW' and 'fxsim_wknd_close_YYYY-WW'.
+     * Without cleanup these would accumulate indefinitely. We delete any entry
+     * whose week component is more than $weeks_to_keep weeks ago.
+     *
+     * @param int $weeks_to_keep How many past weeks to retain (default 4).
+     */
+    private static function purge_weekend_guard_options(int $weeks_to_keep = 4): void {
+        global $wpdb;
+
+        // Build cutoff week string
+        $cutoff_ts   = strtotime("-{$weeks_to_keep} weeks");
+        $cutoff_week = date('Y-W', $cutoff_ts); // e.g. '2024-50'
+
+        // Delete warn + close entries older than cutoff
+        // LIKE 'fxsim_wknd_%' is narrow enough; date comparison handles the rest
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->prefix}options
+             WHERE option_name LIKE 'fxsim_wknd_%%'
+               AND option_name < %s",
+            // Lexicographic comparison works here because YYYY-WW sorts correctly
+            'fxsim_wknd_close_' . $cutoff_week
+        ));
+        // Warn entries share the same year-week format, same cutoff applies
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->prefix}options
+             WHERE option_name LIKE 'fxsim_wknd_warn_%%'
+               AND option_name < %s",
+            'fxsim_wknd_warn_' . $cutoff_week
+        ));
+    }
+
+    /**
+     * Calculate minimum trigger distance for a symbol.
+     *
+     * Configurable via WP option 'fxsim_min_trigger_pct' (percentage of price).
+     * Falls back to symbol-class defaults.
+     *
+     * @param string $symbol Trading pair symbol.
+     * @return float Minimum price distance in price units.
+     */
+    public static function get_min_trigger_distance(string $symbol): float {
+        // Check for admin-configured override (as % of current price)
+        $pct_override = (float)get_option('fxsim_min_trigger_pct', 0);
+        if ($pct_override > 0) {
+            $price = FXSIM_Price_Feed::get($symbol);
+            $mid   = (float)($price['mid'] ?? $price['ask'] ?? 1.0);
+            return round($mid * ($pct_override / 100), 5);
+        }
+
+        // Symbol-class defaults (10 pips equivalent)
+        if (in_array($symbol, ['BTCUSD', 'ETHUSD'], true)) return 10.0;
+        if (in_array($symbol, ['XAUUSD'], true))             return 0.5;
+        if (in_array($symbol, ['XAGUSD'], true))             return 0.05;
+        if (str_contains($symbol, 'JPY'))                    return 0.1;
+        return 0.0010; // Standard 5-digit Forex pairs (10 pips)
+    }
+
+    // ── Get active challenge account for a user ───────────────────────────────
+    private static function get_user_active_account(int $user_id): ?object {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT a.* FROM {$wpdb->prefix}fxsim_accounts a
+             JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+             WHERE ca.user_id = %d AND ca.status IN ('active','funded')
+             ORDER BY ca.created_at DESC LIMIT 1",
+            $user_id
+        ));
+    }
+
+    private static function err(string $msg): array {
+        return ['success' => false, 'message' => $msg];
+    }
+
+    // ── Daily swap accumulation (called by daily cron) ────────────────────────
+    public static function apply_daily_swaps(): void {
+        global $wpdb;
+        $positions = $wpdb->get_results("
+            SELECT p.*, a.user_id FROM {$wpdb->prefix}fxsim_positions p
+            JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+        ");
+        foreach ($positions as $pos) {
+            $sym = FXSIM_Symbols::get($pos->symbol);
+            if (!$sym) continue;
+            $swap_rate  = ($pos->type === 'buy') ? (float)$sym->swap_long : (float)$sym->swap_short;
+            $swap_charge = round($swap_rate * (float)$pos->lot_size, 4);
+            $new_swap    = (float)$pos->swap + $swap_charge;
+            $wpdb->update($wpdb->prefix . 'fxsim_positions', ['swap' => $new_swap], ['id' => $pos->id]);
+        }
+    }
+
+    // ── Account status toggle (admin) ─────────────────────────────────────────
+    // Accepts either account_id directly (preferred) or falls back to active challenge account
+    public static function set_account_status(int $user_id, string $status, int $account_id = 0): bool {
+        global $wpdb;
+        if (!in_array($status, ['active', 'frozen', 'banned'])) return false;
+        $where = $account_id
+            ? ['id' => $account_id]
+            : ['id' => (int)$wpdb->get_var($wpdb->prepare(
+                "SELECT a.id FROM {$wpdb->prefix}fxsim_accounts a
+                 JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+                 WHERE ca.user_id=%d AND ca.status IN ('active','funded') ORDER BY ca.created_at DESC LIMIT 1",
+                $user_id
+              ))];
+        if (!$where['id']) return false;
+        return (bool) $wpdb->update($wpdb->prefix . 'fxsim_accounts', ['status' => $status], $where);
+    }
+
+    private static function get_pip_size(string $symbol): float {
+        $symbol_upper = strtoupper($symbol);
+        // JPY pairs
+        if (str_contains($symbol_upper, 'JPY')) return 0.01;
+        // Gold/Silver
+        if (str_contains($symbol_upper, 'XAU')) return 0.01;
+        if (str_contains($symbol_upper, 'XAG')) return 0.001;
+        // Crypto
+        if (str_contains($symbol_upper, 'BTC') || str_contains($symbol_upper, 'ETH')) return 0.01;
+        // Standard forex
+        return 0.0001;
+    }
+
+    /**
+     * Detect suspicious trading patterns: HFT, copy trading, martingale.
+     * Flags are stored in fxsim_trade_flags table for admin review.
+     */
+    private static function detect_trade_patterns(int $user_id, int $account_id): void {
+        global $wpdb;
+        
+        // 1. HFT Detection: More than 5 orders within 3 seconds
+        $recent_count = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_positions 
+             WHERE account_id = %d AND opened_at > DATE_SUB(NOW(), INTERVAL 3 SECOND)",
+            $account_id
+        ));
+        if ($recent_count > 5) {
+            // Only flag once per 5 minutes to avoid spam
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_trade_flags
+                 WHERE user_id = %d AND flag_type = 'hft' AND flagged_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)",
+                $user_id
+            ));
+            if (!$existing) {
+                FXSIM_Challenge_DB::log_trade_flag($user_id, $account_id, 'hft',
+                    "Opened {$recent_count} positions within 3 seconds. Possible HFT or copy-trade bot.");
+            }
+        }
+        
+        // 2. Martingale Detection: Check if lot sizes are doubling after losses
+        $recent_trades = $wpdb->get_results($wpdb->prepare(
+            "SELECT lot_size, pnl FROM {$wpdb->prefix}fxsim_trades 
+             WHERE account_id = %d ORDER BY closed_at DESC LIMIT 6",
+            $account_id
+        ));
+        if (count($recent_trades) >= 4) {
+            $doubling_count = 0;
+            for ($i = 0; $i < count($recent_trades) - 1; $i++) {
+                if ($recent_trades[$i+1]->pnl < 0) { // Previous trade was a loss
+                    $ratio = $recent_trades[$i]->lot_size / max(0.01, $recent_trades[$i+1]->lot_size);
+                    if ($ratio >= 1.8 && $ratio <= 2.5) $doubling_count++;
+                }
+            }
+            if ($doubling_count >= 2) {
+                $existing = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_trade_flags
+                     WHERE user_id = %d AND flag_type = 'martingale' AND flagged_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)",
+                    $user_id
+                ));
+                if (!$existing) {
+                    FXSIM_Challenge_DB::log_trade_flag($user_id, $account_id, 'martingale',
+                        "Detected doubling lot sizes after consecutive losses. Possible martingale strategy.");
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,68 @@
+# PropFirm System — Recommended .htaccess cache rules
+#
+# Add these rules to your WordPress .htaccess file for optimal CDN and browser
+# caching of plugin static assets. These rules complement the plugin's own
+# Cache-Control headers and improve performance behind Cloudflare.
+#
+# INSTRUCTIONS:
+#   1. Open your WordPress .htaccess file
+#   2. Paste the block below ABOVE the # BEGIN WordPress section
+#   3. Save the file
+#
+# These rules are optional but recommended for production sites.
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # PropFirm plugin static assets — versioned URLs, cache 1 year
+    <FilesMatch "\.(css|js)$">
+        ExpiresDefault "access plus 1 year"
+        Header set Cache-Control "public, max-age=31536000, s-maxage=31536000, immutable"
+        Header append Vary "Accept-Encoding"
+    </FilesMatch>
+
+    # Service Worker — must not be cached (browser checks for SW updates)
+    <Files "sw.js">
+        ExpiresDefault "access"
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        # Allow SW to control entire site scope
+        Header set Service-Worker-Allowed "/"
+    </Files>
+
+    # Web App Manifest — cache 1 hour (dynamic, branded)
+    <FilesMatch "manifest\.json$">
+        ExpiresDefault "access plus 1 hour"
+        Header set Cache-Control "public, max-age=3600"
+        # Required for cross-origin manifest fetches
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Preload critical PropFirm assets on plugin pages
+    # These push assets to the browser before HTML is parsed
+    # Note: Only effective on the specific page paths below
+
+    # Terminal page
+    <If "%{REQUEST_URI} =~ m#^/trading/#">
+        Header add Link "</wp-content/plugins/propfirm-system/assets/css/terminal.css>; rel=preload; as=style"
+        Header add Link "</wp-content/plugins/propfirm-system/assets/js/terminal.js>; rel=preload; as=script"
+    </If>
+
+    # Dashboard pages
+    <If "%{REQUEST_URI} =~ m#^/(dashboard|challenges|statistics)/#">
+        Header add Link "</wp-content/plugins/propfirm-system/assets/css/dashboard.css>; rel=preload; as=style"
+        Header add Link "</wp-content/plugins/propfirm-system/assets/js/dashboard.js>; rel=preload; as=script"
+    </If>
+</IfModule>
+
+# Cloudflare-specific: prevent CF from caching REST API responses
+# CF respects Cache-Control: no-store so the REST headers set by the plugin
+# already handle this. No additional rules needed for REST endpoints.
+
+# Cloudflare SSE compatibility note:
+# Free/Pro CF plan buffers SSE until connection closes.
+# The plugin sends X-Accel-Buffering: no and a 25s connection cycle.
+# For persistent SSE, use Cloudflare's "Bypass Cache" rule for /wp-json/fxsim/v1/stream
+# Or upgrade to CF Enterprise which supports true HTTP streaming.
