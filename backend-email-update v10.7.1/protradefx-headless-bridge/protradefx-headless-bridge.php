@@ -18,8 +18,7 @@ class ProTradeFX_Headless_Bridge {
     const ALLOWED_ORIGINS = [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-		'https://demo.launchapropfirm.com',
-		'https://fundedpeak.walletrecovery.click',
+        'https://demo.launchapropfirm.com',
     ];
 
     /**
@@ -125,18 +124,28 @@ class ProTradeFX_Headless_Bridge {
         return $user_id;
     }
 
+    public static function generate_csrf_token( $user_id ) {
+        return hash_hmac( 'sha256', 'fxsim-csrf-' . $user_id, wp_salt( 'nonce' ) );
+    }
+
     /**
      * Skip WP Core's REST nonce CSRF check for the fxsim namespace.
-     * Runs at priority 1 (before Core's rest_cookie_check_errors at 100):
-     * returning a non-null value short-circuits the filter chain, so Core
-     * never reaches its wp_verify_nonce('wp_rest') call for these routes.
-     * Matches both pretty (/wp-json/fxsim/v1/) and plain (?rest_route=/fxsim/v1/)
-     * permalink forms. Returns the incoming $result unchanged for all other
-     * routes and respects any error a prior callback already set.
+     * Validates a custom stateless CSRF token instead.
      */
     public static function bypass_rest_nonce( $result ) {
         if ( ! empty( $result ) ) return $result; // a prior callback already decided
         if ( strpos( $_SERVER['REQUEST_URI'] ?? '', 'fxsim/v1' ) !== false ) {
+            $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+            if ( $method !== 'GET' && $method !== 'OPTIONS' ) {
+                $user_id = get_current_user_id();
+                if ( $user_id ) {
+                    $header = $_SERVER['HTTP_X_WP_NONCE'] ?? '';
+                    $expected = self::generate_csrf_token( $user_id );
+                    if ( ! hash_equals( $expected, $header ) ) {
+                        return new WP_Error( 'rest_cookie_invalid_nonce', __( 'CSRF token mismatch.' ), [ 'status' => 403 ] );
+                    }
+                }
+            }
             return true; // authentication handled — stop Core's nonce check
         }
         return $result;
@@ -196,26 +205,67 @@ class ProTradeFX_Headless_Bridge {
      *  Handlers
      * ──────────────────────────────────────────────────────────────── */
 
+    /**
+     * Brute-force throttle shared by login() and verify_2fa(). Without this,
+     * a 6-digit 2FA code (1-in-1,000,000 per guess) with a 10-minute TTL is
+     * brute-forceable well within that window, and the password check itself
+     * had no lockout at all.
+     */
+    private static function check_login_throttle( string $key ): bool {
+        return (int) get_transient( 'ptfx_fail_' . $key ) < 10;
+    }
+    private static function bump_login_throttle( string $key ): void {
+        set_transient( 'ptfx_fail_' . $key, (int) get_transient( 'ptfx_fail_' . $key ) + 1, 15 * MINUTE_IN_SECONDS );
+    }
+    private static function clear_login_throttle( string $key ): void {
+        delete_transient( 'ptfx_fail_' . $key );
+    }
+
     public static function login( WP_REST_Request $req ) {
-        $username = sanitize_user( $req->get_param( 'username' ), true );
+        $raw_user = trim( (string) $req->get_param( 'username' ) );
         $password = (string) $req->get_param( 'password' );
         $remember = (bool) $req->get_param( 'remember' );
 
-        // Allow login by email.
-        if ( is_email( $username ) ) {
-            $user = get_user_by( 'email', $username );
-            if ( $user ) $username = $user->user_login;
+        if ( empty( $raw_user ) || empty( $password ) ) {
+            return new WP_Error( 'auth_failed', __( 'Username and password are required.' ), [ 'status' => 400 ] );
         }
 
-        // Validate credentials WITHOUT wp_signon — wp_signon fires the `wp_login`
-        // action and (historically) a 2FA redirect that breaks the SPA fetch.
+        $ip_key  = 'ip_'  . md5( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+        $usr_key = 'usr_' . md5( strtolower( $raw_user ) );
+        if ( ! self::check_login_throttle( $ip_key ) || ! self::check_login_throttle( $usr_key ) ) {
+            return new WP_Error( 'too_many_attempts', 'Too many attempts. Please try again later.', [ 'status' => 429 ] );
+        }
+
+        // Allow login by email directly
+        if ( is_email( $raw_user ) ) {
+            $user_obj = get_user_by( 'email', $raw_user );
+            $username = $user_obj ? $user_obj->user_login : $raw_user;
+        } else {
+            $username = $raw_user;
+        }
+
+        // Validate credentials WITHOUT wp_signon
         $user = wp_authenticate( $username, $password );
-        if ( is_wp_error( $user ) ) {
+        if ( is_wp_error( $user ) || !$user ) {
+            // Also check by email if initial lookup missed
+            if ( is_email( $raw_user ) ) {
+                $user_by_email = get_user_by( 'email', $raw_user );
+                if ( $user_by_email && wp_check_password( $password, $user_by_email->user_pass, $user_by_email->ID ) ) {
+                    $user = $user_by_email;
+                }
+            }
+        }
+
+        if ( is_wp_error( $user ) || !$user ) {
+            self::bump_login_throttle( $ip_key );
+            self::bump_login_throttle( $usr_key );
             return new WP_Error( 'auth_failed', __( 'Invalid username or password.' ), [ 'status' => 401 ] );
         }
 
         // If 2FA is enabled, do NOT establish the session yet: send exactly one
         // code and ask the SPA to complete verification via /auth/2fa/verify.
+        // Throttle stays armed until verify_2fa() actually succeeds — a correct
+        // password alone must not clear it, or 2FA brute-forcing is unthrottled.
         if ( class_exists( 'FXSIM_2FA' ) && FXSIM_2FA::is_enabled( (int) $user->ID ) ) {
             FXSIM_2FA::send_code( (int) $user->ID );
             return [
@@ -223,6 +273,9 @@ class ProTradeFX_Headless_Bridge {
                 'uid'                 => (int) $user->ID,
             ];
         }
+
+        self::clear_login_throttle( $ip_key );
+        self::clear_login_throttle( $usr_key );
 
         // No 2FA — establish the session.
         wp_set_current_user( $user->ID );
@@ -232,7 +285,7 @@ class ProTradeFX_Headless_Bridge {
 
         return [
             'user'  => self::user_payload( $user ),
-            'nonce' => wp_create_nonce( 'wp_rest' ),
+            'nonce' => self::generate_csrf_token( $user->ID ),
         ];
     }
 
@@ -240,7 +293,15 @@ class ProTradeFX_Headless_Bridge {
         $uid  = (int) $req->get_param( 'uid' );
         $code = preg_replace( '/\D/', '', (string) $req->get_param( 'code' ) );
 
+        $ip_key  = 'ip_'  . md5( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+        $uid_key = 'uid_' . $uid;
+        if ( ! self::check_login_throttle( $ip_key ) || ! self::check_login_throttle( $uid_key ) ) {
+            return new WP_Error( 'too_many_attempts', 'Too many attempts. Please try again later.', [ 'status' => 429 ] );
+        }
+
         if ( ! $uid || ! class_exists( 'FXSIM_2FA' ) || ! FXSIM_2FA::verify_code( $uid, $code ) ) {
+            self::bump_login_throttle( $ip_key );
+            self::bump_login_throttle( $uid_key );
             return new WP_Error( 'invalid_code', __( 'Invalid or expired verification code.' ), [ 'status' => 401 ] );
         }
 
@@ -249,6 +310,9 @@ class ProTradeFX_Headless_Bridge {
             return new WP_Error( 'invalid_code', __( 'Invalid or expired verification code.' ), [ 'status' => 401 ] );
         }
 
+        self::clear_login_throttle( $ip_key );
+        self::clear_login_throttle( $uid_key );
+
         wp_set_current_user( $user->ID );
         wp_set_auth_cookie( $user->ID, true, is_ssl() );
 
@@ -256,7 +320,7 @@ class ProTradeFX_Headless_Bridge {
 
         return [
             'user'  => self::user_payload( $user ),
-            'nonce' => wp_create_nonce( 'wp_rest' ),
+            'nonce' => self::generate_csrf_token( $user->ID ),
         ];
     }
 
@@ -321,7 +385,7 @@ class ProTradeFX_Headless_Bridge {
 
         return [
             'user'  => self::user_payload( get_user_by( 'id', $uid ) ),
-            'nonce' => wp_create_nonce( 'wp_rest' ),
+            'nonce' => self::generate_csrf_token( $uid ),
         ];
     }
 

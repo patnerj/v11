@@ -12,7 +12,17 @@ class FXSIM_Challenge_DB {
         $c = $wpdb->get_charset_collate();
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-        // ── 1. Challenge Plans (the products admin creates) ──────────────────────
+        // dbDelta() diffs each CREATE TABLE string against the live schema and,
+        // on every RE-activation (tables already exist), regularly misreads its
+        // own inline `id ... AUTO_INCREMENT PRIMARY KEY` style as a schema change
+        // and tries a redundant ALTER — which MySQL rejects and $wpdb echoes
+        // straight to output ("WordPress database error ..."). The table itself
+        // is untouched (the bad ALTER simply fails), but that echoed text makes
+        // WP's activate_plugin() report "the plugin generated unexpected output"
+        // / "triggered a fatal error" and refuse to activate, even though nothing
+        // is actually broken. Buffer it — log it in case it's ever the one real
+        // error in the pile, but never let it reach the activation response.
+        ob_start();
         dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_challenge_plans (
             id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name            VARCHAR(100)    NOT NULL,
@@ -21,10 +31,11 @@ class FXSIM_Challenge_DB {
             price           DECIMAL(10,2)   NOT NULL DEFAULT 0.00,
             currency        VARCHAR(3)      NOT NULL DEFAULT 'USD',
             phases          TINYINT         NOT NULL DEFAULT 2,
+            plan_type       ENUM('1-step','2-step','3-step','instant') NOT NULL DEFAULT '2-step',
             -- Challenge type: 0=instant funding (no eval), 1/2/3=number of phases
             is_instant_funding  TINYINT(1)  NOT NULL DEFAULT 0,
             -- Drawdown calculation method for this plan
-            drawdown_type   ENUM('static','trailing','eod_trailing') NOT NULL DEFAULT 'static',
+            drawdown_type   ENUM('static','trailing','eod_trailing','static_balance','trailing_equity','trailing_balance') NOT NULL DEFAULT 'static',
             -- Phase 1 rules
             p1_profit_target    DECIMAL(5,2) NOT NULL DEFAULT 8.00,
             p1_daily_dd         DECIMAL(5,2) NOT NULL DEFAULT 5.00,
@@ -50,17 +61,30 @@ class FXSIM_Challenge_DB {
             max_leverage        INT          NOT NULL DEFAULT 100,
             max_lot_size        DECIMAL(8,2) NOT NULL DEFAULT 50.00,
             news_trading        TINYINT(1)   NOT NULL DEFAULT 1,
+            news_window_minutes INT          NOT NULL DEFAULT 5,
             weekend_holding     TINYINT(1)   NOT NULL DEFAULT 0,
             consistency_rule    TINYINT(1)   NOT NULL DEFAULT 0,
             consistency_pct     DECIMAL(5,2) NOT NULL DEFAULT 50.00,
             min_trade_seconds   INT          NOT NULL DEFAULT 0,
             margin_call_level   DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            stop_out_level      DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            stop_loss_required  TINYINT(1)   NOT NULL DEFAULT 0,
+            max_inactivity_days INT          NOT NULL DEFAULT 30,
+            ip_matching_required TINYINT(1)  NOT NULL DEFAULT 0,
+            ea_allowed          TINYINT(1)   NOT NULL DEFAULT 1,
+            copy_trading_allowed TINYINT(1)  NOT NULL DEFAULT 1,
+            martingale_allowed  TINYINT(1)   NOT NULL DEFAULT 1,
+            hedging_allowed     TINYINT(1)   NOT NULL DEFAULT 1,
+            evaluation_profit_share DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            refundable_fee      TINYINT(1)   NOT NULL DEFAULT 0,
+            min_hold_action     ENUM('flag','reject','void_pnl') NOT NULL DEFAULT 'flag',
             -- Scaling plan settings
             scaling_enabled         TINYINT(1)   NOT NULL DEFAULT 0,
             scaling_growth_pct      DECIMAL(5,2) NOT NULL DEFAULT 25.00,
             scaling_interval_months INT          NOT NULL DEFAULT 4,
             scaling_required_profit_pct DECIMAL(5,2) NOT NULL DEFAULT 10.00,
             scaling_max_balance     DECIMAL(15,2) NOT NULL DEFAULT 2000000.00,
+            reset_discount_pct      DECIMAL(5,2) NOT NULL DEFAULT 0.00,
             -- Meta
             is_active           TINYINT(1)   NOT NULL DEFAULT 1,
             sort_order          INT          NOT NULL DEFAULT 0,
@@ -93,6 +117,14 @@ class FXSIM_Challenge_DB {
             last_trade_date     DATE DEFAULT NULL,
             breach_reason       VARCHAR(255) DEFAULT NULL,
             breach_at           DATETIME    DEFAULT NULL,
+            -- Custom Enterprise Overrides
+            custom_profit_split DECIMAL(5,2) DEFAULT NULL,
+            custom_daily_dd     DECIMAL(5,2) DEFAULT NULL,
+            custom_max_dd       DECIMAL(5,2) DEFAULT NULL,
+            custom_min_days     INT          DEFAULT NULL,
+            custom_news_trading TINYINT(1)   DEFAULT NULL,
+            custom_weekend_holding TINYINT(1) DEFAULT NULL,
+            override_admin_note VARCHAR(500) DEFAULT NULL,
             -- Timestamps
             phase_started_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             phase_ends_at       DATETIME DEFAULT NULL,
@@ -100,10 +132,12 @@ class FXSIM_Challenge_DB {
             failed_at           DATETIME DEFAULT NULL,
             funded_at           DATETIME DEFAULT NULL,
             created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            signup_ip           VARCHAR(45) DEFAULT NULL,
             KEY idx_user   (user_id),
             KEY idx_plan   (plan_id),
             KEY idx_status (status),
             KEY idx_phase  (phase),
+            KEY idx_account_id (fxsim_account_id),
             -- Composite: covers WHERE user_id=X AND status IN ('active','funded') in get_active_challenge_account()
             KEY idx_user_status (user_id, status)
         ) $c;");
@@ -146,7 +180,7 @@ class FXSIM_Challenge_DB {
             profit_split_pct DECIMAL(5,2)   NOT NULL DEFAULT 80.00,
             trader_amount   DECIMAL(15,2)   NOT NULL,
             firm_amount     DECIMAL(15,2)   NOT NULL,
-            status          ENUM('pending','approved','rejected','paid') NOT NULL DEFAULT 'pending',
+            status          ENUM('pending','under_review','approved','rejected','paid') NOT NULL DEFAULT 'pending',
             payment_method  VARCHAR(50)     DEFAULT NULL,
             payment_address VARCHAR(255)    DEFAULT NULL,
             tx_reference    VARCHAR(255)    DEFAULT NULL,
@@ -327,6 +361,19 @@ class FXSIM_Challenge_DB {
             KEY idx_status   (status)
         ) $c;");
 
+        // ── 9. News Events (economic calendar) ───────────────────────────────────
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_news_events (
+            id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            event_time_utc   DATETIME        NOT NULL,
+            currency         VARCHAR(10)     NOT NULL,
+            impact           VARCHAR(20)     NOT NULL COMMENT 'low|medium|high',
+            title            VARCHAR(255)    NOT NULL,
+            source           VARCHAR(100)    DEFAULT NULL,
+            created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_time     (event_time_utc),
+            KEY idx_currency (currency)
+        ) $c;");
+
         // Extend payout status enum with 'under_review' (additive; dbDelta can't
         // reliably alter ENUMs, so guard with SHOW COLUMNS and ALTER once).
         $payouts_tbl = $wpdb->prefix . 'fxsim_payouts';
@@ -337,11 +384,45 @@ class FXSIM_Challenge_DB {
                 NOT NULL DEFAULT 'pending'");
         }
 
+        $plans_tbl = $wpdb->prefix . 'fxsim_challenge_plans';
+        $news_col = $wpdb->get_row("SHOW COLUMNS FROM $plans_tbl LIKE 'news_window_minutes'");
+        if (!$news_col) {
+            $wpdb->query("ALTER TABLE $plans_tbl 
+                ADD COLUMN news_window_minutes INT NOT NULL DEFAULT 5,
+                ADD COLUMN stop_out_level DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+                ADD COLUMN stop_loss_required TINYINT(1) NOT NULL DEFAULT 0,
+                ADD COLUMN max_inactivity_days INT NOT NULL DEFAULT 30,
+                ADD COLUMN ip_matching_required TINYINT(1) NOT NULL DEFAULT 0,
+                ADD COLUMN ea_allowed TINYINT(1) NOT NULL DEFAULT 1,
+                ADD COLUMN copy_trading_allowed TINYINT(1) NOT NULL DEFAULT 1,
+                ADD COLUMN martingale_allowed TINYINT(1) NOT NULL DEFAULT 1,
+                ADD COLUMN hedging_allowed TINYINT(1) NOT NULL DEFAULT 1,
+                ADD COLUMN evaluation_profit_share DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+                ADD COLUMN refundable_fee TINYINT(1) NOT NULL DEFAULT 0
+            ");
+        }
+
+        $min_hold_col = $wpdb->get_row("SHOW COLUMNS FROM $plans_tbl LIKE 'min_hold_action'");
+        if (!$min_hold_col) {
+            $wpdb->query("ALTER TABLE $plans_tbl ADD COLUMN min_hold_action ENUM('flag','reject','void_pnl') NOT NULL DEFAULT 'flag'");
+        }
+        
+        $accounts_tbl = $wpdb->prefix . 'fxsim_challenge_accounts';
+        $ip_col = $wpdb->get_row("SHOW COLUMNS FROM $accounts_tbl LIKE 'signup_ip'");
+        if (!$ip_col) {
+            $wpdb->query("ALTER TABLE $accounts_tbl ADD COLUMN signup_ip VARCHAR(45) DEFAULT NULL");
+        }
+
         // Seed default white-label settings
         self::seed_whitelabel();
 
         // Seed default challenge plans
         self::seed_plans();
+
+        $noise = ob_get_clean();
+        if (!empty($noise)) {
+            error_log('[PropFirm] FXSIM_Challenge_DB::install() suppressed dbDelta output: ' . substr($noise, 0, 4000));
+        }
     }
 
     private static function seed_whitelabel(): void {

@@ -9,6 +9,13 @@ class FXSIM_Database {
         $c = $wpdb->get_charset_collate();
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+        // See the matching comment in FXSIM_Challenge_DB::install() — dbDelta
+        // echoes raw "WordPress database error" text on routine re-activation
+        // noise (redundant ALTERs it misreads from its own CREATE TABLE diffing),
+        // and that echoed output alone makes WP's activate_plugin() report a
+        // false "triggered a fatal error". Buffer and log instead of echoing.
+        ob_start();
+
         dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_accounts (
             id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             user_id         BIGINT UNSIGNED NOT NULL,
@@ -254,16 +261,59 @@ class FXSIM_Database {
         
         // ── Competitions / Tournaments ──────────────────────────────────────────
         dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_competitions (
-            id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            name             VARCHAR(255)    NOT NULL,
-            description      TEXT            DEFAULT NULL,
-            start_date       DATETIME        NOT NULL,
-            end_date         DATETIME        NOT NULL,
-            prize_pool       VARCHAR(100)    NOT NULL DEFAULT '$0',
-            entry_fee        DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
-            max_participants INT             NOT NULL DEFAULT 0,
-            status           ENUM('upcoming','active','completed') NOT NULL DEFAULT 'upcoming',
-            created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            name                 VARCHAR(255)    NOT NULL,
+            title                VARCHAR(255)    NOT NULL DEFAULT '',
+            slug                 VARCHAR(120)    DEFAULT NULL,
+            description          TEXT            DEFAULT NULL,
+            starting_balance     DECIMAL(15,2)   NOT NULL DEFAULT 10000.00,
+            entry_fee            DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
+            max_participants     INT             NOT NULL DEFAULT 500,
+            current_participants INT             NOT NULL DEFAULT 0,
+            prize_pool           VARCHAR(100)    NOT NULL DEFAULT '$10,000',
+            prizes_breakdown     LONGTEXT        DEFAULT NULL,
+            rules_json           LONGTEXT        DEFAULT NULL,
+            start_date           DATETIME        NOT NULL,
+            end_date             DATETIME        NOT NULL,
+            status               ENUM('upcoming','active','completed','cancelled') NOT NULL DEFAULT 'upcoming',
+            created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_status (status)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_tournaments (
+            id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            title                VARCHAR(255)    NOT NULL,
+            slug                 VARCHAR(120)    DEFAULT NULL,
+            description          TEXT            DEFAULT NULL,
+            starting_balance     DECIMAL(15,2)   NOT NULL DEFAULT 10000.00,
+            entry_fee            DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
+            max_participants     INT             NOT NULL DEFAULT 500,
+            current_participants INT             NOT NULL DEFAULT 0,
+            prize_pool           VARCHAR(100)    NOT NULL DEFAULT '$10,000',
+            prizes_breakdown     LONGTEXT        DEFAULT NULL,
+            rules_json           LONGTEXT        DEFAULT NULL,
+            start_date           DATETIME        NOT NULL,
+            end_date             DATETIME        NOT NULL,
+            status               ENUM('upcoming','active','completed','cancelled') NOT NULL DEFAULT 'upcoming',
+            created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_status (status)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_tournament_participants (
+            id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            tournament_id        BIGINT UNSIGNED NOT NULL,
+            user_id              BIGINT UNSIGNED NOT NULL,
+            account_id           BIGINT UNSIGNED NOT NULL,
+            starting_equity      DECIMAL(15,2)   NOT NULL DEFAULT 10000.00,
+            current_equity       DECIMAL(15,2)   NOT NULL DEFAULT 10000.00,
+            roi_pct              DECIMAL(8,2)    NOT NULL DEFAULT 0.00,
+            max_dd_reached       DECIMAL(8,2)    NOT NULL DEFAULT 0.00,
+            rank                 INT             NOT NULL DEFAULT 0,
+            status               ENUM('active','disqualified','winner') NOT NULL DEFAULT 'active',
+            created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_tournament (tournament_id),
+            KEY idx_user (user_id),
+            KEY idx_account (account_id),
             KEY idx_status (status)
         ) $c;");
 
@@ -277,6 +327,136 @@ class FXSIM_Database {
             KEY idx_competition (competition_id),
             KEY idx_user (user_id),
             KEY idx_account (account_id)
+        ) $c;");
+
+        // ── Support Tickets & Helpdesk ──────────────────────────────────────────
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_tickets (
+            id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            ticket_number     VARCHAR(32)     NOT NULL,
+            trader_id         BIGINT UNSIGNED NOT NULL,
+            account_id        BIGINT UNSIGNED DEFAULT NULL,
+            subject           VARCHAR(255)    NOT NULL,
+            category          ENUM('billing','rules','tech_mt5','kyc','general') NOT NULL DEFAULT 'general',
+            priority          ENUM('low','medium','high','urgent') NOT NULL DEFAULT 'medium',
+            status            ENUM('open','in_progress','resolved','closed') NOT NULL DEFAULT 'open',
+            assigned_admin_id BIGINT UNSIGNED DEFAULT NULL,
+            created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY idx_ticket_num (ticket_number),
+            KEY idx_trader (trader_id),
+            KEY idx_status (status),
+            KEY idx_priority (priority),
+            KEY idx_category (category)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_ticket_messages (
+            id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            ticket_id         BIGINT UNSIGNED NOT NULL,
+            sender_type       ENUM('trader','admin') NOT NULL DEFAULT 'trader',
+            sender_id         BIGINT UNSIGNED NOT NULL,
+            message           TEXT            NOT NULL,
+            attachments       LONGTEXT        DEFAULT NULL,
+            created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_ticket (ticket_id)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_scaling_rules (
+            id                     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            profit_target_pct      DECIMAL(5,2) NOT NULL DEFAULT 10.00,
+            evaluation_period_days INT NOT NULL DEFAULT 90,
+            min_payouts            INT NOT NULL DEFAULT 2,
+            balance_multiplier_pct DECIMAL(5,2) NOT NULL DEFAULT 25.00,
+            new_profit_split       DECIMAL(5,2) NOT NULL DEFAULT 90.00,
+            max_capital_cap        DECIMAL(15,2) NOT NULL DEFAULT 2000000.00,
+            auto_scale             TINYINT(1) NOT NULL DEFAULT 0,
+            created_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_scaling_events (
+            id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            challenge_account_id BIGINT UNSIGNED NOT NULL,
+            user_id              BIGINT UNSIGNED NOT NULL,
+            old_balance          DECIMAL(15,2) NOT NULL,
+            new_balance          DECIMAL(15,2) NOT NULL,
+            old_split            DECIMAL(5,2) NOT NULL,
+            new_split            DECIMAL(5,2) NOT NULL,
+            roi_achieved         DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            payouts_completed    INT NOT NULL DEFAULT 0,
+            status               ENUM('eligible','applied','rejected','pending_approval') NOT NULL DEFAULT 'eligible',
+            reviewed_by          BIGINT UNSIGNED NULL,
+            applied_at           DATETIME NULL,
+            created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_challenge (challenge_account_id),
+            KEY idx_user (user_id),
+            KEY idx_status (status)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_syndicate_clusters (
+            id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            cluster_code  VARCHAR(64) NOT NULL,
+            account_a_id  BIGINT UNSIGNED NOT NULL,
+            account_b_id  BIGINT UNSIGNED NOT NULL,
+            user_a_id     BIGINT UNSIGNED NOT NULL,
+            user_b_id     BIGINT UNSIGNED NOT NULL,
+            symbol        VARCHAR(32) NOT NULL,
+            action_a      VARCHAR(16) NOT NULL DEFAULT 'BUY',
+            action_b      VARCHAR(16) NOT NULL DEFAULT 'SELL',
+            lot_a         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+            lot_b         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+            ip_a          VARCHAR(64) NOT NULL DEFAULT '127.0.0.1',
+            ip_b          VARCHAR(64) NOT NULL DEFAULT '127.0.0.1',
+            ip_match_type ENUM('exact','subnet_24','device_fingerprint') NOT NULL DEFAULT 'subnet_24',
+            time_delta_ms INT NOT NULL DEFAULT 1200,
+            risk_score    DECIMAL(5,2) NOT NULL DEFAULT 95.00,
+            status        ENUM('flagged','frozen','investigating','dismissed') NOT NULL DEFAULT 'flagged',
+            frozen_at     DATETIME NULL,
+            created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_cluster (cluster_code),
+            KEY idx_acc_a (account_a_id),
+            KEY idx_acc_b (account_b_id),
+            KEY idx_status (status)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_pvp_matches (
+            id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            match_code             VARCHAR(32) NOT NULL,
+            title                  VARCHAR(128) NOT NULL,
+            symbol                 VARCHAR(32) NOT NULL DEFAULT 'EURUSD',
+            stake_amount           DECIMAL(10,2) NOT NULL DEFAULT 50.00,
+            prize_pool             DECIMAL(10,2) NOT NULL DEFAULT 85.00,
+            platform_rake          DECIMAL(10,2) NOT NULL DEFAULT 15.00,
+            starting_balance       DECIMAL(15,2) NOT NULL DEFAULT 10000.00,
+            duration_minutes       INT NOT NULL DEFAULT 15,
+            creator_user_id        BIGINT UNSIGNED NOT NULL,
+            challenger_user_id     BIGINT UNSIGNED NULL,
+            creator_account_id     BIGINT UNSIGNED NULL,
+            challenger_account_id  BIGINT UNSIGNED NULL,
+            creator_pnl            DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+            challenger_pnl         DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+            creator_trades_count   INT NOT NULL DEFAULT 0,
+            challenger_trades_count INT NOT NULL DEFAULT 0,
+            winner_user_id         BIGINT UNSIGNED NULL,
+            status                 ENUM('waiting','active','completed','cancelled') NOT NULL DEFAULT 'waiting',
+            started_at             DATETIME NULL,
+            expires_at             DATETIME NULL,
+            completed_at           DATETIME NULL,
+            created_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_code (match_code),
+            KEY idx_creator (creator_user_id),
+            KEY idx_challenger (challenger_user_id),
+            KEY idx_status (status)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_pvp_events (
+            id         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            match_id   BIGINT UNSIGNED NOT NULL,
+            user_id    BIGINT UNSIGNED NULL,
+            event_type VARCHAR(32) NOT NULL,
+            message    TEXT NOT NULL,
+            payload    LONGTEXT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_match (match_id),
+            KEY idx_type (event_type)
         ) $c;");
 
         // Required for per-challenge account isolation (multiple accounts per user)
@@ -368,6 +548,123 @@ class FXSIM_Database {
             $wpdb->query("ALTER TABLE {$ca} ADD COLUMN mt5_account_type VARCHAR(30) DEFAULT NULL AFTER mt5_server");
         }
 
+        // ── Migration: Enterprise bespoke overrides columns ──────────────────
+        if (!in_array('custom_profit_split', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN custom_profit_split DECIMAL(5,2) DEFAULT NULL AFTER breach_at");
+        }
+        if (!in_array('custom_daily_dd', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN custom_daily_dd DECIMAL(5,2) DEFAULT NULL AFTER custom_profit_split");
+        }
+        if (!in_array('custom_max_dd', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN custom_max_dd DECIMAL(5,2) DEFAULT NULL AFTER custom_daily_dd");
+        }
+        if (!in_array('custom_min_days', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN custom_min_days INT DEFAULT NULL AFTER custom_max_dd");
+        }
+        if (!in_array('custom_news_trading', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN custom_news_trading TINYINT(1) DEFAULT NULL AFTER custom_min_days");
+        }
+        if (!in_array('custom_weekend_holding', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN custom_weekend_holding TINYINT(1) DEFAULT NULL AFTER custom_news_trading");
+        }
+        if (!in_array('override_admin_note', $ca_cols)) {
+            $wpdb->query("ALTER TABLE {$ca} ADD COLUMN override_admin_note VARCHAR(500) DEFAULT NULL AFTER custom_weekend_holding");
+        }
+
+        // ── Migration: fxsim_payouts status ENUM update ──────────────────────
+        $pay_tbl = $wpdb->prefix . 'fxsim_payouts';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$pay_tbl}'") === $pay_tbl) {
+            $wpdb->query("ALTER TABLE {$pay_tbl} MODIFY COLUMN status ENUM('pending','under_review','approved','rejected','paid') NOT NULL DEFAULT 'pending'");
+        }
+
+        // ── Migration: fxsim_challenge_plans standard propfirm columns ───────
+        $cp = $wpdb->prefix . 'fxsim_challenge_plans';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$cp}'") === $cp) {
+            $cp_cols = $wpdb->get_col("SHOW COLUMNS FROM {$cp}", 0);
+
+            if (!in_array('plan_type', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN plan_type ENUM('1-step','2-step','3-step','instant') NOT NULL DEFAULT '2-step' AFTER currency");
+            }
+            if (!in_array('reset_discount_pct', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN reset_discount_pct DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER scaling_max_balance");
+            }
+            if (!in_array('p3_profit_target', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN p3_profit_target DECIMAL(5,2) NOT NULL DEFAULT 3.00 AFTER p2_max_days");
+            }
+            if (!in_array('p3_daily_dd', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN p3_daily_dd DECIMAL(5,2) NOT NULL DEFAULT 5.00 AFTER p3_profit_target");
+            }
+            if (!in_array('p3_max_dd', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN p3_max_dd DECIMAL(5,2) NOT NULL DEFAULT 10.00 AFTER p3_daily_dd");
+            }
+            if (!in_array('p3_min_days', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN p3_min_days INT NOT NULL DEFAULT 5 AFTER p3_max_dd");
+            }
+            if (!in_array('p3_max_days', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN p3_max_days INT NOT NULL DEFAULT 60 AFTER p3_min_days");
+            }
+            if (!in_array('scaling_enabled', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN scaling_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER min_hold_action");
+            }
+            if (!in_array('scaling_growth_pct', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN scaling_growth_pct DECIMAL(5,2) NOT NULL DEFAULT 25.00 AFTER scaling_enabled");
+            }
+            if (!in_array('scaling_interval_months', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN scaling_interval_months INT NOT NULL DEFAULT 4 AFTER scaling_growth_pct");
+            }
+            if (!in_array('scaling_required_profit_pct', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN scaling_required_profit_pct DECIMAL(5,2) NOT NULL DEFAULT 10.00 AFTER scaling_interval_months");
+            }
+            if (!in_array('scaling_max_balance', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN scaling_max_balance DECIMAL(15,2) NOT NULL DEFAULT 2000000.00 AFTER scaling_required_profit_pct");
+            }
+            if (!in_array('min_trade_seconds', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN min_trade_seconds INT NOT NULL DEFAULT 0 AFTER consistency_pct");
+            }
+            if (!in_array('margin_call_level', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN margin_call_level DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER min_trade_seconds");
+            }
+            if (!in_array('stop_out_level', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN stop_out_level DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER margin_call_level");
+            }
+            if (!in_array('stop_loss_required', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN stop_loss_required TINYINT(1) NOT NULL DEFAULT 0 AFTER stop_out_level");
+            }
+            if (!in_array('news_window_minutes', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN news_window_minutes INT NOT NULL DEFAULT 5 AFTER news_trading");
+            }
+            if (!in_array('max_inactivity_days', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN max_inactivity_days INT NOT NULL DEFAULT 30 AFTER stop_loss_required");
+            }
+            if (!in_array('ip_matching_required', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN ip_matching_required TINYINT(1) NOT NULL DEFAULT 0 AFTER max_inactivity_days");
+            }
+            if (!in_array('ea_allowed', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN ea_allowed TINYINT(1) NOT NULL DEFAULT 1 AFTER ip_matching_required");
+            }
+            if (!in_array('copy_trading_allowed', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN copy_trading_allowed TINYINT(1) NOT NULL DEFAULT 1 AFTER ea_allowed");
+            }
+            if (!in_array('martingale_allowed', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN martingale_allowed TINYINT(1) NOT NULL DEFAULT 1 AFTER copy_trading_allowed");
+            }
+            if (!in_array('hedging_allowed', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN hedging_allowed TINYINT(1) NOT NULL DEFAULT 1 AFTER martingale_allowed");
+            }
+            if (!in_array('evaluation_profit_share', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN evaluation_profit_share DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER hedging_allowed");
+            }
+            if (!in_array('refundable_fee', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN refundable_fee TINYINT(1) NOT NULL DEFAULT 0 AFTER evaluation_profit_share");
+            }
+            if (!in_array('min_hold_action', $cp_cols)) {
+                $wpdb->query("ALTER TABLE {$cp} ADD COLUMN min_hold_action ENUM('flag','reject','void_pnl') NOT NULL DEFAULT 'flag' AFTER refundable_fee");
+            }
+
+            // Extend drawdown_type enum if needed
+            $wpdb->query("ALTER TABLE {$cp} MODIFY COLUMN drawdown_type ENUM('static','trailing','eod_trailing','static_balance','trailing_equity','trailing_balance') NOT NULL DEFAULT 'static'");
+        }
+
         // ── Migration v4.4: consolidate individual price options into combined key ─
         // Old installs stored 14 separate fxsim_price_SYMBOL options (autoload=yes).
         // New system uses one fxsim_prices_all option (autoload=no) via FXSIM_Cache.
@@ -436,6 +733,11 @@ class FXSIM_Database {
         FXSIM_Database::seed_symbols();
         FXSIM_Database::ensure_index_symbols();
         update_option('fxsim_db_version', FXSIM_VERSION);
+
+        $noise = ob_get_clean();
+        if (!empty($noise)) {
+            error_log('[PropFirm] FXSIM_Database::install() suppressed dbDelta output: ' . substr($noise, 0, 4000));
+        }
     }
 
     public static function deactivate(): void {
@@ -511,6 +813,59 @@ class FXSIM_Database {
                 'contract_size' => $r[7], 'swap_long' => $r[8], 'swap_short' => $r[9],
                 'is_active' => 0,
             ]);
+        }
+    }
+
+    /**
+     * V10.7.3 — tables for FXSIM_Push (device registry + dispatch queue).
+     * dbDelta is create-if-missing/alter-if-changed, so this is safe to call
+     * on every version bump the same way the other ensure_* migrations are.
+     */
+    public static function ensure_push_tables(): void {
+        global $wpdb;
+        $c = $wpdb->get_charset_collate();
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+        // This runs on plugins_loaded — i.e. mid-request, on EVERY page load
+        // until fxsim_feature_level advances past 3 — not just on activation.
+        // Unbuffered, dbDelta's routine "WordPress database error" noise (see
+        // install() above) would get prepended to whatever the current request
+        // is rendering, e.g. corrupting a REST API JSON response.
+        ob_start();
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_devices (
+            id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id         BIGINT UNSIGNED NOT NULL,
+            platform        VARCHAR(10)     NOT NULL,
+            provider        VARCHAR(10)     NOT NULL,
+            push_token      VARCHAR(512)    NOT NULL,
+            app_version     VARCHAR(20)     DEFAULT NULL,
+            enabled         TINYINT(1)      NOT NULL DEFAULT 1,
+            created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_seen       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY idx_push_token (push_token),
+            KEY idx_user (user_id)
+        ) $c;");
+
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_push_queue (
+            id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id         BIGINT UNSIGNED NOT NULL,
+            event_type      VARCHAR(50)     NOT NULL,
+            title           VARCHAR(200)    NOT NULL,
+            body            VARCHAR(500)    NOT NULL,
+            data            TEXT            DEFAULT NULL,
+            status          VARCHAR(10)     NOT NULL DEFAULT 'pending',
+            attempts        TINYINT UNSIGNED NOT NULL DEFAULT 0,
+            error           VARCHAR(255)    DEFAULT NULL,
+            created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            sent_at         DATETIME        DEFAULT NULL,
+            KEY idx_status (status),
+            KEY idx_user (user_id)
+        ) $c;");
+
+        $noise = ob_get_clean();
+        if (!empty($noise)) {
+            error_log('[PropFirm] FXSIM_Database::ensure_push_tables() suppressed dbDelta output: ' . substr($noise, 0, 4000));
         }
     }
 
@@ -682,6 +1037,10 @@ class FXSIM_Database {
                )",
             $user_id, $user_id
         ));
+
+        // Lets FXSIM_Push (if active) queue a push payload for every in-app
+        // notification without this method needing to know push exists.
+        do_action('fxsim_notification_created', $user_id, $type, $title, $message, $flink ?: '');
     }
 
     /**

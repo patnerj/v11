@@ -47,6 +47,14 @@ class FXSIM_2FA {
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         set_transient(self::TRANSIENT_PFX . $user_id, $code, self::CODE_TTL);
         if (class_exists('FXSIM_Emails')) {
+            // Deliberately kept SYNCHRONOUS, unlike password_reset/challenge_failed.
+            // FXSIM_Emails::send_async() defers via wp_schedule_single_event(),
+            // which under WordPress's default lazy pseudo-cron only actually
+            // fires on the NEXT incoming HTTP request — there's no guaranteed
+            // delivery time. A trader sitting on a "enter your code" screen
+            // needs the code to arrive promptly; the small SMTP-latency cost
+            // paid here is preferable to a code that might not arrive until
+            // some unrelated later request happens to trigger cron.
             FXSIM_Emails::send($user_id, '2fa_code', ['code' => $code]);
         }
     }

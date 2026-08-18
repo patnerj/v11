@@ -148,9 +148,16 @@ class FXSIM_Stripe {
         $payload   = file_get_contents('php://input');
         $sig       = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
-        // Verify signature if webhook secret is set
-        if ($wh_secret && $sig) {
-            if (!self::verify_signature($payload, $sig, $wh_secret)) {
+        // Verify signature whenever a webhook secret is configured. The
+        // previous "$wh_secret && $sig" condition meant a caller who simply
+        // omitted the Stripe-Signature header skipped verification entirely
+        // — since this handler auto-activates a paid challenge account on
+        // 'checkout.session.completed', that let anyone fabricate a fake
+        // event with an invented session_id and get a free challenge with
+        // zero payment. A missing signature must fail closed, same as a
+        // wrong one, whenever a secret is configured.
+        if ($wh_secret) {
+            if (!$sig || !self::verify_signature($payload, $sig, $wh_secret)) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid signature']);
                 exit;
@@ -173,17 +180,48 @@ class FXSIM_Stripe {
             $paid       = ($session['payment_status'] ?? '') === 'paid' || ($session['status'] ?? '') === 'complete';
 
             if ($user_id && $plan_id && $paid) {
-                // Idempotency: if this session was already processed, do nothing.
-                $already = $session_id ? $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM {$wpdb->prefix}fxsim_payment_orders WHERE txn_id=%s", $session_id)) : 0;
-                if (!$already) {
-                    // Create the order only now (payment confirmed), then auto-activate.
-                    $res = FXSIM_Payments::create_order($user_id, $plan_id, 'stripe', $coupon);
-                    $oid = (int)($res['order_id'] ?? 0);
-                    if ($oid) {
-                        if ($session_id) $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', ['txn_id' => $session_id], ['id' => $oid]);
-                        FXSIM_Payments::approve_order($oid, 0, 'Auto-approved via Stripe');
+                // Idempotency via GET_LOCK: the old SELECT-then-check-then-act
+                // was a race — two concurrent Stripe deliveries for the same
+                // session_id (Stripe retries at ~1s intervals on any non-200)
+                // could both find $already=0 before either committed
+                // create_order(), causing two funded accounts + double
+                // coupon/affiliate recording for a single payment.
+                // GET_LOCK serialises all deliveries for this session_id; the
+                // loser finds txn_id already written and exits harmlessly.
+                $lock_key = 'stripe_wh_' . md5($session_id);
+                $locked   = $session_id
+                    ? (bool) $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 10)", $lock_key))
+                    : true; // no session_id → no lock needed, proceed
+
+                if ($locked) {
+                    try {
+                        // Re-check inside the lock: another delivery may have
+                        // won the race and already written the txn_id.
+                        $already = $session_id ? $wpdb->get_var($wpdb->prepare(
+                            "SELECT id FROM {$wpdb->prefix}fxsim_payment_orders WHERE txn_id=%s", $session_id)) : 0;
+                        if (!$already) {
+                            // Create the order only now (payment confirmed), then auto-activate.
+                            $res = FXSIM_Payments::create_order($user_id, $plan_id, 'stripe', $coupon);
+                            $oid = (int)($res['order_id'] ?? 0);
+                            if ($oid) {
+                                if ($session_id) $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', ['txn_id' => $session_id], ['id' => $oid]);
+                                $approve = FXSIM_Payments::approve_order($oid, 0, 'Auto-approved via Stripe');
+                                if (empty($approve['success'])) {
+                                    error_log("[PropFirm] Stripe webhook: approve_order() failed for order #{$oid} (user {$user_id}, plan {$plan_id}) — " . ($approve['message'] ?? 'unknown error'));
+                                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                                        FXSIM_Database::log_admin(0, 'stripe_activation_failed', $user_id,
+                                            "Order #{$oid} paid via Stripe but approve_order() failed: " . ($approve['message'] ?? 'unknown error') . '. Needs manual activation.');
+                                    }
+                                }
+                            }
+                        }
+                    } finally {
+                        if ($session_id) {
+                            $wpdb->get_var($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
+                        }
                     }
+                } else {
+                    error_log("[PropFirm] Stripe webhook: failed to acquire lock for session {$session_id} — concurrent delivery?");
                 }
             } elseif ($user_id && $comp_id && $paid) {
                 // Competition entry fee paid

@@ -19,6 +19,19 @@ class FXSIM_Emails {
         add_action('wp_mail_failed', [self::class, 'log_failure']);
         add_filter('wp_mail_from',      [self::class, 'mail_from']);
         add_filter('wp_mail_from_name', [self::class, 'mail_from_name']);
+        add_action('fxsim_send_async_email', [self::class, 'handle_async_email'], 10, 4);
+    }
+
+    public static function send_async(int $user_id, string $event, array $data = [], int $attempt = 1): void {
+        wp_schedule_single_event(time(), 'fxsim_send_async_email', [$user_id, $event, $data, $attempt]);
+    }
+
+    public static function handle_async_email(int $user_id, string $event, array $data = [], int $attempt = 1): void {
+        $ok = self::send($user_id, $event, $data);
+        if (!$ok && $attempt < 3 && in_array($event, ['2fa_code', 'password_reset', 'challenge_failed'], true)) {
+            // Security-critical retry with exponential backoff (60s, 120s)
+            wp_schedule_single_event(time() + (60 * $attempt), 'fxsim_send_async_email', [$user_id, $event, $data, $attempt + 1]);
+        }
     }
 
     public static function mail_from(string $email): string {
@@ -94,8 +107,8 @@ class FXSIM_Emails {
 
     // ── Build subject + inner body per event ──────────────────────────────────
     private static function build(string $event, array $d, array $ctx): array {
-        $name  = $ctx['name'];
-        $brand = $ctx['brand'];
+        $name  = esc_html($ctx['name']);
+        $brand = esc_html($ctx['brand']);
         $fe    = self::frontend_base();
         $dash  = $fe . '/dashboard';
         $chall = $fe . '/challenges';
@@ -105,21 +118,21 @@ class FXSIM_Emails {
 
         if ($custom_subject && $custom_body) {
             $replace = [
-                '{name}' => $name,
-                '{brand}' => $brand,
-                '{plan_name}' => $d['plan_name'] ?? 'Plan',
-                '{phase}' => $d['phase'] ?? '1',
-                '{amount}' => $d['amount'] ?? '0.00',
-                '{method}' => $d['method'] ?? '',
-                '{reference}' => $d['reference'] ?? '',
-                '{reason}' => $d['reason'] ?? '',
-                '{code}' => $d['code'] ?? '',
-                '{new_balance}' => $d['new_balance'] ?? '',
-                '{new_level}' => $d['new_level'] ?? '',
-                '{rate}' => $d['rate'] ?? '',
+                '{name}'        => $name,
+                '{brand}'       => $brand,
+                '{plan_name}'   => esc_html((string)($d['plan_name'] ?? 'Plan')),
+                '{phase}'       => esc_html((string)($d['phase'] ?? '1')),
+                '{amount}'      => esc_html((string)($d['amount'] ?? '0.00')),
+                '{method}'      => esc_html((string)($d['method'] ?? '')),
+                '{reference}'   => esc_html((string)($d['reference'] ?? '')),
+                '{reason}'      => esc_html((string)($d['reason'] ?? '')),
+                '{code}'        => esc_html((string)($d['code'] ?? '')),
+                '{new_balance}' => esc_html((string)($d['new_balance'] ?? '')),
+                '{new_level}'   => esc_html((string)($d['new_level'] ?? '')),
+                '{rate}'        => esc_html((string)($d['rate'] ?? '')),
             ];
             $subject = str_replace(array_keys($replace), array_values($replace), $custom_subject);
-            $body = str_replace(array_keys($replace), array_values($replace), $custom_body);
+            $body    = str_replace(array_keys($replace), array_values($replace), $custom_body);
             return [$subject, $body];
         }
 
@@ -129,11 +142,11 @@ class FXSIM_Emails {
                 self::block_welcome($name, $brand, $dash, $chall),
             ],
             'challenge_purchased' => [
-                'Challenge Started — ' . ($d['plan_name'] ?? 'Your Challenge'),
+                'Challenge Started — ' . esc_html($d['plan_name'] ?? 'Your Challenge'),
                 self::block_purchased($name, $brand, $d, $dash),
             ],
             'phase_passed' => [
-                'Phase ' . ($d['phase'] ?? '1') . ' Passed!',
+                'Phase ' . esc_html((string)($d['phase'] ?? '1')) . ' Passed!',
                 self::block_phase_passed($name, $brand, $d, $dash),
             ],
             'challenge_passed' => [
@@ -145,7 +158,7 @@ class FXSIM_Emails {
                 self::block_challenge_failed($name, $brand, $d, $chall),
             ],
             'payment_rejected' => [
-                'Payment Not Approved — ' . ($d['plan_name'] ?? 'Challenge'),
+                'Payment Not Approved — ' . esc_html($d['plan_name'] ?? 'Challenge'),
                 self::block_payment_rejected($name, $brand, $d, $chall),
             ],
             'payment_approved' => [
@@ -155,61 +168,61 @@ class FXSIM_Emails {
             'password_reset' => [
                 'Reset your password',
                 "<p>Hi {$name},</p><p>We received a request to reset your password. Click the button below to choose a new one — this link expires in 24 hours.</p>"
-                . "<div style='text-align:center;margin:28px 0'>" . self::btn('Reset Password', (string)($d['reset_url'] ?? $dash)) . "</div>"
+                . "<div style='text-align:center;margin:28px 0'>" . self::btn('Reset Password', esc_url((string)($d['reset_url'] ?? $dash))) . "</div>"
                 . "<p style='color:#9ca3af;font-size:13px'>If you didn't request this, you can safely ignore this email.</p>",
             ],
             'payout_requested' => [
-                'Payout Request Received — $' . ($d['amount'] ?? '0.00'),
-                "<p>Hi {$name},</p><p>We've received your payout request for <strong>\$" . ($d['amount'] ?? '0.00') . "</strong> and it's now pending review.</p>"
+                'Payout Request Received — $' . esc_html((string)($d['amount'] ?? '0.00')),
+                "<p>Hi {$name},</p><p>We've received your payout request for <strong>\$" . esc_html((string)($d['amount'] ?? '0.00')) . "</strong> and it's now pending review.</p>"
                 . "<p>You'll get another email as soon as it's approved and processed.</p>"
                 . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Payouts', $dash . '/payouts') . "</div>",
             ],
             'payout_approved' => [
-                'Payout Processed — $' . ($d['amount'] ?? '0.00'),
-                "<p>Hi {$name},</p><p>Your payout of <strong>\${$d['amount']}</strong> has been processed.</p>"
-                . "<p><strong>Method:</strong> {$d['method']}<br><strong>Reference:</strong> {$d['reference']}</p>"
+                'Payout Processed — $' . esc_html((string)($d['amount'] ?? '0.00')),
+                "<p>Hi {$name},</p><p>Your payout of <strong>\$" . esc_html((string)($d['amount'] ?? '0.00')) . "</strong> has been processed.</p>"
+                . "<p><strong>Method:</strong> " . esc_html($d['method'] ?? '') . "<br><strong>Reference:</strong> " . esc_html($d['reference'] ?? '') . "</p>"
                 . "<p>Funds typically arrive within 1–3 business days.</p>"
                 . "<p>Thank you for trading with {$brand}!</p>",
             ],
             'payout_rejected' => [
                 'Payout Request — Action Required',
                 "<p>Hi {$name},</p><p>Your payout request could not be processed.</p>"
-                . (!empty($d['reason']) ? "<p><strong>Reason:</strong> {$d['reason']}</p>" : '')
+                . (!empty($d['reason']) ? "<p><strong>Reason:</strong> " . esc_html($d['reason']) . "</p>" : '')
                 . "<p>Please contact support or submit a new request from your dashboard.</p>",
             ],
             'payout_under_review' => [
                 'Payout Under Review — ' . $brand,
                 "<p>Hi {$name},</p><p>Your payout request"
-                . (!empty($d['amount']) ? " of <strong>\${$d['amount']}</strong>" : '')
+                . (!empty($d['amount']) ? " of <strong>\$" . esc_html((string)$d['amount']) . "</strong>" : '')
                 . " is now under review by our team.</p>"
                 . "<p>We'll email you again as soon as it's approved. No action is needed right now.</p>",
             ],
             'payout_paid' => [
-                'Payout Paid — $' . ($d['amount'] ?? '0.00'),
-                "<p>Hi {$name},</p><p>Your payout of <strong>\$" . ($d['amount'] ?? '0.00') . "</strong> has been <strong>paid</strong>"
+                'Payout Paid — $' . esc_html((string)($d['amount'] ?? '0.00')),
+                "<p>Hi {$name},</p><p>Your payout of <strong>\$" . esc_html((string)($d['amount'] ?? '0.00')) . "</strong> has been <strong>paid</strong>"
                 . (!empty($d['method']) ? " via " . esc_html($d['method']) : '') . ".</p>"
                 . (!empty($d['reference']) ? "<p><strong>Transaction reference:</strong> " . esc_html($d['reference']) . "</p>" : '')
-                . (!empty($d['proof_url']) ? "<div style='text-align:center;margin:24px 0'>" . self::btn('View Payment Proof', $d['proof_url']) . "</div>" : '')
+                . (!empty($d['proof_url']) ? "<div style='text-align:center;margin:24px 0'>" . self::btn('View Payment Proof', esc_url($d['proof_url'])) . "</div>" : '')
                 . "<p>Funds typically arrive within 1–3 business days.</p>"
                 . "<p>Thank you for trading with {$brand}!</p>",
             ],
             'affiliate_payout_paid' => [
-                'Affiliate Payout Sent — $' . ($d['amount'] ?? '0.00'),
-                "<p>Hi {$name},</p><p>Your affiliate withdrawal of <strong>\$" . ($d['amount'] ?? '0.00') . "</strong> has been paid.</p>"
+                'Affiliate Payout Sent — $' . esc_html((string)($d['amount'] ?? '0.00')),
+                "<p>Hi {$name},</p><p>Your affiliate withdrawal of <strong>\$" . esc_html((string)($d['amount'] ?? '0.00')) . "</strong> has been paid.</p>"
                 . (!empty($d['reference']) ? "<p><strong>Transaction reference:</strong> " . esc_html($d['reference']) . "</p>" : '')
                 . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Affiliate Dashboard', $dash . '/affiliate') . "</div>",
             ],
             'affiliate_commission' => [
                 'You earned a commission — ' . $brand,
-                "<p>Hi {$name},</p><p>Good news — one of your referrals just purchased a challenge, and you earned a commission of <strong>\$" . ($d['amount'] ?? '0.00') . "</strong>"
-                . (!empty($d['rate']) ? " (at your {$d['rate']}% rate)" : '')
+                "<p>Hi {$name},</p><p>Good news — one of your referrals just purchased a challenge, and you earned a commission of <strong>\$" . esc_html((string)($d['amount'] ?? '0.00')) . "</strong>"
+                . (!empty($d['rate']) ? " (at your " . esc_html((string)$d['rate']) . "% rate)" : '')
                 . ".</p><p>Track your referrals and earnings from your affiliate dashboard.</p>"
                 . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Affiliate Dashboard', $dash . '/affiliate') . "</div>",
             ],
             'payment_proof_submitted' => [
                 'Payment Proof Received — ' . $brand,
                 "<p>Hi {$name},</p><p>We've received your payment proof"
-                . (!empty($d['plan']) ? " for the <strong>{$d['plan']}</strong> challenge" : '')
+                . (!empty($d['plan']) ? " for the <strong>" . esc_html($d['plan']) . "</strong> challenge" : '')
                 . ". Our team will review it shortly — you'll get another email once approved.</p>"
                 . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Dashboard', $dash) . "</div>",
             ],
@@ -228,7 +241,7 @@ class FXSIM_Emails {
             'kyc_rejected' => [
                 'Identity Verification — Action Required',
                 "<p>Hi {$name},</p><p>We couldn't verify your identity with the documents provided.</p>"
-                . (!empty($d['reason']) ? "<p><strong>Reason:</strong> {$d['reason']}</p>" : '')
+                . (!empty($d['reason']) ? "<p><strong>Reason:</strong> " . esc_html($d['reason']) . "</p>" : '')
                 . "<p>Please re-submit clear, valid documents from your dashboard's Verification page.</p>",
             ],
             '2fa_code' => [
@@ -236,13 +249,13 @@ class FXSIM_Emails {
                 "<p>Hi {$name},</p><p>Your 6-digit verification code is:</p>"
                 . "<div style='font-size:40px;font-weight:800;letter-spacing:14px;font-family:monospace;"
                 . "text-align:center;padding:28px;background:#f3f4f6;color:#111827;border-radius:12px;"
-                . "margin:20px 0'>{$d['code']}</div>"
+                . "margin:20px 0'>" . esc_html((string)$d['code']) . "</div>"
                 . "<p style='color:#9ca3af;font-size:13px;text-align:center'>Expires in 10 minutes. Never share this code.</p>",
             ],
             'account_scaled' => [
                 'Account Scaled Up! — ' . $brand,
                 "<p>Congratulations {$name}!</p><p>Due to your consistent profitability, your funded account has been scaled up.</p>"
-                . "<p>Your new starting balance is <strong>$" . ($d['new_balance'] ?? '0.00') . "</strong> (Level " . ($d['new_level'] ?? 1) . ").</p>"
+                . "<p>Your new starting balance is <strong>$" . esc_html((string)($d['new_balance'] ?? '0.00')) . "</strong> (Level " . esc_html((string)($d['new_level'] ?? 1)) . ").</p>"
                 . "<p>All drawdown limits have been recalculated based on your new balance.</p>"
                 . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Dashboard', $dash) . "</div>",
             ],

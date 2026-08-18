@@ -185,30 +185,44 @@ class FXSIM_Confirmo {
                 return new WP_REST_Response(['message' => 'Order not found'], 404);
             }
 
-            // Check idempotency (don't double-process)
-            if ($order->status === 'approved' || $order->status === 'completed') {
+            // Atomically claim this order for processing. The previous
+            // "SELECT then check status then UPDATE" was a check-then-act
+            // race: two near-simultaneous 'paid' callbacks for the same
+            // order could both pass the status check before either UPDATE
+            // committed, and both would go on to create a challenge account
+            // for one payment. The UPDATE's WHERE clause itself is the
+            // claim — only the first caller's UPDATE can match a row still
+            // in a non-terminal status, so rows_affected reliably tells us
+            // whether THIS request won the race.
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$orders_table}
+                 SET status = 'approved', txn_id = %s, gateway = 'confirmo', updated_at = %s
+                 WHERE id = %d AND status NOT IN ('approved', 'completed')",
+                $invoice_id, current_time('mysql'), $order_id
+            ));
+            if (!$claimed || $wpdb->rows_affected === 0) {
                 return new WP_REST_Response(['message' => 'Already processed'], 200);
             }
-
-            // Update fxsim_payment_orders
-            $wpdb->update(
-                $orders_table,
-                [
-                    'status' => 'approved',
-                    'txn_id' => $invoice_id,
-                    'gateway' => 'confirmo',
-                    'updated_at' => current_time('mysql')
-                ],
-                ['id' => $order_id]
-            );
 
             // Call FXSIM_Challenge_Engine::create_challenge() to activate the account
             try {
                 $result = FXSIM_Challenge_Engine::create_challenge((int)$order->user_id, (int)$order->plan_id);
                 $challenge_id = $result['success'] ? ($result['challenge_id'] ?? 0) : 0;
-                
-                // Send confirmation email
-                if (class_exists('FXSIM_Emails')) {
+
+                if (!$result['success']) {
+                    // The trader already paid and the order is marked
+                    // 'approved', but no challenge account exists — this
+                    // must NOT look like a successful purchase to the
+                    // trader. Alert admin instead of sending the
+                    // "challenge purchased" email on a failure.
+                    error_log("Confirmo Webhook: create_challenge() failed for order $order_id — " . ($result['message'] ?? 'unknown error'));
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                        FXSIM_Database::log_admin(0, 'confirmo_activation_failed', (int)$order->user_id,
+                            "Order #{$order_id} paid via Confirmo but create_challenge() failed: " . ($result['message'] ?? 'unknown error') . ". Needs manual activation.");
+                    }
+                } elseif (class_exists('FXSIM_Emails')) {
+                    // Send confirmation email only when a challenge account
+                    // genuinely exists.
                     $email_data = [
                         'order_id' => $order_id,
                         'plan_id' => $order->plan_id,
@@ -217,6 +231,49 @@ class FXSIM_Confirmo {
                         'challenge_id' => $challenge_id
                     ];
                     FXSIM_Emails::send($order->user_id, 'challenge_purchased', $email_data);
+
+                    // Record coupon redemption now that payment is confirmed.
+                    // Confirmo previously never called this, so the coupon's
+                    // per-user and global usage limits were not enforced for
+                    // crypto checkouts — the same code could be reused
+                    // indefinitely. Mirrors what approve_order() does for
+                    // Stripe/manual payments.
+                    if ((int)($order->coupon_id ?? 0) > 0 && class_exists('FXSIM_Coupons')) {
+                        FXSIM_Coupons::record_redemption(
+                            (int)$order->coupon_id,
+                            (int)$order->user_id,
+                            $order_id,
+                            (float)$order->discount_amount,
+                            (float)$order->amount
+                        );
+                    }
+
+                    // Record affiliate commission off the final paid amount.
+                    // Confirmo previously never called this, so affiliates
+                    // received zero commission for any crypto conversion.
+                    if (class_exists('FXSIM_Affiliates')) {
+                        FXSIM_Affiliates::record_commission(
+                            (int)$order->user_id,
+                            $order_id,
+                            (float)$order->amount
+                        );
+                    }
+
+                    // Admin audit trail (Stripe/manual paths already log via
+                    // approve_order(); Confirmo had no equivalent entry).
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                        FXSIM_Database::log_admin(0, 'confirmo_payment_approved', (int)$order->user_id,
+                            "Order #{$order_id} paid via Confirmo (invoice {$invoice_id}). Challenge #{$challenge_id} activated.");
+                    }
+
+                    // In-app notification for the trader.
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'push_notification')) {
+                        FXSIM_Database::push_notification((int)$order->user_id, 'success',
+                            'Challenge activated',
+                            'Your crypto payment was confirmed and your challenge account is now active. Good luck!',
+                            '/dashboard'
+                        );
+                    }
                 }
 
                 // Invalidate user cache

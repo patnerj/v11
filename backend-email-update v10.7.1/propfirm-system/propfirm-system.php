@@ -56,6 +56,8 @@ require_once FXSIM_DIR . 'admin/class-admin.php';
 require_once FXSIM_DIR . 'includes/stripe/class-stripe.php';
 require_once FXSIM_DIR . 'includes/class-scaling-engine.php';  // v11: automated scaling plans
 require_once FXSIM_DIR . 'includes/class-confirmo.php';        // v11: Confirmo crypto payments
+require_once FXSIM_DIR . 'includes/class-pvp-engine.php';      // v11.1: 1v1 PvP E-Sports Arena engine
+require_once FXSIM_DIR . 'includes/class-push.php';             // v10.7.3: push notification foundation (device registry + queue)
 
 // ── Activation / Deactivation ─────────────────────────────────────────────────
 // Activation order is intentional:
@@ -143,6 +145,12 @@ add_action('plugins_loaded', function () {
         }
         update_option('fxsim_feature_level', 2, false);
     }
+    if ($fxsim_feature_level < 3) {
+        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'ensure_push_tables')) {
+            FXSIM_Database::ensure_push_tables(); // V10.7.3 push notification foundation tables
+        }
+        update_option('fxsim_feature_level', 3, false);
+    }
 
     FXSIM_REST_API::register();
 
@@ -164,6 +172,7 @@ add_action('plugins_loaded', function () {
     FXSIM_PWA::register();
     FXSIM_Emails::register(); // SMTP configuration + failure logging
     FXSIM_2FA::register();    // Two-factor authentication
+    FXSIM_Push::register();   // Device registry + push queue (delivery unimplemented by design)
 
     // 30-second price cron
     add_action('fxsim_price_update', ['FXSIM_Price_Feed', 'update_all_prices']);
@@ -176,12 +185,68 @@ add_action('plugins_loaded', function () {
     add_action('fxsim_price_update', ['FXSIM_Trading_Engine', 'process_pending_orders'], 20);
     add_action('fxsim_price_update', ['FXSIM_Trading_Engine', 'check_weekend_holding'],  30);
 
+    // Daily-tasks watchdog: checked from the price cron (fires every ~30s) so
+    // fxsim_daily_tasks is monitored by a DIFFERENT cron than itself — the
+    // original health check only monitored the price cron from inside the
+    // daily-tasks cron, so a silently-dead daily-tasks cron had no watchdog
+    // at all. At most one alert email per check (throttled via a transient),
+    // and only once daily_tasks has had a chance to run at least once.
+    add_action('fxsim_price_update', function () {
+        $last = (int) get_option('fxsim_last_daily_tasks_run', 0);
+        if ($last === 0) return; // hasn't run yet since activation — nothing to alert on
+        $stale_seconds = time() - $last;
+        if ($stale_seconds <= DAY_IN_SECONDS + (2 * HOUR_IN_SECONDS)) return; // within schedule + buffer
+        if (get_transient('fxsim_daily_tasks_stale_alerted')) return; // already alerted recently
+        set_transient('fxsim_daily_tasks_stale_alerted', 1, 6 * HOUR_IN_SECONDS);
+
+        $brand = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System') : 'PropFirm System';
+        $hours = round($stale_seconds / HOUR_IN_SECONDS, 1);
+        wp_mail(get_option('admin_email'),
+            "[{$brand}] ⚠ Daily Tasks Cron Not Running — Action Required",
+            "<p>fxsim_daily_tasks has not completed successfully in <strong>{$hours} hours</strong> (expected every 24h).</p>"
+            . "<p>Swaps, breach/promotion evaluation, and scaling checks are not running. Check your server cron and the PHP error log.</p>",
+            ['Content-Type: text/html; charset=UTF-8']
+        );
+        error_log("[PropFirm] fxsim_daily_tasks watchdog: stale for {$hours} hours, admin alerted.");
+    }, 40);
+
     // Daily tasks: swaps + challenge snapshots/time-checks (replaces old fxsim_daily_swap)
     add_action('fxsim_daily_tasks', function () {
-        FXSIM_Trading_Engine::apply_daily_swaps();
-        FXSIM_Challenge_Engine::daily_tasks();
-        if (class_exists('FXSIM_Scaling_Engine')) {
-            FXSIM_Scaling_Engine::daily_scaling_check();
+        global $wpdb;
+        // Concurrency guard: without this, an overlapping run (a slow prior
+        // execution still in progress when WP-Cron fires again) could apply
+        // swaps twice, or race breach()/promote() against a second pass over
+        // the same challenges. Matches the GET_LOCK pattern already used by
+        // check_sl_tp()/process_pending_orders()/check_margin_levels().
+        $lock_key = 'fxsim_daily_tasks_running';
+        $locked = $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 0)", $lock_key));
+        if (!$locked) {
+            error_log('[PropFirm] fxsim_daily_tasks: skipped — a previous run is still in progress.');
+            return;
+        }
+        try {
+            FXSIM_Trading_Engine::apply_daily_swaps();
+            FXSIM_Challenge_Engine::daily_tasks();
+            if (class_exists('FXSIM_Push')) FXSIM_Push::cleanup();
+            // NOTE: daily_scaling_check() was previously called a second time
+            // here, AFTER FXSIM_Challenge_Engine::daily_tasks() already calls
+            // it internally — every funded account got evaluated twice per
+            // run. is_eligible()'s own interval check happened to make this
+            // self-guarding (the first pass's last_scaled_at update made the
+            // second pass ineligible), so it was wasted work, not a double
+            // scale-up — but still removed as dead/redundant.
+
+            // Watchdog timestamp: the price-tick cron (fxsim_price_update,
+            // which fires every ~30s) checks this for staleness below. The
+            // old health check only monitored the PRICE cron, from inside
+            // THIS cron — if fxsim_daily_tasks itself silently stopped
+            // firing, nothing would ever have noticed. This makes the two
+            // crons watch each other instead of one watching only the other.
+            update_option('fxsim_last_daily_tasks_run', time(), false);
+        } catch (\Throwable $e) {
+            error_log('[PropFirm] fxsim_daily_tasks failed: ' . $e->getMessage());
+        } finally {
+            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
         }
 
         // ── Cron health check (once per day) ──────────────────────────────────
@@ -226,9 +291,13 @@ add_action('plugins_loaded', function () {
     // After trade open: increment trading day counter
     add_action('fxsim_trade_opened', function (int $account_id) {
         global $wpdb;
+        // 'funded' must be included here, not just 'active' — otherwise
+        // trading_days permanently stops incrementing the moment a trader
+        // gets funded, which silently breaks any minimum-trading-days-before
+        // -payout gate for every funded account from that point forward.
         $ch = $wpdb->get_row($wpdb->prepare(
             "SELECT id FROM {$wpdb->prefix}fxsim_challenge_accounts
-             WHERE fxsim_account_id=%d AND status='active' LIMIT 1", $account_id
+             WHERE fxsim_account_id=%d AND status IN ('active','funded') LIMIT 1", $account_id
         ));
         if ($ch) FXSIM_Challenge_Engine::increment_trading_days((int)$ch->id);
     }, 10, 1);
@@ -489,13 +558,13 @@ if (!function_exists('wp_password_change_notification')) {
 // Fired by WP-Cron after proof upload completes. Keeps the /payment/submit-proof
 // REST response free of SMTP latency. get_order() and notify_admin_new_proof()
 // are both public statics — visibility was already sufficient.
-add_action('fxsim_notify_admin_proof', function (int $order_id, string $proof_url): void {
+add_action('fxsim_notify_admin_proof', function (int $order_id): void {
     if (!class_exists('FXSIM_Payments')) return;
     $order = FXSIM_Payments::get_order($order_id);
     if ($order) {
-        FXSIM_Payments::notify_admin_new_proof($order, $proof_url);
+        FXSIM_Payments::notify_admin_new_proof($order);
     }
-}, 10, 2);
+}, 10, 1);
 
 // ── User registration: NO auto account — user must purchase a challenge first ─
 // Account is created only when a challenge is purchased via create_challenge()

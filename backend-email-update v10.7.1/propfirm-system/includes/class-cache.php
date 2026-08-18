@@ -89,6 +89,35 @@ class FXSIM_Cache {
     }
 
     /**
+     * Increment a numeric value in the cache atomically if supported.
+     *
+     * @param string $key   Cache key.
+     * @param int    $offset Amount to increment.
+     * @param string $group Optional sub-group.
+     * @return int|false    The new value on success, or false on failure.
+     */
+    public static function incr(string $key, int $offset = 1, string $group = self::GROUP): int|false {
+        if (self::has_object_cache() && function_exists('wp_cache_incr')) {
+            return wp_cache_incr($key, $offset, $group);
+        }
+        // Fallback for transients or object cache lacking incr: read-modify-write (not atomic)
+        $t_key = self::transient_key($key, $group);
+        if (self::has_object_cache()) {
+            $val = wp_cache_get($key, $group);
+            if ($val === false) return false;
+            $new_val = (int)$val + $offset;
+            wp_cache_replace($key, $new_val, $group); // Note: TTL is lost/refreshed depending on object cache backend
+            return $new_val;
+        } else {
+            $val = get_transient($t_key);
+            if ($val === false) return false;
+            $new_val = (int)$val + $offset;
+            set_transient($t_key, $new_val, 3600); // We don't know the exact original TTL, defaulting to 1 hour
+            return $new_val;
+        }
+    }
+
+    /**
      * Build a transient key from group + key.
      * Transient keys are global (no group support) so we prefix manually.
      * Max transient key length in WP is 172 chars; we keep well under that.

@@ -110,16 +110,17 @@ class FXSIM_Challenge_Engine {
         // Update peak + current balance
         self::update_challenge_balance($challenge_id, $balance, $peak);
 
-        // Get rules for current phase
+        // Get rules for current phase (including custom enterprise overrides)
         $phase = (int)$challenge->phase;
-        [$profit_target, $daily_dd_pct, $max_dd_pct, $min_days, $max_days] = self::get_phase_rules($plan, $phase);
+        [$profit_target, $daily_dd_pct, $max_dd_pct, $min_days, $max_days] = self::get_phase_rules($plan, $phase, $challenge);
 
         // ── Drawdown calculation based on type ────────────────────────────────
-        $dd_type = $challenge->drawdown_type ?? 'static';
+        $dd_type = $challenge->drawdown_type ?? ($plan->drawdown_type ?? 'static');
         $current_equity = min($balance, $equity); // Use the lower of balance/equity
 
         switch ($dd_type) {
             case 'trailing':
+            case 'trailing_equity':
                 // Trailing DD: floor moves up with equity high-water mark
                 $hwm = max((float)$challenge->equity_hwm, $current_equity);
                 $new_floor = $hwm * (1 - $max_dd_pct / 100);
@@ -136,12 +137,17 @@ class FXSIM_Challenge_Engine {
                 break;
 
             case 'eod_trailing':
+            case 'trailing_balance':
                 // EOD Trailing: floor only updates at end of day (in daily_tasks)
                 // Here we just check against the stored floor
                 $dd_breach_level = (float)$challenge->trailing_dd_floor;
+                if ($dd_breach_level <= 0) {
+                    $dd_breach_level = $start * (1 - $max_dd_pct / 100);
+                }
                 break;
 
             case 'static':
+            case 'static_balance':
             default:
                 // Static: fixed from starting balance
                 $dd_breach_level = $start * (1 - $max_dd_pct / 100);
@@ -152,7 +158,7 @@ class FXSIM_Challenge_Engine {
         if ($current_equity <= $dd_breach_level) {
             $dd_fmt    = number_format($start - $current_equity, 2);
             $start_fmt = number_format($start, 2);
-            $type_label = $dd_type === 'static' ? 'Static' : ($dd_type === 'trailing' ? 'Trailing' : 'EOD Trailing');
+            $type_label = (in_array($dd_type, ['trailing', 'trailing_equity'], true)) ? 'Trailing Equity' : ((in_array($dd_type, ['eod_trailing', 'trailing_balance'], true)) ? 'EOD Trailing Balance' : 'Static');
             self::breach($challenge_id, (int)$challenge->user_id, 'max_drawdown',
                 $max_dd_pct, round(($start - $current_equity) / $start * 100, 2),
                 "{$type_label} max drawdown breached: equity dropped to \$" . number_format($current_equity, 2) . " (floor: \$" . number_format($dd_breach_level, 2) . ")");
@@ -172,41 +178,67 @@ class FXSIM_Challenge_Engine {
             return;
         }
 
-        // ── Check 3: Consistency rule ──────────────────────────────────────────
-        if ((int)$plan->consistency_rule) {
-            $pct = (float)$plan->consistency_pct;
-            $daily_stats = $wpdb->get_results($wpdb->prepare(
-                "SELECT DATE(closed_at) as trade_date, SUM(CASE WHEN pnl>0 THEN pnl ELSE 0 END) as day_profit
-                 FROM {$wpdb->prefix}fxsim_trades
-                 WHERE account_id=%d AND pnl > 0
-                 GROUP BY trade_date",
-                $challenge->fxsim_account_id
-            ));
-            $total_profit = array_sum(array_column($daily_stats, 'day_profit'));
-            if ($total_profit > 0 && count($daily_stats) > 0) {
-                $best_day = max(array_column($daily_stats, 'day_profit'));
-                $best_day_pct = ($best_day / $total_profit) * 100;
-                if ($best_day_pct > $pct) {
-                    $bp_fmt = number_format($best_day_pct, 1);
-                    self::breach($challenge_id, (int)$challenge->user_id, 'consistency',
-                        $pct, $best_day_pct,
-                        "Consistency rule violated: best single day ({$bp_fmt}%) exceeds {$pct}% of total profit.");
-                    return;
-                }
-            }
-        }
-
-        // ── Check 4: Profit target reached → promote (only for evaluation phases) ──
+        // ── Check 3 & 4: Profit target reached & consistency rule → promote ────
+        // Consistency used to run unconditionally after every single trade
+        // close and call breach() directly. With only one profitable day on
+        // record — which is true by definition on a trader's very first
+        // winning trade — best_day_pct is mathematically always 100%,
+        // exceeding any realistic consistency_pct threshold. That failed
+        // every trader on day one whenever the rule was enabled. It's now a
+        // promotion gate instead: it blocks advancing to the next phase
+        // rather than permanently failing the account, and only gets
+        // evaluated once there's actually a promotion to gate.
         if ($challenge->status === 'active' && $phase >= 1) {
             $profit_needed = $start * ($profit_target / 100);
             $current_profit = $balance - $start;
             if ($current_profit >= $profit_needed) {
                 $trading_days = (int)$challenge->trading_days;
                 if ($trading_days >= $min_days) {
-                    self::promote($challenge_id, $challenge, $plan);
+                    $open_positions = (int)$wpdb->get_var($wpdb->prepare(
+                        "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_positions WHERE account_id=%d",
+                        $challenge->fxsim_account_id
+                    ));
+                    if ($open_positions === 0) {
+                        $consistency = self::check_consistency($challenge, $plan);
+                        if ($consistency['passed']) {
+                            self::promote($challenge_id, $challenge, $plan);
+                        }
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Evaluate the consistency rule (best single day must not exceed
+     * consistency_pct of total profit) as a pass/fail check — never a
+     * breach. Used to gate phase promotion.
+     *
+     * @return array{passed: bool, best_day_pct: float, limit_pct: float}
+     */
+    public static function check_consistency(object $challenge, object $plan): array {
+        $result = ['passed' => true, 'best_day_pct' => 0.0, 'limit_pct' => 0.0];
+        if (!(int)$plan->consistency_rule) return $result;
+
+        global $wpdb;
+        $pct = (float)$plan->consistency_pct;
+        $result['limit_pct'] = $pct;
+
+        $daily_stats = $wpdb->get_results($wpdb->prepare(
+            "SELECT DATE(closed_at) as trade_date, SUM(CASE WHEN pnl>0 THEN pnl ELSE 0 END) as day_profit
+             FROM {$wpdb->prefix}fxsim_trades
+             WHERE account_id=%d AND pnl > 0
+             GROUP BY trade_date",
+            $challenge->fxsim_account_id
+        ));
+        $total_profit = array_sum(array_column($daily_stats, 'day_profit'));
+        if ($total_profit > 0 && count($daily_stats) > 0) {
+            $best_day = max(array_column($daily_stats, 'day_profit'));
+            $best_day_pct = ($best_day / $total_profit) * 100;
+            $result['best_day_pct'] = round($best_day_pct, 2);
+            if ($best_day_pct > $pct) $result['passed'] = false;
+        }
+        return $result;
     }
 
     // ── Daily tasks: reset daily DD tracking, check time limits, EOD trailing ─
@@ -225,7 +257,7 @@ class FXSIM_Challenge_Engine {
             if (!$plan) continue;
 
             $phase = (int)$ch->phase;
-            [$pt, $dd, $max_dd_pct, $min_d, $max_d] = self::get_phase_rules($plan, $phase);
+            [$pt, $dd, $max_dd_pct, $min_d, $max_d] = self::get_phase_rules($plan, $phase, $ch);
 
             // ── EOD Trailing Drawdown: update trailing floor at day's end ─────
             if (($ch->drawdown_type ?? 'static') === 'eod_trailing') {
@@ -258,6 +290,27 @@ class FXSIM_Challenge_Engine {
                     self::breach((int)$ch->id, (int)$ch->user_id, 'time_limit',
                         $max_d, 0,
                         "Phase {$ch->phase} time limit of {$max_d} days exceeded without reaching profit target.");
+                    continue;
+                }
+            }
+
+            // Check Inactivity limit
+            if (isset($plan->max_inactivity_days) && (int)$plan->max_inactivity_days > 0) {
+                $max_inactive = (int)$plan->max_inactivity_days;
+                $last_trade = $wpdb->get_var($wpdb->prepare("SELECT MAX(opened_at) FROM {$wpdb->prefix}fxsim_trades WHERE account_id = %d", $ch->fxsim_account_id));
+                $last_pos = $wpdb->get_var($wpdb->prepare("SELECT MAX(opened_at) FROM {$wpdb->prefix}fxsim_positions WHERE account_id = %d", $ch->fxsim_account_id));
+                
+                $last_activity = $ch->created_at;
+                if ($last_trade && strtotime($last_trade) > strtotime($last_activity)) $last_activity = $last_trade;
+                if ($last_pos && strtotime($last_pos) > strtotime($last_activity)) $last_activity = $last_pos;
+                
+                $days_inactive = (time() - strtotime($last_activity)) / 86400;
+                
+                if ($days_inactive > $max_inactive) {
+                    self::breach((int)$ch->id, (int)$ch->user_id, 'inactivity',
+                        $max_inactive, 0,
+                        "Inactivity limit reached: No trades placed in {$max_inactive} days.");
+                    continue;
                 }
             }
 
@@ -275,32 +328,58 @@ class FXSIM_Challenge_Engine {
     private static function promote(int $challenge_id, object $challenge, object $plan): void {
         global $wpdb;
         $current_phase = (int)$challenge->phase;
-        $total_phases  = (int)$plan->phases;
+        $total_phases  = (!empty($plan->plan_type) && $plan->plan_type === '1-step') ? 1 : ((!empty($plan->plan_type) && $plan->plan_type === '3-step') ? 3 : ((!empty($plan->plan_type) && $plan->plan_type === 'instant') ? 0 : (int)($plan->phases ?? 2)));
         $user_id       = (int)$challenge->user_id;
         $dd_type       = $challenge->drawdown_type ?? 'static';
+        $start         = (float)$challenge->starting_balance;
+
+        try {
+            self::promote_inner($challenge_id, $challenge, $plan, $current_phase, $total_phases, $user_id, $start);
+        } catch (\Throwable $e) {
+            error_log("[PropFirm] promote() failed for challenge #{$challenge_id} (phase={$current_phase}): " . $e->getMessage());
+        }
+    }
+
+    private static function promote_inner(int $challenge_id, object $challenge, object $plan, int $current_phase, int $total_phases, int $user_id, float $start): void {
+        global $wpdb;
+
+        // Force close any remaining positions to be completely safe
+        self::force_close_all_positions($challenge_id, $user_id);
+
+        // Reset account balance to starting balance
+        $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
+            'balance'     => $start,
+            'equity'      => $start,
+            'margin_used' => 0,
+        ], ['id' => $challenge->fxsim_account_id]);
+
+        // Log a reset transaction
+        FXSIM_Database::log_transaction(
+            (int)$challenge->fxsim_account_id,
+            'adjustment',
+            0.0,
+            $start,
+            "Phase {$current_phase} passed. Resetting to initial balance."
+        );
 
         if ($current_phase < $total_phases) {
             // ── Advance to next phase ────────────────────────────────────────
             $next_phase = $current_phase + 1;
-            $start      = (float)$challenge->starting_balance;
 
             // Get max_days for next phase dynamically
             [$next_pt, $next_dd, $next_mdd, $next_min, $next_max] = self::get_phase_rules($plan, $next_phase);
             $phase_end = date('Y-m-d H:i:s', strtotime("+{$next_max} days"));
 
             // Calculate new DD floor for next phase
-            $current_balance = (float)$challenge->current_balance;
-            $new_dd_floor = ($dd_type === 'static')
-                ? $start * (1 - $next_mdd / 100)
-                : $current_balance * (1 - $next_mdd / 100);
+            $new_dd_floor = $start * (1 - $next_mdd / 100);
 
             $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
                 'phase'               => $next_phase,
                 'status'              => 'active',
-                'starting_balance'    => $start,
-                'peak_balance'        => max((float)$challenge->peak_balance, $current_balance),
-                'daily_start_balance' => $current_balance,
-                'equity_hwm'          => $current_balance,
+                'current_balance'     => $start,
+                'peak_balance'        => $start,
+                'daily_start_balance' => $start,
+                'equity_hwm'          => $start,
                 'trailing_dd_floor'   => $new_dd_floor,
                 'trading_days'        => 0,
                 'phase_started_at'    => current_time('mysql'),
@@ -325,8 +404,14 @@ class FXSIM_Challenge_Engine {
 
             if (class_exists('FXSIM_Webhooks')) {
                 $u = get_userdata($user_id);
-                if ($u) {
-                    FXSIM_Webhooks::notify_funded($u->display_name ?: $u->user_login, (float)$challenge->starting_balance);
+                if (method_exists('FXSIM_Webhooks', 'notify_funded')) {
+                    FXSIM_Webhooks::notify_funded($u ? ($u->display_name ?: $u->user_login) : "Trader #{$user_id}", (float)$challenge->starting_balance);
+                } else {
+                    FXSIM_Webhooks::dispatch('purchase', [
+                        'user' => $u ? ($u->display_name ?: $u->user_login) : "Trader #{$user_id}",
+                        'plan' => $plan->name ?? 'Funded Account',
+                        'amount' => (float)$challenge->starting_balance,
+                    ]);
                 }
             }
         }
@@ -336,41 +421,67 @@ class FXSIM_Challenge_Engine {
     private static function breach(int $challenge_id, int $user_id, string $rule, $limit, $actual, string $description): void {
         global $wpdb;
 
-        // Lock the challenge account
-        $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
-            'status'       => 'failed',
-            'breach_reason'=> $description,
-            'breach_at'    => current_time('mysql'),
-            'failed_at'    => current_time('mysql'),
-        ], ['id' => $challenge_id]);
+        try {
+            // Atomic claim: makes breach() idempotent under cron overlap (e.g.
+            // fxsim_daily_tasks firing again before a slow prior run finished).
+            // Without this, two concurrent callers could both pass a prior
+            // status check, both force-close positions, both insert a breach
+            // row, and both fire the notification/webhook for the same
+            // breach. close_position() itself is unaffected by claiming the
+            // CHALLENGE status here — it gates on fxsim_accounts.status
+            // ('active'), which this function only flips to 'frozen' further
+            // below, after positions are closed (see the comment there).
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_challenge_accounts
+                 SET status = 'failed', breach_reason = %s, breach_at = %s, failed_at = %s
+                 WHERE id = %d AND status NOT IN ('failed', 'passed', 'cancelled')",
+                $description, current_time('mysql'), current_time('mysql'), $challenge_id
+            ));
+            if (!$claimed || $wpdb->rows_affected === 0) {
+                return; // Already breached (or otherwise terminal) — nothing to do
+            }
 
-        // Log breach
-        $wpdb->insert($wpdb->prefix . 'fxsim_challenge_breaches', [
-            'challenge_id' => $challenge_id,
-            'user_id'      => $user_id,
-            'rule_type'    => $rule,
-            'rule_value'   => $limit,
-            'actual_value' => $actual,
-            'description'  => $description,
-        ]);
+            // Close all open positions BEFORE freezing the account, otherwise close_position fails
+            // to find an 'active' account and leaves the positions orphaned.
+            self::force_close_all_positions($challenge_id, $user_id);
 
-        // Freeze the underlying trading account
-        $challenge = FXSIM_Challenge_DB::get_challenge($challenge_id);
-        if ($challenge) {
-            $wpdb->update($wpdb->prefix . 'fxsim_accounts',
-                ['status' => 'frozen'],
-                ['id' => (int)$challenge->fxsim_account_id]
-            );
+            // Log breach
+            $wpdb->insert($wpdb->prefix . 'fxsim_challenge_breaches', [
+                'challenge_id' => $challenge_id,
+                'user_id'      => $user_id,
+                'rule_type'    => $rule,
+                'rule_value'   => $limit,
+                'actual_value' => $actual,
+                'description'  => $description,
+            ]);
+
+            // Freeze the underlying trading account
+            $challenge = FXSIM_Challenge_DB::get_challenge($challenge_id);
+            if ($challenge) {
+                $wpdb->update($wpdb->prefix . 'fxsim_accounts',
+                    ['status' => 'frozen'],
+                    ['id' => (int)$challenge->fxsim_account_id]
+                );
+            }
+
+            // Notify
+            self::notify_user($user_id, 'challenge_failed', [
+                'reason' => $description,
+                'rule'   => $rule,
+            ]);
+
+            if (class_exists('FXSIM_Webhooks')) {
+                $user_info = get_userdata($user_id);
+                FXSIM_Webhooks::dispatch('breach', [
+                    'account_id'  => $challenge_id,
+                    'trader_name' => $user_info ? $user_info->display_name : "Trader #$user_id",
+                    'reason'      => $description,
+                    'equity'      => (float)$actual,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            error_log("[PropFirm] breach() failed for challenge #{$challenge_id} (rule={$rule}): " . $e->getMessage());
         }
-
-        // Close all open positions
-        self::force_close_all_positions($challenge_id, $user_id);
-
-        // Notify
-        self::notify_user($user_id, 'challenge_failed', [
-            'reason' => $description,
-            'rule'   => $rule,
-        ]);
     }
 
     // ── Force-close all open positions on breach ──────────────────────────────
@@ -378,12 +489,21 @@ class FXSIM_Challenge_Engine {
         global $wpdb;
         $challenge = FXSIM_Challenge_DB::get_challenge($challenge_id);
         if (!$challenge) return;
+        
         $positions = $wpdb->get_results($wpdb->prepare(
             "SELECT id FROM {$wpdb->prefix}fxsim_positions WHERE account_id=%d",
             $challenge->fxsim_account_id
         ));
         foreach ($positions as $pos) {
-            FXSIM_Trading_Engine::close_position($user_id, (int)$pos->id, 'breach');
+            FXSIM_Trading_Engine::close_position($user_id, (int)$pos->id, 'breach', true);
+        }
+
+        $pending = $wpdb->get_results($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}fxsim_pending_orders WHERE account_id=%d",
+            $challenge->fxsim_account_id
+        ));
+        foreach ($pending as $order) {
+            FXSIM_Trading_Engine::cancel_pending_order($user_id, (int)$order->id, 'breach');
         }
     }
 
@@ -426,7 +546,7 @@ class FXSIM_Challenge_Engine {
         if (!$acc) return [];
 
         $phase = (int)$ch->phase;
-        [$pt, $daily_dd, $max_dd, $min_d, $max_d] = self::get_phase_rules($plan, $phase);
+        [$pt, $daily_dd, $max_dd, $min_d, $max_d] = self::get_phase_rules($plan, $phase, $ch);
 
         if ($ch->status === 'funded' && isset($plan->scaling_enabled) && (int)$plan->scaling_enabled === 1) {
             $pt = (float)($plan->scaling_required_profit_pct ?? 10);
@@ -536,15 +656,35 @@ class FXSIM_Challenge_Engine {
         ];
     }
 
-    // ── Phase rule helper (supports phases 1, 2, 3 + funded) ─────────────────
-    private static function get_phase_rules(object $plan, int $phase): array {
-        if ($phase === 1) return [(float)$plan->p1_profit_target, (float)$plan->p1_daily_dd, (float)$plan->p1_max_dd, (int)$plan->p1_min_days, (int)$plan->p1_max_days];
-        if ($phase === 2) return [(float)$plan->p2_profit_target, (float)$plan->p2_daily_dd, (float)$plan->p2_max_dd, (int)$plan->p2_min_days, (int)$plan->p2_max_days];
-        if ($phase === 3 && isset($plan->p3_profit_target)) return [(float)$plan->p3_profit_target, (float)$plan->p3_daily_dd, (float)$plan->p3_max_dd, (int)$plan->p3_min_days, (int)$plan->p3_max_days];
-        // Phase 0 = instant funded, use funded rules
-        if ($phase === 0) return [0, (float)($plan->p1_daily_dd ?? 5), (float)($plan->funded_max_dd ?? 10), 0, 0];
-        // Fallback to last defined phase
-        return [(float)$plan->p2_profit_target, (float)$plan->p2_daily_dd, (float)$plan->p2_max_dd, (int)$plan->p2_min_days, (int)$plan->p2_max_days];
+    // ── Phase rule helper (supports phases 1, 2, 3 + funded + bespoke overrides) 
+    private static function get_phase_rules(object $plan, int $phase, ?object $challenge = null): array {
+        $pt = 0; $daily_dd = 5; $max_dd = 10; $min_days = 5; $max_days = 30;
+        if ($phase === 1) {
+            $pt = (float)$plan->p1_profit_target; $daily_dd = (float)$plan->p1_daily_dd; $max_dd = (float)$plan->p1_max_dd; $min_days = (int)$plan->p1_min_days; $max_days = (int)$plan->p1_max_days;
+        } elseif ($phase === 2) {
+            $pt = (float)$plan->p2_profit_target; $daily_dd = (float)$plan->p2_daily_dd; $max_dd = (float)$plan->p2_max_dd; $min_days = (int)$plan->p2_min_days; $max_days = (int)$plan->p2_max_days;
+        } elseif ($phase === 3 && isset($plan->p3_profit_target)) {
+            $pt = (float)$plan->p3_profit_target; $daily_dd = (float)$plan->p3_daily_dd; $max_dd = (float)$plan->p3_max_dd; $min_days = (int)$plan->p3_min_days; $max_days = (int)$plan->p3_max_days;
+        } elseif ($phase === 0) {
+            $pt = 0; $daily_dd = (float)($plan->p1_daily_dd ?? 5); $max_dd = (float)($plan->funded_max_dd ?? 10); $min_days = 0; $max_days = 0;
+        } else {
+            $pt = (float)$plan->p2_profit_target; $daily_dd = (float)$plan->p2_daily_dd; $max_dd = (float)$plan->p2_max_dd; $min_days = (int)$plan->p2_min_days; $max_days = (int)$plan->p2_max_days;
+        }
+
+        // Apply account-level enterprise overrides if present
+        if ($challenge) {
+            if (isset($challenge->custom_daily_dd) && $challenge->custom_daily_dd !== null && (float)$challenge->custom_daily_dd > 0) {
+                $daily_dd = (float)$challenge->custom_daily_dd;
+            }
+            if (isset($challenge->custom_max_dd) && $challenge->custom_max_dd !== null && (float)$challenge->custom_max_dd > 0) {
+                $max_dd = (float)$challenge->custom_max_dd;
+            }
+            if (isset($challenge->custom_min_days) && $challenge->custom_min_days !== null && (int)$challenge->custom_min_days >= 0) {
+                $min_days = (int)$challenge->custom_min_days;
+            }
+        }
+
+        return [$pt, $daily_dd, $max_dd, $min_days, $max_days];
     }
 
     private static function update_challenge_balance(int $id, float $balance, float $peak): void {
@@ -557,8 +697,15 @@ class FXSIM_Challenge_Engine {
 
     // ── Notifications (Discord/Telegram/Email hooks) ──────────────────────────
     public static function notify_user(int $user_id, string $event, array $data = []): void {
-        // Use the dedicated email class for HTML emails
-        FXSIM_Emails::send($user_id, $event, $data);
+        // Use the dedicated email class for HTML emails. 'challenge_failed'
+        // fires from breach(), a money-safety path — deferred via WP-Cron
+        // (send_async, with retry) so a slow SMTP host doesn't add latency
+        // to the request that's flipping a trading account to frozen.
+        if ($event === 'challenge_failed' && method_exists('FXSIM_Emails', 'send_async')) {
+            FXSIM_Emails::send_async($user_id, $event, $data);
+        } else {
+            FXSIM_Emails::send($user_id, $event, $data);
+        }
 
         // In-app notification bell
         $dash = home_url('/dashboard/');
@@ -621,5 +768,81 @@ class FXSIM_Challenge_Engine {
         }
 
         do_action('fxsim_challenge_event', $event, $user_id, $data);
+    }
+
+    // ── News Engine Check ─────────────────────────────────────────────────────
+    public static function check_news_window(string $symbol, int $window_minutes, ?int $user_id = null, ?int $challenge_id = null): ?string {
+        $settings = get_option('fxsim_news_guard_settings', []);
+        $guard_enabled = $settings['enabled'] ?? true;
+        if (!$guard_enabled) {
+            return null;
+        }
+
+        $mode = $settings['mode'] ?? 'hard_gate';
+        $buffer_before = (int)($settings['buffer_before_minutes'] ?? ($window_minutes > 0 ? $window_minutes : 2));
+        $buffer_after  = (int)($settings['buffer_after_minutes'] ?? ($window_minutes > 0 ? $window_minutes : 2));
+
+        global $wpdb;
+        $now_utc = gmdate('Y-m-d H:i:s');
+        
+        $currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'];
+        $matched_currencies = [];
+        foreach ($currencies as $c) {
+            if (stripos($symbol, $c) !== false) {
+                $matched_currencies[] = $c;
+            }
+        }
+        // Indices / commodities mapping
+        if (empty($matched_currencies)) {
+            if (preg_match('/(US30|US500|NAS100|SPX500|DOW|XAU|XAG|WTI|BRENT)/i', $symbol)) {
+                $matched_currencies[] = 'USD';
+            } elseif (preg_match('/(GER30|GER40|DAX|FRA40|EU50)/i', $symbol)) {
+                $matched_currencies[] = 'EUR';
+            } elseif (preg_match('/(UK100|FTSE)/i', $symbol)) {
+                $matched_currencies[] = 'GBP';
+            } elseif (preg_match('/(JPN225|NIKKEI)/i', $symbol)) {
+                $matched_currencies[] = 'JPY';
+            }
+        }
+
+        if (empty($matched_currencies)) return null;
+
+        $curr_placeholders = implode(',', array_fill(0, count($matched_currencies), '%s'));
+        
+        // Window check: Event Time is within [NOW - buffer_after] to [NOW + buffer_before]
+        $sql = $wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_news_events
+             WHERE impact IN ('high', 'red')
+               AND currency IN ($curr_placeholders)
+               AND event_time_utc >= DATE_SUB(%s, INTERVAL %d MINUTE)
+               AND event_time_utc <= DATE_ADD(%s, INTERVAL %d MINUTE)
+             ORDER BY event_time_utc ASC
+             LIMIT 1",
+            ...array_merge($matched_currencies, [$now_utc, $buffer_after, $now_utc, $buffer_before])
+        );
+
+        $event = $wpdb->get_row($sql);
+        if (!$event) return null;
+
+        $event_name = $event->title ?: ($event->event_name ?? 'High Impact Release');
+        $curr = $event->currency;
+
+        if ($mode === 'soft_breach') {
+            // Soft violation: Log breach audit without rejecting trade ticket
+            if ($user_id && $challenge_id) {
+                $wpdb->insert($wpdb->prefix . 'fxsim_challenge_breaches', [
+                    'challenge_id' => $challenge_id,
+                    'user_id'      => $user_id,
+                    'rule_type'    => 'news_trading_soft',
+                    'rule_value'   => $buffer_before,
+                    'actual_value' => 0,
+                    'description'  => "Soft Violation: Trade executed on {$symbol} during high-impact news '{$event_name}' ({$curr}) at {$event->event_time_utc} UTC.",
+                ]);
+            }
+            return null; // Allowed with soft flag
+        }
+
+        // Hard Gate: Return rejection message
+        return "Trading Blocked by Macro News Guard: High impact event '{$event_name}' ({$curr}) is within restriction window (±{$buffer_before}m).";
     }
 }

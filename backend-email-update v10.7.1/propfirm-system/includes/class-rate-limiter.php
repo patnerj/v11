@@ -195,13 +195,12 @@ class FXSIM_Rate_Limiter {
             // First request in this window — set with TTL so it auto-expires
             FXSIM_Cache::set($key, 1, self::WINDOW, 'fxsim_rl');
         } else {
-            // Subsequent requests — increment without resetting TTL
-            // FXSIM_Cache::set would reset the TTL; we want the window to stay fixed.
-            // For transients: re-set with remaining TTL estimation is impractical.
-            // Solution: always set with full WINDOW TTL — this is the standard fixed-window
-            // approach. The slight TTL drift (up to WINDOW seconds extra in worst case)
-            // is acceptable for abuse protection purposes.
-            FXSIM_Cache::set($key, $count + 1, self::WINDOW, 'fxsim_rl');
+            // Subsequent requests — try atomic increment first
+            $new_count = FXSIM_Cache::incr($key, 1, 'fxsim_rl');
+            if ($new_count === false) {
+                // Fallback if incr fails (e.g., key expired between get and incr, or unsupported)
+                FXSIM_Cache::set($key, $count + 1, self::WINDOW, 'fxsim_rl');
+            }
         }
 
         // Also set Retry-After header on successful responses near the limit
@@ -331,15 +330,22 @@ class FXSIM_Rate_Limiter {
      *
      * @return string 8 hex chars.
      */
-    private static function get_ip_identity(): string {
-        // Allow trusted proxy header override via constant (defined in wp-config.php)
-        // e.g. define('FXSIM_TRUSTED_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR');
+    public static function get_client_ip(): string {
         if (defined('FXSIM_TRUSTED_PROXY_HEADER') && !empty($_SERVER[FXSIM_TRUSTED_PROXY_HEADER])) {
             // Take only the first IP in a comma-separated list (client IP, not proxy IPs)
             $ip = trim(explode(',', $_SERVER[FXSIM_TRUSTED_PROXY_HEADER])[0]);
         } else {
             $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         }
-        return substr(md5($ip), 0, 8);
+        return $ip;
+    }
+
+    /**
+     * Get a stable IP identity (hashed).
+     *
+     * @return string 8 hex chars.
+     */
+    private static function get_ip_identity(): string {
+        return substr(md5(self::get_client_ip()), 0, 8);
     }
 }

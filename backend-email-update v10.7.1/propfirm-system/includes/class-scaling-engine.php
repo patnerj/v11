@@ -22,7 +22,7 @@ class FXSIM_Scaling_Engine {
 
         // 1. Query all funded challenge accounts WHERE their plan has scaling_enabled=1
         $query = "
-            SELECT ca.*, cp.scaling_enabled, cp.scaling_interval_months, cp.scaling_required_profit_pct, cp.scaling_growth_pct, cp.scaling_max_balance, cp.p1_max_dd as max_drawdown_pct, cp.p1_daily_dd as daily_drawdown_pct, cp.drawdown_type
+            SELECT ca.*, cp.scaling_enabled, cp.scaling_interval_months, cp.scaling_required_profit_pct, cp.scaling_growth_pct, cp.scaling_max_balance, cp.p1_max_dd as max_drawdown_pct, cp.p1_daily_dd as daily_drawdown_pct, cp.drawdown_type, cp.funded_max_dd
             FROM {$ca_table} ca
             INNER JOIN {$cp_table} cp ON ca.plan_id = cp.id
             WHERE ca.status = 'funded' AND cp.scaling_enabled = 1
@@ -130,7 +130,15 @@ class FXSIM_Scaling_Engine {
         $new_scaling_level = (int) $account->scaling_level + 1;
         $now = current_time('mysql');
 
-        // Calculate new drawdown levels
+        // Rebase equity_hwm/trailing_dd_floor to the new, larger balance —
+        // without this, a trailing-drawdown funded account's floor stays
+        // pinned at the pre-scale level, so the newly added notional capital
+        // is not actually protected by the trailing buffer it should have.
+        // Same pattern used by the payout 'paid' transition and
+        // admin_scaling_apply().
+        $allowed_trail_pct = !empty($account->funded_max_dd) ? (float) $account->funded_max_dd : 0;
+        $abs_trail = round($new_balance * ($allowed_trail_pct / 100), 2);
+
         // Update challenge account
         $wpdb->update(
             $ca_table,
@@ -138,11 +146,14 @@ class FXSIM_Scaling_Engine {
                 'starting_balance' => $new_starting_balance,
                 'current_balance' => $new_balance,
                 'peak_balance' => $new_balance,
+                'daily_start_balance' => $new_balance,
+                'equity_hwm' => $new_balance,
+                'trailing_dd_floor' => round($new_balance - $abs_trail, 2),
                 'scaling_level' => $new_scaling_level,
                 'last_scaled_at' => $now
             ],
             ['id' => $account->id],
-            ['%f', '%f', '%f', '%d', '%s'],
+            ['%f', '%f', '%f', '%f', '%f', '%f', '%d', '%s'],
             ['%d']
         );
 
@@ -218,9 +229,13 @@ class FXSIM_Scaling_Engine {
         global $wpdb;
         $history_table = $wpdb->prefix . 'fxsim_scaling_history';
 
+        // fxsim_scaling_history has no challenge_id column — only account_id
+        // (the challenge_accounts.id, set as 'account_id' in scale_up()'s own
+        // INSERT). The old WHERE clause referenced a column that never
+        // existed, so this always silently returned an empty array.
         return $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM {$history_table} WHERE challenge_id = %d ORDER BY scaled_at DESC",
+                "SELECT * FROM {$history_table} WHERE account_id = %d ORDER BY scaled_at DESC",
                 $challenge_id
             ),
             ARRAY_A
@@ -305,7 +320,7 @@ class FXSIM_Scaling_Engine {
         $cp_table = $wpdb->prefix . 'fxsim_challenge_plans';
 
         $query = $wpdb->prepare("
-            SELECT ca.*, cp.scaling_enabled, cp.scaling_interval_months, cp.scaling_required_profit_pct, cp.scaling_growth_pct, cp.scaling_max_balance, cp.p1_max_dd as max_drawdown_pct, cp.p1_daily_dd as daily_drawdown_pct, cp.drawdown_type
+            SELECT ca.*, cp.scaling_enabled, cp.scaling_interval_months, cp.scaling_required_profit_pct, cp.scaling_growth_pct, cp.scaling_max_balance, cp.p1_max_dd as max_drawdown_pct, cp.p1_daily_dd as daily_drawdown_pct, cp.drawdown_type, cp.funded_max_dd
             FROM {$ca_table} ca
             INNER JOIN {$cp_table} cp ON ca.plan_id = cp.id
             WHERE ca.id = %d

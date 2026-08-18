@@ -79,8 +79,10 @@ class FXSIM_REST_API {
         // ── Public ──────────────────────────────────────────────────────────
         register_rest_route(self::NS, '/prices',        ['methods'=>'GET',  'callback'=>[self::class,'prices'],      'permission_callback'=>'__return_true']);
 
-        // ── V10 MT5 feed ingestion (machine-to-machine; auth via shared secret header) ──
+        // ── V10 MT5 feed ingestion & Account Sync Worker (Option B) ───────────
         register_rest_route(self::NS, '/price-feed/ingest', ['methods'=>'POST','callback'=>[self::class,'price_feed_ingest'],'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/mt5/sync',          ['methods'=>'POST','callback'=>[self::class,'mt5_account_sync'], 'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/mt5/sync-targets',  ['methods'=>'GET', 'callback'=>[self::class,'mt5_sync_targets'], 'permission_callback'=>'__return_true']);
 
         // ── Authenticated ────────────────────────────────────────────────────
         register_rest_route(self::NS, '/account',       ['methods'=>'GET',  'callback'=>[self::class,'account'],     'permission_callback'=>$auth]);
@@ -93,26 +95,60 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/transactions',  ['methods'=>'GET',  'callback'=>[self::class,'transactions'],'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/stats',         ['methods'=>'GET',  'callback'=>[self::class,'stats'],      'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/symbols',       ['methods'=>'GET',  'callback'=>[self::class,'symbols'],    'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/news-events',   ['methods'=>'GET',  'callback'=>[self::class,'public_news_events_get'], 'permission_callback'=>$auth]);
 
         // ── Admin ────────────────────────────────────────────────────────────
         register_rest_route(self::NS, '/admin/stats',         ['methods'=>'GET', 'callback'=>[self::class,'admin_stats'],  'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/users',         ['methods'=>'GET', 'callback'=>[self::class,'admin_users'],  'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/users/create',  ['methods'=>'POST','callback'=>[self::class,'admin_user_create'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/create',   ['methods'=>'POST','callback'=>[self::class,'admin_user_create'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/reset-password', ['methods'=>'POST','callback'=>[self::class,'admin_user_reset_pw'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/delete',         ['methods'=>'POST','callback'=>[self::class,'admin_user_delete'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/delete',         ['methods'=>'DELETE','callback'=>[self::class,'admin_user_delete'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/notify',         ['methods'=>'POST','callback'=>[self::class,'admin_user_notify'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/users/(?P<id>\d+)/risk-profile', ['methods'=>'GET', 'callback'=>[self::class,'admin_user_risk_profile'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/adjust-balance',['methods'=>'POST','callback'=>[self::class,'admin_adjust'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/symbol/create', ['methods'=>'POST','callback'=>[self::class,'admin_symbol_create'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/symbols/create',['methods'=>'POST','callback'=>[self::class,'admin_symbol_create'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/symbol/(?P<id>\d+)', ['methods'=>'POST','callback'=>[self::class,'admin_symbol'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/symbol/(?P<id>\d+)', ['methods'=>'DELETE','callback'=>[self::class,'admin_symbol_delete'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/symbol/(?P<id>\d+)/delete', ['methods'=>'POST','callback'=>[self::class,'admin_symbol_delete'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/position/(?P<id>\d+)/close', ['methods'=>'POST','callback'=>[self::class,'admin_position_close'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/position/(?P<id>\d+)/sltp',  ['methods'=>'POST','callback'=>[self::class,'admin_position_sltp'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/trades',        ['methods'=>'GET', 'callback'=>[self::class,'admin_trades'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/log',           ['methods'=>'GET', 'callback'=>[self::class,'admin_log'],    'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/symbols',       ['methods'=>'GET', 'callback'=>[self::class,'admin_symbols'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/set-status',   ['methods'=>'POST','callback'=>[self::class,'admin_set_status'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/risk',          ['methods'=>'GET', 'callback'=>[self::class,'admin_risk'],          'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/risk/heatmap',  ['methods'=>'GET', 'callback'=>[self::class,'admin_risk_heatmap'],  'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/risk/exposure', ['methods'=>'GET', 'callback'=>[self::class,'admin_risk_heatmap'],  'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/risk/alerts',   ['methods'=>'GET', 'callback'=>[self::class,'admin_risk_alerts'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/risk/toxic',    ['methods'=>'GET', 'callback'=>[self::class,'admin_risk_toxic'],    'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/risk/syndicates',          ['methods'=>'GET', 'callback'=>[self::class,'admin_risk_syndicates_get'],           'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/risk/syndicates/settings', ['methods'=>'POST','callback'=>[self::class,'admin_risk_syndicates_save_settings'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/risk/syndicate/(?P<id>\d+)/freeze', ['methods'=>'POST','callback'=>[self::class,'admin_risk_syndicate_freeze'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/bulk/payouts',   ['methods'=>'POST','callback'=>[self::class,'admin_bulk_payouts'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/bulk/kyc',       ['methods'=>'POST','callback'=>[self::class,'admin_bulk_kyc'],     'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/note', ['methods'=>'POST','callback'=>[self::class,'admin_user_note_save'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/mt5',  ['methods'=>'POST','callback'=>[self::class,'admin_user_mt5_save'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/traders/(?P<id>\d+)/mt5',['methods'=>'POST','callback'=>[self::class,'admin_user_mt5_save'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/user/(?P<id>\d+)',      ['methods'=>'GET', 'callback'=>[self::class,'admin_user_detail'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/trader/(?P<id>\d+)',    ['methods'=>'GET', 'callback'=>[self::class,'admin_user_detail'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/360',  ['methods'=>'GET', 'callback'=>[self::class,'admin_user_detail'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/users/(?P<id>\d+)/360', ['methods'=>'GET', 'callback'=>[self::class,'admin_user_detail'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/trader/(?P<id>\d+)/360',['methods'=>'GET', 'callback'=>[self::class,'admin_user_detail'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/traders/(?P<id>\d+)/360',['methods'=>'GET','callback'=>[self::class,'admin_user_detail'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/user/(?P<id>\d+)/override',   ['methods'=>'POST','callback'=>[self::class,'admin_challenge_override'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/users/(?P<id>\d+)/override',  ['methods'=>'POST','callback'=>[self::class,'admin_challenge_override'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/trader/(?P<id>\d+)/override', ['methods'=>'POST','callback'=>[self::class,'admin_challenge_override'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/force-prices',  ['methods'=>'POST','callback'=>[self::class,'admin_force_prices'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/news-lock',     ['methods'=>'POST','callback'=>[self::class,'admin_news_lock'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/news-events',   ['methods'=>'GET', 'callback'=>[self::class,'admin_news_events_get'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/news/events',   ['methods'=>'GET', 'callback'=>[self::class,'admin_news_events_get'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/news-events',   ['methods'=>'POST','callback'=>[self::class,'admin_news_events_save'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/news-events/(?P<id>\d+)', ['methods'=>'DELETE','callback'=>[self::class,'admin_news_events_delete'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/news/settings',      ['methods'=>'GET', 'callback'=>[self::class,'admin_news_settings_get'],  'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/news/settings/save', ['methods'=>'POST','callback'=>[self::class,'admin_news_settings_save'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/rate-limit',    ['methods'=>'POST','callback'=>[self::class,'admin_rate_limit'],  'permission_callback'=>$is_admin]);
 
         // ── Analytics ─────────────────────────────────────────────────────────
@@ -141,16 +177,22 @@ class FXSIM_REST_API {
         // ── Promotional banners ───────────────────────────────────────────────
         register_rest_route(self::NS, '/banners',                      ['methods'=>'GET', 'callback'=>[self::class,'banners_get'],          'permission_callback'=>'__return_true']);
         register_rest_route(self::NS, '/branding',                     ['methods'=>'GET', 'callback'=>[self::class,'branding_get'],         'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/theme',                        ['methods'=>'GET', 'callback'=>[self::class,'branding_get'],         'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/whitelabel',                   ['methods'=>'GET', 'callback'=>[self::class,'branding_get'],         'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/admin/theme',                  ['methods'=>'POST','callback'=>[self::class,'admin_whitelabel_save'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/theme',                  ['methods'=>'GET', 'callback'=>[self::class,'admin_whitelabel_get'],    'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/banners',                ['methods'=>'GET', 'callback'=>[self::class,'admin_banners_list'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/banners/save',           ['methods'=>'POST','callback'=>[self::class,'admin_banner_save'],    'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/banners/(?P<id>\d+)/toggle', ['methods'=>'POST','callback'=>[self::class,'admin_banner_toggle'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/banners/(?P<id>\d+)/delete', ['methods'=>'POST','callback'=>[self::class,'admin_banner_delete'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/banners/(?P<id>\d+)',    ['methods'=>'DELETE','callback'=>[self::class,'admin_banner_delete'], 'permission_callback'=>$is_admin]);
         // ── Coupons / promotions ──────────────────────────────────────────────
         register_rest_route(self::NS, '/coupon/validate',             ['methods'=>'POST','callback'=>[self::class,'coupon_validate'],      'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/admin/coupons',                ['methods'=>'GET', 'callback'=>[self::class,'admin_coupons_list'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/coupons/save',           ['methods'=>'POST','callback'=>[self::class,'admin_coupon_save'],    'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/coupons/(?P<id>\d+)/toggle', ['methods'=>'POST','callback'=>[self::class,'admin_coupon_toggle'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/coupons/(?P<id>\d+)/delete', ['methods'=>'POST','callback'=>[self::class,'admin_coupon_delete'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/coupons/(?P<id>\d+)',    ['methods'=>'DELETE','callback'=>[self::class,'admin_coupon_delete'], 'permission_callback'=>$is_admin]);
         // ── Affiliates ────────────────────────────────────────────────────────
         register_rest_route(self::NS, '/affiliate/me',                 ['methods'=>'GET', 'callback'=>[self::class,'affiliate_me'],         'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/affiliate/enroll',             ['methods'=>'POST','callback'=>[self::class,'affiliate_enroll'],     'permission_callback'=>$auth]);
@@ -161,6 +203,8 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/admin/affiliate-payouts',       ['methods'=>'GET', 'callback'=>[self::class,'admin_affiliate_payouts'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/affiliate-payouts/(?P<id>\d+)/status', ['methods'=>'POST','callback'=>[self::class,'admin_affiliate_payout_status'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/affiliates',             ['methods'=>'GET', 'callback'=>[self::class,'admin_affiliates_list'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/affiliates/config',      ['methods'=>'POST','callback'=>[self::class,'admin_affiliate_config_save'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/affiliates/payout',      ['methods'=>'POST','callback'=>[self::class,'admin_affiliate_payout_create'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/affiliates/(?P<id>\d+)/rate',   ['methods'=>'POST','callback'=>[self::class,'admin_affiliate_rate'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/affiliates/(?P<id>\d+)/status', ['methods'=>'POST','callback'=>[self::class,'admin_affiliate_status'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/commissions',            ['methods'=>'GET', 'callback'=>[self::class,'admin_commissions_list'],'permission_callback'=>$is_admin]);
@@ -187,7 +231,7 @@ class FXSIM_REST_API {
 
         register_rest_route(self::NS, '/challenge/plans',  ['methods'=>'GET', 'callback'=>[self::class,'challenge_plans'], 'permission_callback'=>'__return_true']);
         
-        // ── Competitions ──────────────────────────────────────────────────────
+        // ── Competitions & Tournaments ────────────────────────────────────────
         register_rest_route(self::NS, '/competitions',               ['methods'=>'GET', 'callback'=>[self::class,'get_competitions'],         'permission_callback'=>'__return_true']);
         register_rest_route(self::NS, '/competitions/(?P<id>\d+)/join', ['methods'=>'POST','callback'=>[self::class,'join_competition'],      'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/competitions/(?P<id>\d+)/leaderboard', ['methods'=>'GET','callback'=>[self::class,'competition_leaderboard'], 'permission_callback'=>'__return_true']);
@@ -195,6 +239,22 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/admin/competitions',         ['methods'=>'POST','callback'=>[self::class,'admin_create_competition'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/competitions/(?P<id>\d+)', ['methods'=>'PUT', 'callback'=>[self::class,'admin_update_competition'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/competitions/(?P<id>\d+)', ['methods'=>'DELETE','callback'=>[self::class,'admin_delete_competition'],'permission_callback'=>$is_admin]);
+
+        register_rest_route(self::NS, '/admin/tournaments',          ['methods'=>'GET', 'callback'=>[self::class,'admin_tournaments_list'],    'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tournaments/save',     ['methods'=>'POST','callback'=>[self::class,'admin_tournament_save'],     'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tournaments/(?P<id>\d+)', ['methods'=>'DELETE','callback'=>[self::class,'admin_tournament_delete'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tournaments/(?P<id>\d+)/leaderboard', ['methods'=>'GET','callback'=>[self::class,'admin_tournament_leaderboard'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tournaments/(?P<id>\d+)/status', ['methods'=>'POST','callback'=>[self::class,'admin_tournament_status'],'permission_callback'=>$is_admin]);
+
+        // ── 1v1 PvP E-Sports Arena ────────────────────────────────────────────
+        register_rest_route(self::NS, '/pvp/matches',                  ['methods'=>'GET', 'callback'=>[self::class,'pvp_lobby_get'],           'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/pvp/match/create',             ['methods'=>'POST','callback'=>[self::class,'pvp_match_create'],        'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/join',   ['methods'=>'POST','callback'=>[self::class,'pvp_match_join'],          'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/live',   ['methods'=>'GET', 'callback'=>[self::class,'pvp_match_live'],          'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/order',  ['methods'=>'POST','callback'=>[self::class,'pvp_match_order'],         'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/settle', ['methods'=>'POST','callback'=>[self::class,'pvp_match_settle'],        'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/cancel', ['methods'=>'POST','callback'=>[self::class,'pvp_match_cancel'],        'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/admin/pvp/analytics',          ['methods'=>'GET', 'callback'=>[self::class,'admin_pvp_analytics_get'], 'permission_callback'=>$is_admin]);
 
         // ── Challenge — authenticated ─────────────────────────────────────────
         register_rest_route(self::NS, '/challenge/start',  ['methods'=>'POST','callback'=>[self::class,'challenge_start'],   'permission_callback'=>$auth]);
@@ -226,26 +286,58 @@ class FXSIM_REST_API {
 
         // ── Challenge — admin ─────────────────────────────────────────────────
         register_rest_route(self::NS, '/admin/challenges',                   ['methods'=>'GET', 'callback'=>[self::class,'admin_challenges'],       'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/challenge/(?P<id>\d+)/override', ['methods'=>'POST','callback'=>[self::class,'admin_challenge_override'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/challenges/(?P<id>\d+)/override', ['methods'=>'POST','callback'=>[self::class,'admin_challenge_override'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/challenge/(?P<id>\d+)/approve-payout', ['methods'=>'POST','callback'=>[self::class,'admin_approve_payout'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/challenge/(?P<id>\d+)/mt5-details',   ['methods'=>'POST','callback'=>[self::class,'admin_save_mt5'],        'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/challenge/(?P<id>\d+)/mt5-details',         ['methods'=>'GET', 'callback'=>[self::class,'challenge_mt5_details'], 'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/admin/plans',                        ['methods'=>'GET', 'callback'=>[self::class,'admin_plans_list'],        'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/plans/save',                   ['methods'=>'POST','callback'=>[self::class,'admin_plan_save'],         'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/plans/(?P<id>\d+)',            ['methods'=>'DELETE','callback'=>[self::class,'admin_plan_delete'],     'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/plans/delete',                 ['methods'=>'POST','callback'=>[self::class,'admin_plan_delete'],       'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/plans/purge-and-reset',        ['methods'=>'POST','callback'=>[self::class,'admin_plans_purge_and_reset'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/plans/bulk-delete',            ['methods'=>'POST','callback'=>[self::class,'admin_plans_bulk_delete'],  'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/whitelabel',                   ['methods'=>'GET', 'callback'=>[self::class,'admin_whitelabel_get'],    'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/whitelabel/save',              ['methods'=>'POST','callback'=>[self::class,'admin_whitelabel_save'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/config/whitelabel',            ['methods'=>'GET', 'callback'=>[self::class,'admin_whitelabel_get'],    'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/config/whitelabel',            ['methods'=>'POST','callback'=>[self::class,'admin_whitelabel_save'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/config/rules',                 ['methods'=>'GET', 'callback'=>[self::class,'admin_rules_get'],        'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/config/rules',                 ['methods'=>'POST','callback'=>[self::class,'admin_rules_save'],       'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/email-templates',              ['methods'=>'POST','callback'=>[self::class,'admin_email_templates_save'], 'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/branding/upload',              ['methods'=>'POST','callback'=>[self::class,'admin_branding_upload'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/stripe/status',                ['methods'=>'GET', 'callback'=>[self::class,'admin_stripe_status'],     'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/health',                       ['methods'=>'GET', 'callback'=>[self::class,'admin_system_health'],     'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/demo/status',                  ['methods'=>'GET', 'callback'=>[self::class,'admin_demo_status'],       'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/demo/generate',                ['methods'=>'POST','callback'=>[self::class,'admin_demo_generate'],     'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/demo/seed',                    ['methods'=>'POST','callback'=>[self::class,'admin_demo_generate'],     'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/demo/remove',                  ['methods'=>'POST','callback'=>[self::class,'admin_demo_remove'],       'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/demo/purge',                   ['methods'=>'POST','callback'=>[self::class,'admin_demo_purge'],        'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/marketing/broadcast',          ['methods'=>'POST','callback'=>[self::class,'admin_marketing_broadcast'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/mt5/unassigned',               ['methods'=>'GET', 'callback'=>[self::class,'admin_mt5_unassigned'],    'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/mt5/bridge',                   ['methods'=>'GET', 'callback'=>[self::class,'admin_mt5_bridge_get'],    'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/mt5/bridge/save',              ['methods'=>'POST','callback'=>[self::class,'admin_mt5_bridge_save'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/mt5/bridge/test',              ['methods'=>'POST','callback'=>[self::class,'admin_mt5_bridge_test'],   'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/crypto',                       ['methods'=>'GET', 'callback'=>[self::class,'admin_crypto_get'],        'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/crypto/save',                  ['methods'=>'POST','callback'=>[self::class,'admin_crypto_save'],       'permission_callback'=>$is_admin]);
-        // ── Payment admin ─────────────────────────────────────────────────────
+        // ── Payment gateways & Admin ─────────────────────────────────────────
+        register_rest_route(self::NS, '/admin/payment-gateways',             ['methods'=>'GET', 'callback'=>[self::class,'admin_payment_gateways_get'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/payment-gateways/save',        ['methods'=>'POST','callback'=>[self::class,'admin_payment_gateways_save'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/payments',                     ['methods'=>'GET', 'callback'=>[self::class,'admin_payments_list'],    'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/payments/(?P<id>\d+)/approve', ['methods'=>'POST','callback'=>[self::class,'admin_payment_approve'],  'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/payments/(?P<id>\d+)/reject',  ['methods'=>'POST','callback'=>[self::class,'admin_payment_reject'],   'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/payments/(?P<id>\d+)/proof',   ['methods'=>'GET', 'callback'=>[self::class,'admin_payment_proof'],    'permission_callback'=>$is_admin]);
+        // ── Team RBAC & Staff Management ─────────────────────────────────────
+        register_rest_route(self::NS, '/admin/team',                         ['methods'=>'GET', 'callback'=>[self::class,'admin_team_list'],         'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/team/invite',                  ['methods'=>'POST','callback'=>[self::class,'admin_team_invite'],       'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/team/(?P<id>\d+)/role',        ['methods'=>'POST','callback'=>[self::class,'admin_team_update_role'],  'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/team/(?P<id>\d+)',             ['methods'=>'DELETE','callback'=>[self::class,'admin_team_delete'],     'permission_callback'=>$is_admin]);
+        // ── Certificate Templates Studio ──────────────────────────────────────
+        register_rest_route(self::NS, '/admin/certificates/templates',      ['methods'=>'GET', 'callback'=>[self::class,'admin_certificates_templates_get'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/certificates/templates/save', ['methods'=>'POST','callback'=>[self::class,'admin_certificates_templates_save'],'permission_callback'=>$is_admin]);
+        // ── Webhooks & Instant Alert Integrations ─────────────────────────────
+        register_rest_route(self::NS, '/admin/webhooks',                     ['methods'=>'GET', 'callback'=>[self::class,'admin_webhooks_get'],     'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/webhooks/save',                ['methods'=>'POST','callback'=>[self::class,'admin_webhooks_save'],    'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/webhooks/test',                ['methods'=>'POST','callback'=>[self::class,'admin_webhooks_test'],    'permission_callback'=>$is_admin]);
         // ── Stripe webhook (public — verified by signature) ───────────────────
         register_rest_route(self::NS, '/stripe/webhook', ['methods'=>'POST','callback'=>[self::class,'stripe_webhook'],'permission_callback'=>'__return_true']);
         // ── Stripe checkout (authenticated) ──────────────────────────────────
@@ -261,6 +353,10 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/challenge/(?P<id>\d+)/scaling',             ['methods'=>'GET', 'callback'=>[self::class,'challenge_scaling_status'],'permission_callback'=>$auth]);
         // ── Scaling — admin ───────────────────────────────────────────────────
         register_rest_route(self::NS, '/admin/challenge/(?P<id>\d+)/force-scale',   ['methods'=>'POST','callback'=>[self::class,'admin_force_scale'],       'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/scaling/rules',                       ['methods'=>'GET', 'callback'=>[self::class,'admin_scaling_rules_get'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/scaling/rules/save',                  ['methods'=>'POST','callback'=>[self::class,'admin_scaling_rules_save'],'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/scaling/queue',                       ['methods'=>'GET', 'callback'=>[self::class,'admin_scaling_queue_get'], 'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/scaling/(?P<id>\d+)/apply',           ['methods'=>'POST','callback'=>[self::class,'admin_scaling_apply'],     'permission_callback'=>$is_admin]);
         // ── Statistics ────────────────────────────────────────────────────────
         register_rest_route(self::NS, '/stats/full',      ['methods'=>'GET','callback'=>[self::class,'stats_full'],     'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/stats/leaderboard',['methods'=>'GET','callback'=>[self::class,'leaderboard'],   'permission_callback'=>'__return_true']);
@@ -298,33 +394,43 @@ class FXSIM_REST_API {
         // ── Pending Orders — admin ────────────────────────────────────────────
         register_rest_route(self::NS, '/admin/pending-orders',          ['methods'=>'GET', 'callback'=>[self::class,'admin_pending_orders'],'permission_callback'=>$is_admin]);
         register_rest_route(self::NS, '/admin/pending-orders/(?P<id>\d+)/reject',['methods'=>'POST','callback'=>[self::class,'admin_pending_reject'],'permission_callback'=>$is_admin]);
+
+        // ── Support Tickets & Helpdesk ─────────────────────────────────────────
+        register_rest_route(self::NS, '/tickets',                            ['methods'=>'GET', 'callback'=>[self::class,'tickets_my_list'],        'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/tickets/create',                     ['methods'=>'POST','callback'=>[self::class,'ticket_create'],          'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/tickets/(?P<id>\d+)',                ['methods'=>'GET', 'callback'=>[self::class,'ticket_my_get'],          'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/tickets/(?P<id>\d+)/reply',          ['methods'=>'POST','callback'=>[self::class,'ticket_reply'],           'permission_callback'=>$auth]);
+
+        register_rest_route(self::NS, '/admin/tickets',                      ['methods'=>'GET', 'callback'=>[self::class,'admin_tickets_list'],     'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tickets/(?P<id>\d+)',          ['methods'=>'GET', 'callback'=>[self::class,'admin_ticket_get'],       'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tickets/(?P<id>\d+)/reply',    ['methods'=>'POST','callback'=>[self::class,'admin_ticket_reply'],     'permission_callback'=>$is_admin]);
+        register_rest_route(self::NS, '/admin/tickets/(?P<id>\d+)/status',   ['methods'=>'POST','callback'=>[self::class,'admin_ticket_status'],    'permission_callback'=>$is_admin]);
     }
 
     // ── Permission callbacks ──────────────────────────────────────────────────
     public static function auth_check(): bool {
+        if (class_exists('FXSIM_API_Keys') && FXSIM_API_Keys::is_key_request()) {
+            $uid = (int) get_current_user_id();
+            if ($uid === 0 && FXSIM_API_Keys::current_key() !== null) {
+                $uid = (int) FXSIM_API_Keys::current_key()->user_id;
+                wp_set_current_user($uid);
+            }
+            return $uid > 0;
+        }
+        return is_user_logged_in();
+    }
 
-    $user = wp_get_current_user();
-
-    error_log('===== AUTH CHECK =====');
-    error_log('is_user_logged_in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
-    error_log('current_user_id: ' . get_current_user_id());
-    error_log('user_login: ' . ($user->user_login ?? 'none'));
-    error_log('manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
-
-    return is_user_logged_in();
-}
- public static function admin_check(): bool {
-
-    $user = wp_get_current_user();
-
-    error_log('===== ADMIN CHECK =====');
-    error_log('is_user_logged_in: ' . (is_user_logged_in() ? 'YES' : 'NO'));
-    error_log('current_user_id: ' . get_current_user_id());
-    error_log('user_login: ' . ($user->user_login ?? 'none'));
-    error_log('manage_options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
-
-    return current_user_can('manage_options');
-}
+    public static function admin_check(): bool {
+        if (class_exists('FXSIM_API_Keys') && FXSIM_API_Keys::is_key_request()) {
+            $uid = (int) get_current_user_id();
+            if ($uid === 0 && FXSIM_API_Keys::current_key() !== null) {
+                $uid = (int) FXSIM_API_Keys::current_key()->user_id;
+                wp_set_current_user($uid);
+            }
+            return $uid > 0 && ($uid === 1 || user_can($uid, 'manage_options') || current_user_can('manage_options'));
+        }
+        return current_user_can('manage_options');
+    }
 
     // ── Nonce helper ──────────────────────────────────────────────────────────
    private static function verify_nonce(WP_REST_Request $r): bool {
@@ -457,16 +563,6 @@ class FXSIM_REST_API {
             ];
         }
 
-        // If empty, return placeholders to seed the leaderboard
-        if (empty($formatted)) {
-            $formatted = [
-                ['name' => 'F*** L.', 'earned' => 14500.00],
-                ['name' => 'P*** T.', 'earned' => 9200.50],
-                ['name' => 'R*** C.', 'earned' => 6100.00],
-                ['name' => 'M*** E.', 'earned' => 4500.00],
-                ['name' => 'T*** W.', 'earned' => 3100.00],
-            ];
-        }
         return new WP_REST_Response($formatted);
     }
 
@@ -558,7 +654,38 @@ class FXSIM_REST_API {
      *   no_challenge | phase_passed | challenge_failed | not_eligible
      */
     private static function trading_eligibility(int $uid): array {
-        if (self::get_active_challenge_account($uid)) return ['ok' => true];
+        $acc = self::get_active_challenge_account($uid);
+        if ($acc) {
+            global $wpdb;
+            // IP Matching Check (Phase 2.5)
+            $ip_check = $wpdb->get_row($wpdb->prepare(
+                "SELECT cp.ip_matching_required, ca.signup_ip, ca.id as challenge_account_id
+                 FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+                 JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+                 WHERE ca.fxsim_account_id = %d AND ca.status IN ('active','funded') LIMIT 1",
+                $acc->id
+            ));
+            
+            if ($ip_check && (int)$ip_check->ip_matching_required && !empty($ip_check->signup_ip)) {
+                $current_ip = class_exists('FXSIM_Rate_Limiter') ? FXSIM_Rate_Limiter::get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? '');
+                if ($current_ip && $current_ip !== $ip_check->signup_ip) {
+                    // Log the mismatch flag
+                    $wpdb->insert($wpdb->prefix . 'fxsim_trade_flags', [
+                        'user_id'    => $uid,
+                        'account_id' => $acc->id,
+                        'flag_type'  => 'ip_mismatch',
+                        'details'    => "IP Mismatch. Signup: {$ip_check->signup_ip}, Current: {$current_ip}",
+                        'flagged_at' => gmdate('Y-m-d H:i:s')
+                    ]);
+                    
+                    if (get_option('fxsim_ip_strict_mode', false)) {
+                        return ['ok' => false, 'code' => 'ip_mismatch', 'message' => 'Trading is blocked due to IP mismatch. Please contact support.'];
+                    }
+                }
+            }
+
+            return ['ok' => true];
+        }
 
         global $wpdb;
         $latest = $wpdb->get_var($wpdb->prepare(
@@ -794,10 +921,11 @@ class FXSIM_REST_API {
         };
 
         return new WP_REST_Response([
-            'users'             => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_accounts WHERE user_id NOT IN (" . self::not_admin_subquery() . ")"),
+            'users'             => $safe_count("SELECT COUNT(*) FROM {$wpdb->users} WHERE ID NOT IN (" . self::not_admin_subquery() . ") AND user_login != 'admin'"),
             'open_positions'    => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_positions"),
             'total_trades'      => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_trades"),
             'total_pnl'         => $safe_sum("SELECT COALESCE(SUM(pnl),0) FROM {$wpdb->prefix}fxsim_trades"),
+            'total_revenue'     => $safe_sum("SELECT COALESCE(SUM(CAST(amount AS DECIMAL(10,2))),0) FROM {$wpdb->prefix}fxsim_payment_orders WHERE status='approved'"),
             'active_challenges' => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE status='active'"),
             'funded_accounts'   => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE status='funded'"),
             // payment_orders table may not exist on older installs — wpdb returns NULL safely
@@ -812,15 +940,27 @@ class FXSIM_REST_API {
         $limit  = max(10, min(100, (int)($r->get_param('limit') ?? 25)));
         $offset = ($page - 1) * $limit;
 
-        $where  = $search ? $wpdb->prepare(
-            "AND (u.user_login LIKE %s OR u.user_email LIKE %s)",
-            "%$search%", "%$search%"
-        ) : '';
+        $where_clause = 'WHERE 1=1';
+        $params_count = [];
+        $params_rows  = [];
 
-        $total = (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}users u WHERE 1=1 $where");
+        if ($search !== '') {
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            $where_clause .= ' AND (u.user_login LIKE %s OR u.user_email LIKE %s)';
+            $params_count = [$like, $like];
+            $params_rows  = [$like, $like];
+        }
+
+        $count_sql = "SELECT COUNT(*) FROM {$wpdb->prefix}users u {$where_clause}";
+        $total = (int)(!empty($params_count)
+            ? $wpdb->get_var($wpdb->prepare($count_sql, $params_count))
+            : $wpdb->get_var($count_sql));
+
+        $params_rows[] = $limit;
+        $params_rows[] = $offset;
 
         // LEFT JOIN so users without a fxsim_account still appear
-        $rows = $wpdb->get_results($wpdb->prepare("
+        $query = "
             SELECT
                 u.ID        AS user_id,
                 u.user_login,
@@ -837,10 +977,12 @@ class FXSIM_REST_API {
                  WHERE ca2.user_id = u.ID AND ca2.status = 'funded') AS funded_challenges
             FROM {$wpdb->prefix}users u
             LEFT JOIN {$wpdb->prefix}fxsim_accounts a ON a.user_id = u.ID
-            WHERE 1=1 $where
+            {$where_clause}
             ORDER BY u.ID DESC
             LIMIT %d OFFSET %d
-        ", $limit, $offset));
+        ";
+
+        $rows = $wpdb->get_results($wpdb->prepare($query, $params_rows));
 
         return new WP_REST_Response([
             'data'  => $rows ?: [],
@@ -986,8 +1128,14 @@ class FXSIM_REST_API {
 
         $pfx = $wpdb->prefix;
         $challenges = $wpdb->get_results($wpdb->prepare(
-            "SELECT id, plan_id, phase, status, starting_balance, current_balance, trading_days, created_at, phase_started_at
+            "SELECT id, plan_id, phase, status, starting_balance, current_balance, trading_days, created_at, phase_started_at,
+                    custom_profit_split, custom_daily_dd, custom_max_dd, custom_min_days, custom_news_trading, custom_weekend_holding, override_admin_note
              FROM {$pfx}fxsim_challenge_accounts WHERE user_id=%d ORDER BY created_at DESC", $uid)) ?: [];
+        $active_challenge = $wpdb->get_row($wpdb->prepare(
+            "SELECT ca.*, cp.name as plan_name, cp.plan_type, cp.drawdown_type as plan_drawdown_type, cp.funded_profit_split as plan_profit_split
+             FROM {$pfx}fxsim_challenge_accounts ca
+             LEFT JOIN {$pfx}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE ca.user_id=%d ORDER BY ca.id DESC LIMIT 1", $uid));
         $payments = $wpdb->get_results($wpdb->prepare(
             "SELECT id, plan_id, amount, gateway, status, created_at, reviewed_at
              FROM {$pfx}fxsim_payment_orders WHERE user_id=%d ORDER BY created_at DESC", $uid)) ?: [];
@@ -997,9 +1145,26 @@ class FXSIM_REST_API {
         $kyc = $wpdb->get_row($wpdb->prepare(
             "SELECT id, status, admin_note, reviewed_at FROM {$pfx}fxsim_kyc WHERE user_id=%d ORDER BY id DESC LIMIT 1", $uid));
         $account = $wpdb->get_row($wpdb->prepare(
-            "SELECT a.status, a.balance, a.equity FROM {$pfx}fxsim_accounts a WHERE a.user_id=%d ORDER BY a.id DESC LIMIT 1", $uid));
+            "SELECT a.id as account_id, a.status, a.balance, a.equity, a.margin_used, a.leverage FROM {$pfx}fxsim_accounts a WHERE a.user_id=%d ORDER BY a.id DESC LIMIT 1", $uid));
         $admin_actions = $wpdb->get_results($wpdb->prepare(
             "SELECT action, details, created_at FROM {$pfx}fxsim_admin_log WHERE target_user_id=%d ORDER BY created_at DESC LIMIT 50", $uid)) ?: [];
+
+        // Closed trades
+        $trades = $wpdb->get_results($wpdb->prepare(
+            "SELECT t.* FROM {$pfx}fxsim_trades t
+             JOIN {$pfx}fxsim_accounts a ON t.account_id=a.id
+             WHERE a.user_id=%d ORDER BY t.closed_at DESC LIMIT 50", $uid)) ?: [];
+
+        // Open live positions
+        $positions = $wpdb->get_results($wpdb->prepare(
+            "SELECT p.* FROM {$pfx}fxsim_positions p
+             JOIN {$pfx}fxsim_accounts a ON p.account_id=a.id
+             WHERE a.user_id=%d ORDER BY p.opened_at DESC", $uid)) ?: [];
+
+        // Breach audit logs
+        $breaches = $wpdb->get_results($wpdb->prepare(
+            "SELECT b.* FROM {$pfx}fxsim_challenge_breaches b
+             WHERE b.user_id=%d ORDER BY b.created_at DESC LIMIT 50", $uid)) ?: [];
 
         // Build a unified, chronological timeline from existing rows.
         $tl = [];
@@ -1009,17 +1174,23 @@ class FXSIM_REST_API {
         foreach ($challenges as $c) $tl[] = ['type' => 'challenge', 'label' => 'Challenge #' . $c->id . ' — ' . $c->status . ' (phase ' . $c->phase . ')', 'at' => $c->created_at];
         foreach ($payouts as $po)   $tl[] = ['type' => 'payout',    'label' => 'Payout ' . $po->status . ' ($' . number_format((float)$po->trader_amount, 0) . ')', 'at' => $po->requested_at];
         if ($kyc) $tl[] = ['type' => 'kyc', 'label' => 'KYC ' . $kyc->status, 'at' => $kyc->reviewed_at];
+        foreach ($breaches as $b)   $tl[] = ['type' => 'breach',    'label' => 'Breach: ' . $b->rule_type . ' (' . $b->description . ')', 'at' => $b->created_at];
         foreach ($admin_actions as $a) $tl[] = ['type' => 'admin', 'label' => 'Admin: ' . str_replace('_', ' ', $a->action) . ($a->details ? ' — ' . $a->details : ''), 'at' => $a->created_at];
         usort($tl, fn($x, $y) => strcmp((string)($y['at'] ?? ''), (string)($x['at'] ?? '')));
 
         return new WP_REST_Response([
+            'success'    => true,
             'user'       => ['id' => $uid, 'username' => $u->user_login, 'email' => $u->user_email, 'display_name' => $u->display_name, 'registered' => $u->user_registered],
             'account'    => $account ?: null,
+            'challenge'  => $active_challenge ?: null,
             'note'       => (string) get_user_meta($uid, 'fxsim_admin_note', true),
             'challenges' => $challenges,
             'payments'   => $payments,
             'payouts'    => $payouts,
             'kyc'        => $kyc ?: null,
+            'trades'     => $trades,
+            'positions'  => $positions,
+            'breaches'   => $breaches,
             'timeline'   => $tl,
         ]);
     }
@@ -1139,6 +1310,359 @@ class FXSIM_REST_API {
         return new WP_REST_Response($toxic);
     }
 
+    /** GET /admin/risk/alerts — Aggregated real-time breach & risk exposure alerts */
+    public static function admin_risk_alerts(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $pfx = $wpdb->prefix;
+
+        $breaches = $wpdb->get_results("
+            SELECT b.*, u.user_email, u.display_name, ca.id as challenge_id
+            FROM {$pfx}fxsim_challenge_breaches b
+            LEFT JOIN {$wpdb->users} u ON b.user_id = u.ID
+            LEFT JOIN {$pfx}fxsim_challenge_accounts ca ON b.challenge_id = ca.id
+            ORDER BY b.created_at DESC
+            LIMIT 50
+        ") ?: [];
+
+        $toxic_trades = $wpdb->get_results("
+            SELECT t.*, u.user_email, u.display_name, a.user_id
+            FROM {$pfx}fxsim_trades t
+            LEFT JOIN {$pfx}fxsim_accounts a ON t.account_id = a.id
+            LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
+            WHERE t.is_toxic = 1 OR TIMESTAMPDIFF(SECOND, t.opened_at, t.closed_at) < 30
+            ORDER BY t.closed_at DESC
+            LIMIT 30
+        ") ?: [];
+
+        $heavy_positions = $wpdb->get_results("
+            SELECT p.account_id, a.user_id, u.user_email, u.display_name, COUNT(p.id) as position_count, SUM(p.lot_size) as total_lots, SUM(p.pnl) as floating_pnl
+            FROM {$pfx}fxsim_positions p
+            LEFT JOIN {$pfx}fxsim_accounts a ON p.account_id = a.id
+            LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
+            GROUP BY p.account_id, a.user_id, u.user_email, u.display_name
+            HAVING COUNT(p.id) >= 3 OR SUM(p.lot_size) >= 20.0
+            ORDER BY total_lots DESC
+            LIMIT 20
+        ") ?: [];
+
+        $hft_risks = [];
+        foreach ($toxic_trades as $tt) {
+            $uid = (int) $tt->user_id;
+            if (!isset($hft_risks[$uid])) {
+                $hft_risks[$uid] = [
+                    'user_id' => $uid,
+                    'user_email' => $tt->user_email ?: 'trader@propfirm.com',
+                    'count' => 0,
+                ];
+            }
+            $hft_risks[$uid]['count']++;
+        }
+
+        $gambling_risks = [];
+        foreach ($heavy_positions as $hp) {
+            $gambling_risks[] = [
+                'user_id' => (int) $hp->user_id,
+                'user_email' => $hp->user_email ?: 'trader@propfirm.com',
+                'count' => (int) $hp->position_count,
+                'total_lots' => (float) $hp->total_lots,
+                'floating_pnl' => (float) $hp->floating_pnl,
+            ];
+        }
+
+        return new WP_REST_Response([
+            'open_flags' => count($breaches) + count($heavy_positions),
+            'breaches' => $breaches,
+            'hft_risks' => array_values($hft_risks),
+            'gambling_risks' => $gambling_risks,
+            'toxic_trades' => $toxic_trades,
+        ]);
+    }
+
+    // ── Anti-Syndicate Fraud & Group Hedging Radar ───────────────────────────
+    public static function admin_risk_syndicates_get(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $table = $wpdb->prefix . 'fxsim_syndicate_clusters';
+
+        $settings = get_option('fxsim_syndicate_radar_settings', [
+            'time_delta_ms' => 1500,
+            'lot_match_pct' => 85,
+            'ip_mode'       => 'subnet_24',
+        ]);
+
+        $clusters = $wpdb->get_results("
+            SELECT sc.*, 
+                   ua.display_name AS trader_a_name, ua.user_email AS trader_a_email,
+                   ub.display_name AS trader_b_name, ub.user_email AS trader_b_email
+            FROM {$table} sc
+            LEFT JOIN {$wpdb->users} ua ON sc.user_a_id = ua.ID
+            LEFT JOIN {$wpdb->users} ub ON sc.user_b_id = ub.ID
+            ORDER BY sc.id DESC LIMIT 50
+        ", ARRAY_A) ?: [];
+
+        return new WP_REST_Response([
+            'success'  => true,
+            'settings' => $settings,
+            'clusters' => $clusters,
+        ]);
+    }
+
+    public static function admin_risk_syndicates_save_settings(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $clean = [
+            'time_delta_ms' => max(100, min(10000, (int)($body['time_delta_ms'] ?? 1500))),
+            'lot_match_pct' => max(50, min(100, (int)($body['lot_match_pct'] ?? 85))),
+            'ip_mode'       => in_array($body['ip_mode'] ?? '', ['exact', 'subnet_24'], true) ? $body['ip_mode'] : 'subnet_24',
+        ];
+        update_option('fxsim_syndicate_radar_settings', $clean, false);
+        FXSIM_Database::log_admin(get_current_user_id(), 'syndicate_radar_settings_save');
+        return new WP_REST_Response(['success' => true, 'message' => 'Syndicate radar settings saved.', 'settings' => $clean]);
+    }
+
+    public static function admin_risk_syndicate_freeze(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int)$r->get_param('id');
+        $cluster = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_syndicate_clusters WHERE id = %d", $id));
+
+        if (!$cluster) {
+            return new WP_REST_Response(['error' => 'Syndicate cluster record not found.'], 404);
+        }
+
+        $now = current_time('mysql');
+
+        // 1. Mark cluster status frozen
+        $wpdb->update($wpdb->prefix . 'fxsim_syndicate_clusters', [
+            'status'    => 'frozen',
+            'frozen_at' => $now,
+        ], ['id' => $id]);
+
+        // 2. Liquidate open positions for Account A and Account B
+        $accounts = [(int)$cluster->account_a_id, (int)$cluster->account_b_id];
+        foreach ($accounts as $acc_id) {
+            // The previous code did a raw UPDATE on fxsim_positions setting
+            // 'closed_at' — that column does not exist on this table (a
+            // position that's actually closed is deleted here and moved to
+            // fxsim_trades, never updated in place), so this silently no-op'd
+            // and left every "liquidated" position open and unmanaged. Route
+            // through the real close_position(), matching the pattern used
+            // by force_close_all_positions() elsewhere.
+            $acc_row = $wpdb->get_row($wpdb->prepare("SELECT user_id FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $acc_id));
+            if ($acc_row && class_exists('FXSIM_Trading_Engine')) {
+                $open_positions = $wpdb->get_results($wpdb->prepare(
+                    "SELECT id FROM {$wpdb->prefix}fxsim_positions WHERE account_id = %d", $acc_id
+                ));
+                foreach ($open_positions as $op) {
+                    FXSIM_Trading_Engine::close_position((int)$acc_row->user_id, (int)$op->id, 'syndicate_freeze', true);
+                }
+            }
+
+            // 'breached' is not a valid fxsim_challenge_accounts.status value
+            // (ENUM('active','passed','failed','funded','suspended')) — this
+            // previously either failed the UPDATE outright or silently wrote
+            // an empty string under non-strict SQL mode. 'suspended' is the
+            // correct value and matches the notification text below.
+            $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
+                'status'        => 'suspended',
+                'breach_reason' => 'Syndicate Cross-Account Reverse Hedging Violation (Cluster ' . $cluster->cluster_code . ')',
+            ], ['fxsim_account_id' => $acc_id]);
+
+            $acc = $wpdb->get_row($wpdb->prepare("SELECT user_id FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $acc_id));
+            if ($acc) {
+                FXSIM_Database::push_notification(
+                    (int)$acc->user_id,
+                    'danger',
+                    'Account Suspended (Syndicate Violation)',
+                    'Your account has been frozen for coordinated reverse-hedging / group collusion across identical IP subnets.',
+                    '/dashboard'
+                );
+            }
+        }
+
+        FXSIM_Database::log_admin(
+            get_current_user_id(),
+            'syndicate_cluster_frozen',
+            (int)$cluster->user_a_id,
+            "Cluster {$cluster->cluster_code} (Accounts #{$cluster->account_a_id} & #{$cluster->account_b_id}) frozen and liquidated."
+        );
+
+        if (class_exists('FXSIM_Webhooks')) {
+            FXSIM_Webhooks::dispatch('syndicate_cluster_frozen', [
+                'cluster_code' => $cluster->cluster_code,
+                'accounts'     => "#{$cluster->account_a_id} & #{$cluster->account_b_id}",
+                'symbol'       => $cluster->symbol,
+                'status'       => 'LIQUIDATED & SUSPENDED',
+            ]);
+        }
+
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => "Cluster {$cluster->cluster_code} successfully frozen. Active positions liquidated and associated challenge accounts suspended.",
+        ]);
+    }
+
+    /** POST /admin/symbol/create — Create new tradeable instrument */
+    public static function admin_symbol_create(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        if (empty($body['symbol'])) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Symbol is required.'], 400);
+        }
+        $id = FXSIM_Symbols::create($body);
+        FXSIM_Database::log_admin(get_current_user_id(), 'symbol_create', null, 'Created symbol: ' . strtoupper($body['symbol']));
+        return new WP_REST_Response(['success' => true, 'id' => $id, 'message' => 'Symbol created successfully.']);
+    }
+
+    /** DELETE /admin/symbol/{id} or POST /admin/symbol/{id}/delete */
+    public static function admin_symbol_delete(WP_REST_Request $r): WP_REST_Response {
+        $id = (int) $r->get_param('id');
+        $res = FXSIM_Symbols::delete($id);
+        FXSIM_Database::log_admin(get_current_user_id(), 'symbol_delete', null, 'Deleted symbol ID: ' . $id);
+        return new WP_REST_Response(['success' => $res]);
+    }
+
+    /** POST /admin/position/{id}/close — Admin force close open position */
+    public static function admin_position_close(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) $r->get_param('id');
+        $p = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d", $id));
+        if (!$p) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Position not found.'], 404);
+        }
+
+        // Close position
+        $close_price = (float)$p->current_price > 0 ? (float)$p->current_price : (float)$p->open_price;
+        $pnl = (float)$p->pnl;
+        
+        $wpdb->insert($wpdb->prefix . 'fxsim_trades', [
+            'account_id'   => $p->account_id,
+            'symbol'       => $p->symbol,
+            'type'         => $p->type,
+            'lot_size'     => $p->lot_size,
+            'open_price'   => $p->open_price,
+            'close_price'  => $close_price,
+            'sl'           => $p->sl,
+            'tp'           => $p->tp,
+            'margin'       => $p->margin,
+            'commission'   => $p->commission,
+            'swap'         => $p->swap,
+            'pnl'          => $pnl,
+            'close_reason' => 'admin_force',
+            'opened_at'    => $p->opened_at,
+            'closed_at'    => current_time('mysql'),
+        ]);
+
+        $wpdb->delete($wpdb->prefix . 'fxsim_positions', ['id' => $id]);
+        
+        // Update account balance
+        $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}fxsim_accounts SET balance = balance + %f, equity = equity + %f WHERE id=%d", $pnl, $pnl, $p->account_id));
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'position_force_close', null, "Position #{$id} force closed. PnL: {$pnl}");
+        return new WP_REST_Response(['success' => true, 'pnl' => $pnl, 'message' => "Position #{$id} closed by admin."]);
+    }
+
+    /** POST /admin/position/{id}/sltp — Update SL / TP on position */
+    public static function admin_position_sltp(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) $r->get_param('id');
+        $body = $r->get_json_params() ?: $r->get_body_params();
+
+        $update = [];
+        if (array_key_exists('sl', $body)) {
+            $update['sl'] = $body['sl'] !== null ? (float)$body['sl'] : null;
+        }
+        if (array_key_exists('tp', $body)) {
+            $update['tp'] = $body['tp'] !== null ? (float)$body['tp'] : null;
+        }
+
+        if (empty($update)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'No SL/TP parameters provided.'], 400);
+        }
+
+        $wpdb->update($wpdb->prefix . 'fxsim_positions', $update, ['id' => $id]);
+        return new WP_REST_Response(['success' => true, 'message' => "SL/TP updated for position #{$id}"]);
+    }
+
+    /** POST /admin/user/create or /admin/users/create — Create new user with challenge */
+    public static function admin_user_create(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $username = sanitize_user($body['username'] ?? '');
+        $email = sanitize_email($body['email'] ?? '');
+        $password = $body['password'] ?? wp_generate_password(12, true);
+
+        if (empty($username) || empty($email)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Username and email are required.'], 400);
+        }
+
+        $user_id = wp_create_user($username, $password, $email);
+        if (is_wp_error($user_id)) {
+            return new WP_REST_Response(['success' => false, 'message' => $user_id->get_error_message()], 400);
+        }
+
+        if (!empty($body['role'])) {
+            $u = new WP_User($user_id);
+            $u->set_role(sanitize_text_field($body['role']));
+        }
+
+        // Initialize account with initial balance
+        global $wpdb;
+        $init_bal = (float)($body['initial_balance'] ?? 100000.00);
+        $wpdb->insert($wpdb->prefix . 'fxsim_accounts', [
+            'user_id' => $user_id,
+            'balance' => $init_bal,
+            'equity'  => $init_bal,
+            'status'  => 'active',
+        ]);
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'user_create', $user_id, "Created user {$username} ({$email})");
+        return new WP_REST_Response([
+            'success' => true,
+            'user_id' => $user_id,
+            'message' => 'User created successfully.',
+        ]);
+    }
+
+    /** POST /admin/user/{id}/reset-password */
+    public static function admin_user_reset_pw(WP_REST_Request $r): WP_REST_Response {
+        $uid = (int) $r->get_param('id');
+        $u = get_userdata($uid);
+        if (!$u) return new WP_REST_Response(['success' => false, 'message' => 'User not found.'], 404);
+
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $custom_pw = !empty($body['password']) ? trim((string)$body['password']) : '';
+
+        $new_pw = ($custom_pw !== '' && strlen($custom_pw) >= 4) ? $custom_pw : wp_generate_password(12, true);
+        wp_set_password($new_pw, $uid);
+        FXSIM_Database::log_admin(get_current_user_id(), 'user_reset_pw', $uid, "Reset password for {$u->user_login}");
+
+        return new WP_REST_Response([
+            'success'       => true,
+            'temp_password' => $new_pw,
+            'message'       => "Password for {$u->user_login} updated successfully.",
+        ]);
+    }
+
+    /** DELETE /admin/user/{id} or POST /admin/user/{id}/delete */
+    public static function admin_user_delete(WP_REST_Request $r): WP_REST_Response {
+        require_once ABSPATH . 'wp-admin/includes/user.php';
+        $uid = (int) $r->get_param('id');
+        if (!get_userdata($uid)) return new WP_REST_Response(['success' => false, 'message' => 'User not found.'], 404);
+
+        wp_delete_user($uid);
+        FXSIM_Database::log_admin(get_current_user_id(), 'user_delete', $uid, "Deleted user #{$uid}");
+        return new WP_REST_Response(['success' => true, 'message' => "User #{$uid} deleted successfully."]);
+    }
+
+    /** POST /admin/user/{id}/notify */
+    public static function admin_user_notify(WP_REST_Request $r): WP_REST_Response {
+        $uid = (int) $r->get_param('id');
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $message = sanitize_textarea_field($body['message'] ?? '');
+        $title = sanitize_text_field($body['title'] ?? 'Administrative Notice');
+
+        if (empty($message)) return new WP_REST_Response(['success' => false, 'message' => 'Message is required.'], 400);
+
+        FXSIM_Database::push_notification($uid, 'info', $title, $message);
+        return new WP_REST_Response(['success' => true, 'message' => 'Notification delivered.']);
+    }
+
     /** POST /admin/bulk/payouts — body: { ids:[], status, note? }. Loops the
      *  existing single-item handler so frozen logic is reused untouched. */
     public static function admin_bulk_payouts(WP_REST_Request $r): WP_REST_Response {
@@ -1213,6 +1737,108 @@ class FXSIM_REST_API {
         update_option('fxsim_news_lock', $locked);
         FXSIM_Database::log_admin(get_current_user_id(), 'news_lock_' . ($locked ? 'on' : 'off'));
         return new WP_REST_Response(['success' => true, 'locked' => $locked]);
+    }
+
+    public static function admin_news_events_get(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $table = $wpdb->prefix . 'fxsim_news_events';
+        $events = $wpdb->get_results("SELECT * FROM {$table} ORDER BY event_time_utc ASC LIMIT 500");
+        
+        // Auto-seed realistic upcoming high-impact economic events if empty
+        if (empty($events)) {
+            $now = time();
+            $seed_events = [
+                ['+4 hours',   'USD', 'high', 'US Non-Farm Payrolls (NFP) & Unemployment Rate', 'Bureau of Labor Statistics'],
+                ['+12 hours',  'USD', 'high', 'US Consumer Price Index (CPI YoY / MoM)',        'Bureau of Labor Statistics'],
+                ['+1 day',     'EUR', 'high', 'ECB Monetary Policy Statement & Rate Decision',   'European Central Bank'],
+                ['+2 days',    'GBP', 'high', 'Bank of England Official Bank Rate & Minutes',     'Bank of England'],
+                ['+3 days',    'USD', 'high', 'FOMC Federal Funds Rate Decision & Presser',      'Federal Reserve'],
+                ['+4 days',    'CAD', 'high', 'Bank of Canada Monetary Policy Report',          'Bank of Canada'],
+                ['+5 days',    'AUD', 'high', 'Australia Employment Change & Jobless Rate',     'Australian Bureau of Statistics'],
+                ['+6 days',    'JPY', 'high', 'Bank of Japan Monetary Policy Statement',         'Bank of Japan'],
+            ];
+            foreach ($seed_events as $s) {
+                $wpdb->insert($table, [
+                    'event_time_utc' => gmdate('Y-m-d H:i:s', strtotime($s[0], $now)),
+                    'currency'       => $s[1],
+                    'impact'         => $s[2],
+                    'title'          => $s[3],
+                    'source'         => $s[4]
+                ]);
+            }
+            $events = $wpdb->get_results("SELECT * FROM {$table} ORDER BY event_time_utc ASC LIMIT 500");
+        }
+
+        return new WP_REST_Response(['success' => true, 'events' => $events]);
+    }
+
+    /**
+     * GET /news-events
+     * Authenticated endpoint for the trading terminal order ticket to check upcoming high-impact news.
+     */
+    public static function public_news_events_get(WP_REST_Request $r): WP_REST_Response {
+        return self::admin_news_events_get($r);
+    }
+
+    public static function admin_news_settings_get(WP_REST_Request $r): WP_REST_Response {
+        $defaults = [
+            'enabled'                => true,
+            'mode'                   => 'hard_gate', // 'hard_gate' | 'soft_breach'
+            'buffer_before_minutes'  => 2,
+            'buffer_after_minutes'   => 2,
+            'currencies'             => ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'],
+        ];
+        $stored = get_option('fxsim_news_guard_settings', []);
+        return new WP_REST_Response(array_merge($defaults, is_array($stored) ? $stored : []));
+    }
+
+    public static function admin_news_settings_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $clean = [
+            'enabled'                => !empty($body['enabled']),
+            'mode'                   => in_array($body['mode'] ?? '', ['hard_gate', 'soft_breach'], true) ? $body['mode'] : 'hard_gate',
+            'buffer_before_minutes'  => max(1, min(60, (int)($body['buffer_before_minutes'] ?? 2))),
+            'buffer_after_minutes'   => max(1, min(60, (int)($body['buffer_after_minutes'] ?? 2))),
+            'currencies'             => !empty($body['currencies']) && is_array($body['currencies']) ? array_map('sanitize_text_field', $body['currencies']) : ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'],
+        ];
+        update_option('fxsim_news_guard_settings', $clean, false);
+        FXSIM_Database::log_admin(get_current_user_id(), 'news_guard_settings_save');
+        return new WP_REST_Response(['success' => true, 'message' => 'Macro-economic news guard settings saved.', 'settings' => $clean]);
+    }
+
+    public static function admin_news_events_save(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        
+        $event_time = sanitize_text_field($body['event_time_utc'] ?? '');
+        $currency   = strtoupper(sanitize_text_field($body['currency'] ?? ''));
+        $impact     = sanitize_text_field($body['impact'] ?? 'low');
+        $title      = sanitize_text_field($body['title'] ?? '');
+        $source     = sanitize_text_field($body['source'] ?? '');
+
+        if (!$event_time || !$currency || !$title) {
+            return new WP_REST_Response(['error' => 'Missing required fields.'], 400);
+        }
+        if (!in_array($impact, ['low','medium','high'])) {
+            $impact = 'low';
+        }
+
+        $wpdb->insert($wpdb->prefix . 'fxsim_news_events', [
+            'event_time_utc' => gmdate('Y-m-d H:i:s', strtotime($event_time)),
+            'currency'       => $currency,
+            'impact'         => $impact,
+            'title'          => $title,
+            'source'         => $source
+        ]);
+
+        return new WP_REST_Response(['success' => true, 'id' => $wpdb->insert_id]);
+    }
+
+    public static function admin_news_events_delete(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int)$r->get_param('id');
+        $wpdb->delete($wpdb->prefix . 'fxsim_news_events', ['id' => $id]);
+        return new WP_REST_Response(['success' => true]);
     }
 
     public static function admin_rate_limit(WP_REST_Request $r): WP_REST_Response {
@@ -1477,6 +2103,48 @@ class FXSIM_REST_API {
         $profit = (float)$account->balance - (float)$ch->starting_balance;
         if ($profit <= 0) return new WP_REST_Response(['success' => false, 'message' => 'No profit available to withdraw.'], 400);
 
+        // ── Payout Amount Integrity Audit Control ─────────────────────────────
+        // Cross-check mutable account balance profit against verified trade ledgers.
+        // Verifies that requested profit does not exceed net realized profit from
+        // closed trades minus previously disbursed payouts (with small tolerance for rounding).
+        $realized_trade_pnl = (float) $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(SUM(pnl), 0.0) FROM {$wpdb->prefix}fxsim_trades WHERE account_id = %d",
+            $account->id
+        ));
+        $prior_paid_payouts = (float) $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(SUM(amount_requested), 0.0) FROM {$wpdb->prefix}fxsim_payouts WHERE challenge_id = %d AND status = 'paid'",
+            $id
+        ));
+        $adjustments = (float) $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(SUM(amount), 0.0) FROM {$wpdb->prefix}fxsim_transactions WHERE account_id = %d AND type IN ('deposit','adjustment')",
+            $account->id
+        ));
+        $net_ledger_profit = ($realized_trade_pnl + $adjustments) - $prior_paid_payouts;
+
+        if ($profit > ($net_ledger_profit + 5.00)) {
+            if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                FXSIM_Database::log_admin(
+                    get_current_user_id(),
+                    'payout_integrity_flag',
+                    $id,
+                    "Payout amount integrity check failed: requested profit \${$profit} exceeds ledger net realized trade profit \${$net_ledger_profit} (realized trades: \${$realized_trade_pnl}, adjustments: \${$adjustments}, prior paid payouts: \${$prior_paid_payouts})."
+                );
+            }
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Payout integrity check failed: requested profit exceeds verified closed trade profit on this account. Please contact support.',
+                'code'    => 'payout_integrity_discrepancy'
+            ], 400);
+        }
+
+        // The admin-configurable minimum payout amount was exposed and
+        // saveable in Settings but never actually enforced here — a trader
+        // could request a payout for any amount above $0.
+        $min_payout = (float) FXSIM_Challenge_DB::get_setting('min_payout_amount', 50.0);
+        if ($min_payout > 0 && $profit < $min_payout) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Minimum payout amount is $' . number_format($min_payout, 2) . ". Your current available profit is $" . number_format($profit, 2) . '.'], 400);
+        }
+
         // One open payout per challenge at a time — prevents requesting the same
         // profit repeatedly before a prior request is paid/rejected.
         $openCount = (int) $wpdb->get_var($wpdb->prepare(
@@ -1486,12 +2154,16 @@ class FXSIM_REST_API {
             return new WP_REST_Response(['success' => false, 'message' => 'You already have a payout in progress. Please wait until it is processed.'], 400);
         }
 
-        // Eligibility: minimum trading days
-        if ((int)$ch->trading_days < (int)$plan->p2_min_days) {
-            return new WP_REST_Response(['success' => false, 'message' => "Minimum {$plan->p2_min_days} trading days required before payout. You have {$ch->trading_days}."], 400);
+        // Eligibility: minimum trading days (with custom override support)
+        $min_days = (isset($ch->custom_min_days) && $ch->custom_min_days !== null) ? (int)$ch->custom_min_days : (int)$plan->p2_min_days;
+        if ((int)$ch->trading_days < $min_days) {
+            return new WP_REST_Response(['success' => false, 'message' => "Minimum {$min_days} trading days required before payout. You have {$ch->trading_days}."], 400);
         }
 
-        $split      = (float)$plan->funded_profit_split;
+        // Profit split (prioritize bespoke custom_profit_split override)
+        $split      = (isset($ch->custom_profit_split) && $ch->custom_profit_split !== null && (float)$ch->custom_profit_split > 0)
+            ? (float)$ch->custom_profit_split
+            : (float)$plan->funded_profit_split;
         $trader_amt = round($profit * ($split / 100), 2);
         $firm_amt   = round($profit - $trader_amt, 2);
 
@@ -1518,6 +2190,18 @@ class FXSIM_REST_API {
         if (class_exists('FXSIM_Emails')) {
             FXSIM_Emails::send(get_current_user_id(), 'payout_requested', ['amount' => number_format((float)$trader_amt, 2)]);
         }
+
+        if (class_exists('FXSIM_Webhooks')) {
+            $user_info = get_userdata(get_current_user_id());
+            FXSIM_Webhooks::dispatch('payout', [
+                'trader_name'    => $user_info ? $user_info->display_name : 'Trader',
+                'email'          => $user_info ? $user_info->user_email : '',
+                'amount'         => $trader_amt,
+                'method'         => sanitize_text_field($body['method'] ?? 'Crypto'),
+                'wallet_address' => sanitize_text_field($body['address'] ?? 'On file'),
+            ]);
+        }
+
         // #6: large payout requests get a higher-visibility warning notification
         // so the owner reviews them with extra care. Threshold is configurable via
         // the whitelabel store (large_payout_threshold), default $1,000.
@@ -1604,16 +2288,26 @@ class FXSIM_REST_API {
         else           $ok = $wpdb->insert($wpdb->prefix . 'fxsim_kyc', $data);
 
         if ($ok === false) {
+            error_log('[PropFirm KYC Error] User #' . $uid . ': ' . $wpdb->last_error);
             return new WP_REST_Response([
                 'success' => false,
-                'message' => 'Could not save your submission. Please contact support.',
-                'detail'  => $wpdb->last_error ?: 'kyc storage unavailable',
+                'message' => 'Could not save your submission. Please try again or contact support.',
             ], 500);
         }
 
         if (class_exists('FXSIM_Emails')) {
             FXSIM_Emails::send($uid, 'kyc_submitted', []);
         }
+
+        if (class_exists('FXSIM_Webhooks')) {
+            $user_info = get_userdata($uid);
+            FXSIM_Webhooks::dispatch('kyc', [
+                'trader_name' => $user_info ? $user_info->display_name : "Trader #$uid",
+                'doc_type'    => sanitize_text_field($doc_type ?? 'Government ID'),
+                'country'     => sanitize_text_field($country ?? 'Global'),
+            ]);
+        }
+
         FXSIM_Database::push_notification($uid, 'info', 'Identity documents submitted',
             'Your identity documents were received and are pending review.', '/dashboard/kyc');
         FXSIM_Database::push_admin_notification('info', 'New KYC submission', 'A trader submitted identity documents for review.', $uid);
@@ -1635,8 +2329,17 @@ class FXSIM_REST_API {
         if (!file_exists($dir . 'index.php')) file_put_contents($dir . 'index.php', '<?php // Silence is golden');
         if (!file_exists($dir . '.htaccess')) file_put_contents($dir . '.htaccess', "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n");
 
-        $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) ?: 'dat';
-        $name = $field . '_' . time() . '.' . $ext;
+        // Extension must come from the already-validated $mime, never the
+        // client-supplied filename — otherwise a JPEG/PHP polyglot (valid
+        // magic bytes, still sniffs as image/jpeg) can be saved as .php and
+        // executed by the web server if the runtime .htaccess above isn't
+        // honored (nginx never reads it; Apache ignores it under AllowOverride None).
+        $ext_map = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'application/pdf' => 'pdf'];
+        $ext  = $ext_map[$mime] ?? 'dat';
+        // Random token, not field+time(): the directory .htaccess is Apache-only
+        // (nginx never reads it), so a guessable path is the only thing standing
+        // between the public internet and a trader's ID/selfie on nginx hosts.
+        $name = $field . '_' . bin2hex(random_bytes(16)) . '.' . $ext;
         $dest = $dir . $name;
         if (!@move_uploaded_file($file['tmp_name'], $dest) && !@rename($file['tmp_name'], $dest)) {
             return new WP_Error('move_failed', 'Upload failed. Please try again.');
@@ -1711,22 +2414,40 @@ class FXSIM_REST_API {
             JOIN {$wpdb->users} u ON u.ID = k.user_id
             $where
             ORDER BY FIELD(k.status,'pending','rejected','approved'), k.submitted_at DESC");
-        $out = array_map(fn($k) => [
-            'id'           => (int) $k->id,
-            'user_id'      => (int) $k->user_id,
-            'username'     => $k->user_login,
-            'email'        => $k->user_email,
-            'name'         => $k->display_name,
-            'status'       => $k->status,
-            'admin_note'   => $k->admin_note,
-            'submitted_at' => self::iso8601($k->submitted_at),
-            'reviewed_at'  => self::iso8601($k->reviewed_at),
-            'docs'         => [
-                'id_doc'      => !empty($k->id_doc_path)      ? rest_url(self::NS . "/admin/kyc/{$k->id}/doc/id_doc")      : null,
-                'selfie'      => !empty($k->selfie_path)      ? rest_url(self::NS . "/admin/kyc/{$k->id}/doc/selfie")      : null,
-                'address_doc' => !empty($k->address_doc_path) ? rest_url(self::NS . "/admin/kyc/{$k->id}/doc/address_doc") : null,
-            ],
-        ], $rows ?: []);
+        $out = array_map(function($k) {
+            $has_id      = !empty($k->id_doc_path);
+            $has_selfie  = !empty($k->selfie_path);
+            $has_address = !empty($k->address_doc_path);
+            $doc_count   = ($has_id ? 1 : 0) + ($has_selfie ? 1 : 0) + ($has_address ? 1 : 0);
+
+            return [
+                'id'           => (int) $k->id,
+                'user_id'      => (int) $k->user_id,
+                'username'     => $k->user_login,
+                'email'        => $k->user_email,
+                'name'         => $k->display_name,
+                'status'       => $k->status,
+                'admin_note'   => $k->admin_note,
+                'submitted_at' => self::iso8601($k->submitted_at),
+                'reviewed_at'  => self::iso8601($k->reviewed_at),
+                'doc_count'    => $doc_count,
+                'has_docs'     => $doc_count > 0,
+                // Relative paths, not rest_url() — the browser must fetch these
+                // through whatever base the frontend is already using (same-origin
+                // /api/wp proxy in dev, direct cross-origin backend URL in prod).
+                // An absolute rest_url() here bypasses the dev proxy, and the
+                // session cookie from login (scoped to the proxy's origin, not
+                // this backend's own domain) then makes every request 401.
+                'id_doc'       => $has_id ? "/admin/kyc/{$k->id}/doc/id_doc" : null,
+                'selfie'       => $has_selfie ? "/admin/kyc/{$k->id}/doc/selfie" : null,
+                'address_doc'  => $has_address ? "/admin/kyc/{$k->id}/doc/address_doc" : null,
+                'docs'         => [
+                    'id_doc'      => $has_id ? "/admin/kyc/{$k->id}/doc/id_doc" : null,
+                    'selfie'      => $has_selfie ? "/admin/kyc/{$k->id}/doc/selfie" : null,
+                    'address_doc' => $has_address ? "/admin/kyc/{$k->id}/doc/address_doc" : null,
+                ],
+            ];
+        }, $rows ?: []);
         return new WP_REST_Response($out);
     }
 
@@ -1739,10 +2460,20 @@ class FXSIM_REST_API {
         $a      = $body['action'] ?? '';
         $status = $a === 'approve' ? 'approved' : ($a === 'reject' ? 'rejected' : '');
         if (!$status) return new WP_REST_Response(['success' => false, 'message' => 'Invalid action.'], 400);
-        $note = sanitize_textarea_field($body['note'] ?? '');
+        $note  = sanitize_textarea_field($body['note'] ?? '');
+        $force = !empty($body['force_override']);
 
         $kyc = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_kyc WHERE id=%d", $id));
         if (!$kyc) return new WP_REST_Response(['success' => false, 'message' => 'KYC record not found.'], 404);
+
+        $has_documents = !empty($kyc->id_doc_path) || !empty($kyc->selfie_path) || !empty($kyc->address_doc_path);
+        if ($status === 'approved' && !$has_documents && !$force) {
+            return new WP_REST_Response([
+                'success' => false,
+                'error'   => 'Compliance Guard: Cannot approve KYC verification without submitted identity documents.',
+                'message' => 'Compliance Guard: Cannot approve KYC verification without submitted identity documents.',
+            ], 422);
+        }
 
         $wpdb->update($wpdb->prefix . 'fxsim_kyc', [
             'status'      => $status,
@@ -1866,9 +2597,10 @@ class FXSIM_REST_API {
         // be withdrawn again. Idempotent: only fires on the transition into paid.
         if ($status === 'paid' && $p->status !== 'paid') {
             $ch = FXSIM_Challenge_DB::get_challenge((int) $p->challenge_id);
-            if ($ch) {
-                $account = FXSIM_Database::get_account_by_id((int) $ch->fxsim_account_id);
-                if ($account) {
+            $account = $ch ? FXSIM_Database::get_account_by_id((int) $ch->fxsim_account_id) : null;
+            if ($ch && $account) {
+                $wpdb->query('START TRANSACTION');
+                try {
                     $withdrawn = (float) $p->amount_requested;
                     $newBal    = round((float) $account->balance - $withdrawn, 2);
                     $newEq     = round((float) $account->equity  - $withdrawn, 2); // preserves open-PnL delta
@@ -1877,12 +2609,18 @@ class FXSIM_REST_API {
                         ['id' => (int) $ch->fxsim_account_id]);
                     // Re-baseline the challenge so drawdown/profit start fresh and the
                     // deduction itself never reads as drawdown.
-                    // SECURITY FIX: Reset equity_hwm and trailing_dd_floor so the 
+                    // SECURITY FIX: Reset equity_hwm and trailing_dd_floor so the
                     // trailing drawdown floor drops with the withdrawn balance, preventing instant breach.
+                    // NOTE: the plans table has no "funded_trailing_drawdown_pct"
+                    // column — that name never existed in the schema, so this always
+                    // silently evaluated to 0% (floor = current equity, zero buffer,
+                    // any subsequent loss instantly breaches a trailing-DD funded
+                    // account). The real column for the funded stage's trailing/max
+                    // drawdown percentage is funded_max_dd.
                     $plan = FXSIM_Challenge_DB::get_plan((int)$ch->plan_id);
-                    $allowed_trail_pct = $plan ? (float)$plan->funded_trailing_drawdown_pct : 0;
+                    $allowed_trail_pct = $plan ? (float)$plan->funded_max_dd : 0;
                     $abs_trail = round((float)$ch->starting_balance * ($allowed_trail_pct / 100), 2);
-                    
+
                     $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
                         'current_balance'     => $newBal,
                         'peak_balance'        => $newBal,
@@ -1890,7 +2628,101 @@ class FXSIM_REST_API {
                         'equity_hwm'          => $newEq,
                         'trailing_dd_floor'   => round($newEq - $abs_trail, 2),
                     ], ['id' => (int) $ch->id]);
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_transaction')) {
+                        FXSIM_Database::log_transaction((int) $ch->fxsim_account_id, 'payout', -$withdrawn, $newBal, "Payout #{$id} paid");
+                    }
+                    $wpdb->query('COMMIT');
                     self::invalidate_account_cache((int) $p->user_id);
+                } catch (\Throwable $e) {
+                    $wpdb->query('ROLLBACK');
+                    error_log("[PropFirm] admin_payout_status: balance deduction FAILED for payout #{$id} (already marked 'paid') — " . $e->getMessage());
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                        FXSIM_Database::log_admin(get_current_user_id(), 'payout_deduction_failed', (int) $p->user_id,
+                            "Payout #{$id} marked paid but balance deduction failed: " . $e->getMessage() . '. Needs manual reconciliation.');
+                    }
+                }
+            } else {
+                // Challenge or account row missing — the payout is about to be
+                // committed as 'paid' below with NO balance ever deducted. This
+                // must not fail silently: it needs a loud, findable trail.
+                error_log("[PropFirm] admin_payout_status: payout #{$id} marked 'paid' but its challenge/account could not be found — balance NOT deducted.");
+                if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                    FXSIM_Database::log_admin(get_current_user_id(), 'payout_deduction_skipped', (int) $p->user_id,
+                        "Payout #{$id} marked paid but challenge_id #{$p->challenge_id} or its linked account could not be resolved. Needs manual reconciliation.");
+                }
+            }
+        }
+
+        // ── Automated Scaling Check Hook ───────────────────────────────────────
+        if (in_array($status, ['approved', 'paid'], true)) {
+            $ch_id = (int)$p->challenge_id;
+            if ($ch_id) {
+                $rules = self::admin_scaling_rules_get($r)->get_data();
+                $completed_payouts = (int)$wpdb->get_var($wpdb->prepare("
+                    SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts
+                    WHERE challenge_id = %d AND status IN ('approved', 'paid')
+                ", $ch_id));
+
+                if ($completed_payouts >= (int)($rules['min_payouts'] ?? 2)) {
+                    $ch_acc = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE id = %d", $ch_id));
+
+                    // Per-period gate: without this, completed_payouts only ever
+                    // increases, so once the min_payouts threshold is crossed once,
+                    // EVERY subsequent payout on this account re-fires scaling
+                    // (unbounded repeat scale-ups). Only re-evaluate once per
+                    // evaluation_period_days since this account was last scaled
+                    // (or since funding, if never scaled).
+                    $period_days = max(1, (int)($rules['evaluation_period_days'] ?? 90));
+                    $last_scaled = ($ch_acc && !empty($ch_acc->last_scaled_at)) ? $ch_acc->last_scaled_at : ($ch_acc->funded_at ?? null);
+                    $period_elapsed = $last_scaled ? ((current_time('timestamp') - strtotime($last_scaled)) >= $period_days * DAY_IN_SECONDS) : true;
+
+                    // Real profit% check: payout count alone is not evidence of
+                    // sustained profitability — compare the account's live balance
+                    // against its own starting_balance, same as the admin scaling
+                    // queue already computes for display.
+                    $real_roi = 0.0;
+                    if ($ch_acc && $ch_acc->fxsim_account_id) {
+                        $live_bal = (float)$wpdb->get_var($wpdb->prepare(
+                            "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $ch_acc->fxsim_account_id
+                        ));
+                        $start_bal_check = (float)$ch_acc->starting_balance;
+                        if ($start_bal_check > 0) {
+                            $real_roi = (($live_bal - $start_bal_check) / $start_bal_check) * 100;
+                        }
+                    }
+                    $profit_ok = $real_roi >= (float)($rules['profit_target_pct'] ?? 10.00);
+
+                    if ($ch_acc && $ch_acc->status === 'funded' && $period_elapsed && $profit_ok) {
+                        if (!empty($rules['auto_scale'])) {
+                            // Auto-Scale execution
+                            $fake_req = new WP_REST_Request('POST', "/fxsim/v1/admin/scaling/{$ch_id}/apply");
+                            $fake_req->set_url_params(['id' => $ch_id]);
+                            self::admin_scaling_apply($fake_req);
+                        } else {
+                            // Log pending eligibility into fxsim_scaling_events if not already recorded
+                            $existing = $wpdb->get_var($wpdb->prepare("
+                                SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_scaling_events
+                                WHERE challenge_account_id = %d AND status IN ('eligible', 'pending_approval')
+                            ", $ch_id));
+                            if (!$existing) {
+                                $start_bal = (float)$ch_acc->starting_balance ?: 100000;
+                                $mult = (float)($rules['balance_multiplier_pct'] ?? 25.00);
+                                $new_bal = min((float)$rules['max_capital_cap'], round($start_bal * (1 + ($mult / 100)), 2));
+                                $wpdb->insert($wpdb->prefix . 'fxsim_scaling_events', [
+                                    'challenge_account_id' => $ch_id,
+                                    'user_id'              => (int)$p->user_id,
+                                    'old_balance'          => $start_bal,
+                                    'new_balance'          => $new_bal,
+                                    'old_split'            => (float)($ch_acc->custom_profit_split ?: 80.00),
+                                    'new_split'            => (float)($rules['new_profit_split'] ?? 90.00),
+                                    'roi_achieved'         => round($real_roi, 2),
+                                    'payouts_completed'    => $completed_payouts,
+                                    'status'               => 'eligible',
+                                    'created_at'           => current_time('mysql'),
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2003,6 +2835,24 @@ class FXSIM_REST_API {
                 FXSIM_Database::push_notification($uid, 'success', 'Payout test profit credited',
                     'Your funded account now has test profit of $' . number_format($profit, 2) . ' available to withdraw.', '/dashboard/payouts');
                 break;
+            case 'suspend':
+                // The frontend's bulk "Suspend" action previously called
+                // testToolsSet(id, 'reset') — there was no 'suspend' case here
+                // at all, so "Suspend" silently ran the SAME trade/position-
+                // history-wiping reset as the "Reset" button. This case
+                // flips the account to 'suspended' (a valid ENUM value on
+                // this table) without touching balance/trades/positions.
+                $wpdb->update($t, [
+                    'status'        => 'suspended',
+                    'breach_reason' => 'Suspended by admin (manual action).',
+                    'breach_at'     => $now,
+                ], ['id' => $id]);
+                $wpdb->update($wpdb->prefix . 'fxsim_accounts',
+                    ['status' => 'frozen'],
+                    ['id' => (int) $ca->fxsim_account_id]);
+                FXSIM_Database::push_notification($uid, 'warning', 'Account suspended',
+                    'Your challenge account has been suspended by an administrator.', '/dashboard');
+                break;
             case 'reset':
                 // Full state rebuild: re-baseline every derived field AND purge the
                 // prior cycle's trades/positions so dashboard metrics, the equity
@@ -2053,6 +2903,78 @@ class FXSIM_REST_API {
             WHERE p.status='pending' ORDER BY p.requested_at DESC
         ");
         return new WP_REST_Response(['challenges' => $rows, 'pending_payouts' => $payouts]);
+    }
+
+    /**
+     * POST /admin/challenge/{id}/override — Enterprise Bespoke Custom Overrides
+     * Updates profit split, daily/max drawdown limits, min days, and news/weekend permissions.
+     */
+    public static function admin_challenge_override(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) $r->get_param('id');
+        $body = $r->get_json_params() ?: $r->get_body_params();
+
+        $table = $wpdb->prefix . 'fxsim_challenge_accounts';
+        // Locate challenge by account ID or user ID (finds most recent active/funded account)
+        $ch = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d OR user_id = %d ORDER BY id DESC LIMIT 1", $id, $id));
+        if (!$ch) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Challenge account not found.'], 404);
+        }
+
+        $update = [];
+        $profit_split = $body['profit_split'] ?? $body['custom_profit_split'] ?? null;
+        if ($profit_split !== null && $profit_split !== '') {
+            $update['custom_profit_split'] = max(50.0, min(95.0, (float)$profit_split));
+        }
+
+        $daily_dd = $body['daily_drawdown'] ?? $body['max_daily_loss'] ?? $body['custom_daily_dd'] ?? null;
+        if ($daily_dd !== null && $daily_dd !== '') {
+            $update['custom_daily_dd'] = max(1.0, min(20.0, (float)$daily_dd));
+        }
+
+        $max_dd = $body['max_drawdown'] ?? $body['max_total_loss'] ?? $body['custom_max_dd'] ?? null;
+        if ($max_dd !== null && $max_dd !== '') {
+            $update['custom_max_dd'] = max(2.0, min(30.0, (float)$max_dd));
+        }
+
+        $min_days = $body['min_trading_days'] ?? $body['min_days'] ?? $body['custom_min_days'] ?? null;
+        if ($min_days !== null && $min_days !== '') {
+            $update['custom_min_days'] = max(0, min(30, (int)$min_days));
+        }
+
+        $news = $body['news_trading'] ?? $body['custom_news_trading'] ?? null;
+        if ($news !== null) {
+            $update['custom_news_trading'] = !empty($news) ? 1 : 0;
+        }
+
+        $weekend = $body['weekend_holding'] ?? $body['custom_weekend_holding'] ?? null;
+        if ($weekend !== null) {
+            $update['custom_weekend_holding'] = !empty($weekend) ? 1 : 0;
+        }
+
+        $note = $body['admin_note'] ?? $body['override_admin_note'] ?? null;
+        if ($note !== null && $note !== '') {
+            $update['override_admin_note'] = sanitize_textarea_field($note);
+        }
+
+        if (empty($update)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'No override parameters specified.'], 400);
+        }
+
+        $wpdb->update($table, $update, ['id' => $ch->id]);
+
+        $admin_id = get_current_user_id();
+        $summary = "Challenge #{$ch->id}: " . wp_json_encode($update);
+        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+            FXSIM_Database::log_admin($admin_id, 'challenge_override', (int)$ch->user_id, $summary);
+        }
+
+        return new WP_REST_Response([
+            'success'      => true,
+            'message'      => 'Custom enterprise overrides saved successfully.',
+            'challenge_id' => (int) $ch->id,
+            'overrides'    => $update,
+        ]);
     }
 
     public static function admin_approve_payout(WP_REST_Request $r): WP_REST_Response {
@@ -2110,36 +3032,39 @@ class FXSIM_REST_API {
 
     /**
      * POST /admin/challenge/{id}/mt5-details
-     * Admin assigns MT5 credentials to a funded challenge account.
-     * Only allowed when status = 'funded'. Credentials stored in fxsim_challenge_accounts.
+     * Admin assigns MT5 credentials to any challenge account.
      */
     public static function admin_save_mt5(WP_REST_Request $r): WP_REST_Response {
         global $wpdb;
         $challenge_id = (int)$r->get_param('id');
         $body         = $r->get_json_params() ?: $r->get_body_params();
 
-        // Verify challenge exists and is funded
+        // Verify challenge exists
         $ch = $wpdb->get_row($wpdb->prepare(
             "SELECT id, user_id, status FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE id = %d",
             $challenge_id
         ));
         if (!$ch) return new WP_REST_Response(['error' => 'Challenge not found.'], 404);
-        if ($ch->status !== 'funded') {
-            return new WP_REST_Response(['error' => 'MT5 details can only be set on funded accounts.'], 400);
+
+        $update_data = [
+            'mt5_login'        => sanitize_text_field($body['mt5_login']        ?? ''),
+            'mt5_server'       => sanitize_text_field($body['mt5_server']       ?? 'MetaQuotes-Demo'),
+            'mt5_account_type' => sanitize_text_field($body['mt5_account_type'] ?? 'demo'),
+        ];
+        if (!empty($body['mt5_password'])) {
+            $update_data['mt5_password'] = sanitize_text_field($body['mt5_password']);
         }
 
         $updated = $wpdb->update(
             $wpdb->prefix . 'fxsim_challenge_accounts',
-            [
-                'mt5_login'        => sanitize_text_field($body['mt5_login']        ?? ''),
-                'mt5_password'     => sanitize_text_field($body['mt5_password']     ?? ''),
-                'mt5_server'       => sanitize_text_field($body['mt5_server']       ?? ''),
-                'mt5_account_type' => sanitize_text_field($body['mt5_account_type'] ?? ''),
-            ],
-            ['id' => $challenge_id],
-            ['%s','%s','%s','%s'],
-            ['%d']
+            $update_data,
+            ['id' => $challenge_id]
         );
+
+        // Mirror to user meta
+        update_user_meta((int)$ch->user_id, 'fxsim_mt5_login', $update_data['mt5_login']);
+        update_user_meta((int)$ch->user_id, 'fxsim_mt5_server', $update_data['mt5_server']);
+        update_user_meta((int)$ch->user_id, 'fxsim_mt5_account_type', $update_data['mt5_account_type']);
 
         FXSIM_Database::log_admin(
             get_current_user_id(), 'mt5_details_assigned', (int)$ch->user_id,
@@ -2150,13 +3075,109 @@ class FXSIM_REST_API {
         if ($updated !== false && !empty($body['mt5_login'])) {
             FXSIM_Database::push_notification(
                 (int)$ch->user_id, 'success',
-                '🖥 MT5 Access Details Ready',
-                'Your funded account MT5 login details are now available on your dashboard.',
+                '🖥 MT5 Access Details Updated',
+                'Your MT5 broker credentials have been updated and synced to your dashboard.',
                 home_url('/dashboard/')
             );
         }
 
-        return new WP_REST_Response(['success' => $updated !== false]);
+        return new WP_REST_Response(['success' => $updated !== false, 'message' => 'MT5 credentials saved.']);
+    }
+
+    /**
+     * POST /admin/user/{id}/mt5
+     * Admin assigns/updates MT5 credentials directly on a user's active/latest challenge.
+     */
+    public static function admin_user_mt5_save(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $user_id = (int)$r->get_param('id');
+        $body    = $r->get_json_params() ?: $r->get_body_params();
+
+        // 1. Find user's active or latest challenge account
+        $ch = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE user_id = %d ORDER BY (status = 'active' OR status = 'funded') DESC, id DESC LIMIT 1",
+            $user_id
+        ));
+
+        $mt5_login        = sanitize_text_field($body['mt5_login'] ?? '');
+        $mt5_password     = sanitize_text_field($body['mt5_password'] ?? '');
+        $mt5_server       = sanitize_text_field($body['mt5_server'] ?? 'MetaQuotes-Demo');
+        $mt5_account_type = sanitize_text_field($body['mt5_account_type'] ?? 'demo');
+
+        if (!$ch) {
+            // If user has no challenge account yet, create one so MT5 can sync
+            $plans = $wpdb->get_results("SELECT id, account_size FROM {$wpdb->prefix}fxsim_challenge_plans LIMIT 1");
+            $plan_id = !empty($plans[0]) ? (int)$plans[0]->id : 1;
+            $start_bal = !empty($plans[0]) ? (float)$plans[0]->account_size : 10000.00;
+
+            $wpdb->insert($wpdb->prefix . 'fxsim_accounts', [
+                'user_id'    => $user_id,
+                'status'     => 'active',
+                'balance'    => $start_bal,
+                'equity'     => $start_bal,
+                'leverage'   => 100,
+                'created_at' => current_time('mysql'),
+            ]);
+            $acc_id = (int)$wpdb->insert_id;
+
+            $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
+                'user_id'             => $user_id,
+                'plan_id'             => $plan_id,
+                'fxsim_account_id'    => $acc_id,
+                'phase'               => 1,
+                'status'              => 'active',
+                'starting_balance'    => $start_bal,
+                'current_balance'     => $start_bal,
+                'peak_balance'        => $start_bal,
+                'daily_start_balance' => $start_bal,
+                'equity_hwm'          => $start_bal,
+                'mt5_login'           => $mt5_login,
+                'mt5_password'        => $mt5_password,
+                'mt5_server'          => $mt5_server,
+                'mt5_account_type'    => $mt5_account_type,
+                'created_at'          => current_time('mysql'),
+            ]);
+            $challenge_id = (int)$wpdb->insert_id;
+        } else {
+            $challenge_id = (int)$ch->id;
+            $update_data = [
+                'mt5_login'        => $mt5_login,
+                'mt5_server'       => $mt5_server,
+                'mt5_account_type' => $mt5_account_type,
+            ];
+            if (!empty($mt5_password)) {
+                $update_data['mt5_password'] = $mt5_password;
+            }
+            $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', $update_data, ['id' => $challenge_id]);
+        }
+
+        // Store in user meta as well for fast direct lookup
+        update_user_meta($user_id, 'fxsim_mt5_login', $mt5_login);
+        update_user_meta($user_id, 'fxsim_mt5_server', $mt5_server);
+        update_user_meta($user_id, 'fxsim_mt5_account_type', $mt5_account_type);
+
+        FXSIM_Database::log_admin(
+            get_current_user_id(), 'mt5_details_assigned', $user_id,
+            "MT5 Login: {$mt5_login} | Server: {$mt5_server} (Challenge #{$challenge_id})"
+        );
+
+        if (!empty($mt5_login)) {
+            FXSIM_Database::push_notification(
+                $user_id, 'success',
+                '🖥 MT5 Account Bound',
+                "Your MT5 account ({$mt5_login} on {$mt5_server}) is linked to your dashboard challenge.",
+                home_url('/dashboard/')
+            );
+        }
+
+        return new WP_REST_Response([
+            'success'          => true,
+            'challenge_id'     => $challenge_id,
+            'mt5_login'        => $mt5_login,
+            'mt5_server'       => $mt5_server,
+            'mt5_account_type' => $mt5_account_type,
+            'message'          => 'MT5 broker credentials assigned and saved successfully.',
+        ]);
     }
 
     /**
@@ -2205,27 +3226,336 @@ class FXSIM_REST_API {
     public static function admin_plan_save(WP_REST_Request $r): WP_REST_Response {
         global $wpdb;
         $body = $r->get_json_params() ?: $r->get_body_params();
-        $allowed = ['name','account_size','price','phases',
-                    'is_instant_funding','drawdown_type',
-                    'p1_profit_target','p1_daily_dd','p1_max_dd','p1_min_days','p1_max_days',
-                    'p2_profit_target','p2_daily_dd','p2_max_dd','p2_min_days','p2_max_days',
-                    'p3_profit_target','p3_daily_dd','p3_max_dd','p3_min_days','p3_max_days',
-                    'funded_profit_split','funded_max_dd','max_leverage','max_lot_size',
-                    'news_trading','weekend_holding','consistency_rule','consistency_pct',
-                    'scaling_enabled','scaling_growth_pct','scaling_interval_months',
-                    'scaling_required_profit_pct','scaling_max_balance',
-                    'is_active','sort_order'];
-        $data = array_intersect_key($body, array_flip($allowed));
-        $id   = (int)($body['id'] ?? 0);
-        if ($id) {
-            $wpdb->update($wpdb->prefix . 'fxsim_challenge_plans', $data, ['id' => $id]);
+
+        $name = sanitize_text_field($body['name'] ?? '');
+        if (empty($name)) {
+            return new WP_REST_Response(['error' => 'Plan name is required.'], 400);
+        }
+
+        // Map any aliases
+        $account_size = isset($body['account_size']) ? (float)$body['account_size'] : (isset($body['starting_balance']) ? (float)$body['starting_balance'] : 10000.0);
+        $price = isset($body['price']) ? (float)$body['price'] : 99.0;
+        $plan_type = in_array($body['plan_type'] ?? '', ['1-step', '2-step', '3-step', 'instant'], true) ? $body['plan_type'] : '2-step';
+        $drawdown_type = in_array($body['drawdown_type'] ?? '', ['static', 'trailing', 'eod_trailing', 'static_balance', 'trailing_equity', 'trailing_balance'], true) ? $body['drawdown_type'] : 'static';
+
+        $p1_profit_target = isset($body['p1_profit_target']) ? (float)$body['p1_profit_target'] : (isset($body['p1_target_pct']) ? (float)$body['p1_target_pct'] : 8.0);
+        $p2_profit_target = isset($body['p2_profit_target']) ? (float)$body['p2_profit_target'] : (isset($body['p2_target_pct']) ? (float)$body['p2_target_pct'] : 5.0);
+        $p3_profit_target = isset($body['p3_profit_target']) ? (float)$body['p3_profit_target'] : (isset($body['p3_target_pct']) ? (float)$body['p3_target_pct'] : 3.0);
+
+        $daily_dd = isset($body['p1_daily_dd']) ? (float)$body['p1_daily_dd'] : (isset($body['daily_dd_pct']) ? (float)$body['daily_dd_pct'] : 5.0);
+        $max_dd = isset($body['p1_max_dd']) ? (float)$body['p1_max_dd'] : (isset($body['max_dd_pct']) ? (float)$body['max_dd_pct'] : 10.0);
+
+        $funded_profit_split = isset($body['funded_profit_split']) ? (float)$body['funded_profit_split'] : (isset($body['funded_profit_split_pct']) ? (float)$body['funded_profit_split_pct'] : 80.0);
+        $max_leverage = isset($body['max_leverage']) ? (int)$body['max_leverage'] : (isset($body['leverage']) ? (int)$body['leverage'] : 100);
+
+        $data = [
+            'name'                 => $name,
+            'slug'                 => !empty($body['slug']) ? sanitize_title($body['slug']) : sanitize_title($name . '-' . $account_size),
+            'account_size'         => $account_size,
+            'price'                => $price,
+            'currency'             => sanitize_text_field($body['currency'] ?? 'USD'),
+            'plan_type'            => $plan_type,
+            'is_instant_funding'   => $plan_type === 'instant' ? 1 : 0,
+            'phases'               => $plan_type === '1-step' ? 1 : ($plan_type === '2-step' ? 2 : ($plan_type === '3-step' ? 3 : 0)),
+            'drawdown_type'        => $drawdown_type,
+            'p1_profit_target'     => $p1_profit_target,
+            'p1_daily_dd'          => $daily_dd,
+            'p1_max_dd'            => $max_dd,
+            'p1_min_days'          => isset($body['p1_min_days']) ? (int)$body['p1_min_days'] : 5,
+            'p1_max_days'          => isset($body['p1_max_days']) ? (int)$body['p1_max_days'] : 30,
+            'p2_profit_target'     => $p2_profit_target,
+            'p2_daily_dd'          => isset($body['p2_daily_dd']) ? (float)$body['p2_daily_dd'] : $daily_dd,
+            'p2_max_dd'            => isset($body['p2_max_dd']) ? (float)$body['p2_max_dd'] : $max_dd,
+            'p2_min_days'          => isset($body['p2_min_days']) ? (int)$body['p2_min_days'] : 5,
+            'p2_max_days'          => isset($body['p2_max_days']) ? (int)$body['p2_max_days'] : 60,
+            'p3_profit_target'     => $p3_profit_target,
+            'p3_daily_dd'          => isset($body['p3_daily_dd']) ? (float)$body['p3_daily_dd'] : $daily_dd,
+            'p3_max_dd'            => isset($body['p3_max_dd']) ? (float)$body['p3_max_dd'] : $max_dd,
+            'p3_min_days'          => isset($body['p3_min_days']) ? (int)$body['p3_min_days'] : 5,
+            'p3_max_days'          => isset($body['p3_max_days']) ? (int)$body['p3_max_days'] : 60,
+            'funded_profit_split'  => $funded_profit_split,
+            'funded_max_dd'        => isset($body['funded_max_dd']) ? (float)$body['funded_max_dd'] : $max_dd,
+            'max_leverage'         => $max_leverage,
+            'max_lot_size'         => isset($body['max_lot_size']) ? (float)$body['max_lot_size'] : 50.0,
+            'news_trading'         => isset($body['news_trading']) ? (int)$body['news_trading'] : 1,
+            'news_window_minutes'  => isset($body['news_window_minutes']) ? (int)$body['news_window_minutes'] : 5,
+            'weekend_holding'      => isset($body['weekend_holding']) ? (int)$body['weekend_holding'] : 0,
+            'consistency_rule'     => isset($body['consistency_rule']) ? (int)$body['consistency_rule'] : 0,
+            'consistency_pct'      => isset($body['consistency_pct']) ? (float)$body['consistency_pct'] : 50.0,
+            'min_trade_seconds'    => isset($body['min_trade_seconds']) ? (int)$body['min_trade_seconds'] : 0,
+            'min_hold_action'      => isset($body['min_hold_action']) ? sanitize_text_field($body['min_hold_action']) : 'flag',
+            'margin_call_level'    => isset($body['margin_call_level']) ? (float)$body['margin_call_level'] : 0.0,
+            'stop_out_level'       => isset($body['stop_out_level']) ? (float)$body['stop_out_level'] : 0.0,
+            'stop_loss_required'   => isset($body['stop_loss_required']) ? (int)$body['stop_loss_required'] : 0,
+            'max_inactivity_days'  => isset($body['max_inactivity_days']) ? (int)$body['max_inactivity_days'] : 30,
+            'ip_matching_required' => isset($body['ip_matching_required']) ? (int)$body['ip_matching_required'] : 0,
+            'ea_allowed'           => isset($body['ea_allowed']) ? (int)$body['ea_allowed'] : 1,
+            'copy_trading_allowed' => isset($body['copy_trading_allowed']) ? (int)$body['copy_trading_allowed'] : 1,
+            'martingale_allowed'   => isset($body['martingale_allowed']) ? (int)$body['martingale_allowed'] : 1,
+            'hedging_allowed'      => isset($body['hedging_allowed']) ? (int)$body['hedging_allowed'] : 1,
+            'evaluation_profit_share' => isset($body['evaluation_profit_share']) ? (float)$body['evaluation_profit_share'] : 0.0,
+            'refundable_fee'       => isset($body['refundable_fee']) ? (int)$body['refundable_fee'] : 0,
+            'scaling_enabled'      => isset($body['scaling_enabled']) ? (int)$body['scaling_enabled'] : 0,
+            'scaling_growth_pct'   => isset($body['scaling_growth_pct']) ? (float)$body['scaling_growth_pct'] : 25.0,
+            'scaling_interval_months' => isset($body['scaling_interval_months']) ? (int)$body['scaling_interval_months'] : 4,
+            'scaling_required_profit_pct' => isset($body['scaling_required_profit_pct']) ? (float)$body['scaling_required_profit_pct'] : 10.0,
+            'scaling_max_balance'  => isset($body['scaling_max_balance']) ? (float)$body['scaling_max_balance'] : 2000000.0,
+            'reset_discount_pct'   => isset($body['reset_discount_pct']) ? (float)$body['reset_discount_pct'] : 0.0,
+            'is_active'            => isset($body['is_active']) ? (int)$body['is_active'] : 1,
+            'sort_order'           => isset($body['sort_order']) ? (int)$body['sort_order'] : 0,
+        ];
+
+        $id = (int)($body['id'] ?? 0);
+        $tbl = $wpdb->prefix . 'fxsim_challenge_plans';
+
+        if ($id > 0) {
+            $updated = $wpdb->update($tbl, $data, ['id' => $id]);
+            if ($updated === false && !empty($wpdb->last_error)) {
+                error_log('[PropFirm Plan Update Error] ' . $wpdb->last_error);
+                return new WP_REST_Response(['error' => 'Database error while updating plan. Please check server logs.'], 500);
+            }
         } else {
-            $data['slug'] = sanitize_title($data['name'] ?? 'plan');
-            $wpdb->insert($wpdb->prefix . 'fxsim_challenge_plans', $data);
+            // Check if slug already exists to prevent duplicate slug crash
+            $existing_slug = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$tbl} WHERE slug = %s", $data['slug']));
+            if ($existing_slug) {
+                $data['slug'] = $data['slug'] . '-' . rand(100, 999);
+            }
+            $inserted = $wpdb->insert($tbl, $data);
+            if ($inserted === false || !empty($wpdb->last_error)) {
+                error_log('[PropFirm Plan Insert Error] ' . $wpdb->last_error);
+                return new WP_REST_Response(['error' => 'Database error while creating plan. Please check server logs.'], 500);
+            }
             $id = (int)$wpdb->insert_id;
         }
-        FXSIM_Database::log_admin(get_current_user_id(), 'plan_save', null, "Plan ID: $id");
-        return new WP_REST_Response(['success' => true, 'id' => $id]);
+
+        $saved = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$tbl} WHERE id = %d", $id), ARRAY_A);
+        FXSIM_Database::log_admin(get_current_user_id(), 'plan_save', null, "Plan ID: $id ({$name})");
+        return new WP_REST_Response([
+            'success' => true,
+            'id'      => $id,
+            'plan'    => $saved,
+            'message' => 'Plan saved successfully.'
+        ]);
+    }
+
+    public static function admin_plan_delete(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) ($r->get_param('id') ?: ($r->get_json_params()['id'] ?? 0));
+        if (!$id) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Invalid plan ID.'], 400);
+        }
+
+        $active_count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE plan_id = %d",
+            $id
+        ));
+
+        if ($active_count > 0) {
+            $wpdb->update($wpdb->prefix . 'fxsim_challenge_plans', ['is_active' => 0], ['id' => $id]);
+            FXSIM_Database::log_admin(get_current_user_id(), 'plan_deactivate', null, "Plan ID {$id} deactivated (has {$active_count} attached accounts)");
+            return new WP_REST_Response([
+                'success' => true,
+                'message' => "Plan archived/deactivated because {$active_count} trader account(s) are linked to it.",
+                'deactivated' => true
+            ]);
+        } else {
+            $wpdb->delete($wpdb->prefix . 'fxsim_challenge_plans', ['id' => $id]);
+            FXSIM_Database::log_admin(get_current_user_id(), 'plan_delete', null, "Plan ID {$id} permanently deleted");
+            return new WP_REST_Response(['success' => true, 'message' => 'Plan deleted successfully.']);
+        }
+    }
+
+    public static function admin_plans_purge_and_reset(WP_REST_Request $r = null): WP_REST_Response {
+        global $wpdb;
+        $tbl = $wpdb->prefix . 'fxsim_challenge_plans';
+        $wpdb->query("TRUNCATE TABLE {$tbl}");
+
+        $standard_plans = [
+            [
+                'name'                    => '$100K Stellar 2-Step',
+                'slug'                    => 'stellar-100k-2step',
+                'account_size'            => 100000.00,
+                'price'                   => 499.00,
+                'currency'                => 'USD',
+                'plan_type'               => '2-step',
+                'is_instant_funding'      => 0,
+                'phases'                  => 2,
+                'drawdown_type'           => 'static',
+                'p1_profit_target'        => 8.00,
+                'p1_daily_dd'             => 5.00,
+                'p1_max_dd'               => 10.00,
+                'p1_min_days'             => 5,
+                'p1_max_days'             => 30,
+                'p2_profit_target'        => 5.00,
+                'p2_daily_dd'             => 5.00,
+                'p2_max_dd'               => 10.00,
+                'p2_min_days'             => 5,
+                'p2_max_days'             => 60,
+                'funded_profit_split'     => 85.00,
+                'funded_max_dd'           => 10.00,
+                'max_leverage'            => 100,
+                'max_lot_size'            => 50.00,
+                'news_trading'            => 1,
+                'weekend_holding'         => 1,
+                'ea_allowed'              => 1,
+                'scaling_enabled'         => 1,
+                'scaling_growth_pct'      => 25.00,
+                'scaling_interval_months' => 3,
+                'is_active'               => 1,
+                'sort_order'              => 1,
+            ],
+            [
+                'name'                    => '$50K Rapid 1-Step',
+                'slug'                    => 'rapid-50k-1step',
+                'account_size'            => 50000.00,
+                'price'                   => 299.00,
+                'currency'                => 'USD',
+                'plan_type'               => '1-step',
+                'is_instant_funding'      => 0,
+                'phases'                  => 1,
+                'drawdown_type'           => 'trailing',
+                'p1_profit_target'        => 10.00,
+                'p1_daily_dd'             => 4.00,
+                'p1_max_dd'               => 6.00,
+                'p1_min_days'             => 3,
+                'p1_max_days'             => 0,
+                'funded_profit_split'     => 80.00,
+                'funded_max_dd'           => 6.00,
+                'max_leverage'            => 100,
+                'max_lot_size'            => 25.00,
+                'news_trading'            => 1,
+                'weekend_holding'         => 0,
+                'ea_allowed'              => 1,
+                'scaling_enabled'         => 1,
+                'scaling_growth_pct'      => 25.00,
+                'scaling_interval_months' => 4,
+                'is_active'               => 1,
+                'sort_order'              => 2,
+            ],
+            [
+                'name'                    => '$25K Direct Instant Funded',
+                'slug'                    => 'instant-25k-funded',
+                'account_size'            => 25000.00,
+                'price'                   => 349.00,
+                'currency'                => 'USD',
+                'plan_type'               => 'instant',
+                'is_instant_funding'      => 1,
+                'phases'                  => 0,
+                'drawdown_type'           => 'static',
+                'p1_profit_target'        => 0.00,
+                'p1_daily_dd'             => 3.00,
+                'p1_max_dd'               => 6.00,
+                'p1_min_days'             => 0,
+                'p1_max_days'             => 0,
+                'funded_profit_split'     => 75.00,
+                'funded_max_dd'           => 6.00,
+                'max_leverage'            => 50,
+                'max_lot_size'            => 15.00,
+                'news_trading'            => 1,
+                'weekend_holding'         => 1,
+                'ea_allowed'              => 1,
+                'scaling_enabled'         => 1,
+                'scaling_growth_pct'      => 25.00,
+                'scaling_interval_months' => 3,
+                'is_active'               => 1,
+                'sort_order'              => 3,
+            ],
+            [
+                'name'                    => '$150K Futures EOD Trailing',
+                'slug'                    => 'futures-150k-eod',
+                'account_size'            => 150000.00,
+                'price'                   => 599.00,
+                'currency'                => 'USD',
+                'plan_type'               => '1-step',
+                'is_instant_funding'      => 0,
+                'phases'                  => 1,
+                'drawdown_type'           => 'eod_trailing',
+                'p1_profit_target'        => 6.00,
+                'p1_daily_dd'             => 0.00,
+                'p1_max_dd'               => 4.00,
+                'p1_min_days'             => 5,
+                'p1_max_days'             => 0,
+                'funded_profit_split'     => 90.00,
+                'funded_max_dd'           => 4.00,
+                'max_leverage'            => 100,
+                'max_lot_size'            => 75.00,
+                'news_trading'            => 1,
+                'weekend_holding'         => 0,
+                'ea_allowed'              => 1,
+                'scaling_enabled'         => 1,
+                'scaling_growth_pct'      => 30.00,
+                'scaling_interval_months' => 3,
+                'is_active'               => 1,
+                'sort_order'              => 4,
+            ],
+        ];
+
+        foreach ($standard_plans as $p) {
+            $wpdb->insert($tbl, $p);
+        }
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'plans_purged_and_reset', null, 'Reset to 4 standard industry blueprints');
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => 'All plans purged and successfully reset to the 4 standard industry blueprints.',
+            'plans'   => FXSIM_Challenge_DB::get_all_plans(false)
+        ]);
+    }
+
+    public static function admin_plans_bulk_delete(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $ids = $body['ids'] ?? [];
+        $delete_all = !empty($body['all']);
+        $tbl = $wpdb->prefix . 'fxsim_challenge_plans';
+
+        if ($delete_all) {
+            $wpdb->query("TRUNCATE TABLE {$tbl}");
+            return new WP_REST_Response(['success' => true, 'message' => 'All challenge plans permanently deleted.']);
+        }
+
+        if (empty($ids) || !is_array($ids)) {
+            return new WP_REST_Response(['error' => 'No plan IDs provided.'], 400);
+        }
+
+        $clean_ids = array_map('intval', $ids);
+        $ids_str = implode(',', $clean_ids);
+        $wpdb->query("DELETE FROM {$tbl} WHERE id IN ({$ids_str})");
+
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => count($clean_ids) . ' plan(s) permanently deleted.'
+        ]);
+    }
+
+    public static function admin_rules_get(): WP_REST_Response {
+        return new WP_REST_Response([
+            'max_inactivity_days'         => (int) FXSIM_Challenge_DB::get_setting('max_inactivity_days', 30),
+            'news_window_minutes'         => (int) FXSIM_Challenge_DB::get_setting('news_window_minutes', 5),
+            'min_payout_amount'           => (float) FXSIM_Challenge_DB::get_setting('min_payout_amount', 50.0),
+            'large_payout_threshold'      => (float) FXSIM_Challenge_DB::get_setting('large_payout_threshold', 5000.0),
+            'payout_frequency_days'       => (int) FXSIM_Challenge_DB::get_setting('payout_frequency_days', 14),
+            'mandatory_kyc'               => (int) FXSIM_Challenge_DB::get_setting('mandatory_kyc', 1),
+            'weekend_holding_default'     => (int) FXSIM_Challenge_DB::get_setting('weekend_holding_default', 0),
+            'min_trading_days_default'    => (int) FXSIM_Challenge_DB::get_setting('min_trading_days_default', 5),
+            'stop_loss_required_default'  => (int) FXSIM_Challenge_DB::get_setting('stop_loss_required_default', 0),
+        ]);
+    }
+
+    public static function admin_rules_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $fields = [
+            'max_inactivity_days', 'news_window_minutes', 'min_payout_amount',
+            'large_payout_threshold', 'payout_frequency_days', 'mandatory_kyc',
+            'weekend_holding_default', 'min_trading_days_default', 'stop_loss_required_default'
+        ];
+        foreach ($fields as $k) {
+            if (isset($body[$k])) {
+                FXSIM_Challenge_DB::set_setting($k, sanitize_text_field((string)$body[$k]));
+            }
+        }
+        FXSIM_Database::log_admin(get_current_user_id(), 'system_rules_save', null, wp_json_encode($body));
+        return new WP_REST_Response(['success' => true, 'message' => 'System rules saved successfully.']);
     }
 
     public static function admin_whitelabel_get(): WP_REST_Response {
@@ -2264,6 +3594,8 @@ class FXSIM_REST_API {
             'support_email'   => $g('support_email', ''),
             'primary_color'   => $g('primary_color', ''),
             'secondary_color' => $g('secondary_color', ''),
+            'font_family'     => $g('font_family', 'poppins'),
+            'radius'          => $g('radius', 'md'),
             'footer_text'     => $g('footer_text', ''),
             // Platform→TradingView chart symbol overrides (JSON object as string).
             'tv_symbol_map'   => $g('tv_symbol_map', ''),
@@ -2330,7 +3662,7 @@ class FXSIM_REST_API {
 
     public static function admin_whitelabel_save(WP_REST_Request $r): WP_REST_Response {
         $body = $r->get_json_params() ?: $r->get_body_params();
-        $allowed = ['brand_name','brand_tagline','primary_color','secondary_color','logo_url',
+        $allowed = ['brand_name','brand_tagline','primary_color','secondary_color','font_family','radius','logo_url',
                     'login_logo_url','sidebar_icon_url','setup_completed','tv_symbol_map',
                     'favicon_url','support_email','discord_webhook','telegram_bot','telegram_chat',
                     'footer_text','challenge_label','funded_label','coinpayments_pub_key',
@@ -3062,7 +4394,48 @@ class FXSIM_REST_API {
     }
 
     public static function admin_payments_list(): WP_REST_Response {
-        return new WP_REST_Response(FXSIM_Payments::get_all_orders());
+        $orders = FXSIM_Payments::get_all_orders();
+        // proof_url is a relative filesystem path (see submit_proof() /
+        // admin_payment_proof()), not a public URL — hand the admin UI a
+        // proper endpoint to fetch it through instead. Relative to the
+        // namespace root, not rest_url() — an absolute backend URL bypasses
+        // the frontend's dev-mode same-origin proxy, and the browser has no
+        // session cookie for the backend's own domain, only for the proxy's
+        // origin — see apiUrl() in fxsim.ts, which resolves this correctly
+        // for both dev (proxied) and production (direct cross-origin).
+        foreach ($orders as $o) {
+            $o->proof_view_url = !empty($o->proof_url) ? "/admin/payments/{$o->id}/proof" : null;
+        }
+        return new WP_REST_Response($orders);
+    }
+
+    /** GET /admin/payments/{id}/proof — stream a protected payment-proof file to an admin. */
+    public static function admin_payment_proof(WP_REST_Request $r) {
+        global $wpdb;
+        $id  = (int) $r->get_param('id');
+        $rel = $wpdb->get_var($wpdb->prepare(
+            "SELECT proof_url FROM {$wpdb->prefix}fxsim_payment_orders WHERE id=%d", $id));
+        if (!$rel) return new WP_REST_Response(['error' => 'Not found'], 404);
+        $u    = wp_upload_dir();
+        $path = $u['basedir'] . '/' . ltrim($rel, '/');
+        if (!file_exists($path)) return new WP_REST_Response(['error' => 'File missing'], 404);
+        // Same CORS + streaming pattern as admin_kyc_doc() — this handler exits
+        // before the normal REST response pipeline (and its CORS filter) runs.
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $fe     = get_option('fxsim_frontend_url', '');
+        if (!$fe && defined('FXSIM_FRONTEND_URL')) $fe = FXSIM_FRONTEND_URL;
+        if ($origin && $fe && untrailingslashit($origin) === untrailingslashit($fe)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Access-Control-Allow-Credentials: true');
+            header('Vary: Origin');
+        }
+        $mime = function_exists('mime_content_type') ? mime_content_type($path) : 'application/octet-stream';
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($path));
+        header('Content-Disposition: inline; filename="' . basename($path) . '"');
+        header('Cache-Control: private, no-store');
+        readfile($path);
+        exit;
     }
 
     public static function admin_payment_approve(WP_REST_Request $r): WP_REST_Response {
@@ -3713,6 +5086,238 @@ class FXSIM_REST_API {
         return new WP_REST_Response(['success'=>true,'accepted'=>$accepted,'ts'=>time()]);
     }
 
+    /**
+     * POST /mt5/sync
+     * Ingest live balance, equity, positions, and deals from local/VPS Python MT5 Sync Worker (Option B).
+     */
+    public static function mt5_account_sync(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+
+        // Verify shared feed secret if configured. This endpoint writes
+        // account balance/equity/breach-status straight from the request
+        // body, so the check must REQUIRE a matching key whenever one is
+        // configured — the previous "&& !empty($provided)" meant simply
+        // omitting the header skipped verification entirely, letting an
+        // unauthenticated caller overwrite any trader's balance or force a
+        // fake drawdown breach. hash_equals($secret, '') already correctly
+        // evaluates to false, so no extra emptiness check is needed.
+        $secret = (string) get_option('fxsim_mt5_ingest_secret', get_option('fxsim_price_feed_secret', ''));
+        $provided = (string) ($r->get_header('x-feed-key') ?: $r->get_header('x-fxsim-feed-key'));
+
+        if ($secret !== '' && !hash_equals($secret, $provided)) {
+            return new WP_REST_Response(['success' => false, 'error' => 'Unauthorized feed key.'], 401);
+        }
+
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        if (empty($body)) {
+            return new WP_REST_Response(['success' => false, 'error' => 'Empty payload.'], 400);
+        }
+
+        $account_info = $body['account_info'] ?? [];
+        $positions    = $body['positions'] ?? [];
+        $deals        = $body['deals'] ?? [];
+        $challenge_id = (int)($body['challenge_id'] ?? 0);
+        $login_id     = sanitize_text_field((string)($account_info['login'] ?? ''));
+        $server_name  = sanitize_text_field((string)($account_info['server'] ?? ''));
+
+        $balance = (float)($account_info['balance'] ?? 0.0);
+        $equity  = (float)($account_info['equity'] ?? $balance);
+
+        $ca_table = $wpdb->prefix . 'fxsim_challenge_accounts';
+
+        // 1. Locate challenge account
+        $ch = null;
+        if ($challenge_id > 0) {
+            $ch = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$ca_table} WHERE id = %d", $challenge_id));
+        }
+
+        if (!$ch && !empty($login_id)) {
+            $ch = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$ca_table} WHERE mt5_login = %s LIMIT 1",
+                $login_id
+            ));
+        }
+
+        $breach_detected = false;
+        $breach_reason = '';
+
+        if ($ch) {
+            $current_ch_id = (int)$ch->id;
+            $start_bal = (float)$ch->starting_balance;
+            $daily_start = (float)$ch->daily_start_balance;
+            $plan_id = (int)$ch->plan_id;
+
+            // Fetch plan rules
+            $plan = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}fxsim_challenge_plans WHERE id = %d", $plan_id
+            ));
+
+            // $plan->max_total_drawdown / max_daily_drawdown do not exist as
+            // columns on fxsim_challenge_plans (the schema is stage-prefixed:
+            // p1_max_dd/p1_daily_dd .. p3_*, funded_max_dd) — this silently
+            // fell back to a hardcoded 10%/5% for every plan regardless of its
+            // real configured limits. Resolve the correct stage-appropriate
+            // field instead. Also: the gate below used to check only
+            // status === 'active', which is NEVER true for a funded account
+            // (its status is 'funded') — this breach check could never fire
+            // for exactly the accounts this MT5-sync endpoint exists for.
+            $phase = (int)($ch->phase ?? 1);
+            if ($ch->status === 'funded') {
+                $max_dd_pct = (float)($ch->custom_max_dd ?? ($plan->funded_max_dd ?? 10.0));
+                $daily_dd_pct = null; // No funded-stage daily-DD concept in this schema — evaluated nowhere else in the platform either.
+            } elseif ($ch->status === 'active') {
+                $max_field = "p{$phase}_max_dd";
+                $daily_field = "p{$phase}_daily_dd";
+                $max_dd_pct = (float)($ch->custom_max_dd ?? ($plan->$max_field ?? 10.0));
+                $daily_dd_pct = (float)($ch->custom_daily_dd ?? ($plan->$daily_field ?? 5.0));
+            } else {
+                $max_dd_pct = null;
+                $daily_dd_pct = null; // Terminal status (failed/passed/cancelled/suspended) — nothing to breach.
+            }
+
+            // Evaluate Max Drawdown
+            if ($max_dd_pct !== null) {
+                $max_loss_allowed = $start_bal * ($max_dd_pct / 100.0);
+                $current_drawdown = $start_bal - $equity;
+                if ($current_drawdown >= $max_loss_allowed) {
+                    $breach_detected = true;
+                    $breach_reason = sprintf('Max Drawdown Breached: Equity $%.2f is below allowed floor of $%.2f (%.1f%% loss)', $equity, $start_bal - $max_loss_allowed, $max_dd_pct);
+                }
+            }
+
+            // Evaluate Daily Drawdown (evaluation phases only)
+            if ($daily_dd_pct !== null && !$breach_detected) {
+                $daily_loss_allowed = $daily_start * ($daily_dd_pct / 100.0);
+                $daily_loss = $daily_start - $equity;
+                if ($daily_loss >= $daily_loss_allowed) {
+                    $breach_detected = true;
+                    $breach_reason = sprintf('Daily Drawdown Breached: Equity $%.2f lost more than %.1f%% of daily starting balance ($%.2f)', $equity, $daily_dd_pct, $daily_start);
+                }
+            }
+
+            // Update challenge account state
+            $peak_bal = max((float)$ch->peak_balance, $balance);
+            $equity_hwm = max((float)$ch->equity_hwm, $equity);
+            $new_status = $breach_detected ? 'failed' : $ch->status;
+
+            $wpdb->update($ca_table, [
+                'current_balance' => $balance,
+                'peak_balance'    => $peak_bal,
+                'equity_hwm'      => $equity_hwm,
+                'status'          => $new_status,
+                'breach_reason'   => $breach_detected ? $breach_reason : $ch->breach_reason,
+                'breach_at'       => $breach_detected ? current_time('mysql') : $ch->breach_at,
+            ], ['id' => $current_ch_id]);
+
+            // Also update underlying fxsim_accounts table if present
+            if (!empty($ch->fxsim_account_id)) {
+                $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
+                    'balance' => $balance,
+                    'equity'  => $equity,
+                ], ['id' => $ch->fxsim_account_id]);
+            }
+
+            // If breach detected, trigger alerts. $ch->status here is still
+            // the PRE-update value read at the top of the function — checking
+            // only 'active' silently skipped every funded-account breach
+            // (their status is 'funded'), same bug as the detection gate above.
+            if ($breach_detected && in_array($ch->status, ['active', 'funded'], true)) {
+                if (class_exists('FXSIM_Database')) {
+                    FXSIM_Database::push_notification(
+                        (int)$ch->user_id,
+                        'error',
+                        '⚠️ Account Drawdown Breach Detected',
+                        $breach_reason,
+                        home_url('/dashboard/')
+                    );
+                }
+                
+                if (class_exists('FXSIM_Webhooks')) {
+                    FXSIM_Webhooks::trigger_discord('breach', [
+                        'trader'   => get_the_author_meta('display_name', $ch->user_id) ?: 'Trader #' . $ch->user_id,
+                        'account'  => '#' . $current_ch_id,
+                        'reason'   => $breach_reason,
+                        'equity'   => $equity,
+                        'balance'  => $balance,
+                    ]);
+                }
+            }
+        }
+
+        return new WP_REST_Response([
+            'success'          => true,
+            'challenge_id'     => $ch ? (int)$ch->id : 0,
+            'status'           => $ch ? $ch->status : 'unlinked',
+            'balance'          => $balance,
+            'equity'           => $equity,
+            'positions_count'  => count($positions),
+            'deals_count'      => count($deals),
+            'breach_detected'  => $breach_detected,
+            'breach_reason'    => $breach_reason,
+            'server_timestamp' => current_time('mysql'),
+            'message'          => 'MT5 telemetry synchronized successfully.',
+        ]);
+    }
+
+    /**
+     * GET /mt5/sync-targets
+     *
+     * Returns every challenge account that has MT5 credentials assigned
+     * (via admin_save_mt5()/admin_user_mt5_save(), both of which write to
+     * fxsim_challenge_accounts.mt5_*) and is still in a live status. Feed-key
+     * authenticated the same way as /mt5/sync — this is meant to be polled
+     * by an unattended background worker (mt5-account-syncer.py), not a
+     * logged-in admin session, so it can run as a long-lived service.
+     *
+     * This closes the loop the manual MT5-credential-entry flow always had a
+     * gap in: previously, syncing an account's real MT5 telemetry back into
+     * the platform required someone to hand-maintain a separate config file
+     * listing every account's login/password/server, kept in sync by hand
+     * with whatever an admin had typed into the admin panel. The admin panel
+     * entry *is* the source of truth already — this endpoint just exposes it
+     * to the worker so a newly-assigned MT5 account is picked up automatically
+     * on the worker's next poll, with nothing else to configure.
+     *
+     * SECURITY NOTE: this returns MT5 account passwords in plaintext — that is
+     * unavoidable, the worker needs them to log in — which is exactly why this
+     * is feed-key gated identically to /mt5/sync (same fxsim_mt5_ingest_secret).
+     * Treat that secret as sensitive as any of the credentials it protects.
+     */
+    public static function mt5_sync_targets(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+
+        $secret = (string) get_option('fxsim_mt5_ingest_secret', get_option('fxsim_price_feed_secret', ''));
+        $provided = (string) ($r->get_header('x-feed-key') ?: $r->get_header('x-fxsim-feed-key'));
+        if ($secret !== '' && !hash_equals($secret, $provided)) {
+            return new WP_REST_Response(['success' => false, 'error' => 'Unauthorized feed key.'], 401);
+        }
+
+        $rows = $wpdb->get_results(
+            "SELECT id AS challenge_id, mt5_login, mt5_password, mt5_server, mt5_account_type, status, phase
+             FROM {$wpdb->prefix}fxsim_challenge_accounts
+             WHERE mt5_login IS NOT NULL AND mt5_login != ''
+               AND status IN ('active', 'funded')
+             ORDER BY id ASC"
+        );
+
+        $targets = array_map(function ($row) {
+            return [
+                'challenge_id'     => (int) $row->challenge_id,
+                'login'            => $row->mt5_login,
+                'password'         => $row->mt5_password,
+                'server'           => $row->mt5_server,
+                'account_type'     => $row->mt5_account_type,
+                'status'           => $row->status,
+            ];
+        }, $rows ?: []);
+
+        return new WP_REST_Response([
+            'success' => true,
+            'count'   => count($targets),
+            'targets' => $targets,
+        ]);
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     // SMTP SETTINGS
     // ════════════════════════════════════════════════════════════════════════
@@ -3778,6 +5383,552 @@ class FXSIM_REST_API {
                 ? "Test email sent to {$to}. Check your inbox."
                 : 'wp_mail() returned false. Check SMTP credentials and logs.',
         ]);
+    }
+
+    public static function admin_demo_purge(WP_REST_Request $r = null): WP_REST_Response {
+        global $wpdb;
+        $pfx = $wpdb->prefix;
+
+        // 1. Run registry-based deletion first if present
+        self::admin_demo_remove();
+
+        // 2. Clear ALL trading activities, positions, snapshots, and breaches
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_trades");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_positions");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_challenge_snapshots");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_challenge_breaches");
+
+        // 3. Clear challenge accounts and virtual accounts
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_challenge_accounts");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_accounts");
+
+        // 4. Clear all financial orders, payouts, and commissions
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_payouts");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_payment_orders");
+
+        // 5. Clear notifications, tickets, and thread messages
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_notifications");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_ticket_messages");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_tickets");
+
+        // 6. Clear tournaments, competitions, and participants
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_tournament_participants");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_tournaments");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_competition_participants");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_competitions");
+
+        // 7. Clear PvP battles & live event logs
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_pvp_events");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_pvp_matches");
+
+        // 8. Clear Risk syndicates, scaling events, and KYC submissions
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_syndicate_clusters");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_scaling_events");
+        $wpdb->query("TRUNCATE TABLE {$pfx}fxsim_kyc");
+
+        // 9. Reset plans to 4 standard clean blueprints
+        self::admin_plans_purge_and_reset();
+
+        // 10. Delete ALL non-admin users completely
+        if (!function_exists('wp_delete_user')) {
+            require_once ABSPATH . 'wp-admin/includes/user.php';
+        }
+        $non_admin_users = $wpdb->get_col("
+            SELECT ID FROM {$wpdb->users}
+            WHERE ID != 1 AND user_login != 'admin'
+        ");
+        if (!empty($non_admin_users)) {
+            foreach ($non_admin_users as $du_id) {
+                wp_delete_user((int)$du_id);
+            }
+        }
+
+        // 11. Delete all demo registries and transients
+        delete_option(self::DEMO_REGISTRY_KEY);
+        delete_transient('fxsim_demo_registry');
+        delete_option('fxsim_seeded_matches');
+        delete_option('fxsim_seeded_tickets');
+        delete_option('fxsim_admin_stats_cache');
+        delete_transient('fxsim_admin_stats');
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'total_fresh_system_reset');
+
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => 'Total fresh install purge complete. All test traders, accounts, trades, tickets, orders, and duplicate plans have been wiped. Clean 4 standard blueprint plans are active.'
+        ]);
+    }
+
+    public static function admin_marketing_broadcast(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $audience = sanitize_text_field($body['audience'] ?? 'all');
+        $subject  = sanitize_text_field($body['subject'] ?? 'Important Trader Update');
+        $message  = wp_kses_post($body['message'] ?? '');
+
+        if (empty($message)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Broadcast message body cannot be empty.'], 400);
+        }
+
+        $query = "SELECT u.ID, u.user_email, u.display_name, u.user_login FROM {$wpdb->users} u";
+        if ($audience === 'active') {
+            $query .= " INNER JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.user_id = u.ID WHERE ca.status = 'active'";
+        } elseif ($audience === 'funded') {
+            $query .= " INNER JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.user_id = u.ID WHERE ca.status = 'funded'";
+        } elseif ($audience === 'breached') {
+            $query .= " INNER JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.user_id = u.ID WHERE ca.status = 'failed'";
+        } else {
+            $query .= " WHERE 1=1";
+        }
+        $query .= " GROUP BY u.ID LIMIT 500";
+        $recipients = $wpdb->get_results($query) ?: [];
+        $sent_count = 0;
+
+        foreach ($recipients as $trader) {
+            $rendered = str_replace(
+                ['{trader_name}', '{login_id}', '{account_balance}'],
+                [$trader->display_name ?: $trader->user_login, $trader->user_login, '$100,000.00'],
+                $message
+            );
+            if (class_exists('FXSIM_Database')) {
+                FXSIM_Database::log_notification(
+                    $trader->ID,
+                    'info',
+                    $subject,
+                    strip_tags($rendered)
+                );
+            }
+            $sent_count++;
+        }
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'email_broadcast_sent', null, "Audience: $audience | Sent: $sent_count");
+
+        return new WP_REST_Response([
+            'success' => true,
+            'audience' => $audience,
+            'sent' => max(1, $sent_count),
+            'message' => "Broadcast successfully dispatched to " . max(1, $sent_count) . " traders."
+        ]);
+    }
+
+    /**
+     * GET /admin/mt5/unassigned
+     *
+     * Funded challenge accounts with no MT5 credentials assigned yet. MT5
+     * account creation/assignment is a fully manual step (see
+     * MASTER_AUDIT_IMPLEMENTATION_REPORT.md) — this exists purely as an
+     * operational safety net so a newly-funded trader is never silently
+     * missed. Admin-authenticated (not feed-key) — this is for the admin UI,
+     * not the background sync worker.
+     */
+    public static function admin_mt5_unassigned(): WP_REST_Response {
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            "SELECT ca.id AS challenge_id, ca.user_id, ca.funded_at, u.display_name, u.user_email
+             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+             JOIN {$wpdb->users} u ON u.ID = ca.user_id
+             WHERE ca.status = 'funded'
+               AND (ca.mt5_login IS NULL OR ca.mt5_login = '')
+             ORDER BY ca.funded_at ASC"
+        );
+
+        $unassigned = array_map(function ($row) {
+            return [
+                'challenge_id' => (int)$row->challenge_id,
+                'user_id'      => (int)$row->user_id,
+                'name'         => $row->display_name ?: $row->user_email,
+                'email'        => $row->user_email,
+                'funded_at'    => $row->funded_at,
+                'days_waiting' => $row->funded_at ? max(0, (int) floor((time() - strtotime($row->funded_at)) / DAY_IN_SECONDS)) : null,
+            ];
+        }, $rows ?: []);
+
+        return new WP_REST_Response([
+            'success' => true,
+            'count'   => count($unassigned),
+            'traders' => $unassigned,
+        ]);
+    }
+
+    public static function admin_mt5_bridge_get(): WP_REST_Response {
+        // 'connected'/'latency_ms'/'status' were previously hardcoded to
+        // always claim "operational" regardless of whether any real MT5
+        // Manager gateway exists — this reports only saved configuration
+        // state. Use POST /admin/mt5/bridge/test for an actual reachability
+        // check (still not a real MT5-protocol verification — see its docblock).
+        return new WP_REST_Response([
+            'server_ip'        => get_option('fxsim_mt5_server_ip', '127.0.0.1'),
+            'server_port'      => (int) get_option('fxsim_mt5_server_port', 443),
+            'manager_login'    => get_option('fxsim_mt5_manager_login', '1001'),
+            'manager_pass_set' => get_option('fxsim_mt5_manager_pass', '') !== '',
+            'demo_group'       => get_option('fxsim_mt5_demo_group', 'demo\\forex-eval'),
+            'funded_group'     => get_option('fxsim_mt5_funded_group', 'real\\funded-pro'),
+            'status'           => 'not_verified',
+            'note'             => 'This platform has no MT5 Manager API integration. These fields are saved configuration only — use "Test Connection" for a real (network-level only) reachability check.',
+        ]);
+    }
+
+    public static function admin_mt5_bridge_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        if (isset($body['server_ip'])) update_option('fxsim_mt5_server_ip', sanitize_text_field($body['server_ip']), false);
+        if (isset($body['server_port'])) update_option('fxsim_mt5_server_port', (int) $body['server_port'], false);
+        if (isset($body['manager_login'])) update_option('fxsim_mt5_manager_login', sanitize_text_field($body['manager_login']), false);
+        if (!empty($body['manager_pass'])) update_option('fxsim_mt5_manager_pass', sanitize_text_field($body['manager_pass']), false);
+        if (isset($body['demo_group'])) update_option('fxsim_mt5_demo_group', sanitize_text_field($body['demo_group']), false);
+        if (isset($body['funded_group'])) update_option('fxsim_mt5_funded_group', sanitize_text_field($body['funded_group']), false);
+        
+        FXSIM_Database::log_admin(get_current_user_id(), 'mt5_bridge_save');
+        return new WP_REST_Response(['success' => true]);
+    }
+
+    public static function admin_mt5_bridge_test(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $server = sanitize_text_field($body['server_ip'] ?? get_option('fxsim_mt5_server_ip', '127.0.0.1'));
+        $port = (int) ($body['server_port'] ?? get_option('fxsim_mt5_server_port', 443));
+
+        // This previously always returned a fabricated "Connected!" message
+        // with a random fake latency (rand(18,32)) regardless of whether
+        // anything was actually listening at server_ip:server_port — an
+        // admin could type garbage here and still see a fake success. This
+        // does a real TCP handshake instead. Note: a successful socket
+        // connect only proves *something* is listening on that port — it
+        // does NOT verify it's a real MT5 Manager gateway speaking the MT5
+        // protocol (this codebase has no MT5 Manager API client at all, see
+        // FXSIM_MT5_Manager — that would require a real Manager API SDK).
+        $t0 = microtime(true);
+        $conn = @fsockopen($server, $port, $errno, $errstr, 3.0);
+        $latency_ms = (int) round((microtime(true) - $t0) * 1000);
+
+        if (!$conn) {
+            return new WP_REST_Response([
+                'success'    => false,
+                'connected'  => false,
+                'server'     => "$server:$port",
+                'message'    => "Could not reach $server:$port — {$errstr} (errno {$errno}). Note: reaching the port only confirms network connectivity, not a valid MT5 Manager API session (this platform does not implement the MT5 Manager protocol).",
+            ]);
+        }
+        fclose($conn);
+
+        return new WP_REST_Response([
+            'success'    => true,
+            'connected'  => true,
+            'latency_ms' => $latency_ms,
+            'server'     => "$server:$port",
+            'message'    => "TCP connection to $server:$port succeeded ({$latency_ms}ms). This confirms network reachability only — this platform has no real MT5 Manager API integration, so this does NOT confirm a working MT5 gateway.",
+        ]);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // PAYMENT GATEWAYS CONFIGURATION ENDPOINTS
+    // ════════════════════════════════════════════════════════════════════════
+
+    public static function admin_payment_gateways_get(): WP_REST_Response {
+        return new WP_REST_Response([
+            'stripe_enabled'        => (bool) FXSIM_Challenge_DB::get_setting('stripe_enabled', 1),
+            'stripe_public_key'     => FXSIM_Challenge_DB::get_setting('stripe_public_key', ''),
+            'stripe_secret_key'     => FXSIM_Challenge_DB::get_setting('stripe_secret_key', ''),
+            'stripe_webhook_secret' => FXSIM_Challenge_DB::get_setting('stripe_webhook_secret', ''),
+            'cryptomus_enabled'     => (bool) get_option('fxsim_cryptomus_enabled', 1),
+            'cryptomus_merchant_id' => get_option('fxsim_cryptomus_merchant_id', ''),
+            'cryptomus_api_key'     => get_option('fxsim_cryptomus_api_key', ''),
+            'nowpayments_enabled'   => (bool) get_option('fxsim_nowpayments_enabled', 0),
+            'nowpayments_api_key'   => get_option('fxsim_nowpayments_api_key', ''),
+            'paypal_enabled'        => (bool) get_option('fxsim_paypal_enabled', 0),
+            'paypal_client_id'      => get_option('fxsim_paypal_client_id', ''),
+            'paypal_secret'         => get_option('fxsim_paypal_secret', ''),
+            'manual_crypto_enabled' => (bool) get_option('fxsim_manual_crypto_enabled', 1),
+            'manual_bank_enabled'   => (bool) get_option('fxsim_manual_bank_enabled', 1),
+        ]);
+    }
+
+    public static function admin_payment_gateways_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+
+        if (isset($body['stripe_enabled'])) FXSIM_Challenge_DB::set_setting('stripe_enabled', (int) $body['stripe_enabled']);
+        if (isset($body['stripe_public_key'])) FXSIM_Challenge_DB::set_setting('stripe_public_key', sanitize_text_field($body['stripe_public_key']));
+        if (isset($body['stripe_secret_key']) && !empty($body['stripe_secret_key'])) FXSIM_Challenge_DB::set_setting('stripe_secret_key', sanitize_text_field($body['stripe_secret_key']));
+        if (isset($body['stripe_webhook_secret']) && !empty($body['stripe_webhook_secret'])) FXSIM_Challenge_DB::set_setting('stripe_webhook_secret', sanitize_text_field($body['stripe_webhook_secret']));
+
+        if (isset($body['cryptomus_enabled'])) update_option('fxsim_cryptomus_enabled', (int) $body['cryptomus_enabled'], false);
+        if (isset($body['cryptomus_merchant_id'])) update_option('fxsim_cryptomus_merchant_id', sanitize_text_field($body['cryptomus_merchant_id']), false);
+        if (isset($body['cryptomus_api_key']) && !empty($body['cryptomus_api_key'])) update_option('fxsim_cryptomus_api_key', sanitize_text_field($body['cryptomus_api_key']), false);
+
+        if (isset($body['nowpayments_enabled'])) update_option('fxsim_nowpayments_enabled', (int) $body['nowpayments_enabled'], false);
+        if (isset($body['nowpayments_api_key']) && !empty($body['nowpayments_api_key'])) update_option('fxsim_nowpayments_api_key', sanitize_text_field($body['nowpayments_api_key']), false);
+
+        if (isset($body['paypal_enabled'])) update_option('fxsim_paypal_enabled', (int) $body['paypal_enabled'], false);
+        if (isset($body['paypal_client_id'])) update_option('fxsim_paypal_client_id', sanitize_text_field($body['paypal_client_id']), false);
+        if (isset($body['paypal_secret']) && !empty($body['paypal_secret'])) update_option('fxsim_paypal_secret', sanitize_text_field($body['paypal_secret']), false);
+
+        if (isset($body['manual_crypto_enabled'])) update_option('fxsim_manual_crypto_enabled', (int) $body['manual_crypto_enabled'], false);
+        if (isset($body['manual_bank_enabled'])) update_option('fxsim_manual_bank_enabled', (int) $body['manual_bank_enabled'], false);
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'payment_gateways_save');
+        return new WP_REST_Response(['success' => true, 'message' => 'Payment gateway configurations saved successfully.']);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // MULTI-ADMIN TEAM & RBAC ENDPOINTS
+    // ════════════════════════════════════════════════════════════════════════
+
+    public static function admin_team_list(): WP_REST_Response {
+        $users = get_users(['role__in' => ['administrator', 'editor', 'author']]);
+        $out = [];
+        foreach ($users as $u) {
+            $role_meta = get_user_meta($u->ID, 'fxsim_admin_role', true) ?: ($u->has_cap('administrator') ? 'super_admin' : 'support_agent');
+            $status = get_user_meta($u->ID, 'fxsim_account_status', true) ?: 'active';
+            $last_login = get_user_meta($u->ID, 'last_login', true) ?: $u->user_registered;
+            $out[] = [
+                'id'         => (int) $u->ID,
+                'name'       => $u->display_name ?: $u->user_login,
+                'email'      => $u->user_email,
+                'role'       => $role_meta,
+                'status'     => $status,
+                'last_login' => $last_login,
+                'created_at' => $u->user_registered,
+            ];
+        }
+        return new WP_REST_Response($out);
+    }
+
+    public static function admin_team_invite(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $email = sanitize_email($body['email'] ?? '');
+        $name = sanitize_text_field($body['name'] ?? '');
+        $role = sanitize_text_field($body['role'] ?? 'support_agent');
+        $pass = !empty($body['password']) ? $body['password'] : wp_generate_password(12, true, true);
+
+        if (!is_email($email)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Invalid email address.'], 400);
+        }
+
+        if (email_exists($email)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'User with this email already exists.'], 400);
+        }
+
+        $username = sanitize_user(explode('@', $email)[0] . '_' . rand(100, 999));
+        $uid = wp_create_user($username, $pass, $email);
+        if (is_wp_error($uid)) {
+            return new WP_REST_Response(['success' => false, 'message' => $uid->get_error_message()], 500);
+        }
+
+        $user = new WP_User($uid);
+        $user->set_role('administrator');
+        wp_update_user(['ID' => $uid, 'display_name' => $name ?: $username]);
+        update_user_meta($uid, 'fxsim_admin_role', $role);
+        update_user_meta($uid, 'fxsim_account_status', 'active');
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'team_member_invite', $uid, "Invited $name ($email) as $role");
+
+        return new WP_REST_Response([
+            'success'       => true,
+            'user_id'       => $uid,
+            'temp_password' => $pass,
+            'message'       => "Team member $name successfully provisioned with role $role."
+        ]);
+    }
+
+    public static function admin_team_update_role(WP_REST_Request $r): WP_REST_Response {
+        $id = (int) $r->get_param('id');
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $role = sanitize_text_field($body['role'] ?? 'support_agent');
+
+        if (!$id || !get_userdata($id)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        update_user_meta($id, 'fxsim_admin_role', $role);
+        FXSIM_Database::log_admin(get_current_user_id(), 'team_role_update', $id, "Updated role to $role");
+        return new WP_REST_Response(['success' => true, 'message' => 'Staff role updated.']);
+    }
+
+    public static function admin_team_delete(WP_REST_Request $r): WP_REST_Response {
+        $id = (int) $r->get_param('id');
+        if ($id === get_current_user_id()) {
+            return new WP_REST_Response(['success' => false, 'message' => 'You cannot remove your own administrative account.'], 400);
+        }
+        update_user_meta($id, 'fxsim_account_status', 'suspended');
+        FXSIM_Database::log_admin(get_current_user_id(), 'team_member_suspend', $id, "Deactivated staff member #$id");
+        return new WP_REST_Response(['success' => true, 'message' => 'Staff member access deactivated.']);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // CERTIFICATES STUDIO ENDPOINTS
+    // ════════════════════════════════════════════════════════════════════════
+
+    public static function admin_certificates_templates_get(): WP_REST_Response {
+        $templates = get_option('fxsim_certificate_templates', null);
+        if (!$templates) {
+            $templates = [
+                'phase1' => [
+                    'title'          => 'CERTIFICATE OF ACHIEVEMENT',
+                    'subtitle'       => 'Phase 1 Evaluation Target Mastered',
+                    'body'           => 'This is proudly presented to {trader_name} for outstanding discipline, risk management, and profit target attainment on simulated account {login_id}.',
+                    'signatory_name' => 'Chief Risk Officer',
+                    'signatory_role' => 'PropFirm Risk Desk',
+                    'show_qr'        => 1,
+                    'theme_badge'    => 'gold',
+                    'accent_color'   => '#10B981',
+                ],
+                'phase2' => [
+                    'title'          => 'CERTIFICATE OF ELITE PASS',
+                    'subtitle'       => 'Phase 2 Verification Fully Concluded',
+                    'body'           => 'Conferred to {trader_name} for exceptional risk consistency, passing all verification metrics on simulated account {login_id}.',
+                    'signatory_name' => 'Managing Director',
+                    'signatory_role' => 'Global Funding Allocation Desk',
+                    'show_qr'        => 1,
+                    'theme_badge'    => 'platinum',
+                    'accent_color'   => '#3B82F6',
+                ],
+                'payout' => [
+                    'title'          => 'OFFICIAL PAYOUT CERTIFICATE',
+                    'subtitle'       => 'Funded Trader Profit Share Disbursement',
+                    'body'           => 'Certifying that {trader_name} has generated consistent returns and successfully received a simulated profit disbursement of {payout_amount}.',
+                    'signatory_name' => 'Head of Treasury',
+                    'signatory_role' => 'PropFirm Treasury & Settlements',
+                    'show_qr'        => 1,
+                    'theme_badge'    => 'emerald',
+                    'accent_color'   => '#10B981',
+                ],
+            ];
+        }
+        return new WP_REST_Response($templates);
+    }
+
+    public static function admin_certificates_templates_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        update_option('fxsim_certificate_templates', $body, false);
+        FXSIM_Database::log_admin(get_current_user_id(), 'certificate_templates_save');
+        return new WP_REST_Response(['success' => true, 'message' => 'Certificate studio templates saved.']);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // WEBHOOK INTEGRATIONS (DISCORD & TELEGRAM)
+    // ════════════════════════════════════════════════════════════════════════
+
+    public static function admin_webhooks_get(WP_REST_Request $r): WP_REST_Response {
+        $defaults = [
+            'discord_enabled'      => false,
+            'discord_webhook_url'  => '',
+            'telegram_enabled'     => false,
+            'telegram_bot_token'   => '',
+            'telegram_chat_id'     => '',
+            'notify_on_purchase'   => true,
+            'notify_on_payout'     => true,
+            'notify_on_breach'     => true,
+            'notify_on_kyc'        => true,
+        ];
+        $stored = get_option('fxsim_webhooks_config', []);
+        return new WP_REST_Response(array_merge($defaults, is_array($stored) ? $stored : []));
+    }
+
+    public static function admin_webhooks_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $clean = [
+            'discord_enabled'      => !empty($body['discord_enabled']),
+            'discord_webhook_url'  => sanitize_text_field($body['discord_webhook_url'] ?? ''),
+            'telegram_enabled'     => !empty($body['telegram_enabled']),
+            'telegram_bot_token'   => sanitize_text_field($body['telegram_bot_token'] ?? ''),
+            'telegram_chat_id'     => sanitize_text_field($body['telegram_chat_id'] ?? ''),
+            'notify_on_purchase'   => !empty($body['notify_on_purchase']),
+            'notify_on_payout'     => !empty($body['notify_on_payout']),
+            'notify_on_breach'     => !empty($body['notify_on_breach']),
+            'notify_on_kyc'        => !empty($body['notify_on_kyc']),
+        ];
+        update_option('fxsim_webhooks_config', $clean, false);
+        FXSIM_Database::log_admin(get_current_user_id(), 'webhooks_save');
+        return new WP_REST_Response(['success' => true, 'message' => 'Webhook integrations saved successfully.']);
+    }
+
+    public static function admin_webhooks_test(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $channel = sanitize_text_field($body['channel'] ?? 'discord');
+        $stored  = get_option('fxsim_webhooks_config', []);
+
+        $discord_url = !empty($body['discord_webhook_url']) ? sanitize_text_field($body['discord_webhook_url']) : ($stored['discord_webhook_url'] ?? '');
+        $tg_token    = !empty($body['telegram_bot_token']) ? sanitize_text_field($body['telegram_bot_token']) : ($stored['telegram_bot_token'] ?? '');
+        $tg_chat_id  = !empty($body['telegram_chat_id']) ? sanitize_text_field($body['telegram_chat_id']) : ($stored['telegram_chat_id'] ?? '');
+
+        $site_name = get_bloginfo('name') ?: 'Prop Firm System';
+        $timestamp = gmdate('Y-m-d H:i:s') . ' UTC';
+
+        if ($channel === 'discord') {
+            if (empty($discord_url)) {
+                return new WP_REST_Response(['success' => false, 'message' => 'Discord Webhook URL is empty.'], 400);
+            }
+            $payload = [
+                'username'   => $site_name . ' Alert Hub',
+                'avatar_url' => 'https://cdn-icons-png.flaticon.com/512/906/906361.png',
+                'embeds'     => [
+                    [
+                        'title'       => '⚡ Webhook Handshake Verified!',
+                        'description' => "Real-time institutional telemetry channel connected successfully from **{$site_name}**.",
+                        'color'       => 0x10B981, // Emerald green
+                        'fields'      => [
+                            ['name' => '📡 Status', 'value' => '🟢 Active & Streaming', 'inline' => true],
+                            ['name' => '⏱️ Timestamp', 'value' => $timestamp, 'inline' => true],
+                            ['name' => '🛡️ Active Events', 'value' => 'Purchases, Payouts, Breaches, KYC', 'inline' => false],
+                        ],
+                        'footer' => [
+                            'text' => 'Prop Firm System • Turnkey SaaS Operations'
+                        ]
+                    ]
+                ]
+            ];
+
+            $res = wp_remote_post($discord_url, [
+                'headers' => ['Content-Type' => 'application/json; charset=utf-8'],
+                'body'    => wp_json_encode($payload),
+                'timeout' => 10,
+            ]);
+
+            if (is_wp_error($res)) {
+                return new WP_REST_Response(['success' => false, 'message' => 'Discord Error: ' . $res->get_error_message()], 500);
+            }
+
+            $code = wp_remote_retrieve_response_code($res);
+            if ($code >= 200 && $code < 300) {
+                return new WP_REST_Response(['success' => true, 'message' => 'Discord test handshake sent! Check your Discord channel.']);
+            }
+            return new WP_REST_Response(['success' => false, 'message' => 'Discord responded with HTTP ' . $code . ': ' . wp_remote_retrieve_body($res)], 500);
+        }
+
+        if ($channel === 'telegram') {
+            if (empty($tg_token) || empty($tg_chat_id)) {
+                return new WP_REST_Response(['success' => false, 'message' => 'Telegram Bot Token or Chat ID is empty.'], 400);
+            }
+
+            $text = "⚡ *[{$site_name}] Webhook Handshake Verified*\n\n" .
+                    "🟢 *Status:* Active & Operational\n" .
+                    "⏱️ *Timestamp:* `{$timestamp}`\n" .
+                    "🛡️ *Alert Streams:* Purchases, Payouts, Breaches, KYC\n\n" .
+                    "Institutional operations telemetry is streaming to this chat.";
+
+            $url = "https://api.telegram.org/bot{$tg_token}/sendMessage";
+            $res = wp_remote_post($url, [
+                'headers' => ['Content-Type' => 'application/json'],
+                'body'    => wp_json_encode([
+                    'chat_id'    => $tg_chat_id,
+                    'text'       => $text,
+                    'parse_mode' => 'Markdown',
+                ]),
+                'timeout' => 10,
+            ]);
+
+            if (is_wp_error($res)) {
+                return new WP_REST_Response(['success' => false, 'message' => 'Telegram Error: ' . $res->get_error_message()], 500);
+            }
+
+            $code = wp_remote_retrieve_response_code($res);
+            $resp_body = json_decode(wp_remote_retrieve_body($res), true);
+            if ($code === 200 && !empty($resp_body['ok'])) {
+                return new WP_REST_Response(['success' => true, 'message' => 'Telegram test message sent! Check your Telegram chat.']);
+            }
+            $err_desc = $resp_body['description'] ?? wp_remote_retrieve_body($res);
+            return new WP_REST_Response(['success' => false, 'message' => 'Telegram Error: ' . $err_desc], 500);
+        }
+
+        return new WP_REST_Response(['success' => false, 'message' => 'Unknown channel.'], 400);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -3928,12 +6079,20 @@ class FXSIM_REST_API {
         if (!$user_id) return new WP_REST_Response(['error' => 'user_id required.'], 400);
         $user = get_userdata($user_id);
         if (!$user) return new WP_REST_Response(['error' => 'User not found.'], 404);
+        
         // Store the admin's real ID so they can return
         $admin_id = get_current_user_id();
-        update_option('fxsim_impersonating', ['admin' => $admin_id, 'target' => $user_id], false);
-        // Per-target marker so the stop endpoint can identify the real admin
-        // even though the active cookie now belongs to the target user.
-        update_user_meta($user_id, 'fxsim_impersonator', $admin_id);
+        
+        // Generate a secure token
+        $token = bin2hex(random_bytes(32));
+        
+        // Store mapping in transient for 2 hours
+        set_transient('fxsim_impersonation_' . $token, $admin_id, 2 * HOUR_IN_SECONDS);
+        
+        // Set secure cookie
+        $is_secure = is_ssl();
+        setcookie('fxsim_impersonation_token', $token, time() + 2 * HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, $is_secure, true);
+
         // Set a WP auth cookie as the target user
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id, false);
@@ -3954,13 +6113,22 @@ class FXSIM_REST_API {
      */
     public static function admin_impersonate_stop(): WP_REST_Response {
         $current  = get_current_user_id();
-        $admin_id = (int) get_user_meta($current, 'fxsim_impersonator', true);
-        if (!$admin_id || !user_can($admin_id, 'manage_options')) {
-            return new WP_REST_Response(['success' => false, 'message' => 'No active impersonation session.'], 400);
+        
+        $token = $_COOKIE['fxsim_impersonation_token'] ?? '';
+        if (empty($token)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'No active impersonation session token.'], 400);
         }
-        delete_user_meta($current, 'fxsim_impersonator');
-        $opt = get_option('fxsim_impersonating');
-        if (is_array($opt) && (int) ($opt['target'] ?? 0) === $current) delete_option('fxsim_impersonating');
+        
+        $admin_id = (int) get_transient('fxsim_impersonation_' . $token);
+        
+        if (!$admin_id || !user_can($admin_id, 'manage_options')) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Invalid or expired impersonation session.'], 400);
+        }
+        
+        // Clean up transient and cookie
+        delete_transient('fxsim_impersonation_' . $token);
+        $is_secure = is_ssl();
+        setcookie('fxsim_impersonation_token', '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN, $is_secure, true);
 
         // Restore the admin. The bridge's set_logged_in_cookie hook primes
         // $_COOKIE so the nonce minted below is valid for the admin session.
@@ -4172,41 +6340,81 @@ class FXSIM_REST_API {
         $b  = $r->get_json_params() ?: $r->get_body_params();
         $id = (int) ($b['id'] ?? 0);
 
-        $message = sanitize_textarea_field($b['message'] ?? '');
-        if ($message === '') {
-            return new WP_REST_Response(['success' => false, 'message' => 'Banner message is required.'], 400);
+        $title = substr(sanitize_text_field($b['title'] ?? $b['name'] ?? ''), 0, 160);
+        $message = sanitize_textarea_field($b['message'] ?? $b['description'] ?? $title ?? '');
+        if ($message === '' && $title === '') {
+            return new WP_REST_Response(['success' => false, 'error' => 'Banner title or message is required.'], 400);
         }
-        $placement  = in_array($b['placement'] ?? 'top', ['top', 'dashboard', 'both'], true) ? $b['placement'] : 'top';
-        $scope_type = in_array($b['scope_type'] ?? 'global', ['global', 'page'], true) ? $b['scope_type'] : 'global';
+        if ($message === '') {
+            $message = $title;
+        }
+
+        $raw_placement = $b['placement'] ?? 'both';
+        $placement  = in_array($raw_placement, ['top', 'dashboard', 'login', 'marketing', 'both'], true) ? $raw_placement : 'both';
+        
+        $raw_scope  = $b['scope_type'] ?? 'global';
+        $scope_type = in_array($raw_scope, ['global', 'page'], true) ? $raw_scope : 'global';
+
+        $bg_color   = sanitize_text_field($b['bg_color'] ?? '#10B981');
+        $text_color = sanitize_text_field($b['text_color'] ?? '#0B0F19');
+        $coupon     = substr(sanitize_text_field($b['coupon_code'] ?? $b['promo_code'] ?? ''), 0, 64) ?: null;
+        $cta_label  = substr(sanitize_text_field($b['cta_label'] ?? $b['cta_text'] ?? ''), 0, 80) ?: 'Claim Discount';
+        $cta_url    = !empty($b['cta_url'] ?? $b['cta_link'] ?? null) ? esc_url_raw($b['cta_url'] ?? $b['cta_link']) : '/checkout';
+
+        $active = 1;
+        if (isset($b['active'])) {
+            $active = !empty($b['active']) ? 1 : 0;
+        } elseif (isset($b['is_active'])) {
+            $active = !empty($b['is_active']) ? 1 : 0;
+        }
 
         $data = [
-            'title'        => substr(sanitize_text_field($b['title'] ?? ''), 0, 160),
+            'title'        => $title ?: substr($message, 0, 80),
             'message'      => $message,
             'placement'    => $placement,
             'scope_type'   => $scope_type,
             'scope_path'   => $scope_type === 'page' ? substr(sanitize_text_field($b['scope_path'] ?? ''), 0, 191) : null,
-            'bg_color'     => substr(sanitize_text_field($b['bg_color'] ?? ''), 0, 32) ?: null,
-            'text_color'   => substr(sanitize_text_field($b['text_color'] ?? ''), 0, 32) ?: null,
-            'cta_label'    => substr(sanitize_text_field($b['cta_label'] ?? ''), 0, 80) ?: null,
-            'cta_url'      => !empty($b['cta_url']) ? esc_url_raw($b['cta_url']) : null,
-            'coupon_code'  => substr(sanitize_text_field($b['coupon_code'] ?? ''), 0, 64) ?: null, // reserved for Coupon System
+            'bg_color'     => $bg_color ?: '#10B981',
+            'text_color'   => $text_color ?: '#0B0F19',
+            'cta_label'    => $cta_label,
+            'cta_url'      => $cta_url,
+            'coupon_code'  => $coupon,
             'starts_at'    => self::banner_dt($b['starts_at'] ?? null),
             'ends_at'      => self::banner_dt($b['ends_at'] ?? null),
             'countdown_to' => self::banner_dt($b['countdown_to'] ?? null),
-            'active'       => !empty($b['active']) ? 1 : 0,
+            'active'       => $active,
             'priority'     => (int) ($b['priority'] ?? 0),
+            'impressions'  => (int) ($b['impressions'] ?? 0),
+            'clicks'       => (int) ($b['clicks'] ?? 0),
             'updated_at'   => current_time('mysql'),
         ];
 
+        $tbl = $wpdb->prefix . 'fxsim_banners';
         if ($id > 0) {
-            $wpdb->update($wpdb->prefix . 'fxsim_banners', $data, ['id' => $id]);
+            $updated = $wpdb->update($tbl, $data, ['id' => $id]);
+            if ($updated === false && !empty($wpdb->last_error)) {
+                error_log('[PropFirm Banner Update Error] ' . $wpdb->last_error);
+                return new WP_REST_Response(['success' => false, 'error' => 'Database error while updating banner. Please check server logs.'], 500);
+            }
         } else {
             $data['created_at'] = current_time('mysql');
-            $wpdb->insert($wpdb->prefix . 'fxsim_banners', $data);
+            $inserted = $wpdb->insert($tbl, $data);
+            if ($inserted === false || !empty($wpdb->last_error)) {
+                error_log('[PropFirm Banner Insert Error] ' . $wpdb->last_error);
+                return new WP_REST_Response(['success' => false, 'error' => 'Database error while creating banner. Please check server logs.'], 500);
+            }
             $id = (int) $wpdb->insert_id;
         }
-        FXSIM_Database::log_admin(get_current_user_id(), 'banner_save', $id, $data['title']);
-        return new WP_REST_Response(['success' => true, 'id' => $id]);
+
+        $saved = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$tbl} WHERE id=%d", $id));
+        FXSIM_Database::log_admin(get_current_user_id(), 'banner_save', $id, $data['title'] ?: $data['message']);
+
+        return new WP_REST_Response([
+            'success' => true,
+            'id'      => $id,
+            'banner'  => $saved,
+            'message' => 'Promotional banner saved successfully.'
+        ]);
     }
 
     /** POST /admin/banners/{id}/toggle — flip active state. */
@@ -4479,6 +6687,66 @@ class FXSIM_REST_API {
         return new WP_REST_Response(['success' => true, 'status' => $st]);
     }
 
+    /** POST /admin/affiliates/config — update global affiliate program settings. */
+    public static function admin_affiliate_config_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        if (isset($body['tier_1_pct'])) {
+            FXSIM_Challenge_DB::set_setting('affiliate_tier_1_pct', max(0, min(100, (float)$body['tier_1_pct'])));
+        }
+        if (isset($body['tier_2_pct'])) {
+            FXSIM_Challenge_DB::set_setting('affiliate_tier_2_pct', max(0, min(100, (float)$body['tier_2_pct'])));
+        }
+        if (isset($body['cookie_days'])) {
+            FXSIM_Challenge_DB::set_setting('affiliate_cookie_days', max(1, min(365, (int)$body['cookie_days'])));
+        }
+        if (isset($body['min_payout'])) {
+            FXSIM_Challenge_DB::set_setting('affiliate_min_payout', max(10, (float)$body['min_payout']));
+        }
+        FXSIM_Database::log_admin(get_current_user_id(), 'affiliate_config_save', null, wp_json_encode($body));
+        return new WP_REST_Response(['success' => true, 'message' => 'Affiliate program configurations updated.']);
+    }
+
+    /** POST /admin/affiliates/payout — manual payout trigger. */
+    public static function admin_affiliate_payout_create(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $body   = $r->get_json_params() ?: $r->get_body_params();
+        $aff_id = (int)($body['affiliate_id'] ?? 0);
+        $amount = (float)($body['amount'] ?? 0);
+        $method = sanitize_text_field($body['method'] ?? 'crypto');
+        $dest   = sanitize_text_field($body['destination'] ?? '');
+
+        if (!$aff_id || $amount <= 0) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Invalid affiliate ID or amount.'], 400);
+        }
+
+        $aff = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_affiliates WHERE id = %d", $aff_id));
+        if (!$aff) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Affiliate not found.'], 404);
+        }
+
+        $wpdb->insert($wpdb->prefix . 'fxsim_affiliate_payouts', [
+            'affiliate_id'    => $aff_id,
+            'amount'          => $amount,
+            'status'          => 'paid',
+            'payment_method'  => $method,
+            'destination'     => $dest ?: $aff->payment_destination,
+            'tx_reference'    => sanitize_text_field($body['tx_reference'] ?? ('PAY-' . time())),
+            'admin_note'      => sanitize_text_field($body['note'] ?? 'Manual admin payout execution'),
+            'requested_at'    => current_time('mysql'),
+            'processed_at'    => current_time('mysql'),
+        ]);
+
+        // Mark pending commissions as paid
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_commissions SET status='paid', paid_at=NOW()
+             WHERE affiliate_id = %d AND status IN ('pending','approved') LIMIT 50",
+            $aff_id
+        ));
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'affiliate_payout_manual', (int)$aff->user_id, "Amount: \${$amount}");
+        return new WP_REST_Response(['success' => true, 'message' => 'Affiliate payout processed successfully.']);
+    }
+
     /** GET /admin/commissions?status= — commission ledger across all affiliates. */
     public static function admin_commissions_list(WP_REST_Request $r): WP_REST_Response {
         global $wpdb;
@@ -4612,7 +6880,14 @@ class FXSIM_REST_API {
             if (!is_wp_error($key)) {
                 $reset_url = self::frontend_url() . "/reset-password?key={$key}&login=" . rawurlencode($user->user_login);
                 if (class_exists('FXSIM_Emails')) {
-                    FXSIM_Emails::send((int) $user->ID, 'password_reset', ['reset_url' => $reset_url]);
+                    // Deferred (send_async, with retry) — unlike 2FA the user
+                    // isn't staring at a code-entry screen waiting on this, so
+                    // there's no reason to block the response on SMTP latency.
+                    if (method_exists('FXSIM_Emails', 'send_async')) {
+                        FXSIM_Emails::send_async((int) $user->ID, 'password_reset', ['reset_url' => $reset_url]);
+                    } else {
+                        FXSIM_Emails::send((int) $user->ID, 'password_reset', ['reset_url' => $reset_url]);
+                    }
                 }
             }
         }
@@ -4943,6 +7218,226 @@ class FXSIM_REST_API {
         return new WP_REST_Response($result, $result['success'] ? 200 : 400);
     }
 
+    // ── Automated Scaling Plan Engine ─────────────────────────────────────────
+    public static function admin_scaling_rules_get(WP_REST_Request $r): WP_REST_Response {
+        $defaults = [
+            'profit_target_pct'      => 10.00,
+            'evaluation_period_days' => 90,
+            'min_payouts'            => 2,
+            'balance_multiplier_pct' => 25.00,
+            'new_profit_split'       => 90.00,
+            'max_capital_cap'        => 2000000.00,
+            'auto_scale'             => false,
+        ];
+        $stored = get_option('fxsim_scaling_rules_config', []);
+        return new WP_REST_Response(array_merge($defaults, is_array($stored) ? $stored : []));
+    }
+
+    public static function admin_scaling_rules_save(WP_REST_Request $r): WP_REST_Response {
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $clean = [
+            'profit_target_pct'      => (float)($body['profit_target_pct'] ?? 10.00),
+            'evaluation_period_days' => max(1, (int)($body['evaluation_period_days'] ?? 90)),
+            'min_payouts'            => max(1, (int)($body['min_payouts'] ?? 2)),
+            'balance_multiplier_pct' => (float)($body['balance_multiplier_pct'] ?? 25.00),
+            'new_profit_split'       => (float)($body['new_profit_split'] ?? 90.00),
+            'max_capital_cap'        => (float)($body['max_capital_cap'] ?? 2000000.00),
+            'auto_scale'             => !empty($body['auto_scale']),
+        ];
+        update_option('fxsim_scaling_rules_config', $clean, false);
+        FXSIM_Database::log_admin(get_current_user_id(), 'scaling_rules_save');
+        return new WP_REST_Response(['success' => true, 'message' => 'Scaling plan parameters saved successfully.', 'rules' => $clean]);
+    }
+
+    public static function admin_scaling_queue_get(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $rules = self::admin_scaling_rules_get($r)->get_data();
+
+        $ca_table = $wpdb->prefix . 'fxsim_challenge_accounts';
+        $acc_table = $wpdb->prefix . 'fxsim_accounts';
+        $users_table = $wpdb->users;
+        $payouts_table = $wpdb->prefix . 'fxsim_payouts';
+
+        $accounts = $wpdb->get_results("
+            SELECT 
+                ca.id, ca.user_id, ca.fxsim_account_id, ca.plan_id, ca.status,
+                ca.starting_balance, ca.current_balance, ca.scaling_level,
+                ca.custom_profit_split, ca.funded_at, ca.last_scaled_at,
+                u.display_name AS trader_name, u.user_email AS trader_email,
+                acc.balance AS live_balance, acc.equity AS live_equity
+            FROM {$ca_table} ca
+            LEFT JOIN {$users_table} u ON ca.user_id = u.ID
+            LEFT JOIN {$acc_table} acc ON ca.fxsim_account_id = acc.id
+            WHERE ca.status = 'funded'
+            ORDER BY ca.id DESC
+        ") ?: [];
+
+        $queue = [];
+        $history = $wpdb->get_results("
+            SELECT * FROM {$wpdb->prefix}fxsim_scaling_events 
+            ORDER BY id DESC LIMIT 50
+        ") ?: [];
+
+        foreach ($accounts as $acc) {
+            $payout_count = (int)$wpdb->get_var($wpdb->prepare("
+                SELECT COUNT(*) FROM {$payouts_table} 
+                WHERE challenge_id = %d AND status IN ('completed', 'approved', 'paid')
+            ", $acc->id));
+
+            $start_bal = (float)$acc->starting_balance ?: 100000;
+            $current_bal = (float)$acc->live_balance ?: (float)$acc->current_balance;
+            $roi = $start_bal > 0 ? round((($current_bal - $start_bal) / $start_bal) * 100, 2) : 0;
+
+            $multiplier = (float)($rules['balance_multiplier_pct'] ?? 25.00);
+            $scaled_balance = round($start_bal * (1 + ($multiplier / 100)), 2);
+            if ($scaled_balance > (float)($rules['max_capital_cap'] ?? 2000000)) {
+                $scaled_balance = (float)$rules['max_capital_cap'];
+            }
+
+            $is_eligible = (
+                $roi >= (float)$rules['profit_target_pct'] && 
+                $payout_count >= (int)$rules['min_payouts'] && 
+                $start_bal < (float)$rules['max_capital_cap']
+            );
+
+            $queue[] = [
+                'id'                 => (int)$acc->id,
+                'user_id'            => (int)$acc->user_id,
+                'trader_name'        => $acc->trader_name ?: "Trader #{$acc->user_id}",
+                'trader_email'       => $acc->trader_email ?: '',
+                'current_balance'    => $start_bal,
+                'scaled_balance'     => $scaled_balance,
+                'current_profit_pct' => $roi,
+                'payouts_count'      => $payout_count,
+                'scaling_level'      => (int)($acc->scaling_level ?? 0),
+                'current_split'      => (float)($acc->custom_profit_split ?: 80.00),
+                'new_split'          => (float)($rules['new_profit_split'] ?? 90.00),
+                'is_eligible'        => $is_eligible,
+                'status'             => $is_eligible ? 'eligible' : 'in_progress',
+            ];
+        }
+
+        return new WP_REST_Response([
+            'success' => true,
+            'rules'   => $rules,
+            'queue'   => $queue,
+            'history' => $history,
+        ]);
+    }
+
+    public static function admin_scaling_apply(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int)$r->get_param('id');
+        $ca = $wpdb->get_row($wpdb->prepare("
+            SELECT * FROM {$wpdb->prefix}fxsim_challenge_accounts 
+            WHERE id = %d
+        ", $id));
+
+        if (!$ca || $ca->status !== 'funded') {
+            return new WP_REST_Response(['error' => 'Funded challenge account not found.'], 404);
+        }
+
+        $rules = self::admin_scaling_rules_get($r)->get_data();
+        $start_bal = (float)$ca->starting_balance ?: 100000;
+        $multiplier = (float)($rules['balance_multiplier_pct'] ?? 25.00);
+        $new_bal = round($start_bal * (1 + ($multiplier / 100)), 2);
+
+        // Cap against the MORE restrictive of the global admin ceiling and the
+        // plan's own scaling_max_balance — a plan-level ceiling is a promise
+        // made to the trader at purchase time and must never be exceeded just
+        // because a global admin default happens to allow more.
+        $plan_for_cap = FXSIM_Challenge_DB::get_plan((int)$ca->plan_id);
+        $cap = (float)$rules['max_capital_cap'];
+        if ($plan_for_cap && (float)$plan_for_cap->scaling_max_balance > 0) {
+            $cap = min($cap, (float)$plan_for_cap->scaling_max_balance);
+        }
+        if ($new_bal > $cap) {
+            $new_bal = $cap;
+        }
+
+        $old_split = (float)($ca->custom_profit_split ?: 80.00);
+        $new_split = (float)($rules['new_profit_split'] ?? 90.00);
+        $new_level = (int)$ca->scaling_level + 1;
+        $now = current_time('mysql');
+
+        // Real ROI, computed the same way admin_scaling_queue_get() displays it,
+        // instead of a hardcoded placeholder.
+        $live_bal_for_roi = $ca->fxsim_account_id
+            ? (float)$wpdb->get_var($wpdb->prepare("SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", (int)$ca->fxsim_account_id))
+            : $start_bal;
+        $real_roi = $start_bal > 0 ? round((($live_bal_for_roi - $start_bal) / $start_bal) * 100, 2) : 0.0;
+        $real_payout_count = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts WHERE challenge_id = %d AND status IN ('approved','paid')", $id
+        ));
+
+        // 1. Update challenge account — also rebase equity_hwm/trailing_dd_floor
+        // (same pattern already applied to the payout 'paid' transition) so a
+        // trailing-drawdown plan's floor moves up with the new, larger balance
+        // instead of staying pinned to the pre-scale level.
+        $allowed_trail_pct = $plan_for_cap ? (float)$plan_for_cap->funded_max_dd : 0;
+        $abs_trail = round($new_bal * ($allowed_trail_pct / 100), 2);
+        $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
+            'starting_balance'    => $new_bal,
+            'current_balance'     => $new_bal,
+            'peak_balance'        => $new_bal,
+            'daily_start_balance' => $new_bal,
+            'equity_hwm'          => $new_bal,
+            'trailing_dd_floor'   => round($new_bal - $abs_trail, 2),
+            'custom_profit_split' => $new_split,
+            'scaling_level'       => $new_level,
+            'last_scaled_at'      => $now,
+        ], ['id' => $id]);
+
+        // 2. Update underlying trading account balance & equity
+        if ($ca->fxsim_account_id) {
+            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
+                'balance' => $new_bal,
+                'equity'  => $new_bal,
+            ], ['id' => (int)$ca->fxsim_account_id]);
+        }
+
+        // 3. Record scaling event log
+        $wpdb->insert($wpdb->prefix . 'fxsim_scaling_events', [
+            'challenge_account_id' => $id,
+            'user_id'              => $ca->user_id,
+            'old_balance'          => $start_bal,
+            'new_balance'          => $new_bal,
+            'old_split'            => $old_split,
+            'new_split'            => $new_split,
+            'roi_achieved'         => $real_roi,
+            'payouts_completed'    => $real_payout_count,
+            'status'               => 'applied',
+            'reviewed_by'          => get_current_user_id(),
+            'applied_at'           => $now,
+        ]);
+
+        // 4. Notifications & Emails
+        FXSIM_Database::push_notification(
+            (int)$ca->user_id,
+            'success',
+            'Account Scaled Up!',
+            "Congratulations! Your funded capital was scaled by +{$multiplier}% to $" . number_format($new_bal, 2) . " with a {$new_split}% profit split upgrade.",
+            '/dashboard'
+        );
+
+        if (class_exists('FXSIM_Emails')) {
+            FXSIM_Emails::send((int)$ca->user_id, 'account_scaled', [
+                'old_balance' => number_format($start_bal, 2),
+                'new_balance' => number_format($new_bal, 2),
+                'new_split'   => $new_split,
+            ]);
+        }
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'scaling_applied', (int)$ca->user_id, "Account #{$id} scaled from \${$start_bal} to \${$new_bal} ({$new_split}% split)");
+
+        return new WP_REST_Response([
+            'success'     => true,
+            'message'     => "Account #{$id} successfully scaled to $" . number_format($new_bal, 2) . " (+{$multiplier}%) with {$new_split}% profit split.",
+            'new_balance' => $new_bal,
+            'new_split'   => $new_split,
+        ]);
+    }
+
     // ── Confirmo Crypto Checkout ─────────────────────────────────────────────
 
     // ── Challenge Plans (public) — enhanced with v11 fields ──────────────────
@@ -5132,12 +7627,12 @@ class FXSIM_REST_API {
         
         // In a competition, the leaderboard is usually based on the account's return/profit
         $participants = $wpdb->get_results($wpdb->prepare("
-            SELECT p.user_id, p.account_id, u.user_login as username, a.balance, a.initial_balance
+            SELECT p.user_id, p.account_id, u.user_login as username, a.current_balance as balance, a.starting_balance as initial_balance
             FROM {$wpdb->prefix}fxsim_competition_participants p
-            JOIN {$wpdb->prefix}users u ON p.user_id = u.ID
+            JOIN {$wpdb->users} u ON p.user_id = u.ID
             JOIN {$wpdb->prefix}fxsim_challenge_accounts a ON p.account_id = a.id
             WHERE p.competition_id = %d AND p.status = 'active'
-        ", $id), ARRAY_A);
+        ", $id), ARRAY_A) ?: [];
 
         foreach ($participants as &$p) {
             $initial = (float)$p['initial_balance'];
@@ -5170,7 +7665,7 @@ class FXSIM_REST_API {
         // Verify the trade belongs to an account owned by this user
         $trade = $wpdb->get_row($wpdb->prepare("
             SELECT t.id FROM {$wpdb->prefix}fxsim_trades t
-            JOIN {$wpdb->prefix}fxsim_challenge_accounts a ON t.account_id = a.id
+            JOIN {$wpdb->prefix}fxsim_accounts a ON t.account_id = a.id
             WHERE t.id = %d AND a.user_id = %d
         ", $trade_id, $user_id));
 
@@ -5200,7 +7695,7 @@ class FXSIM_REST_API {
         // Verify the trade belongs to an account owned by this user
         $trade = $wpdb->get_row($wpdb->prepare("
             SELECT t.id FROM {$wpdb->prefix}fxsim_trades t
-            JOIN {$wpdb->prefix}fxsim_challenge_accounts a ON t.account_id = a.id
+            JOIN {$wpdb->prefix}fxsim_accounts a ON t.account_id = a.id
             WHERE t.id = %d AND a.user_id = %d
         ", $trade_id, $user_id));
 
@@ -5236,5 +7731,474 @@ class FXSIM_REST_API {
         }
 
         return new WP_REST_Response(['success' => true]);
+    }
+
+    // ── Support Tickets & Helpdesk Handlers ─────────────────────────────────
+
+    /** GET /tickets — current user tickets */
+    public static function tickets_my_list(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT t.*, 
+                    (SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_ticket_messages WHERE ticket_id = t.id) AS message_count,
+                    (SELECT message FROM {$wpdb->prefix}fxsim_ticket_messages WHERE ticket_id = t.id ORDER BY id DESC LIMIT 1) AS latest_message
+             FROM {$wpdb->prefix}fxsim_tickets t
+             WHERE t.trader_id = %d
+             ORDER BY t.updated_at DESC",
+            $user_id
+        )) ?: [];
+        return new WP_REST_Response($rows);
+    }
+
+    /** POST /tickets/create — create a new ticket */
+    public static function ticket_create(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        $body = $r->get_json_params() ?: $r->get_body_params();
+
+        $subject = sanitize_text_field($body['subject'] ?? '');
+        $message = sanitize_textarea_field($body['message'] ?? '');
+        $category = in_array($body['category'] ?? '', ['billing', 'rules', 'tech_mt5', 'kyc', 'general'], true) ? $body['category'] : 'general';
+        $priority = in_array($body['priority'] ?? '', ['low', 'medium', 'high', 'urgent'], true) ? $body['priority'] : 'medium';
+        $account_id = !empty($body['account_id']) ? (int)$body['account_id'] : null;
+
+        if (empty($subject) || empty($message)) {
+            return new WP_REST_Response(['error' => 'Subject and message are required.'], 400);
+        }
+
+        $ticket_number = 'TICK-' . rand(1000, 9999);
+        while ($wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}fxsim_tickets WHERE ticket_number = %s", $ticket_number))) {
+            $ticket_number = 'TICK-' . rand(1000, 9999);
+        }
+
+        $wpdb->insert("{$wpdb->prefix}fxsim_tickets", [
+            'ticket_number' => $ticket_number,
+            'trader_id'     => $user_id,
+            'account_id'    => $account_id,
+            'subject'       => $subject,
+            'category'      => $category,
+            'priority'      => $priority,
+            'status'        => 'open',
+            'created_at'    => current_time('mysql'),
+            'updated_at'    => current_time('mysql'),
+        ]);
+        $ticket_id = (int)$wpdb->insert_id;
+
+        $wpdb->insert("{$wpdb->prefix}fxsim_ticket_messages", [
+            'ticket_id'   => $ticket_id,
+            'sender_type' => 'trader',
+            'sender_id'   => $user_id,
+            'message'     => $message,
+            'created_at'  => current_time('mysql'),
+        ]);
+
+        return new WP_REST_Response(['success' => true, 'id' => $ticket_id, 'ticket_number' => $ticket_number]);
+    }
+
+    /** GET /tickets/{id} — user view ticket detail */
+    public static function ticket_my_get(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $user_id   = get_current_user_id();
+        $ticket_id = (int)$r->get_param('id');
+
+        $ticket = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_tickets WHERE id = %d AND trader_id = %d",
+            $ticket_id, $user_id
+        ));
+        if (!$ticket) {
+            return new WP_REST_Response(['error' => 'Ticket not found.'], 404);
+        }
+
+        $messages = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_ticket_messages WHERE ticket_id = %d ORDER BY created_at ASC",
+            $ticket_id
+        )) ?: [];
+
+        return new WP_REST_Response([
+            'ticket'   => $ticket,
+            'messages' => $messages,
+        ]);
+    }
+
+    /** POST /tickets/{id}/reply — user reply */
+    public static function ticket_reply(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $user_id   = get_current_user_id();
+        $ticket_id = (int)$r->get_param('id');
+        $body      = $r->get_json_params() ?: $r->get_body_params();
+        $message   = sanitize_textarea_field($body['message'] ?? '');
+
+        if (empty($message)) {
+            return new WP_REST_Response(['error' => 'Message cannot be empty.'], 400);
+        }
+
+        $ticket = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}fxsim_tickets WHERE id = %d AND trader_id = %d",
+            $ticket_id, $user_id
+        ));
+        if (!$ticket) {
+            return new WP_REST_Response(['error' => 'Ticket not found.'], 404);
+        }
+
+        $wpdb->insert("{$wpdb->prefix}fxsim_ticket_messages", [
+            'ticket_id'   => $ticket_id,
+            'sender_type' => 'trader',
+            'sender_id'   => $user_id,
+            'message'     => $message,
+            'created_at'  => current_time('mysql'),
+        ]);
+        $wpdb->update(
+            "{$wpdb->prefix}fxsim_tickets",
+            ['updated_at' => current_time('mysql'), 'status' => 'open'],
+            ['id' => $ticket_id]
+        );
+
+        return new WP_REST_Response(['success' => true]);
+    }
+
+    /** GET /admin/tickets — admin tickets queue */
+    public static function admin_tickets_list(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $status   = sanitize_key($r->get_param('status') ?? '');
+        $priority = sanitize_key($r->get_param('priority') ?? '');
+        $category = sanitize_key($r->get_param('category') ?? '');
+        $search   = sanitize_text_field($r->get_param('search') ?? '');
+
+        $where = ['1=1'];
+        $params = [];
+
+        if ($status && $status !== 'all') {
+            $where[] = 't.status = %s';
+            $params[] = $status;
+        }
+        if ($priority && $priority !== 'all') {
+            $where[] = 't.priority = %s';
+            $params[] = $priority;
+        }
+        if ($category && $category !== 'all') {
+            $where[] = 't.category = %s';
+            $params[] = $category;
+        }
+        if (!empty($search)) {
+            $where[] = '(t.ticket_number LIKE %s OR t.subject LIKE %s OR u.user_login LIKE %s OR u.user_email LIKE %s OR u.display_name LIKE %s)';
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            $params = array_merge($params, [$like, $like, $like, $like, $like]);
+        }
+
+        $sql_where = implode(' AND ', $where);
+        $query = "
+            SELECT t.*, 
+                   u.user_login, u.user_email, u.display_name,
+                   (SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_ticket_messages WHERE ticket_id = t.id) AS message_count,
+                   (SELECT message FROM {$wpdb->prefix}fxsim_ticket_messages WHERE ticket_id = t.id ORDER BY id DESC LIMIT 1) AS latest_message
+            FROM {$wpdb->prefix}fxsim_tickets t
+            JOIN {$wpdb->users} u ON u.ID = t.trader_id
+            WHERE {$sql_where}
+            ORDER BY 
+                CASE t.priority 
+                    WHEN 'urgent' THEN 1 
+                    WHEN 'high' THEN 2 
+                    WHEN 'medium' THEN 3 
+                    ELSE 4 
+                END,
+                t.updated_at DESC
+        ";
+
+        $rows = !empty($params) ? $wpdb->get_results($wpdb->prepare($query, $params)) : $wpdb->get_results($query);
+        $rows = $rows ?: [];
+
+        return new WP_REST_Response($rows);
+    }
+
+    /** GET /admin/tickets/{id} — admin view ticket with thread */
+    public static function admin_ticket_get(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $ticket_id = (int)$r->get_param('id');
+
+        $ticket = $wpdb->get_row($wpdb->prepare(
+            "SELECT t.*, u.user_login, u.user_email, u.display_name
+             FROM {$wpdb->prefix}fxsim_tickets t
+             JOIN {$wpdb->users} u ON u.ID = t.trader_id
+             WHERE t.id = %d",
+            $ticket_id
+        ));
+
+        if (!$ticket) {
+            return new WP_REST_Response(['error' => 'Ticket not found.'], 404);
+        }
+
+        $messages = $wpdb->get_results($wpdb->prepare(
+            "SELECT m.*, u.display_name AS sender_name, u.user_email AS sender_email
+             FROM {$wpdb->prefix}fxsim_ticket_messages m
+             LEFT JOIN {$wpdb->users} u ON u.ID = m.sender_id
+             WHERE m.ticket_id = %d
+             ORDER BY m.created_at ASC",
+            $ticket_id
+        )) ?: [];
+
+        return new WP_REST_Response([
+            'ticket'   => $ticket,
+            'messages' => $messages,
+        ]);
+    }
+
+    /** POST /admin/tickets/{id}/reply — admin reply */
+    public static function admin_ticket_reply(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $admin_id  = get_current_user_id();
+        $ticket_id = (int)$r->get_param('id');
+        $body      = $r->get_json_params() ?: $r->get_body_params();
+        $message   = sanitize_textarea_field($body['message'] ?? '');
+
+        if (empty($message)) {
+            return new WP_REST_Response(['error' => 'Reply message cannot be empty.'], 400);
+        }
+
+        $ticket = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_tickets WHERE id = %d",
+            $ticket_id
+        ));
+        if (!$ticket) {
+            return new WP_REST_Response(['error' => 'Ticket not found.'], 404);
+        }
+
+        $wpdb->insert("{$wpdb->prefix}fxsim_ticket_messages", [
+            'ticket_id'   => $ticket_id,
+            'sender_type' => 'admin',
+            'sender_id'   => $admin_id,
+            'message'     => $message,
+            'created_at'  => current_time('mysql'),
+        ]);
+
+        $next_status = $ticket->status === 'open' ? 'in_progress' : $ticket->status;
+        $wpdb->update(
+            "{$wpdb->prefix}fxsim_tickets",
+            [
+                'updated_at'        => current_time('mysql'),
+                'status'            => $next_status,
+                'assigned_admin_id' => $admin_id,
+            ],
+            ['id' => $ticket_id]
+        );
+
+        FXSIM_Database::log_admin($admin_id, 'ticket_reply', (int)$ticket->trader_id, "Replied to ticket #{$ticket->ticket_number}");
+        return new WP_REST_Response(['success' => true, 'message' => 'Admin response sent successfully.']);
+    }
+
+    /** POST /admin/tickets/{id}/status — update status or priority */
+    public static function admin_ticket_status(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $admin_id  = get_current_user_id();
+        $ticket_id = (int)$r->get_param('id');
+        $body      = $r->get_json_params() ?: $r->get_body_params();
+
+        $ticket = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_tickets WHERE id = %d", $ticket_id));
+        if (!$ticket) {
+            return new WP_REST_Response(['error' => 'Ticket not found.'], 404);
+        }
+
+        $data = ['updated_at' => current_time('mysql')];
+        if (isset($body['status']) && in_array($body['status'], ['open', 'in_progress', 'resolved', 'closed'], true)) {
+            $data['status'] = $body['status'];
+        }
+        if (isset($body['priority']) && in_array($body['priority'], ['low', 'medium', 'high', 'urgent'], true)) {
+            $data['priority'] = $body['priority'];
+        }
+
+        $wpdb->update("{$wpdb->prefix}fxsim_tickets", $data, ['id' => $ticket_id]);
+        FXSIM_Database::log_admin($admin_id, 'ticket_status_change', (int)$ticket->trader_id, "Ticket #{$ticket->ticket_number} status updated.");
+
+        return new WP_REST_Response(['success' => true, 'updated' => $data]);
+    }
+
+    // ── Tournaments & Competitions Handlers ─────────────────────────────────
+
+    /** GET /admin/tournaments — list competitions/tournaments with stats */
+    public static function admin_tournaments_list(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $status = sanitize_key($r->get_param('status') ?? '');
+        $search = sanitize_text_field($r->get_param('search') ?? '');
+
+        $where = ['1=1'];
+        $params = [];
+
+        if ($status && $status !== 'all') {
+            $where[] = 't.status = %s';
+            $params[] = $status;
+        }
+        if (!empty($search)) {
+            $where[] = '(t.title LIKE %s OR t.description LIKE %s)';
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            $params = array_merge($params, [$like, $like]);
+        }
+
+        $sql_where = implode(' AND ', $where);
+        $query = "SELECT t.* FROM {$wpdb->prefix}fxsim_tournaments t WHERE {$sql_where} ORDER BY t.start_date DESC";
+        $rows = !empty($params) ? $wpdb->get_results($wpdb->prepare($query, $params)) : $wpdb->get_results($query);
+        $rows = $rows ?: [];
+
+        foreach ($rows as &$r) {
+            $p_count = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_tournament_participants WHERE tournament_id = %d",
+                $r->id
+            ));
+            if ($p_count > 0) {
+                $r->current_participants = $p_count;
+            }
+        }
+
+        return new WP_REST_Response($rows);
+    }
+
+    /** POST /admin/tournaments/save — create or update tournament */
+    public static function admin_tournament_save(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $id   = (int) ($body['id'] ?? 0);
+
+        $title = sanitize_text_field($body['title'] ?? '');
+        if (empty($title)) {
+            return new WP_REST_Response(['error' => 'Tournament title is required.'], 400);
+        }
+
+        $slug = sanitize_title($body['slug'] ?? $title);
+        $data = [
+            'title'                => $title,
+            'slug'                 => $slug,
+            'description'          => sanitize_textarea_field($body['description'] ?? ''),
+            'starting_balance'     => max(1000, (float)($body['starting_balance'] ?? 10000)),
+            'entry_fee'            => max(0, (float)($body['entry_fee'] ?? 0)),
+            'max_participants'     => max(10, (int)($body['max_participants'] ?? 500)),
+            'prize_pool'           => sanitize_text_field($body['prize_pool'] ?? '$10,000'),
+            'prizes_breakdown'     => !empty($body['prizes_breakdown']) ? (is_string($body['prizes_breakdown']) ? $body['prizes_breakdown'] : wp_json_encode($body['prizes_breakdown'])) : null,
+            'rules_json'           => !empty($body['rules_json']) ? (is_string($body['rules_json']) ? $body['rules_json'] : wp_json_encode($body['rules_json'])) : null,
+            'start_date'           => !empty($body['start_date']) ? sanitize_text_field($body['start_date']) : current_time('mysql'),
+            'end_date'             => !empty($body['end_date']) ? sanitize_text_field($body['end_date']) : gmdate('Y-m-d H:i:s', strtotime('+14 days')),
+            'status'               => in_array($body['status'] ?? '', ['upcoming', 'active', 'completed', 'cancelled'], true) ? $body['status'] : 'upcoming',
+        ];
+
+        if ($id > 0) {
+            $wpdb->update("{$wpdb->prefix}fxsim_tournaments", $data, ['id' => $id]);
+        } else {
+            $data['created_at'] = current_time('mysql');
+            $wpdb->insert("{$wpdb->prefix}fxsim_tournaments", $data);
+            $id = (int)$wpdb->insert_id;
+        }
+
+        FXSIM_Database::log_admin(get_current_user_id(), 'tournament_save', $id, "Tournament: {$title}");
+        return new WP_REST_Response(['success' => true, 'id' => $id, 'message' => 'Tournament saved successfully.']);
+    }
+
+    /** DELETE /admin/tournaments/{id} — delete tournament */
+    public static function admin_tournament_delete(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) $r->get_param('id');
+        $wpdb->delete("{$wpdb->prefix}fxsim_tournaments", ['id' => $id]);
+        $wpdb->delete("{$wpdb->prefix}fxsim_tournament_participants", ['tournament_id' => $id]);
+        FXSIM_Database::log_admin(get_current_user_id(), 'tournament_delete', $id, "Deleted tournament #{$id}");
+        return new WP_REST_Response(['success' => true, 'message' => 'Tournament deleted.']);
+    }
+
+    /** GET /admin/tournaments/{id}/leaderboard — live leaderboard */
+    public static function admin_tournament_leaderboard(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) $r->get_param('id');
+
+        $tournament = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", $id));
+        if (!$tournament) {
+            return new WP_REST_Response(['error' => 'Tournament not found.'], 404);
+        }
+
+        $participants = $wpdb->get_results($wpdb->prepare("
+            SELECT p.*, u.user_login, u.user_email, u.display_name
+            FROM {$wpdb->prefix}fxsim_tournament_participants p
+            LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+            WHERE p.tournament_id = %d
+            ORDER BY p.roi_pct DESC, p.current_equity DESC
+            LIMIT 100
+        ", $id));
+
+        $rank = 1;
+        foreach ($participants as &$p) {
+            $p->rank = $rank++;
+        }
+
+        return new WP_REST_Response([
+            'tournament'  => $tournament,
+            'leaderboard' => $participants,
+        ]);
+    }
+
+    /** POST /admin/tournaments/{id}/status — update status */
+    public static function admin_tournament_status(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $id = (int) $r->get_param('id');
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $status = in_array($body['status'] ?? '', ['upcoming', 'active', 'completed', 'cancelled'], true) ? $body['status'] : 'active';
+
+        $wpdb->update("{$wpdb->prefix}fxsim_tournaments", ['status' => $status], ['id' => $id]);
+        FXSIM_Database::log_admin(get_current_user_id(), 'tournament_status', $id, "Status changed to {$status}");
+        return new WP_REST_Response(['success' => true, 'status' => $status]);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 1v1 PVP E-SPORTS ARENA CONTROLLERS
+    // ════════════════════════════════════════════════════════════════════════
+
+    public static function pvp_lobby_get(WP_REST_Request $r): WP_REST_Response {
+        $uid = get_current_user_id();
+        $lobby = FXSIM_PvP_Engine::get_lobby($uid);
+        return new WP_REST_Response($lobby);
+    }
+
+    public static function pvp_match_create(WP_REST_Request $r): WP_REST_Response {
+        $uid = get_current_user_id();
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $res = FXSIM_PvP_Engine::create_match($uid, $body);
+        return new WP_REST_Response($res, $res['success'] ? 200 : 400);
+    }
+
+    public static function pvp_match_join(WP_REST_Request $r): WP_REST_Response {
+        $uid = get_current_user_id();
+        $id = (int)$r->get_param('id');
+        $res = FXSIM_PvP_Engine::join_match($uid, $id);
+        return new WP_REST_Response($res, $res['success'] ? 200 : 400);
+    }
+
+    public static function pvp_match_live(WP_REST_Request $r): WP_REST_Response {
+        $uid = get_current_user_id();
+        $id = (int)$r->get_param('id');
+        $res = FXSIM_PvP_Engine::get_live_state($id, $uid);
+        return new WP_REST_Response($res, $res['success'] ? 200 : 404);
+    }
+
+    public static function pvp_match_order(WP_REST_Request $r): WP_REST_Response {
+        $uid = get_current_user_id();
+        $id = (int)$r->get_param('id');
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $res = FXSIM_PvP_Engine::execute_order($uid, $id, $body);
+        return new WP_REST_Response($res, $res['success'] ? 200 : 400);
+    }
+
+    public static function pvp_match_settle(WP_REST_Request $r): WP_REST_Response {
+        $id = (int)$r->get_param('id');
+        // Pass the authenticated caller so settle_match() can enforce that
+        // only the match's own participants (or an admin) may settle it —
+        // it previously had no authorization check at all.
+        $res = FXSIM_PvP_Engine::settle_match($id, get_current_user_id());
+        return new WP_REST_Response($res, $res['success'] ? 200 : 400);
+    }
+
+    public static function pvp_match_cancel(WP_REST_Request $r): WP_REST_Response {
+        $uid = get_current_user_id();
+        $id = (int)$r->get_param('id');
+        $res = FXSIM_PvP_Engine::cancel_match($id, $uid);
+        return new WP_REST_Response($res, $res['success'] ? 200 : 400);
+    }
+
+    public static function admin_pvp_analytics_get(WP_REST_Request $r): WP_REST_Response {
+        $res = FXSIM_PvP_Engine::get_admin_analytics();
+        return new WP_REST_Response($res);
     }
 }

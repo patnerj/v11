@@ -103,32 +103,48 @@ class FXSIM_Payments {
 
         $upload_dir  = wp_upload_dir();
         $dest_dir    = $upload_dir['basedir'] . '/propfirm-proofs/' . $user_id . '/';
-        $dest_url    = $upload_dir['baseurl'] . '/propfirm-proofs/' . $user_id . '/';
         wp_mkdir_p($dest_dir);
 
         // Protect directory from direct browse
         if (!file_exists($dest_dir . 'index.php')) {
             file_put_contents($dest_dir . 'index.php', '<?php // Silence is golden');
         }
+        if (!file_exists($dest_dir . '.htaccess')) {
+            file_put_contents($dest_dir . '.htaccess', "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n");
+        }
 
-        $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $filename = 'proof_' . $order_id . '_' . time() . '.' . $ext;
+        // Extension must come from the already-validated $mime, never the
+        // client-supplied filename — same fix as store_kyc_file(): a JPEG/PHP
+        // polyglot (valid JPEG magic bytes, still sniffs as image/jpeg) would
+        // otherwise be saved as .php inside the web-uploads tree.
+        // Filename is a random token, not order_id + time(): the directory's
+        // .htaccess deny-all is Apache-only (nginx never reads it), so on an
+        // nginx-hosted deployment a guessable path (sequential order_id, coarse
+        // timestamp) is the only thing standing between the public internet and
+        // a trader's bank/card payment proof. Same reasoning as store_kyc_file().
+        $ext_map  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'application/pdf' => 'pdf'];
+        $ext      = $ext_map[$mime] ?? 'dat';
+        $filename = 'proof_' . bin2hex(random_bytes(16)) . '.' . $ext;
         $dest     = $dest_dir . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             return ['success' => false, 'message' => 'Upload failed. Please try again.'];
         }
 
-        $proof_url = $dest_url . $filename;
+        // Store the relative path, not the public URL — proof is served to
+        // admins exclusively through the authenticated GET
+        // /admin/payments/{id}/proof proxy (class-rest-api.php), same pattern
+        // as store_kyc_file()/admin_kyc_doc(). Never expose $dest_url directly.
+        $rel_path = 'propfirm-proofs/' . $user_id . '/' . $filename;
 
         $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', [
-            'proof_url'   => $proof_url,
+            'proof_url'   => $rel_path,
             'proof_notes' => sanitize_textarea_field($notes),
         ], ['id' => $order_id]);
 
         // Defer admin notification to WP-Cron so the REST response is not blocked
         // by SMTP latency. The upload and DB update above are already complete.
-        wp_schedule_single_event(time(), 'fxsim_notify_admin_proof', [(int)$order->id, $proof_url]);
+        wp_schedule_single_event(time(), 'fxsim_notify_admin_proof', [(int)$order->id]);
 
         // Confirmation to the trader that their proof was received (J4).
         if (class_exists('FXSIM_Emails')) {
@@ -154,38 +170,67 @@ class FXSIM_Payments {
         if (!$order) return ['success' => false, 'message' => 'Order not found.'];
         if ($order->status === 'approved') return ['success' => false, 'message' => 'Already approved.'];
 
-        $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', [
-            'status'      => 'approved',
-            'admin_note'  => sanitize_text_field($note),
-            'reviewed_by' => $admin_id,
-            'reviewed_at' => current_time('mysql'),
-        ], ['id' => $order_id]);
+        // Atomic claim: the WHERE clause itself decides who wins a race
+        // between two near-simultaneous approvals of the same order (e.g. a
+        // retried Stripe webhook delivery racing the same order's own
+        // create_order() dedup path, or an admin double-clicking approve).
+        // The earlier "SELECT then check status in PHP then UPDATE" let both
+        // callers pass the check before either UPDATE committed, each then
+        // calling create_challenge() and activating two challenge accounts
+        // (plus double coupon/affiliate recording) for one payment.
+        $claimed = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_payment_orders
+             SET status = 'approved', admin_note = %s, reviewed_by = %d, reviewed_at = %s
+             WHERE id = %d AND status != 'approved'",
+            sanitize_text_field($note), $admin_id, current_time('mysql'), $order_id
+        ));
+        if (!$claimed || $wpdb->rows_affected === 0) {
+            return ['success' => false, 'message' => 'Already approved.'];
+        }
 
         // NOW create the challenge account
         $result = FXSIM_Challenge_Engine::create_challenge((int)$order->user_id, (int)$order->plan_id);
 
-        if ($result['success']) {
-            // Invalidate per-request account cache so next REST call fetches the new account
-            FXSIM_REST_API::invalidate_account_cache((int)$order->user_id);
-            // Coupon is now actually consumed (paid). Idempotent.
-            if ((int) ($order->coupon_id ?? 0) > 0 && class_exists('FXSIM_Coupons')) {
-                FXSIM_Coupons::record_redemption((int) $order->coupon_id, (int) $order->user_id, $order_id,
-                    (float) $order->discount_amount, (float) $order->amount);
-            }
-            // Affiliate commission off the FINAL paid amount. Idempotent + self-referral safe.
-            if (class_exists('FXSIM_Affiliates')) {
-                FXSIM_Affiliates::record_commission((int) $order->user_id, $order_id, (float) $order->amount);
-            }
-            FXSIM_Database::log_admin($admin_id, 'payment_approved', (int)$order->user_id,
-                "Order #{$order_id}, Plan #{$order->plan_id}, Note: {$note}");
-            FXSIM_Emails::send((int)$order->user_id, 'challenge_purchased', [
-                'plan_name'    => $result['plan']->name ?? '',
-                'account_size' => $result['plan']->account_size ?? 0,
-                'p1_profit_target' => $result['plan']->p1_profit_target ?? 0,
-                'p1_max_dd'    => $result['plan']->p1_max_dd ?? 0,
+        if (!$result['success']) {
+            $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', [
+                'status'     => 'pending',
+                'admin_note' => 'Challenge activation failed: ' . sanitize_text_field($result['message'] ?? ($result['error'] ?? 'unknown error')) . ' (retriable)',
+            ], ['id' => $order_id]);
+            return array_merge(['success' => false, 'order_id' => $order_id], $result);
+        }
+
+        // Invalidate per-request account cache so next REST call fetches the new account
+        FXSIM_REST_API::invalidate_account_cache((int)$order->user_id);
+        // Coupon is now actually consumed (paid). Idempotent.
+        if ((int) ($order->coupon_id ?? 0) > 0 && class_exists('FXSIM_Coupons')) {
+            FXSIM_Coupons::record_redemption((int) $order->coupon_id, (int) $order->user_id, $order_id,
+                (float) $order->discount_amount, (float) $order->amount);
+        }
+        // Affiliate commission off the FINAL paid amount. Idempotent + self-referral safe.
+        if (class_exists('FXSIM_Affiliates')) {
+            FXSIM_Affiliates::record_commission((int) $order->user_id, $order_id, (float) $order->amount);
+        }
+        FXSIM_Database::log_admin($admin_id, 'payment_approved', (int)$order->user_id,
+            "Order #{$order_id}, Plan #{$order->plan_id}, Note: {$note}");
+        FXSIM_Emails::send((int)$order->user_id, 'challenge_purchased', [
+            'plan_name'    => $result['plan']->name ?? '',
+            'account_size' => $result['plan']->account_size ?? 0,
+            'p1_profit_target' => $result['plan']->p1_profit_target ?? 0,
+            'p1_max_dd'    => $result['plan']->p1_max_dd ?? 0,
+        ]);
+        FXSIM_Database::push_notification((int)$order->user_id, 'success', 'Challenge activated',
+            'Your payment was approved and your challenge account is now active. Good luck!', '/dashboard');
+
+        if (class_exists('FXSIM_Webhooks')) {
+            $user_info = get_userdata((int)$order->user_id);
+            FXSIM_Webhooks::dispatch('purchase', [
+                'trader_name' => $user_info ? $user_info->display_name : "User #{$order->user_id}",
+                'email'       => $user_info ? $user_info->user_email : '',
+                'plan_name'   => $result['plan']->name ?? 'Challenge Plan',
+                'amount'      => (float)$order->amount,
+                'gateway'     => strtoupper($order->gateway ?? 'ONLINE'),
+                'login_id'    => $result['account']->id ?? ($result['challenge_id'] ?? $order_id),
             ]);
-            FXSIM_Database::push_notification((int)$order->user_id, 'success', 'Challenge activated',
-                'Your payment was approved and your challenge account is now active. Good luck!', '/dashboard');
         }
 
         return array_merge(['success' => true, 'order_id' => $order_id], $result);
@@ -289,7 +334,7 @@ class FXSIM_Payments {
         ", $limit)) ?: [];
     }
 
-    public static function notify_admin_new_proof(object $order, string $proof_url): void {
+    public static function notify_admin_new_proof(object $order): void {
         $admins = get_users(['role' => 'administrator', 'fields' => ['user_email']]);
         if (!$admins) return;
         $plan    = FXSIM_Challenge_DB::get_plan((int)$order->plan_id);
@@ -304,7 +349,6 @@ class FXSIM_Payments {
               . "<strong>Trader:</strong> " . esc_html($user->user_login ?? '') . " (" . esc_html($user->user_email ?? '') . ")<br>"
               . "<strong>Plan:</strong> " . esc_html($plan->name ?? 'Unknown') . "<br>"
               . "<strong>Amount:</strong> $" . esc_html((string)$order->amount) . " " . esc_html((string)$order->currency) . "</p>"
-              . "<p><a href='" . esc_url($proof_url) . "'>View submitted proof</a></p>"
               . "<div style='text-align:center;margin:24px 0'>" . (class_exists('FXSIM_Emails') ? FXSIM_Emails::btn('Review in admin dashboard', $fe . '/dashboard/admin/payments') : '') . "</div>";
         $html = class_exists('FXSIM_Emails') ? FXSIM_Emails::build_html($body) : $body;
 

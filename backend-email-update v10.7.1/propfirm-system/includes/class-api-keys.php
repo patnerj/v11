@@ -83,6 +83,35 @@ class FXSIM_API_Keys {
 
         // Hook 3: rest_post_dispatch — log usage + update last_used timestamp
         add_filter('rest_post_dispatch', [self::class, 'log_usage'], 10, 3);
+
+        // Hook 4: rest_authentication_errors, priority 101 — runs AFTER WP
+        // core's rest_cookie_check_errors() (priority 100). Every POST/PUT/
+        // DELETE authenticated purely via X-FXSIM-Key (no browser cookie) was
+        // being rejected 403 'rest_cookie_invalid_nonce': core's check calls
+        // is_user_logged_in(), which lazily resolves determine_current_user
+        // for the FIRST time right there and, as a side effect, also runs its
+        // own default cookie-cookie fallback — leaving $wp_rest_auth_cookie in
+        // a state core reads as "an (invalid) cookie was involved," so it
+        // demands a nonce even though no cookie was ever sent. A bearer key
+        // presented in an explicit header is not CSRF-able the way an
+        // ambient browser cookie is, so the nonce requirement doesn't apply
+        // to it — only clear the error when OUR OWN independent key lookup
+        // already verified a valid, active, hashed-in-DB key.
+        add_filter('rest_authentication_errors', [self::class, 'bypass_cookie_nonce_for_key_requests'], 101);
+    }
+
+    /**
+     * See Hook 4 above. Only fires for the exact false-positive this exists
+     * for — any other auth error (bad/expired/revoked key, wrong scope,
+     * genuine cookie CSRF failure on a real browser session) still blocks.
+     */
+    public static function bypass_cookie_nonce_for_key_requests($errors) {
+        if (self::$authenticated_via_key && self::$current_key !== null
+            && $errors instanceof WP_Error
+            && $errors->get_error_code() === 'rest_cookie_invalid_nonce') {
+            return true;
+        }
+        return $errors;
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -183,6 +212,12 @@ class FXSIM_API_Keys {
      * @return bool
      */
     public static function is_key_request(): bool {
+        if (!self::$authenticated_via_key) {
+            $res = self::authenticate_request(0);
+            if (is_int($res) && $res > 0) {
+                return true;
+            }
+        }
         return self::$authenticated_via_key;
     }
 
@@ -218,12 +253,37 @@ class FXSIM_API_Keys {
 
         // Only our namespace
         $route = $request->get_route();
-        if (strpos($route, '/fxsim/v1/') === false) {
+        if (strpos($route, '/fxsim/v1') === false && strpos($route, 'fxsim/v1') === false) {
             return $result;
         }
 
         $path    = str_replace('/fxsim/v1', '', $route);
         $method  = $request->get_method();
+
+        // Account-security control-plane actions must never be delegable to an
+        // API key, regardless of scope — a key is meant to authorize trading /
+        // data automation, not to reconfigure the account's own security:
+        //  - /api-keys create|revoke: a merely 'read'-scoped key could mint
+        //    itself a new 'trade'/'challenge' key, escalating past whatever
+        //    scope it was actually issued with.
+        //  - /auth/2fa/toggle: auth_2fa_toggle() disables 2FA with no
+        //    re-authentication of its own (no password, no current 2FA code)
+        //    — a leaked 'read'-only key could silently turn off the account's
+        //    2FA protection.
+        // Both require a real logged-in session (cookie auth). (/admin/api-keys
+        // is a separate, already-'admin'-scoped route for managing OTHER
+        // users' keys and is unaffected.)
+        $session_only_routes = ['#^/api-keys(/|$)#' => 'POST', '#^/auth/2fa/toggle$#' => 'POST'];
+        foreach ($session_only_routes as $pattern => $guarded_method) {
+            if ($method === $guarded_method && preg_match($pattern, $path)) {
+                return new WP_Error(
+                    'fxsim_action_requires_session',
+                    'This action requires a logged-in session, not an API key — sign in and use the dashboard.',
+                    ['status' => 403]
+                );
+            }
+        }
+
         $scopes  = array_map('trim', explode(',', self::$current_key->scopes));
         $required = self::required_scope($path, $method);
 
@@ -484,13 +544,15 @@ class FXSIM_API_Keys {
             return ['success' => false, 'message' => 'Database error — key not created.'];
         }
 
+        $key_id = (int) $wpdb->insert_id;
+
         FXSIM_Database::log_admin($user_id, 'api_key_created', $user_id,
             "Key: {$name}, Env: {$env}, Scopes: " . implode(',', $scopes));
 
         return [
             'success' => true,
             'key'     => $raw_key,          // Raw key — display once only
-            'key_id'  => (int) $wpdb->insert_id,
+            'key_id'  => $key_id,
             'message' => 'API key created. Copy it now — it will not be shown again.',
         ];
     }
@@ -578,9 +640,8 @@ class FXSIM_API_Keys {
      * Fast string check — no regex.
      */
     private static function is_fxsim_request(): bool {
-        // During REST request, REQUEST_URI contains the REST path
         $uri = $_SERVER['REQUEST_URI'] ?? '';
-        return strpos($uri, '/fxsim/v1/') !== false;
+        return strpos($uri, 'fxsim/v1') !== false || (defined('REST_REQUEST') && REST_REQUEST);
     }
 
     /**
@@ -591,15 +652,36 @@ class FXSIM_API_Keys {
      */
     private static function extract_key(): ?string {
         // Preferred: X-FXSIM-Key header
-        // In PHP, headers are in $_SERVER as HTTP_{HEADER_NAME_UPPERCASE}
         $header_name = 'HTTP_' . strtoupper(str_replace('-', '_', self::HEADER));
         if (!empty($_SERVER[$header_name])) {
             return sanitize_text_field(wp_unslash($_SERVER[$header_name]));
         }
 
-        // Fallback: query parameter (for EventSource, simple browser tools)
+        // Header check via getallheaders() if available
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            foreach ($headers as $k => $v) {
+                if (strcasecmp($k, self::HEADER) === 0 || strcasecmp($k, 'X-FXSIM-Key') === 0 || strcasecmp($k, 'x-api-key') === 0) {
+                    return sanitize_text_field(wp_unslash($v));
+                }
+            }
+        }
+
+        // Authorization: Bearer fxsim_...
+        $auth_header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        if (str_starts_with($auth_header, 'Bearer ') && str_starts_with(substr($auth_header, 7), self::KEY_PREFIX)) {
+            return sanitize_text_field(substr($auth_header, 7));
+        }
+
+        // Fallback: query parameter
         if (!empty($_GET[self::QUERY_PARAM])) {
             return sanitize_text_field(wp_unslash($_GET[self::QUERY_PARAM]));
+        }
+        if (!empty($_GET['fxsim_key'])) {
+            return sanitize_text_field(wp_unslash($_GET['fxsim_key']));
+        }
+        if (!empty($_GET['api_key'])) {
+            return sanitize_text_field(wp_unslash($_GET['api_key']));
         }
 
         return null;

@@ -225,12 +225,14 @@ class FXSIM_Price_Feed {
         update_option('fxsim_price_source', 'mt5:' . sanitize_text_field($source_id), false);
         delete_option('fxsim_price_feed_failed');
 
+        $secret = self::get_ws_secret();
+        $ws_url = self::get_ws_push_url();
         // Push to WebSocket server asynchronously
-        wp_remote_post('http://127.0.0.1:8080/push', [
+        wp_remote_post($ws_url, [
             'blocking' => false,
             'headers'  => [
                 'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer propfirm_internal_secret_2026',
+                'Authorization' => 'Bearer ' . $secret,
             ],
             'body'     => wp_json_encode(['prices' => $data]),
         ]);
@@ -240,6 +242,9 @@ class FXSIM_Price_Feed {
 
         // Parity with the cron path: evaluate stop-loss / take-profit on the new ticks.
         FXSIM_Trading_Engine::check_sl_tp();
+        // Margin call / stop-out engine runs on the same tick so overleveraged
+        // accounts are closed before the next tick can worsen the deficit further.
+        FXSIM_Trading_Engine::check_margin_levels();
 
         return $accepted;
     }
@@ -361,6 +366,15 @@ class FXSIM_Price_Feed {
             'feed_failed'       => $failed ? true : false,
             'symbol_count'      => $count,
             'secret_set'        => get_option('fxsim_mt5_ingest_secret', '') !== '',
+            // The WS push secret is now auto-generated (self::get_ws_secret())
+            // instead of a hardcoded shared default, but the Node ws-server
+            // process reads its own copy from a SECRET_TOKEN env var — with
+            // no way to see the generated value, an admin has no way to make
+            // the two sides match, so price-push authentication would fail
+            // by default. Exposed here (admin-only route) so it can be
+            // copied into ws-server's .env as SECRET_TOKEN.
+            'ws_push_secret'    => self::get_ws_secret(),
+            'ws_push_url'       => self::get_ws_push_url(),
             'market_open'       => self::fx_market_open(),
             'last_reject'       => get_option('fxsim_mt5_last_reject', null) ?: null,
         ];
@@ -379,6 +393,25 @@ class FXSIM_Price_Feed {
             return ['ok' => false, 'message' => 'Live price feed is temporarily unavailable. New trades are paused — please try again shortly.'];
         }
         return ['ok' => true, 'message' => ''];
+    }
+
+    /**
+     * Get or generate a cryptographically secure random WebSocket ingestion secret.
+     */
+    public static function get_ws_secret(): string {
+        $secret = (string) get_option('fxsim_ws_secret', '');
+        if ($secret === '') {
+            $secret = wp_generate_password(32, false, false);
+            update_option('fxsim_ws_secret', $secret, false);
+        }
+        return $secret;
+    }
+
+    /**
+     * Get the configured WebSocket push ingest URL.
+     */
+    public static function get_ws_push_url(): string {
+        return (string) get_option('fxsim_ws_push_url', 'http://127.0.0.1:8080/push');
     }
 
     /**
@@ -444,12 +477,14 @@ class FXSIM_Price_Feed {
             // Clear any existing feed-failure flag now that we have live data
             delete_option('fxsim_price_feed_failed');
             
+            $secret = self::get_ws_secret();
+            $ws_url = self::get_ws_push_url();
             // Push to WebSocket server asynchronously
-            wp_remote_post('http://127.0.0.1:8080/push', [
+            wp_remote_post($ws_url, [
                 'blocking' => false,
                 'headers'  => [
                     'Content-Type'  => 'application/json',
-                    'Authorization' => 'Bearer propfirm_internal_secret_2026',
+                    'Authorization' => 'Bearer ' . $secret,
                 ],
                 'body'     => wp_json_encode(['prices' => $data]),
             ]);
@@ -464,6 +499,8 @@ class FXSIM_Price_Feed {
 
         // ── SL/TP check runs after prices are updated ─────────────────────────
         FXSIM_Trading_Engine::check_sl_tp();
+        // Margin call / stop-out engine runs on the same tick.
+        FXSIM_Trading_Engine::check_margin_levels();
     }
 
     /**
