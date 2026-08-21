@@ -2793,7 +2793,7 @@ class FXSIM_REST_API {
         $kyc = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_kyc WHERE id=%d", $id));
         if (!$kyc) return new WP_REST_Response(['success' => false, 'message' => 'KYC record not found.'], 404);
 
-        $has_documents = !empty($kyc->id_doc_path) || !empty($kyc->selfie_path) || !empty($kyc->address_doc_path);
+        $has_documents = !empty($kyc->id_front) || !empty($kyc->id_back) || !empty($kyc->selfie) || !empty($kyc->proof_address) || !empty($kyc->id_doc_path) || !empty($kyc->id_doc_back_path) || !empty($kyc->selfie_path) || !empty($kyc->address_doc_path);
         if ($status === 'approved' && !$has_documents && !$force) {
             return new WP_REST_Response([
                 'success' => false,
@@ -3762,6 +3762,23 @@ class FXSIM_REST_API {
     public static function admin_plan_save(WP_REST_Request $r): WP_REST_Response {
         global $wpdb;
         $body = $r->get_json_params() ?: $r->get_body_params();
+        $table = $wpdb->prefix . 'fxsim_challenge_plans';
+        $id = (int)($body['id'] ?? 0);
+
+        // Handle partial update if an existing plan ID is passed without a full plan name (e.g. bulk activate/deactivate)
+        if ($id > 0 && empty($body['name'])) {
+            $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id));
+            if (!$existing) {
+                return new WP_REST_Response(['error' => 'Plan not found.'], 404);
+            }
+            $partial_data = [];
+            if (isset($body['is_active'])) $partial_data['is_active'] = (int)$body['is_active'];
+            if (isset($body['display_order'])) $partial_data['display_order'] = (int)$body['display_order'];
+            if (!empty($partial_data)) {
+                $wpdb->update($table, $partial_data, ['id' => $id]);
+            }
+            return new WP_REST_Response(['success' => true, 'id' => $id, 'message' => 'Plan status updated successfully.']);
+        }
 
         $name = sanitize_text_field($body['name'] ?? '');
         if (empty($name)) {
@@ -5921,16 +5938,38 @@ class FXSIM_REST_API {
         if (!is_email($to)) {
             return new WP_REST_Response(['success' => false, 'message' => 'Invalid email address.'], 400);
         }
+
+        $test_hook = null;
+        if (!empty($body['host'])) {
+            $test_hook = function(\PHPMailer\PHPMailer\PHPMailer $mailer) use ($body) {
+                $mailer->isSMTP();
+                $mailer->Host       = sanitize_text_field($body['host']);
+                $mailer->Port       = (int)($body['port'] ?? 587);
+                $mailer->SMTPAuth   = isset($body['auth']) ? (bool)$body['auth'] : true;
+                if (!empty($body['user'])) $mailer->Username = sanitize_text_field($body['user']);
+                if (isset($body['pass']) && $body['pass'] !== '') $mailer->Password = (string)$body['pass'];
+                $mailer->SMTPSecure = sanitize_text_field($body['secure'] ?? 'tls');
+                if (!empty($body['from_email'])) $mailer->From = sanitize_email($body['from_email']);
+                if (!empty($body['from_name'])) $mailer->FromName = sanitize_text_field($body['from_name']);
+            };
+            add_action('phpmailer_init', $test_hook, 999);
+        }
+
         $brand  = class_exists('FXSIM_Challenge_DB')
             ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System')
             : 'PropFirm System';
         $result = wp_mail(
             $to,
-            "SMTP test email",
+            "{$brand} SMTP test email",
             "<p>If you received this, your SMTP configuration is working correctly.</p>"
             . "<p>Sent: " . current_time('mysql') . "</p>",
             ['Content-Type: text/html; charset=UTF-8']
         );
+
+        if ($test_hook) {
+            remove_action('phpmailer_init', $test_hook, 999);
+        }
+
         return new WP_REST_Response([
             'success' => $result,
             'message' => $result

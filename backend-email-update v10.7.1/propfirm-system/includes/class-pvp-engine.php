@@ -1090,8 +1090,13 @@ class FXSIM_PvP_Engine {
         $recent_matches = $wpdb->get_results("
             SELECT m.*, 
                    u1.display_name AS creator_name,
+                   u1.user_email   AS creator_email,
+                   u1.user_login   AS creator_login,
                    u2.display_name AS challenger_name,
-                   uw.display_name AS winner_name
+                   u2.user_email   AS challenger_email,
+                   u2.user_login   AS challenger_login,
+                   uw.display_name AS winner_name,
+                   uw.user_email   AS winner_email
             FROM {$table} m
             LEFT JOIN {$wpdb->users} u1 ON m.creator_user_id = u1.ID
             LEFT JOIN {$wpdb->users} u2 ON m.challenger_user_id = u2.ID
