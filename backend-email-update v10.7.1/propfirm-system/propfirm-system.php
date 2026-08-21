@@ -13,7 +13,7 @@
 defined('ABSPATH') || exit;
 
 // Version must match the plugin header
-define('FXSIM_VERSION', '11.0.2');
+define('FXSIM_VERSION', '11.0.3');
 define('FXSIM_DIR',     plugin_dir_path(__FILE__));
 define('FXSIM_URL',     plugin_dir_url(__FILE__));
 // Default SPA origin for this deployment. The `fxsim_frontend_url` option, if
@@ -150,6 +150,18 @@ add_action('plugins_loaded', function () {
             FXSIM_Database::ensure_push_tables(); // V10.7.3 push notification foundation tables
         }
         update_option('fxsim_feature_level', 3, false);
+    }
+    if ($fxsim_feature_level < 4) {
+        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'ensure_kyc_columns')) {
+            FXSIM_Database::ensure_kyc_columns(); // V10.7.4 KYC Back ID column support
+        }
+        update_option('fxsim_feature_level', 4, false);
+    }
+    if ($fxsim_feature_level < 5) {
+        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'ensure_admin_notes_table')) {
+            FXSIM_Database::ensure_admin_notes_table(); // V11.0.3 persistent append-only admin notes
+        }
+        update_option('fxsim_feature_level', 5, false);
     }
 
     FXSIM_REST_API::register();
@@ -459,6 +471,15 @@ add_action('template_redirect', function () {
         // Bad nonce — store error keyed by IP so shortcode can display it
         set_transient('fxsim_reg_error_' . md5($_SERVER['REMOTE_ADDR'] ?? 'x'), 'Security check failed.', 60);
         return;
+    }
+
+    // #8 Emergency control: global registration pause (whitelabel switch)
+    if (class_exists('FXSIM_Challenge_DB')) {
+        $pause_reg = FXSIM_Challenge_DB::get_setting('pause_registrations', '0');
+        if (in_array($pause_reg, ['1', 1, 'true', true], true)) {
+            set_transient('fxsim_reg_error_' . md5($_SERVER['REMOTE_ADDR'] ?? 'x'), 'New registrations are temporarily paused by administration.', 60);
+            return;
+        }
     }
 
     $username = sanitize_user($_POST['username'] ?? '');

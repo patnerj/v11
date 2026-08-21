@@ -27,7 +27,7 @@ class ProTradeFX_Headless_Bridge {
      * hardcoded — so a buyer's own domain is trusted automatically with no
      * code edit and no leftover references to any other domain.
      */
-    private static function allowed_origins(): array {
+    public static function allowed_origins(): array {
         $origins = self::ALLOWED_ORIGINS;
         $fe = get_option('fxsim_frontend_url', '');
         if (!$fe && defined('FXSIM_FRONTEND_URL')) $fe = FXSIM_FRONTEND_URL;
@@ -82,7 +82,7 @@ class ProTradeFX_Headless_Bridge {
             header( 'Access-Control-Allow-Origin: ' . $origin );
             header( 'Access-Control-Allow-Credentials: true' );
             header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
-            header( 'Access-Control-Allow-Headers: Content-Type, X-WP-Nonce, Authorization' );
+            header( 'Access-Control-Allow-Headers: Content-Type, X-WP-Nonce, X-FXSIM-Token, Authorization' );
             header( 'Access-Control-Max-Age: 600' );
         }
         http_response_code( 204 );
@@ -96,7 +96,10 @@ class ProTradeFX_Headless_Bridge {
             if ( in_array( $origin, self::allowed_origins(), true ) ) {
                 header( 'Access-Control-Allow-Origin: ' . $origin );
                 header( 'Access-Control-Allow-Credentials: true' );
-                header( 'Access-Control-Expose-Headers: X-WP-Nonce' );
+                header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
+                header( 'Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce, X-FXSIM-Token' );
+                header( 'Access-Control-Expose-Headers: X-WP-Nonce, X-FXSIM-Token, Content-Disposition, Content-Type, Content-Length' );
+                header( 'Access-Control-Max-Age: 600' );
                 header( 'Vary: Origin' );
             }
             return $served;
@@ -104,20 +107,95 @@ class ProTradeFX_Headless_Bridge {
     }
 
     /* ─────────────────────────────────────────────────────────────────
-     *  Cross-origin cookie auth
-     *  Resolves the current user from the logged-in cookie for fxsim/v1
-     *  requests when WP hasn't already done so. Read-only: it never grants
-     *  access beyond what the cookie itself authorises.
+     *  Cross-origin cookie + Bearer token auth
+     *  Resolves the current user from Bearer Token, X-WP-Nonce, or logged-in
+     *  cookie for fxsim/v1 requests. Allows 100% reliable headless session
+     *  persistence even when browsers block cross-subdomain third-party cookies.
      * ──────────────────────────────────────────────────────────────── */
 
-    public static function force_cookie_auth( $user_id ) {
-        if ( ! defined( 'REST_REQUEST' ) || ! REST_REQUEST ) return $user_id;
-        if ( strpos( $_SERVER['REQUEST_URI'] ?? '', '/wp-json/fxsim/v1/' ) === false ) return $user_id;
-        if ( ! empty( $user_id ) ) return $user_id; // already resolved
+    public static function generate_auth_token( int $user_id, int $ttl_seconds = 2592000 ): string {
+        $expires = time() + $ttl_seconds;
+        $sig = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}", wp_salt( 'auth' ) );
+        return base64_encode( "{$user_id}:{$expires}:{$sig}" );
+    }
 
+    public static function validate_auth_token( string $token ): int {
+        $token = trim($token);
+        if ( empty($token) ) return 0;
+        $raw = base64_decode( $token, true );
+        if ( ! $raw ) return 0;
+        $parts = explode( ':', $raw, 3 );
+        if ( count( $parts ) !== 3 ) return 0;
+        $user_id = (int) $parts[0];
+        $expires = (int) $parts[1];
+        $sig     = (string) $parts[2];
+        if ( $user_id <= 0 || $expires < time() ) return 0;
+        $expected = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}", wp_salt( 'auth' ) );
+        if ( hash_equals( $expected, $sig ) ) {
+            return $user_id;
+        }
+        return 0;
+    }
+
+    public static function extract_token_from_request(): string {
+        if ( ! empty( $_GET['token'] ) ) {
+            return trim( (string) $_GET['token'] );
+        }
+        if ( ! empty( $_GET['fxsim_token'] ) ) {
+            return trim( (string) $_GET['fxsim_token'] );
+        }
+        if ( ! empty( $_SERVER['HTTP_X_FXSIM_TOKEN'] ) ) {
+            return trim( (string) $_SERVER['HTTP_X_FXSIM_TOKEN'] );
+        }
+        if ( ! empty( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
+            return preg_replace( '/^Bearer\s+/i', '', trim( (string) $_SERVER['HTTP_AUTHORIZATION'] ) );
+        }
+        if ( ! empty( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ) {
+            return preg_replace( '/^Bearer\s+/i', '', trim( (string) $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) );
+        }
+        if ( ! empty( $_SERVER['HTTP_X_WP_NONCE'] ) ) {
+            $nonce = trim( (string) $_SERVER['HTTP_X_WP_NONCE'] );
+            if ( self::validate_auth_token( $nonce ) > 0 ) return $nonce;
+        }
+        if ( function_exists( 'getallheaders' ) ) {
+            $headers = getallheaders();
+            foreach ( ['X-FXSIM-Token', 'x-fxsim-token', 'Authorization', 'authorization', 'X-WP-Nonce', 'x-wp-nonce'] as $h ) {
+                if ( ! empty( $headers[ $h ] ) ) {
+                    $val = trim( (string) $headers[ $h ] );
+                    $val = preg_replace( '/^Bearer\s+/i', '', $val );
+                    if ( self::validate_auth_token( $val ) > 0 ) return $val;
+                }
+            }
+        }
+        return '';
+    }
+
+    public static function force_cookie_auth( $user_id ) {
+        if ( ! empty( $user_id ) && $user_id > 0 ) {
+            $status = get_user_meta( $user_id, 'fxsim_account_status', true );
+            if ( $status === 'suspended' || $status === 'banned' ) return 0;
+            return $user_id; // already resolved
+        }
+
+        // 1. Check all possible ways PHP/FastCGI receives the token
+        $token = self::extract_token_from_request();
+
+        if ( $token !== '' ) {
+            $token_uid = self::validate_auth_token( $token );
+            if ( $token_uid > 0 ) {
+                $status = get_user_meta( $token_uid, 'fxsim_account_status', true );
+                if ( $status === 'suspended' || $status === 'banned' ) return 0;
+                wp_set_current_user( $token_uid );
+                return $token_uid;
+            }
+        }
+
+        // 2. Fallback to WordPress Logged In Cookie
         if ( function_exists( 'wp_cookie_constants' ) ) wp_cookie_constants();
         $validated = wp_validate_auth_cookie( '', 'logged_in' );
         if ( $validated ) {
+            $status = get_user_meta( $validated, 'fxsim_account_status', true );
+            if ( $status === 'suspended' || $status === 'banned' ) return 0;
             wp_set_current_user( $validated );
             return $validated;
         }
@@ -128,17 +206,63 @@ class ProTradeFX_Headless_Bridge {
         return hash_hmac( 'sha256', 'fxsim-csrf-' . $user_id, wp_salt( 'nonce' ) );
     }
 
+    private static function set_session_flag_cookie( int $user_id, bool $remember ): void {
+        $domain = trim( (string) get_option( 'fxsim_cookie_domain', '' ) );
+        if ( ! $domain && class_exists( 'FXSIM_Challenge_DB' ) ) {
+            $domain = trim( (string) FXSIM_Challenge_DB::get_setting( 'cookie_domain', '' ) );
+        }
+        $expire = $remember ? time() + 30 * DAY_IN_SECONDS : 0; // 0 = browser-session cookie
+        $args = [
+            'expires'  => $expire,
+            'path'     => '/',
+            'secure'   => is_ssl(),
+            'httponly' => false, // carries no sensitive data — a presence flag for edge middleware only
+            'samesite' => is_ssl() ? 'None' : 'Lax',
+        ];
+        if ( $domain !== '' ) $args['domain'] = $domain;
+        setcookie( 'fxsim_authed', '1', $args );
+    }
+
+    private static function clear_session_flag_cookie(): void {
+        $domain = trim( (string) get_option( 'fxsim_cookie_domain', '' ) );
+        if ( ! $domain && class_exists( 'FXSIM_Challenge_DB' ) ) {
+            $domain = trim( (string) FXSIM_Challenge_DB::get_setting( 'cookie_domain', '' ) );
+        }
+        $args = [ 'expires' => time() - HOUR_IN_SECONDS, 'path' => '/', 'secure' => is_ssl(), 'httponly' => false, 'samesite' => is_ssl() ? 'None' : 'Lax' ];
+        if ( $domain !== '' ) $args['domain'] = $domain;
+        setcookie( 'fxsim_authed', '', $args );
+    }
+
     /**
      * Skip WP Core's REST nonce CSRF check for the fxsim namespace.
      * Validates a custom stateless CSRF token instead.
      */
     public static function bypass_rest_nonce( $result ) {
         if ( ! empty( $result ) ) return $result; // a prior callback already decided
-        if ( strpos( $_SERVER['REQUEST_URI'] ?? '', 'fxsim/v1' ) !== false ) {
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        if ( strpos( $uri, 'fxsim/v1' ) !== false || strpos( $uri, 'wp-json' ) !== false || isset( $_GET['rest_route'] ) ) {
+            // Ensure the user is identified from bearer token or cookie
+            if ( get_current_user_id() === 0 ) {
+                self::force_cookie_auth( 0 );
+            }
+
+            // Public auth endpoints establish their own session and must never demand
+            // a pre-existing CSRF nonce — a stray unrelated logged-in cookie (e.g. an
+            // admin's wp-admin session on the same domain) must not block a fresh
+            // login/register/2FA/logout attempt that has no session yet to have a nonce for.
+            if ( preg_match( '#/fxsim/v1/auth/(login|register|2fa/verify|logout)(?:$|[/?])#', $uri ) ) {
+                return true;
+            }
             $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
             if ( $method !== 'GET' && $method !== 'OPTIONS' ) {
                 $user_id = get_current_user_id();
                 if ( $user_id ) {
+                    // Token-based requests (Authorization / X-FXSIM-Token) are immune to browser CSRF
+                    $bearer_token = self::extract_token_from_request();
+                    if ( $bearer_token !== '' && self::validate_auth_token( $bearer_token ) > 0 ) {
+                        return true;
+                    }
+
                     $header = $_SERVER['HTTP_X_WP_NONCE'] ?? '';
                     $expected = self::generate_csrf_token( $user_id );
                     if ( ! hash_equals( $expected, $header ) ) {
@@ -212,10 +336,10 @@ class ProTradeFX_Headless_Bridge {
      * had no lockout at all.
      */
     private static function check_login_throttle( string $key ): bool {
-        return (int) get_transient( 'ptfx_fail_' . $key ) < 10;
+        return (int) get_transient( 'ptfx_fail_' . $key ) < 50;
     }
     private static function bump_login_throttle( string $key ): void {
-        set_transient( 'ptfx_fail_' . $key, (int) get_transient( 'ptfx_fail_' . $key ) + 1, 15 * MINUTE_IN_SECONDS );
+        set_transient( 'ptfx_fail_' . $key, (int) get_transient( 'ptfx_fail_' . $key ) + 1, 2 * MINUTE_IN_SECONDS );
     }
     private static function clear_login_throttle( string $key ): void {
         delete_transient( 'ptfx_fail_' . $key );
@@ -262,6 +386,11 @@ class ProTradeFX_Headless_Bridge {
             return new WP_Error( 'auth_failed', __( 'Invalid username or password.' ), [ 'status' => 401 ] );
         }
 
+        $account_status = get_user_meta( $user->ID, 'fxsim_account_status', true );
+        if ( $account_status === 'suspended' || $account_status === 'banned' ) {
+            return new WP_Error( 'account_suspended', __( 'This account has been deactivated. Access revoked.' ), [ 'status' => 403 ] );
+        }
+
         // If 2FA is enabled, do NOT establish the session yet: send exactly one
         // code and ask the SPA to complete verification via /auth/2fa/verify.
         // Throttle stays armed until verify_2fa() actually succeeds — a correct
@@ -280,12 +409,16 @@ class ProTradeFX_Headless_Bridge {
         // No 2FA — establish the session.
         wp_set_current_user( $user->ID );
         wp_set_auth_cookie( $user->ID, $remember, is_ssl() );
+        self::set_session_flag_cookie( (int) $user->ID, (bool) $remember );
 
         self::log_user_ip( $user->ID );
+
+        $token = self::generate_auth_token( (int) $user->ID, $remember ? 30 * DAY_IN_SECONDS : 86400 );
 
         return [
             'user'  => self::user_payload( $user ),
             'nonce' => self::generate_csrf_token( $user->ID ),
+            'token' => $token,
         ];
     }
 
@@ -310,17 +443,26 @@ class ProTradeFX_Headless_Bridge {
             return new WP_Error( 'invalid_code', __( 'Invalid or expired verification code.' ), [ 'status' => 401 ] );
         }
 
+        $account_status = get_user_meta( $user->ID, 'fxsim_account_status', true );
+        if ( $account_status === 'suspended' || $account_status === 'banned' ) {
+            return new WP_Error( 'account_suspended', __( 'This account has been deactivated. Access revoked.' ), [ 'status' => 403 ] );
+        }
+
         self::clear_login_throttle( $ip_key );
         self::clear_login_throttle( $uid_key );
 
         wp_set_current_user( $user->ID );
         wp_set_auth_cookie( $user->ID, true, is_ssl() );
+        self::set_session_flag_cookie( (int) $user->ID, true );
 
         self::log_user_ip( $user->ID );
+
+        $token = self::generate_auth_token( (int) $user->ID, 30 * DAY_IN_SECONDS );
 
         return [
             'user'  => self::user_payload( $user ),
             'nonce' => self::generate_csrf_token( $user->ID ),
+            'token' => $token,
         ];
     }
 
@@ -329,8 +471,11 @@ class ProTradeFX_Headless_Bridge {
             return new WP_Error( 'registration_disabled', 'Registration is disabled.', [ 'status' => 403 ] );
         }
         // #8 Emergency control: global registration pause (whitelabel switch).
-        if ( class_exists( 'FXSIM_Challenge_DB' ) && FXSIM_Challenge_DB::get_setting( 'pause_registrations', '' ) === '1' ) {
-            return new WP_Error( 'registration_paused', 'New registrations are temporarily paused.', [ 'status' => 503 ] );
+        if ( class_exists( 'FXSIM_Challenge_DB' ) ) {
+            $pause_reg = FXSIM_Challenge_DB::get_setting( 'pause_registrations', '0' );
+            if ( in_array( $pause_reg, [ '1', 1, 'true', true ], true ) ) {
+                return new WP_Error( 'registration_paused', 'New registrations are temporarily paused.', [ 'status' => 503 ] );
+            }
         }
 
         $username = sanitize_user( $req->get_param( 'username' ), true );
@@ -382,10 +527,14 @@ class ProTradeFX_Headless_Bridge {
         // Sign the new user in.
         wp_set_current_user( $uid );
         wp_set_auth_cookie( $uid, true, is_ssl() );
+        self::set_session_flag_cookie( (int) $uid, true );
+
+        $token = self::generate_auth_token( (int) $uid, 30 * DAY_IN_SECONDS );
 
         return [
             'user'  => self::user_payload( get_user_by( 'id', $uid ) ),
             'nonce' => self::generate_csrf_token( $uid ),
+            'token' => $token,
         ];
     }
 
@@ -404,6 +553,7 @@ class ProTradeFX_Headless_Bridge {
 
     public static function logout() {
         wp_logout();
+        self::clear_session_flag_cookie();
         return [ 'success' => true ];
     }
 
@@ -412,6 +562,10 @@ class ProTradeFX_Headless_Bridge {
         $uid = get_current_user_id();
         if ( ! $uid ) {
             return new WP_Error( 'not_logged_in', 'Not authenticated.', [ 'status' => 401 ] );
+        }
+        $status = get_user_meta( $uid, 'fxsim_account_status', true );
+        if ( $status === 'suspended' || $status === 'banned' ) {
+            return new WP_Error( 'account_suspended', 'This account has been deactivated.', [ 'status' => 403 ] );
         }
         return self::user_payload( get_user_by( 'id', $uid ) );
     }
