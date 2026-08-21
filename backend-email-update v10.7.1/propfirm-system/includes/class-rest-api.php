@@ -769,10 +769,37 @@ class FXSIM_REST_API {
      * Otherwise returns a precise reason so the UI can message correctly:
      *   no_challenge | phase_passed | challenge_failed | not_eligible
      */
-    private static function trading_eligibility(int $uid): array {
+    /**
+     * Determine trading eligibility for an account.
+     * Returns an array: ['ok' => bool, 'code' => string, 'message' => string]
+     * Error codes:
+     *   no_challenge | phase_passed | challenge_failed | not_eligible
+     */
+    private static function trading_eligibility(int $uid, int $explicit_account_id = 0, int $tournament_id = 0): array {
+        global $wpdb;
+
+        // If trading in a tournament context, verify active tournament participation
+        if ($tournament_id > 0 || $explicit_account_id > 0) {
+            if ($tournament_id > 0) {
+                $is_part = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                     WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                    $tournament_id, $uid
+                ));
+                if ($is_part) return ['ok' => true];
+            }
+            if ($explicit_account_id > 0) {
+                $is_tourney_acc = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                     WHERE account_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                    $explicit_account_id, $uid
+                ));
+                if ($is_tourney_acc) return ['ok' => true];
+            }
+        }
+
         $acc = self::get_active_challenge_account($uid);
         if ($acc) {
-            global $wpdb;
             // IP Matching Check (Phase 2.5)
             $ip_check = $wpdb->get_row($wpdb->prepare(
                 "SELECT cp.ip_matching_required, ca.signup_ip, ca.id as challenge_account_id
@@ -803,7 +830,6 @@ class FXSIM_REST_API {
             return ['ok' => true];
         }
 
-        global $wpdb;
         $latest = $wpdb->get_var($wpdb->prepare(
             "SELECT status FROM {$wpdb->prefix}fxsim_challenge_accounts
              WHERE user_id = %d ORDER BY created_at DESC LIMIT 1", $uid));
@@ -840,11 +866,35 @@ class FXSIM_REST_API {
         }
     }
 
-    public static function positions(): WP_REST_Response {
+    public static function positions(WP_REST_Request $r = null): WP_REST_Response {
+        global $wpdb;
         $user_id = get_current_user_id();
-        $acc = self::get_active_challenge_account($user_id);
-        if (!$acc) return new WP_REST_Response([]);
-        $pos = FXSIM_Trading_Engine::refresh_positions((int) $acc->id);
+        $account_id = $r ? (int)($r->get_param('account_id') ?? 0) : 0;
+        $tournament_id = $r ? (int)($r->get_param('tournament_id') ?? 0) : 0;
+
+        if ($tournament_id > 0 && !$account_id) {
+            $account_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT account_id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                 WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                $tournament_id, $user_id
+            ));
+        }
+
+        if ($account_id > 0) {
+            $owner = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $account_id
+            ));
+            if ($owner !== $user_id && !current_user_can('manage_options')) {
+                return new WP_REST_Response([], 403);
+            }
+            $target_acc_id = $account_id;
+        } else {
+            $acc = self::get_active_challenge_account($user_id);
+            if (!$acc) return new WP_REST_Response([]);
+            $target_acc_id = (int)$acc->id;
+        }
+
+        $pos = FXSIM_Trading_Engine::refresh_positions($target_acc_id);
         // Enrich with an offset-aware ISO timestamp so the UI shows correct
         // relative/actual times regardless of browser timezone (no engine edit).
         $out = array_map(function ($p) {
@@ -857,7 +907,20 @@ class FXSIM_REST_API {
 
     public static function open(WP_REST_Request $r): WP_REST_Response {
         if (!self::verify_nonce($r)) return new WP_REST_Response(['error'=>'Invalid nonce'], 403);
-        $gate = self::trading_eligibility(get_current_user_id());
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $account_id = (int)($body['account_id'] ?? ($r->get_param('account_id') ?? 0));
+        $tournament_id = (int)($body['tournament_id'] ?? ($r->get_param('tournament_id') ?? 0));
+
+        if ($tournament_id > 0 && !$account_id) {
+            global $wpdb;
+            $account_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT account_id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                 WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                $tournament_id, get_current_user_id()
+            ));
+        }
+
+        $gate = self::trading_eligibility(get_current_user_id(), $account_id, $tournament_id);
         if (!$gate['ok']) return new WP_REST_Response(['success'=>false,'message'=>$gate['message'],'code'=>$gate['code']], 403);
         // V10: block new entries when a strict MT5 feed is stale during market hours.
         // No-op in 'auto'/'yahoo' modes, so default deployments are unaffected.
@@ -865,7 +928,7 @@ class FXSIM_REST_API {
         if (!$fg['ok']) return new WP_REST_Response(['success'=>false,'message'=>$fg['message'],'code'=>'feed_unavailable'], 503);
         // #8 Emergency control: global trading pause blocks new entries.
         if (self::ops_paused('pause_trading')) return new WP_REST_Response(['success'=>false,'message'=>'Trading is temporarily paused by the platform operator.','code'=>'ops_paused'], 503);
-        $result = FXSIM_Trading_Engine::open_position(get_current_user_id(), $r->get_json_params() ?: $r->get_body_params());
+        $result = FXSIM_Trading_Engine::open_position(get_current_user_id(), $body, $account_id);
         return new WP_REST_Response($result, $result['success'] ? 200 : 400);
     }
 
@@ -895,8 +958,31 @@ class FXSIM_REST_API {
 
     public static function history(WP_REST_Request $r): WP_REST_Response {
         global $wpdb;
-        $acc = self::get_active_challenge_account(get_current_user_id());
-        if (!$acc) return new WP_REST_Response([]);
+        $user_id = get_current_user_id();
+        $account_id = (int)($r->get_param('account_id') ?? 0);
+        $tournament_id = (int)($r->get_param('tournament_id') ?? 0);
+
+        if ($tournament_id > 0 && !$account_id) {
+            $account_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT account_id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                 WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                $tournament_id, $user_id
+            ));
+        }
+
+        if ($account_id > 0) {
+            $owner = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $account_id
+            ));
+            if ($owner !== $user_id && !current_user_can('manage_options')) {
+                return new WP_REST_Response([], 403);
+            }
+            $target_acc_id = $account_id;
+        } else {
+            $acc = self::get_active_challenge_account($user_id);
+            if (!$acc) return new WP_REST_Response([]);
+            $target_acc_id = (int)$acc->id;
+        }
 
         $limit  = 50;
         // Keyset cursor: client passes the `last_id` of the final row from the previous page.
@@ -913,7 +999,7 @@ class FXSIM_REST_API {
                  WHERE account_id = %d AND id < %d
                  ORDER BY id DESC
                  LIMIT %d",
-                $acc->id, $last_id, $limit
+                $target_acc_id, $last_id, $limit
             ));
         } else {
             // First page: no cursor needed — most recent rows
@@ -922,7 +1008,7 @@ class FXSIM_REST_API {
                  WHERE account_id = %d
                  ORDER BY id DESC
                  LIMIT %d",
-                $acc->id, $limit
+                $target_acc_id, $limit
             ));
         }
 
@@ -1041,7 +1127,7 @@ class FXSIM_REST_API {
             'open_positions'    => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_positions"),
             'total_trades'      => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_trades"),
             'total_pnl'         => $safe_sum("SELECT COALESCE(SUM(pnl),0) FROM {$wpdb->prefix}fxsim_trades"),
-            'total_revenue'     => $safe_sum("SELECT COALESCE(SUM(CAST(amount AS DECIMAL(10,2))),0) FROM {$wpdb->prefix}fxsim_payment_orders WHERE status='approved'"),
+            'total_revenue'     => $safe_sum("SELECT COALESCE(SUM(CAST(amount AS DECIMAL(10,2))),0) FROM {$wpdb->prefix}fxsim_payment_orders WHERE status IN ('approved','redeemed')"),
             'active_challenges' => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE status='active'"),
             'funded_accounts'   => $safe_count("SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts WHERE status='funded'"),
             // payment_orders table may not exist on older installs — wpdb returns NULL safely
@@ -5266,10 +5352,22 @@ class FXSIM_REST_API {
      */
     public static function pending_place(WP_REST_Request $r): WP_REST_Response {
         if (!self::verify_nonce($r)) return new WP_REST_Response(['error' => 'Invalid nonce'], 403);
-        $gate = self::trading_eligibility(get_current_user_id());
+        $body = $r->get_json_params() ?: $r->get_body_params();
+        $account_id = (int)($body['account_id'] ?? ($r->get_param('account_id') ?? 0));
+        $tournament_id = (int)($body['tournament_id'] ?? ($r->get_param('tournament_id') ?? 0));
+
+        if ($tournament_id > 0 && !$account_id) {
+            global $wpdb;
+            $account_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT account_id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                 WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                $tournament_id, get_current_user_id()
+            ));
+        }
+
+        $gate = self::trading_eligibility(get_current_user_id(), $account_id, $tournament_id);
         if (!$gate['ok']) return new WP_REST_Response(['success'=>false,'message'=>$gate['message'],'code'=>$gate['code']], 403);
-        $body   = $r->get_json_params() ?: $r->get_body_params();
-        $result = FXSIM_Trading_Engine::place_pending_order(get_current_user_id(), $body);
+        $result = FXSIM_Trading_Engine::place_pending_order(get_current_user_id(), $body, $account_id);
         return new WP_REST_Response($result, $result['success'] ? 200 : 400);
     }
 
@@ -5290,17 +5388,40 @@ class FXSIM_REST_API {
      * GET /pending-order/my
      * List the authenticated user's pending orders (all statuses for history).
      */
-    public static function pending_my(): WP_REST_Response {
+    public static function pending_my(WP_REST_Request $r = null): WP_REST_Response {
         global $wpdb;
-        $acc = self::get_active_challenge_account(get_current_user_id());
-        if (!$acc) return new WP_REST_Response([]);
+        $user_id = get_current_user_id();
+        $account_id = $r ? (int)($r->get_param('account_id') ?? 0) : 0;
+        $tournament_id = $r ? (int)($r->get_param('tournament_id') ?? 0) : 0;
+
+        if ($tournament_id > 0 && !$account_id) {
+            $account_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT account_id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                 WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                $tournament_id, $user_id
+            ));
+        }
+
+        if ($account_id > 0) {
+            $owner = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $account_id
+            ));
+            if ($owner !== $user_id && !current_user_can('manage_options')) {
+                return new WP_REST_Response([], 403);
+            }
+            $target_acc_id = $account_id;
+        } else {
+            $acc = self::get_active_challenge_account($user_id);
+            if (!$acc) return new WP_REST_Response([]);
+            $target_acc_id = (int)$acc->id;
+        }
 
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}fxsim_pending_orders
              WHERE account_id = %d
              ORDER BY created_at DESC
              LIMIT 100",
-            $acc->id
+            $target_acc_id
         ));
         $out = array_map(function ($r) {
             $a = (array) $r;
@@ -6609,7 +6730,7 @@ class FXSIM_REST_API {
                     COUNT(*) AS count,
                     COALESCE(SUM(CAST(amount AS DECIMAL(10,2))), 0) AS total
              FROM {$wpdb->prefix}fxsim_payment_orders
-             WHERE status = 'approved'
+             WHERE status IN ('approved','redeemed')
                AND created_at >= DATE_SUB(NOW(), $win)
              GROUP BY month
              ORDER BY month ASC"
@@ -6620,13 +6741,13 @@ class FXSIM_REST_API {
                     COALESCE(SUM(CAST(po.amount AS DECIMAL(10,2))), 0) AS revenue
              FROM {$wpdb->prefix}fxsim_payment_orders po
              JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
-             WHERE po.status = 'approved'
+             WHERE po.status IN ('approved','redeemed')
              GROUP BY cp.id, cp.name
              ORDER BY revenue DESC"
         );
         $total = (float)$wpdb->get_var(
             "SELECT COALESCE(SUM(CAST(amount AS DECIMAL(10,2))),0)
-             FROM {$wpdb->prefix}fxsim_payment_orders WHERE status='approved'"
+             FROM {$wpdb->prefix}fxsim_payment_orders WHERE status IN ('approved','redeemed')"
         );
         return new WP_REST_Response([
             'monthly'  => $rows ?: [],

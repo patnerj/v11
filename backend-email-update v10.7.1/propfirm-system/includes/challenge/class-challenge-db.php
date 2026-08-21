@@ -209,7 +209,7 @@ class FXSIM_Challenge_DB {
             amount          DECIMAL(10,2)   NOT NULL,
             currency        VARCHAR(10)     NOT NULL DEFAULT 'USD',
             gateway         ENUM('manual','coinpayments','stripe','confirmo') NOT NULL DEFAULT 'manual',
-            status          ENUM('pending','approved','rejected','expired') NOT NULL DEFAULT 'pending',
+            status          ENUM('pending','approved','rejected','expired','redeemed') NOT NULL DEFAULT 'pending',
             proof_url       VARCHAR(500)    DEFAULT NULL,
             proof_notes     TEXT            DEFAULT NULL,
             txn_id          VARCHAR(255)    DEFAULT NULL,
@@ -351,6 +351,7 @@ class FXSIM_Challenge_DB {
             user_id          BIGINT UNSIGNED NOT NULL,
             status           ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
             id_doc_path      VARCHAR(255)    DEFAULT NULL,
+            id_doc_back_path VARCHAR(255)    DEFAULT NULL,
             selfie_path      VARCHAR(255)    DEFAULT NULL,
             address_doc_path VARCHAR(255)    DEFAULT NULL,
             admin_note       VARCHAR(500)    DEFAULT NULL,
@@ -381,6 +382,15 @@ class FXSIM_Challenge_DB {
         if ($status_col && strpos($status_col->Type, 'under_review') === false) {
             $wpdb->query("ALTER TABLE $payouts_tbl
                 MODIFY status ENUM('pending','under_review','approved','rejected','paid')
+                NOT NULL DEFAULT 'pending'");
+        }
+
+        // Extend payment orders status enum with 'redeemed'
+        $orders_tbl = $wpdb->prefix . 'fxsim_payment_orders';
+        $order_status_col = $wpdb->get_row("SHOW COLUMNS FROM $orders_tbl LIKE 'status'");
+        if ($order_status_col && strpos($order_status_col->Type, 'redeemed') === false) {
+            $wpdb->query("ALTER TABLE $orders_tbl
+                MODIFY status ENUM('pending','approved','rejected','expired','redeemed')
                 NOT NULL DEFAULT 'pending'");
         }
 

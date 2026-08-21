@@ -25,13 +25,35 @@ class FXSIM_Trading_Engine {
     }
 
     // ── Open a market order ───────────────────────────────────────────────────
-    public static function open_position(int $user_id, array $args): array {
+    public static function open_position(int $user_id, array $args, int $explicit_account_id = 0): array {
         global $wpdb;
 
-        // Use active challenge account, not generic user account
-        $account = self::get_user_active_account($user_id);
-        if (!$account)                      return self::err('No active challenge account. Purchase a challenge to start trading.');
-        if ($account->status !== 'active')  return self::err('Account is ' . $account->status . '.');
+        // ── Defense-in-depth: Firm-wide emergency trading pause & feed guard ───────
+        if (class_exists('FXSIM_Challenge_DB') && FXSIM_Challenge_DB::get_setting('pause_trading', '') === '1') {
+            return self::err('Trading is temporarily halted by the platform operator.');
+        }
+        if (class_exists('FXSIM_Price_Feed')) {
+            $feed_guard = FXSIM_Price_Feed::feed_guard_for_trading();
+            if (!empty($feed_guard) && empty($feed_guard['ok'])) {
+                return self::err($feed_guard['message'] ?? 'Trading is temporarily paused due to price feed status.');
+            }
+        }
+
+        if ($explicit_account_id > 0) {
+            $account = $wpdb->get_row($wpdb->prepare(
+                "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
+                 FROM {$wpdb->prefix}fxsim_accounts a
+                 LEFT JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+                 WHERE a.id = %d AND a.user_id = %d LIMIT 1",
+                $explicit_account_id, $user_id
+            ));
+            if (!$account) return self::err('Specified trading account not found.');
+        } else {
+            // Use active challenge account, not generic user account
+            $account = self::get_user_active_account($user_id);
+            if (!$account) return self::err('No active challenge account. Purchase a challenge to start trading.');
+        }
+        if ($account->status !== 'active') return self::err('Account is ' . $account->status . '.');
 
         $sym_obj = FXSIM_Symbols::get($args['symbol']);
         if (!$sym_obj) return self::err('Symbol not found or disabled.');
@@ -192,17 +214,36 @@ class FXSIM_Trading_Engine {
     }
 
     // ── Close a position ──────────────────────────────────────────────────────
-    public static function close_position(int $user_id, int $pos_id, string $reason = 'manual', bool $force = false): array {
+    public static function close_position(int $user_id, int $pos_id, string $reason = 'manual', bool $force = false, int $explicit_account_id = 0): array {
         global $wpdb;
 
-        $account = self::get_user_active_account($user_id);
-        if (!$account) return self::err('No active account.');
-
         $pos = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d AND account_id=%d",
-            $pos_id, $account->id
+            "SELECT p.*, a.user_id 
+             FROM {$wpdb->prefix}fxsim_positions p
+             JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+             WHERE p.id = %d AND a.user_id = %d",
+            $pos_id, $user_id
         ));
         if (!$pos) return self::err('Position not found.');
+
+        if ($explicit_account_id > 0) {
+            $account = $wpdb->get_row($wpdb->prepare(
+                "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
+                 FROM {$wpdb->prefix}fxsim_accounts a
+                 LEFT JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+                 WHERE a.id = %d AND a.user_id = %d LIMIT 1",
+                $explicit_account_id, $user_id
+            ));
+        } else {
+            $account = $wpdb->get_row($wpdb->prepare(
+                "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
+                 FROM {$wpdb->prefix}fxsim_accounts a
+                 LEFT JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+                 WHERE a.id = %d AND a.user_id = %d LIMIT 1",
+                $pos->account_id, $user_id
+            ));
+        }
+        if (!$account) return self::err('No active account.');
 
         $prices    = FXSIM_Price_Feed::get($pos->symbol);
         $close_px  = ($pos->type === 'buy') ? $prices['bid'] : $prices['ask'];
@@ -316,6 +357,20 @@ class FXSIM_Trading_Engine {
             // Fire hook for challenge engine evaluation
             do_action('fxsim_trade_closed', $account->id);
 
+            // Sync tournament participant metrics if this was a tournament account
+            $tp = $wpdb->get_row($wpdb->prepare(
+                "SELECT id, starting_equity FROM {$wpdb->prefix}fxsim_tournament_participants WHERE account_id = %d LIMIT 1",
+                $account->id
+            ));
+            if ($tp) {
+                $starting_eq = (float)$tp->starting_equity > 0 ? (float)$tp->starting_equity : 10000.0;
+                $roi = (($new_bal - $starting_eq) / $starting_eq) * 100.0;
+                $wpdb->update("{$wpdb->prefix}fxsim_tournament_participants", [
+                    'current_equity' => $new_bal,
+                    'roi_pct'        => round($roi, 2)
+                ], ['id' => $tp->id]);
+            }
+
             return ['success' => true, 'pnl' => $pnl, 'close_price' => $close_px];
 
         } catch (\Exception $e) {
@@ -327,14 +382,24 @@ class FXSIM_Trading_Engine {
     // ── Partial close ─────────────────────────────────────────────────────────
     public static function partial_close(int $user_id, int $pos_id, float $close_lots): array {
         global $wpdb;
-        $account = self::get_user_active_account($user_id);
-        if (!$account) return self::err('No active account.');
 
         $pos = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d AND account_id=%d",
-            $pos_id, $account->id
+            "SELECT p.*, a.user_id 
+             FROM {$wpdb->prefix}fxsim_positions p
+             JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+             WHERE p.id = %d AND a.user_id = %d",
+            $pos_id, $user_id
         ));
         if (!$pos) return self::err('Position not found.');
+
+        $account = $wpdb->get_row($wpdb->prepare(
+            "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
+             FROM {$wpdb->prefix}fxsim_accounts a
+             LEFT JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+             WHERE a.id = %d AND a.user_id = %d LIMIT 1",
+            $pos->account_id, $user_id
+        ));
+        if (!$account) return self::err('No active account.');
 
         $sym_obj = FXSIM_Symbols::get($pos->symbol);
         if (!$sym_obj) return self::err('Symbol not found.');
@@ -447,14 +512,24 @@ class FXSIM_Trading_Engine {
     }
     public static function update_sltp(int $user_id, int $pos_id, ?float $sl, ?float $tp): array {
         global $wpdb;
-        $account = self::get_user_active_account($user_id);
-        if (!$account) return self::err('No active account.');
 
         $pos = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE id=%d AND account_id=%d",
-            $pos_id, $account->id
+            "SELECT p.*, a.user_id 
+             FROM {$wpdb->prefix}fxsim_positions p
+             JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+             WHERE p.id = %d AND a.user_id = %d",
+            $pos_id, $user_id
         ));
         if (!$pos) return self::err('Position not found.');
+
+        $account = $wpdb->get_row($wpdb->prepare(
+            "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
+             FROM {$wpdb->prefix}fxsim_accounts a
+             LEFT JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+             WHERE a.id = %d AND a.user_id = %d LIMIT 1",
+            $pos->account_id, $user_id
+        ));
+        if (!$account) return self::err('No active account.');
 
         $price = FXSIM_Price_Feed::get($pos->symbol);
         $cur   = (float) $pos->current_price ?: (($pos->type==='buy') ? $price['bid'] : $price['ask']);
@@ -979,11 +1054,33 @@ class FXSIM_Trading_Engine {
      *   expires_at   string   Optional. ISO datetime for GTC expiry.
      * }
      */
-    public static function place_pending_order(int $user_id, array $args): array {
+    public static function place_pending_order(int $user_id, array $args, int $explicit_account_id = 0): array {
         global $wpdb;
 
-        $account = self::get_user_active_account($user_id);
-        if (!$account)                    return self::err('No active challenge account.');
+        // ── Defense-in-depth: Firm-wide emergency trading pause & feed guard ───────
+        if (class_exists('FXSIM_Challenge_DB') && FXSIM_Challenge_DB::get_setting('pause_trading', '') === '1') {
+            return self::err('Trading is temporarily halted by the platform operator.');
+        }
+        if (class_exists('FXSIM_Price_Feed')) {
+            $feed_guard = FXSIM_Price_Feed::feed_guard_for_trading();
+            if (!empty($feed_guard) && empty($feed_guard['ok'])) {
+                return self::err($feed_guard['message'] ?? 'Trading is temporarily paused due to price feed status.');
+            }
+        }
+
+        if ($explicit_account_id > 0) {
+            $account = $wpdb->get_row($wpdb->prepare(
+                "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
+                 FROM {$wpdb->prefix}fxsim_accounts a
+                 LEFT JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
+                 WHERE a.id = %d AND a.user_id = %d LIMIT 1",
+                $explicit_account_id, $user_id
+            ));
+            if (!$account) return self::err('Specified trading account not found.');
+        } else {
+            $account = self::get_user_active_account($user_id);
+            if (!$account) return self::err('No active challenge account.');
+        }
         if ($account->status !== 'active') return self::err('Account is ' . $account->status . '.');
 
         // ── Validate type ────────────────────────────────────────────────────
@@ -1282,6 +1379,11 @@ class FXSIM_Trading_Engine {
             return;
         }
 
+        // ── Emergency Pause Trading guard ─────────────────────────────────────
+        if (class_exists('FXSIM_Challenge_DB') && FXSIM_Challenge_DB::get_setting('pause_trading', '') === '1') {
+            return; // Trading paused: leave order in pending state until pause is lifted
+        }
+
         // ── Idempotency guard: claim the order row before creating position ───
         // If another cron tick is simultaneously processing this order, only one
         // will win this UPDATE (rows_affected = 1). The other gets rows_affected = 0
@@ -1432,6 +1534,17 @@ class FXSIM_Trading_Engine {
      */
     public static function process_pending_orders(): void {
         global $wpdb;
+
+        // ── Emergency Pause Trading guard (Defense-in-depth) ───────────────────
+        if (class_exists('FXSIM_Challenge_DB') && FXSIM_Challenge_DB::get_setting('pause_trading', '') === '1') {
+            return;
+        }
+        if (class_exists('FXSIM_Price_Feed')) {
+            $feed_guard = FXSIM_Price_Feed::feed_guard_for_trading();
+            if (!empty($feed_guard) && empty($feed_guard['ok'])) {
+                return;
+            }
+        }
 
         // ── Execution lock ────────────────────────────────────────────────────
         $lock_key = 'fxsim_pending_orders_running';
@@ -1781,20 +1894,28 @@ class FXSIM_Trading_Engine {
     }
 
     // ── Account status toggle (admin) ─────────────────────────────────────────
-    // Accepts either account_id directly (preferred) or falls back to active challenge account
+    // Accepts either account_id directly (preferred) or locates the trader's trading account by user_id
     public static function set_account_status(int $user_id, string $status, int $account_id = 0): bool {
         global $wpdb;
         if (!in_array($status, ['active', 'frozen', 'banned'])) return false;
-        $where = $account_id
-            ? ['id' => $account_id]
-            : ['id' => (int)$wpdb->get_var($wpdb->prepare(
+        $where_id = $account_id;
+        if (!$where_id) {
+            $where_id = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT a.id FROM {$wpdb->prefix}fxsim_accounts a
-                 JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.fxsim_account_id = a.id
-                 WHERE ca.user_id=%d AND ca.status IN ('active','funded') ORDER BY ca.created_at DESC LIMIT 1",
+                 WHERE a.user_id = %d ORDER BY a.id DESC LIMIT 1",
                 $user_id
-              ))];
-        if (!$where['id']) return false;
-        return (bool) $wpdb->update($wpdb->prefix . 'fxsim_accounts', ['status' => $status], $where);
+            ));
+        }
+        if (!$where_id) return false;
+
+        // Sync account status usermeta so authentication & API guards immediately recognize ban state
+        if ($status === 'banned' || $status === 'frozen') {
+            update_user_meta($user_id, 'fxsim_account_status', $status);
+        } else {
+            update_user_meta($user_id, 'fxsim_account_status', 'active');
+        }
+
+        return (bool) $wpdb->update($wpdb->prefix . 'fxsim_accounts', ['status' => $status], ['id' => $where_id]);
     }
 
     public static function calc_margin_usd(string $symbol, float $lot_size, float $contract_size, float $price, int $leverage): float {

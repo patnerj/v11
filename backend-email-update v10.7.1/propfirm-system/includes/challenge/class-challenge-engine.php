@@ -30,7 +30,7 @@ class FXSIM_Challenge_Engine {
             $funded_max_dd = (float)($plan->funded_max_dd ?? 10);
             $funded_dd_floor = $start * (1 - $funded_max_dd / 100);
 
-            $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
+            $inserted = $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
                 'user_id'             => $user_id,
                 'plan_id'             => $plan_id,
                 'fxsim_account_id'    => $account_id,
@@ -48,6 +48,9 @@ class FXSIM_Challenge_Engine {
             ]);
 
             $challenge_id = (int) $wpdb->insert_id;
+            if (!$inserted || !$challenge_id) {
+                return ['success' => false, 'message' => 'Database error provisioning instant funded challenge: ' . $wpdb->last_error];
+            }
 
             FXSIM_Database::log_transaction(
                 $account_id, 'deposit', $start, $start,
@@ -63,7 +66,7 @@ class FXSIM_Challenge_Engine {
         // ── Standard evaluation challenge ────────────────────────────────────
         $phase_ends = date('Y-m-d H:i:s', strtotime("+{$plan->p1_max_days} days"));
 
-        $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
+        $inserted = $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
             'user_id'             => $user_id,
             'plan_id'             => $plan_id,
             'fxsim_account_id'    => $account_id,
@@ -81,6 +84,9 @@ class FXSIM_Challenge_Engine {
         ]);
 
         $challenge_id = (int) $wpdb->insert_id;
+        if (!$inserted || !$challenge_id) {
+            return ['success' => false, 'message' => 'Database error provisioning challenge account: ' . $wpdb->last_error];
+        }
 
         FXSIM_Database::log_transaction(
             $account_id, 'deposit', $start, $start,
