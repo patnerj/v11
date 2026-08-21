@@ -2793,7 +2793,7 @@ class FXSIM_REST_API {
         $kyc = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_kyc WHERE id=%d", $id));
         if (!$kyc) return new WP_REST_Response(['success' => false, 'message' => 'KYC record not found.'], 404);
 
-        $has_documents = !empty($kyc->id_front) || !empty($kyc->id_back) || !empty($kyc->selfie) || !empty($kyc->proof_address) || !empty($kyc->id_doc_path) || !empty($kyc->id_doc_back_path) || !empty($kyc->selfie_path) || !empty($kyc->address_doc_path);
+        $has_documents = !empty($kyc->id_doc_path) || !empty($kyc->id_doc_back_path) || !empty($kyc->selfie_path) || !empty($kyc->address_doc_path);
         if ($status === 'approved' && !$has_documents && !$force) {
             return new WP_REST_Response([
                 'success' => false,
