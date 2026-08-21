@@ -2304,13 +2304,14 @@ class FXSIM_REST_API {
             return new WP_REST_Response($result, $result['success'] ? 200 : 400);
         }
 
-        // PAID plans: require an approved payment order
+        // PAID plans: require an approved payment order with atomic claim to prevent double provisioning
         global $wpdb;
-        $approved = $wpdb->get_var($wpdb->prepare(
+        $user_id = get_current_user_id();
+        $approved = (int) $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$wpdb->prefix}fxsim_payment_orders
              WHERE user_id=%d AND plan_id=%d AND status='approved'
-             ORDER BY reviewed_at DESC LIMIT 1",
-            get_current_user_id(), $plan_id
+             ORDER BY reviewed_at DESC, id DESC LIMIT 1",
+            $user_id, $plan_id
         ));
 
         if (!$approved) {
@@ -2323,12 +2324,29 @@ class FXSIM_REST_API {
             ], 402);
         }
 
-        $result = FXSIM_Challenge_Engine::create_challenge(get_current_user_id(), $plan_id);
+        // Atomic claim: Transition status to 'redeemed' first. If two concurrent requests arrive,
+        // exactly one will see rows_affected === 1; the loser will get 0 and fail gracefully.
+        $claimed = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_payment_orders 
+             SET status='redeemed' 
+             WHERE id=%d AND user_id=%d AND status='approved'",
+            $approved, $user_id
+        ));
+
+        if (!$claimed) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'This payment order has already been redeemed or is currently processing.',
+            ], 409);
+        }
+
+        $result = FXSIM_Challenge_Engine::create_challenge($user_id, $plan_id);
         
-        // SECURITY FIX: Mark payment order as redeemed so it can't be reused infinitely.
-        if ($result['success']) {
-            $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', 
-                ['status' => 'redeemed'], 
+        // Rollback claim if challenge creation unexpectedly failed so user can retry
+        if (empty($result['success'])) {
+            $wpdb->update(
+                $wpdb->prefix . 'fxsim_payment_orders', 
+                ['status' => 'approved'], 
                 ['id' => $approved]
             );
         }
@@ -8536,19 +8554,46 @@ class FXSIM_REST_API {
             return new WP_REST_Response(['error' => 'Tournament not found.'], 404);
         }
 
+        // Dynamically compute live equity and ROI for all participants from their dedicated account
         $participants = $wpdb->get_results($wpdb->prepare("
-            SELECT p.*, u.user_login, u.user_email, u.display_name
+            SELECT p.*, 
+                   u.user_login, u.user_email, u.display_name,
+                   COALESCE(a.equity, a.balance, p.starting_equity) AS live_equity
             FROM {$wpdb->prefix}fxsim_tournament_participants p
             LEFT JOIN {$wpdb->users} u ON u.ID = p.user_id
+            LEFT JOIN {$wpdb->prefix}fxsim_accounts a ON a.id = p.account_id
             WHERE p.tournament_id = %d
-            ORDER BY p.roi_pct DESC, p.current_equity DESC
-            LIMIT 100
         ", $id));
+
+        foreach ($participants as &$p) {
+            $starting = (float)$p->starting_equity > 0 ? (float)$p->starting_equity : 10000.0;
+            $current = (float)$p->live_equity;
+            $roi = (($current - $starting) / $starting) * 100.0;
+            $p->current_equity = $current;
+            $p->roi_pct = round($roi, 2);
+
+            // Persist updated values back to participant row
+            $wpdb->update("{$wpdb->prefix}fxsim_tournament_participants", [
+                'current_equity' => $current,
+                'roi_pct'        => $p->roi_pct
+            ], ['id' => $p->id]);
+        }
+        unset($p);
+
+        // Sort descending by roi_pct and current_equity
+        usort($participants, function($a, $b) {
+            if ((float)$b->roi_pct != (float)$a->roi_pct) {
+                return ((float)$b->roi_pct < (float)$a->roi_pct) ? -1 : 1;
+            }
+            return ((float)$b->current_equity < (float)$a->current_equity) ? -1 : 1;
+        });
 
         $rank = 1;
         foreach ($participants as &$p) {
             $p->rank = $rank++;
+            $wpdb->update("{$wpdb->prefix}fxsim_tournament_participants", ['rank' => $p->rank], ['id' => $p->id]);
         }
+        unset($p);
 
         return new WP_REST_Response([
             'tournament'  => $tournament,
@@ -8771,22 +8816,18 @@ class FXSIM_REST_API {
             $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}fxsim_accounts SET balance = balance - %f WHERE id = %d", $entry_fee, $user_acc->id));
         }
 
-        // Resolve or create trading account for this tournament
+        // Create an ISOLATED, dedicated trading account specifically for this tournament
+        // SECURITY / FINANCIAL INTEGRITY: Never reuse or hijack a trader's real challenge/funded account!
         $starting_bal = (float)$t->starting_balance > 0 ? (float)$t->starting_balance : 10000.0;
-        $acc_id = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}fxsim_accounts WHERE user_id = %d ORDER BY id DESC LIMIT 1", $uid));
-        if (!$acc_id) {
-            $wpdb->insert($wpdb->prefix . 'fxsim_accounts', [
-                'user_id'          => $uid,
-                'balance'          => $starting_bal,
-                'equity'           => $starting_bal,
-                'starting_balance' => $starting_bal,
-                'margin_used'      => 0.00,
-                'leverage'         => 100,
-                'status'           => 'active',
-                'created_at'       => current_time('mysql')
-            ]);
-            $acc_id = (int)$wpdb->insert_id;
-        }
+        $wpdb->insert($wpdb->prefix . 'fxsim_accounts', [
+            'user_id'     => $uid,
+            'balance'     => $starting_bal,
+            'equity'      => $starting_bal,
+            'margin_used' => 0.00,
+            'leverage'    => 100,
+            'status'      => 'active',
+        ]);
+        $acc_id = (int)$wpdb->insert_id;
 
         $inserted = $wpdb->insert("{$wpdb->prefix}fxsim_tournament_participants", [
             'tournament_id'   => $id,

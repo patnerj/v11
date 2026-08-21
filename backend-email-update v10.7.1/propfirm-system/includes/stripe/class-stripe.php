@@ -148,20 +148,18 @@ class FXSIM_Stripe {
         $payload   = file_get_contents('php://input');
         $sig       = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
-        // Verify signature whenever a webhook secret is configured. The
-        // previous "$wh_secret && $sig" condition meant a caller who simply
-        // omitted the Stripe-Signature header skipped verification entirely
-        // — since this handler auto-activates a paid challenge account on
-        // 'checkout.session.completed', that let anyone fabricate a fake
-        // event with an invented session_id and get a free challenge with
-        // zero payment. A missing signature must fail closed, same as a
-        // wrong one, whenever a secret is configured.
-        if ($wh_secret) {
-            if (!$sig || !self::verify_signature($payload, $sig, $wh_secret)) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Invalid signature']);
-                exit;
-            }
+        // Fail closed: reject webhook entirely if webhook secret is not configured
+        // preventing anyone from fabricating fake checkout.session.completed events without payment
+        if (empty($wh_secret)) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Stripe webhook secret is not configured on server']);
+            exit;
+        }
+
+        if (!$sig || !self::verify_signature($payload, $sig, $wh_secret)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid signature']);
+            exit;
         }
 
         $event = json_decode($payload, true);
