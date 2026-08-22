@@ -92,6 +92,8 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/partial-close/(?P<id>\d+)', ['methods'=>'POST','callback'=>[self::class,'partial_close'],'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/sltp/(?P<id>\d+)',   ['methods'=>'POST','callback'=>[self::class,'sltp'],          'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/history',       ['methods'=>'GET',  'callback'=>[self::class,'history'],    'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/profile/(?P<id>\d+)', ['methods'=>'GET', 'callback'=>[self::class,'public_profile'], 'permission_callback'=>'__return_true']);
+        register_rest_route(self::NS, '/stats/affiliate-leaderboard', ['methods'=>'GET', 'callback'=>[self::class,'public_affiliate_leaderboard'], 'permission_callback'=>'__return_true']);
         register_rest_route(self::NS, '/transactions',  ['methods'=>'GET',  'callback'=>[self::class,'transactions'],'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/stats',         ['methods'=>'GET',  'callback'=>[self::class,'stats'],      'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/symbols',       ['methods'=>'GET',  'callback'=>[self::class,'symbols'],    'permission_callback'=>$auth]);
@@ -984,51 +986,50 @@ class FXSIM_REST_API {
             if ($owner !== $user_id && !current_user_can('manage_options')) {
                 return new WP_REST_Response([], 403);
             }
-            $target_acc_id = $account_id;
+            $target_acc_ids = [$account_id];
         } else {
-            $acc = self::get_active_challenge_account($user_id);
-            if (!$acc) return new WP_REST_Response([]);
-            $target_acc_id = (int)$acc->id;
+            // Scope trade history across ALL accounts owned by this trader (active, passed, failed, funded, suspended)
+            $acc_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}fxsim_accounts WHERE user_id = %d", $user_id
+            ));
+            if (empty($acc_ids)) {
+                return new WP_REST_Response([
+                    'trades'      => [],
+                    'next_cursor' => null,
+                    'has_more'    => false,
+                    'stats'       => ['total' => 0, 'wins' => 0, 'losses' => 0, 'netPnL' => 0.0, 'winRate' => 0.0],
+                ]);
+            }
+            $target_acc_ids = array_map('intval', $acc_ids);
         }
 
-        $limit  = 50;
-        // Keyset cursor: client passes the `last_id` of the final row from the previous page.
-        // First page: no cursor (last_id = 0). Subsequent pages: pass last row's id.
-        // Response includes `next_cursor` for the client to use on the next call.
-        // Backward compatible: `page` param still accepted but ignored (keyset takes precedence).
+        $limit   = 50;
         $last_id = (int)($r->get_param('last_id') ?? 0);
+        $id_list = implode(',', $target_acc_ids);
 
         if ($last_id > 0) {
-            // Keyset: fetch rows with id < last_id (walking backwards through sorted-by-id=closed_at)
-            // Uses idx_account_closed composite index: WHERE account_id=X AND id < Y ORDER BY closed_at DESC
             $rows = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM {$wpdb->prefix}fxsim_trades
-                 WHERE account_id = %d AND id < %d
+                 WHERE account_id IN ({$id_list}) AND id < %d
                  ORDER BY id DESC
                  LIMIT %d",
-                $target_acc_id, $last_id, $limit
+                $last_id, $limit
             ));
         } else {
-            // First page: no cursor needed — most recent rows
             $rows = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM {$wpdb->prefix}fxsim_trades
-                 WHERE account_id = %d
+                 WHERE account_id IN ({$id_list})
                  ORDER BY id DESC
                  LIMIT %d",
-                $target_acc_id, $limit
+                $limit
             ));
         }
 
-        // Enrich each row with offset-aware ISO-8601 timestamps. Trade times are
-        // stored via current_time('mysql') = WP site-local, naive. Emitting an
-        // explicit offset removes the client-side "parsed as browser-local" skew
-        // that made freshly-closed trades read as hours old.
         foreach ($rows as $row) {
             $row->closed_at_iso = self::iso8601($row->closed_at ?? null);
             $row->opened_at_iso = self::iso8601($row->opened_at ?? null);
         }
 
-        // Provide next_cursor so client can load more without tracking page numbers
         $next_cursor = (!empty($rows) && count($rows) === $limit)
             ? (int) end($rows)->id
             : null;
@@ -1039,36 +1040,115 @@ class FXSIM_REST_API {
             'has_more'    => $next_cursor !== null,
         ];
 
-        // Only calculate full-history stats on the first page load
+        // Full-history stats across target account(s) on the first page load
         if ($last_id === 0) {
-            $stats_row = $wpdb->get_row($wpdb->prepare("
+            $stats_row = $wpdb->get_row("
                 SELECT 
                     COUNT(*) as total,
                     SUM(IF(pnl > 0, 1, 0)) as wins,
                     SUM(IF(pnl < 0, 1, 0)) as losses,
                     SUM(pnl) as net_pnl
                 FROM {$wpdb->prefix}fxsim_trades
-                WHERE account_id = %d
-            ", $acc->id));
+                WHERE account_id IN ({$id_list})
+            ");
             
             if ($stats_row) {
-                $total = (int)$stats_row->total;
-                $wins = (int)$stats_row->wins;
-                $losses = (int)$stats_row->losses;
-                $netPnL = (float)$stats_row->net_pnl;
+                $total   = (int)$stats_row->total;
+                $wins    = (int)$stats_row->wins;
+                $losses  = (int)$stats_row->losses;
+                $netPnL  = (float)$stats_row->net_pnl;
                 $winRate = $total > 0 ? ($wins / $total) * 100 : 0;
                 
                 $response['stats'] = [
-                    'total' => $total,
-                    'wins' => $wins,
-                    'losses' => $losses,
-                    'netPnL' => $netPnL,
+                    'total'   => $total,
+                    'wins'    => $wins,
+                    'losses'  => $losses,
+                    'netPnL'  => $netPnL,
                     'winRate' => $winRate
                 ];
             }
         }
 
         return new WP_REST_Response($response);
+    }
+
+    public static function public_profile(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $user_id = (int)$r->get_param('id');
+        if ($user_id <= 0) {
+            return new WP_REST_Response(['message' => 'Trader not found.'], 404);
+        }
+
+        $u = get_userdata($user_id);
+        if (!$u) {
+            return new WP_REST_Response(['message' => 'Trader not found.'], 404);
+        }
+
+        // Sanitized public name — never expose private email, phone, or billing details
+        $name = $u->display_name ?: $u->user_login;
+
+        // Check active funded accounts
+        $is_funded = (bool) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts
+             WHERE user_id = %d AND status = 'funded'",
+            $user_id
+        ));
+
+        // Check passed challenges
+        $has_passed = (bool) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_challenge_accounts
+             WHERE user_id = %d AND (status = 'funded' OR passed_at IS NOT NULL)",
+            $user_id
+        ));
+
+        // Total completed payouts
+        $total_payouts = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts
+             WHERE user_id = %d AND status IN ('approved', 'paid')",
+            $user_id
+        ));
+
+        // Total trade stats for dynamic achievements
+        $trade_stats = $wpdb->get_row($wpdb->prepare(
+            "SELECT COUNT(*) as total, SUM(IF(t.pnl > 0, 1, 0)) as wins
+             FROM {$wpdb->prefix}fxsim_trades t
+             JOIN {$wpdb->prefix}fxsim_accounts a ON t.account_id = a.id
+             WHERE a.user_id = %d",
+            $user_id
+        ));
+
+        $badges = [];
+        if ($is_funded) {
+            $badges[] = 'Funded Trader';
+        }
+        if ($has_passed) {
+            $badges[] = 'Challenge Master';
+        }
+        if ($total_payouts >= 1) {
+            $badges[] = 'Payout Recipient';
+        }
+        if ($total_payouts >= 5) {
+            $badges[] = 'Elite Earner';
+        }
+
+        if ($trade_stats && (int)$trade_stats->total >= 10) {
+            $win_rate = ((int)$trade_stats->wins / (int)$trade_stats->total) * 100;
+            if ($win_rate >= 60) {
+                $badges[] = 'High Win Rate';
+            }
+            if ((int)$trade_stats->total >= 50) {
+                $badges[] = 'Active Trader';
+            }
+        }
+
+        return new WP_REST_Response([
+            'id'            => $user_id,
+            'name'          => $name,
+            'is_funded'     => $is_funded,
+            'has_passed'    => $has_passed,
+            'total_payouts' => $total_payouts,
+            'badges'        => array_values(array_unique($badges)),
+        ], 200);
     }
 
     public static function transactions(WP_REST_Request $r): WP_REST_Response {
