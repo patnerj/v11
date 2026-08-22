@@ -296,12 +296,12 @@ add_action('plugins_loaded', function () {
         wp_schedule_event(time(), 'daily', 'fxsim_daily_tasks');
     }
 
-    // After trade close: evaluate challenge rules
+    // After trade close: evaluate challenge rules (including real-time balance sync for funded accounts)
     add_action('fxsim_trade_closed', function (int $account_id) {
         global $wpdb;
         $ch = $wpdb->get_row($wpdb->prepare(
             "SELECT id FROM {$wpdb->prefix}fxsim_challenge_accounts
-             WHERE fxsim_account_id=%d AND status='active' LIMIT 1", $account_id
+             WHERE fxsim_account_id=%d AND status IN ('active','funded') LIMIT 1", $account_id
         ));
         if ($ch) FXSIM_Challenge_Engine::evaluate_after_trade((int)$ch->id);
     }, 10, 1);

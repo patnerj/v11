@@ -76,7 +76,7 @@ class FXSIM_Payments {
     }
 
     // ── Submit payment proof (manual gateway) ─────────────────────────────────
-    public static function submit_proof(int $order_id, int $user_id, array $file, string $notes = ''): array {
+    public static function submit_proof(int $order_id, int $user_id, array $file, string $notes = '', string $txn_reference = ''): array {
         global $wpdb;
 
         $order = self::get_order($order_id);
@@ -127,7 +127,7 @@ class FXSIM_Payments {
         $filename = 'proof_' . bin2hex(random_bytes(16)) . '.' . $ext;
         $dest     = $dest_dir . $filename;
 
-        if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        if (!@move_uploaded_file($file['tmp_name'], $dest) && !@rename($file['tmp_name'], $dest)) {
             return ['success' => false, 'message' => 'Upload failed. Please try again.'];
         }
 
@@ -137,10 +137,15 @@ class FXSIM_Payments {
         // as store_kyc_file()/admin_kyc_doc(). Never expose $dest_url directly.
         $rel_path = 'propfirm-proofs/' . $user_id . '/' . $filename;
 
-        $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', [
+        $update_data = [
             'proof_url'   => $rel_path,
             'proof_notes' => sanitize_textarea_field($notes),
-        ], ['id' => $order_id]);
+        ];
+        if (!empty($txn_reference)) {
+            $update_data['txn_id'] = sanitize_text_field($txn_reference);
+        }
+
+        $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', $update_data, ['id' => $order_id]);
 
         // Defer admin notification to WP-Cron so the REST response is not blocked
         // by SMTP latency. The upload and DB update above are already complete.

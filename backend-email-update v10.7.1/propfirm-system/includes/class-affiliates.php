@@ -128,13 +128,29 @@ class FXSIM_Affiliates {
     /** Supported affiliate payout methods (no bank transfers). */
     const PAYOUT_METHODS = ['usdt_trc20', 'usdt_bep20', 'wise'];
 
-    /** Save the affiliate's payout method + destination. */
+    /** Save the affiliate's payout method + destination with format validation. */
     public static function set_payout_method(int $user_id, string $method, string $destination): array {
         $aff = self::get_by_user($user_id);
         if (!$aff) return ['success' => false, 'message' => 'Not an affiliate.'];
         if (!in_array($method, self::PAYOUT_METHODS, true)) return ['success' => false, 'message' => 'Unsupported payout method.'];
         $destination = trim($destination);
         if ($destination === '') return ['success' => false, 'message' => 'Payout destination is required.'];
+
+        // Format validation per method
+        if ($method === 'usdt_trc20') {
+            if (!preg_match('/^T[1-9A-HJ-NP-Za-km-z]{33}$/', $destination)) {
+                return ['success' => false, 'message' => 'Invalid TRC20 USDT address. Must start with T and be 34 characters.'];
+            }
+        } elseif ($method === 'usdt_bep20') {
+            if (!preg_match('/^0x[a-fA-F0-9]{40}$/', $destination)) {
+                return ['success' => false, 'message' => 'Invalid BEP20 USDT address. Must be a valid 42-character 0x hex address.'];
+            }
+        } elseif ($method === 'wise') {
+            if (!filter_var($destination, FILTER_VALIDATE_EMAIL)) {
+                return ['success' => false, 'message' => 'Invalid Wise email address.'];
+            }
+        }
+
         global $wpdb;
         $wpdb->update($wpdb->prefix . 'fxsim_affiliates', [
             'payout_method'      => $method,

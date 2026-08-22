@@ -2386,15 +2386,40 @@ class FXSIM_REST_API {
 
     public static function challenge_start(WP_REST_Request $r): WP_REST_Response {
         if (!self::verify_nonce($r)) return new WP_REST_Response(['error' => 'Invalid nonce'], 403);
-        $body    = $r->get_json_params() ?: $r->get_body_params();
-        $plan_id = (int)($body['plan_id'] ?? 0);
-        $plan    = FXSIM_Challenge_DB::get_plan($plan_id);
+        $body        = $r->get_json_params() ?: ($r->get_body_params() ?: []);
+        $plan_id     = (int)($body['plan_id'] ?? ($r->get_param('plan_id') ?? 0));
+        $plan        = FXSIM_Challenge_DB::get_plan($plan_id);
         if (!$plan) return new WP_REST_Response(['success' => false, 'message' => 'Plan not found.'], 404);
 
         // FREE plans (price = 0) can be started directly
         if ((float)$plan->price <= 0) {
             $result = FXSIM_Challenge_Engine::create_challenge(get_current_user_id(), $plan_id);
             return new WP_REST_Response($result, $result['success'] ? 200 : 400);
+        }
+
+        // 100% DISCOUNT COUPON CHECK: If user provided a valid 100% coupon, auto-create and start
+        $coupon_code = sanitize_text_field($body['coupon_code'] ?? ($body['coupon'] ?? ($r->get_param('coupon_code') ?? ($r->get_param('coupon') ?? ''))));
+        if (!empty($coupon_code) && class_exists('FXSIM_Coupons')) {
+            $v = FXSIM_Coupons::validate($coupon_code, $plan_id, get_current_user_id());
+            if (!empty($v['valid']) && (float)($v['final'] ?? 1) <= 0) {
+                global $wpdb;
+                $wpdb->insert($wpdb->prefix . 'fxsim_payment_orders', [
+                    'user_id'         => get_current_user_id(),
+                    'plan_id'         => $plan_id,
+                    'amount'          => 0.00,
+                    'original_amount' => (float)$plan->price,
+                    'discount_amount' => (float)$plan->price,
+                    'coupon_id'       => (int)$v['coupon_id'],
+                    'coupon_code'     => $v['code'],
+                    'currency'        => $plan->currency ?? 'USD',
+                    'gateway'         => 'coupon_100',
+                    'status'          => 'redeemed',
+                ]);
+                $free_order_id = (int)$wpdb->insert_id;
+                FXSIM_Coupons::record_redemption((int)$v['coupon_id'], get_current_user_id(), $free_order_id, (float)$plan->price, 0.00);
+                $result = FXSIM_Challenge_Engine::create_challenge(get_current_user_id(), $plan_id);
+                return new WP_REST_Response($result, $result['success'] ? 200 : 400);
+            }
         }
 
         // PAID plans: require an approved payment order with atomic claim to prevent double provisioning
@@ -2789,21 +2814,34 @@ class FXSIM_REST_API {
 
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}fxsim_payouts WHERE user_id=%d ORDER BY requested_at DESC", $uid));
-        $history = array_map(fn($p) => [
-            'id'               => (int) $p->id,
-            'challenge_id'     => (int) $p->challenge_id,
-            'amount_requested' => (float) $p->amount_requested,
-            'trader_amount'    => (float) $p->trader_amount,
-            'firm_amount'      => (float) $p->firm_amount,
-            'profit_split_pct' => (float) $p->profit_split_pct,
-            'status'           => $p->status,
-            'payment_method'   => $p->payment_method,
-            'tx_reference'     => $p->tx_reference,
-            'proof_url'        => $p->proof_url,
-            'admin_note'       => $p->admin_note,
-            'requested_at'     => self::iso8601($p->requested_at),
-            'processed_at'     => self::iso8601($p->processed_at),
-        ], $rows ?: []);
+        
+        $user = get_userdata($uid);
+        $display_name = $user ? ($user->display_name ?: $user->user_login) : 'Trader';
+        $username     = $user ? $user->user_login : '';
+
+        $history = array_map(function($p) use ($display_name, $username) {
+            $ch = FXSIM_Challenge_DB::get_challenge((int) $p->challenge_id);
+            $plan = $ch ? FXSIM_Challenge_DB::get_plan((int) $ch->plan_id) : null;
+            return [
+                'id'               => (int) $p->id,
+                'challenge_id'     => (int) $p->challenge_id,
+                'plan_name'        => $plan ? ($plan->name ?? '') : '',
+                'amount_requested' => (float) $p->amount_requested,
+                'trader_amount'    => (float) $p->trader_amount,
+                'firm_amount'      => (float) $p->firm_amount,
+                'profit_split_pct' => (float) $p->profit_split_pct,
+                'status'           => $p->status,
+                'payment_method'   => $p->payment_method,
+                'tx_reference'     => $p->tx_reference,
+                'proof_url'        => $p->proof_url,
+                'admin_note'       => $p->admin_note,
+                'name'             => $display_name,
+                'trader_name'      => $display_name,
+                'username'         => $username,
+                'requested_at'     => self::iso8601($p->requested_at),
+                'processed_at'     => self::iso8601($p->processed_at),
+            ];
+        }, $rows ?: []);
 
         $cycle_days = (int) (FXSIM_Challenge_DB::get_setting('payout_cycle_days', '14') ?: 14);
         $available  = 0.0;
@@ -4978,10 +5016,11 @@ class FXSIM_REST_API {
      */
     public static function payment_config(): WP_REST_Response {
         $s = FXSIM_Challenge_DB::get_all_settings();
-        $pub_key   = $s['coinpayments_pub_key']  ?? '';
-        $priv_key  = $s['coinpayments_priv_key'] ?? '';
-        $stripe_pk = $s['stripe_public_key']     ?? '';
-        $crypto    = $s['manual_crypto_address'] ?? '';
+        $pub_key      = $s['coinpayments_pub_key']   ?? '';
+        $priv_key     = $s['coinpayments_priv_key']  ?? '';
+        $stripe_pk    = $s['stripe_public_key']      ?? '';
+        $confirmo_key = $s['confirmo_api_key']       ?? '';
+        $crypto       = $s['manual_crypto_address']  ?? '';
 
         // Multi-network crypto (public-safe fields only) — addresses are meant to be shared.
         $networks = [];
@@ -5001,7 +5040,8 @@ class FXSIM_REST_API {
             'instructions'      => $s['manual_payment_instructions'] ?? '',
             'crypto_address'    => $crypto,
             'crypto_networks'   => $networks,
-            'has_coinpayments'  => !empty($pub_key) && !empty($priv_key),
+            'has_confirmo'      => !empty($confirmo_key),
+            'has_coinpayments'  => false, // Gateway stub unimplemented; keep false to prevent orphaned checkouts
             'has_stripe'        => !empty($stripe_pk),
             'has_manual_crypto' => !empty($crypto) || !empty($networks),
         ]);
@@ -5014,6 +5054,10 @@ class FXSIM_REST_API {
         $plan_id = (int)($body['plan_id'] ?? 0);
         $gateway = sanitize_text_field($body['gateway'] ?? 'manual');
         $coupon  = sanitize_text_field($body['coupon_code'] ?? '');
+
+        if ($gateway === 'coinpayments') {
+            return new WP_REST_Response(['success' => false, 'message' => 'CoinPayments integration is coming soon. Please choose another payment method.'], 400);
+        }
         
         $result  = FXSIM_Payments::create_order(get_current_user_id(), $plan_id, $gateway, $coupon);
         
@@ -5032,13 +5076,6 @@ class FXSIM_REST_API {
                 } else {
                     return new WP_REST_Response(['success' => false, 'message' => $confirmo['message']], 400);
                 }
-            } elseif ($gateway === 'coinpayments' && method_exists('FXSIM_Payments', 'coinpayments_create')) {
-                $cp = FXSIM_Payments::coinpayments_create($result['order_id']);
-                if ($cp['success']) {
-                    $result['payment_url'] = $cp['payment_url'] ?? '';
-                } else {
-                    return new WP_REST_Response(['success' => false, 'message' => $cp['message']], 400);
-                }
             }
         }
         
@@ -5055,8 +5092,10 @@ class FXSIM_REST_API {
         if (!self::verify_nonce($r)) return new WP_REST_Response(['error'=>'Invalid nonce'],403);
         $order_id = (int)($_POST['order_id'] ?? 0);
         $notes    = sanitize_textarea_field($_POST['notes'] ?? '');
+        $txn_ref  = sanitize_text_field($_POST['txn_reference'] ?? ($_POST['txnRef'] ?? ''));
+
         if (!isset($_FILES['proof'])) return new WP_REST_Response(['success'=>false,'message'=>'No file received.'],400);
-        $result = FXSIM_Payments::submit_proof($order_id, get_current_user_id(), $_FILES['proof'], $notes);
+        $result = FXSIM_Payments::submit_proof($order_id, get_current_user_id(), $_FILES['proof'], $notes, $txn_ref);
         return new WP_REST_Response($result, $result['success'] ? 200 : 400);
     }
 
