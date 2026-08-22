@@ -121,21 +121,45 @@ class FXSIM_PvP_Engine {
         $leaderboard = [];
         $rank = 1;
         foreach ($leaderboard_rows as $lr) {
+            $p_uid = (int)$lr['user_id'];
+            $total_played = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table} 
+                 WHERE (creator_user_id = %d OR challenger_user_id = %d) AND status = 'completed'",
+                $p_uid, $p_uid
+            ));
+            $win_rate = $total_played > 0 ? round(((int)$lr['wins'] / $total_played) * 100, 1) : 100.0;
+
+            // Calculate current active winning streak from recent completed matches
+            $recent_matches = $wpdb->get_results($wpdb->prepare(
+                "SELECT winner_user_id FROM {$table} 
+                 WHERE (creator_user_id = %d OR challenger_user_id = %d) AND status = 'completed'
+                 ORDER BY completed_at DESC, id DESC LIMIT 20",
+                $p_uid, $p_uid
+            ));
+            $streak = 0;
+            foreach ($recent_matches as $rm) {
+                if ((int)$rm->winner_user_id === $p_uid) {
+                    $streak++;
+                } else {
+                    break;
+                }
+            }
+
             $leaderboard[] = [
                 'rank'      => $rank++,
                 'name'      => $lr['name'] ?: 'Trader #' . $lr['user_id'],
                 'avatar'    => '⚔️',
                 'wins'      => (int)$lr['wins'],
-                'win_rate'  => 100.0,
+                'win_rate'  => $win_rate,
                 'earnings'  => (float)$lr['earnings'],
-                'streak'    => (int)$lr['wins'],
+                'streak'    => $streak,
             ];
         }
 
-        // Real database metrics (true zeroes when empty)
-        $total_staked = (float) $wpdb->get_var("SELECT SUM(stake_amount * 2) FROM {$table}") ?: 0.00;
+        // Real database metrics (filtered to active/completed to avoid overcounting cancelled/unfilled duels)
+        $total_staked = (float) $wpdb->get_var("SELECT SUM(stake_amount * 2) FROM {$table} WHERE status IN ('active', 'completed')") ?: 0.00;
         $total_rake = (float) $wpdb->get_var("SELECT SUM(platform_rake) FROM {$table} WHERE status = 'completed'") ?: 0.00;
-        $total_matches = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}") ?: 0;
+        $total_matches = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status IN ('active', 'completed')") ?: 0;
 
         // Tell the caller which wallet they'll stake from if they create/join
         // a match — only funded traders use their real account; everyone

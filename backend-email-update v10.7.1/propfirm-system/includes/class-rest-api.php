@@ -270,6 +270,7 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/order',  ['methods'=>'POST','callback'=>[self::class,'pvp_match_order'],         'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/settle', ['methods'=>'POST','callback'=>[self::class,'pvp_match_settle'],        'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/cancel', ['methods'=>'POST','callback'=>[self::class,'pvp_match_cancel'],        'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/pvp/match/(?P<id>\d+)/chat',   ['methods'=>'POST','callback'=>[self::class,'pvp_match_chat'],          'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/admin/pvp/analytics',          ['methods'=>'GET', 'callback'=>[self::class,'admin_pvp_analytics_get'], 'permission_callback'=>$is_admin]);
 
         // ── Challenge — authenticated ─────────────────────────────────────────
@@ -2835,10 +2836,12 @@ class FXSIM_REST_API {
 
         if (class_exists('FXSIM_Webhooks')) {
             $user_info = get_userdata($uid);
+            $doc_type = sanitize_text_field((string)$r->get_param('doc_type') ?: 'Government ID (Front & Back)');
+            $country  = sanitize_text_field((string)$r->get_param('country') ?: 'Global');
             FXSIM_Webhooks::dispatch('kyc', [
                 'trader_name' => $user_info ? $user_info->display_name : "Trader #$uid",
-                'doc_type'    => sanitize_text_field($doc_type ?? 'Government ID (Front & Back)'),
-                'country'     => sanitize_text_field($country ?? 'Global'),
+                'doc_type'    => $doc_type,
+                'country'     => $country,
             ]);
         }
 
@@ -7715,23 +7718,42 @@ class FXSIM_REST_API {
         return new WP_REST_Response(['success' => true]);
     }
 
-    /** GET /notifications — fetch unread notifications for current user */
-    public static function notifications_get(): WP_REST_Response {
+    /** GET /notifications — fetch notifications for current user with pagination */
+    public static function notifications_get(WP_REST_Request $r = null): WP_REST_Response {
         global $wpdb;
         $user_id = get_current_user_id();
+        $page = $r ? max(1, (int)$r->get_param('page')) : 1;
+        $per_page = $r ? max(1, min(100, (int)($r->get_param('per_page') ?: 30))) : 30;
+        $offset = ($page - 1) * $per_page;
+
+        $total = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_notifications WHERE user_id = %d",
+            $user_id
+        ));
+        $unread_count = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_notifications WHERE user_id = %d AND is_read = 0",
+            $user_id
+        ));
+
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT id, type, title, message, link, is_read, created_at
              FROM {$wpdb->prefix}fxsim_notifications
              WHERE user_id = %d
              ORDER BY created_at DESC
-             LIMIT 30",
-            $user_id
+             LIMIT %d OFFSET %d",
+            $user_id,
+            $per_page,
+            $offset
         ));
-        foreach (($rows ?: []) as $r) { if (!empty($r->created_at)) $r->created_at_iso = self::iso8601($r->created_at); }
-        $unread = array_filter($rows ?: [], fn($r) => !(int)$r->is_read);
+        foreach (($rows ?: []) as $row) { if (!empty($row->created_at)) $row->created_at_iso = self::iso8601($row->created_at); }
+
         return new WP_REST_Response([
             'notifications' => $rows ?: [],
-            'unread_count'  => count($unread),
+            'unread_count'  => $unread_count,
+            'total'         => $total,
+            'page'          => $page,
+            'per_page'      => $per_page,
+            'has_more'      => ($offset + count($rows ?: [])) < $total,
         ]);
     }
 
@@ -8905,6 +8927,34 @@ class FXSIM_REST_API {
         return new WP_REST_Response($res, $res['success'] ? 200 : 400);
     }
 
+    public static function pvp_match_chat(WP_REST_Request $r): WP_REST_Response {
+        global $wpdb;
+        $uid = get_current_user_id();
+        if (!$uid) return new WP_REST_Response(['success' => false, 'error' => 'Authentication required.'], 401);
+        $id = (int)$r->get_param('id');
+        $params = $r->get_json_params() ?: $r->get_body_params();
+        $message = sanitize_text_field($params['message'] ?? '');
+        if (empty($message)) {
+            return new WP_REST_Response(['success' => false, 'error' => 'Message cannot be empty.'], 400);
+        }
+        $match = $wpdb->get_row($wpdb->prepare("SELECT id, status FROM {$wpdb->prefix}fxsim_pvp_matches WHERE id = %d", $id));
+        if (!$match) {
+            return new WP_REST_Response(['success' => false, 'error' => 'Match not found.'], 404);
+        }
+        $user = get_userdata($uid);
+        $author_name = $user ? $user->display_name : 'Gladiator #' . $uid;
+        
+        $wpdb->insert($wpdb->prefix . 'fxsim_pvp_events', [
+            'match_id'   => $id,
+            'user_id'    => $uid,
+            'event_type' => 'chat',
+            'message'    => $message,
+            'payload'    => json_encode(['author_name' => $author_name]),
+            'created_at' => current_time('mysql'),
+        ]);
+        return new WP_REST_Response(['success' => true, 'message' => 'Chat message broadcasted.']);
+    }
+
     public static function admin_pvp_analytics_get(WP_REST_Request $r): WP_REST_Response {
         $res = FXSIM_PvP_Engine::get_admin_analytics();
         return new WP_REST_Response($res);
@@ -9005,6 +9055,15 @@ class FXSIM_REST_API {
         $t->current_participants = $p_count;
         $t->participants_count = $p_count;
         $t->name = $t->title;
+        
+        $uid = get_current_user_id();
+        $is_registered = $uid > 0 ? (bool)$wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants WHERE tournament_id = %d AND user_id = %d",
+            $t->id, $uid
+        )) : false;
+        $t->is_registered = $is_registered;
+        $t->is_joined = $is_registered;
+
         return new WP_REST_Response($t);
     }
 
@@ -9042,15 +9101,33 @@ class FXSIM_REST_API {
             return new WP_REST_Response(['success' => false, 'message' => 'Tournament has reached maximum participant capacity.'], 400);
         }
 
-        // Check entry fee if applicable
+        // Check entry fee if applicable — ATOMIC CONDITIONAL DEDUCTION TO PREVENT RACE CONDITIONS
         $entry_fee = (float) $t->entry_fee;
+        $fee_acc_id = 0;
         if ($entry_fee > 0) {
             $user_acc = $wpdb->get_row($wpdb->prepare("SELECT id, balance FROM {$wpdb->prefix}fxsim_accounts WHERE user_id = %d ORDER BY id DESC LIMIT 1", $uid));
-            if (!$user_acc || (float)$user_acc->balance < $entry_fee) {
+            if (!$user_acc) {
+                return new WP_REST_Response(['success' => false, 'message' => "No trading account found to pay \${$entry_fee} entry fee."], 400);
+            }
+            $fee_acc_id = (int)$user_acc->id;
+
+            // Single atomic conditional update (checks balance >= fee in WHERE clause)
+            $affected = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts 
+                 SET balance = balance - %f, equity = equity - %f 
+                 WHERE id = %d AND balance >= %f",
+                $entry_fee, $entry_fee, $fee_acc_id, $entry_fee
+            ));
+
+            if ($affected !== 1) {
                 return new WP_REST_Response(['success' => false, 'message' => "Insufficient account balance to pay \${$entry_fee} entry fee."], 400);
             }
-            // Deduct entry fee
-            $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}fxsim_accounts SET balance = balance - %f WHERE id = %d", $entry_fee, $user_acc->id));
+
+            // Log audit transaction
+            if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_transaction')) {
+                $new_bal = (float)$wpdb->get_var($wpdb->prepare("SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $fee_acc_id));
+                FXSIM_Database::log_transaction($fee_acc_id, 'fee', -$entry_fee, $new_bal, "Tournament entry fee: {$t->title}");
+            }
         }
 
         // Create an ISOLATED, dedicated trading account specifically for this tournament
@@ -9080,6 +9157,13 @@ class FXSIM_REST_API {
         ]);
 
         if (!$inserted) {
+            // Refund entry fee if participant insertion failed
+            if ($entry_fee > 0 && $fee_acc_id > 0) {
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$wpdb->prefix}fxsim_accounts SET balance = balance + %f, equity = equity + %f WHERE id = %d",
+                    $entry_fee, $entry_fee, $fee_acc_id
+                ));
+            }
             return new WP_REST_Response(['success' => false, 'message' => 'Database error registering for tournament: ' . $wpdb->last_error], 500);
         }
 

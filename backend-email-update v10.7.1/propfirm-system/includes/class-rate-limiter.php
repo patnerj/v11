@@ -63,7 +63,7 @@ class FXSIM_Rate_Limiter {
     private const TIERS = [
         // High-risk write operations
         'trading_write' => [
-            'patterns' => ['/open', '/close/', '/partial-close/', '/sltp/', '/pending-order/'],
+            'patterns' => ['/open', '/close/', '/partial-close/', '/sltp/', '/pending-order/', '/pvp/match/'],
             'methods'  => ['POST'],
             'default'  => 60,
         ],
