@@ -237,6 +237,9 @@ class FXSIM_REST_API {
         register_rest_route(self::NS, '/auth/resend-verification',     ['methods'=>'POST','callback'=>[self::class,'auth_resend_verification'],'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/auth/2fa/toggle',              ['methods'=>'POST','callback'=>[self::class,'auth_2fa_toggle'],          'permission_callback'=>$auth]);
         register_rest_route(self::NS, '/auth/2fa/status',              ['methods'=>'GET', 'callback'=>[self::class,'auth_2fa_status'],          'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/auth/change-password',         ['methods'=>'POST','callback'=>[self::class,'auth_change_password'],       'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/user/preferences',             ['methods'=>'GET', 'callback'=>[self::class,'user_preferences_get'],       'permission_callback'=>$auth]);
+        register_rest_route(self::NS, '/user/preferences',             ['methods'=>'POST','callback'=>[self::class,'user_preferences_save'],      'permission_callback'=>$auth]);
 
         // ── Trader analytics (extended) ───────────────────────────────────────
         register_rest_route(self::NS, '/stats/advanced',               ['methods'=>'GET', 'callback'=>[self::class,'stats_advanced'],          'permission_callback'=>$auth]);
@@ -2770,13 +2773,18 @@ class FXSIM_REST_API {
         $row = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}fxsim_kyc WHERE user_id=%d", $uid));
         if (!$row) return new WP_REST_Response(['status' => 'not_started']);
+        $doc_type = get_user_meta($uid, 'fxsim_kyc_doc_type', true) ?: 'national_id';
+        $country  = get_user_meta($uid, 'fxsim_kyc_country', true) ?: '';
         return new WP_REST_Response([
             'status'       => $row->status,
+            'doc_type'     => $doc_type,
+            'country'      => $country,
             'admin_note'   => $row->admin_note,
             'submitted_at' => self::iso8601($row->submitted_at),
             'reviewed_at'  => self::iso8601($row->reviewed_at),
             'docs'         => [
                 'id_doc'      => !empty($row->id_doc_path),
+                'id_doc_back' => !empty($row->id_doc_back_path),
                 'selfie'      => !empty($row->selfie_path),
                 'address_doc' => !empty($row->address_doc_path),
             ],
@@ -2807,6 +2815,11 @@ class FXSIM_REST_API {
             $paths[$f] = $stored;
         }
 
+        $doc_type = sanitize_text_field((string)($r->get_param('doc_type') ?: 'national_id'));
+        $country  = sanitize_text_field((string)($r->get_param('country') ?: ''));
+        update_user_meta($uid, 'fxsim_kyc_doc_type', $doc_type);
+        update_user_meta($uid, 'fxsim_kyc_country', $country);
+
         $data = [
             'user_id'          => $uid,
             'status'           => 'pending',
@@ -2836,8 +2849,6 @@ class FXSIM_REST_API {
 
         if (class_exists('FXSIM_Webhooks')) {
             $user_info = get_userdata($uid);
-            $doc_type = sanitize_text_field((string)$r->get_param('doc_type') ?: 'Government ID (Front & Back)');
-            $country  = sanitize_text_field((string)$r->get_param('country') ?: 'Global');
             FXSIM_Webhooks::dispatch('kyc', [
                 'trader_name' => $user_info ? $user_info->display_name : "Trader #$uid",
                 'doc_type'    => $doc_type,
@@ -7927,6 +7938,78 @@ class FXSIM_REST_API {
         return new WP_REST_Response(['enabled' => FXSIM_2FA::is_enabled(get_current_user_id())]);
     }
 
+    /** POST /auth/change-password — body: { current_password, new_password } */
+    public static function auth_change_password(WP_REST_Request $req): WP_REST_Response {
+        $uid = get_current_user_id();
+        if (!$uid) return new WP_REST_Response(['success' => false, 'message' => 'Unauthorized'], 401);
+
+        $body = $req->get_json_params() ?: $req->get_body_params();
+        $current = (string)($body['current_password'] ?? '');
+        $new = (string)($body['new_password'] ?? '');
+
+        if (empty($current) || empty($new)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Current password and new password are required.'], 400);
+        }
+
+        if (strlen($new) < 8) {
+            return new WP_REST_Response(['success' => false, 'message' => 'New password must be at least 8 characters long.'], 400);
+        }
+
+        $user = get_user_by('id', $uid);
+        if (!$user || !wp_check_password($current, $user->user_pass, $uid)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Incorrect current password.'], 400);
+        }
+
+        wp_set_password($new, $uid);
+
+        // Re-authenticate session cookie for current user
+        wp_set_current_user($uid);
+        wp_set_auth_cookie($uid, true, is_ssl());
+
+        return new WP_REST_Response([
+            'success' => true,
+            'message' => 'Password changed successfully.'
+        ]);
+    }
+
+    /** GET /user/preferences */
+    public static function user_preferences_get(): WP_REST_Response {
+        $uid = get_current_user_id();
+        if (!$uid) return new WP_REST_Response(['success' => false, 'message' => 'Unauthorized'], 401);
+
+        $prefs = get_user_meta($uid, 'fxsim_trader_preferences', true);
+        if (!is_array($prefs)) {
+            $prefs = [
+                'email_trade_closed'    => true,
+                'email_margin_warning'  => true,
+                'email_payout_updates'  => true,
+                'email_marketing'       => false,
+                'sound_effects'         => true,
+            ];
+        }
+        return new WP_REST_Response(['success' => true, 'preferences' => $prefs]);
+    }
+
+    /** POST /user/preferences */
+    public static function user_preferences_save(WP_REST_Request $req): WP_REST_Response {
+        $uid = get_current_user_id();
+        if (!$uid) return new WP_REST_Response(['success' => false, 'message' => 'Unauthorized'], 401);
+
+        $body = $req->get_json_params() ?: $req->get_body_params();
+        $prefs = (array)($body['preferences'] ?? $body);
+
+        $sanitized = [
+            'email_trade_closed'   => !empty($prefs['email_trade_closed']),
+            'email_margin_warning' => !empty($prefs['email_margin_warning']),
+            'email_payout_updates' => !empty($prefs['email_payout_updates']),
+            'email_marketing'      => !empty($prefs['email_marketing']),
+            'sound_effects'        => !empty($prefs['sound_effects']),
+        ];
+
+        update_user_meta($uid, 'fxsim_trader_preferences', $sanitized);
+        return new WP_REST_Response(['success' => true, 'preferences' => $sanitized]);
+    }
+
     /**
      * Send email verification to a user.
      * Called after registration and on resend request.
@@ -9157,12 +9240,24 @@ class FXSIM_REST_API {
         ]);
 
         if (!$inserted) {
+            // Delete orphaned isolated account created for this attempt
+            if ($acc_id > 0) {
+                $wpdb->delete("{$wpdb->prefix}fxsim_accounts", ['id' => $acc_id]);
+            }
             // Refund entry fee if participant insertion failed
             if ($entry_fee > 0 && $fee_acc_id > 0) {
                 $wpdb->query($wpdb->prepare(
                     "UPDATE {$wpdb->prefix}fxsim_accounts SET balance = balance + %f, equity = equity + %f WHERE id = %d",
                     $entry_fee, $entry_fee, $fee_acc_id
                 ));
+            }
+            $is_duplicate = (strpos(strtolower($wpdb->last_error), 'duplicate') !== false) ||
+                (bool) $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants WHERE tournament_id = %d AND user_id = %d",
+                    $id, $uid
+                ));
+            if ($is_duplicate) {
+                return new WP_REST_Response(['success' => false, 'message' => 'You are already registered for this tournament.'], 400);
             }
             return new WP_REST_Response(['success' => false, 'message' => 'Database error registering for tournament: ' . $wpdb->last_error], 500);
         }

@@ -307,8 +307,9 @@ class ProTradeFX_Headless_Bridge {
             'callback'            => [ __CLASS__, 'verify_2fa' ],
             'permission_callback' => '__return_true',
             'args'                => [
-                'uid'  => [ 'required' => true, 'type' => 'integer' ],
-                'code' => [ 'required' => true, 'type' => 'string' ],
+                'uid'      => [ 'required' => true, 'type' => 'integer' ],
+                'code'     => [ 'required' => true, 'type' => 'string' ],
+                'remember' => [ 'type' => 'boolean', 'default' => true ],
             ],
         ]);
 
@@ -451,13 +452,15 @@ class ProTradeFX_Headless_Bridge {
         self::clear_login_throttle( $ip_key );
         self::clear_login_throttle( $uid_key );
 
+        $remember = (bool) ( $req->get_param( 'remember' ) ?? true );
+
         wp_set_current_user( $user->ID );
-        wp_set_auth_cookie( $user->ID, true, is_ssl() );
-        self::set_session_flag_cookie( (int) $user->ID, true );
+        wp_set_auth_cookie( $user->ID, $remember, is_ssl() );
+        self::set_session_flag_cookie( (int) $user->ID, $remember );
 
         self::log_user_ip( $user->ID );
 
-        $token = self::generate_auth_token( (int) $user->ID, 30 * DAY_IN_SECONDS );
+        $token = self::generate_auth_token( (int) $user->ID, $remember ? 30 * DAY_IN_SECONDS : 86400 );
 
         return [
             'user'  => self::user_payload( $user ),

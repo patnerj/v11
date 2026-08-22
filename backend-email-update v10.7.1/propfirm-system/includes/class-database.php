@@ -320,6 +320,7 @@ class FXSIM_Database {
             rank                 INT             NOT NULL DEFAULT 0,
             status               ENUM('active','disqualified','winner') NOT NULL DEFAULT 'active',
             created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_tournament_user (tournament_id, user_id),
             KEY idx_tournament (tournament_id),
             KEY idx_user (user_id),
             KEY idx_account (account_id),
@@ -1111,18 +1112,25 @@ class FXSIM_Database {
         }
     }
 
-    /** Ensure fxsim_admin_notes table exists (V11.0.3 migration helper) */
-    public static function ensure_admin_notes_table(): void {
+    /** Ensure fxsim_tournament_participants has UNIQUE KEY on (tournament_id, user_id) (V11.0.5 migration helper) */
+    public static function ensure_tournament_unique_participant(): void {
         global $wpdb;
-        $c = $wpdb->get_charset_collate();
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_admin_notes (
-            id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            user_id         BIGINT UNSIGNED NOT NULL,
-            author_id       BIGINT UNSIGNED NOT NULL DEFAULT 0,
-            note            TEXT            NOT NULL,
-            created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            KEY idx_user (user_id), KEY idx_author (author_id)
-        ) $c;");
+        $table = $wpdb->prefix . 'fxsim_tournament_participants';
+        $indices = $wpdb->get_results("SHOW INDEX FROM `{$table}`");
+        $has_unique = false;
+        if ($indices) {
+            foreach ($indices as $idx) {
+                if ($idx->Key_name === 'uniq_tournament_user') {
+                    $has_unique = true;
+                    break;
+                }
+            }
+        }
+        if (!$has_unique) {
+            // Deduplicate prior records if any exist
+            $wpdb->query("DELETE t1 FROM `{$table}` t1 INNER JOIN `{$table}` t2 WHERE t1.id > t2.id AND t1.tournament_id = t2.tournament_id AND t1.user_id = t2.user_id");
+            $wpdb->query("ALTER TABLE `{$table}` ADD UNIQUE KEY `uniq_tournament_user` (tournament_id, user_id)");
+        }
     }
 }
+

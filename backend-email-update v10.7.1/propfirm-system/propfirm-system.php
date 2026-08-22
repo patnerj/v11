@@ -169,6 +169,12 @@ add_action('plugins_loaded', function () {
         }
         update_option('fxsim_feature_level', 6, false);
     }
+    if ($fxsim_feature_level < 7) {
+        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'ensure_tournament_unique_participant')) {
+            FXSIM_Database::ensure_tournament_unique_participant(); // V11.0.5 UNIQUE (tournament_id, user_id) on tournament participants
+        }
+        update_option('fxsim_feature_level', 7, false);
+    }
 
     FXSIM_REST_API::register();
 
