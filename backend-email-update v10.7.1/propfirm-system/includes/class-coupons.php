@@ -98,7 +98,8 @@ class FXSIM_Coupons {
 
     /**
      * Atomically claim and redeem a 100%-off coupon for a free challenge start.
-     * Prevents race conditions / burst over-minting of free challenges.
+     * Prevents race conditions / burst over-minting of free challenges across both
+     * global usage_limit and per-user limits via atomic update + MySQL named mutex.
      */
     public static function claim_100pct_free_challenge(string $code, int $plan_id, int $user_id, object $plan): array {
         global $wpdb;
@@ -126,77 +127,82 @@ class FXSIM_Coupons {
             return ['success' => false, 'message' => 'Coupon does not provide a 100% discount.'];
         }
 
-        // Advisory check for per-user limit
-        if ((int)$c->per_user_limit > 0) {
-            $used_user = (int)$wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_coupon_redemptions WHERE coupon_id = %d AND user_id = %d",
-                $c->id, $user_id));
-            if ($used_user >= (int)$c->per_user_limit) {
-                return ['success' => false, 'message' => 'You have already used this coupon.'];
+        // Acquire MySQL named lock scoped to (coupon_id, user_id) with 5s timeout to mutex per-user check + write
+        $lock_name = "fxsim_coupon_{$c->id}_{$user_id}";
+        $got_lock  = (int)$wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 5)", $lock_name));
+        if (!$got_lock) {
+            return ['success' => false, 'message' => 'Another request is currently processing this coupon. Please try again.'];
+        }
+
+        try {
+            // 1. Check per-user limit under lock
+            if ((int)$c->per_user_limit > 0) {
+                $used_user = (int)$wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_coupon_redemptions WHERE coupon_id = %d AND user_id = %d",
+                    $c->id, $user_id));
+                if ($used_user >= (int)$c->per_user_limit) {
+                    $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_name));
+                    return ['success' => false, 'message' => 'You have already used this coupon.'];
+                }
             }
-        }
 
-        // ATOMIC CLAIM: Increment used_count only if under usage_limit
-        $now = current_time('mysql');
-        $claimed = $wpdb->query($wpdb->prepare(
-            "UPDATE {$wpdb->prefix}fxsim_coupons
-             SET used_count = used_count + 1
-             WHERE id = %d AND active = 1
-               AND (expires_at IS NULL OR expires_at > %s)
-               AND (usage_limit = 0 OR used_count < usage_limit)",
-            $c->id, $now));
+            // 2. ATOMIC GLOBAL CLAIM: Increment used_count only if under global usage_limit
+            $now = current_time('mysql');
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_coupons
+                 SET used_count = used_count + 1
+                 WHERE id = %d AND active = 1
+                   AND (expires_at IS NULL OR expires_at > %s)
+                   AND (usage_limit = 0 OR used_count < usage_limit)",
+                $c->id, $now));
 
-        if (!$claimed) {
-            return ['success' => false, 'message' => 'Coupon usage limit reached or coupon inactive.'];
-        }
-
-        // Re-check per-user limit after atomic claim to prevent concurrent single-user bypass
-        if ((int)$c->per_user_limit > 0) {
-            $used_user = (int)$wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_coupon_redemptions WHERE coupon_id = %d AND user_id = %d",
-                $c->id, $user_id));
-            if ($used_user >= (int)$c->per_user_limit) {
-                $wpdb->query($wpdb->prepare(
-                    "UPDATE {$wpdb->prefix}fxsim_coupons SET used_count = GREATEST(0, used_count - 1) WHERE id = %d",
-                    $c->id));
-                return ['success' => false, 'message' => 'You have already used this coupon.'];
+            if (!$claimed) {
+                $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_name));
+                return ['success' => false, 'message' => 'Coupon usage limit reached or coupon inactive.'];
             }
+
+            // 3. Create the redeemed $0 order record
+            $wpdb->insert($wpdb->prefix . 'fxsim_payment_orders', [
+                'user_id'         => $user_id,
+                'plan_id'         => $plan_id,
+                'amount'          => 0.00,
+                'original_amount' => $price,
+                'discount_amount' => $price,
+                'coupon_id'       => (int)$c->id,
+                'coupon_code'     => $c->code,
+                'currency'        => $plan->currency ?? 'USD',
+                'gateway'         => 'coupon_100',
+                'status'          => 'redeemed',
+            ]);
+            $order_id = (int)$wpdb->insert_id;
+
+            // 4. Insert redemption record under lock (so concurrent requests will immediately see this row once lock released)
+            $wpdb->insert($wpdb->prefix . 'fxsim_coupon_redemptions', [
+                'coupon_id'       => (int)$c->id,
+                'user_id'         => $user_id,
+                'order_id'        => $order_id,
+                'discount_amount' => $price,
+                'final_amount'    => 0.00,
+                'created_at'      => $now,
+            ]);
+
+            // Release lock before returning success
+            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_name));
+
+            return [
+                'success'   => true,
+                'order_id'  => $order_id,
+                'coupon_id' => (int)$c->id,
+            ];
+        } catch (\Throwable $e) {
+            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_name));
+            return ['success' => false, 'message' => 'An error occurred while claiming coupon: ' . $e->getMessage()];
         }
-
-        // Create the redeemed $0 order record
-        $wpdb->insert($wpdb->prefix . 'fxsim_payment_orders', [
-            'user_id'         => $user_id,
-            'plan_id'         => $plan_id,
-            'amount'          => 0.00,
-            'original_amount' => $price,
-            'discount_amount' => $price,
-            'coupon_id'       => (int)$c->id,
-            'coupon_code'     => $c->code,
-            'currency'        => $plan->currency ?? 'USD',
-            'gateway'         => 'coupon_100',
-            'status'          => 'redeemed',
-        ]);
-        $order_id = (int)$wpdb->insert_id;
-
-        // Insert redemption record
-        $wpdb->insert($wpdb->prefix . 'fxsim_coupon_redemptions', [
-            'coupon_id'       => (int)$c->id,
-            'user_id'         => $user_id,
-            'order_id'        => $order_id,
-            'discount_amount' => $price,
-            'final_amount'    => 0.00,
-            'created_at'      => $now,
-        ]);
-
-        return [
-            'success'   => true,
-            'order_id'  => $order_id,
-            'coupon_id' => (int)$c->id,
-        ];
     }
 
     /** Rollback claim if challenge creation fails */
     public static function rollback_100pct_claim(int $coupon_id, int $order_id): void {
+        if ($coupon_id <= 0 || $order_id <= 0) return;
         global $wpdb;
         $wpdb->query($wpdb->prepare(
             "UPDATE {$wpdb->prefix}fxsim_coupons SET used_count = GREATEST(0, used_count - 1) WHERE id = %d",

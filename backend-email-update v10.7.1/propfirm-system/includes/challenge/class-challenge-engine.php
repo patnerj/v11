@@ -401,7 +401,6 @@ class FXSIM_Challenge_Engine {
         } else {
             // ── All phases passed → Funded ────────────────────────────────────
             $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
-                'phase'     => 0,
                 'status'    => 'funded',
                 'funded_at' => current_time('mysql'),
                 'passed_at' => current_time('mysql'),
