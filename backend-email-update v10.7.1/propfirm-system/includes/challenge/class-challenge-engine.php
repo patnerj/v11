@@ -117,7 +117,7 @@ class FXSIM_Challenge_Engine {
         self::update_challenge_balance($challenge_id, $balance, $peak);
 
         // Get rules for current phase (including custom enterprise overrides)
-        $phase = (int)$challenge->phase;
+        $phase = ($challenge->status === 'funded') ? 0 : (int)$challenge->phase;
         [$profit_target, $daily_dd_pct, $max_dd_pct, $min_days, $max_days] = self::get_phase_rules($plan, $phase, $challenge);
 
         // ── Drawdown calculation based on type ────────────────────────────────
@@ -401,6 +401,7 @@ class FXSIM_Challenge_Engine {
         } else {
             // ── All phases passed → Funded ────────────────────────────────────
             $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
+                'phase'     => 0,
                 'status'    => 'funded',
                 'funded_at' => current_time('mysql'),
                 'passed_at' => current_time('mysql'),
@@ -665,14 +666,20 @@ class FXSIM_Challenge_Engine {
     // ── Phase rule helper (supports phases 1, 2, 3 + funded + bespoke overrides) 
     private static function get_phase_rules(object $plan, int $phase, ?object $challenge = null): array {
         $pt = 0; $daily_dd = 5; $max_dd = 10; $min_days = 5; $max_days = 30;
-        if ($phase === 1) {
+        
+        // Funded accounts (phase 0 or status 'funded') use funded rules
+        if (($challenge && ($challenge->status ?? '') === 'funded') || $phase === 0) {
+            $pt = 0;
+            $daily_dd = (float)($plan->funded_daily_dd ?? ($plan->p1_daily_dd ?? 5));
+            $max_dd = (float)($plan->funded_max_dd ?? 10);
+            $min_days = 0;
+            $max_days = 0;
+        } elseif ($phase === 1) {
             $pt = (float)$plan->p1_profit_target; $daily_dd = (float)$plan->p1_daily_dd; $max_dd = (float)$plan->p1_max_dd; $min_days = (int)$plan->p1_min_days; $max_days = (int)$plan->p1_max_days;
         } elseif ($phase === 2) {
             $pt = (float)$plan->p2_profit_target; $daily_dd = (float)$plan->p2_daily_dd; $max_dd = (float)$plan->p2_max_dd; $min_days = (int)$plan->p2_min_days; $max_days = (int)$plan->p2_max_days;
         } elseif ($phase === 3 && isset($plan->p3_profit_target)) {
             $pt = (float)$plan->p3_profit_target; $daily_dd = (float)$plan->p3_daily_dd; $max_dd = (float)$plan->p3_max_dd; $min_days = (int)$plan->p3_min_days; $max_days = (int)$plan->p3_max_days;
-        } elseif ($phase === 0) {
-            $pt = 0; $daily_dd = (float)($plan->p1_daily_dd ?? 5); $max_dd = (float)($plan->funded_max_dd ?? 10); $min_days = 0; $max_days = 0;
         } else {
             $pt = (float)$plan->p2_profit_target; $daily_dd = (float)$plan->p2_daily_dd; $max_dd = (float)$plan->p2_max_dd; $min_days = (int)$plan->p2_min_days; $max_days = (int)$plan->p2_max_days;
         }

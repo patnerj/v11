@@ -95,4 +95,113 @@ class FXSIM_Coupons {
                 $coupon_id));
         }
     }
+
+    /**
+     * Atomically claim and redeem a 100%-off coupon for a free challenge start.
+     * Prevents race conditions / burst over-minting of free challenges.
+     */
+    public static function claim_100pct_free_challenge(string $code, int $plan_id, int $user_id, object $plan): array {
+        global $wpdb;
+        $code = strtoupper(trim($code));
+        if ($code === '') return ['success' => false, 'message' => 'Enter a coupon code.'];
+
+        $c = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_coupons WHERE code = %s", $code));
+        if (!$c || !(int)$c->active) return ['success' => false, 'message' => 'Invalid coupon code.'];
+
+        if ($c->expires_at && strtotime($c->expires_at) < time()) {
+            return ['success' => false, 'message' => 'This coupon has expired.'];
+        }
+        if (!empty($c->plan_ids)) {
+            $ids = array_filter(array_map('intval', explode(',', $c->plan_ids)));
+            if ($ids && !in_array($plan_id, $ids, true)) {
+                return ['success' => false, 'message' => 'This coupon doesn\'t apply to the selected plan.'];
+            }
+        }
+
+        $price    = (float)$plan->price;
+        $discount = self::compute_discount($c, $price);
+        $final    = max(0, round($price - $discount, 2));
+        if ($final > 0) {
+            return ['success' => false, 'message' => 'Coupon does not provide a 100% discount.'];
+        }
+
+        // Advisory check for per-user limit
+        if ((int)$c->per_user_limit > 0) {
+            $used_user = (int)$wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_coupon_redemptions WHERE coupon_id = %d AND user_id = %d",
+                $c->id, $user_id));
+            if ($used_user >= (int)$c->per_user_limit) {
+                return ['success' => false, 'message' => 'You have already used this coupon.'];
+            }
+        }
+
+        // ATOMIC CLAIM: Increment used_count only if under usage_limit
+        $now = current_time('mysql');
+        $claimed = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_coupons
+             SET used_count = used_count + 1
+             WHERE id = %d AND active = 1
+               AND (expires_at IS NULL OR expires_at > %s)
+               AND (usage_limit = 0 OR used_count < usage_limit)",
+            $c->id, $now));
+
+        if (!$claimed) {
+            return ['success' => false, 'message' => 'Coupon usage limit reached or coupon inactive.'];
+        }
+
+        // Re-check per-user limit after atomic claim to prevent concurrent single-user bypass
+        if ((int)$c->per_user_limit > 0) {
+            $used_user = (int)$wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_coupon_redemptions WHERE coupon_id = %d AND user_id = %d",
+                $c->id, $user_id));
+            if ($used_user >= (int)$c->per_user_limit) {
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$wpdb->prefix}fxsim_coupons SET used_count = GREATEST(0, used_count - 1) WHERE id = %d",
+                    $c->id));
+                return ['success' => false, 'message' => 'You have already used this coupon.'];
+            }
+        }
+
+        // Create the redeemed $0 order record
+        $wpdb->insert($wpdb->prefix . 'fxsim_payment_orders', [
+            'user_id'         => $user_id,
+            'plan_id'         => $plan_id,
+            'amount'          => 0.00,
+            'original_amount' => $price,
+            'discount_amount' => $price,
+            'coupon_id'       => (int)$c->id,
+            'coupon_code'     => $c->code,
+            'currency'        => $plan->currency ?? 'USD',
+            'gateway'         => 'coupon_100',
+            'status'          => 'redeemed',
+        ]);
+        $order_id = (int)$wpdb->insert_id;
+
+        // Insert redemption record
+        $wpdb->insert($wpdb->prefix . 'fxsim_coupon_redemptions', [
+            'coupon_id'       => (int)$c->id,
+            'user_id'         => $user_id,
+            'order_id'        => $order_id,
+            'discount_amount' => $price,
+            'final_amount'    => 0.00,
+            'created_at'      => $now,
+        ]);
+
+        return [
+            'success'   => true,
+            'order_id'  => $order_id,
+            'coupon_id' => (int)$c->id,
+        ];
+    }
+
+    /** Rollback claim if challenge creation fails */
+    public static function rollback_100pct_claim(int $coupon_id, int $order_id): void {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_coupons SET used_count = GREATEST(0, used_count - 1) WHERE id = %d",
+            $coupon_id));
+        $wpdb->delete($wpdb->prefix . 'fxsim_coupon_redemptions', ['order_id' => $order_id, 'coupon_id' => $coupon_id]);
+        $wpdb->delete($wpdb->prefix . 'fxsim_payment_orders', ['id' => $order_id]);
+    }
 }

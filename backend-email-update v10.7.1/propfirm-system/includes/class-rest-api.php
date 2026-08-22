@@ -2397,29 +2397,19 @@ class FXSIM_REST_API {
             return new WP_REST_Response($result, $result['success'] ? 200 : 400);
         }
 
-        // 100% DISCOUNT COUPON CHECK: If user provided a valid 100% coupon, auto-create and start
+        // 100% DISCOUNT COUPON CHECK: Atomically claim usage slot and activate challenge
         $coupon_code = sanitize_text_field($body['coupon_code'] ?? ($body['coupon'] ?? ($r->get_param('coupon_code') ?? ($r->get_param('coupon') ?? ''))));
         if (!empty($coupon_code) && class_exists('FXSIM_Coupons')) {
-            $v = FXSIM_Coupons::validate($coupon_code, $plan_id, get_current_user_id());
-            if (!empty($v['valid']) && (float)($v['final'] ?? 1) <= 0) {
-                global $wpdb;
-                $wpdb->insert($wpdb->prefix . 'fxsim_payment_orders', [
-                    'user_id'         => get_current_user_id(),
-                    'plan_id'         => $plan_id,
-                    'amount'          => 0.00,
-                    'original_amount' => (float)$plan->price,
-                    'discount_amount' => (float)$plan->price,
-                    'coupon_id'       => (int)$v['coupon_id'],
-                    'coupon_code'     => $v['code'],
-                    'currency'        => $plan->currency ?? 'USD',
-                    'gateway'         => 'coupon_100',
-                    'status'          => 'redeemed',
-                ]);
-                $free_order_id = (int)$wpdb->insert_id;
-                FXSIM_Coupons::record_redemption((int)$v['coupon_id'], get_current_user_id(), $free_order_id, (float)$plan->price, 0.00);
-                $result = FXSIM_Challenge_Engine::create_challenge(get_current_user_id(), $plan_id);
-                return new WP_REST_Response($result, $result['success'] ? 200 : 400);
+            $claim = FXSIM_Coupons::claim_100pct_free_challenge($coupon_code, $plan_id, get_current_user_id(), $plan);
+            if (!$claim['success']) {
+                return new WP_REST_Response(['success' => false, 'message' => $claim['message']], 400);
             }
+            $result = FXSIM_Challenge_Engine::create_challenge(get_current_user_id(), $plan_id);
+            if (empty($result['success'])) {
+                FXSIM_Coupons::rollback_100pct_claim((int)$claim['coupon_id'], (int)$claim['order_id']);
+                return new WP_REST_Response($result, 400);
+            }
+            return new WP_REST_Response($result, 200);
         }
 
         // PAID plans: require an approved payment order with atomic claim to prevent double provisioning
