@@ -63,18 +63,10 @@ class FXSIM_Trading_Engine {
             return self::err("Market is closed. {$args['symbol']} does not trade on weekends. Market reopens Monday 00:00 UTC.");
         }
 
-        // ── Plan rules: single JOIN fetches news_trading + lot/leverage caps ────────
-        // Deliberately placed before lot validation so plan limits are checked
-        // even when symbol limits would pass. One query instead of two.
-        $plan_rules = $wpdb->get_row($wpdb->prepare(
-            "SELECT ca.id AS challenge_id, ca.custom_news_trading, cp.news_trading, cp.news_window_minutes, cp.max_lot_size, cp.max_leverage, cp.stop_loss_required
-             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
-             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
-             WHERE ca.fxsim_account_id = %d
-               AND ca.status IN ('active','funded')
-             LIMIT 1",
-            $account->id
-        ));
+        // ── Plan & Tournament risk rules: fetches news_trading + lot/leverage caps ──
+        // Deliberately placed before lot validation so plan/tournament limits are checked
+        // even when symbol limits would pass.
+        $plan_rules = self::get_account_risk_rules($account);
 
         // News lock: global admin toggle + plan must restrict news trading
         // news_trading=0 (or custom_news_trading=0) means news trading is restricted on this plan
@@ -806,7 +798,35 @@ class FXSIM_Trading_Engine {
                         SELECT 1 FROM {$wpdb->prefix}fxsim_positions p
                         WHERE p.account_id = a.id
                    )"
-            );
+            ) ?: [];
+
+            // Also include active tournament accounts with open positions
+            $tourney_accounts = $wpdb->get_results(
+                "SELECT a.id            AS account_id,
+                        a.user_id,
+                        a.balance,
+                        a.margin_used,
+                        t.rules_json,
+                        tp.id           AS participant_id
+                 FROM   {$wpdb->prefix}fxsim_accounts a
+                 JOIN   {$wpdb->prefix}fxsim_tournament_participants tp
+                            ON tp.account_id = a.id
+                           AND tp.status = 'active'
+                 JOIN   {$wpdb->prefix}fxsim_tournaments t
+                            ON t.id = tp.tournament_id
+                 WHERE  EXISTS (
+                        SELECT 1 FROM {$wpdb->prefix}fxsim_positions p
+                        WHERE p.account_id = a.id
+                 )"
+            ) ?: [];
+
+            foreach ($tourney_accounts as $tacct) {
+                $rules = !empty($tacct->rules_json) ? json_decode($tacct->rules_json, true) : [];
+                $tacct->margin_call_level = (float)($rules['margin_call_level'] ?? 100.0);
+                $tacct->stop_out_level    = (float)($rules['stop_out_level'] ?? 50.0);
+                $tacct->challenge_id      = 0;
+                $accounts[] = $tacct;
+            }
 
             foreach ($accounts as $acct) {
                 $account_id   = (int)   $acct->account_id;
@@ -1085,7 +1105,10 @@ class FXSIM_Trading_Engine {
 
         // ── Validate type ────────────────────────────────────────────────────
         $valid_types = ['buy_limit', 'sell_limit', 'buy_stop', 'sell_stop'];
-        $type        = sanitize_text_field($args['type'] ?? '');
+        $type        = sanitize_text_field($args['order_type'] ?? ($args['type'] ?? ''));
+        if (!in_array($type, $valid_types, true)) {
+            $type = sanitize_text_field($args['type'] ?? '');
+        }
         if (!in_array($type, $valid_types, true)) {
             return self::err('Invalid order type. Must be: ' . implode(', ', $valid_types));
         }
@@ -1094,14 +1117,8 @@ class FXSIM_Trading_Engine {
         $sym_obj = FXSIM_Symbols::get($args['symbol'] ?? '');
         if (!$sym_obj) return self::err('Symbol not found or disabled.');
 
-        // ── Load plan rules (lot cap, leverage, news) ─────────────────────────
-        $plan_rules = $wpdb->get_row($wpdb->prepare(
-            "SELECT cp.news_trading, cp.news_window_minutes, cp.max_lot_size, cp.max_leverage, cp.stop_loss_required
-             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
-             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
-             WHERE ca.fxsim_account_id = %d AND ca.status IN ('active','funded') LIMIT 1",
-            $account->id
-        ));
+        // ── Load plan & tournament rules (lot cap, leverage, news) ───────────
+        $plan_rules = self::get_account_risk_rules($account);
 
         // News lock
         if ($plan_rules && !(int)$plan_rules->news_trading) {
@@ -1862,6 +1879,53 @@ class FXSIM_Trading_Engine {
              ORDER BY ca.created_at DESC, ca.id DESC LIMIT 1",
             $user_id
         ));
+    }
+
+    /**
+     * Resolve risk rules for an account (Challenge plan rules OR Tournament rules_json).
+     */
+    public static function get_account_risk_rules(object $account): ?object {
+        global $wpdb;
+
+        // 1. Challenge Plan Rules
+        $plan_rules = $wpdb->get_row($wpdb->prepare(
+            "SELECT ca.id AS challenge_id, ca.custom_news_trading, cp.news_trading, cp.news_window_minutes, cp.max_lot_size, cp.max_leverage, cp.stop_loss_required
+             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON ca.plan_id = cp.id
+             WHERE ca.fxsim_account_id = %d
+               AND ca.status IN ('active','funded')
+             LIMIT 1",
+            $account->id
+        ));
+
+        if ($plan_rules) {
+            return $plan_rules;
+        }
+
+        // 2. Tournament Rules (fxsim_tournaments.rules_json)
+        $t_row = $wpdb->get_row($wpdb->prepare(
+            "SELECT t.rules_json, tp.id AS participant_id, tp.tournament_id
+             FROM {$wpdb->prefix}fxsim_tournament_participants tp
+             JOIN {$wpdb->prefix}fxsim_tournaments t ON tp.tournament_id = t.id
+             WHERE tp.account_id = %d AND tp.status = 'active'
+             LIMIT 1",
+            $account->id
+        ));
+
+        if ($t_row) {
+            $rules_arr = !empty($t_row->rules_json) ? json_decode($t_row->rules_json, true) : [];
+            return (object) [
+                'challenge_id'        => 0,
+                'custom_news_trading' => null,
+                'news_trading'        => isset($rules_arr['news_trading']) ? (int)$rules_arr['news_trading'] : 1,
+                'news_window_minutes' => isset($rules_arr['news_window_minutes']) ? (int)$rules_arr['news_window_minutes'] : 5,
+                'max_lot_size'        => isset($rules_arr['max_lot_size']) ? (float)$rules_arr['max_lot_size'] : 50.0,
+                'max_leverage'        => isset($rules_arr['max_leverage']) ? (int)$rules_arr['max_leverage'] : (int)($account->leverage ?: 100),
+                'stop_loss_required'  => isset($rules_arr['stop_loss_required']) ? (int)$rules_arr['stop_loss_required'] : 0,
+            ];
+        }
+
+        return null;
     }
 
     private static function err(string $msg): array {

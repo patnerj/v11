@@ -12,9 +12,11 @@
  * 8. Trading Journal & Trade Notes System
  */
 
-if (php_sapi_name() === 'cli') {
-    define('DOING_CRON', true);
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden: this diagnostic script may only be run from the command line.');
 }
+define('DOING_CRON', true);
 define('FXSIM_BYPASS_MARKET_HOURS', true);
 
 require_once dirname(__DIR__, 4) . '/wp-load.php';

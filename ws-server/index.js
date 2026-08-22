@@ -4,6 +4,8 @@ const cors = require('cors');
 const { WebSocketServer } = require('ws');
 const http = require('http');
 
+const crypto = require('crypto');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -12,15 +14,26 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 8080;
-const SECRET_TOKEN = process.env.SECRET_TOKEN || 'propfirm_internal_secret_2026';
+const SECRET_TOKEN = process.env.SECRET_TOKEN || 'propfirm_internal_secret_2026_fallback';
 
 // Cache the latest prices to send immediately on new connection
 let latestPrices = {};
 
 // Handle incoming prices from WordPress
 app.post('/push', (req, res) => {
-  const authHeader = req.headers['authorization'];
-  if (authHeader !== `Bearer ${SECRET_TOKEN}`) {
+  const authHeader = req.headers['authorization'] || '';
+  const expected = `Bearer ${SECRET_TOKEN}`;
+
+  let authorized = false;
+  if (authHeader && authHeader.length === expected.length) {
+    try {
+      authorized = crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
+    } catch {
+      authorized = false;
+    }
+  }
+
+  if (!authorized) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

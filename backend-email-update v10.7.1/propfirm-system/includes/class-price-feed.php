@@ -365,7 +365,9 @@ class FXSIM_Price_Feed {
             'yahoo_last_ts'     => $yahoo_last ?: null,
             'feed_failed'       => $failed ? true : false,
             'symbol_count'      => $count,
-            'secret_set'        => get_option('fxsim_mt5_ingest_secret', '') !== '',
+            'secret_set'        => true,
+            'ingest_secret'     => self::get_ingest_secret(),
+            'ingest_url'        => home_url('/wp-json/fxsim/v1/price-feed/ingest'),
             // The WS push secret is now auto-generated (self::get_ws_secret())
             // instead of a hardcoded shared default, but the Node ws-server
             // process reads its own copy from a SECRET_TOKEN env var — with
@@ -381,6 +383,18 @@ class FXSIM_Price_Feed {
     }
 
     /**
+     * Get or generate a cryptographically secure MT5 Price Feed ingestion secret.
+     */
+    public static function get_ingest_secret(): string {
+        $secret = (string) get_option('fxsim_mt5_ingest_secret', '');
+        if ($secret === '') {
+            $secret = 'fxsim_live_' . wp_generate_password(16, false, false);
+            update_option('fxsim_mt5_ingest_secret', $secret, false);
+        }
+        return $secret;
+    }
+
+    /**
      * Trading guard for new positions. Only blocks in STRICT 'mt5' mode when the
      * feed is stale during market hours — i.e. never affects 'auto'/'yahoo'
      * (default) deployments, so the change is zero-impact until strict mode is on.
@@ -389,8 +403,9 @@ class FXSIM_Price_Feed {
      */
     public static function feed_guard_for_trading(): array {
         $mode = get_option('fxsim_price_source_mode', 'auto');
-        if ($mode === 'mt5' && !self::mt5_is_fresh() && self::fx_market_open()) {
-            return ['ok' => false, 'message' => 'Live price feed is temporarily unavailable. New trades are paused — please try again shortly.'];
+        $auto_freeze = (bool) get_option('fxsim_feed_auto_freeze', false);
+        if (($mode === 'mt5' || $auto_freeze) && !self::mt5_is_fresh() && self::fx_market_open()) {
+            return ['ok' => false, 'message' => 'Live price feed is stale/unavailable and automatic execution freeze is active. New trades are paused — please try again shortly.'];
         }
         return ['ok' => true, 'message' => ''];
     }
@@ -428,13 +443,18 @@ class FXSIM_Price_Feed {
         // The 30s Yahoo cron must not overwrite a fresh MT5 push.
         //   mode 'yahoo' → always run Yahoo (legacy behaviour, default-equivalent).
         //   mode 'mt5'   → strict: MT5 push owns the store; cron never fetches Yahoo.
-        //   mode 'auto'  → use MT5 while fresh; fall back to Yahoo when MT5 is stale.
+        //   mode 'auto'  → use MT5 while fresh; fall back to Yahoo when MT5 is stale (unless auto-failover is disabled).
         // $force (admin "Force refresh") always bypasses the guard and runs Yahoo.
         if (!$force) {
             $mode = get_option('fxsim_price_source_mode', 'auto');
-            if ($mode === 'mt5') return;                       // strict — never clobber
-            if ($mode === 'auto' && self::mt5_is_fresh()) return; // MT5 fresh — leave it
-            // mode 'yahoo', or 'auto' with stale MT5 → continue to Yahoo fetch below.
+            $auto_failover = (bool) get_option('fxsim_feed_auto_failover', true);
+            if ($mode === 'mt5' && !$auto_failover) return;                       // strict — never clobber
+            if ($mode === 'mt5' && $auto_failover && self::mt5_is_fresh()) return; // MT5 fresh — leave it
+            if ($mode === 'auto' && self::mt5_is_fresh()) return;                  // MT5 fresh — leave it
+            if ($mode === 'auto' && !$auto_failover && !self::mt5_is_fresh() && (int)get_option('fxsim_mt5_last_push', 0) > 0) {
+                return; // Auto-failover disabled: do not fall back to Yahoo when MT5 goes stale
+            }
+            // mode 'yahoo', or 'auto' with stale MT5 + auto-failover enabled → continue to Yahoo fetch below.
         }
 
         // Record cron execution timestamp — used by health monitor

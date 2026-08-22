@@ -386,13 +386,7 @@ class FXSIM_Challenge_DB {
         }
 
         // Extend payment orders status enum with 'redeemed'
-        $orders_tbl = $wpdb->prefix . 'fxsim_payment_orders';
-        $order_status_col = $wpdb->get_row("SHOW COLUMNS FROM $orders_tbl LIKE 'status'");
-        if ($order_status_col && strpos($order_status_col->Type, 'redeemed') === false) {
-            $wpdb->query("ALTER TABLE $orders_tbl
-                MODIFY status ENUM('pending','approved','rejected','expired','redeemed')
-                NOT NULL DEFAULT 'pending'");
-        }
+        self::ensure_payment_orders_redeemed_enum();
 
         $plans_tbl = $wpdb->prefix . 'fxsim_challenge_plans';
         $news_col = $wpdb->get_row("SHOW COLUMNS FROM $plans_tbl LIKE 'news_window_minutes'");
@@ -607,6 +601,17 @@ class FXSIM_Challenge_DB {
              ON DUPLICATE KEY UPDATE setting_value=%s",
             $key, $value, $value
         ));
+    }
+
+    public static function ensure_payment_orders_redeemed_enum(): void {
+        global $wpdb;
+        $orders_tbl = $wpdb->prefix . 'fxsim_payment_orders';
+        $order_status_col = $wpdb->get_row("SHOW COLUMNS FROM $orders_tbl LIKE 'status'");
+        if ($order_status_col && strpos($order_status_col->Type, 'redeemed') === false) {
+            $wpdb->query("ALTER TABLE $orders_tbl
+                MODIFY status ENUM('pending','approved','rejected','expired','redeemed')
+                NOT NULL DEFAULT 'pending'");
+        }
     }
 
     public static function get_all_settings(): array {

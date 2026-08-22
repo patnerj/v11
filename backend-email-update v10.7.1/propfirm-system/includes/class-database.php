@@ -115,6 +115,15 @@ class FXSIM_Database {
             KEY idx_admin (admin_id), KEY idx_action (action)
         ) $c;");
 
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_admin_notes (
+            id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id         BIGINT UNSIGNED NOT NULL,
+            author_id       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            note            TEXT            NOT NULL,
+            created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_user (user_id), KEY idx_author (author_id)
+        ) $c;");
+
         dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_pending_orders (
             id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             account_id      BIGINT UNSIGNED NOT NULL,
@@ -920,12 +929,15 @@ class FXSIM_Database {
      */
     public static function create_challenge_account(int $user_id, float $balance): int {
         global $wpdb;
-        $wpdb->insert($wpdb->prefix . 'fxsim_accounts', [
+        $inserted = $wpdb->insert($wpdb->prefix . 'fxsim_accounts', [
             'user_id' => $user_id,
             'balance' => $balance,
             'equity'  => $balance,
             'status'  => 'active',
         ]);
+        if (!$inserted || !$wpdb->insert_id) {
+            return 0;
+        }
         return (int) $wpdb->insert_id;
     }
 
@@ -1043,6 +1055,12 @@ class FXSIM_Database {
         do_action('fxsim_notification_created', $user_id, $type, $title, $message, $flink ?: '');
     }
 
+    public static function log_notification(
+        int $user_id, string $type, string $title, string $message, string $link = ''
+    ): void {
+        self::push_notification($user_id, $type, $title, $message, $link);
+    }
+
     /**
      * Push a notification to the shared ADMIN feed (user_id = 0). Records a
      * reference to the user the event concerns. Pruned to the latest 200.
@@ -1081,5 +1099,30 @@ class FXSIM_Database {
         if (function_exists('wp_schedule_single_event')) {
             wp_schedule_single_event(time(), 'fxsim_admin_email', [$title, $message]);
         }
+    }
+
+    /** Ensure fxsim_kyc has id_doc_back_path column */
+    public static function ensure_kyc_columns(): void {
+        global $wpdb;
+        $table = $wpdb->prefix . 'fxsim_kyc';
+        $col = $wpdb->get_results("SHOW COLUMNS FROM `{$table}` LIKE 'id_doc_back_path'");
+        if (empty($col)) {
+            $wpdb->query("ALTER TABLE `{$table}` ADD `id_doc_back_path` VARCHAR(255) DEFAULT NULL AFTER `id_doc_path`");
+        }
+    }
+
+    /** Ensure fxsim_admin_notes table exists (V11.0.3 migration helper) */
+    public static function ensure_admin_notes_table(): void {
+        global $wpdb;
+        $c = $wpdb->get_charset_collate();
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta("CREATE TABLE {$wpdb->prefix}fxsim_admin_notes (
+            id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id         BIGINT UNSIGNED NOT NULL,
+            author_id       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            note            TEXT            NOT NULL,
+            created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_user (user_id), KEY idx_author (author_id)
+        ) $c;");
     }
 }

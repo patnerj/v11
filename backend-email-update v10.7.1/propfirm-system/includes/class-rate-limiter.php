@@ -65,31 +65,31 @@ class FXSIM_Rate_Limiter {
         'trading_write' => [
             'patterns' => ['/open', '/close/', '/partial-close/', '/sltp/', '/pending-order/'],
             'methods'  => ['POST'],
-            'default'  => 20,
+            'default'  => 60,
         ],
         // Read-heavy polling endpoints
         'trading_read'  => [
             'patterns' => ['/account', '/positions', '/history', '/transactions', '/stats', '/symbols', '/pending-order/my'],
             'methods'  => ['GET'],
-            'default'  => 240,
+            'default'  => 1200,
         ],
         // Infrequent high-value writes
         'auth_write'    => [
             'patterns' => ['/payment/', '/challenge/start', '/challenge/', '/payout'],
             'methods'  => ['POST'],
-            'default'  => 10,
+            'default'  => 30,
         ],
         // SSE stream connections
         'stream'        => [
             'patterns' => ['/stream'],
             'methods'  => ['GET'],
-            'default'  => 60,
+            'default'  => 300,
         ],
         // Public endpoints (IP-based)
         'public'        => [
             'patterns' => ['/prices', '/challenge/plans', '/leaderboard'],
             'methods'  => ['GET'],
-            'default'  => 30,
+            'default'  => 300,
         ],
     ];
 
@@ -229,8 +229,8 @@ class FXSIM_Rate_Limiter {
             return null;
         }
 
-        // Stripe webhook: bypass (not user-facing, validated by signature)
-        if ($path === '/stripe/webhook') {
+        // Webhook, Auth, Theme, Branding: bypass (infrastructure and public UI assets)
+        if ($path === '/stripe/webhook' || strpos($path, '/auth/') !== false || $path === '/theme' || $path === '/branding' || strpos($path, '/config/') !== false) {
             return null;
         }
 

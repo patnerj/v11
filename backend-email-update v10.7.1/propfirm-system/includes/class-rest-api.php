@@ -780,15 +780,22 @@ class FXSIM_REST_API {
 
         // If trading in a tournament context, verify active tournament participation
         if ($tournament_id > 0 || $explicit_account_id > 0) {
-            if ($tournament_id > 0) {
+            if ($tournament_id > 0 && $explicit_account_id > 0) {
+                $is_part = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants 
+                     WHERE tournament_id = %d AND account_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
+                    $tournament_id, $explicit_account_id, $uid
+                ));
+                if ($is_part) return ['ok' => true];
+                return ['ok' => false, 'code' => 'invalid_tournament_account', 'message' => 'The specified account does not match the active tournament.'];
+            } elseif ($tournament_id > 0) {
                 $is_part = $wpdb->get_var($wpdb->prepare(
                     "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants 
                      WHERE tournament_id = %d AND user_id = %d AND status = 'active' LIMIT 1",
                     $tournament_id, $uid
                 ));
                 if ($is_part) return ['ok' => true];
-            }
-            if ($explicit_account_id > 0) {
+            } elseif ($explicit_account_id > 0) {
                 $is_tourney_acc = $wpdb->get_var($wpdb->prepare(
                     "SELECT id FROM {$wpdb->prefix}fxsim_tournament_participants 
                      WHERE account_id = %d AND user_id = %d AND status = 'active' LIMIT 1",

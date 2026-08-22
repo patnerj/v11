@@ -1,0 +1,7 @@
+{
+  "propfirm_url": "http://propfirm.local",
+  "feed_key": "PASTE_YOUR_ADMIN_CONFIGURED_MT5_INGESTION_SECRET_HERE",
+  "poll_interval_sec": 60.0,
+  "between_accounts_sec": 1.0,
+  "history_days": 30
+}

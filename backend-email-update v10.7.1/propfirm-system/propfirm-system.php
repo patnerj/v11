@@ -163,6 +163,12 @@ add_action('plugins_loaded', function () {
         }
         update_option('fxsim_feature_level', 5, false);
     }
+    if ($fxsim_feature_level < 6) {
+        if (class_exists('FXSIM_Challenge_DB') && method_exists('FXSIM_Challenge_DB', 'ensure_payment_orders_redeemed_enum')) {
+            FXSIM_Challenge_DB::ensure_payment_orders_redeemed_enum(); // V11.0.4 payment orders redeemed status enum
+        }
+        update_option('fxsim_feature_level', 6, false);
+    }
 
     FXSIM_REST_API::register();
 

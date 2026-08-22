@@ -6,9 +6,11 @@
  * evaluation lifecycles, drawdown models, risk rules, and scaling logic.
  */
 
-if (php_sapi_name() === 'cli') {
-    define('DOING_CRON', true);
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden: this diagnostic script may only be run from the command line.');
 }
+define('DOING_CRON', true);
 
 require_once dirname(__DIR__, 4) . '/wp-load.php';
 
