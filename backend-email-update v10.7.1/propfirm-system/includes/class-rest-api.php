@@ -2817,6 +2817,9 @@ class FXSIM_REST_API {
 
         $doc_type = sanitize_text_field((string)($r->get_param('doc_type') ?: 'national_id'));
         $country  = sanitize_text_field((string)($r->get_param('country') ?: ''));
+        if (empty($country)) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Country of issuance is required.'], 400);
+        }
         update_user_meta($uid, 'fxsim_kyc_doc_type', $doc_type);
         update_user_meta($uid, 'fxsim_kyc_country', $country);
 
