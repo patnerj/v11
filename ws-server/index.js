@@ -14,7 +14,10 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 8080;
-const SECRET_TOKEN = process.env.SECRET_TOKEN || 'propfirm_internal_secret_2026_fallback';
+const SECRET_TOKEN = process.env.SECRET_TOKEN || crypto.randomBytes(32).toString('hex');
+if (!process.env.SECRET_TOKEN) {
+  console.warn('[SECURITY WARNING] SECRET_TOKEN not configured in environment. Generated ephemeral 64-char secret for this process.');
+}
 
 // Cache the latest prices to send immediately on new connection
 let latestPrices = {};

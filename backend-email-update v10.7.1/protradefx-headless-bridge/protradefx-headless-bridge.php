@@ -115,8 +115,11 @@ class ProTradeFX_Headless_Bridge {
 
     public static function generate_auth_token( int $user_id, int $ttl_seconds = 2592000 ): string {
         $expires = time() + $ttl_seconds;
-        $sig = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}", wp_salt( 'auth' ) );
-        return base64_encode( "{$user_id}:{$expires}:{$sig}" );
+        $version = (int) get_user_meta( $user_id, 'fxsim_token_version', true );
+        $user = get_userdata( $user_id );
+        $pass_frag = $user ? substr( (string)$user->user_pass, -8 ) : '0';
+        $sig = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}|{$version}|{$pass_frag}", wp_salt( 'auth' ) );
+        return base64_encode( "{$user_id}:{$expires}:{$version}:{$sig}" );
     }
 
     public static function validate_auth_token( string $token ): int {
@@ -124,15 +127,31 @@ class ProTradeFX_Headless_Bridge {
         if ( empty($token) ) return 0;
         $raw = base64_decode( $token, true );
         if ( ! $raw ) return 0;
-        $parts = explode( ':', $raw, 3 );
-        if ( count( $parts ) !== 3 ) return 0;
-        $user_id = (int) $parts[0];
-        $expires = (int) $parts[1];
-        $sig     = (string) $parts[2];
-        if ( $user_id <= 0 || $expires < time() ) return 0;
-        $expected = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}", wp_salt( 'auth' ) );
-        if ( hash_equals( $expected, $sig ) ) {
-            return $user_id;
+        $parts = explode( ':', $raw );
+        
+        // Versioned Token Format (v11 hardened): user_id:expires:version:sig
+        if ( count( $parts ) === 4 ) {
+            $user_id = (int) $parts[0];
+            $expires = (int) $parts[1];
+            $version = (int) $parts[2];
+            $sig     = (string) $parts[3];
+            if ( $user_id <= 0 || $expires < time() ) return 0;
+            $curr_version = (int) get_user_meta( $user_id, 'fxsim_token_version', true );
+            if ( $version !== $curr_version ) return 0;
+            $user = get_userdata( $user_id );
+            $pass_frag = $user ? substr( (string)$user->user_pass, -8 ) : '0';
+            $expected = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}|{$version}|{$pass_frag}", wp_salt( 'auth' ) );
+            return hash_equals( $expected, $sig ) ? $user_id : 0;
+        }
+
+        // Legacy Token Format (backward-compatibility during active rollout): user_id:expires:sig
+        if ( count( $parts ) === 3 ) {
+            $user_id = (int) $parts[0];
+            $expires = (int) $parts[1];
+            $sig     = (string) $parts[2];
+            if ( $user_id <= 0 || $expires < time() ) return 0;
+            $expected = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}", wp_salt( 'auth' ) );
+            return hash_equals( $expected, $sig ) ? $user_id : 0;
         }
         return 0;
     }

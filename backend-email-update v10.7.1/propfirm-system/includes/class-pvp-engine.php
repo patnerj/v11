@@ -921,24 +921,32 @@ class FXSIM_PvP_Engine {
                 $wpdb->query('START TRANSACTION');
                 try {
                     $prize = (float)$match->prize_pool;
-                    $acc = $wpdb->get_row($wpdb->prepare(
-                        "SELECT balance, equity FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $winner_account_id
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE {$wpdb->prefix}fxsim_accounts 
+                         SET balance = balance + %f, equity = equity + %f 
+                         WHERE id = %d",
+                        $prize, $prize, $winner_account_id
                     ));
-                    if ($acc) {
-                        $new_bal = round((float)$acc->balance + $prize, 2);
-                        $new_eq  = round((float)$acc->equity + $prize, 2);
-                        $wpdb->update($wpdb->prefix . 'fxsim_accounts',
-                            ['balance' => $new_bal, 'equity' => $new_eq],
-                            ['id' => $winner_account_id]
-                        );
-                        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_transaction')) {
-                            FXSIM_Database::log_transaction($winner_account_id, 'pvp_prize', $prize, $new_bal, "PvP Match Prize: {$match->match_code}");
-                        }
+                    $new_bal = (float)$wpdb->get_var($wpdb->prepare(
+                        "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $winner_account_id
+                    ));
+
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_transaction')) {
+                        FXSIM_Database::log_transaction($winner_account_id, 'pvp_prize', $prize, $new_bal, "PvP Match Prize: {$match->match_code}");
                     }
                     $wpdb->query('COMMIT');
                 } catch (\Throwable $e) {
                     $wpdb->query('ROLLBACK');
                     error_log("[PropFirm] settle_match(): prize disbursement failed for match #{$match_id}, winner account #{$winner_account_id}: " . $e->getMessage());
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                        FXSIM_Database::log_admin(0, 'pvp_prize_failed', (int)$winner_id, "Prize disbursement of \${$prize} failed for match #{$match_id} (Account #{$winner_account_id}): " . $e->getMessage());
+                    }
+                    $wpdb->insert($wpdb->prefix . 'fxsim_pvp_events', [
+                        'match_id'   => $match_id,
+                        'user_id'    => (int)$winner_id,
+                        'event_type' => 'prize_payout_failed',
+                        'message'    => "⚠️ Automated prize disbursement of \${$prize} failed. Queued for admin manual credit.",
+                    ]);
                 }
             } elseif ($winner_id > 0) {
                 // NULL account_id but a real winner — they staked from a

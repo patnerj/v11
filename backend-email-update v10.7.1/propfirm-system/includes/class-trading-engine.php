@@ -154,13 +154,33 @@ class FXSIM_Trading_Engine {
         // effective_leverage is the stricter of account leverage and plan cap
         $margin     = self::calc_margin_usd($args['symbol'], $lot, (float)$sym_obj->contract_size, $open_px, $effective_leverage);
         $commission = $lot * $sym_obj->commission;
-        $free_margin = $account->equity - $account->margin_used;
+        $req_total  = (float) $margin + (float) $commission;
 
-        if (($margin + $commission) > $free_margin)
-            return self::err("Insufficient margin. Required: $" . number_format($margin + $commission, 2) . ", Available: $" . number_format($free_margin, 2));
+        // Quick pre-flight check (will be strictly validated atomically under row-lock below)
+        $free_margin = (float)$account->equity - (float)$account->margin_used;
+        if ($req_total > $free_margin) {
+            return self::err("Insufficient margin. Required: $" . number_format($req_total, 2) . ", Available: $" . number_format($free_margin, 2));
+        }
 
         $wpdb->query('START TRANSACTION');
         try {
+            // ATOMIC CLAIM (H3c Fix): Conditionally deduct commission and reserve margin
+            // in a single statement. Under MySQL InnoDB row-level lock, this eliminates
+            // stale-read margin over-commit and lost-update races across concurrent open orders.
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts 
+                 SET balance = balance - %f, 
+                     equity = equity - %f, 
+                     margin_used = margin_used + %f 
+                 WHERE id = %d AND (equity - margin_used) >= %f",
+                (float) $commission, (float) $commission, (float) $margin, (int) $account->id, (float) $req_total
+            ));
+
+            if ($claimed !== 1) {
+                $wpdb->query('ROLLBACK');
+                return self::err('Insufficient free margin or account updated concurrently. Please retry.');
+            }
+
             // Insert position
             $res = $wpdb->insert($wpdb->prefix . 'fxsim_positions', [
                 'account_id'    => $account->id,
@@ -177,15 +197,11 @@ class FXSIM_Trading_Engine {
             ]);
             if (!$res) throw new \Exception('Failed to insert position.');
 
-            $pos_id  = (int) $wpdb->insert_id;
-            $new_bal = $account->balance - $commission;
-            $new_margin = $account->margin_used + $margin;
-
-            // Deduct commission from balance, add margin
-            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
-                'balance'     => $new_bal,
-                'margin_used' => $new_margin,
-            ], ['id' => $account->id]);
+            $pos_id = (int) $wpdb->insert_id;
+            $new_bal = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
+                $account->id
+            ));
 
             FXSIM_Database::log_transaction($account->id, 'commission', -$commission, $new_bal, "Commission: {$args['symbol']} #{$pos_id}");
 
@@ -1068,11 +1084,14 @@ class FXSIM_Trading_Engine {
             // raw(GBP) × GBPUSD = USD ✓
             $gbpusd_data = FXSIM_Price_Feed::get('GBPUSD');
             $gbpusd      = (float)($gbpusd_data['mid'] ?? $gbpusd_data['bid'] ?? 0);
+            if ($gbpusd <= 0 && class_exists('FXSIM_Price_Feed')) {
+                $all_quotes = FXSIM_Price_Feed::get_all();
+                $gbpusd = (float)($all_quotes['GBPUSD']['bid'] ?? $all_quotes['GBPUSD']['ask'] ?? 0);
+            }
             if ($gbpusd > 0) {
                 $raw = $raw * $gbpusd;
             } else {
-                // Fallback: approximate GBPUSD as 1.27 (last known baseline)
-                $raw = $raw * 1.27;
+                $raw = $raw * (float) get_option('fxsim_gbpusd_fallback_rate', 1.27);
             }
         }
         // Future symbols (EURAUD, EURCAD, etc.) should be added above before deployment
