@@ -32,6 +32,9 @@ define('FXSIM_PREFIX',  'fxsim_');
 // ── Autoload includes ──────────────────────────────────────────────────────────
 require_once FXSIM_DIR . 'includes/class-database.php';
 require_once FXSIM_DIR . 'includes/class-symbols.php';
+require_once FXSIM_DIR . 'includes/class-redis-client.php';   // RESP2 client — must precede cache & locks
+require_once FXSIM_DIR . 'includes/class-distributed-lock.php'; // cross-server locks — must precede trading engine
+require_once FXSIM_DIR . 'includes/class-crypto.php';          // credential encryption-at-rest — must precede REST API
 require_once FXSIM_DIR . 'includes/class-cache.php';        // cache abstraction — must precede price feed
 require_once FXSIM_DIR . 'includes/class-price-feed.php';
 require_once FXSIM_DIR . 'includes/class-trading-engine.php';
@@ -258,6 +261,14 @@ add_action('plugins_loaded', function () {
             FXSIM_Trading_Engine::apply_daily_swaps();
             FXSIM_Challenge_Engine::daily_tasks();
             if (class_exists('FXSIM_Push')) FXSIM_Push::cleanup();
+            // Self-healing credential migration: encrypts any mt5_password rows
+            // still stored as plaintext (idempotent; no-op once fully migrated).
+            if (class_exists('FXSIM_Crypto')) {
+                $mig = FXSIM_Crypto::migrate_mt5_passwords();
+                if (!empty($mig['migrated'])) {
+                    error_log("[PropFirm] FXSIM_Crypto: encrypted {$mig['migrated']} plaintext MT5 credential row(s).");
+                }
+            }
             // NOTE: daily_scaling_check() was previously called a second time
             // here, AFTER FXSIM_Challenge_Engine::daily_tasks() already calls
             // it internally — every funded account got evaluated twice per

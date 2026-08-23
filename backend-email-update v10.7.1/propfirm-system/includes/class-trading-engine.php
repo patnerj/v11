@@ -723,15 +723,15 @@ class FXSIM_Trading_Engine {
         global $wpdb;
 
         /**
-         * Race condition guard: WP cron can overlap on high-traffic sites.
-         * Two concurrent executions could both SELECT the same position, both
-         * decide to close it, and both call close_position() resulting in a
-         * double-close attempt. We use a transient lock (max 60s) to serialise.
+         * Race condition guard: WP cron can overlap on high-traffic sites — and
+         * on multi-server deployments EVERY node's cron fires independently.
+         * FXSIM_Distributed_Lock serialises via Redis when available (no DB
+         * connection pinned) and falls back to MySQL GET_LOCK otherwise.
          */
         $lock_key = 'fxsim_sl_tp_running';
-        $locked = $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 0)", $lock_key));
-        if (!$locked) {
-            return; // Another execution is in progress — skip this tick
+        $lock_token = FXSIM_Distributed_Lock::acquire($lock_key, 60, 0);
+        if ($lock_token === false) {
+            return; // Another execution is in progress (any server) — skip this tick
         }
 
         try {
@@ -791,7 +791,7 @@ class FXSIM_Trading_Engine {
             error_log('[PropFirm] check_sl_tp() failed: ' . $e->getMessage());
         } finally {
             // Always release lock, even if an exception occurs mid-loop
-            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
+            FXSIM_Distributed_Lock::release($lock_key, $lock_token);
         }
     }
 
@@ -811,14 +811,15 @@ class FXSIM_Trading_Engine {
      * Both levels are taken from the challenge plan. A level of 0.00 means "not
      * configured" and the respective action is skipped.
      *
-     * Uses GET_LOCK to serialise concurrent cron ticks (same pattern as check_sl_tp).
+     * Uses FXSIM_Distributed_Lock to serialise concurrent cron ticks across ALL
+     * web servers (Redis backend, MySQL GET_LOCK fallback) — same pattern as check_sl_tp.
      */
     public static function check_margin_levels(): void {
         global $wpdb;
 
-        $lock_key = 'fxsim_margin_engine_running';
-        $locked   = $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 0)", $lock_key));
-        if (!$locked) {
+        $lock_key   = 'fxsim_margin_engine_running';
+        $lock_token = FXSIM_Distributed_Lock::acquire($lock_key, 60, 0);
+        if ($lock_token === false) {
             return; // Another execution in progress — skip this tick
         }
 
@@ -922,13 +923,11 @@ class FXSIM_Trading_Engine {
 
                 // ── Stop-Out: force-close all positions ───────────────────────
                 if ($so_level > 0 && $margin_pct <= $so_level) {
-                    // Claim with GET_LOCK on a per-account key so two concurrent
-                    // ticks don't both attempt a double stop-out on the same account.
-                    $so_lock = 'fxsim_so_' . $account_id;
-                    $so_locked = (bool) $wpdb->get_var(
-                        $wpdb->prepare("SELECT GET_LOCK(%s, 0)", $so_lock)
-                    );
-                    if (!$so_locked) continue; // Another tick is already stopping out this account
+                    // Claim with a distributed per-account lock so two concurrent
+                    // ticks — on ANY server — don't both attempt a double stop-out.
+                    $so_lock   = 'fxsim_so_' . $account_id;
+                    $so_locked = FXSIM_Distributed_Lock::acquire($so_lock, 60, 0);
+                    if ($so_locked === false) continue; // Another tick is already stopping out this account
 
                     try {
                         foreach ($positions as $pos) {
@@ -964,7 +963,7 @@ class FXSIM_Trading_Engine {
                     } catch (\Throwable $e) {
                         error_log("[PropFirm] check_margin_levels() stop-out failed for account #{$account_id}: " . $e->getMessage());
                     } finally {
-                        $wpdb->get_var($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $so_lock));
+                        FXSIM_Distributed_Lock::release($so_lock, $so_locked);
                     }
 
                     continue; // Stop-out handled — skip margin-call check for this account
@@ -996,7 +995,7 @@ class FXSIM_Trading_Engine {
         } catch (\Throwable $e) {
             error_log('[PropFirm] check_margin_levels() failed: ' . $e->getMessage());
         } finally {
-            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
+            FXSIM_Distributed_Lock::release($lock_key, $lock_token);
         }
     }
 
@@ -1612,10 +1611,10 @@ class FXSIM_Trading_Engine {
             }
         }
 
-        // ── Execution lock ────────────────────────────────────────────────────
-        $lock_key = 'fxsim_pending_orders_running';
-        $locked = $wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 0)", $lock_key));
-        if (!$locked) return;
+        // ── Execution lock (distributed: Redis primary, MySQL fallback) ───────
+        $lock_key   = 'fxsim_pending_orders_running';
+        $lock_token = FXSIM_Distributed_Lock::acquire($lock_key, 60, 0);
+        if ($lock_token === false) return;
 
         try {
             // ── COUNT guard: bail immediately if nothing to process ────────────
@@ -1726,7 +1725,7 @@ class FXSIM_Trading_Engine {
             // order/price lookup silently aborts the whole tick with zero trace.
             error_log('[PropFirm] process_pending_orders() failed: ' . $e->getMessage());
         } finally {
-            $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_key));
+            FXSIM_Distributed_Lock::release($lock_key, $lock_token);
         }
     }
 

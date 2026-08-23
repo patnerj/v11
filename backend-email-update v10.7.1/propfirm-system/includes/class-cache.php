@@ -5,8 +5,11 @@
  * Tier hierarchy (automatic, transparent to callers):
  *   1. WordPress Object Cache   — in-memory, sub-millisecond
  *                                 (populated by Redis Object Cache plugin, W3TC, etc.)
- *   2. WordPress Transients     — falls back to wp_options when no object cache plugin
- *   3. Single combined wp_option — last-resort for price data specifically
+ *   2. Plugin-managed Redis     — FXSIM_Redis_Client (central store on multi-server
+ *                                 setups; atomic INCR for the rate limiter even when
+ *                                 no WP object-cache drop-in is installed)
+ *   3. WordPress Transients     — falls back to wp_options when neither is present
+ *   4. Single combined wp_option — last-resort for price data specifically
  *
  * ALL callers use only get()/set()/delete(). The tier selection is internal.
  * Upgrading from transients to Redis requires zero changes in calling code.
@@ -53,6 +56,14 @@ class FXSIM_Cache {
             $val = wp_cache_get($key, $group);
             return ($val !== false) ? $val : false;
         }
+        // Tier 2: plugin-managed Redis (central across web nodes).
+        if (!self::has_object_cache() && FXSIM_Redis_Client::available()) {
+            $raw = FXSIM_Redis_Client::get(self::redis_key($key, $group));
+            if ($raw !== null) {
+                return self::redis_decode($raw);
+            }
+            // Redis miss → fall through to transients so pre-migration data stays visible.
+        }
         // Fall through to transients (stored in wp_options when no object cache)
         return get_transient(self::transient_key($key, $group));
     }
@@ -70,6 +81,15 @@ class FXSIM_Cache {
             wp_cache_set($key, $value, $group, $ttl);
             return;
         }
+        // Tier 2: plugin-managed Redis. Values >64KB stay on transients — Redis
+        // here is a HOT cache, not a blob store; big payloads belong in MySQL.
+        if (FXSIM_Redis_Client::available()) {
+            $encoded = self::redis_encode($value);
+            if ($encoded !== null && strlen($encoded) <= 65536) {
+                FXSIM_Redis_Client::set(self::redis_key($key, $group), $encoded, $ttl > 0 ? $ttl : 3600);
+                return;
+            }
+        }
         // Transients expire automatically; 0 maps to 1 hour to avoid permanent storage
         set_transient(self::transient_key($key, $group), $value, $ttl > 0 ? $ttl : 3600);
     }
@@ -85,6 +105,10 @@ class FXSIM_Cache {
             wp_cache_delete($key, $group);
             return;
         }
+        // Keep both tiers coherent: clear Redis AND the transient twin.
+        if (FXSIM_Redis_Client::available()) {
+            FXSIM_Redis_Client::del(self::redis_key($key, $group));
+        }
         delete_transient(self::transient_key($key, $group));
     }
 
@@ -99,6 +123,18 @@ class FXSIM_Cache {
     public static function incr(string $key, int $offset = 1, string $group = self::GROUP): int|false {
         if (self::has_object_cache() && function_exists('wp_cache_incr')) {
             return wp_cache_incr($key, $offset, $group);
+        }
+        // Tier 2: Redis INCRBY is truly atomic across all web nodes — this is
+        // the path that makes the rate limiter correct on multi-server setups.
+        if (!self::has_object_cache() && FXSIM_Redis_Client::available()) {
+            $rk = self::redis_key($key, $group);
+            if (FXSIM_Redis_Client::exists($rk) === false) {
+                // Key absent: create it so the caller's window/TTL semantics hold.
+                FXSIM_Redis_Client::set($rk, '0', 3600);
+            }
+            $new = FXSIM_Redis_Client::incrby($rk, $offset);
+            if ($new !== null) return $new;
+            // Transport hiccup → fall through to the non-atomic local fallback.
         }
         // Fallback for transients or object cache lacking incr: read-modify-write (not atomic)
         $t_key = self::transient_key($key, $group);
@@ -131,5 +167,43 @@ class FXSIM_Cache {
         $safe_group = preg_replace('/[^a-z0-9_\-]/', '_', strtolower($group));
         $safe_key   = preg_replace('/[^a-z0-9_\-]/', '_', strtolower($key));
         return substr("{$safe_group}_{$safe_key}", 0, 172);
+    }
+
+    // ── Redis tier helpers ────────────────────────────────────────────────────
+
+    /** Namespaced Redis key: fxsim:cache:<group>:<key>. */
+    private static function redis_key(string $key, string $group): string {
+        return "cache:{$group}:{$key}";
+    }
+
+    /**
+     * Serialise a value for Redis transport. Strings/ints/floats travel raw
+     * (fast path); everything else goes through serialize() with a marker.
+     * @return string|null null = unserialisable value, caller should use transients.
+     */
+    private static function redis_encode(mixed $value): ?string {
+        if (is_string($value) && !preg_match('/^R[SD]:/', $value)) return $value;
+        if (is_int($value) || is_float($value))  return (string) $value;
+        if (is_bool($value))                     return $value ? 'RB:1' : 'RB:0';
+        try {
+            return 'RS:' . serialize($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** Inverse of redis_encode(). Unknown formats pass through as strings. */
+    private static function redis_decode(string $raw): mixed {
+        if ($raw === 'RB:0') return false;
+        if ($raw === 'RB:1') return true;
+        if (str_starts_with($raw, 'RS:')) {
+            try {
+                return unserialize(substr($raw, 3), ['allowed_classes' => false]);
+            } catch (\Throwable) {
+                return false;
+            }
+        }
+        if (is_numeric($raw)) return $raw + 0;
+        return $raw;
     }
 }
