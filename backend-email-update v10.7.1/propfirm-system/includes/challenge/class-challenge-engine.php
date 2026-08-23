@@ -64,7 +64,9 @@ class FXSIM_Challenge_Engine {
         }
 
         // ── Standard evaluation challenge ────────────────────────────────────
-        $phase_ends = date('Y-m-d H:i:s', strtotime("+{$plan->p1_max_days} days"));
+        $phase_ends = ((int)$plan->p1_max_days > 0)
+            ? date('Y-m-d H:i:s', strtotime("+{$plan->p1_max_days} days"))
+            : NULL;
 
         $inserted = $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
             'user_id'             => $user_id,
@@ -288,8 +290,8 @@ class FXSIM_Challenge_Engine {
             $peak = max((float)$ch->peak_balance, $balance);
             self::update_challenge_balance((int)$ch->id, $balance, $peak);
 
-            // Check time limit exceeded (only for evaluation phases)
-            if ($ch->status === 'active' && $ch->phase_ends_at && strtotime($ch->phase_ends_at) < time()) {
+            // Check time limit exceeded (only for evaluation phases with configured limit)
+            if ($ch->status === 'active' && $ch->phase_ends_at && (int)$max_d > 0 && strtotime($ch->phase_ends_at) < time()) {
                 $profit = $balance - (float)$ch->starting_balance;
                 $profit_needed = (float)$ch->starting_balance * ($pt / 100);
                 if ($profit < $profit_needed) {
@@ -307,6 +309,8 @@ class FXSIM_Challenge_Engine {
                 $last_pos = $wpdb->get_var($wpdb->prepare("SELECT MAX(opened_at) FROM {$wpdb->prefix}fxsim_positions WHERE account_id = %d", $ch->fxsim_account_id));
                 
                 $last_activity = $ch->created_at;
+                if (!empty($ch->phase_started_at) && strtotime($ch->phase_started_at) > strtotime($last_activity)) $last_activity = $ch->phase_started_at;
+                if (!empty($ch->funded_at) && strtotime($ch->funded_at) > strtotime($last_activity)) $last_activity = $ch->funded_at;
                 if ($last_trade && strtotime($last_trade) > strtotime($last_activity)) $last_activity = $last_trade;
                 if ($last_pos && strtotime($last_pos) > strtotime($last_activity)) $last_activity = $last_pos;
                 
@@ -374,7 +378,7 @@ class FXSIM_Challenge_Engine {
 
             // Get max_days for next phase dynamically
             [$next_pt, $next_dd, $next_mdd, $next_min, $next_max] = self::get_phase_rules($plan, $next_phase);
-            $phase_end = date('Y-m-d H:i:s', strtotime("+{$next_max} days"));
+            $phase_end = ((int)$next_max > 0) ? date('Y-m-d H:i:s', strtotime("+{$next_max} days")) : NULL;
 
             // Calculate new DD floor for next phase
             $new_dd_floor = $start * (1 - $next_mdd / 100);
@@ -569,8 +573,17 @@ class FXSIM_Challenge_Engine {
         $daily_dd_val       = $daily_start * ($daily_dd / 100);
 
         $current_profit     = $balance - $start;
-        $current_max_dd     = $start - min($balance, $equity);
         $current_daily_loss = max(0, $daily_start - min($balance, $equity));
+
+        $is_trailing = in_array($ch->drawdown_type ?? 'static', ['trailing', 'trailing_equity', 'eod_trailing', 'trailing_balance'], true);
+        if ($is_trailing && !empty($ch->trailing_dd_floor)) {
+            $effective_val  = min($balance, $equity);
+            $dd_remaining   = max(0.0, round($effective_val - (float)$ch->trailing_dd_floor, 2));
+            $current_max_dd = max(0.0, round($start - $effective_val, 2));
+        } else {
+            $current_max_dd = max(0.0, round($start - min($balance, $equity), 2));
+            $dd_remaining   = round($max_dd_val - $current_max_dd, 2);
+        }
 
         $profit_pct    = $start > 0 ? round(($current_profit / $start) * 100, 2) : 0;
         $max_dd_used   = $start > 0 ? round(($current_max_dd / $start) * 100, 2) : 0;
@@ -629,7 +642,7 @@ class FXSIM_Challenge_Engine {
             'max_dd_val'        => round($max_dd_val, 2),
             'current_dd'        => round($current_max_dd, 2),
             'current_dd_pct'    => $max_dd_used,
-            'dd_remaining'      => round($max_dd_val - $current_max_dd, 2),
+            'dd_remaining'      => $dd_remaining,
             'max_dd_progress'   => min(100, round($current_max_dd / max(1, $max_dd_val) * 100, 1)),
             // Daily drawdown
             'daily_dd_pct'      => $daily_dd,

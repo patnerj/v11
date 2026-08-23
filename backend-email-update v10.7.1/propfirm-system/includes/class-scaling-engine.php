@@ -134,9 +134,9 @@ class FXSIM_Scaling_Engine {
         // without this, a trailing-drawdown funded account's floor stays
         // pinned at the pre-scale level, so the newly added notional capital
         // is not actually protected by the trailing buffer it should have.
-        // Same pattern used by the payout 'paid' transition and
-        // admin_scaling_apply().
-        $allowed_trail_pct = !empty($account->funded_max_dd) ? (float) $account->funded_max_dd : 0;
+        $allowed_trail_pct = !empty($account->funded_max_dd)
+            ? (float) $account->funded_max_dd
+            : (!empty($account->max_drawdown_pct) ? (float) $account->max_drawdown_pct : 10.0);
         $abs_trail = round($new_balance * ($allowed_trail_pct / 100), 2);
 
         // Update challenge account
@@ -292,7 +292,9 @@ class FXSIM_Scaling_Engine {
         $next_scale_date = date('Y-m-d H:i:s', strtotime("+{$account->scaling_interval_months} months", $last_time));
         
         $new_starting_balance = $account->starting_balance * (1 + ($account->scaling_growth_pct / 100));
-        $next_balance = min($new_starting_balance, $account->scaling_max_balance);
+        $cap = !empty($account->scaling_max_balance) ? (float) $account->scaling_max_balance : 0.0;
+        $next_balance = ($cap > 0) ? min($new_starting_balance, $cap) : $new_starting_balance;
+        $under_cap = ($cap <= 0 || (float)$account->starting_balance < $cap);
 
         return [
             'eligible' => true,
@@ -302,9 +304,9 @@ class FXSIM_Scaling_Engine {
             'profit_progress_pct' => round($profit_progress_pct, 2),
             'current_profit_pct' => round($profit_pct, 2),
             'required_profit_pct' => (float) $account->scaling_required_profit_pct,
-            'next_balance' => $next_balance,
-            'max_balance' => (float) $account->scaling_max_balance,
-            'is_ready' => ($time_progress_pct >= 100 && $profit_progress_pct >= 100 && $account->starting_balance < $account->scaling_max_balance)
+            'next_balance' => round($next_balance, 2),
+            'max_balance' => $cap,
+            'is_ready' => ($time_progress_pct >= 100 && $profit_progress_pct >= 100 && $under_cap)
         ];
     }
 
