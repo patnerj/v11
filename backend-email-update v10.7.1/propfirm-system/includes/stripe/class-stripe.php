@@ -222,35 +222,46 @@ class FXSIM_Stripe {
                     error_log("[PropFirm] Stripe webhook: failed to acquire lock for session {$session_id} — concurrent delivery?");
                 }
             } elseif ($user_id && $comp_id && $paid) {
-                // Competition entry fee paid
-                $already = $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM {$wpdb->prefix}fxsim_competition_participants WHERE competition_id = %d AND user_id = %d",
-                    $comp_id, $user_id
-                ));
-                if (!$already) {
-                    $comp = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_competitions WHERE id = %d", $comp_id));
-                    if ($comp) {
-                        $account_id = FXSIM_Challenge_DB::create_account(
-                            $user_id,
-                            'Tournament Account - ' . $comp->name,
-                            (float)$comp->initial_balance,
-                            1, 
-                            [
-                                'max_daily_loss' => 5,
-                                'max_total_loss' => 10,
-                                'profit_target'  => 0,
-                                'max_days'       => 30
-                            ]
-                        );
-                        if (!is_wp_error($account_id)) {
-                            $wpdb->insert("{$wpdb->prefix}fxsim_competition_participants", [
-                                'competition_id' => $comp_id,
-                                'user_id'        => $user_id,
-                                'account_id'     => $account_id,
-                                'status'         => 'active',
-                                'registered_at'  => current_time('mysql', 1)
-                            ]);
+                // Competition entry fee paid — acquire named lock to prevent concurrency races
+                $lock_name = 'stripe_comp_' . md5($session_id);
+                $got_lock = (int)$wpdb->get_var($wpdb->prepare("SELECT GET_LOCK(%s, 10)", $lock_name));
+                if ($got_lock === 1) {
+                    try {
+                        $already = $wpdb->get_var($wpdb->prepare(
+                            "SELECT id FROM {$wpdb->prefix}fxsim_competition_participants WHERE competition_id = %d AND user_id = %d",
+                            $comp_id, $user_id
+                        ));
+                        if (!$already) {
+                            $comp = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_competitions WHERE id = %d", $comp_id));
+                            if ($comp) {
+                                $account_id = FXSIM_Challenge_DB::create_account(
+                                    $user_id,
+                                    'Tournament Account - ' . $comp->name,
+                                    (float)$comp->initial_balance,
+                                    1, 
+                                    [
+                                        'max_daily_loss' => 5,
+                                        'max_total_loss' => 10,
+                                        'profit_target'  => 0,
+                                        'max_days'       => 30
+                                    ]
+                                );
+                                if (!is_wp_error($account_id) && $account_id > 0) {
+                                    $inserted = $wpdb->insert("{$wpdb->prefix}fxsim_competition_participants", [
+                                        'competition_id' => $comp_id,
+                                        'user_id'        => $user_id,
+                                        'account_id'     => $account_id,
+                                        'status'         => 'active',
+                                        'registered_at'  => current_time('mysql', 1)
+                                    ]);
+                                    if (!$inserted) {
+                                        $wpdb->delete("{$wpdb->prefix}fxsim_accounts", ['id' => $account_id]);
+                                    }
+                                }
+                            }
                         }
+                    } finally {
+                        $wpdb->query($wpdb->prepare("SELECT RELEASE_LOCK(%s)", $lock_name));
                     }
                 }
             }
@@ -269,7 +280,7 @@ class FXSIM_Stripe {
         exit;
     }
 
-    // ── Verify Stripe webhook signature ──────────────────────────────────────
+    // ── Verify Stripe webhook signature with 5-minute replay tolerance ──────
     private static function verify_signature(string $payload, string $sig_header, string $secret): bool {
         $parts     = explode(',', $sig_header);
         $timestamp = '';
@@ -281,7 +292,13 @@ class FXSIM_Stripe {
             if ($key === 'v1') $signatures[] = $value;
         }
 
-        if (!$timestamp) return false;
+        if (!$timestamp || !is_numeric($timestamp)) return false;
+
+        // M2 Fix: Enforce 5-minute (300s) replay tolerance
+        if (abs(time() - (int)$timestamp) > 300) {
+            error_log('[PropFirm] Stripe webhook signature expired: timestamp beyond 300s tolerance window.');
+            return false;
+        }
 
         $signed_payload = $timestamp . '.' . $payload;
         $expected       = hash_hmac('sha256', $signed_payload, $secret);

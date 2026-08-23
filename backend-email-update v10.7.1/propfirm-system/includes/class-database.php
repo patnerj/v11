@@ -334,6 +334,7 @@ class FXSIM_Database {
             account_id       BIGINT UNSIGNED NOT NULL,
             status           ENUM('active','disqualified') NOT NULL DEFAULT 'active',
             registered_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_comp_user (competition_id, user_id),
             KEY idx_competition (competition_id),
             KEY idx_user (user_id),
             KEY idx_account (account_id)
@@ -1130,6 +1131,27 @@ class FXSIM_Database {
             // Deduplicate prior records if any exist
             $wpdb->query("DELETE t1 FROM `{$table}` t1 INNER JOIN `{$table}` t2 WHERE t1.id > t2.id AND t1.tournament_id = t2.tournament_id AND t1.user_id = t2.user_id");
             $wpdb->query("ALTER TABLE `{$table}` ADD UNIQUE KEY `uniq_tournament_user` (tournament_id, user_id)");
+        }
+    }
+
+    /** Ensure fxsim_competition_participants has UNIQUE KEY on (competition_id, user_id) (V11.0.6 migration helper) */
+    public static function ensure_competition_unique_participant(): void {
+        global $wpdb;
+        $table = $wpdb->prefix . 'fxsim_competition_participants';
+        $indices = $wpdb->get_results("SHOW INDEX FROM `{$table}`");
+        $has_unique = false;
+        if ($indices) {
+            foreach ($indices as $idx) {
+                if ($idx->Key_name === 'uniq_comp_user') {
+                    $has_unique = true;
+                    break;
+                }
+            }
+        }
+        if (!$has_unique) {
+            // Deduplicate prior records if any exist
+            $wpdb->query("DELETE t1 FROM `{$table}` t1 INNER JOIN `{$table}` t2 WHERE t1.id > t2.id AND t1.competition_id = t2.competition_id AND t1.user_id = t2.user_id");
+            $wpdb->query("ALTER TABLE `{$table}` ADD UNIQUE KEY `uniq_comp_user` (competition_id, user_id)");
         }
     }
 }

@@ -138,12 +138,9 @@ class ProTradeFX_Headless_Bridge {
     }
 
     public static function extract_token_from_request(): string {
-        if ( ! empty( $_GET['token'] ) ) {
-            return trim( (string) $_GET['token'] );
-        }
-        if ( ! empty( $_GET['fxsim_token'] ) ) {
-            return trim( (string) $_GET['fxsim_token'] );
-        }
+        // SECURITY FIX (M5): Only accept authentication tokens from HTTP headers.
+        // Never read session bearer tokens from URL query parameters ($_GET) to prevent
+        // credential leakage into access logs, proxy logs, and Referer headers.
         if ( ! empty( $_SERVER['HTTP_X_FXSIM_TOKEN'] ) ) {
             return trim( (string) $_SERVER['HTTP_X_FXSIM_TOKEN'] );
         }

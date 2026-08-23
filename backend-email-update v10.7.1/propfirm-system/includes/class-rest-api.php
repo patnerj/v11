@@ -3217,38 +3217,44 @@ class FXSIM_REST_API {
             return new WP_REST_Response(['success' => false, 'message' => 'A transaction reference is required to mark a payout paid.'], 400);
         }
 
-        $update = ['status' => $status, 'admin_note' => $note ?: $p->admin_note];
-        if ($txRef !== '') $update['tx_reference'] = $txRef;
-        if ($proof !== '') $update['proof_url']    = $proof;
-        if (in_array($status, ['approved', 'rejected', 'paid'], true)) $update['processed_at'] = current_time('mysql');
-        $wpdb->update($wpdb->prefix . 'fxsim_payouts', $update, ['id' => $id]);
+        if ($status === 'paid') {
+            // ATOMIC CLAIM: Only update if status is NOT already 'paid'
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_payouts 
+                 SET status = 'paid', admin_note = %s, tx_reference = %s, proof_url = %s, processed_at = %s 
+                 WHERE id = %d AND status != 'paid'",
+                $note ?: $p->admin_note,
+                $txRef !== '' ? $txRef : $p->tx_reference,
+                $proof !== '' ? $proof : $p->proof_url,
+                current_time('mysql'),
+                $id
+            ));
+            if ($claimed !== 1) {
+                return new WP_REST_Response(['success' => false, 'message' => 'Payout has already been marked as paid.'], 400);
+            }
 
-        // ── Payout cycle reset (Issues 1 & 2) ──────────────────────────────────
-        // When a payout is FIRST marked paid, withdraw the requested profit from
-        // the funded account and re-baseline the cycle so the same profit can't
-        // be withdrawn again. Idempotent: only fires on the transition into paid.
-        if ($status === 'paid' && $p->status !== 'paid') {
+            // ── Payout cycle reset (Issues 1 & 2) ──────────────────────────────────
             $ch = FXSIM_Challenge_DB::get_challenge((int) $p->challenge_id);
             $account = $ch ? FXSIM_Database::get_account_by_id((int) $ch->fxsim_account_id) : null;
             if ($ch && $account) {
                 $wpdb->query('START TRANSACTION');
                 try {
                     $withdrawn = (float) $p->amount_requested;
-                    $newBal    = round((float) $account->balance - $withdrawn, 2);
-                    $newEq     = round((float) $account->equity  - $withdrawn, 2); // preserves open-PnL delta
-                    $wpdb->update($wpdb->prefix . 'fxsim_accounts',
-                        ['balance' => $newBal, 'equity' => $newEq],
-                        ['id' => (int) $ch->fxsim_account_id]);
-                    // Re-baseline the challenge so drawdown/profit start fresh and the
-                    // deduction itself never reads as drawdown.
-                    // SECURITY FIX: Reset equity_hwm and trailing_dd_floor so the
-                    // trailing drawdown floor drops with the withdrawn balance, preventing instant breach.
-                    // NOTE: the plans table has no "funded_trailing_drawdown_pct"
-                    // column — that name never existed in the schema, so this always
-                    // silently evaluated to 0% (floor = current equity, zero buffer,
-                    // any subsequent loss instantly breaches a trailing-DD funded
-                    // account). The real column for the funded stage's trailing/max
-                    // drawdown percentage is funded_max_dd.
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE {$wpdb->prefix}fxsim_accounts 
+                         SET balance = balance - %f, equity = equity - %f 
+                         WHERE id = %d",
+                        $withdrawn, $withdrawn, (int) $ch->fxsim_account_id
+                    ));
+                    $newBal = (float) $wpdb->get_var($wpdb->prepare(
+                        "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
+                        (int) $ch->fxsim_account_id
+                    ));
+                    $newEq = (float) $wpdb->get_var($wpdb->prepare(
+                        "SELECT equity FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
+                        (int) $ch->fxsim_account_id
+                    ));
+
                     $plan = FXSIM_Challenge_DB::get_plan((int)$ch->plan_id);
                     $allowed_trail_pct = $plan ? (float)$plan->funded_max_dd : 0;
                     $abs_trail = round((float)$ch->starting_balance * ($allowed_trail_pct / 100), 2);
@@ -3258,31 +3264,35 @@ class FXSIM_REST_API {
                         'peak_balance'        => $newBal,
                         'daily_start_balance' => $newBal,
                         'equity_hwm'          => $newEq,
-                        'trailing_dd_floor'   => round($newEq - $abs_trail, 2),
-                    ], ['id' => (int) $ch->id]);
+                        'trailing_dd_floor'   => $abs_trail > 0 ? max((float)$ch->starting_balance - $abs_trail, $newEq - $abs_trail) : 0,
+                    ], ['id' => (int) $p->challenge_id]);
+
                     if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_transaction')) {
-                        FXSIM_Database::log_transaction((int) $ch->fxsim_account_id, 'payout', -$withdrawn, $newBal, "Payout #{$id} paid");
+                        FXSIM_Database::log_transaction((int) $ch->fxsim_account_id, 'payout', -$withdrawn, $newBal, "Payout #{$id} paid: \${$withdrawn}");
                     }
+
                     $wpdb->query('COMMIT');
-                    self::invalidate_account_cache((int) $p->user_id);
                 } catch (\Throwable $e) {
                     $wpdb->query('ROLLBACK');
-                    error_log("[PropFirm] admin_payout_status: balance deduction FAILED for payout #{$id} (already marked 'paid') — " . $e->getMessage());
+                    error_log("[PropFirm] admin_payout_status: balance deduction FAILED for payout #{$id} — " . $e->getMessage());
                     if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
                         FXSIM_Database::log_admin(get_current_user_id(), 'payout_deduction_failed', (int) $p->user_id,
                             "Payout #{$id} marked paid but balance deduction failed: " . $e->getMessage() . '. Needs manual reconciliation.');
                     }
                 }
             } else {
-                // Challenge or account row missing — the payout is about to be
-                // committed as 'paid' below with NO balance ever deducted. This
-                // must not fail silently: it needs a loud, findable trail.
                 error_log("[PropFirm] admin_payout_status: payout #{$id} marked 'paid' but its challenge/account could not be found — balance NOT deducted.");
                 if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
                     FXSIM_Database::log_admin(get_current_user_id(), 'payout_deduction_skipped', (int) $p->user_id,
                         "Payout #{$id} marked paid but challenge_id #{$p->challenge_id} or its linked account could not be resolved. Needs manual reconciliation.");
                 }
             }
+        } else {
+            $update = ['status' => $status, 'admin_note' => $note ?: $p->admin_note];
+            if ($txRef !== '') $update['tx_reference'] = $txRef;
+            if ($proof !== '') $update['proof_url']    = $proof;
+            if (in_array($status, ['approved', 'rejected'], true)) $update['processed_at'] = current_time('mysql');
+            $wpdb->update($wpdb->prefix . 'fxsim_payouts', $update, ['id' => $id]);
         }
 
         // ── Automated Scaling Check Hook ───────────────────────────────────────
@@ -5944,10 +5954,12 @@ class FXSIM_REST_API {
         // unauthenticated caller overwrite any trader's balance or force a
         // fake drawdown breach. hash_equals($secret, '') already correctly
         // evaluates to false, so no extra emptiness check is needed.
-        $secret = (string) get_option('fxsim_mt5_ingest_secret', get_option('fxsim_price_feed_secret', ''));
+        $secret = class_exists('FXSIM_Price_Feed') && method_exists('FXSIM_Price_Feed', 'get_ingest_secret')
+            ? FXSIM_Price_Feed::get_ingest_secret()
+            : (string) get_option('fxsim_mt5_ingest_secret', get_option('fxsim_price_feed_secret', ''));
         $provided = (string) ($r->get_header('x-feed-key') ?: $r->get_header('x-fxsim-feed-key'));
 
-        if ($secret !== '' && !hash_equals($secret, $provided)) {
+        if ($secret === '' || $provided === '' || !hash_equals($secret, $provided)) {
             return new WP_REST_Response(['success' => false, 'error' => 'Unauthorized feed key.'], 401);
         }
 
@@ -6129,9 +6141,11 @@ class FXSIM_REST_API {
     public static function mt5_sync_targets(WP_REST_Request $r): WP_REST_Response {
         global $wpdb;
 
-        $secret = (string) get_option('fxsim_mt5_ingest_secret', get_option('fxsim_price_feed_secret', ''));
+        $secret = class_exists('FXSIM_Price_Feed') && method_exists('FXSIM_Price_Feed', 'get_ingest_secret')
+            ? FXSIM_Price_Feed::get_ingest_secret()
+            : (string) get_option('fxsim_mt5_ingest_secret', get_option('fxsim_price_feed_secret', ''));
         $provided = (string) ($r->get_header('x-feed-key') ?: $r->get_header('x-fxsim-feed-key'));
-        if ($secret !== '' && !hash_equals($secret, $provided)) {
+        if ($secret === '' || $provided === '' || !hash_equals($secret, $provided)) {
             return new WP_REST_Response(['success' => false, 'error' => 'Unauthorized feed key.'], 401);
         }
 

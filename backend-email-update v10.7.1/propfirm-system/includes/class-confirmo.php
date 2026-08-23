@@ -185,6 +185,15 @@ class FXSIM_Confirmo {
                 return new WP_REST_Response(['message' => 'Order not found'], 404);
             }
 
+            // M3 Fix: Validate received payment amount against stored order amount
+            $received_amount = (float)($body['settlement']['amount'] ?? $body['amount'] ?? 0.0);
+            if ($received_amount > 0 && (float)$order->amount > 0) {
+                if ($received_amount < ((float)$order->amount - 0.99)) {
+                    error_log("Confirmo Webhook: Order {$order_id} underpaid! Expected {$order->amount}, received {$received_amount}");
+                    return new WP_REST_Response(['message' => 'Underpaid order amount'], 400);
+                }
+            }
+
             // Atomically claim this order for processing. The previous
             // "SELECT then check status then UPDATE" was a check-then-act
             // race: two near-simultaneous 'paid' callbacks for the same

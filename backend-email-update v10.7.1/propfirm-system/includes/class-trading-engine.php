@@ -307,7 +307,18 @@ class FXSIM_Trading_Engine {
 
         $wpdb->query('START TRANSACTION');
         try {
-            // Move to history
+            // 1. ATOMIC CLAIM: Delete open position immediately.
+            // If 0 rows affected, another concurrent process (manual, SL/TP, margin stop-out) already closed it!
+            $deleted = $wpdb->query($wpdb->prepare(
+                "DELETE FROM {$wpdb->prefix}fxsim_positions WHERE id = %d",
+                $pos_id
+            ));
+            if ($deleted !== 1) {
+                $wpdb->query('ROLLBACK');
+                return self::err('Position already closed or concurrently processed.');
+            }
+
+            // 2. Log closed position to trade history
             $wpdb->insert($wpdb->prefix . 'fxsim_trades', [
                 'account_id'   => $pos->account_id,
                 'symbol'       => $pos->symbol,
@@ -326,21 +337,26 @@ class FXSIM_Trading_Engine {
                 'is_toxic'     => $is_toxic,
             ]);
 
-            $wpdb->delete($wpdb->prefix . 'fxsim_positions', ['id' => $pos_id]);
+            // 3. ATOMIC DELTA UPDATE on account balance & margin
+            // calc_pnl() subtracts $pos->commission (correct for informational PnL),
+            // but commission was already deducted at open. Adding $pnl + commission ensures
+            // round-trip commission is charged exactly once.
+            $credit_amount   = (float) $pnl + (float) $pos->commission;
+            $released_margin = (float) $pos->margin;
 
-            // Update account balance / margin.
-            // calc_pnl() subtracts $pos->commission (correct for the
-            // informational floating-PnL/trade-history value), but commission
-            // was already deducted from balance once, immediately at open
-            // (see open_position()). Adding $pnl straight to balance here
-            // would charge commission twice per round trip, so add it back.
-            $new_bal    = $account->balance + $pnl + (float)$pos->commission;
-            $new_margin = max(0, $account->margin_used - $pos->margin);
-            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
-                'balance'     => $new_bal,
-                'margin_used' => $new_margin,
-                'equity'      => $new_bal,
-            ], ['id' => $account->id]);
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts 
+                 SET balance = balance + %f, 
+                     equity = equity + %f, 
+                     margin_used = GREATEST(0, margin_used - %f) 
+                 WHERE id = %d",
+                $credit_amount, $credit_amount, $released_margin, $account->id
+            ));
+
+            $new_bal = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
+                $account->id
+            ));
 
             FXSIM_Database::log_transaction($account->id, 'pnl', $pnl, $new_bal, "Close {$pos->type} {$pos->symbol} #{$pos_id} ({$reason})");
 
@@ -451,17 +467,24 @@ class FXSIM_Trading_Engine {
 
         $wpdb->query('START TRANSACTION');
         try {
-            // Reduce original position size
+            // 1. ATOMIC CLAIM: Reduce original position size only if current lot_size >= close_lots
             $remain_lots   = round($orig_lots - $close_lots, 2);
             $remain_margin = (float)$pos->margin * (1 - $partial_ratio);
-            $wpdb->update($wpdb->prefix . 'fxsim_positions', [
-                'lot_size'  => $remain_lots,
-                'margin'    => $remain_margin,
-                'commission'=> (float)$pos->commission * (1 - $partial_ratio),
-                'swap'      => (float)$pos->swap * (1 - $partial_ratio),
-            ], ['id' => $pos_id]);
+            $updated = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_positions 
+                 SET lot_size = lot_size - %f, 
+                     margin = margin - %f, 
+                     commission = commission * (1 - %f), 
+                     swap = swap * (1 - %f) 
+                 WHERE id = %d AND lot_size >= %f",
+                $close_lots, (float)$partial_pos->margin, $partial_ratio, $partial_ratio, $pos_id, $close_lots
+            ));
+            if ($updated !== 1) {
+                $wpdb->query('ROLLBACK');
+                return self::err('Position already modified or closed concurrently.');
+            }
 
-            // Log the partial close as a trade
+            // 2. Log the partial close as a trade
             $wpdb->insert($wpdb->prefix . 'fxsim_trades', [
                 'account_id'   => $account->id,
                 'symbol'       => $pos->symbol,
@@ -480,17 +503,24 @@ class FXSIM_Trading_Engine {
                 'is_toxic'     => $is_toxic,
             ]);
 
-            // Update balance. Same double-commission fix as close_position():
-            // the FULL position's commission was already deducted from
-            // balance once at open, so add back the prorated share calc_pnl()
-            // just subtracted for this partial close.
-            $new_bal    = (float)$account->balance + $pnl + $partial_pos->commission;
-            $new_margin = max(0, (float)$account->margin_used - $partial_pos->margin);
-            $wpdb->update($wpdb->prefix . 'fxsim_accounts', [
-                'balance'     => $new_bal,
-                'equity'      => $new_bal,
-                'margin_used' => $new_margin,
-            ], ['id' => $account->id]);
+            // 3. ATOMIC DELTA UPDATE on account balance & margin
+            $credit_amount   = (float) $pnl + (float) $partial_pos->commission;
+            $released_margin = (float) $partial_pos->margin;
+
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_accounts 
+                 SET balance = balance + %f, 
+                     equity = equity + %f, 
+                     margin_used = GREATEST(0, margin_used - %f) 
+                 WHERE id = %d",
+                $credit_amount, $credit_amount, $released_margin, $account->id
+            ));
+
+            $new_bal = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
+                $account->id
+            ));
+
             FXSIM_Database::log_transaction($account->id, 'pnl', $pnl, $new_bal,
                 "Partial close {$close_lots}L {$pos->type} {$pos->symbol} #{$pos_id}");
 

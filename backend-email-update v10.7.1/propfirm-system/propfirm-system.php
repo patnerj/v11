@@ -175,6 +175,12 @@ add_action('plugins_loaded', function () {
         }
         update_option('fxsim_feature_level', 7, false);
     }
+    if ($fxsim_feature_level < 8) {
+        if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'ensure_competition_unique_participant')) {
+            FXSIM_Database::ensure_competition_unique_participant(); // V11.0.6 UNIQUE (competition_id, user_id) on competition participants
+        }
+        update_option('fxsim_feature_level', 8, false);
+    }
 
     FXSIM_REST_API::register();
 
