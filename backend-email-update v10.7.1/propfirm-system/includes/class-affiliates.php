@@ -167,37 +167,58 @@ class FXSIM_Affiliates {
              WHERE affiliate_id=%d AND status IN ('pending','approved') AND payout_id IS NULL", $affiliate_id));
     }
 
-    /** Affiliate requests a withdrawal of their available balance. */
+    /** Affiliate requests a withdrawal of their available balance. (W5 Fix: transacted + row-locked) */
     public static function request_payout(int $user_id): array {
         global $wpdb;
         $aff = self::get_by_user($user_id);
         if (!$aff) return ['success' => false, 'message' => 'Not an affiliate.'];
         if ($aff->status !== 'active') return ['success' => false, 'message' => 'Affiliate account is suspended.'];
         if (!$aff->payout_method || !$aff->payout_destination) return ['success' => false, 'message' => 'Set your payout method first.'];
-        $open = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_affiliate_payouts WHERE affiliate_id=%d AND status IN ('pending','approved')", $aff->id));
-        if ($open > 0) return ['success' => false, 'message' => 'You already have a withdrawal in progress.'];
-        $available = self::available_balance((int) $aff->id);
-        if ($available <= 0) return ['success' => false, 'message' => 'No commissions available to withdraw.'];
 
-        $wpdb->insert($wpdb->prefix . 'fxsim_affiliate_payouts', [
-            'affiliate_id' => $aff->id,
-            'amount'       => $available,
-            'method'       => $aff->payout_method,
-            'destination'  => $aff->payout_destination,
-            'status'       => 'pending',
-        ]);
-        $pid = (int) $wpdb->insert_id;
-        // Lock the contributing commissions to this payout.
-        $wpdb->query($wpdb->prepare(
-            "UPDATE {$wpdb->prefix}fxsim_commissions SET payout_id=%d, status='approved'
-             WHERE affiliate_id=%d AND status IN ('pending','approved') AND payout_id IS NULL", $pid, $aff->id));
-        FXSIM_Database::push_admin_notification('info', 'Affiliate withdrawal requested',
-            'An affiliate requested a withdrawal of ' . number_format($available, 2) . '.', $user_id);
-        FXSIM_Database::push_notification($user_id, 'info', 'Withdrawal requested',
-            'Your affiliate withdrawal of $' . number_format($available, 2) . ' was submitted and is pending review.', '/dashboard/affiliate');
-        if (class_exists('FXSIM_Emails')) FXSIM_Emails::send($user_id, 'payout_requested', ['amount' => number_format($available, 2)]);
-        return ['success' => true, 'amount' => round($available, 2), 'payout_id' => $pid];
+        $wpdb->query('START TRANSACTION');
+        try {
+            $open = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_affiliate_payouts 
+                 WHERE affiliate_id=%d AND status IN ('pending','approved') FOR UPDATE", 
+                $aff->id
+            ));
+            if ($open > 0) {
+                $wpdb->query('ROLLBACK');
+                return ['success' => false, 'message' => 'You already have a withdrawal in progress.'];
+            }
+            $available = self::available_balance((int) $aff->id);
+            if ($available <= 0) {
+                $wpdb->query('ROLLBACK');
+                return ['success' => false, 'message' => 'No commissions available to withdraw.'];
+            }
+
+            $wpdb->insert($wpdb->prefix . 'fxsim_affiliate_payouts', [
+                'affiliate_id' => $aff->id,
+                'amount'       => $available,
+                'method'       => $aff->payout_method,
+                'destination'  => $aff->payout_destination,
+                'status'       => 'pending',
+            ]);
+            $pid = (int) $wpdb->insert_id;
+            // Lock the contributing commissions to this payout atomically.
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_commissions SET payout_id=%d, status='approved'
+                 WHERE affiliate_id=%d AND status IN ('pending','approved') AND payout_id IS NULL", 
+                $pid, $aff->id
+            ));
+
+            $wpdb->query('COMMIT');
+
+            FXSIM_Database::push_admin_notification('info', 'Affiliate withdrawal requested',
+                'An affiliate requested a withdrawal of ' . number_format($available, 2) . '.', $user_id);
+            FXSIM_Database::push_notification($user_id, 'info', 'Withdrawal requested',
+                'Your affiliate withdrawal of $' . number_format($available, 2) . ' was submitted and is pending review.', '/dashboard/affiliate');
+            if (class_exists('FXSIM_Emails')) FXSIM_Emails::send($user_id, 'payout_requested', ['amount' => number_format($available, 2)]);
+            return ['success' => true, 'amount' => round($available, 2), 'payout_id' => $pid];
+        } catch (\Throwable $e) {
+            $wpdb->query('ROLLBACK');
+            return ['success' => false, 'message' => 'Withdrawal request failed: ' . $e->getMessage()];
+        }
     }
 
     /** Admin processes a payout: approved | rejected | paid (with tx ref / proof / note). */
@@ -207,31 +228,54 @@ class FXSIM_Affiliates {
         if (!$p) return ['success' => false, 'message' => 'Payout not found.'];
         if (!in_array($status, ['approved', 'rejected', 'paid'], true)) return ['success' => false, 'message' => 'Invalid status.'];
 
-        $data = ['status' => $status, 'admin_note' => substr(sanitize_text_field($note), 0, 500)];
-        if ($tx !== '')    $data['tx_reference'] = substr(sanitize_text_field($tx), 0, 255);
-        if ($proof !== '') $data['proof_url']    = esc_url_raw($proof);
-        if (in_array($status, ['paid', 'rejected'], true)) $data['processed_at'] = current_time('mysql');
-        $wpdb->update($wpdb->prefix . 'fxsim_affiliate_payouts', $data, ['id' => $payout_id]);
+        if ($status === 'paid') {
+            // ATOMIC CLAIM: Only update if not already paid
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_affiliate_payouts 
+                 SET status = 'paid', admin_note = %s, tx_reference = %s, proof_url = %s, processed_at = %s 
+                 WHERE id = %d AND status != 'paid'",
+                substr(sanitize_text_field($note ?: $p->admin_note), 0, 500),
+                $tx !== '' ? substr(sanitize_text_field($tx), 0, 255) : $p->tx_reference,
+                $proof !== '' ? esc_url_raw($proof) : $p->proof_url,
+                current_time('mysql'),
+                $payout_id
+            ));
+            if ($claimed !== 1) {
+                return ['success' => false, 'message' => 'Payout has already been marked as paid.'];
+            }
+
+            $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->prefix}fxsim_commissions SET status='paid', paid_at=%s WHERE payout_id=%d",
+                current_time('mysql'), $payout_id
+            ));
+        } else {
+            $data = ['status' => $status, 'admin_note' => substr(sanitize_text_field($note), 0, 500)];
+            if ($tx !== '')    $data['tx_reference'] = substr(sanitize_text_field($tx), 0, 255);
+            if ($proof !== '') $data['proof_url']    = esc_url_raw($proof);
+            if ($status === 'rejected') $data['processed_at'] = current_time('mysql');
+            $wpdb->update($wpdb->prefix . 'fxsim_affiliate_payouts', $data, ['id' => $payout_id]);
+
+            if ($status === 'rejected') {
+                // Release commissions back to available
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$wpdb->prefix}fxsim_commissions SET payout_id=NULL, status='approved' WHERE payout_id=%d",
+                    $payout_id
+                ));
+            }
+        }
 
         $aff = $wpdb->get_row($wpdb->prepare("SELECT user_id FROM {$wpdb->prefix}fxsim_affiliates WHERE id=%d", $p->affiliate_id));
         $uid = (int) ($aff->user_id ?? 0);
 
-        if ($status === 'paid') {
-            $wpdb->query($wpdb->prepare(
-                "UPDATE {$wpdb->prefix}fxsim_commissions SET status='paid', paid_at=%s WHERE payout_id=%d",
-                current_time('mysql'), $payout_id));
-            if ($uid) {
-                FXSIM_Database::push_notification($uid, 'success', 'Affiliate payout sent',
-                    'Your withdrawal of $' . number_format((float) $p->amount, 2) . ' has been paid.' . ($tx ? ' Ref: ' . $tx : ''), '/dashboard/affiliate');
-                if (class_exists('FXSIM_Emails')) FXSIM_Emails::send($uid, 'affiliate_payout_paid', ['amount' => number_format((float) $p->amount, 2), 'reference' => $tx]);
-            }
-        } elseif ($status === 'rejected') {
-            // Release commissions back to claimable.
-            $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}fxsim_commissions SET payout_id=NULL WHERE payout_id=%d", $payout_id));
-            if ($uid) FXSIM_Database::push_notification($uid, 'warning', 'Affiliate payout rejected',
+        if ($status === 'paid' && $uid) {
+            FXSIM_Database::push_notification($uid, 'success', 'Affiliate payout sent',
+                'Your withdrawal of $' . number_format((float) $p->amount, 2) . ' has been paid.' . ($tx ? ' Ref: ' . $tx : ''), '/dashboard/affiliate');
+            if (class_exists('FXSIM_Emails')) FXSIM_Emails::send($uid, 'affiliate_payout_paid', ['amount' => number_format((float) $p->amount, 2), 'reference' => $tx]);
+        } elseif ($status === 'rejected' && $uid) {
+            FXSIM_Database::push_notification($uid, 'warning', 'Affiliate payout rejected',
                 ($note ?: 'Your withdrawal request was rejected.'), '/dashboard/affiliate');
-        } elseif ($status === 'approved') {
-            if ($uid) FXSIM_Database::push_notification($uid, 'info', 'Affiliate payout approved',
+        } elseif ($status === 'approved' && $uid) {
+            FXSIM_Database::push_notification($uid, 'info', 'Affiliate payout approved',
                 'Your withdrawal of $' . number_format((float) $p->amount, 2) . ' was approved and is being processed.', '/dashboard/affiliate');
         }
         return ['success' => true, 'status' => $status];

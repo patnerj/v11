@@ -79,6 +79,12 @@ class FXSIM_Rate_Limiter {
             'methods'  => ['POST'],
             'default'  => 30,
         ],
+        // Authentication sensitive endpoints (register, reset, verify) (W3 Fix)
+        'auth_ops'      => [
+            'patterns' => ['/auth/register', '/auth/request-reset', '/auth/resend-verification', '/auth/change-password', '/auth/2fa/toggle'],
+            'methods'  => ['POST'],
+            'default'  => 20,
+        ],
         // SSE stream connections
         'stream'        => [
             'patterns' => ['/stream'],
@@ -229,9 +235,14 @@ class FXSIM_Rate_Limiter {
             return null;
         }
 
-        // Webhook, Auth, Theme, Branding: bypass (infrastructure and public UI assets)
-        if ($path === '/stripe/webhook' || strpos($path, '/auth/') !== false || $path === '/theme' || $path === '/branding' || strpos($path, '/config/') !== false) {
+        // Webhook, Theme, Branding, Config: bypass (infrastructure and public UI assets)
+        if ($path === '/stripe/webhook' || $path === '/theme' || $path === '/branding' || strpos($path, '/config/') !== false) {
             return null;
+        }
+
+        // W3 Fix: Rate limit POSTs to auth endpoints (registration, password reset, 2fa)
+        if ($method === 'POST' && strpos($path, '/auth/') !== false) {
+            return 'auth_ops';
         }
 
         // Match against tier patterns — most-specific first
@@ -273,7 +284,12 @@ class FXSIM_Rate_Limiter {
             return 'trading_read';
         }
 
-        return null; // Unclassified — pass through without limiting
+        // W4 Fix: For any unclassified POSTs (e.g. /kyc/submit, /tournaments/join), throttle to auth_write tier (30 req/min)
+        if ($method === 'POST') {
+            return 'auth_write';
+        }
+
+        return null; // Unclassified GETs — pass through
     }
 
     /**

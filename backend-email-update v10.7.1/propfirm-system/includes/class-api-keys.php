@@ -337,12 +337,13 @@ class FXSIM_API_Keys {
             return 'challenge';
         }
 
-        // Trade execution writes
+        // Trade execution writes (W1 Fix: include partial-close)
         if ($method === 'POST' && (
             $path === '/open' ||
             strpos($path, '/close') !== false ||
-            strpos($path, '/sltp/') !== false ||
-            strpos($path, '/pending-order/') !== false
+            strpos($path, '/partial-close') !== false ||
+            strpos($path, '/sltp') !== false ||
+            strpos($path, '/pending-order') !== false
         )) {
             return 'trade';
         }
@@ -673,17 +674,9 @@ class FXSIM_API_Keys {
             return sanitize_text_field(substr($auth_header, 7));
         }
 
-        // Fallback: query parameter
-        if (!empty($_GET[self::QUERY_PARAM])) {
-            return sanitize_text_field(wp_unslash($_GET[self::QUERY_PARAM]));
-        }
-        if (!empty($_GET['fxsim_key'])) {
-            return sanitize_text_field(wp_unslash($_GET['fxsim_key']));
-        }
-        if (!empty($_GET['api_key'])) {
-            return sanitize_text_field(wp_unslash($_GET['api_key']));
-        }
-
+        // W2 Fix: Reject API keys passed in URL query parameters to prevent
+        // credential leakage into access logs, proxy caches, and Referer headers.
+        // API keys must be provided in X-FXSIM-KEY or Authorization headers.
         return null;
     }
 
