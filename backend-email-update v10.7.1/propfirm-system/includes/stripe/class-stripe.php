@@ -256,6 +256,14 @@ class FXSIM_Stripe {
                                     ]);
                                     if (!$inserted) {
                                         $wpdb->delete("{$wpdb->prefix}fxsim_accounts", ['id' => $account_id]);
+                                    } elseif (class_exists('FXSIM_Emails')) {
+                                        FXSIM_Emails::send($user_id, 'tournament_purchased', [
+                                            'item_type'        => 'tournament',
+                                            'tournament_title' => $comp->name ?? 'Competition',
+                                            'starting_balance' => (float)$comp->initial_balance,
+                                            'prize_pool'       => $comp->prize_pool ?? '$25,000',
+                                            'entry_fee'        => (float)$comp->entry_fee,
+                                        ]);
                                     }
                                 }
                             }

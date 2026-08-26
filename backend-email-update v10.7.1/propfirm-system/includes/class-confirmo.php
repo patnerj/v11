@@ -213,6 +213,33 @@ class FXSIM_Confirmo {
                 return new WP_REST_Response(['message' => 'Already processed'], 200);
             }
 
+            // Check if tournament entry order
+            $is_tourn = (int)$order->plan_id === 0 && strpos((string)$order->admin_note, 'tournament_entry:') !== false;
+            if ($is_tourn) {
+                preg_match('/tournament_entry:(\d+)/', (string)$order->admin_note, $matches);
+                $t_id = !empty($matches[1]) ? (int)$matches[1] : 0;
+                $join_res = FXSIM_REST_API::tournament_join_internal((int)$order->user_id, $t_id, $order_id);
+                if (!$join_res['success']) {
+                    error_log("Confirmo Webhook: tournament_join_internal() failed for order $order_id — " . ($join_res['message'] ?? 'unknown error'));
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'log_admin')) {
+                        FXSIM_Database::log_admin(0, 'confirmo_activation_failed', (int)$order->user_id,
+                            "Order #{$order_id} paid via Confirmo but tournament_join_internal() failed. Needs manual activation.");
+                    }
+                } elseif (class_exists('FXSIM_Emails')) {
+                    $t_info = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", $t_id));
+                    FXSIM_Emails::send((int)$order->user_id, 'tournament_purchased', [
+                        'item_type'        => 'tournament',
+                        'tournament_id'    => $t_id,
+                        'tournament_title' => $t_info->title ?? "Tournament #{$t_id}",
+                        'starting_balance' => $t_info->starting_balance ?? 100000,
+                        'prize_pool'       => $t_info->prize_pool ?? '$25,000',
+                        'entry_fee'        => (float)$order->amount,
+                        'end_date'         => $t_info->end_date ?? null,
+                    ]);
+                }
+                return new WP_REST_Response(['message' => 'Tournament entry activated'], 200);
+            }
+
             // Call FXSIM_Challenge_Engine::create_challenge() to activate the account
             try {
                 $result = FXSIM_Challenge_Engine::create_challenge((int)$order->user_id, (int)$order->plan_id);

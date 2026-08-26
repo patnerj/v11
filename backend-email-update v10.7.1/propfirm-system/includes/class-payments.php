@@ -219,23 +219,26 @@ class FXSIM_Payments {
         // by SMTP latency. The upload and DB update above are already complete.
         wp_schedule_single_event(time(), 'fxsim_notify_admin_proof', [(int)$order->id]);
 
+        $is_tourn = (int)$order->plan_id === 0 && strpos((string)$order->admin_note, 'tournament_entry:') !== false;
+        $tourn_title = '';
+        if ($is_tourn && preg_match('/tournament_entry:(\d+)/', (string)$order->admin_note, $m)) {
+            $tourn_title = $wpdb->get_var($wpdb->prepare(
+                "SELECT title FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", (int)$m[1]
+            ));
+        }
+        $trader_link = $is_tourn ? '/dashboard/tournaments' : '/dashboard/challenges';
+        $item_text   = $is_tourn ? ($tourn_title ? "Tournament: {$tourn_title}" : "Tournament Entry") : 'Challenge';
+
         // Confirmation to the trader that their proof was received (J4).
         if (class_exists('FXSIM_Emails')) {
             FXSIM_Emails::send($user_id, 'payment_proof_submitted', [
-                'plan' => $order->plan_name ?? ($order->plan ?? ''),
+                'item_type'        => $is_tourn ? 'tournament' : 'challenge',
+                'tournament_title' => $tourn_title,
+                'plan'             => $is_tourn ? ($tourn_title ?: 'Tournament Entry') : ($order->plan_name ?? ($order->plan ?? 'Challenge')),
+                'amount'           => $order->amount,
             ]);
         }
         if (class_exists('FXSIM_Database')) {
-            $is_tourn = (int)$order->plan_id === 0 && strpos((string)$order->admin_note, 'tournament_entry:') !== false;
-            $tourn_title = '';
-            if ($is_tourn && preg_match('/tournament_entry:(\d+)/', (string)$order->admin_note, $m)) {
-                $tourn_title = $wpdb->get_var($wpdb->prepare(
-                    "SELECT title FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", (int)$m[1]
-                ));
-            }
-            $trader_link = $is_tourn ? '/dashboard/tournaments' : '/dashboard/challenges';
-            $item_text   = $is_tourn ? ($tourn_title ? "Tournament: {$tourn_title}" : "Tournament Entry") : 'Challenge';
-
             FXSIM_Database::push_notification($user_id, 'info', 'Payment proof submitted',
                 "We received your payment proof for {$item_text} and it is pending review.", $trader_link);
             FXSIM_Database::push_admin_notification('warning', 'Payment proof to review',
@@ -286,6 +289,23 @@ class FXSIM_Payments {
             FXSIM_REST_API::invalidate_account_cache((int)$order->user_id);
             FXSIM_Database::log_admin($admin_id, 'payment_approved', (int)$order->user_id,
                 "Order #{$order_id}, Tournament #{$t_id}, Note: {$note}");
+
+            // Fetch tournament details and send rich tournament enrollment email to trader
+            $t_info = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", $t_id
+            ));
+            if (class_exists('FXSIM_Emails')) {
+                FXSIM_Emails::send((int)$order->user_id, 'tournament_purchased', [
+                    'item_type'        => 'tournament',
+                    'tournament_id'    => $t_id,
+                    'tournament_title' => $t_info->title ?? "Tournament #{$t_id}",
+                    'starting_balance' => $t_info->starting_balance ?? 100000,
+                    'prize_pool'       => $t_info->prize_pool ?? '$25,000',
+                    'entry_fee'        => (float)$order->amount,
+                    'end_date'         => $t_info->end_date ?? null,
+                ]);
+            }
+
             FXSIM_Database::push_notification((int)$order->user_id, 'success', 'Tournament Registration Confirmed',
                 'Your payment was approved and you are now enrolled in the tournament. Good luck!', '/dashboard/tournaments');
             return ['success' => true, 'order_id' => $order_id, 'tournament_id' => $t_id, 'account_id' => $join_res['account_id'] ?? 0];
@@ -359,13 +379,25 @@ class FXSIM_Payments {
         // Notify user of rejection
         $user = get_userdata((int)$order->user_id);
         if ($user) {
-            $plan = FXSIM_Challenge_DB::get_plan((int)$order->plan_id);
+            $is_tourn = (int)$order->plan_id === 0 && strpos((string)$order->admin_note, 'tournament_entry:') !== false;
+            $t_title = '';
+            if ($is_tourn && preg_match('/tournament_entry:(\d+)/', (string)$order->admin_note, $m)) {
+                $t_title = $wpdb->get_var($wpdb->prepare(
+                    "SELECT title FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", (int)$m[1]
+                ));
+            }
+            $plan = !$is_tourn ? FXSIM_Challenge_DB::get_plan((int)$order->plan_id) : null;
+            $item_name = $is_tourn ? ($t_title ?: 'Tournament Entry') : ($plan->name ?? 'Challenge');
+
             FXSIM_Emails::send((int)$order->user_id, 'payment_rejected', [
-                'plan_name' => $plan->name ?? 'Challenge',
-                'reason'    => $note,
+                'item_type'        => $is_tourn ? 'tournament' : 'challenge',
+                'tournament_title' => $t_title,
+                'plan_name'        => $item_name,
+                'reason'           => $note,
             ]);
             FXSIM_Database::push_notification((int)$order->user_id, 'warning', 'Payment not approved',
-                ($note ?: 'Your payment could not be approved. Please contact support.'), '/challenges');
+                ($note ?: 'Your payment could not be approved. Please contact support.'),
+                $is_tourn ? '/dashboard/tournaments' : '/challenges');
         }
 
         return ['success' => true];

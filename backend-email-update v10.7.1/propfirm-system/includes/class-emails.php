@@ -85,7 +85,7 @@ class FXSIM_Emails {
 
         $brand   = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System') : 'PropFirm System';
         $tagline = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_tagline', 'The Funded Trader Platform') : 'The Funded Trader Platform';
-        $color   = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('primary_color', '#7c6ef5') : '#7c6ef5';
+        $color   = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('primary_color', '#10B981') : '#10B981';
         $support = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('support_email', '') : '';
         $footer  = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('footer_text', '') : '';
         $logo    = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('logo_url', '') : '';
@@ -142,8 +142,16 @@ class FXSIM_Emails {
                 self::block_welcome($name, $brand, $dash, $chall),
             ],
             'challenge_purchased' => [
-                'Challenge Started — ' . esc_html($d['plan_name'] ?? 'Your Challenge'),
-                self::block_purchased($name, $brand, $d, $dash),
+                (($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title'])
+                    ? 'Tournament Confirmed — 🏆 ' . esc_html($d['tournament_title'] ?? 'Tournament')
+                    : 'Challenge Started — ' . esc_html($d['plan_name'] ?? 'Your Challenge')),
+                (($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title'])
+                    ? self::block_tournament_enrolled($name, $brand, $d, $dash)
+                    : self::block_purchased($name, $brand, $d, $dash)),
+            ],
+            'tournament_purchased', 'tournament_enrolled' => [
+                'Tournament Confirmed — 🏆 ' . esc_html($d['tournament_title'] ?? ($d['plan_name'] ?? 'Tournament')),
+                self::block_tournament_enrolled($name, $brand, $d, $dash),
             ],
             'phase_passed' => [
                 'Phase ' . esc_html((string)($d['phase'] ?? '1')) . ' Passed!',
@@ -158,12 +166,18 @@ class FXSIM_Emails {
                 self::block_challenge_failed($name, $brand, $d, $chall),
             ],
             'payment_rejected' => [
-                'Payment Not Approved — ' . esc_html($d['plan_name'] ?? 'Challenge'),
+                (($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title'])
+                    ? 'Tournament Entry Not Approved — ' . esc_html($d['tournament_title'] ?? ($d['plan_name'] ?? 'Tournament'))
+                    : 'Payment Not Approved — ' . esc_html($d['plan_name'] ?? 'Challenge')),
                 self::block_payment_rejected($name, $brand, $d, $chall),
             ],
             'payment_approved' => [
-                'Payment Approved — Challenge Account Activated',
-                self::block_purchased($name, $brand, $d, $dash),
+                (($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title'])
+                    ? 'Tournament Registration Approved — 🏆 ' . esc_html($d['tournament_title'] ?? 'Tournament')
+                    : 'Payment Approved — Challenge Account Activated'),
+                (($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title'])
+                    ? self::block_tournament_enrolled($name, $brand, $d, $dash)
+                    : self::block_purchased($name, $brand, $d, $dash)),
             ],
             'password_reset' => [
                 'Reset your password',
@@ -220,11 +234,10 @@ class FXSIM_Emails {
                 . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Affiliate Dashboard', $dash . '/affiliate') . "</div>",
             ],
             'payment_proof_submitted' => [
-                'Payment Proof Received — ' . $brand,
-                "<p>Hi {$name},</p><p>We've received your payment proof"
-                . (!empty($d['plan']) ? " for the <strong>" . esc_html($d['plan']) . "</strong> challenge" : '')
-                . ". Our team will review it shortly — you'll get another email once approved.</p>"
-                . "<div style='text-align:center;margin:28px 0'>" . self::btn('View Dashboard', $dash) . "</div>",
+                (($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title'])
+                    ? 'Tournament Entry Payment Received — ' . $brand
+                    : 'Payment Proof Received — ' . $brand),
+                self::block_payment_proof_submitted($name, $brand, $d, $dash),
             ],
             'kyc_submitted' => [
                 'Verification Received — ' . $brand,
@@ -362,12 +375,86 @@ class FXSIM_Emails {
         " . self::btn('Start a New Challenge', $chall);
     }
 
-    private static function block_payment_rejected(string $name, string $brand, array $d, string $chall): string {
-        $plan   = esc_html($d['plan_name'] ?? 'Challenge');
-        $reason = esc_html($d['reason'] ?? 'Payment could not be verified.');
+    private static function block_tournament_enrolled(string $name, string $brand, array $d, string $dash): string {
+        $title    = esc_html($d['tournament_title'] ?? ($d['plan_name'] ?? 'Tournament'));
+        $balance  = '$' . number_format((float)($d['starting_balance'] ?? ($d['account_size'] ?? 100000)), 0);
+        $prize    = esc_html((string)($d['prize_pool'] ?? '$25,000'));
+        $fee      = !empty($d['entry_fee']) ? '$' . number_format((float)$d['entry_fee'], 2) : 'Confirmed';
+        $ends     = !empty($d['end_date']) ? date('M j, Y', strtotime((string)$d['end_date'])) : 'See schedule';
+        $terminal = $dash . '/trading';
+
         return "
-        <h2 style='font-size:22px;font-weight:800;color:#111827;margin:0 0 8px'>Payment Not Approved</h2>
-        <p style='color:#6b7280;margin:0 0 24px'>Hi {$name}, your payment for <strong style='color:#111827'>{$plan}</strong> was not approved.</p>
+        <div style='background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:20px;text-align:center;margin-bottom:24px'>
+          <div style='font-size:36px;margin-bottom:8px'>🏆</div>
+          <h2 style='font-size:22px;font-weight:800;color:#166534;margin:0 0 4px'>You're Enrolled in the Tournament!</h2>
+          <p style='color:#16a34a;margin:0;font-size:15px'>Hi {$name}, your registration for <strong style='color:#166534'>{$title}</strong> is confirmed.</p>
+        </div>
+
+        <table cellpadding='0' cellspacing='0' width='100%' style='background:#f9fafb;border-radius:10px;margin-bottom:24px;border:1px solid #e5e7eb'>
+          <tr>
+            <td style='padding:14px 20px;border-bottom:1px solid #e5e7eb'>
+              <span style='color:#9ca3af;font-size:12px;text-transform:uppercase;font-weight:600'>Starting Balance</span><br>
+              <strong style='color:#111827;font-size:18px'>{$balance}</strong>
+            </td>
+            <td style='padding:14px 20px;border-bottom:1px solid #e5e7eb;border-left:1px solid #e5e7eb'>
+              <span style='color:#9ca3af;font-size:12px;text-transform:uppercase;font-weight:600'>Prize Pool</span><br>
+              <strong style='color:#10b981;font-size:18px'>{$prize}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td style='padding:14px 20px'>
+              <span style='color:#9ca3af;font-size:12px;text-transform:uppercase;font-weight:600'>Entry Fee</span><br>
+              <strong style='color:#111827;font-size:15px'>{$fee}</strong>
+            </td>
+            <td style='padding:14px 20px;border-left:1px solid #e5e7eb'>
+              <span style='color:#9ca3af;font-size:12px;text-transform:uppercase;font-weight:600'>Ends On</span><br>
+              <strong style='color:#111827;font-size:15px'>{$ends}</strong>
+            </td>
+          </tr>
+        </table>
+
+        <p style='color:#6b7280;font-size:14px;margin:0 0 16px'>Your dedicated tournament trading account is live. Switch to this account in your trading terminal to start placing trades and climb the leaderboard.</p>
+        " . self::btn('Open Trading Terminal', $terminal) . "
+        <a href='{$dash}/tournaments' style='display:inline-block;margin-left:12px;color:#6b7280;font-size:14px;text-decoration:none'>View Tournaments →</a>";
+    }
+
+    private static function block_payment_proof_submitted(string $name, string $brand, array $d, string $dash): string {
+        $is_tourn = ($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title']);
+        $item_name = esc_html($d['tournament_title'] ?? ($d['plan'] ?? ($d['plan_name'] ?? '')));
+        $target_url = $is_tourn ? $dash . '/tournaments' : $dash;
+        $btn_label  = $is_tourn ? 'View Tournaments' : 'View Dashboard';
+
+        if ($is_tourn) {
+            $headline = "We've received your payment proof for <strong>Tournament: {$item_name}</strong>.";
+            $subtext  = "Our team will review your proof shortly. Once approved, your tournament trading account will be activated and you will be enrolled automatically.";
+        } else {
+            $headline = "We've received your payment proof" . ($item_name ? " for the <strong>{$item_name}</strong> challenge" : "") . ".";
+            $subtext  = "Our team will review it shortly — you'll get another email once approved and your challenge account is activated.";
+        }
+
+        return "
+        <h2 style='font-size:22px;font-weight:800;color:#111827;margin:0 0 8px'>Payment Proof Received</h2>
+        <p style='color:#6b7280;margin:0 0 16px'>Hi {$name},</p>
+        <p style='color:#374151;font-size:15px;margin:0 0 12px'>{$headline}</p>
+        <p style='color:#6b7280;font-size:14px;margin:0 0 24px'>{$subtext}</p>
+        " . self::btn($btn_label, $target_url);
+    }
+
+    private static function block_payment_rejected(string $name, string $brand, array $d, string $chall): string {
+        $is_tourn   = ($d['item_type'] ?? '') === 'tournament' || !empty($d['tournament_title']);
+        $item_name  = esc_html($d['tournament_title'] ?? ($d['plan_name'] ?? 'Challenge'));
+        $target_url = $is_tourn ? self::frontend_base() . '/dashboard/tournaments' : $chall;
+        $btn_label  = $is_tourn ? 'Back to Tournaments' : 'Try Again';
+        $reason     = esc_html($d['reason'] ?? 'Payment could not be verified.');
+
+        $title = $is_tourn ? "Tournament Entry Not Approved" : "Payment Not Approved";
+        $intro = $is_tourn
+            ? "Hi {$name}, your payment for Tournament: <strong style='color:#111827'>{$item_name}</strong> was not approved."
+            : "Hi {$name}, your payment for <strong style='color:#111827'>{$item_name}</strong> was not approved.";
+
+        return "
+        <h2 style='font-size:22px;font-weight:800;color:#111827;margin:0 0 8px'>{$title}</h2>
+        <p style='color:#6b7280;margin:0 0 24px'>{$intro}</p>
 
         <div style='background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:20px;margin-bottom:24px'>
           <p style='color:#dc2626;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px'>Reason</p>
@@ -375,7 +462,7 @@ class FXSIM_Emails {
         </div>
 
         <p style='color:#6b7280;font-size:14px;margin:0 0 24px'>Please resubmit your payment or contact support if you need help.</p>
-        " . self::btn('Try Again', $chall);
+        " . self::btn($btn_label, $target_url);
     }
 
     // ── HTML wrapper — Clean light fintech email template ─────────────────────
@@ -386,7 +473,7 @@ class FXSIM_Emails {
         $full_ctx = [
             'brand'   => $brand,
             'tagline' => $ctx['tagline'] ?? 'Professional Prop Trading',
-            'color'   => $ctx['color']   ?? '#7c6ef5',
+            'color'   => $ctx['color']   ?? '#10B981',
             'footer'  => $ctx['footer']  ?? '',
             'support' => $ctx['support'] ?? '',
             'logo'    => $ctx['logo'] ?? (class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('logo_url', '') : ''),
@@ -404,7 +491,7 @@ class FXSIM_Emails {
     private static function wrap(string $body, array $ctx): string {
         $brand   = esc_html($ctx['brand']);
         $tagline = esc_html($ctx['tagline']);
-        $color   = esc_attr($ctx['color'] ?: '#7c6ef5');
+        $color   = esc_attr($ctx['color'] ?: '#10B981');
         $year    = date('Y');
         $footer  = esc_html($ctx['footer'] ?: "© {$year} {$brand}. All rights reserved.");
         $support = $ctx['support']
@@ -469,13 +556,13 @@ class FXSIM_Emails {
 
     // ── Reusable components ────────────────────────────────────────────────────
     public static function btn(string $text, string $url): string {
-        return "<a href='{$url}' style='display:inline-block;background:#7c6ef5;color:#ffffff;font-size:14px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;letter-spacing:.2px'>{$text}</a>";
+        return "<a href='{$url}' style='display:inline-block;background:#10B981;color:#ffffff;font-size:14px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;letter-spacing:.2px'>{$text}</a>";
     }
 
     public static function send_admin(string $subject, string $title, string $message): bool {
         $brand   = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System') : 'PropFirm System';
         $tagline = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_tagline', 'The Funded Trader Platform') : 'The Funded Trader Platform';
-        $color   = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('primary_color', '#7c6ef5') : '#7c6ef5';
+        $color   = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('primary_color', '#10B981') : '#10B981';
         $support = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('support_email', '') : '';
         $footer  = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('footer_text', '') : '';
         $admin   = get_option('fxsim_admin_email', '') ?: get_option('admin_email');

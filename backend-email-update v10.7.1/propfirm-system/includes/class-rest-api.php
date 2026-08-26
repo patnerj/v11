@@ -9520,6 +9520,19 @@ class FXSIM_REST_API {
             FXSIM_Database::push_notification($uid, 'success', 'Tournament Registration Confirmed', "You have joined {$t->title}!", '/dashboard/tournaments');
         }
 
+        // When joined directly (free or wallet, order_id === 0), send enrollment email
+        if ($order_id === 0 && class_exists('FXSIM_Emails')) {
+            FXSIM_Emails::send($uid, 'tournament_enrolled', [
+                'item_type'        => 'tournament',
+                'tournament_id'    => $tournament_id,
+                'tournament_title' => $t->title,
+                'starting_balance' => $starting_bal,
+                'prize_pool'       => $t->prize_pool,
+                'entry_fee'        => (float)$t->entry_fee,
+                'end_date'         => $t->end_date,
+            ]);
+        }
+
         return [
             'success'        => true,
             'message'        => "Successfully enrolled in {$t->title}!",
