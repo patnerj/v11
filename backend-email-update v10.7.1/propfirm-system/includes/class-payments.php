@@ -226,10 +226,20 @@ class FXSIM_Payments {
             ]);
         }
         if (class_exists('FXSIM_Database')) {
+            $is_tourn = (int)$order->plan_id === 0 && strpos((string)$order->admin_note, 'tournament_entry:') !== false;
+            $tourn_title = '';
+            if ($is_tourn && preg_match('/tournament_entry:(\d+)/', (string)$order->admin_note, $m)) {
+                $tourn_title = $wpdb->get_var($wpdb->prepare(
+                    "SELECT title FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", (int)$m[1]
+                ));
+            }
+            $trader_link = $is_tourn ? '/dashboard/tournaments' : '/dashboard/challenges';
+            $item_text   = $is_tourn ? ($tourn_title ? "Tournament: {$tourn_title}" : "Tournament Entry") : 'Challenge';
+
             FXSIM_Database::push_notification($user_id, 'info', 'Payment proof submitted',
-                'We received your payment proof and it is pending review.', '/dashboard/challenges');
+                "We received your payment proof for {$item_text} and it is pending review.", $trader_link);
             FXSIM_Database::push_admin_notification('warning', 'Payment proof to review',
-                'A trader uploaded payment proof awaiting approval.', $user_id);
+                "A trader uploaded payment proof for {$item_text} awaiting approval.", $user_id);
         }
 
         return ['success' => true, 'message' => 'Payment proof submitted. Awaiting admin review.'];
@@ -391,20 +401,62 @@ class FXSIM_Payments {
         ));
     }
 
+    public static function enrich_orders_with_tournament_info(array &$orders): void {
+        if (empty($orders)) return;
+        global $wpdb;
+        $t_ids = [];
+        foreach ($orders as $o) {
+            $note = (string)($o->admin_note ?? '');
+            if ((int)($o->plan_id ?? 0) === 0 && preg_match('/tournament_entry:(\d+)/', $note, $m)) {
+                $t_ids[(int)$m[1]] = true;
+            }
+        }
+        if (empty($t_ids)) return;
+
+        $id_list = implode(',', array_map('intval', array_keys($t_ids)));
+        $tournaments = $wpdb->get_results(
+            "SELECT id, title, starting_balance, prize_pool FROM {$wpdb->prefix}fxsim_tournaments WHERE id IN ($id_list)"
+        );
+        $t_map = [];
+        if ($tournaments) {
+            foreach ($tournaments as $t) {
+                $t_map[(int)$t->id] = $t;
+            }
+        }
+
+        foreach ($orders as &$o) {
+            $note = (string)($o->admin_note ?? '');
+            if ((int)($o->plan_id ?? 0) === 0 && preg_match('/tournament_entry:(\d+)/', $note, $m)) {
+                $tid = (int)$m[1];
+                $t = $t_map[$tid] ?? null;
+                $o->order_type       = 'tournament';
+                $o->tournament_id    = $tid;
+                $o->tournament_title = $t ? $t->title : "Tournament #{$tid}";
+                $o->plan_name        = $t ? "Tournament: {$t->title} Entry Fee" : "Tournament #{$tid} Entry Fee";
+                $o->account_size     = $t ? $t->starting_balance : 0;
+            } else {
+                $o->order_type = 'challenge';
+            }
+        }
+        unset($o);
+    }
+
     public static function get_user_orders(int $user_id): array {
         global $wpdb;
-        return $wpdb->get_results($wpdb->prepare(
+        $orders = $wpdb->get_results($wpdb->prepare(
             "SELECT po.*, cp.name AS plan_name, cp.account_size
              FROM {$wpdb->prefix}fxsim_payment_orders po
              LEFT JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
              WHERE po.user_id = %d ORDER BY po.created_at DESC",
             $user_id
         )) ?: [];
+        self::enrich_orders_with_tournament_info($orders);
+        return $orders;
     }
 
     public static function get_pending_orders(): array {
         global $wpdb;
-        return $wpdb->get_results("
+        $orders = $wpdb->get_results("
             SELECT po.*, u.user_login, u.user_email, cp.name AS plan_name, cp.account_size
             FROM {$wpdb->prefix}fxsim_payment_orders po
             JOIN {$wpdb->prefix}users u ON po.user_id = u.ID
@@ -412,11 +464,13 @@ class FXSIM_Payments {
             WHERE po.status = 'pending'
             ORDER BY po.created_at ASC
         ") ?: [];
+        self::enrich_orders_with_tournament_info($orders);
+        return $orders;
     }
 
     public static function get_all_orders(int $limit = 100): array {
         global $wpdb;
-        return $wpdb->get_results($wpdb->prepare("
+        $orders = $wpdb->get_results($wpdb->prepare("
             SELECT po.*, u.user_login, u.user_email, cp.name AS plan_name, cp.account_size,
                    a.user_login AS reviewed_by_login
             FROM {$wpdb->prefix}fxsim_payment_orders po
@@ -425,14 +479,31 @@ class FXSIM_Payments {
             LEFT JOIN {$wpdb->prefix}users a ON po.reviewed_by = a.ID
             ORDER BY po.created_at DESC LIMIT %d
         ", $limit)) ?: [];
+        self::enrich_orders_with_tournament_info($orders);
+        return $orders;
     }
 
     public static function notify_admin_new_proof(object $order): void {
         $admins = get_users(['role' => 'administrator', 'fields' => ['user_email']]);
         if (!$admins) return;
-        $plan    = FXSIM_Challenge_DB::get_plan((int)$order->plan_id);
-        $user    = get_userdata((int)$order->user_id);
-        $subject = "Payment Proof Submitted — Order #{$order->id}";
+        global $wpdb;
+
+        $user = get_userdata((int)$order->user_id);
+        $note = (string)($order->admin_note ?? '');
+        $item_label = 'Unknown Plan';
+
+        if ((int)$order->plan_id === 0 && preg_match('/tournament_entry:(\d+)/', $note, $m)) {
+            $tid = (int)$m[1];
+            $t_title = $wpdb->get_var($wpdb->prepare(
+                "SELECT title FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", $tid
+            ));
+            $item_label = "🏆 Tournament Entry — " . ($t_title ? $t_title : "#{$tid}");
+            $subject = "Payment Proof: Tournament Entry (" . ($t_title ? $t_title : "#{$tid}") . ") — Order #{$order->id}";
+        } else {
+            $plan = FXSIM_Challenge_DB::get_plan((int)$order->plan_id);
+            $item_label = $plan->name ?? 'Challenge Plan';
+            $subject = "Payment Proof Submitted — Order #{$order->id}";
+        }
 
         $fe   = class_exists('FXSIM_Emails') ? FXSIM_Emails::frontend_base() : home_url();
         $body = "<p style='font-size:12px;color:#10B981;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px'>Admin notification</p>"
@@ -440,7 +511,7 @@ class FXSIM_Payments {
               . "<p>A trader has submitted a payment proof for review.</p>"
               . "<p><strong>Order:</strong> #" . esc_html((string)$order->id) . "<br>"
               . "<strong>Trader:</strong> " . esc_html($user->user_login ?? '') . " (" . esc_html($user->user_email ?? '') . ")<br>"
-              . "<strong>Plan:</strong> " . esc_html($plan->name ?? 'Unknown') . "<br>"
+              . "<strong>Item:</strong> " . esc_html($item_label) . "<br>"
               . "<strong>Amount:</strong> $" . esc_html((string)$order->amount) . " " . esc_html((string)$order->currency) . "</p>"
               . "<div style='text-align:center;margin:24px 0'>" . (class_exists('FXSIM_Emails') ? FXSIM_Emails::btn('Review in admin dashboard', $fe . '/dashboard/admin/payments') : '') . "</div>";
         $html = class_exists('FXSIM_Emails') ? FXSIM_Emails::build_html($body) : $body;
