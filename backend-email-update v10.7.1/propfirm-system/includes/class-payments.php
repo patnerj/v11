@@ -75,6 +75,74 @@ class FXSIM_Payments {
                 'amount' => $final, 'original' => $price, 'discount' => $discount, 'currency' => $currency];
     }
 
+    // ── Create a pending payment order for Tournament Entry ────────────────────
+    public static function create_tournament_order(int $user_id, int $tournament_id, string $gateway = 'manual'): array {
+        global $wpdb;
+
+        $t = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_tournaments WHERE id = %d", $tournament_id));
+        if (!$t) return ['success' => false, 'message' => 'Tournament not found.'];
+        if (!in_array($t->status, ['upcoming', 'active'], true)) {
+            return ['success' => false, 'message' => "Tournament is {$t->status} and cannot be joined."];
+        }
+
+        $fee = (float) $t->entry_fee;
+        if ($fee <= 0) {
+            return ['success' => false, 'message' => 'This tournament is free to join.'];
+        }
+
+        $note_tag = 'tournament_entry:' . $tournament_id;
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}fxsim_payment_orders
+             WHERE user_id = %d AND plan_id = 0 AND status = 'pending' AND admin_note LIKE %s",
+            $user_id, $note_tag . '%'
+        ));
+
+        if ($existing) {
+            $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', [
+                'amount'          => $fee,
+                'original_amount' => $fee,
+                'gateway'         => $gateway,
+                'currency'        => 'USD',
+            ], ['id' => (int) $existing]);
+            return [
+                'success'       => true,
+                'order_id'      => (int) $existing,
+                'existing'      => true,
+                'amount'        => $fee,
+                'currency'      => 'USD',
+                'tournament_id' => $tournament_id,
+                'title'         => $t->title
+            ];
+        }
+
+        $wpdb->insert($wpdb->prefix . 'fxsim_payment_orders', [
+            'user_id'         => $user_id,
+            'plan_id'         => 0,
+            'amount'          => $fee,
+            'original_amount' => $fee,
+            'discount_amount' => 0,
+            'currency'        => 'USD',
+            'gateway'         => $gateway,
+            'status'          => 'pending',
+            'admin_note'      => $note_tag,
+        ]);
+
+        $order_id = (int) $wpdb->insert_id;
+        if (class_exists('FXSIM_Database')) {
+            FXSIM_Database::push_admin_notification('info', 'New tournament entry payment',
+                'A trader initiated entry fee checkout for tournament: ' . $t->title, $user_id);
+        }
+
+        return [
+            'success'       => true,
+            'order_id'      => $order_id,
+            'amount'        => $fee,
+            'currency'      => 'USD',
+            'tournament_id' => $tournament_id,
+            'title'         => $t->title
+        ];
+    }
+
     // ── Submit payment proof (manual gateway) ─────────────────────────────────
     public static function submit_proof(int $order_id, int $user_id, array $file, string $notes = '', string $txn_reference = ''): array {
         global $wpdb;
@@ -191,6 +259,26 @@ class FXSIM_Payments {
         ));
         if (!$claimed || $wpdb->rows_affected === 0) {
             return ['success' => false, 'message' => 'Already approved.'];
+        }
+
+        // Check if tournament entry order
+        if ((int)$order->plan_id === 0 && strpos((string)$order->admin_note, 'tournament_entry:') !== false) {
+            preg_match('/tournament_entry:(\d+)/', (string)$order->admin_note, $matches);
+            $t_id = !empty($matches[1]) ? (int)$matches[1] : 0;
+            $join_res = FXSIM_REST_API::tournament_join_internal((int)$order->user_id, $t_id, $order_id);
+            if (!$join_res['success']) {
+                $wpdb->update($wpdb->prefix . 'fxsim_payment_orders', [
+                    'status'     => 'pending',
+                    'admin_note' => $order->admin_note . ' | Activation failed: ' . sanitize_text_field($join_res['message'] ?? 'unknown error'),
+                ], ['id' => $order_id]);
+                return array_merge(['success' => false, 'order_id' => $order_id], $join_res);
+            }
+            FXSIM_REST_API::invalidate_account_cache((int)$order->user_id);
+            FXSIM_Database::log_admin($admin_id, 'payment_approved', (int)$order->user_id,
+                "Order #{$order_id}, Tournament #{$t_id}, Note: {$note}");
+            FXSIM_Database::push_notification((int)$order->user_id, 'success', 'Tournament Registration Confirmed',
+                'Your payment was approved and you are now enrolled in the tournament. Good luck!', '/dashboard/tournaments');
+            return ['success' => true, 'order_id' => $order_id, 'tournament_id' => $t_id, 'account_id' => $join_res['account_id'] ?? 0];
         }
 
         // NOW create the challenge account
@@ -347,7 +435,7 @@ class FXSIM_Payments {
         $subject = "Payment Proof Submitted — Order #{$order->id}";
 
         $fe   = class_exists('FXSIM_Emails') ? FXSIM_Emails::frontend_base() : home_url();
-        $body = "<p style='font-size:12px;color:#7c6ef5;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px'>Admin notification</p>"
+        $body = "<p style='font-size:12px;color:#10B981;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px'>Admin notification</p>"
               . "<h1 style='font-size:21px;font-weight:800;color:#dde8f5;margin:0 0 12px'>Payment proof submitted</h1>"
               . "<p>A trader has submitted a payment proof for review.</p>"
               . "<p><strong>Order:</strong> #" . esc_html((string)$order->id) . "<br>"
