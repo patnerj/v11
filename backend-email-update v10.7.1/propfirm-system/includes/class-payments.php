@@ -396,7 +396,7 @@ class FXSIM_Payments {
         return $wpdb->get_results($wpdb->prepare(
             "SELECT po.*, cp.name AS plan_name, cp.account_size
              FROM {$wpdb->prefix}fxsim_payment_orders po
-             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
+             LEFT JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
              WHERE po.user_id = %d ORDER BY po.created_at DESC",
             $user_id
         )) ?: [];
@@ -408,7 +408,7 @@ class FXSIM_Payments {
             SELECT po.*, u.user_login, u.user_email, cp.name AS plan_name, cp.account_size
             FROM {$wpdb->prefix}fxsim_payment_orders po
             JOIN {$wpdb->prefix}users u ON po.user_id = u.ID
-            JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
+            LEFT JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
             WHERE po.status = 'pending'
             ORDER BY po.created_at ASC
         ") ?: [];
@@ -421,7 +421,7 @@ class FXSIM_Payments {
                    a.user_login AS reviewed_by_login
             FROM {$wpdb->prefix}fxsim_payment_orders po
             JOIN {$wpdb->prefix}users u ON po.user_id = u.ID
-            JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
+            LEFT JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON po.plan_id = cp.id
             LEFT JOIN {$wpdb->prefix}users a ON po.reviewed_by = a.ID
             ORDER BY po.created_at DESC LIMIT %d
         ", $limit)) ?: [];
