@@ -5432,7 +5432,7 @@ class FXSIM_REST_API {
                 $tid, $user_id
             ));
             if ( $fxacc > 0 ) {
-                $acc = $wpdb->get_row( $wpdb->prepare('SELECT * FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d', $fxacc) );
+                $acc = $wpdb->get_row( $wpdb->prepare("SELECT * FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d", $fxacc) );
                 if ( $acc ) return array( $acc, false );
             }
         }
