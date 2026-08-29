@@ -23,7 +23,11 @@ import { toast } from 'sonner'
 export default function AdminAnalyticsPage() {
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('monthly')
 
+<<<<<<< HEAD
   const { data: revenue, isPending: isRevPending, isError: isRevError, refetch: refetchRevenue } = useQuery({
+=======
+  const { data: revenue, isPending: isRevPending, refetch: refetchRevenue } = useQuery({
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     queryKey: ['admin-analytics-revenue', period],
     queryFn: async () => {
       const res = await api.admin.analyticsRevenue(period)
@@ -33,7 +37,11 @@ export default function AdminAnalyticsPage() {
     staleTime: 15000,
   })
 
+<<<<<<< HEAD
   const { data: growth, isPending: isGrowthPending, isError: isGrowthError, refetch: refetchGrowth } = useQuery({
+=======
+  const { data: growth, isPending: isGrowthPending, refetch: refetchGrowth } = useQuery({
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     queryKey: ['admin-analytics-growth', period],
     queryFn: async () => {
       const res = await api.admin.analyticsGrowth(period)
@@ -43,7 +51,11 @@ export default function AdminAnalyticsPage() {
     staleTime: 15000,
   })
 
+<<<<<<< HEAD
   const { data: challenges, isPending: isChallengesPending, isError: isChallengesError, refetch: refetchChallenges } = useQuery({
+=======
+  const { data: challenges, isPending: isChallengesPending, refetch: refetchChallenges } = useQuery({
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     queryKey: ['admin-analytics-challenges'],
     queryFn: async () => {
       const res = await api.admin.analyticsChallenges()
@@ -54,9 +66,12 @@ export default function AdminAnalyticsPage() {
   })
 
   const isPending = isRevPending || isGrowthPending || isChallengesPending
+<<<<<<< HEAD
   // Previously nothing distinguished "failed to load" from a genuinely
   // zero-revenue business — every KPI just rendered $0 either way.
   const isAnalyticsError = isRevError || isGrowthError || isChallengesError
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   const handleRefreshAll = async () => {
     try {
@@ -95,11 +110,15 @@ export default function AdminAnalyticsPage() {
     return `$${num.toLocaleString()}`
   }
 
+<<<<<<< HEAD
   // Matches the actual backend window (analytics_bucket in class-rest-api.php)
   // — this previously claimed 7 days / 6 weeks / 7 months while the backend
   // returns 30 days / 12 weeks / 12 months of buckets, so the chart showed
   // roughly double what its own label promised.
   const periodLabel = period === 'daily' ? 'last 30 days' : period === 'weekly' ? 'last 12 weeks' : 'last 12 months'
+=======
+  const periodLabel = period === 'daily' ? 'last 7 days' : period === 'weekly' ? 'last 6 weeks' : 'last 7 months'
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   // Dynamic Revenue Series
   const revenueChartData = useMemo(() => {
@@ -258,6 +277,7 @@ export default function AdminAnalyticsPage() {
             <p className="text-xs text-gray-400 font-mono">Aggregating real-time financial telemetry...</p>
           </div>
         </div>
+<<<<<<< HEAD
       ) : isAnalyticsError ? (
         <div className="flex h-96 items-center justify-center">
           <div className="text-center space-y-3 max-w-md">
@@ -271,6 +291,8 @@ export default function AdminAnalyticsPage() {
             </Button>
           </div>
         </div>
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       ) : (
         <>
           {/* ── 1. Top 4 Clean Unified KPI Cards ──────────────────────────────── */}

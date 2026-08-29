@@ -3,7 +3,11 @@
 import { create } from 'zustand'
 import { api } from '@/lib/api'
 import { invalidateFxsim, setSession, hydrateSession, clearFxsimCache } from '@/lib/fxsim'
+<<<<<<< HEAD
 import { sessionEstablish, sessionDestroy, notifySessionCleared } from '@/lib/session'
+=======
+import { sessionEstablish, sessionDestroy } from '@/lib/session'
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 import { toast } from 'sonner'
 import type { AuthUser } from '@/types/api'
 
@@ -86,11 +90,16 @@ export const useAuth = create<AuthState>((set, get) => ({
       setSession({ nonce: res.data.nonce, bearer: token })
       // Server-verified signed cookie for middleware route protection.
       if ((res.data as any).token) await establishSessionSafe((res.data as any).token, remember)
+<<<<<<< HEAD
       // Clear any cached anonymous responses, AND any react-query cache left
       // over from a previous user's session on this device (see
       // notifySessionCleared's own comment in lib/session.ts).
       clearFxsimCache()
       notifySessionCleared()
+=======
+      // Clear any cached anonymous responses
+      clearFxsimCache()
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       // Defensive: clear any leftover impersonation record from a prior session.
       // The dynamic import avoids a circular dependency with the impersonation store.
       try {
@@ -113,7 +122,10 @@ export const useAuth = create<AuthState>((set, get) => ({
       setSession({ nonce: res.data.nonce, bearer: token })
       if ((res.data as any)?.token) await establishSessionSafe((res.data as any).token, remember ?? true)
       clearFxsimCache()
+<<<<<<< HEAD
       notifySessionCleared()
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       try {
         if (typeof window !== 'undefined') sessionStorage.removeItem('fxsim:impersonating')
         const { useImpersonation } = await import('@/store/impersonation')
@@ -134,7 +146,10 @@ export const useAuth = create<AuthState>((set, get) => ({
       setSession({ nonce: res.data.nonce, bearer: token })
       if ((res.data as any)?.token) await establishSessionSafe((res.data as any).token, true)
       clearFxsimCache()
+<<<<<<< HEAD
       notifySessionCleared()
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       set({ user: res.data.user, loading: false, ready: true, lastChecked: Date.now(), error: null })
       return { ok: true }
     }

@@ -90,19 +90,31 @@ export function PayoutManagementModal({
   const traderName = payout.name || payout.username || payout.user_login || `Trader #${payout.user_id || payout.id}`
   const traderEmail = payout.email || payout.user_email || `${payout.username || 'trader'}@example.com`
   
+<<<<<<< HEAD
   // Never invent a payout amount — this figure drives the actual balance
   // deduction when the payout is marked paid, so a fabricated fallback here
   // would misstate real money moved.
   const requestedAmt = Number(payout.amount_requested || payout.amount || 0)
+=======
+  const requestedAmt = Number(payout.amount_requested || payout.amount || 540.00)
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const splitPct = Number(payout.profit_split_pct || 80)
   const traderShare = payout.trader_amount ? Number(payout.trader_amount) : (requestedAmt * (splitPct / 100))
   const firmShare = payout.firm_amount ? Number(payout.firm_amount) : (requestedAmt - traderShare)
 
   const method = (payout.payment_method || payout.gateway || 'Crypto TRC20').toUpperCase()
+<<<<<<< HEAD
   // Never invent a destination address — a fabricated one displayed with a
   // working Copy button risks an admin sending real funds to a wallet that
   // belongs to nobody involved. Show the real address on file, or nothing.
   const destinationAddress = payout.payment_address || null
+=======
+  const destinationAddress = payout.payment_address || (
+    method.includes('TRC20') ? 'TQ5xWzV58Z1mQ7rP9fK2jN8xL4yB6vC3dA' :
+    method.includes('BEP20') ? '0x89F2A71d4C8B08a54A94bC80521e6490FDbCe2B1' :
+    'IBAN: GB29 NWBK 6016 1331 9268 19 • Swift: NWBKGB2L'
+  )
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   const dateFormatted = payout.requested_at || payout.created_at 
     ? new Date(payout.requested_at || payout.created_at || Date.now()).toLocaleString('en-US', {
@@ -139,6 +151,7 @@ export function PayoutManagementModal({
       return
     }
 
+<<<<<<< HEAD
     if (action === 'paid' && requestedAmt <= 0) {
       toast.error('This payout has no amount on file — cannot mark as paid.')
       return
@@ -149,6 +162,8 @@ export function PayoutManagementModal({
       return
     }
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     if (action === 'rejected' && !adminNote.trim()) {
       toast.error('Admin audit note is required to reject a payout.')
       return
@@ -397,6 +412,7 @@ export function PayoutManagementModal({
               <Wallet className="h-3.5 w-3.5 text-emerald-400" />
               Destination Gateway: <span className="font-mono text-emerald-400 font-bold">{method}</span>
             </span>
+<<<<<<< HEAD
             {destinationAddress && (
               <button
                 type="button"
@@ -411,6 +427,20 @@ export function PayoutManagementModal({
 
           <div className={`bg-[#111827] border p-2.5 rounded-lg font-mono text-xs break-all select-all ${destinationAddress ? 'border-[#1F2937] text-gray-200' : 'border-red-500/40 text-red-400'}`}>
             {destinationAddress || 'No destination address on file — confirm with the trader before marking this payout paid.'}
+=======
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="text-xs text-gray-400 hover:text-emerald-400 font-mono flex items-center gap-1 transition-colors"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? 'Copied' : 'Copy Address'}
+            </button>
+          </div>
+
+          <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg font-mono text-xs text-gray-200 break-all select-all">
+            {destinationAddress}
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           </div>
         </div>
 

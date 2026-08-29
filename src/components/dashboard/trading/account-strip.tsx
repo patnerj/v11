@@ -65,6 +65,7 @@ export const AccountStrip = memo(function AccountStrip({ account, openPnL, metri
     // or metrics.plan.drawdown_type below throws and takes down the dashboard.
     if (!metrics || !metrics.plan) return null
 
+<<<<<<< HEAD
     // max_dd_progress/daily_dd_progress are ALREADY 0-100 percentages from
     // the backend (min(100, round(x/y*100,1)) — see class-challenge-engine.php)
     // — every other consumer (dashboard/page.tsx, challenge-progress-card.tsx)
@@ -72,6 +73,10 @@ export const AccountStrip = memo(function AccountStrip({ account, openPnL, metri
     // trader 1% into their allowed drawdown saw both bars render at 100% red.
     const maxDdPct = metrics.max_dd_progress
     const dailyDdPct = metrics.daily_dd_progress
+=======
+    const maxDdPct = metrics.max_dd_progress * 100
+    const dailyDdPct = metrics.daily_dd_progress * 100
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     
     // Highlight UI in red/warning as it approaches limits (e.g. >80% is warning, >95% is danger)
     const maxTone = maxDdPct >= 95 ? 'bg-danger' : maxDdPct >= 80 ? 'bg-warn' : 'bg-primary'
@@ -83,7 +88,11 @@ export const AccountStrip = memo(function AccountStrip({ account, openPnL, metri
         <div className="rounded-md px-3 py-2 border bg-bg-subtle/40 border-border-subtle flex flex-col justify-center gap-1.5">
           <div className="flex items-center justify-between text-2xs uppercase tracking-wider text-text-muted">
             <span>Daily Loss Limit</span>
+<<<<<<< HEAD
             <span className={cn('font-semibold', dailyDdPct >= 95 ? 'text-danger' : dailyDdPct >= 80 ? 'text-warn' : 'text-text')}>
+=======
+            <span className={cn('font-semibold', dailyDdPct >= 80 ? 'text-warn' : dailyDdPct >= 95 ? 'text-danger' : 'text-text')}>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               {fmtUSD(metrics.current_daily_loss)} / {fmtUSD(metrics.daily_dd_val)}
             </span>
           </div>
@@ -96,7 +105,11 @@ export const AccountStrip = memo(function AccountStrip({ account, openPnL, metri
         <div className="rounded-md px-3 py-2 border bg-bg-subtle/40 border-border-subtle flex flex-col justify-center gap-1.5">
           <div className="flex items-center justify-between text-2xs uppercase tracking-wider text-text-muted">
             <span>Max Loss Limit ({metrics.plan.drawdown_type.replace('_', ' ')})</span>
+<<<<<<< HEAD
             <span className={cn('font-semibold', maxDdPct >= 95 ? 'text-danger' : maxDdPct >= 80 ? 'text-warn' : 'text-text')}>
+=======
+            <span className={cn('font-semibold', maxDdPct >= 80 ? 'text-warn' : maxDdPct >= 95 ? 'text-danger' : 'text-text')}>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               {fmtUSD(metrics.current_dd)} / {fmtUSD(metrics.max_dd_val)}
             </span>
           </div>

@@ -338,12 +338,16 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                       {onSelectPlan ? (
                         "Start Challenge"
                       ) : (
+<<<<<<< HEAD
                         // /challenges never reads ?plan= — a visitor configuring
                         // a plan here (the Puck-built landing page variant, with
                         // no onSelectPlan) got dumped at the top of that page
                         // with their selection discarded. /checkout is what
                         // actually reads this param.
                         <Link href={`/checkout?plan=${activePlan.id}`}>
+=======
+                        <Link href={`/challenges?plan=${activePlan.id}`}>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                           Start Challenge
                         </Link>
                       )}

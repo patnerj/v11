@@ -47,6 +47,7 @@ export default function PaymentsHubPage() {
     manual_bank_enabled: true,
   })
 
+<<<<<<< HEAD
   const { data: gatewayData, isLoading: isGatewaysLoading, isError: isGatewaysError, refetch: refetchGateways } = useQuery({
     queryKey: ['admin-payment-gateways'],
     queryFn: async () => {
@@ -61,6 +62,15 @@ export default function PaymentsHubPage() {
     },
     staleTime: 10000,
     retry: 1,
+=======
+  const { data: gatewayData, isLoading: isGatewaysLoading, refetch: refetchGateways } = useQuery({
+    queryKey: ['admin-payment-gateways'],
+    queryFn: async () => {
+      const res = await api.admin.paymentGatewaysGet()
+      return res.ok && res.data ? res.data : null
+    },
+    staleTime: 10000,
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   })
 
   useEffect(() => {
@@ -300,6 +310,7 @@ export default function PaymentsHubPage() {
       {/* ── TAB 1: GATEWAY CONFIGURATION ──────────────────────────────────── */}
       {activeTab === 'gateways' && (
         <div className="space-y-6 max-w-4xl">
+<<<<<<< HEAD
 
           {isGatewaysError && (
             <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300 flex items-center justify-between gap-4">
@@ -308,6 +319,9 @@ export default function PaymentsHubPage() {
             </div>
           )}
 
+=======
+          
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           {/* Stripe Card */}
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardHeader className="border-b border-[#1F2937]/60 pb-4">
@@ -513,8 +527,11 @@ export default function PaymentsHubPage() {
               size="sm"
               onClick={() => saveGatewaysMutation.mutate(gatewayForm)}
               loading={saveGatewaysMutation.isPending}
+<<<<<<< HEAD
               disabled={isGatewaysError || isGatewaysLoading}
               title={isGatewaysError ? 'Settings failed to load — saving now would overwrite live values with defaults.' : undefined}
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               className="gap-2 shadow-emerald-500/20"
             >
               <Save className="h-4 w-4" />

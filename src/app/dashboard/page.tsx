@@ -109,6 +109,7 @@ export default function DashboardOverview() {
   const acc = account && isAccount(account) ? account : null
   const noChallenge = !isPendingChallenges && challenges !== null && challenges.length === 0
   const isError = !isPendingChallenges && rawChallenges === undefined && !challenges
+<<<<<<< HEAD
 
   // When a tournament is the selected trading context, `active`/`acc` above
   // still resolve to the trader's CHALLENGE (the guard on 'challenge' kind
@@ -123,6 +124,8 @@ export default function DashboardOverview() {
   const selectedTournament = isTournamentView
     ? myTournaments.find((t) => t.tournament_id === storeCtx?.tournamentId) ?? null
     : null
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const phaseLabel = active
     ? (active.status === 'funded' ? 'Funded account'
       : active.status === 'passed' ? 'Evaluation passed'
@@ -190,6 +193,7 @@ export default function DashboardOverview() {
         </Card>
       )}
 
+<<<<<<< HEAD
       {/* Tournament selected — plainly-labeled summary, not the challenge card below */}
       {!isError && isTournamentView ? (
         <Card className="relative overflow-hidden border-border/60">
@@ -220,6 +224,10 @@ export default function DashboardOverview() {
           </CardContent>
         </Card>
       ) : !isError && noChallenge ? (
+=======
+      {/* No challenge state */}
+      {!isError && noChallenge ? (
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         <NoChallengeCTA />
       ) : !isError && (
         <>

@@ -168,6 +168,7 @@ export default function TradingTerminalPage() {
 
   const accountId = account && 'id' in account ? account.id : null
 
+<<<<<<< HEAD
   // Named distinctly from useChallengeMetricsQuery's ['challengeMetrics', challengeId]
   // key used elsewhere (e.g. the main dashboard) — that hook keys by CHALLENGE
   // id, this one by ACCOUNT id. Sharing the 'challengeMetrics' name with a
@@ -175,6 +176,10 @@ export default function TradingTerminalPage() {
   // challenge's cached numbers rendered under a different challenge's id.
   const { data: metrics = null } = useQuery({
     queryKey: ['challengeMetricsByAccount', accountId],
+=======
+  const { data: metrics = null } = useQuery({
+    queryKey: ['challengeMetrics', accountId],
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     queryFn: async () => {
       if (!accountId || !chs) return null
       const ch = chs.find(c => c.fxsim_account_id === accountId)

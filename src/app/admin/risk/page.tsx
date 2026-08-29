@@ -21,7 +21,10 @@ import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { Progress } from '@/components/ui/progress'
 import { Input, Label } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+<<<<<<< HEAD
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 import { toast } from 'sonner'
 
 function formatMoney(val: number | string | undefined | null) {
@@ -62,12 +65,15 @@ export default function RiskManagementHubPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'overview' | 'syndicate'>('overview')
 
+<<<<<<< HEAD
   // Confirmation state — Force Close and Freeze Cluster are irreversible,
   // account-affecting actions, so both are gated behind an explicit confirm.
   const [forceCloseTarget, setForceCloseTarget] = useState<ViolationAlertRow | null>(null)
   const [isForceClosing, setIsForceClosing] = useState(false)
   const [freezeClusterTarget, setFreezeClusterTarget] = useState<SyndicateCluster | null>(null)
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   // ─────────────────────────────────────────────────────────────────
   // ANTI-SYNDICATE FRAUD & GROUP HEDGING RADAR STATE
   // ─────────────────────────────────────────────────────────────────
@@ -197,11 +203,15 @@ export default function RiskManagementHubPage() {
         id: a.id || idx + 1,
         trader_name: a.trader_name || a.username || a.display_name || `Trader #${a.user_id || idx + 1}`,
         email: a.email || a.user_email || `${a.username || 'trader'}@example.com`,
+<<<<<<< HEAD
         // 0 is a sentinel for "no real id available" (real WP user ids start
         // at 1) — never fabricate a real-looking id here. Flag Account trusts
         // this value at face value server-side, so a fabricated id could
         // target a real, unrelated trader.
         user_id: a.user_id || 0,
+=======
+        user_id: a.user_id || 101,
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         account_id: a.account_id || (a.challenge_id ? `#CH-${a.challenge_id}` : `#TRD-${a.user_id || idx + 1}`),
         rule_type: a.rule_type || a.violation_type || 'Risk Limit Exceeded',
         risk_level: a.risk_level || 'high',
@@ -215,10 +225,13 @@ export default function RiskManagementHubPage() {
 
   // Handlers for quick risk actions
   const handleForceClose = async (row: ViolationAlertRow) => {
+<<<<<<< HEAD
     if (!row.user_id) {
       toast.error('This alert has no real trader id on file — refusing to act on it.')
       return
     }
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     try {
       const res = await api.admin.riskForceClose({ user_id: row.user_id, account_id: row.account_id })
       if (res.ok && res.data?.success) {
@@ -235,10 +248,13 @@ export default function RiskManagementHubPage() {
   }
 
   const handleFlagTrader = async (row: ViolationAlertRow) => {
+<<<<<<< HEAD
     if (!row.user_id) {
       toast.error('This alert has no real trader id on file — refusing to act on it.')
       return
     }
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     try {
       const res = await api.admin.riskFlagTrader({ user_id: row.user_id, reason: row.details })
       if (res.ok && res.data.success) {
@@ -334,7 +350,11 @@ export default function RiskManagementHubPage() {
           <Button
             size="sm"
             variant="destructive"
+<<<<<<< HEAD
             onClick={() => setForceCloseTarget(row)}
+=======
+            onClick={() => handleForceClose(row)}
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
             className="h-7 text-xs"
           >
             Force Close
@@ -1085,7 +1105,12 @@ export default function RiskManagementHubPage() {
                                 <Button
                                   variant="destructive"
                                   size="sm"
+<<<<<<< HEAD
                                   onClick={() => setFreezeClusterTarget(cluster)}
+=======
+                                  onClick={() => freezeClusterMutation.mutate(cluster.id)}
+                                  loading={freezeClusterMutation.isPending}
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                                   className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white font-bold gap-1.5 shadow-lg shadow-red-600/30 border border-red-500/50"
                                 >
                                   <AlertTriangle className="h-3.5 w-3.5" />
@@ -1106,6 +1131,7 @@ export default function RiskManagementHubPage() {
         </div>
       )}
 
+<<<<<<< HEAD
       {/* ── Force Close Confirmation Dialog ─────────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!forceCloseTarget}
@@ -1143,6 +1169,8 @@ export default function RiskManagementHubPage() {
         loading={freezeClusterMutation.isPending}
       />
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     </div>
   )
 }

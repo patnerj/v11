@@ -64,6 +64,7 @@ export function onSessionCleared(cb: SessionClearedCb): () => void {
   }
 }
 
+<<<<<<< HEAD
 // Exported (not just used internally by sessionDestroy) — signin/register/
 // verifyTwoFactor in store/auth.ts must call this too, not only logout. If a
 // prior user's session expired server-side without a clean logout (SPA left
@@ -71,6 +72,9 @@ export function onSessionCleared(cb: SessionClearedCb): () => void {
 // NEXT person signing in on that shared machine would otherwise see a flash
 // of the previous user's data until the first refetch overwrote it.
 export function notifySessionCleared() {
+=======
+function notifySessionCleared() {
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   for (const cb of sessionClearedCbs) {
     try { cb() } catch { /* listener errors must not break logout */ }
   }

@@ -31,10 +31,13 @@ const NAV: NavItem[] = [
   { href: '/dashboard/trading',        label: 'Trade',         icon: CandlestickChart, badge: 'LIVE', queryKey: ['account'] },
   { href: '/dashboard/challenges',     label: 'Challenges',   icon: Trophy, queryKey: ['challenges'] },
   { href: '/dashboard/tournaments',    label: 'Tournaments',  icon: Trophy, badge: 'WIN', queryKey: ['tournaments'] },
+<<<<<<< HEAD
   // The stake-money 1v1 PvP Arena shipped with no entry point anywhere a
   // trader could find it — reachable only by hand-typing the URL. The
   // Swords icon was already imported above with nothing using it.
   { href: '/arena',                    label: 'Arena',        icon: Swords, badge: 'PVP' },
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   { href: '/dashboard/history',        label: 'Trade history', icon: History, queryKey: ['history', 'latest'] },
   { href: '/dashboard/analytics',      label: 'Analytics',     icon: BarChart3, badge: 'NEW', queryKey: ['analytics'] },
   { href: '/dashboard/payouts',        label: 'Payouts',      icon: Banknote, queryKey: ['payouts'] },

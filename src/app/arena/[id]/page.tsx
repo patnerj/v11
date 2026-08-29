@@ -88,6 +88,7 @@ export default function PvpLiveBattleArenaPage() {
       toast.success('🏆 Match Settled! ' + data.message)
       refetch()
     },
+<<<<<<< HEAD
     onError: (err: any) => {
       // Unlike its sibling mutations on this page, this one had no onError —
       // a rejected settlement (clicked before the timer allows it, server
@@ -95,6 +96,8 @@ export default function PvpLiveBattleArenaPage() {
       // dead with no explanation.
       toast.error('Settlement Error: ' + err.message)
     },
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   })
 
   // Cancel / Withdraw Mutation

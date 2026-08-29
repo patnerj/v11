@@ -394,15 +394,22 @@ function FirstChallengeStep() {
 function LaunchStep({ frontendUrlSet }: { frontendUrlSet: boolean }) {
   const [score, setScore] = useState<number | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
+<<<<<<< HEAD
   const [error, setError] = useState<string | null>(null)
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const [done, setDone] = useState(false)
 
   useEffect(() => {
     api.admin.health(false).then((r) => {
+<<<<<<< HEAD
       if (!r.ok) {
         setError(r.error || 'Could not connect to health telemetry endpoint.')
         return
       }
+=======
+      if (!r.ok) return
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       setScore(r.data.score)
       setWarnings(Object.values(r.data.items).filter((i) => i.state !== 'ok').map((i) => i.label))
     })
@@ -421,8 +428,11 @@ function LaunchStep({ frontendUrlSet }: { frontendUrlSet: boolean }) {
       setDone(true)
       invalidateFxsim('/admin/whitelabel')
       toast.success('Platform setup completed! Welcome aboard your new prop firm! 🎉')
+<<<<<<< HEAD
     } else {
       toast.error((r as any).error || 'Failed to mark setup as completed. Please try again.')
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     }
   }
 
@@ -437,6 +447,7 @@ function LaunchStep({ frontendUrlSet }: { frontendUrlSet: boolean }) {
           <div className="text-xl font-bold text-white">
             {done ? 'Your Prop Firm Platform is Live-Ready!' : 'Almost Ready for Live Launch'}
           </div>
+<<<<<<< HEAD
           <div className="text-xs text-gray-400 leading-relaxed">
             {error ? (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
@@ -457,6 +468,18 @@ function LaunchStep({ frontendUrlSet }: { frontendUrlSet: boolean }) {
               </>
             )}
           </div>
+=======
+          <p className="text-xs text-gray-400 leading-relaxed">
+            {score !== null && (
+              <>Current platform telemetry score: <strong className={cn('font-bold', score >= 90 ? 'text-emerald-400' : score >= 70 ? 'text-amber-400' : 'text-red-400')}>{score}/100</strong>. </>
+            )}
+            {warnings.length > 0 ? (
+              <>Recommended items to check before launching traffic: {warnings.join(', ')}. Inspect the <Link href="/admin/operations" className="text-emerald-400 hover:underline">Operations Hub</Link> for detailed metrics.</>
+            ) : (
+              'All core infrastructure services are verified and operational.'
+            )}
+          </p>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
           {!frontendUrlSet && !done && (
             <p className="text-xs text-amber-400 inline-flex items-center gap-1.5 font-mono pt-2">

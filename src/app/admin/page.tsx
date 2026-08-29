@@ -75,6 +75,7 @@ export default function AdminCommandCenter() {
   const [emergencyReason, setEmergencyReason] = useState('High Impact Economic News Event - Temporary Trading Lock')
   
   // Issue Manual Challenge Form State
+<<<<<<< HEAD
   // planId is a real fxsim_challenge_plans.id — 0 means "not yet chosen" (falls
   // back to the cheapest active plan server-side if left unset).
   const [issueForm, setIssueForm] = useState({
@@ -82,6 +83,14 @@ export default function AdminCommandCenter() {
     planId: 0,
     phase: '1' as '1' | 'phase2' | 'funded',
     balance: '100000',
+=======
+  const [issueForm, setIssueForm] = useState({
+    email: '',
+    planType: '100k-stellar',
+    phase: '1',
+    balance: '100000',
+    leverage: '1:100'
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   })
   const [issuingLoading, setIssuingLoading] = useState(false)
   const [payoutActionLoading, setPayoutActionLoading] = useState(false)
@@ -163,6 +172,7 @@ export default function AdminCommandCenter() {
     staleTime: 10000,
   })
 
+<<<<<<< HEAD
   // Real challenge plans for the Issue Manual Challenge modal — the plan
   // dropdown must offer actual configured plans, not fixed placeholder labels.
   const { data: plansList = [] } = useQuery({
@@ -181,6 +191,8 @@ export default function AdminCommandCenter() {
     }
   }, [activePlans, issueForm.planId])
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   // Founder Action Center calculated values
   const pendingPayoutsCount = payoutsList?.length || 0
   const pendingPayoutsAmount = useMemo(() => {
@@ -291,6 +303,7 @@ export default function AdminCommandCenter() {
     if (revenue?.monthly && revenue.monthly.length > 0) {
       return revenue.monthly.map((m: any, idx: number) => {
         const rawRev = typeof m.total === 'string' ? parseFloat(m.total) : m.total
+<<<<<<< HEAD
         // Was Math.round(rawRev * 0.28) — an invented "payouts are always 28%
         // of revenue" assumption with no real basis. A firm with zero actual
         // payouts saw a payout curve on its executive dashboard. Real
@@ -302,6 +315,14 @@ export default function AdminCommandCenter() {
           revenue: rawRev || 0,
           payouts: realPayout,
           profit: (rawRev || 0) - realPayout,
+=======
+        const estPayout = Math.round(rawRev * 0.28)
+        return {
+          name: m.month ? m.month.split('-').slice(1).join('-') : `M${idx + 1}`,
+          revenue: rawRev || 0,
+          payouts: estPayout,
+          profit: (rawRev || 0) - estPayout,
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         }
       }).slice(-7)
     }
@@ -312,11 +333,15 @@ export default function AdminCommandCenter() {
     if (growth?.new_challenges && growth.new_challenges.length > 0) {
       return growth.new_challenges.map((item: any) => {
         const fundedMatch = (growth?.funded_monthly || []).find((f: any) => f.month === item.month)
+<<<<<<< HEAD
         // Was Math.round(item.count * 0.38) when no real funded record existed
         // for the month — an invented pass rate feeding the "Pass Conversion"
         // tooltip and "Avg Pass" badge. 0 is the honest value when there's
         // genuinely no funded data for that month yet.
         const passedCount = fundedMatch ? fundedMatch.count : 0
+=======
+        const passedCount = fundedMatch ? fundedMatch.count : Math.round(item.count * 0.38)
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         const rate = item.count > 0 ? ((passedCount / item.count) * 100).toFixed(1) + '%' : '0%'
         return {
           name: item.month ? item.month.split('-').slice(1).join('-') : 'Mo',
@@ -329,6 +354,7 @@ export default function AdminCommandCenter() {
     return DEFAULT_GROWTH_SERIES
   }, [growth])
 
+<<<<<<< HEAD
   // Real aggregate pass-conversion rate across the months shown in the chart
   // above (sum of passes / sum of registrations) — not a fixed reference figure.
   const avgPassRate = useMemo(() => {
@@ -339,6 +365,8 @@ export default function AdminCommandCenter() {
     return totals.reg > 0 ? (totals.pass / totals.reg) * 100 : null
   }, [barChartData])
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   interface PayoutRowItem {
     id: number
     challenge_id: number
@@ -474,7 +502,11 @@ export default function AdminCommandCenter() {
           </div>
           <div>
             <p className="font-semibold text-gray-200 text-sm">ACC-{row.id}</p>
+<<<<<<< HEAD
             <p className="text-[11px] text-gray-500 font-mono">User ID: {row.user_id ? `#${row.user_id}` : '—'}</p>
+=======
+            <p className="text-[11px] text-gray-500 font-mono">User ID: #{row.user_id || '104'}</p>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           </div>
         </div>
       )
@@ -485,7 +517,11 @@ export default function AdminCommandCenter() {
       className: 'whitespace-nowrap',
       render: (row) => (
         <span className="text-xs text-gray-300 font-medium">
+<<<<<<< HEAD
           {row.plan_name || '—'}
+=======
+          {row.plan_name || '2-Step Stellar Standard'}
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         </span>
       )
     },
@@ -495,10 +531,17 @@ export default function AdminCommandCenter() {
       align: 'right',
       className: 'whitespace-nowrap',
       render: (row) => {
+<<<<<<< HEAD
         const cap = row.starting_balance || row.balance || row.current_balance
         return (
           <span className="font-mono text-xs font-bold text-gray-100">
             {cap ? formatCurrency(cap) : '—'}
+=======
+        const cap = row.starting_balance || row.balance || row.current_balance || 100000
+        return (
+          <span className="font-mono text-xs font-bold text-gray-100">
+            {formatCurrency(cap)}
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           </span>
         )
       }
@@ -541,6 +584,7 @@ export default function AdminCommandCenter() {
       align: 'right',
       className: 'whitespace-nowrap w-8',
       render: (row) => (
+<<<<<<< HEAD
         // Previously linked with row.id (the CHALLENGE id) into a route that
         // treats the param as a USER id — clicking through landed on an
         // unrelated trader's profile (or a phantom placeholder if that id
@@ -553,6 +597,14 @@ export default function AdminCommandCenter() {
             <ArrowRight className="h-4 w-4" />
           </Link>
         ) : null
+=======
+        <Link 
+          href={`/admin/traders/${row.id}`} 
+          className="text-gray-500 hover:text-emerald-400 transition-colors p-1"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       )
     }
   ]
@@ -566,20 +618,31 @@ export default function AdminCommandCenter() {
     }
     setIssuingLoading(true)
     try {
+<<<<<<< HEAD
       const res = await api.admin.createManualChallenge({
         email: issueForm.email,
         plan_id: issueForm.planId || undefined,
         starting_balance: Number(issueForm.balance) || undefined,
         initial_phase: issueForm.phase !== '1' ? issueForm.phase : undefined,
       })
+=======
+      const res = await api.admin.createManualChallenge({ email: issueForm.email })
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       if (res.ok && res.data.success) {
         toast.success(res.data.message || `Challenge account #${res.data.account_id} issued to ${issueForm.email}`)
         setIssueModalOpen(false)
         setIssueForm({
           email: '',
+<<<<<<< HEAD
           planId: activePlans[0]?.id || 0,
           phase: '1',
           balance: activePlans[0] ? String(activePlans[0].account_size) : '100000',
+=======
+          planType: '100k-stellar',
+          phase: '1',
+          balance: '100000',
+          leverage: '1:100'
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         })
         queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
         queryClient.invalidateQueries({ queryKey: ['admin-challenges'] })
@@ -601,7 +664,11 @@ export default function AdminCommandCenter() {
     try {
       const [wlRes] = await Promise.all([
         api.admin.whitelabelSave({ pause_trading: nextState ? '1' : '0' }),
+<<<<<<< HEAD
         api.admin.newsLock(nextState, emergencyReason)
+=======
+        api.admin.newsLock(nextState)
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       ])
       if (!wlRes.ok) {
         setIsEmergencyPaused(!nextState)
@@ -627,12 +694,17 @@ export default function AdminCommandCenter() {
     if (!selectedPayout) return
     setPayoutActionLoading(true)
     try {
+<<<<<<< HEAD
       const res = await api.admin.payoutStatus(
+=======
+      await api.admin.payoutStatus(
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         selectedPayout.id,
         action === 'approve' ? 'approved' : 'rejected',
         action === 'approve' ? 'Approved from Command Center' : 'Rejected by Compliance Admin',
         txRefInput ? { tx_reference: txRefInput } : undefined
       )
+<<<<<<< HEAD
       // fxsim() resolves { ok: false } rather than throwing, so a rejected
       // request (expired session, already-processed payout) never reached
       // the catch below — the modal closed and reported success while the
@@ -642,6 +714,8 @@ export default function AdminCommandCenter() {
         toast.error((res as any).error || (res as any).data?.message || 'Failed to update payout status')
         return
       }
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       toast.success(action === 'approve' ? `Payout #PAY-${selectedPayout.id} approved & queued for disbursement!` : `Payout #PAY-${selectedPayout.id} marked as rejected.`)
       setPayoutReviewModalOpen(false)
       setSelectedPayout(null)
@@ -675,7 +749,11 @@ export default function AdminCommandCenter() {
               Command Center
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
+<<<<<<< HEAD
               Live System v11.1.0
+=======
+              Live System v11.0.4
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
             </Badge>
             {isEmergencyPaused && (
               <Badge tone="danger" size="sm" pulsing>
@@ -1206,7 +1284,11 @@ export default function AdminCommandCenter() {
               </CardDescription>
             </div>
             <Badge tone="neutral" size="sm" className="font-mono text-[10px]">
+<<<<<<< HEAD
               {avgPassRate !== null ? `Avg Pass: ${avgPassRate.toFixed(1)}%` : 'Avg Pass: —'}
+=======
+              Avg Pass: 41.8%
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
             </Badge>
           </CardHeader>
 
@@ -1432,6 +1514,7 @@ export default function AdminCommandCenter() {
               <select
                 id="plan-type"
                 className="flex h-10 w-full rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-emerald-500"
+<<<<<<< HEAD
                 value={issueForm.planId || ''}
                 onChange={(e) => {
                   const id = Number(e.target.value)
@@ -1443,6 +1526,25 @@ export default function AdminCommandCenter() {
                 {activePlans.map((p: any) => (
                   <option key={p.id} value={p.id}>{p.name} — ${Number(p.account_size).toLocaleString()}</option>
                 ))}
+=======
+                value={issueForm.planType}
+                onChange={(e) => {
+                  const val = e.target.value
+                  let bal = '100000'
+                  if (val.includes('10k')) bal = '10000'
+                  if (val.includes('25k')) bal = '25000'
+                  if (val.includes('50k')) bal = '50000'
+                  if (val.includes('100k')) bal = '100000'
+                  if (val.includes('200k')) bal = '200000'
+                  setIssueForm({ ...issueForm, planType: val, balance: bal })
+                }}
+              >
+                <option value="10k-standard">$10,000 Standard</option>
+                <option value="25k-micro">$25,000 Micro</option>
+                <option value="50k-flash">$50,000 Flash</option>
+                <option value="100k-stellar">$100,000 Stellar</option>
+                <option value="200k-royal">$200,000 Royal</option>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               </select>
             </div>
 
@@ -1452,6 +1554,7 @@ export default function AdminCommandCenter() {
                 id="account-phase"
                 className="flex h-10 w-full rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-emerald-500"
                 value={issueForm.phase}
+<<<<<<< HEAD
                 onChange={(e) => setIssueForm({ ...issueForm, phase: e.target.value as '1' | 'phase2' | 'funded' })}
               >
                 <option value="1">Phase 1 (Evaluation)</option>
@@ -1459,6 +1562,13 @@ export default function AdminCommandCenter() {
                   Phase 2 (Verification){(!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant') ? ' — not available on this plan' : ''}
                 </option>
                 <option value="funded">Funded (Instant Live)</option>
+=======
+                onChange={(e) => setIssueForm({ ...issueForm, phase: e.target.value })}
+              >
+                <option value="1">Phase 1 (Evaluation)</option>
+                <option value="2">Phase 2 (Verification)</option>
+                <option value="3">Funded (Instant Live)</option>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               </select>
             </div>
           </div>
@@ -1474,11 +1584,25 @@ export default function AdminCommandCenter() {
               />
             </div>
             <div>
+<<<<<<< HEAD
               <Label>Max Leverage</Label>
               <div className="flex h-10 w-full items-center rounded-lg border border-[#1F2937] bg-[#0B0F19]/60 px-3 text-sm text-gray-400">
                 {selectedPlan ? `1:${selectedPlan.max_leverage}` : '—'}
                 <span className="ml-2 text-[11px] text-gray-600">(set by the selected plan)</span>
               </div>
+=======
+              <Label htmlFor="leverage">Max Leverage</Label>
+              <select
+                id="leverage"
+                className="flex h-10 w-full rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-emerald-500"
+                value={issueForm.leverage}
+                onChange={(e) => setIssueForm({ ...issueForm, leverage: e.target.value })}
+              >
+                <option value="1:50">1:50</option>
+                <option value="1:100">1:100 (Default)</option>
+                <option value="1:200">1:200</option>
+              </select>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
             </div>
           </div>
         </form>

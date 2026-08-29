@@ -71,6 +71,7 @@ export default function AdminHelpdeskPage() {
     refetchInterval: 15_000,
   })
 
+<<<<<<< HEAD
   // Always-unfiltered fetch for the headline metrics below (see `metrics`),
   // independent of whatever status/priority/category filter the list view
   // currently has applied.
@@ -83,6 +84,8 @@ export default function AdminHelpdeskPage() {
     refetchInterval: 15_000,
   })
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   // Auto-select first ticket on load if none selected
   useEffect(() => {
     if (tickets.length > 0 && selectedTicketId === null) {
@@ -157,6 +160,7 @@ export default function AdminHelpdeskPage() {
     sendReplyMutation.mutate({ id: selectedTicketId, message: replyMessage.trim() })
   }
 
+<<<<<<< HEAD
   // Summary Metrics Computation — from allTickets (unfiltered), not the
   // currently-filtered `tickets` list above. These headline numbers look
   // global; deriving them from the filtered set meant switching to e.g. the
@@ -170,6 +174,17 @@ export default function AdminHelpdeskPage() {
     const resolutionRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 100
     return { total, openCount, urgentCount, resolvedCount, resolutionRate }
   }, [allTickets])
+=======
+  // Summary Metrics Computation
+  const metrics = useMemo(() => {
+    const total = tickets.length
+    const openCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length
+    const urgentCount = tickets.filter(t => t.priority === 'urgent').length
+    const resolvedCount = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length
+    const resolutionRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 100
+    return { total, openCount, urgentCount, resolvedCount, resolutionRate }
+  }, [tickets])
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   return (
     <div className="w-full space-y-6 pb-16">

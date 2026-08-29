@@ -93,11 +93,15 @@ export default function HistoryPage() {
     setSavingTradeId(null)
     if (res.ok) {
       toast.success('Trade note saved successfully.')
+<<<<<<< HEAD
       // Must match the full active query key (including the account/tournament
       // scoping segment) or this update silently lands on a cache entry
       // nothing reads — the dirty-check then keeps comparing against the
       // stale trade, so "Save" never visibly clears even though it worked.
       queryClient.setQueryData(['history', 'infinite', hParams?.account_id ?? hParams?.tournament_id ?? 0], (oldData: any) => {
+=======
+      queryClient.setQueryData(['history', 'infinite'], (oldData: any) => {
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         if (!oldData) return oldData
         return {
           ...oldData,
@@ -328,11 +332,15 @@ export default function HistoryPage() {
                             }
                             const newScreenshot = (res.data as any).screenshot_url || ''
                             updateTradeNote(t.id, { note: newNote, tags: newTags, screenshot_url: newScreenshot }, t)
+<<<<<<< HEAD
                             // Must match the full active query key (including the account/tournament
       // scoping segment) or this update silently lands on a cache entry
       // nothing reads — the dirty-check then keeps comparing against the
       // stale trade, so "Save" never visibly clears even though it worked.
       queryClient.setQueryData(['history', 'infinite', hParams?.account_id ?? hParams?.tournament_id ?? 0], (oldData: any) => {
+=======
+                            queryClient.setQueryData(['history', 'infinite'], (oldData: any) => {
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                               if (!oldData) return oldData
                               return {
                                 ...oldData,

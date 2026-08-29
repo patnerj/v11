@@ -6,6 +6,10 @@ import { config } from "@/lib/puck.config";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+<<<<<<< HEAD
+=======
+import { getSession } from "@/lib/fxsim";
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
@@ -44,6 +48,7 @@ export default function AdminPageBuilder() {
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   useEffect(() => {
+<<<<<<< HEAD
     // Previously a raw fetch() with no auth headers against an admin-only
     // endpoint, and keyed off an env var (NEXT_PUBLIC_FXSIM_API) that isn't
     // the one actually set by the deploy (NEXT_PUBLIC_API_URL) — every real
@@ -55,6 +60,16 @@ export default function AdminPageBuilder() {
       .then(res => {
         const data: any = res.ok ? res.data : null;
         setInitialData(data && data.content ? data : DEFAULT_LAYOUT);
+=======
+    fetch(process.env.NEXT_PUBLIC_FXSIM_API + "/admin/page-schema")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.content) {
+          setInitialData(data);
+        } else {
+          setInitialData(DEFAULT_LAYOUT);
+        }
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         setLoading(false);
       })
       .catch(err => {
@@ -66,11 +81,28 @@ export default function AdminPageBuilder() {
 
   const handlePublish = async (data: any) => {
     try {
+<<<<<<< HEAD
       const res = await api.admin.builderSaveSchema(data);
       if (res.ok) {
         toast.success("Homepage layout published live to the web!");
       } else {
         toast.error("Error publishing layout: " + ((res as any).error || (res as any).data?.message || "Unknown error"));
+=======
+      const res = await fetch(process.env.NEXT_PUBLIC_FXSIM_API + "/admin/page-schema", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-WP-Nonce": getSession().nonce || "",
+          "Authorization": getSession().bearer ? "Bearer " + getSession().bearer : ""
+        },
+        body: JSON.stringify({ schema: data })
+      });
+      const result = await res.json();
+      if (res.ok) {
+        toast.success("Homepage layout published live to the web!");
+      } else {
+        toast.error("Error publishing layout: " + (result.message || result.error || "Unknown error"));
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       }
     } catch (err) {
       toast.error("Network error while publishing landing page.");

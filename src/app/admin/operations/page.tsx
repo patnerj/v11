@@ -219,6 +219,7 @@ export default function OperationsHubPage() {
   // healthy score — an operator must be able to trust this widget.
   const healthUnknown = !isHealthLoading && !healthReport
   const healthScore = healthReport?.score ?? (healthUnknown ? 0 : 100)
+<<<<<<< HEAD
   // Uptime% and response-time figures were previously invented from the
   // health score via a ternary (never actually measured) — this platform
   // doesn't track real uptime/latency telemetry, so showing a fabricated
@@ -228,6 +229,10 @@ export default function OperationsHubPage() {
   const healthItems = healthReport?.items ? Object.entries(healthReport.items) : []
   const totalChecks = healthItems.length
   const degradedChecks = healthItems.filter(([, item]: [string, any]) => item?.state && item.state !== 'ok').length
+=======
+  const uptimePct = healthUnknown ? '—' : healthScore >= 90 ? '99.9%' : healthScore >= 70 ? '98.5%' : '94.2%'
+  const avgLatency = healthUnknown ? 0 : healthScore >= 90 ? 14 : 45
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   const HEALTH_KEY_CONFIG: Record<string, { name: string; category: string; icon: any }> = {
     mt5_feed: { name: 'MT5 Bridge Execution', category: 'Trading Engine', icon: Activity },
@@ -270,6 +275,7 @@ export default function OperationsHubPage() {
     const nextState = !emergencyStates[key]
 
     try {
+<<<<<<< HEAD
       // fxsim() resolves { ok: false } on a failed API call rather than
       // throwing, so the catch block below never sees a rejected request —
       // every result here must be checked explicitly, or a failed toggle
@@ -289,6 +295,15 @@ export default function OperationsHubPage() {
       if (!ok) {
         toast.error(`Failed to update ${label} — the backend rejected the request. Nothing was changed.`)
         return
+=======
+      if (key === 'maintenanceMode') {
+        await api.admin.maintenance(nextState, 'Platform maintenance in progress.')
+      } else if (key === 'freezeTrading') {
+        await api.admin.whitelabelSave({ pause_trading: nextState ? '1' : '0' })
+        await api.admin.newsLock(nextState)
+      } else if (key === 'pauseRegistrations') {
+        await api.admin.whitelabelSave({ pause_registrations: nextState ? '1' : '0' })
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       }
 
       setEmergencyStates(prev => ({ ...prev, [key]: nextState }))
@@ -328,6 +343,7 @@ export default function OperationsHubPage() {
     refetchInterval: 8000,
   })
 
+<<<<<<< HEAD
   // Unlike every sibling settings form on this page (MT5, news, gateways),
   // this one never synced from the fetched data — it always showed its
   // hardcoded defaults regardless of the actual saved mode/threshold.
@@ -346,6 +362,8 @@ export default function OperationsHubPage() {
     }))
   }, [feedHealth])
 
+=======
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const saveFeedMutation = useMutation({
     mutationFn: async (payload: typeof priceFeedForm) => {
       const res = await api.admin.priceFeedSave({
@@ -611,21 +629,39 @@ export default function OperationsHubPage() {
                 {/* Health Specs */}
                 <div className="space-y-3 text-xs">
                   <div>
+<<<<<<< HEAD
                     <span className="text-gray-500 block">Checks Passing</span>
                     <span className="font-mono font-bold text-white text-base">{healthUnknown ? '—' : `${totalChecks - degradedChecks} / ${totalChecks}`}</span>
                   </div>
                   <div>
                     <span className="text-gray-500 block">Degraded / Warning</span>
                     <span className={`font-mono font-bold text-sm ${degradedChecks > 0 ? 'text-amber-400' : 'text-gray-300'}`}>{healthUnknown ? '—' : `${degradedChecks} Service${degradedChecks === 1 ? '' : 's'}`}</span>
+=======
+                    <span className="text-gray-500 block">System Uptime</span>
+                    <span className="font-mono font-bold text-white text-base">{uptimePct}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Avg Response Time</span>
+                    <span className="font-mono font-bold text-emerald-400 text-sm">{avgLatency} ms</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Degraded Nodes</span>
+                    <span className="font-mono font-bold text-gray-300 text-sm">0 Services</span>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                   </div>
                 </div>
               </CardContent>
 
+<<<<<<< HEAD
               <CardFooter className="pt-0 border-t border-[#1F2937]/50 text-xs text-gray-400">
+=======
+              <CardFooter className="pt-0 border-t border-[#1F2937]/50 text-xs text-gray-400 flex items-center justify-between">
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                 {healthUnknown ? (
                   <span className="flex items-center gap-1.5 text-amber-400 font-medium">
                     <AlertCircle className="h-3.5 w-3.5" /> Health API unreachable — status unknown
                   </span>
+<<<<<<< HEAD
                 ) : degradedChecks === 0 ? (
                   <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
                     <CheckCircle2 className="h-3.5 w-3.5" /> All {totalChecks} systems nominal
@@ -635,6 +671,14 @@ export default function OperationsHubPage() {
                     <AlertCircle className="h-3.5 w-3.5" /> {degradedChecks} of {totalChecks} systems degraded or in warning
                   </span>
                 )}
+=======
+                ) : (
+                  <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> All 9 critical systems nominal
+                  </span>
+                )}
+                <span className="font-mono text-[11px] text-gray-500">Tier 4 Datacenter</span>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               </CardFooter>
             </Card>
 
@@ -1022,6 +1066,7 @@ export default function OperationsHubPage() {
                   </Button>
                 </div>
 
+<<<<<<< HEAD
                 {/* Every field below previously defaulted to a healthy-looking
                     value (MT5 Gateway / Fresh / Open / 28 instruments) when
                     feedHealth hadn't loaded yet or the request failed — an
@@ -1046,6 +1091,24 @@ export default function OperationsHubPage() {
                   <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
                     <span className="text-gray-500 block text-[10px] uppercase">Tracked Symbols</span>
                     <span className="font-bold text-white">{feedHealth ? `${feedHealth.symbol_count} Instruments` : '—'}</span>
+=======
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
+                    <span className="text-gray-500 block text-[10px] uppercase">Active Source</span>
+                    <span className="font-bold text-emerald-400 capitalize">{feedHealth?.active_source || 'MT5 Gateway'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
+                    <span className="text-gray-500 block text-[10px] uppercase">Tick Freshness</span>
+                    <span className="font-bold text-emerald-400">{feedHealth?.mt5_fresh !== false ? 'Fresh (<1s)' : 'Stale'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
+                    <span className="text-gray-500 block text-[10px] uppercase">Market Status</span>
+                    <span className="font-bold text-white">{feedHealth?.market_open !== false ? '🟢 Open' : '🔴 Closed'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
+                    <span className="text-gray-500 block text-[10px] uppercase">Tracked Symbols</span>
+                    <span className="font-bold text-white">{feedHealth?.symbol_count || 28} Instruments</span>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                   </div>
                 </div>
               </div>
@@ -1568,6 +1631,7 @@ export default function OperationsHubPage() {
                                 {evt.title}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
+<<<<<<< HEAD
                                 {/* Was hardcoded to "High Impact" for every row regardless of
                                     the event's real impact — the desk couldn't tell which
                                     events actually gate trading. */}
@@ -1587,6 +1651,12 @@ export default function OperationsHubPage() {
                                     Low Impact
                                   </span>
                                 )}
+=======
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/10 border border-red-500/30 text-red-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
+                                  High Impact
+                                </span>
+>>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                               </td>
                               <td className="px-4 py-3 text-gray-400 text-[11px] whitespace-nowrap">
                                 {evt.source || 'Central Bank / Bureau'}
