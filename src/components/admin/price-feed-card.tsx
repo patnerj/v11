@@ -155,7 +155,7 @@ export function PriceFeedCard() {
             </p>
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <span className="text-2xs uppercase font-medium text-text-faint">Ingestion endpoint</span>
+                <span className="text-2xs uppercase font-medium text-text-faint">Ingestion endpoint (or Base URL)</span>
                 <div className="flex items-center gap-1.5 p-2 bg-bg-subtle rounded-md border border-border-subtle text-2xs font-mono">
                   <span className="truncate flex-1">{health?.ingest_url || '—'}</span>
                   <button
