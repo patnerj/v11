@@ -6,11 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-<<<<<<< HEAD
     "lint": "eslint .",
-=======
-    "lint": "next lint",
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -36,11 +32,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "framer-motion": "^11.18.2",
-<<<<<<< HEAD
     "jspdf": "^4.0.0",
-=======
-    "jspdf": "^2.5.2",
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     "lightweight-charts": "^5.2.0",
     "lucide-react": "^0.460.0",
     "next": "^16.3.0",

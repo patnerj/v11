@@ -91,13 +91,9 @@ export default function PayoutsHubPage() {
           id: rawId,
           raw_id: rawId,
           payout_code: `PO-${rawId}`,
-<<<<<<< HEAD
           // Never fabricate user_id — this drives the trader-profile link;
           // a fabricated id would point an admin at the wrong trader.
           user_id: p.user_id,
-=======
-          user_id: p.user_id || 100 + rawId,
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           trader_name: p.name || p.username || p.user_login || `Trader #${p.user_id || rawId}`,
           email: p.email || p.user_email || `${p.username || 'trader'}@example.com`,
           amount_requested: amt,
@@ -105,14 +101,10 @@ export default function PayoutsHubPage() {
           firm_amount: firmShare,
           profit_split_pct: split,
           payment_method: p.payment_method || p.gateway || 'Crypto TRC20',
-<<<<<<< HEAD
           // Never fabricate a payout destination — a fake address with a
           // working Copy button risks real funds being sent to a wallet that
           // belongs to nobody involved. Pass through what's actually on file.
           payment_address: p.payment_address || '',
-=======
-          payment_address: p.payment_address || 'TQ5xWzV58Z1mQ7rP9fK2jN8xL4yB6vC3dA',
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           status: (p.status || 'requested').toLowerCase(),
           tx_reference: p.tx_reference,
           proof_url: p.proof_url,
@@ -126,7 +118,6 @@ export default function PayoutsHubPage() {
   }, [rawPayouts])
 
   // Summary Metrics Computation
-<<<<<<< HEAD
   const SLA_TARGET_HOURS = 6.0
   const metrics = useMemo(() => {
     const pendingList = allPayouts.filter(p => p.status === 'requested' || p.status === 'pending')
@@ -158,30 +149,15 @@ export default function PayoutsHubPage() {
       ? (resolvedWithTimes.filter(h => h <= SLA_TARGET_HOURS).length / resolvedWithTimes.length) * 100
       : null
 
-=======
-  const metrics = useMemo(() => {
-    const pendingList = allPayouts.filter(p => p.status === 'requested' || p.status === 'pending')
-    const pendingSum = pendingList.reduce((acc, p) => acc + p.amount_requested, 0)
-    
-    const approvedList = allPayouts.filter(p => p.status === 'approved' || p.status === 'paid')
-    const approvedSum = approvedList.reduce((acc, p) => acc + p.amount_requested, 0)
-    
-    const rejectedList = allPayouts.filter(p => p.status === 'rejected')
-
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     return {
       pendingCount: pendingList.length,
       pendingTotal: pendingSum,
       approvedCount: approvedList.length,
       approvedTotal: approvedSum,
       rejectedCount: rejectedList.length,
-<<<<<<< HEAD
       avgTimeHours: avgTimeHours !== null ? `${avgTimeHours.toFixed(1)} Hours` : '--',
       slaSampleSize: resolvedWithTimes.length,
       slaPct,
-=======
-      avgTimeHours: '2.4 Hours',
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     }
   }, [allPayouts])
 
@@ -410,11 +386,7 @@ export default function PayoutsHubPage() {
               Payouts & Billing Engine
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-<<<<<<< HEAD
-              Live Billing v11.1.0
-=======
-              Live Billing v11.0.4
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
+              Live Billing v11.1.1
             </Badge>
           </div>
           <p className="text-sm text-gray-400 mt-1">
@@ -555,17 +527,10 @@ export default function PayoutsHubPage() {
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
                 <span className="text-[11px] text-gray-400 leading-tight block flex-1">
-<<<<<<< HEAD
                   Target SLA &lt; {SLA_TARGET_HOURS.toFixed(1)} hrs {metrics.slaSampleSize > 0 && `(${metrics.slaSampleSize} resolved)`}
                 </span>
                 <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
                   {metrics.slaPct !== null ? `${metrics.slaPct.toFixed(1)}% SLA` : 'No data yet'}
-=======
-                  Target SLA &lt; 6.0 hrs
-                </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
-                  99.2% SLA
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                 </Badge>
               </div>
             </CardContent>

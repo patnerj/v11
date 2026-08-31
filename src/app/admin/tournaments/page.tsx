@@ -103,11 +103,8 @@ export default function AdminTournamentsPage() {
     refetchInterval: 10_000,
   })
 
-<<<<<<< HEAD
   const [matchToSettle, setMatchToSettle] = useState<any>(null)
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const settlePvpMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await api.pvp.settle(id)
@@ -834,13 +831,8 @@ export default function AdminTournamentsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-<<<<<<< HEAD
                                 onClick={() => setMatchToSettle(m)}
                                 loading={settlePvpMutation.isPending && settlePvpMutation.variables === m.id}
-=======
-                                onClick={() => settlePvpMutation.mutate(m.id)}
-                                loading={settlePvpMutation.isPending}
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                                 className="h-7 text-[10px] font-mono text-red-400 border-red-500/30 hover:bg-red-500/10 px-2"
                               >
                                 <StopCircle className="h-3 w-3 mr-1" />
@@ -950,11 +942,7 @@ export default function AdminTournamentsPage() {
                         <td className="py-3 px-4">
                           <div>
                             <span className="font-semibold text-white block">{p.display_name || p.user_login || 'Trader'}</span>
-<<<<<<< HEAD
                             <span className="text-[10px] text-gray-400 font-mono">{p.user_email || '—'}</span>
-=======
-                            <span className="text-[10px] text-gray-400 font-mono">{p.user_email || 'trader@prop.io'}</span>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                           </div>
                         </td>
                         <td className="py-3 px-4 font-mono text-gray-300">
@@ -963,19 +951,11 @@ export default function AdminTournamentsPage() {
                         <td className="py-3 px-4 text-right font-mono font-bold text-white">
                           ${Number(p.current_equity).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
-<<<<<<< HEAD
                         <td className={`py-3 px-4 text-right font-mono font-bold ${Number(p.roi_pct) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           {Number(p.roi_pct) >= 0 ? '+' : ''}{Number(p.roi_pct).toFixed(2)}%
                         </td>
                         <td className="py-3 px-4 text-right font-mono text-gray-400">
                           {p.max_dd_reached != null ? Number(p.max_dd_reached).toFixed(1) : '0.0'}%
-=======
-                        <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">
-                          +{Number(p.roi_pct).toFixed(2)}%
-                        </td>
-                        <td className="py-3 px-4 text-right font-mono text-gray-400">
-                          {Number(p.max_dd_reached || 2.1).toFixed(1)}%
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                         </td>
                         <td className="py-3 px-4">
                           <span className={`text-[11px] font-semibold ${isTop3 ? 'text-amber-400' : 'text-gray-400'}`}>
@@ -1247,7 +1227,6 @@ export default function AdminTournamentsPage() {
         loading={deleteTournamentMutation.isPending}
       />
 
-<<<<<<< HEAD
       {/* Force Settle Confirm Dialog — one click used to immediately settle a
           live money-staked duel (distributing the prize pool) with no
           confirmation at all, unlike every other destructive action here. */}
@@ -1267,8 +1246,6 @@ export default function AdminTournamentsPage() {
         loading={settlePvpMutation.isPending}
       />
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     </div>
   )
 }

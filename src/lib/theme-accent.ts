@@ -172,7 +172,8 @@ export function hexToHsl(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`
 }
 
-export function applyThemeAccent(hex: string) {
+export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) {
+  const { persist = true } = opts
   if (!hex || typeof window === 'undefined') return
 
   const cleanHex = hex.startsWith('#') ? hex : `#${hex}`
@@ -257,14 +258,24 @@ export function applyThemeAccent(hex: string) {
     }
   `
 
-  try {
-    localStorage.setItem('fxsim:theme-accent', cleanHex)
-  } catch {
-    /* private mode */
+  // Only remember this as THE accent once it's a confirmed value (loaded
+  // from the saved backend config, or just successfully saved) — not while
+  // an admin is merely clicking through color swatches to preview them.
+  // Persisting on every preview meant the last color an admin previewed
+  // (even if never saved) got stuck in this browser's localStorage and
+  // flashed on every page's first paint — including trader-facing pages —
+  // until the real saved color loaded moments later and corrected it.
+  if (persist) {
+    try {
+      localStorage.setItem('fxsim:theme-accent', cleanHex)
+    } catch {
+      /* private mode */
+    }
   }
 }
 
-export function applyFontFamily(fontId: string) {
+export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}) {
+  const { persist = true } = opts
   if (typeof window === 'undefined') return
 
   const found = FONT_PRESETS.find((f) => f.id === fontId) || FONT_PRESETS[0]
@@ -287,10 +298,12 @@ export function applyFontFamily(fontId: string) {
     }
   `
 
-  try {
-    localStorage.setItem('fxsim:theme-font', found.id)
-  } catch {
-    /* private mode */
+  if (persist) {
+    try {
+      localStorage.setItem('fxsim:theme-font', found.id)
+    } catch {
+      /* private mode */
+    }
   }
 }
 
@@ -302,7 +315,8 @@ export const RADIUS_PRESETS: Record<string, { base: string; sm: string; md: stri
   full: { base: '9999px', sm: '9999px', md: '9999px', lg: '9999px', xl: '9999px', '2xl': '9999px' },
 }
 
-export function applyRadius(radiusId: string) {
+export function applyRadius(radiusId: string, opts: { persist?: boolean } = {}) {
+  const { persist = true } = opts
   if (typeof window === 'undefined') return
 
   const cleanRadius = (radiusId || 'md').toLowerCase()
@@ -345,10 +359,12 @@ export function applyRadius(radiusId: string) {
     }
   `
 
-  try {
-    localStorage.setItem('fxsim:theme-radius', cleanRadius)
-  } catch {
-    /* private mode */
+  if (persist) {
+    try {
+      localStorage.setItem('fxsim:theme-radius', cleanRadius)
+    } catch {
+      /* private mode */
+    }
   }
 }
 

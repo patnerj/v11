@@ -22,6 +22,7 @@ import { Switch } from '@/components/ui/switch'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { PriceFeedCard } from '@/components/admin/price-feed-card'
 import { toast } from 'sonner'
 
 export default function OperationsHubPage() {
@@ -219,7 +220,6 @@ export default function OperationsHubPage() {
   // healthy score — an operator must be able to trust this widget.
   const healthUnknown = !isHealthLoading && !healthReport
   const healthScore = healthReport?.score ?? (healthUnknown ? 0 : 100)
-<<<<<<< HEAD
   // Uptime% and response-time figures were previously invented from the
   // health score via a ternary (never actually measured) — this platform
   // doesn't track real uptime/latency telemetry, so showing a fabricated
@@ -229,10 +229,6 @@ export default function OperationsHubPage() {
   const healthItems = healthReport?.items ? Object.entries(healthReport.items) : []
   const totalChecks = healthItems.length
   const degradedChecks = healthItems.filter(([, item]: [string, any]) => item?.state && item.state !== 'ok').length
-=======
-  const uptimePct = healthUnknown ? '—' : healthScore >= 90 ? '99.9%' : healthScore >= 70 ? '98.5%' : '94.2%'
-  const avgLatency = healthUnknown ? 0 : healthScore >= 90 ? 14 : 45
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   const HEALTH_KEY_CONFIG: Record<string, { name: string; category: string; icon: any }> = {
     mt5_feed: { name: 'MT5 Bridge Execution', category: 'Trading Engine', icon: Activity },
@@ -275,7 +271,6 @@ export default function OperationsHubPage() {
     const nextState = !emergencyStates[key]
 
     try {
-<<<<<<< HEAD
       // fxsim() resolves { ok: false } on a failed API call rather than
       // throwing, so the catch block below never sees a rejected request —
       // every result here must be checked explicitly, or a failed toggle
@@ -295,15 +290,6 @@ export default function OperationsHubPage() {
       if (!ok) {
         toast.error(`Failed to update ${label} — the backend rejected the request. Nothing was changed.`)
         return
-=======
-      if (key === 'maintenanceMode') {
-        await api.admin.maintenance(nextState, 'Platform maintenance in progress.')
-      } else if (key === 'freezeTrading') {
-        await api.admin.whitelabelSave({ pause_trading: nextState ? '1' : '0' })
-        await api.admin.newsLock(nextState)
-      } else if (key === 'pauseRegistrations') {
-        await api.admin.whitelabelSave({ pause_registrations: nextState ? '1' : '0' })
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       }
 
       setEmergencyStates(prev => ({ ...prev, [key]: nextState }))
@@ -323,83 +309,6 @@ export default function OperationsHubPage() {
       setTogglingKey(null)
     }
   }
-
-  // ─────────────────────────────────────────────────────────────────
-  // PRICE FEED ENGINE & FAILOVER STATE & QUERIES
-  // ─────────────────────────────────────────────────────────────────
-  const [priceFeedForm, setPriceFeedForm] = useState({
-    price_source_mode: 'auto', // 'auto' | 'mt5' | 'yahoo'
-    stale_threshold_sec: 5,
-    auto_failover_enabled: 1,
-    auto_freeze_on_latency: 1,
-  })
-
-  const { data: feedHealth, refetch: refetchFeed, isLoading: isFeedLoading } = useQuery({
-    queryKey: ['admin-price-feed-health'],
-    queryFn: async () => {
-      const res = await api.admin.priceFeedHealth()
-      return res.ok && res.data ? res.data : null
-    },
-    refetchInterval: 8000,
-  })
-
-<<<<<<< HEAD
-  // Unlike every sibling settings form on this page (MT5, news, gateways),
-  // this one never synced from the fetched data — it always showed its
-  // hardcoded defaults regardless of the actual saved mode/threshold.
-  // Saving any OTHER change on this tab would then silently revert the live
-  // feed's source mode back to 'auto' even if it had deliberately been
-  // switched to a fallback. Only syncs on the FIRST load (not every 8s
-  // refetch) so it doesn't stomp on an admin's in-progress edit.
-  const feedFormHydrated = React.useRef(false)
-  useEffect(() => {
-    if (feedFormHydrated.current || !feedHealth) return
-    feedFormHydrated.current = true
-    setPriceFeedForm((prev) => ({
-      ...prev,
-      price_source_mode: feedHealth.mode ?? prev.price_source_mode,
-      stale_threshold_sec: feedHealth.stale_threshold ?? prev.stale_threshold_sec,
-    }))
-  }, [feedHealth])
-
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
-  const saveFeedMutation = useMutation({
-    mutationFn: async (payload: typeof priceFeedForm) => {
-      const res = await api.admin.priceFeedSave({
-        source_mode: payload.price_source_mode,
-        mt5_stale_secs: Number(payload.stale_threshold_sec),
-        price_source_mode: payload.price_source_mode,
-        stale_threshold_sec: Number(payload.stale_threshold_sec),
-        auto_failover: Boolean(payload.auto_failover_enabled),
-        auto_freeze: Boolean(payload.auto_freeze_on_latency),
-      })
-      if (!res.ok) throw new Error('Failed to save price feed settings')
-      return res.data
-    },
-    onSuccess: () => {
-      toast.success('Market price feed & failover rules saved!')
-      refetchFeed()
-    },
-    onError: (err: any) => {
-      toast.error('Failed to save feed settings: ' + err.message)
-    }
-  })
-
-  const forcePriceRefreshMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.admin.forcePrices()
-      if (!res.ok) throw new Error(res.error || 'Failed to refresh quotes')
-      return res.data
-    },
-    onSuccess: () => {
-      toast.success('Forced real-time market quote broadcast to all active terminals!')
-      refetchFeed()
-    },
-    onError: (err: any) => {
-      toast.error('Force quote error: ' + err.message)
-    }
-  })
 
   // ─────────────────────────────────────────────────────────────────
   // MT5 BRIDGE MANAGER STATE & QUERIES
@@ -629,39 +538,21 @@ export default function OperationsHubPage() {
                 {/* Health Specs */}
                 <div className="space-y-3 text-xs">
                   <div>
-<<<<<<< HEAD
                     <span className="text-gray-500 block">Checks Passing</span>
                     <span className="font-mono font-bold text-white text-base">{healthUnknown ? '—' : `${totalChecks - degradedChecks} / ${totalChecks}`}</span>
                   </div>
                   <div>
                     <span className="text-gray-500 block">Degraded / Warning</span>
                     <span className={`font-mono font-bold text-sm ${degradedChecks > 0 ? 'text-amber-400' : 'text-gray-300'}`}>{healthUnknown ? '—' : `${degradedChecks} Service${degradedChecks === 1 ? '' : 's'}`}</span>
-=======
-                    <span className="text-gray-500 block">System Uptime</span>
-                    <span className="font-mono font-bold text-white text-base">{uptimePct}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">Avg Response Time</span>
-                    <span className="font-mono font-bold text-emerald-400 text-sm">{avgLatency} ms</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">Degraded Nodes</span>
-                    <span className="font-mono font-bold text-gray-300 text-sm">0 Services</span>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                   </div>
                 </div>
               </CardContent>
 
-<<<<<<< HEAD
               <CardFooter className="pt-0 border-t border-[#1F2937]/50 text-xs text-gray-400">
-=======
-              <CardFooter className="pt-0 border-t border-[#1F2937]/50 text-xs text-gray-400 flex items-center justify-between">
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                 {healthUnknown ? (
                   <span className="flex items-center gap-1.5 text-amber-400 font-medium">
                     <AlertCircle className="h-3.5 w-3.5" /> Health API unreachable — status unknown
                   </span>
-<<<<<<< HEAD
                 ) : degradedChecks === 0 ? (
                   <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
                     <CheckCircle2 className="h-3.5 w-3.5" /> All {totalChecks} systems nominal
@@ -671,14 +562,6 @@ export default function OperationsHubPage() {
                     <AlertCircle className="h-3.5 w-3.5" /> {degradedChecks} of {totalChecks} systems degraded or in warning
                   </span>
                 )}
-=======
-                ) : (
-                  <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> All 9 critical systems nominal
-                  </span>
-                )}
-                <span className="font-mono text-[11px] text-gray-500">Tier 4 Datacenter</span>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               </CardFooter>
             </Card>
 
@@ -866,267 +749,7 @@ export default function OperationsHubPage() {
       {/* ── TAB 2: PRICE FEED ENGINE & FAILOVER ────────────────────────────── */}
       {activeTab === 'feed' && (
         <div className="space-y-6 max-w-4xl">
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                  <Radio className="h-4 w-4 text-emerald-400" />
-                  Market Price Feed Routing & Fallback Engine
-                </CardTitle>
-                <Badge tone="accent" size="sm">Feed Controller</Badge>
-              </div>
-              <CardDescription className="text-xs text-gray-400">
-                Configure primary quote stream providers, stale quote detection thresholds, and automated failover mechanics.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-6">
-              
-              {/* Primary Feed Source Switcher */}
-              <div className="space-y-2">
-                <Label>Primary Price Feed Engine Routing</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div 
-                    onClick={() => setPriceFeedForm({ ...priceFeedForm, price_source_mode: 'auto' })}
-                    className={`p-4 rounded-xl border-2 bg-[#0B0F19] cursor-pointer space-y-2 transition-all ${
-                      priceFeedForm.price_source_mode === 'auto' || priceFeedForm.price_source_mode === 'mt5'
-                        ? 'border-emerald-500 ring-1 ring-emerald-500/30'
-                        : 'border-[#1F2937] hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Server className="h-4 w-4 text-emerald-400" /> MT5 Bridge Live Stream (Recommended)
-                      </span>
-                      {(priceFeedForm.price_source_mode === 'auto' || priceFeedForm.price_source_mode === 'mt5') && (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                      )}
-                    </div>
-                    <p className="text-[11px] text-gray-400 leading-relaxed">
-                      Sub-millisecond institutional price feed streamed directly from MetaTrader 5 bridge gateway.
-                    </p>
-                  </div>
-
-                  <div 
-                    onClick={() => setPriceFeedForm({ ...priceFeedForm, price_source_mode: 'yahoo' })}
-                    className={`p-4 rounded-xl border-2 bg-[#0B0F19] cursor-pointer space-y-2 transition-all ${
-                      priceFeedForm.price_source_mode === 'yahoo'
-                        ? 'border-blue-500 ring-1 ring-blue-500/30'
-                        : 'border-[#1F2937] hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Globe className="h-4 w-4 text-blue-400" /> Yahoo Finance API (Public Fallback)
-                      </span>
-                      {priceFeedForm.price_source_mode === 'yahoo' && (
-                        <CheckCircle2 className="h-4 w-4 text-blue-400" />
-                      )}
-                    </div>
-                    <p className="text-[11px] text-gray-400 leading-relaxed">
-                      Public real-time financial market quotes. Zero infrastructure setup required for sandbox testing.
-                    </p>
-                  </div>
-                </div>
-
-                {/* MT5 Bridge Streamer Configuration Panel */}
-                {(priceFeedForm.price_source_mode === 'auto' || priceFeedForm.price_source_mode === 'mt5') && (
-                  <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/10 space-y-3 mt-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Terminal className="h-4 w-4 text-emerald-400" />
-                        <span className="text-xs font-bold text-white">MT5 Bridge Python Streamer Credentials</span>
-                      </div>
-                      <Badge tone={feedHealth?.mt5_fresh ? 'success' : 'warn'} size="sm">
-                        {feedHealth?.mt5_fresh ? '● MT5 Feed Connected' : 'Waiting for Python Streamer'}
-                      </Badge>
-                    </div>
-
-                    <p className="text-[11px] text-gray-300">
-                      The Python streamer script runs locally on your PC / VPS alongside your open MetaTrader 5 terminal to stream live institutional ticks into the platform.
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase font-bold text-gray-400">Ingestion API Endpoint</span>
-                        <div className="flex items-center gap-1.5 p-2 bg-[#0B0F19] rounded-lg border border-[#1F2937] text-xs font-mono text-gray-200">
-                          <span className="truncate flex-1">https://api.yourbrand.com/wp-json/fxsim/v1/price-feed/ingest</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText('https://api.yourbrand.com/wp-json/fxsim/v1/price-feed/ingest')
-                              toast.success('Ingestion endpoint copied!')
-                            }}
-                            className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors shrink-0"
-                            title="Copy Ingestion URL"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase font-bold text-gray-400">Feed Secret Key (`feed_key`)</span>
-                        <div className="flex items-center gap-1.5 p-2 bg-[#0B0F19] rounded-lg border border-[#1F2937] text-xs font-mono text-emerald-400">
-                          <span className="truncate flex-1">{feedHealth?.ingest_secret || '••••••••••••'}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (feedHealth?.ingest_secret) {
-                                navigator.clipboard.writeText(feedHealth.ingest_secret)
-                                toast.success('Feed secret key copied!')
-                              } else {
-                                toast.error('Configure feed key in settings first.')
-                              }
-                            }}
-                            className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors shrink-0"
-                            title="Copy Feed Key"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-lg bg-[#0B0F19]/80 border border-border-subtle text-2xs text-gray-300 space-y-1">
-                      <div className="font-semibold text-emerald-400 flex items-center gap-1">
-                        <span>📁 1-Click Desktop Launcher Ready:</span>
-                      </div>
-                      <p className="text-gray-400">
-                        1. Open MetaTrader 5 Terminal and log into your broker account.<br />
-                        2. Open the <strong className="text-white">MT5-Price-Streamer</strong> folder on your Desktop.<br />
-                        3. Double-click <strong className="text-emerald-400">START_STREAMER.bat</strong>.<br />
-                        4. This monitor will immediately switch to <strong className="text-emerald-400">MT5 Bridge Live (Fresh &lt;1s)</strong>!
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Stale Quote Timeout */}
-              <div className="space-y-1.5 pt-2 border-t border-[#1F2937]/60">
-                <Label htmlFor="stale-timeout">Stale Quote Detection Threshold (Seconds)</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    id="stale-timeout"
-                    type="number"
-                    value={priceFeedForm.stale_threshold_sec}
-                    onChange={(e) => setPriceFeedForm({ ...priceFeedForm, stale_threshold_sec: Number(e.target.value) })}
-                    className="font-mono text-xs max-w-[200px]"
-                  />
-                  <span className="text-xs text-gray-400">Default: 5 seconds</span>
-                </div>
-                <p className="text-[11px] text-gray-500">If no ticks arrive from primary source within this window, quote is marked stale.</p>
-              </div>
-
-              {/* Toggles */}
-              <div className="space-y-4 pt-2 border-t border-[#1F2937]/60">
-                <Label>Automated Resilience Guardrails</Label>
-
-                <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-200">Auto-switch to Yahoo Finance API if MT5 feed drops or goes stale</p>
-                    <p className="text-[11px] text-gray-500">Seamless failover guarantees zero trading terminal blackout during broker gateway maintenance</p>
-                  </div>
-                  <Switch
-                    checked={!!priceFeedForm.auto_failover_enabled}
-                    onCheckedChange={(checked) => setPriceFeedForm({ ...priceFeedForm, auto_failover_enabled: checked ? 1 : 0 })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-200">Auto-freeze active trader execution during abnormal market feed latency</p>
-                    <p className="text-[11px] text-gray-500">Protects prop firm balance sheet from toxic latency arbitrage and stale price fills</p>
-                  </div>
-                  <Switch
-                    checked={!!priceFeedForm.auto_freeze_on_latency}
-                    onCheckedChange={(checked) => setPriceFeedForm({ ...priceFeedForm, auto_freeze_on_latency: checked ? 1 : 0 })}
-                  />
-                </div>
-              </div>
-
-              {/* Live Telemetry Health Status Card */}
-              <div className="p-4 rounded-xl border border-emerald-500/30 bg-[#0B0F19] space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs font-bold text-white">Live Price Feed Engine Telemetry</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => forcePriceRefreshMutation.mutate()}
-                    loading={forcePriceRefreshMutation.isPending}
-                    className="text-xs gap-1.5"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    Force Broadcast Quotes
-                  </Button>
-                </div>
-
-<<<<<<< HEAD
-                {/* Every field below previously defaulted to a healthy-looking
-                    value (MT5 Gateway / Fresh / Open / 28 instruments) when
-                    feedHealth hadn't loaded yet or the request failed — an
-                    operator watching this tab during an outage would see a
-                    fully "fine" panel. Unloaded now reads as — rather than a
-                    fabricated status. */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Active Source</span>
-                    <span className="font-bold text-emerald-400 capitalize">{feedHealth?.active_source || '—'}</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Tick Freshness</span>
-                    <span className={`font-bold ${!feedHealth ? 'text-gray-500' : feedHealth.mt5_fresh ? 'text-emerald-400' : 'text-amber-400'}`}>
-                      {!feedHealth ? '—' : feedHealth.mt5_fresh ? 'Fresh (<1s)' : 'Stale'}
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Market Status</span>
-                    <span className="font-bold text-white">{!feedHealth ? '—' : feedHealth.market_open ? '🟢 Open' : '🔴 Closed'}</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Tracked Symbols</span>
-                    <span className="font-bold text-white">{feedHealth ? `${feedHealth.symbol_count} Instruments` : '—'}</span>
-=======
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Active Source</span>
-                    <span className="font-bold text-emerald-400 capitalize">{feedHealth?.active_source || 'MT5 Gateway'}</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Tick Freshness</span>
-                    <span className="font-bold text-emerald-400">{feedHealth?.mt5_fresh !== false ? 'Fresh (<1s)' : 'Stale'}</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Market Status</span>
-                    <span className="font-bold text-white">{feedHealth?.market_open !== false ? '🟢 Open' : '🔴 Closed'}</span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1F2937]">
-                    <span className="text-gray-500 block text-[10px] uppercase">Tracked Symbols</span>
-                    <span className="font-bold text-white">{feedHealth?.symbol_count || 28} Instruments</span>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
-                  </div>
-                </div>
-              </div>
-
-            </CardContent>
-
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
-              <Button
-                variant="primary"
-                onClick={() => saveFeedMutation.mutate(priceFeedForm)}
-                loading={saveFeedMutation.isPending}
-                className="gap-1.5 shadow-emerald-500/20"
-              >
-                <Save className="h-4 w-4" />
-                Save Price Feed Routing Settings
-              </Button>
-            </CardFooter>
-          </Card>
+          <PriceFeedCard />
         </div>
       )}
 
@@ -1631,7 +1254,6 @@ export default function OperationsHubPage() {
                                 {evt.title}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
-<<<<<<< HEAD
                                 {/* Was hardcoded to "High Impact" for every row regardless of
                                     the event's real impact — the desk couldn't tell which
                                     events actually gate trading. */}
@@ -1651,12 +1273,6 @@ export default function OperationsHubPage() {
                                     Low Impact
                                   </span>
                                 )}
-=======
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/10 border border-red-500/30 text-red-400">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
-                                  High Impact
-                                </span>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                               </td>
                               <td className="px-4 py-3 text-gray-400 text-[11px] whitespace-nowrap">
                                 {evt.source || 'Central Bank / Bureau'}

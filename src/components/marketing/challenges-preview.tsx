@@ -10,9 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Info } from "lucide-react";
+import { useBranding } from "@/store/branding";
 
 export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: (planId: number) => void, puckProps?: any }) {
   const title = puckProps?.title || "Choose your next challenge";
+  // Was a hardcoded "FXSIM" literal — an internal codename with no meaning
+  // to a real visitor, and wrong for a white-label product where every
+  // buyer runs this under their own brand. Pulls the buyer's configured
+  // name instead (Admin → Config → Branding), same store the rest of the
+  // site already uses for title/favicon.
+  const brandName = useBranding((s) => s.branding.brand_name);
+  const loadBranding = useBranding((s) => s.load);
+  // This block can be placed standalone via the Puck page builder (see
+  // puckProps below), so it can't assume MarketingHeader already triggered
+  // the fetch — load() is idempotent (guards on its own `loaded`/in-flight
+  // state), so calling it again here is safe either way.
+  useEffect(() => { loadBranding(); }, [loadBranding]);
   const [plans, setPlans] = useState<ChallengePlan[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -152,7 +165,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                         isActive ? "text-text" : "text-text-muted"
                       }`}
                     >
-                      FXSIM {m}
+                      {brandName} {m}
                     </h3>
                     <p
                       className={`mt-2 text-xs leading-relaxed ${
@@ -320,12 +333,12 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
 
                   <div className="lg:w-72 flex flex-col justify-center">
                     <h3 className="text-xl font-bold text-text mb-1">
-                      FXSIM {selectedModel}{" "}
+                      {brandName} {selectedModel}{" "}
                       {fmtUSD(activePlan.account_size, { decimals: 0 })}
                     </h3>
 
                     <div className="flex items-baseline gap-2 mt-4 mb-6">
-                      <span className="text-4xl font-extrabold text-success tracking-tight">
+                      <span className="text-4xl font-extrabold text-accent tracking-tight">
                         {fmtUSD(activePlan.price)}
                       </span>
                     </div>
@@ -338,16 +351,12 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                       {onSelectPlan ? (
                         "Start Challenge"
                       ) : (
-<<<<<<< HEAD
                         // /challenges never reads ?plan= — a visitor configuring
                         // a plan here (the Puck-built landing page variant, with
                         // no onSelectPlan) got dumped at the top of that page
                         // with their selection discarded. /checkout is what
                         // actually reads this param.
                         <Link href={`/checkout?plan=${activePlan.id}`}>
-=======
-                        <Link href={`/challenges?plan=${activePlan.id}`}>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
                           Start Challenge
                         </Link>
                       )}

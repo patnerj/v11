@@ -156,7 +156,6 @@ function CheckoutInner() {
   const isFree = finalPrice <= 0
 
   // 3. Fetch Config on Gateway Step
-<<<<<<< HEAD
   const loadPaymentConfig = () => {
     api.paymentConfig().then((res) => {
       if (res.ok) { setConfig(res.data); setError(null) }
@@ -167,14 +166,6 @@ function CheckoutInner() {
     if (step !== 'gateway' || config || isFree) return
     loadPaymentConfig()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-=======
-  useEffect(() => {
-    if (step !== 'gateway' || config || isFree) return
-    api.paymentConfig().then((res) => {
-      if (res.ok) setConfig(res.data)
-      else        setError(res.error)
-    })
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   }, [step, config, isFree])
 
   const gateways = useMemo(() => {
@@ -237,11 +228,7 @@ function CheckoutInner() {
 
     if (g === 'stripe') {
       setLoading(true)
-<<<<<<< HEAD
       const res = await api.stripeCheckout(plan.id, couponToSend, tournamentId || undefined)
-=======
-      const res = await api.stripeCheckout(plan.id, couponToSend)
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       setLoading(false)
       if (res.ok && res.data.checkout_url) {
         window.location.href = res.data.checkout_url
@@ -364,7 +351,6 @@ function CheckoutInner() {
               <p className="text-text-muted">You need an account to purchase a challenge. It only takes 30 seconds.</p>
             </div>
             <div className="flex flex-col gap-3">
-<<<<<<< HEAD
               {(() => {
                 // Was hardcoded to `/checkout?plan=${plan.id}` — for a
                 // tournament entry plan.id is 0 (the pseudo-plan built above),
@@ -393,14 +379,6 @@ function CheckoutInner() {
                   </>
                 )
               })()}
-=======
-              <Button asChild size="lg" className="w-full">
-                <Link href={`/register?next=${encodeURIComponent('/checkout?plan=' + plan.id)}`}>Create account</Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full">
-                <Link href={`/login?next=${encodeURIComponent('/checkout?plan=' + plan.id)}`}>Sign in</Link>
-              </Button>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
             </div>
           </div>
         </main>
@@ -420,11 +398,7 @@ function CheckoutInner() {
           
           <AnimatePresence mode="wait">
             {step === 'review'  && <ReviewStep    key="review"  plan={plan} onNext={() => isFree ? startFree() : setStep('gateway')} loading={loading} isFree={isFree} error={error} coupon={coupon} setCoupon={setCoupon} applyCoupon={applyCoupon} clearCoupon={clearCoupon} couponInfo={couponInfo} couponErr={couponErr} couponBusy={couponBusy} />}
-<<<<<<< HEAD
             {step === 'gateway' && <GatewayStep   key="gateway" plan={plan} gateways={gateways} configLoaded={!!config} onRetryConfig={loadPaymentConfig} chooseGateway={chooseGateway} onBack={() => setStep('review')} loading={loading} error={error} amountDue={finalPrice} couponApplied={!!couponInfo} />}
-=======
-            {step === 'gateway' && <GatewayStep   key="gateway" plan={plan} gateways={gateways} configLoaded={!!config} chooseGateway={chooseGateway} onBack={() => setStep('review')} loading={loading} error={error} amountDue={finalPrice} couponApplied={!!couponInfo} />}
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
             {step === 'manual'  && <ManualStep    key="manual"  plan={plan} gateway={gateway} config={config} orderId={orderId} proofFile={proofFile} setProof={setProof} txnRef={txnRef} setTxnRef={setTxnRef} onBack={() => setStep('gateway')} onSubmit={submitProof} loading={loading} error={error} amountDue={finalPrice} />}
             {step === 'success' && <SuccessStep   key="success" tournamentId={tournamentId} />}
           </AnimatePresence>
@@ -547,19 +521,12 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
 
 // ── Step 2: Pick gateway ───────────────────────────────────────────────────
 function GatewayStep({
-<<<<<<< HEAD
   plan, gateways, configLoaded, onRetryConfig, chooseGateway, onBack, loading, error, amountDue, couponApplied,
-=======
-  plan, gateways, configLoaded, chooseGateway, onBack, loading, error, amountDue, couponApplied,
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 }: {
   plan:     ChallengePlan
   gateways: { id: Gateway; label: string; sub: string; icon: React.ComponentType<{ className?: string }>; tone: string }[]
   configLoaded: boolean
-<<<<<<< HEAD
   onRetryConfig: () => void
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   chooseGateway: (g: Gateway) => void
   onBack:   () => void
   loading:  boolean
@@ -587,7 +554,6 @@ function GatewayStep({
       </div>
 
       <div className="space-y-3">
-<<<<<<< HEAD
         {!configLoaded && error ? (
           // A failed config fetch previously left configLoaded false forever
           // (error was set but nothing rendered it) — a paying customer saw
@@ -602,9 +568,6 @@ function GatewayStep({
             <Button size="sm" variant="outline" onClick={onRetryConfig}>Retry</Button>
           </div>
         ) : !configLoaded
-=======
-        {!configLoaded
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)
           : gateways.length === 0
             ? (

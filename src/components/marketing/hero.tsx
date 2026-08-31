@@ -43,7 +43,13 @@ export function Hero({ puckProps }: { puckProps?: { title: string, highlight: st
             transition={{ duration: 0.6, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
             className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tightest leading-[1.05]"
           >
-            {title} <span className="bg-gradient-to-r from-accent via-success to-accent bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">{highlight}</span>
+            {/* Was from-accent via-success to-accent — --success is a separate,
+                unrelated token (profit/positive-state color) that never updates
+                alongside a buyer's configured brand accent, so any brand color
+                other than the default green showed as a two-tone gradient here.
+                Shimmer effect now varies accent's own opacity instead, so it's
+                always shades of one color, whatever that color is configured to. */}
+            {title} <span className="bg-gradient-to-r from-accent via-accent/50 to-accent bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]">{highlight}</span>
           </motion.h1>
 
           <motion.p
@@ -61,7 +67,7 @@ export function Hero({ puckProps }: { puckProps?: { title: string, highlight: st
             transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Button asChild size="xl" className="bg-gradient-to-r from-accent to-success hover:from-accent-hover hover:to-success-hover text-white shadow-glow hover:shadow-glow-success transition-all duration-300 group btn-shine">
+            <Button asChild size="xl" className="bg-gradient-to-r from-accent to-accent/70 hover:from-accent-hover hover:to-accent-hover text-white shadow-glow hover:shadow-glow-success transition-all duration-300 group btn-shine">
               <Link href="/challenges">
                 Start the challenge
                 <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />

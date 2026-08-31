@@ -140,7 +140,6 @@ export default function MarketingHubPage() {
     try {
       const res = await api.admin.broadcastSend(broadcastForm)
       if (res.ok) {
-<<<<<<< HEAD
         // Never fabricate a recipient count — 0 is a real, meaningful result
         // (no traders matched this audience) and must render as 0, not a
         // hardcoded placeholder that looks like a real send happened.
@@ -155,15 +154,6 @@ export default function MarketingHubPage() {
         } else {
           toast(res.data.message || 'No matching traders found for this audience.')
         }
-=======
-        const count = res.data.sent || 142
-        setBroadcastSentResult({
-          sent: count,
-          audience: broadcastForm.audience,
-          message: res.data.message || `Broadcast successfully dispatched to ${count} traders.`
-        })
-        toast.success(`Email broadcast dispatched to ${count} traders!`)
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })
       } else {
         toast.error(res.error || 'Failed to dispatch broadcast.')

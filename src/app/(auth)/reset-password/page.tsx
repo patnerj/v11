@@ -33,7 +33,6 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     if (!login) return
     setLoading(true)
-<<<<<<< HEAD
     const res = await api.auth.requestReset(login)
     setLoading(false)
     // Distinguish a real transport/server failure (network error, rate limit,
@@ -47,11 +46,6 @@ export default function ResetPasswordPage() {
     } else {
       setError((res as any).error || 'Could not send the reset email right now. Please try again in a moment.')
     }
-=======
-    await api.auth.requestReset(login)
-    setLoading(false)
-    setSent(true)
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   }
 
   async function submitComplete(e: FormEvent) {
@@ -138,10 +132,7 @@ export default function ResetPasswordPage() {
                 <Label htmlFor="user">Username or email</Label>
                 <Input id="user" autoFocus value={login} onChange={(e) => setLogin(e.target.value)} required />
               </div>
-<<<<<<< HEAD
               {error && <p className="text-sm text-danger">{error}</p>}
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               <Button type="submit" className="w-full" loading={loading} size="lg">Send reset link</Button>
             </form>
             <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-muted">

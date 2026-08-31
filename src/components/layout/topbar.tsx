@@ -157,7 +157,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
               className="flex items-center gap-2 h-9 pl-2 pr-3 rounded-md hover:bg-surface-muted focus-ring transition-colors"
               aria-label="Profile menu"
             >
-              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-accent to-success flex items-center justify-center text-2xs font-semibold text-white">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center text-2xs font-semibold text-white">
                 {initials}
               </div>
               <span className="hidden md:block text-sm font-medium text-text">{user?.display_name || user?.username}</span>

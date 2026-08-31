@@ -5,11 +5,8 @@ import { Trophy, Clock, Users, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import type { Competition } from '@/types/api'
-<<<<<<< HEAD
 import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
 export default function PublicTournamentsPage() {
   const [tournaments, setTournaments] = useState<Competition[]>([])
@@ -134,13 +131,10 @@ export default function PublicTournamentsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-<<<<<<< HEAD
       {/* Unlike /challenges, /leaderboard, and /faq, this page had no site
           header or footer — a visitor landing here had no navigation back to
           the rest of the site except the browser back button. */}
       <MarketingHeader />
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-surface border-b border-border py-16 sm:py-24">
         <div className="absolute inset-0 z-0">
@@ -163,13 +157,10 @@ export default function PublicTournamentsPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-16">
         {loading ? (
           <div className="text-center py-20 text-text-muted animate-pulse">Loading arenas...</div>
-<<<<<<< HEAD
         ) : tournaments.length === 0 ? (
           <div className="text-center py-20 text-text-muted">
             No tournaments are open right now — check back soon.
           </div>
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         ) : (
           <>
             {activeTournaments.length > 0 && (
@@ -210,10 +201,7 @@ export default function PublicTournamentsPage() {
           </>
         )}
       </div>
-<<<<<<< HEAD
       <MarketingFooter />
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     </div>
   )
 }

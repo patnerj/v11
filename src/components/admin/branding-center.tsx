@@ -119,7 +119,7 @@ export function BrandingCenter() {
               <div className="bg-surface p-3 flex items-center gap-2.5 h-16">
                 {vals.sidebar_icon_url
                   ? <img src={vals.sidebar_icon_url} alt={brand} className="h-8 w-8 rounded-lg object-contain bg-surface-muted/40 shrink-0" />
-                  : <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent to-success/70 shrink-0" />}
+                  : <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent to-accent/70 shrink-0" />}
                 <span className="font-semibold text-sm truncate">{brand}</span>
               </div>
             </div>

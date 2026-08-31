@@ -306,7 +306,6 @@ export default function KycHubPage() {
     staleTime: 5000,
   })
 
-<<<<<<< HEAD
   // Separate, always-unfiltered fetch just for the headline counts below —
   // they used to be derived from kycData above, which is itself filtered by
   // statusFilter. On the "approved" tab, "Pending Review" silently read 0
@@ -321,8 +320,6 @@ export default function KycHubPage() {
     staleTime: 5000,
   })
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   // Review Mutation
   const reviewMutation = useMutation({
     mutationFn: async ({ id, action, note, force_override }: { id: number; action: 'approve' | 'reject'; note?: string; force_override?: boolean }) => {
@@ -423,7 +420,6 @@ export default function KycHubPage() {
     })
   }, [kycData, statusFilter, searchQuery])
 
-<<<<<<< HEAD
   // Aggregate Metrics — computed from the unfiltered set (see allKycData
   // above), not the currently-filtered table data.
   const counts = useMemo(() => {
@@ -433,16 +429,6 @@ export default function KycHubPage() {
       rejected: allKycData.filter(k => k.status === 'rejected').length,
     }
   }, [allKycData])
-=======
-  // Aggregate Metrics
-  const counts = useMemo(() => {
-    return {
-      pending: kycData.filter(k => k.status === 'pending').length,
-      approved: kycData.filter(k => k.status === 'approved').length,
-      rejected: kycData.filter(k => k.status === 'rejected').length,
-    }
-  }, [kycData])
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   const openReviewModal = (kyc: KycSubmission) => {
     setSelectedKyc(kyc)

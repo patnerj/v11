@@ -58,26 +58,19 @@ export default function Trader360ProfilePage() {
   const queryClient = useQueryClient()
   const adminUser = useAuth((s) => s.user)
   const startImpersonation = useImpersonation((s) => s.start)
-<<<<<<< HEAD
   // A missing/invalid id must NOT silently fall back to user #1 — that's a
   // real account (often the primary admin) whose data would render as if it
   // belonged to whatever trader the operator meant to open.
   const parsedId = Number(params?.id)
   const userId = Number.isFinite(parsedId) && parsedId > 0 ? parsedId : 0
-=======
-  const userId = Number(params?.id) || 1
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   // Modals & form states
   const [overrideModalOpen, setOverrideModalOpen] = useState(false)
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
   const [impersonateConfirmOpen, setImpersonateConfirmOpen] = useState(false)
   const [isImpersonating, setIsImpersonating] = useState(false)
-<<<<<<< HEAD
   const [freezeConfirmOpen, setFreezeConfirmOpen] = useState(false)
   const [isFreezing, setIsFreezing] = useState(false)
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const [isBanned, setIsBanned] = useState(false)
   const [noteInput, setNoteInput] = useState('')
   const [isSavingNote, setIsSavingNote] = useState(false)
@@ -118,16 +111,11 @@ export default function Trader360ProfilePage() {
       return null
     },
     staleTime: 10000,
-<<<<<<< HEAD
     enabled: userId > 0,
   })
 
   const notFound = userId === 0 || (!isLoading && !traderApiData)
 
-=======
-  })
-
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   // Normalized Profile Data Model with strict real calculations
   const trader = useMemo(() => {
     const apiUser = traderApiData?.user || traderApiData
@@ -496,7 +484,6 @@ export default function Trader360ProfilePage() {
     )
   }
 
-<<<<<<< HEAD
   // Both API calls above previously failed silently into a fully synthesized
   // placeholder profile ("Trader #N", plan "Standard Evaluation", $0
   // balances) with no error state — an admin auditing a bad link had no way
@@ -521,8 +508,6 @@ export default function Trader360ProfilePage() {
     )
   }
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
       
@@ -623,11 +608,7 @@ export default function Trader360ProfilePage() {
             <Button
               variant={isBanned ? 'primary' : 'destructive'}
               size="sm"
-<<<<<<< HEAD
               onClick={() => setFreezeConfirmOpen(true)}
-=======
-              onClick={handleToggleFreeze}
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               className="gap-2 h-9"
             >
               <Ban className="h-3.5 w-3.5" />
@@ -1276,7 +1257,6 @@ export default function Trader360ProfilePage() {
         cancelText="Cancel"
       />
 
-<<<<<<< HEAD
       {/* ── 7. Freeze / Unfreeze Confirmation Dialog ────────────────────────── */}
       <ConfirmDialog
         isOpen={freezeConfirmOpen}
@@ -1299,8 +1279,6 @@ export default function Trader360ProfilePage() {
         loading={isFreezing}
       />
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     </div>
   )
 }

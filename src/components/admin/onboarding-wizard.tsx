@@ -114,7 +114,11 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
 
   const handleSelectColor = (hex: string) => {
     setSelectedColor(hex)
-    applyThemeAccent(hex)
+    // Preview only — this step hasn't been saved yet (see handleNextStep2,
+    // which applies the confirmed value after whitelabelSave succeeds).
+    // Persisting here would leak an unsaved color into every other page's
+    // first paint via the shared localStorage-cached accent.
+    applyThemeAccent(hex, { persist: false })
   }
 
   const handleNextStep1 = async () => {

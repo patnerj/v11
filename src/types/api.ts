@@ -596,7 +596,6 @@ export interface HealthItem {
   ts?:     number | null
 }
 
-<<<<<<< HEAD
 export interface LicenseStatus {
   configured:            boolean
   license_key:           string
@@ -611,8 +610,6 @@ export interface LicenseStatus {
   sales_allowed:         boolean
 }
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 export interface HealthReport {
   score:        number
   generated_at: number

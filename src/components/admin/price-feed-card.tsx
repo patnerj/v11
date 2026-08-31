@@ -1,19 +1,22 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { RefreshCw, Activity } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { RefreshCw, Activity, Server, Globe, CheckCircle2, Terminal, Copy } from 'lucide-react'
 
 interface Health {
   mode: 'auto' | 'mt5' | 'yahoo'; active_source: string; status: string
   mt5_last_push_ts: number | null; mt5_age_sec: number | null; mt5_fresh: boolean
   stale_threshold: number; yahoo_last_ts: number | null; feed_failed: boolean
   symbol_count: number; secret_set: boolean; market_open: boolean
+  ingest_secret?: string; ingest_url?: string
+  auto_failover?: boolean; auto_freeze?: boolean
 }
 
 const STATUS_TONE: Record<string, 'success' | 'warn' | 'danger' | 'neutral'> = {
@@ -25,18 +28,31 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function PriceFeedCard() {
   const [health, setHealth] = useState<Health | null>(null)
-  const [mode, setMode]     = useState<'auto' | 'mt5' | 'yahoo'>('auto')
-  const [stale, setStale]   = useState('12')
+  const [mode, setMode] = useState<'auto' | 'mt5' | 'yahoo'>('auto')
+  const [stale, setStale] = useState('5')
   const [secret, setSecret] = useState('')
+  const [autoFailover, setAutoFailover] = useState(true)
+  const [autoFreeze, setAutoFreeze] = useState(false)
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+
+  // Hydrate editable fields from the server exactly once. This card polls
+  // health every 10s to keep the telemetry panel live — re-syncing the
+  // editable fields on every poll would silently revert an admin's
+  // in-progress edit before they get a chance to save it.
+  const hydrated = useRef(false)
 
   const load = useCallback(async () => {
     const res = await api.admin.priceFeedHealth()
     if (res.ok) {
       setHealth(res.data)
-      setMode(res.data.mode)
-      setStale(String(res.data.stale_threshold))
+      if (!hydrated.current) {
+        hydrated.current = true
+        setMode(res.data.mode)
+        setStale(String(res.data.stale_threshold))
+        setAutoFailover(res.data.auto_failover ?? true)
+        setAutoFreeze(res.data.auto_freeze ?? false)
+      }
     }
   }, [])
 
@@ -48,7 +64,10 @@ export function PriceFeedCard() {
 
   const save = async () => {
     setSaving(true)
-    const payload: Record<string, string> = { source_mode: mode, mt5_stale_secs: stale }
+    const payload: Record<string, string | boolean> = {
+      source_mode: mode, mt5_stale_secs: stale,
+      auto_failover: autoFailover, auto_freeze: autoFreeze,
+    }
     if (secret.trim()) payload.mt5_ingest_secret = secret.trim()
     const res = await api.admin.priceFeedSave(payload)
     setSaving(false)
@@ -62,6 +81,12 @@ export function PriceFeedCard() {
     setRefreshing(false)
     if (res.ok) { toast.success(res.data.message || 'Prices refreshed'); load() }
     else toast.error(res.ok ? 'Refresh failed' : res.error)
+  }
+
+  const copy = (label: string, value?: string) => {
+    if (!value) { toast.error(`No ${label.toLowerCase()} yet — it appears after the first save.`); return }
+    navigator.clipboard.writeText(value)
+    toast.success(`${label} copied`)
   }
 
   const status = health?.status ?? 'yahoo'
@@ -78,45 +103,125 @@ export function PriceFeedCard() {
           <Stat label="Active source" value={health?.active_source ?? '—'} />
           <Stat label="MT5 last push" value={health?.mt5_age_sec != null ? `${health.mt5_age_sec}s ago` : 'never'} />
           <Stat label="Symbols" value={health ? String(health.symbol_count) : '—'} />
-          <Stat label="Secret" value={health?.secret_set ? 'configured' : 'not set'} />
+          <Stat label="Market" value={health ? (health.market_open ? 'Open' : 'Closed') : '—'} />
         </div>
 
-        {!health?.secret_set && (
-          <p className="text-2xs text-text-faint">
-            The MT5 feed is inert until an ingestion secret is set. With no secret and mode <strong>auto</strong>, the
-            platform behaves exactly as before (Yahoo). Set a secret below, then point your MT5 price service at
-            <code className="mx-1">/wp-json/fxsim/v1/price-feed/ingest</code> using the <code>X-FXSIM-Feed-Key</code> header.
-          </p>
+        {/* Source mode */}
+        <div className="space-y-2">
+          <Label>Source mode</Label>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setMode('mt5')}
+              className={`p-3.5 rounded-lg border text-left space-y-1 transition-colors ${
+                mode === 'auto' || mode === 'mt5' ? 'border-accent bg-accent/5' : 'border-border-subtle hover:border-border'
+              }`}
+            >
+              <span className="text-xs font-semibold flex items-center gap-1.5">
+                <Server className="h-3.5 w-3.5 text-accent" /> MT5 bridge live stream
+                {(mode === 'auto' || mode === 'mt5') && <CheckCircle2 className="h-3.5 w-3.5 text-accent ml-auto" />}
+              </span>
+              <p className="text-2xs text-text-faint">Live institutional ticks from your MT5 bridge, with Yahoo as fallback.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('yahoo')}
+              className={`p-3.5 rounded-lg border text-left space-y-1 transition-colors ${
+                mode === 'yahoo' ? 'border-accent bg-accent/5' : 'border-border-subtle hover:border-border'
+              }`}
+            >
+              <span className="text-xs font-semibold flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5 text-accent" /> Yahoo Finance only
+                {mode === 'yahoo' && <CheckCircle2 className="h-3.5 w-3.5 text-accent ml-auto" />}
+              </span>
+              <p className="text-2xs text-text-faint">Public quotes, zero setup required — ignores MT5 entirely.</p>
+            </button>
+          </div>
+        </div>
+
+        {/* MT5 streamer credentials — only relevant when MT5 is in play */}
+        {(mode === 'auto' || mode === 'mt5') && (
+          <div className="p-3.5 rounded-lg border border-border-subtle bg-surface-muted/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <Terminal className="h-3.5 w-3.5 text-accent" /> MT5 streamer credentials
+              </div>
+              <Badge tone={health?.mt5_fresh ? 'success' : 'warn'}>
+                {health?.mt5_fresh ? 'MT5 connected' : 'Waiting for streamer'}
+              </Badge>
+            </div>
+            <p className="text-2xs text-text-faint">
+              Point your MT5 price streamer at this endpoint with this key in the <code>X-FXSIM-Feed-Key</code> header.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <span className="text-2xs uppercase font-medium text-text-faint">Ingestion endpoint</span>
+                <div className="flex items-center gap-1.5 p-2 bg-bg-subtle rounded-md border border-border-subtle text-2xs font-mono">
+                  <span className="truncate flex-1">{health?.ingest_url || '—'}</span>
+                  <button
+                    type="button"
+                    onClick={() => copy('Ingestion endpoint', health?.ingest_url)}
+                    className="p-1 hover:bg-surface-muted rounded text-text-faint hover:text-text shrink-0"
+                    title="Copy ingestion URL"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-2xs uppercase font-medium text-text-faint">Feed secret key</span>
+                <div className="flex items-center gap-1.5 p-2 bg-bg-subtle rounded-md border border-border-subtle text-2xs font-mono">
+                  <span className="truncate flex-1">{health?.ingest_secret || '—'}</span>
+                  <button
+                    type="button"
+                    onClick={() => copy('Feed secret key', health?.ingest_secret)}
+                    className="p-1 hover:bg-surface-muted rounded text-text-faint hover:text-text shrink-0"
+                    title="Copy feed key"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Settings */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Source mode</Label>
-            <select value={mode} onChange={(e) => setMode(e.target.value as 'auto'|'mt5'|'yahoo')}
-              className="w-full h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm">
-              <option value="auto">Auto — MT5 when fresh, Yahoo fallback</option>
-              <option value="mt5">MT5 only — strict (pause new trades if stale)</option>
-              <option value="yahoo">Yahoo only — ignore MT5</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
             <Label htmlFor="pf-stale">Staleness threshold (seconds)</Label>
             <Input id="pf-stale" inputMode="numeric" value={stale}
-              onChange={(e) => setStale(e.target.value.replace(/\D/g, '') || '')} placeholder="12" />
+              onChange={(e) => setStale(e.target.value.replace(/\D/g, '') || '')} placeholder="5" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-secret">Rotate ingestion secret {health?.ingest_secret && <span className="text-text-faint font-normal">(leave blank to keep current)</span>}</Label>
+            <Input id="pf-secret" type="password" value={secret} onChange={(e) => setSecret(e.target.value)}
+              placeholder="Set a new shared secret" autoComplete="off" />
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="pf-secret">Ingestion secret {health?.secret_set && <span className="text-text-faint font-normal">(leave blank to keep current)</span>}</Label>
-          <Input id="pf-secret" type="password" value={secret} onChange={(e) => setSecret(e.target.value)}
-            placeholder={health?.secret_set ? '•••••••• (unchanged)' : 'Set a strong shared secret'} autoComplete="off" />
+        {/* Resilience toggles */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between p-3 bg-surface-muted/30 rounded-lg border border-border-subtle">
+            <div>
+              <p className="text-xs font-medium">Auto-failover to Yahoo when MT5 drops or goes stale</p>
+              <p className="text-2xs text-text-faint">Keeps quotes flowing during MT5 bridge or broker downtime.</p>
+            </div>
+            <Switch checked={autoFailover} onCheckedChange={setAutoFailover} />
+          </div>
+          <div className="flex items-center justify-between p-3 bg-surface-muted/30 rounded-lg border border-border-subtle">
+            <div>
+              <p className="text-xs font-medium">Auto-freeze execution during abnormal feed latency</p>
+              <p className="text-2xs text-text-faint">Blocks new fills on stale prices to avoid latency-arbitrage exposure.</p>
+            </div>
+            <Switch checked={autoFreeze} onCheckedChange={setAutoFreeze} />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button onClick={save} loading={saving}>Save feed settings</Button>
           <Button variant="outline" onClick={forceRefresh} loading={refreshing}>
-            <RefreshCw className="h-4 w-4" /> Force Yahoo refresh
+            <RefreshCw className="h-4 w-4" /> Force refresh now
           </Button>
         </div>
       </CardContent>

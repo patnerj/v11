@@ -61,7 +61,6 @@ function CheckoutSuccessInner() {
           if (attempt === POLL_ATTEMPTS - 1) { setPhase('error'); return }
         } else {
           const orders: PaymentOrder[] = Array.isArray(res.data) ? res.data : []
-<<<<<<< HEAD
           // Was orders.some(status === 'approved') — matched ANY historical
           // approved order regardless of age, so a trader who already owns
           // one challenge and then abandons/fails a SECOND purchase (back
@@ -76,9 +75,6 @@ function CheckoutSuccessInner() {
             return t > latestT ? o : latest
           }, null)
           if (mostRecent?.status === 'approved') { setPhase('success'); return }
-=======
-          if (orders.some((o) => o.status === 'approved')) { setPhase('success'); return }
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
           const cutoff = Date.now() - RECENT_WINDOW_MS
           const recentAwaiting = orders.some((o) => {
             if (o.status !== 'pending' && o.status !== 'submitted') return false

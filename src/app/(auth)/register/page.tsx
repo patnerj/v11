@@ -1,11 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-<<<<<<< HEAD
 import { useRouter, useSearchParams } from 'next/navigation'
-=======
-import { useRouter } from 'next/navigation'
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 import { useState, useEffect, FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -14,7 +10,6 @@ import { Input, Label } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/store/auth'
 import { AlertCircle, ArrowRight, Check } from 'lucide-react'
-<<<<<<< HEAD
 import { Suspense } from 'react'
 
 export default function RegisterPage() {
@@ -36,12 +31,6 @@ function RegisterForm() {
   // returns to their in-progress purchase instead of the empty dashboard.
   const rawNext = params.get('next') ?? '/dashboard'
   const next    = /^\/(?!\/)/.test(rawNext) ? rawNext : '/dashboard'
-=======
-
-export default function RegisterPage() {
-  const router = useRouter()
-  const { signup, user, ready } = useAuth()
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const [username, setU] = useState('')
   const [email, setE]    = useState('')
   const [password, setP] = useState('')
@@ -61,13 +50,8 @@ export default function RegisterPage() {
   }, [])
 
   useEffect(() => {
-<<<<<<< HEAD
     if (ready && user) router.replace(next)
   }, [ready, user, router, next])
-=======
-    if (ready && user) router.replace('/dashboard')
-  }, [ready, user, router])
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -82,11 +66,7 @@ export default function RegisterPage() {
     if (res.ok) {
       try { localStorage.removeItem('fxsim:ref') } catch { /* ignore */ }
       toast.success('Account created — welcome!')
-<<<<<<< HEAD
       router.replace(next === '/dashboard' ? '/dashboard?welcome=1' : next)
-=======
-      router.replace('/dashboard?welcome=1')
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     } else {
       setError(res.error ?? 'Sign-up failed')
     }

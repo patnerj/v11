@@ -40,114 +40,6 @@ const slugify = (text: string) => {
     .replace(/^-+|-+$/g, '')      // remove leading/trailing hyphens
 }
 
-<<<<<<< HEAD
-=======
-// Default fallback plans if backend returns empty or is initializing
-const DEFAULT_STARTER_PLANS: Partial<ChallengePlan>[] = [
-  {
-    id: 1,
-    name: '$100K Stellar 2-Step',
-    slug: 'stellar-100k-2step',
-    plan_type: '2-step',
-    account_size: 100000,
-    price: 499,
-    currency: 'USD',
-    phases: 2,
-    is_instant_funding: 0,
-    drawdown_type: 'static',
-    p1_profit_target: 8,
-    p2_profit_target: 5,
-    p1_daily_dd: 5,
-    p1_max_dd: 10,
-    p2_daily_dd: 5,
-    p2_max_dd: 10,
-    funded_profit_split: 85,
-    max_leverage: 100,
-    p1_min_days: 5,
-    p2_min_days: 5,
-    p1_max_days: 30,
-    p2_max_days: 60,
-    news_trading: 1,
-    weekend_holding: 1,
-    ea_allowed: 1,
-    scaling_enabled: 1,
-    scaling_growth_pct: 25,
-    is_active: 1,
-  },
-  {
-    id: 2,
-    name: '$50K Rapid 1-Step',
-    slug: 'rapid-50k-1step',
-    plan_type: '1-step',
-    account_size: 50000,
-    price: 299,
-    currency: 'USD',
-    phases: 1,
-    is_instant_funding: 0,
-    drawdown_type: 'trailing',
-    p1_profit_target: 10,
-    p1_daily_dd: 4,
-    p1_max_dd: 6,
-    funded_profit_split: 80,
-    max_leverage: 100,
-    p1_min_days: 3,
-    news_trading: 1,
-    weekend_holding: 0,
-    ea_allowed: 1,
-    scaling_enabled: 1,
-    scaling_growth_pct: 25,
-    is_active: 1,
-  },
-  {
-    id: 3,
-    name: '$25K Direct Instant Funded',
-    slug: 'instant-25k-funded',
-    plan_type: 'instant',
-    account_size: 25000,
-    price: 349,
-    currency: 'USD',
-    phases: 0,
-    is_instant_funding: 1,
-    drawdown_type: 'static',
-    p1_profit_target: 0,
-    p1_daily_dd: 3,
-    p1_max_dd: 6,
-    funded_profit_split: 75,
-    max_leverage: 50,
-    news_trading: 1,
-    weekend_holding: 1,
-    ea_allowed: 1,
-    scaling_enabled: 1,
-    scaling_growth_pct: 25,
-    is_active: 1,
-  },
-  {
-    id: 4,
-    name: '$150K Futures EOD Trailing',
-    slug: 'futures-150k-eod',
-    plan_type: '1-step',
-    account_size: 150000,
-    price: 599,
-    currency: 'USD',
-    phases: 1,
-    is_instant_funding: 0,
-    drawdown_type: 'eod_trailing',
-    p1_profit_target: 6,
-    p1_daily_dd: 0,
-    p1_max_dd: 4,
-    funded_profit_split: 90,
-    max_leverage: 100,
-    p1_min_days: 5,
-    news_trading: 1,
-    weekend_holding: 0,
-    ea_allowed: 1,
-    scaling_enabled: 1,
-    scaling_growth_pct: 30,
-    is_active: 1,
-  },
-]
-
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 export interface ChallengeBlueprintPreset {
   id: string
   name: string
@@ -366,11 +258,7 @@ export default function ConfigurationHubPage() {
   const queryClient = useQueryClient()
 
   // Main Tab: 'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling'
-<<<<<<< HEAD
   const [activeTab, setActiveTab] = useState<'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling' | 'license'>('plans')
-=======
-  const [activeTab, setActiveTab] = useState<'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling'>('plans')
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   // ─────────────────────────────────────────────────────────────────
   // AUTOMATED SCALING PLAN ENGINE STATE
@@ -418,7 +306,6 @@ export default function ConfigurationHubPage() {
     },
   })
 
-<<<<<<< HEAD
   // ── License ───────────────────────────────────────────────────────────────
   const [licenseKeyInput, setLicenseKeyInput] = useState('')
   const [licenseServerInput, setLicenseServerInput] = useState('')
@@ -476,8 +363,6 @@ export default function ConfigurationHubPage() {
     },
   })
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   const applyScaleMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await api.admin.scalingApply(id)
@@ -584,7 +469,6 @@ export default function ConfigurationHubPage() {
   // ─────────────────────────────────────────────────────────────────
   // 1. FETCH PLANS
   // ─────────────────────────────────────────────────────────────────
-<<<<<<< HEAD
   const { data: plansData, isLoading: isLoadingPlans, isError: isPlansError, refetch: refetchPlans } = useQuery({
     queryKey: ['admin-plans'],
     queryFn: async () => {
@@ -602,20 +486,6 @@ export default function ConfigurationHubPage() {
   })
 
   const plans = plansData || []
-=======
-  const { data: plansData, isLoading: isLoadingPlans, refetch: refetchPlans } = useQuery({
-    queryKey: ['admin-plans'],
-    queryFn: async () => {
-      const res = await api.admin.plansList()
-      if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
-        return res.data
-      }
-      return DEFAULT_STARTER_PLANS as ChallengePlan[]
-    },
-  })
-
-  const plans = plansData || (DEFAULT_STARTER_PLANS as ChallengePlan[])
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   // Modal State for Plan Create / Edit
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false)
@@ -678,7 +548,6 @@ export default function ConfigurationHubPage() {
     if (selectedPlanIds.length === 0) return
     const toastId = toast.loading(`${isActive ? 'Activating' : 'Deactivating'} ${selectedPlanIds.length} plans...`)
     try {
-<<<<<<< HEAD
       const results = await Promise.all(
         selectedPlanIds.map(id => api.admin.planSave({ id, is_active: isActive ? 1 : 0 }))
       )
@@ -691,12 +560,6 @@ export default function ConfigurationHubPage() {
       } else {
         toast.success(`${selectedPlanIds.length} plan(s) ${isActive ? 'activated' : 'deactivated'} successfully!`, { id: toastId })
       }
-=======
-      await Promise.all(
-        selectedPlanIds.map(id => api.admin.planSave({ id, is_active: isActive ? 1 : 0 }))
-      )
-      toast.success(`${selectedPlanIds.length} plan(s) ${isActive ? 'activated' : 'deactivated'} successfully!`, { id: toastId })
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       queryClient.invalidateQueries({ queryKey: ['admin-plans'] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'plans'] })
       setSelectedPlanIds([])
@@ -1052,20 +915,26 @@ export default function ConfigurationHubPage() {
   const sidebarIconFileInputRef = useRef<HTMLInputElement>(null)
   const faviconFileInputRef = useRef<HTMLInputElement>(null)
 
+  // These three are live-preview-only (swatch clicks before Save is ever
+  // pressed) — persist: false keeps them from overwriting the confirmed
+  // saved value in localStorage, which every other page's first paint reads
+  // before the real config has loaded. Without this, previewing a color
+  // here (even without saving) would flash on every trader-facing page
+  // load in this browser until the real saved value corrected it.
   const handleSelectAccent = (primary: string, secondary = '#111827') => {
     setBrandingForm((prev) => ({ ...prev, primary_color: primary, secondary_color: secondary }))
-    applyThemeAccent(primary)
+    applyThemeAccent(primary, { persist: false })
   }
 
   const handleSelectFont = (fontId: string) => {
     setBrandingForm((prev) => ({ ...prev, font_family: fontId }))
-    applyFontFamily(fontId)
+    applyFontFamily(fontId, { persist: false })
     toast.success(`Platform font updated to ${fontId}`)
   }
 
   const handleSelectRadius = (radiusId: string) => {
     setBrandingForm((prev) => ({ ...prev, radius: radiusId }))
-    applyRadius(radiusId)
+    applyRadius(radiusId, { persist: false })
     toast.success(`Component border radius set to ${radiusId}`)
   }
 
@@ -1492,11 +1361,7 @@ export default function ConfigurationHubPage() {
               Configuration & Engine Hub
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-<<<<<<< HEAD
-              Engine v11.1.0
-=======
-              Engine v11.0.4
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
+              Engine v11.1.1
             </Badge>
           </div>
           <p className="text-sm text-gray-400 mt-1">
@@ -1625,7 +1490,6 @@ export default function ConfigurationHubPage() {
             <TrendingUp className="h-3.5 w-3.5" />
             Scaling Plans
           </button>
-<<<<<<< HEAD
 
           <button
             onClick={() => setActiveTab('license')}
@@ -1638,8 +1502,6 @@ export default function ConfigurationHubPage() {
             <Lock className="h-3.5 w-3.5" />
             License
           </button>
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
         </div>
       </div>
 
@@ -1803,7 +1665,6 @@ export default function ConfigurationHubPage() {
             </div>
           )}
 
-<<<<<<< HEAD
           {isPlansError && (
             <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300 flex items-center justify-between gap-4">
               <span>Couldn't load challenge plans from the server. Nothing shown below reflects real data.</span>
@@ -1819,10 +1680,6 @@ export default function ConfigurationHubPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
             {!isPlansError && plans.map((plan) => {
-=======
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
-            {plans.map((plan) => {
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               const planId = Number(plan.id)
               const isSelected = selectedPlanIds.includes(planId)
               const accountSize = Number(plan.account_size || 10000)
@@ -1941,7 +1798,7 @@ export default function ConfigurationHubPage() {
                         size="sm"
                         variant="danger"
                         onClick={() => setPlanToDelete(plan)}
-                        className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                        className="h-8 w-8 p-0"
                         title="Delete/Archive Plan"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -3852,7 +3709,6 @@ export default function ConfigurationHubPage() {
         </div>
       )}
 
-<<<<<<< HEAD
       {/* ── TAB: LICENSE ─────────────────────────────────────────────────── */}
       {activeTab === 'license' && (
         <div className="space-y-8 w-full max-w-3xl">
@@ -3967,8 +3823,6 @@ export default function ConfigurationHubPage() {
         </div>
       )}
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       {/* ── CREATE / EDIT CHALLENGE PLAN MODAL ────────────────────────────── */}
       <Modal
         open={isPlanModalOpen}

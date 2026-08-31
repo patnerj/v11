@@ -25,7 +25,6 @@ export default function DashboardError({
       <p className="text-text-muted max-w-md mb-4">
         We encountered an unexpected error while loading this page. Our team has been notified.
       </p>
-<<<<<<< HEAD
       {process.env.NODE_ENV === 'development' ? (
         <pre className="text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg p-3 max-w-xl overflow-x-auto mb-6 whitespace-pre-wrap text-left">
           {error?.message || 'Unknown error'}
@@ -37,13 +36,6 @@ export default function DashboardError({
         // launch," still present) — only a correlation id is safe to show.
         <p className="text-xs text-text-muted font-mono mb-6">Reference: {error.digest}</p>
       ) : null}
-=======
-      {/* DEBUG: surface the actual error so it can be reported — remove before public launch */}
-      <pre className="text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg p-3 max-w-xl overflow-x-auto mb-6 whitespace-pre-wrap text-left">
-        {error?.message || 'Unknown error'}
-        {error?.digest ? `\ndigest: ${error.digest}` : ''}
-      </pre>
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
       <div className="flex gap-4">
         <Button onClick={() => window.location.reload()} variant="outline">
           Reload Page

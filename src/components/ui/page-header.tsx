@@ -172,7 +172,7 @@ export function PageHero({
         className
       )}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-success/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/5 pointer-events-none" />
       
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav aria-label="Breadcrumb" className="relative z-10 flex items-center gap-1.5 text-xs text-text-muted mb-3">

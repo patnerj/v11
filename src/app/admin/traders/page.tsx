@@ -108,13 +108,10 @@ export default function TradersHubPage() {
   const [impersonateTarget, setImpersonateTarget] = useState<TraderRowItem | null>(null)
   const [isImpersonating, setIsImpersonating] = useState(false)
 
-<<<<<<< HEAD
   // Ban/Freeze Confirmation State
   const [banTarget, setBanTarget] = useState<TraderRowItem | null>(null)
   const [isBanning, setIsBanning] = useState(false)
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
   // Balance Adjustment State (ported from the retired /dashboard/admin/users page)
   const [balanceTarget, setBalanceTarget] = useState<TraderRowItem | null>(null)
 
@@ -575,17 +572,10 @@ export default function TradersHubPage() {
 
               <DropdownMenuSeparator />
 
-<<<<<<< HEAD
               <DropdownMenuItem
                 danger
                 className="gap-2.5"
                 onClick={() => setBanTarget(row)}
-=======
-              <DropdownMenuItem 
-                danger 
-                className="gap-2.5"
-                onClick={() => handleToggleBan(row)}
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
               >
                 <Ban className="h-4 w-4" />
                 {isBanned ? 'Unfreeze Account' : 'Ban / Freeze Account'}
@@ -855,7 +845,6 @@ export default function TradersHubPage() {
         cancelText="Cancel"
       />
 
-<<<<<<< HEAD
       {/* ── Ban / Freeze Confirmation Dialog ────────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!banTarget}
@@ -884,8 +873,6 @@ export default function TradersHubPage() {
         loading={isBanning}
       />
 
-=======
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
     </div>
   )
 }

@@ -30,15 +30,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (impersonating || !user.is_admin) {
       router.replace('/dashboard')
     }
-<<<<<<< HEAD
     // Depend on the user's stable identity/role, not the `user` object
     // itself — refresh() above replaces it with a new object every call, so
     // depending on the object re-triggered this effect (and thus another
     // refresh()) continuously for as long as any admin tab stayed open.
   }, [ready, user?.id, user?.is_admin, impersonating, router])
-=======
-  }, [ready, user, impersonating, router])
->>>>>>> 99e40d21da20bddb8d2b8de9000069e94044b0ba
 
   if (!ready || !user || !user.is_admin || impersonating) {
     return (
