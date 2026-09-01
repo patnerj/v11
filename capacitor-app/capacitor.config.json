@@ -5,7 +5,8 @@
   "server": {
     "url": "https://demo.launchapropfirm.com",
     "cleartext": true,
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "errorPath": "offline.html"
   },
   "plugins": {
     "SplashScreen": {

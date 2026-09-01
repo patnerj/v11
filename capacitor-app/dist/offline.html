@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Alpha Capital - Connection Lost</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      background-color: #070C18;
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      position: relative;
+    }
+    .icon-container {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(7, 12, 24, 0) 70%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .pulse-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    .wifi-icon {
+      width: 44px;
+      height: 44px;
+      stroke: #10B981;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    p {
+      font-size: 14px;
+      color: #94A3B8;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 20px;
+      color: #F87171;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #EF4444;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .btn-retry {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease;
+    }
+    .btn-retry:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+    .auto-check {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(148, 163, 184, 0.2);
+      border-top-color: #10B981;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icon-container">
+      <div class="pulse-ring"></div>
+      <svg class="wifi-icon" viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+
+    <div class="status-badge" id="statusBadge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">No Internet Connection</span>
+    </div>
+
+    <h1>Unable to Reach Server</h1>
+    <p>Please check your Wi-Fi or mobile data connection. The app will automatically reconnect as soon as internet is back.</p>
+
+    <button class="btn-retry" id="retryBtn" onclick="manualRetry()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+      Retry Connection
+    </button>
+
+    <div class="auto-check">
+      <div class="spinner"></div>
+      <span id="autoText">Auto-detecting network...</span>
+    </div>
+  </div>
+
+  <script>
+    var TARGET_URL = "https://demo.launchapropfirm.com";
+    var isChecking = false;
+
+    function checkConnectionAndReload() {
+      if (isChecking) return;
+      isChecking = true;
+      
+      var pingUrl = TARGET_URL + "/favicon.ico?_t=" + Date.now();
+      var img = new Image();
+      
+      img.onload = function() {
+        showSuccessAndRedirect();
+      };
+      
+      img.onerror = function() {
+        isChecking = false;
+      };
+      
+      img.src = pingUrl;
+      
+      // Also try fetch fallback
+      if (window.fetch) {
+        fetch(pingUrl, { mode: 'no-cors', cache: 'no-store' })
+          .then(function() {
+            showSuccessAndRedirect();
+          })
+          .catch(function() {
+            isChecking = false;
+          });
+      }
+    }
+
+    function showSuccessAndRedirect() {
+      var badge = document.getElementById('statusBadge');
+      var dot = document.getElementById('statusDot');
+      var text = document.getElementById('statusText');
+      var autoText = document.getElementById('autoText');
+      
+      if (badge) {
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        badge.style.color = '#34D399';
+      }
+      if (dot) dot.style.backgroundColor = '#10B981';
+      if (text) text.textContent = 'Connection Restored!';
+      if (autoText) autoText.textContent = 'Redirecting to Live Terminal...';
+      
+      setTimeout(function() {
+        window.location.href = TARGET_URL;
+      }, 500);
+    }
+
+    function manualRetry() {
+      var btn = document.getElementById('retryBtn');
+      if (btn) {
+        btn.innerHTML = '<div class="spinner" style="border-top-color:#fff;"></div> Connecting...';
+      }
+      checkConnectionAndReload();
+      setTimeout(function() {
+        if (btn) {
+          btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Retry Connection';
+        }
+      }, 2000);
+    }
+
+    // Event listeners
+    window.addEventListener('online', function() {
+      checkConnectionAndReload();
+    });
+
+    // Auto-polling timer every 3.5 seconds
+    setInterval(checkConnectionAndReload, 3500);
+  </script>
+</body>
+</html>
