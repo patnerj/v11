@@ -1,0 +1,33 @@
+{
+  "appId": "com.alphacapital.trading",
+  "appName": "Alpha Capital",
+  "webDir": "dist",
+  "server": {
+    "url": "https://demo.launchapropfirm.com",
+    "cleartext": true,
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#070C18",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#070C18"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK"
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}
