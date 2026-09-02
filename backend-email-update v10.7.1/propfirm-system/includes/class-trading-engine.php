@@ -39,6 +39,19 @@ class FXSIM_Trading_Engine {
             }
         }
 
+        // ── Defense-in-depth: Reject trade if a payout is pending review on this account ──
+        if ($explicit_account_id > 0) {
+            $pending_payout = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT p.id FROM {$wpdb->prefix}fxsim_payouts p
+                 JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.id = p.challenge_id
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review') LIMIT 1",
+                $explicit_account_id
+            ));
+            if ($pending_payout > 0) {
+                return self::err('Trading is temporarily locked while a payout request is pending review.');
+            }
+        }
+
         if ($explicit_account_id > 0) {
             $account = $wpdb->get_row($wpdb->prepare(
                 "SELECT a.*, ca.plan_id, ca.id AS challenge_id, ca.status AS challenge_status
@@ -53,7 +66,27 @@ class FXSIM_Trading_Engine {
             $account = self::get_user_active_account($user_id);
             if (!$account) return self::err('No active challenge account. Purchase a challenge to start trading.');
         }
+
+        // Security gate: Block new orders if a payout is pending or under review
+        if (!empty($account->id)) {
+            $pending_payout = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts p
+                 JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON p.challenge_id = ca.id
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review')",
+                (int) $account->id
+            ));
+            if ($pending_payout > 0) {
+                return self::err('Trading is temporarily locked while a payout request is pending review.');
+            }
+        }
         if ($account->status !== 'active') return self::err('Account is ' . $account->status . '.');
+
+        // ── Pre-trade drawdown gate: once equity is at/through the max-DD floor or
+        // the daily loss limit is consumed, block NEW risk (floating-loss protection) ──
+        if (class_exists('FXSIM_Challenge_Engine') && !empty($account->challenge_id)) {
+            $dd_err = FXSIM_Challenge_Engine::pretrade_dd_guard((int)$account->challenge_id);
+            if ($dd_err) return self::err($dd_err);
+        }
 
         $sym_obj = FXSIM_Symbols::get($args['symbol']);
         if (!$sym_obj) return self::err('Symbol not found or disabled.');
@@ -285,6 +318,9 @@ class FXSIM_Trading_Engine {
 
                         if ($action === 'void_pnl') {
                             $is_toxic = 1;
+                            if ($pnl > 0) {
+                                $pnl = 0.0;
+                            }
                         }
 
                         // Always flag the violation for the record — including
@@ -323,7 +359,35 @@ class FXSIM_Trading_Engine {
 
         $wpdb->query('START TRANSACTION');
         try {
-            // 1. ATOMIC CLAIM: Delete open position immediately.
+            // 1. ATOMIC ROW LOCK: Lock position row with FOR UPDATE to prevent concurrent partial/full close races.
+            $pos_locked = $wpdb->get_row($wpdb->prepare(
+                "SELECT p.*, a.user_id 
+                 FROM {$wpdb->prefix}fxsim_positions p
+                 JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+                 WHERE p.id = %d AND a.user_id = %d FOR UPDATE",
+                $pos_id, $user_id
+            ));
+            if (!$pos_locked) {
+                $wpdb->query('ROLLBACK');
+                return self::err('Position already closed or concurrently processed.');
+            }
+            // Adopt locked position state in case a concurrent partial_close modified lot_size/margin
+            $pos = $pos_locked;
+            $pnl = self::calc_pnl($pos, $close_px);
+
+            // Anti-scalping void_pnl enforcement: if trade held < min_trade_seconds and action is void_pnl,
+            // force $pnl = 0.0 and ensure $credit_amount = 0.0 so no scalping profits are credited to account balance.
+            if ($is_toxic === 1 && $pnl > 0) {
+                $pnl = 0.0;
+                $credit_amount = 0.0;
+            } else {
+                // calc_pnl() subtracts $pos->commission (correct for informational PnL),
+                // but commission was already deducted at open. Adding $pnl + commission ensures
+                // round-trip commission is charged exactly once.
+                $credit_amount = (float) $pnl + (float) $pos->commission;
+            }
+
+            // ATOMIC CLAIM: Delete open position immediately.
             // If 0 rows affected, another concurrent process (manual, SL/TP, margin stop-out) already closed it!
             $deleted = $wpdb->query($wpdb->prepare(
                 "DELETE FROM {$wpdb->prefix}fxsim_positions WHERE id = %d",
@@ -354,10 +418,6 @@ class FXSIM_Trading_Engine {
             ]);
 
             // 3. ATOMIC DELTA UPDATE on account balance & margin
-            // calc_pnl() subtracts $pos->commission (correct for informational PnL),
-            // but commission was already deducted at open. Adding $pnl + commission ensures
-            // round-trip commission is charged exactly once.
-            $credit_amount   = (float) $pnl + (float) $pos->commission;
             $released_margin = (float) $pos->margin;
 
             $wpdb->query($wpdb->prepare(
@@ -465,6 +525,9 @@ class FXSIM_Trading_Engine {
                     
                     if ($action === 'void_pnl') {
                         $is_toxic = 1;
+                        if ($pnl > 0) {
+                            $pnl = 0.0;
+                        }
                     }
 
                     if ($action !== 'reject') {
@@ -483,21 +546,67 @@ class FXSIM_Trading_Engine {
 
         $wpdb->query('START TRANSACTION');
         try {
+            // ATOMIC ROW LOCK: Lock position row under transaction to synchronize with close_position
+            $pos_locked = $wpdb->get_row($wpdb->prepare(
+                "SELECT p.*, a.user_id 
+                 FROM {$wpdb->prefix}fxsim_positions p
+                 JOIN {$wpdb->prefix}fxsim_accounts a ON p.account_id = a.id
+                 WHERE p.id = %d AND a.user_id = %d FOR UPDATE",
+                $pos_id, $user_id
+            ));
+            if (!$pos_locked || (float)$pos_locked->lot_size < $close_lots) {
+                $wpdb->query('ROLLBACK');
+                return self::err('Insufficient position lots or position already closed concurrently.');
+            }
+            $orig_lots = (float)$pos_locked->lot_size;
+            $pos = $pos_locked;
+
+            // Recalculate partial ratio and metrics based on locked state
+            $current_lots  = $orig_lots;
+            $partial_ratio = ($current_lots > 0) ? ($close_lots / $current_lots) : 1.0;
+            $partial_pos   = clone $pos;
+            $partial_pos->lot_size   = $close_lots;
+            $partial_pos->margin     = (float)$pos->margin     * $partial_ratio;
+            $partial_pos->commission = (float)$pos->commission * $partial_ratio;
+            $partial_pos->swap       = (float)$pos->swap       * $partial_ratio;
+            $pnl = self::calc_pnl($partial_pos, $close_px);
+
+            // Anti-scalping void_pnl enforcement: if trade held < min_trade_seconds and action is void_pnl,
+            // force $pnl = 0.0 and ensure $credit_amount = 0.0 so no scalping profits are credited to account balance.
+            if ($is_toxic === 1 && $pnl > 0) {
+                $pnl = 0.0;
+                $credit_amount = 0.0;
+            } else {
+                $credit_amount = (float) $pnl + (float) $partial_pos->commission;
+            }
+
             // 1. ATOMIC CLAIM: Reduce original position size only if current lot_size >= close_lots
             $remain_lots   = round($orig_lots - $close_lots, 2);
             $remain_margin = (float)$pos->margin * (1 - $partial_ratio);
-            $updated = $wpdb->query($wpdb->prepare(
-                "UPDATE {$wpdb->prefix}fxsim_positions 
-                 SET lot_size = lot_size - %f, 
-                     margin = margin - %f, 
-                     commission = commission * (1 - %f), 
-                     swap = swap * (1 - %f) 
-                 WHERE id = %d AND lot_size >= %f",
-                $close_lots, (float)$partial_pos->margin, $partial_ratio, $partial_ratio, $pos_id, $close_lots
-            ));
-            if ($updated !== 1) {
-                $wpdb->query('ROLLBACK');
-                return self::err('Position already modified or closed concurrently.');
+            if ($remain_lots <= 0.00001) {
+                $deleted = $wpdb->query($wpdb->prepare(
+                    "DELETE FROM {$wpdb->prefix}fxsim_positions WHERE id = %d",
+                    $pos_id
+                ));
+                if ($deleted !== 1) {
+                    $wpdb->query('ROLLBACK');
+                    return self::err('Position already modified or closed concurrently.');
+                }
+                $remain_lots = 0.0;
+            } else {
+                $updated = $wpdb->query($wpdb->prepare(
+                    "UPDATE {$wpdb->prefix}fxsim_positions 
+                     SET lot_size = lot_size - %f, 
+                         margin = margin - %f, 
+                         commission = commission * (1 - %f), 
+                         swap = swap * (1 - %f) 
+                     WHERE id = %d AND lot_size >= %f",
+                    $close_lots, (float)$partial_pos->margin, $partial_ratio, $partial_ratio, $pos_id, $close_lots
+                ));
+                if ($updated !== 1) {
+                    $wpdb->query('ROLLBACK');
+                    return self::err('Position already modified or closed concurrently.');
+                }
             }
 
             // 2. Log the partial close as a trade
@@ -520,7 +629,6 @@ class FXSIM_Trading_Engine {
             ]);
 
             // 3. ATOMIC DELTA UPDATE on account balance & margin
-            $credit_amount   = (float) $pnl + (float) $partial_pos->commission;
             $released_margin = (float) $partial_pos->margin;
 
             $wpdb->query($wpdb->prepare(
@@ -608,12 +716,19 @@ class FXSIM_Trading_Engine {
         ));
 
         if (empty($positions)) {
-            // No positions — ensure equity = balance and margin_used = 0
+            // No open positions — equity = balance. margin_used must still carry
+            // any PENDING-order margin reservations (placed orders increment
+            // margin_used; wiping it here would silently release their margin).
+            $pending_margin = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT COALESCE(SUM(margin),0) FROM {$wpdb->prefix}fxsim_pending_orders
+                 WHERE account_id = %d AND status = 'pending'",
+                $account_id
+            ));
             $wpdb->query($wpdb->prepare(
                 "UPDATE {$wpdb->prefix}fxsim_accounts
-                 SET equity = balance, margin_used = 0
+                 SET equity = balance, margin_used = %f
                  WHERE id = %d",
-                $account_id
+                $pending_margin, $account_id
             ));
             return [];
         }
@@ -668,13 +783,21 @@ class FXSIM_Trading_Engine {
             ");
         }
 
-        // Update equity — single query using live balance from DB (not stale PHP read)
+        // Update equity — single query using live balance from DB (not stale PHP read).
+        // margin_used = open-position margin + PENDING-order reservations. Overwriting
+        // with position margin alone releases pending reservations every tick and
+        // lets traders over-commit free margin.
+        $pending_margin = (float) $wpdb->get_var($wpdb->prepare(
+            "SELECT COALESCE(SUM(margin),0) FROM {$wpdb->prefix}fxsim_pending_orders
+             WHERE account_id = %d AND status = 'pending'",
+            $account_id
+        ));
         $wpdb->query($wpdb->prepare(
             "UPDATE {$wpdb->prefix}fxsim_accounts
              SET equity      = balance + %f,
                  margin_used = %f
              WHERE id = %d",
-            $total_pnl, $total_margin, $account_id
+            $total_pnl, $total_margin + $pending_margin, $account_id
         ));
 
         return $positions;
@@ -1151,6 +1274,19 @@ class FXSIM_Trading_Engine {
         }
         if ($account->status !== 'active') return self::err('Account is ' . $account->status . '.');
 
+        // Security gate: Block new pending orders if a payout is pending or under review
+        if (!empty($account->id)) {
+            $pending_payout = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts p
+                 JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON p.challenge_id = ca.id
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review')",
+                (int) $account->id
+            ));
+            if ($pending_payout > 0) {
+                return self::err('Trading is temporarily locked while a payout request is pending review.');
+            }
+        }
+
         // ── Validate type ────────────────────────────────────────────────────
         $valid_types = ['buy_limit', 'sell_limit', 'buy_stop', 'sell_stop'];
         $type        = sanitize_text_field($args['order_type'] ?? ($args['type'] ?? ''));
@@ -1168,13 +1304,24 @@ class FXSIM_Trading_Engine {
         // ── Load plan & tournament rules (lot cap, leverage, news) ───────────
         $plan_rules = self::get_account_risk_rules($account);
 
-        // News lock
-        if ($plan_rules && !(int)$plan_rules->news_trading) {
+        // News lock - same custom_news_trading override resolution as
+        // open_position(): a per-account override must gate pending orders too,
+        // otherwise a restriction is bypassable by parking limit/stop orders
+        // ahead of the release.
+        $is_news_restricted = ($plan_rules && $plan_rules->custom_news_trading !== null)
+            ? !(int)$plan_rules->custom_news_trading
+            : ($plan_rules && !(int)$plan_rules->news_trading);
+        if ($is_news_restricted) {
             if (get_option('fxsim_news_lock', false)) {
                 return self::err('\u26a0 News lock active. Trading paused during high-impact news events. Please wait for the lock to be lifted.');
             }
             if (class_exists('FXSIM_Challenge_Engine')) {
-                $news_err = FXSIM_Challenge_Engine::check_news_window($args['symbol'], (int)($plan_rules->news_window_minutes ?? 5));
+                $news_err = FXSIM_Challenge_Engine::check_news_window(
+                    $args['symbol'],
+                    (int)($plan_rules->news_window_minutes ?? 5),
+                    (int)$account->user_id,
+                    (int)($account->challenge_id ?? 0)
+                );
                 if ($news_err) {
                     return self::err("\u26a0 " . $news_err);
                 }
@@ -1444,6 +1591,26 @@ class FXSIM_Trading_Engine {
             return;
         }
 
+        // ── Pre-trade DD gate at FILL time ────────────────────────────────────
+        // Equity may have gapped through the max-DD/daily-loss floor between
+        // placement and fill (fills run up to 30s after the tick). Without this
+        // re-check a stop order placed while healthy fills into a breached
+        // account — exactly the "additional risk after the floor" hole.
+        if (class_exists('FXSIM_Challenge_Engine')) {
+            $chal_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}fxsim_challenge_accounts
+                 WHERE fxsim_account_id = %d AND status IN ('active','funded') LIMIT 1",
+                $order->account_id
+            ));
+            if ($chal_id) {
+                $dd_err = FXSIM_Challenge_Engine::pretrade_dd_guard($chal_id);
+                if ($dd_err) {
+                    self::expire_pending_order($order, $dd_err);
+                    return;
+                }
+            }
+        }
+
         // ── Emergency Pause Trading guard ─────────────────────────────────────
         if (class_exists('FXSIM_Challenge_DB') && FXSIM_Challenge_DB::get_setting('pause_trading', '') === '1') {
             return; // Trading paused: leave order in pending state until pause is lifted
@@ -1511,18 +1678,23 @@ class FXSIM_Trading_Engine {
             );
 
             // Swap reserved margin (at target_price) for precise margin (at fill_px).
-            // Uses SQL arithmetic on the live column value — not the PHP-cached $account->margin_used.
-            // This prevents a stale-read race if check_sl_tp() modifies margin_used concurrently.
-            $margin_diff     = $precise_margin - (float)$order->margin; // usually near-zero
-            $new_balance     = (float)$account->balance - $precise_commission;
+            // Both writes use SQL arithmetic on the live column values — not the
+            // PHP-cached $account snapshot. A stale absolute balance write here
+            // used to silently revert any close/open that committed between the
+            // read and this UPDATE (lost-update race = money created/destroyed).
+            $margin_diff = $precise_margin - (float)$order->margin;
 
             $wpdb->query($wpdb->prepare(
                 "UPDATE {$wpdb->prefix}fxsim_accounts
-                 SET balance    = %f,
+                 SET balance    = balance - %f,
                      margin_used = GREATEST(0, margin_used + %f)
                  WHERE id = %d",
-                $new_balance,
+                $precise_commission,
                 $margin_diff,   // atomic: DB adds diff to whatever live value is
+                $account->id
+            ));
+            $new_balance = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT balance FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
                 $account->id
             ));
 
@@ -1810,8 +1982,8 @@ class FXSIM_Trading_Engine {
         if (!$affected) return;
 
         $brand = class_exists('FXSIM_Challenge_DB')
-            ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System')
-            : 'PropFirm System';
+            ? FXSIM_Challenge_DB::get_setting('brand_name', 'Alpha Capital')
+            : 'Alpha Capital';
 
         foreach ($affected as $row) {
             $user = get_userdata((int)$row->user_id);

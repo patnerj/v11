@@ -8,25 +8,34 @@ defined('ABSPATH') || exit;
 class FXSIM_Challenge_Engine {
 
     // ── Create a new isolated challenge account for a user ────────────────────
-    public static function create_challenge(int $user_id, int $plan_id): array {
+    // $overrides (all optional; every existing call site passes none, and gets
+    // identical behavior to before this parameter was added):
+    //   starting_balance  float  override the plan's own account_size
+    //   initial_phase     int    2 to start the account already in Phase 2 (only
+    //                            applied when the plan actually has Phase 2 rules)
+    //   force_funded      bool   grant Funded status immediately, bypassing
+    //                            evaluation, regardless of the plan's own
+    //                            is_instant_funding flag
+    public static function create_challenge(int $user_id, int $plan_id, array $overrides = []): array {
         global $wpdb;
 
         $plan = FXSIM_Challenge_DB::get_plan($plan_id);
         if (!$plan) return ['success' => false, 'message' => 'Plan not found.'];
 
-        $start = (float) $plan->account_size;
+        $start = isset($overrides['starting_balance']) && (float)$overrides['starting_balance'] > 0
+            ? (float)$overrides['starting_balance']
+            : (float)$plan->account_size;
 
         // ISOLATION: create a brand-new trading account for this challenge only
         $account_id = FXSIM_Database::create_challenge_account($user_id, $start);
         if (!$account_id) return ['success' => false, 'message' => 'Failed to create challenge account.'];
 
-        // Determine drawdown type and initial DD floor
+        // Determine drawdown type
         $dd_type = $plan->drawdown_type ?? 'static';
-        $max_dd_pct = (float)($plan->p1_max_dd ?? 10);
-        $initial_dd_floor = $start * (1 - $max_dd_pct / 100);
 
         // ── Instant Funding: skip evaluation, go directly to funded ──────────
-        if (!empty($plan->is_instant_funding)) {
+        // Triggered by the plan's own flag, or by an explicit admin override.
+        if (!empty($plan->is_instant_funding) || !empty($overrides['force_funded'])) {
             $funded_max_dd = (float)($plan->funded_max_dd ?? 10);
             $funded_dd_floor = $start * (1 - $funded_max_dd / 100);
 
@@ -64,15 +73,29 @@ class FXSIM_Challenge_Engine {
         }
 
         // ── Standard evaluation challenge ────────────────────────────────────
-        $phase_ends = ((int)$plan->p1_max_days > 0)
-            ? date('Y-m-d H:i:s', strtotime("+{$plan->p1_max_days} days"))
-            : NULL;
+        // Start at Phase 2 only when explicitly requested AND the plan actually
+        // defines Phase 2 rules — otherwise fall back to the normal Phase 1 start.
+        $start_phase = (isset($overrides['initial_phase']) && (int)$overrides['initial_phase'] === 2 && isset($plan->p2_profit_target))
+            ? 2 : 1;
+
+        if ($start_phase === 2) {
+            $max_dd_pct = (float)($plan->p2_max_dd ?? 10);
+            $phase_ends = ((int)$plan->p2_max_days > 0)
+                ? date('Y-m-d H:i:s', strtotime("+{$plan->p2_max_days} days"))
+                : NULL;
+        } else {
+            $max_dd_pct = (float)($plan->p1_max_dd ?? 10);
+            $phase_ends = ((int)$plan->p1_max_days > 0)
+                ? date('Y-m-d H:i:s', strtotime("+{$plan->p1_max_days} days"))
+                : NULL;
+        }
+        $initial_dd_floor = $start * (1 - $max_dd_pct / 100);
 
         $inserted = $wpdb->insert($wpdb->prefix . 'fxsim_challenge_accounts', [
             'user_id'             => $user_id,
             'plan_id'             => $plan_id,
             'fxsim_account_id'    => $account_id,
-            'phase'               => 1,
+            'phase'               => $start_phase,
             'status'              => 'active',
             'starting_balance'    => $start,
             'current_balance'     => $start,
@@ -111,12 +134,35 @@ class FXSIM_Challenge_Engine {
         if (!$plan || !$account) return;
 
         $balance = (float)$account->balance;
-        $equity  = (float)$account->equity;
         $start   = (float)$challenge->starting_balance;
         $peak    = max((float)$challenge->peak_balance, $balance);
 
         // Update peak + current balance
         self::update_challenge_balance($challenge_id, $balance, $peak);
+
+        // Dynamically calculate live floating PnL across all remaining open positions
+        $positions = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_positions WHERE account_id = %d",
+            (int)$account->id
+        ));
+
+        $floating_pnl = 0.0;
+        if (!empty($positions)) {
+            foreach ($positions as $pos) {
+                $prices = FXSIM_Price_Feed::get($pos->symbol);
+                $price  = ($pos->type === 'buy') ? (float)($prices['bid'] ?? 0) : (float)($prices['ask'] ?? 0);
+                if ($price <= 0) {
+                    $price = (float)($pos->current_price ?? $pos->open_price ?? 0);
+                }
+                if ($price > 0 && class_exists('FXSIM_Trading_Engine')) {
+                    $floating_pnl += FXSIM_Trading_Engine::calc_pnl($pos, $price) + (float)$pos->commission;
+                }
+            }
+        }
+
+        $live_equity    = $balance + $floating_pnl;
+        $current_equity = min($balance, $live_equity);
+        $equity         = $live_equity;
 
         // Get rules for current phase (including custom enterprise overrides)
         $phase = ($challenge->status === 'funded') ? 0 : (int)$challenge->phase;
@@ -124,7 +170,6 @@ class FXSIM_Challenge_Engine {
 
         // ── Drawdown calculation based on type ────────────────────────────────
         $dd_type = $challenge->drawdown_type ?? ($plan->drawdown_type ?? 'static');
-        $current_equity = min($balance, $equity); // Use the lower of balance/equity
 
         switch ($dd_type) {
             case 'trailing':
@@ -132,8 +177,11 @@ class FXSIM_Challenge_Engine {
                 // Trailing DD: floor moves up with equity high-water mark
                 $hwm = max((float)$challenge->equity_hwm, $current_equity);
                 $new_floor = $hwm * (1 - $max_dd_pct / 100);
-                // Floor can only go UP (never down)
-                $trailing_floor = max((float)$challenge->trailing_dd_floor, $new_floor);
+                if ($new_floor >= $start) {
+                    $new_floor = $start;
+                }
+                // Floor can only go UP (never down), and locks permanently once it reaches starting balance ($start)
+                $trailing_floor = min($start, max((float)$challenge->trailing_dd_floor, $new_floor));
 
                 // Update HWM and trailing floor
                 $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
@@ -152,6 +200,9 @@ class FXSIM_Challenge_Engine {
                 if ($dd_breach_level <= 0) {
                     $dd_breach_level = $start * (1 - $max_dd_pct / 100);
                 }
+                if ($start > 0 && $dd_breach_level > $start) {
+                    $dd_breach_level = $start;
+                }
                 break;
 
             case 'static':
@@ -163,7 +214,8 @@ class FXSIM_Challenge_Engine {
         }
 
         // ── Check 1: Max Drawdown ──────────────────────────────────────────────
-        if ($current_equity <= $dd_breach_level) {
+        // max_dd_pct = 0 means "no max-DD rule on this phase" — never breach on it.
+        if ($max_dd_pct > 0 && $current_equity <= $dd_breach_level) {
             $dd_fmt    = number_format($start - $current_equity, 2);
             $start_fmt = number_format($start, 2);
             $type_label = (in_array($dd_type, ['trailing', 'trailing_equity'], true)) ? 'Trailing Equity' : ((in_array($dd_type, ['eod_trailing', 'trailing_balance'], true)) ? 'EOD Trailing Balance' : 'Static');
@@ -174,10 +226,16 @@ class FXSIM_Challenge_Engine {
         }
 
         // ── Check 2: Daily Drawdown ────────────────────────────────────────────
+        // daily_dd_pct = 0 means "no daily loss limit on this plan" (e.g.
+        // futures-style EOD plans) — with a 0 limit any loss ≥ $0 would
+        // instantly breach, so the check is skipped entirely when it's 0.
         $daily_start  = (float)$challenge->daily_start_balance;
         $daily_dd_val = $daily_start * ($daily_dd_pct / 100);
         $daily_loss   = $daily_start - $current_equity;
-        if ($daily_loss >= $daily_dd_val) {
+        // $daily_start > 0 guard: a zeroed daily baseline (stop-out negative
+        // balance, payout deduction) must not divide-by-zero here — that fatal
+        // aborted the whole trade-close request before breach() could run.
+        if ($daily_dd_pct > 0 && $daily_start > 0 && $daily_loss >= $daily_dd_val) {
             $dl_fmt  = number_format($daily_loss, 2);
             $ds_fmt  = number_format($daily_start, 2);
             self::breach($challenge_id, (int)$challenge->user_id, 'daily_drawdown',
@@ -215,6 +273,82 @@ class FXSIM_Challenge_Engine {
                 }
             }
         }
+    }
+
+    /**
+     * Pre-trade drawdown gate.
+     *
+     * Breach evaluation still runs on trade close (floating losses alone do
+     * not fail an account), but once equity is at/through the max-DD floor —
+     * or the daily loss limit is consumed — the trader must not be able to
+     * open ADDITIONAL risk. Returns null when trading is allowed, or an
+     * error message string to reject the order with.
+     */
+    public static function pretrade_dd_guard(int $challenge_id): ?string {
+        global $wpdb;
+        $challenge = FXSIM_Challenge_DB::get_challenge($challenge_id);
+        if (!$challenge || !in_array($challenge->status, ['active', 'funded'], true)) return null;
+
+        $plan    = FXSIM_Challenge_DB::get_plan((int)$challenge->plan_id);
+        $account = FXSIM_Database::get_account_by_id((int)$challenge->fxsim_account_id);
+        if (!$plan || !$account) return null;
+
+        $balance = (float)$account->balance;
+        $equity  = (float)$account->equity;
+        $start   = (float)$challenge->starting_balance;
+        if ($start <= 0) return null;
+
+        $phase = ($challenge->status === 'funded') ? 0 : (int)$challenge->phase;
+        [$profit_target, $daily_dd_pct, $max_dd_pct, $min_days, $max_days] = self::get_phase_rules($plan, $phase, $challenge);
+
+        $current_equity = min($balance, $equity);
+        $dd_type        = $challenge->drawdown_type ?? ($plan->drawdown_type ?? 'static');
+
+        // ── Max drawdown floor (mirrors evaluate_after_trade semantics) ────────
+        switch ($dd_type) {
+            case 'trailing':
+            case 'trailing_equity':
+                $hwm       = max((float)$challenge->equity_hwm, $current_equity);
+                $new_floor = $hwm * (1 - $max_dd_pct / 100);
+                if ($new_floor >= $start) {
+                    $new_floor = $start;
+                }
+                $trailing_floor  = min($start, max((float)$challenge->trailing_dd_floor, $new_floor));
+                $dd_breach_level = $trailing_floor;
+                break;
+            case 'eod_trailing':
+            case 'trailing_balance':
+                $dd_breach_level = (float)$challenge->trailing_dd_floor;
+                if ($dd_breach_level <= 0) $dd_breach_level = $start * (1 - $max_dd_pct / 100);
+                if ($start > 0 && $dd_breach_level > $start) $dd_breach_level = $start;
+                break;
+            default:
+                $dd_breach_level = $start * (1 - $max_dd_pct / 100);
+                break;
+        }
+
+        if ($max_dd_pct > 0 && $current_equity <= $dd_breach_level) {
+            return sprintf(
+                'Max drawdown limit reached (equity $%s / floor $%s). New trades are blocked; closing positions may trigger evaluation.',
+                number_format($current_equity, 2),
+                number_format($dd_breach_level, 2)
+            );
+        }
+
+        // ── Daily drawdown consumed ────────────────────────────────────────────
+        $daily_start = (float)$challenge->daily_start_balance;
+        if ($daily_dd_pct > 0 && $daily_start > 0) {
+            $daily_loss = $daily_start - $current_equity;
+            if ($daily_loss >= $daily_start * ($daily_dd_pct / 100)) {
+                return sprintf(
+                    'Daily loss limit reached ($%s of $%s allowed today). No new trades until the daily window resets.',
+                    number_format($daily_loss, 2),
+                    number_format($daily_start * ($daily_dd_pct / 100), 2)
+                );
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -261,6 +395,7 @@ class FXSIM_Challenge_Engine {
         foreach ($challenges as $ch) {
             $balance  = (float)$ch->balance;
             $equity   = (float)($ch->equity ?? $balance);
+            $start    = (float)$ch->starting_balance;
             $plan     = FXSIM_Challenge_DB::get_plan((int)$ch->plan_id);
             if (!$plan) continue;
 
@@ -268,11 +403,20 @@ class FXSIM_Challenge_Engine {
             [$pt, $dd, $max_dd_pct, $min_d, $max_d] = self::get_phase_rules($plan, $phase, $ch);
 
             // ── EOD Trailing Drawdown: update trailing floor at day's end ─────
-            if (($ch->drawdown_type ?? 'static') === 'eod_trailing') {
+            // EOD trailing AND trailing_balance both advance their floor at the
+            // daily swap — trailing_balance was grouped with EOD in evaluation
+            // but never advanced here, leaving it effectively static DD.
+            // Industry standard rule: Trailing DD floor locks permanently once it reaches or exceeds $start.
+            if (in_array(($ch->drawdown_type ?? 'static'), ['eod_trailing', 'trailing_balance', 'trailing', 'trailing_equity'], true)) {
                 $current_equity = min($balance, $equity);
                 $hwm = max((float)$ch->equity_hwm, $current_equity);
                 $new_floor = $hwm * (1 - $max_dd_pct / 100);
-                $trailing_floor = max((float)$ch->trailing_dd_floor, $new_floor);
+                if ($start > 0 && $new_floor >= $start) {
+                    $new_floor = $start;
+                }
+                $trailing_floor = ($start > 0)
+                    ? min($start, max((float)$ch->trailing_dd_floor, $new_floor))
+                    : max((float)$ch->trailing_dd_floor, $new_floor);
 
                 $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
                     'equity_hwm'        => $hwm,
@@ -305,7 +449,10 @@ class FXSIM_Challenge_Engine {
             // Check Inactivity limit
             if (isset($plan->max_inactivity_days) && (int)$plan->max_inactivity_days > 0) {
                 $max_inactive = (int)$plan->max_inactivity_days;
-                $last_trade = $wpdb->get_var($wpdb->prepare("SELECT MAX(opened_at) FROM {$wpdb->prefix}fxsim_trades WHERE account_id = %d", $ch->fxsim_account_id));
+                // GREATEST(opened_at, closed_at): a trader actively MANAGING
+                // positions (closing daily) without opening new ones must not
+                // accrue inactivity days — last activity includes closes.
+                $last_trade = $wpdb->get_var($wpdb->prepare("SELECT GREATEST(COALESCE(MAX(opened_at),'1970-01-01'), COALESCE(MAX(closed_at),'1970-01-01')) FROM {$wpdb->prefix}fxsim_trades WHERE account_id = %d", $ch->fxsim_account_id));
                 $last_pos = $wpdb->get_var($wpdb->prepare("SELECT MAX(opened_at) FROM {$wpdb->prefix}fxsim_positions WHERE account_id = %d", $ch->fxsim_account_id));
                 
                 $last_activity = $ch->created_at;
@@ -383,7 +530,11 @@ class FXSIM_Challenge_Engine {
             // Calculate new DD floor for next phase
             $new_dd_floor = $start * (1 - $next_mdd / 100);
 
-            $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
+            // Conditional claim: only promote an ACTIVE challenge. A concurrent
+            // breach() may have flipped status to 'failed' between our (stale)
+            // read and this write — without the status guard this UPDATE would
+            // resurrect a failed account (free phase skip).
+            $promoted = $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
                 'phase'               => $next_phase,
                 'status'              => 'active',
                 'current_balance'     => $start,
@@ -395,7 +546,11 @@ class FXSIM_Challenge_Engine {
                 'phase_started_at'    => current_time('mysql'),
                 'phase_ends_at'       => $phase_end,
                 'passed_at'           => NULL,
-            ], ['id' => $challenge_id]);
+            ], ['id' => $challenge_id, 'status' => 'active']);
+
+            if ($promoted === 0 && (int)$wpdb->rows_affected === 0) {
+                return; // lost the race to a concurrent breach — do not resurrect
+            }
 
             self::notify_user($user_id, 'phase_passed', [
                 'phase' => $current_phase,
@@ -404,11 +559,16 @@ class FXSIM_Challenge_Engine {
 
         } else {
             // ── All phases passed → Funded ────────────────────────────────────
-            $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
+            // Same conditional claim as the phase path above.
+            $funded = $wpdb->update($wpdb->prefix . 'fxsim_challenge_accounts', [
                 'status'    => 'funded',
                 'funded_at' => current_time('mysql'),
                 'passed_at' => current_time('mysql'),
-            ], ['id' => $challenge_id]);
+            ], ['id' => $challenge_id, 'status' => 'active']);
+
+            if ($funded === 0 && (int)$wpdb->rows_affected === 0) {
+                return; // lost the race to a concurrent breach
+            }
 
             self::notify_user($user_id, 'challenge_passed', ['challenge_id' => $challenge_id]);
 
@@ -451,8 +611,23 @@ class FXSIM_Challenge_Engine {
                 return; // Already breached (or otherwise terminal) — nothing to do
             }
 
-            // Close all open positions BEFORE freezing the account, otherwise close_position fails
-            // to find an 'active' account and leaves the positions orphaned.
+            // Freeze the underlying trading account IMMEDIATELY after the claim —
+            // BEFORE closing positions. In the old order (close → freeze) there was
+            // a window where the challenge was already 'failed' (so pretrade_dd_guard
+            // short-circuited to null) but fxsim_accounts was still 'active' —
+            // open_position() could sneak NEW positions into an account whose
+            // positions were about to be force-closed, orphaning them. close_position()
+            // does not gate on fxsim_accounts.status and force_close passes force=true,
+            // so freezing first is safe.
+            $challenge_for_freeze = FXSIM_Challenge_DB::get_challenge($challenge_id);
+            if ($challenge_for_freeze) {
+                $wpdb->update($wpdb->prefix . 'fxsim_accounts',
+                    ['status' => 'frozen'],
+                    ['id' => (int)$challenge_for_freeze->fxsim_account_id]
+                );
+            }
+
+            // Close all open positions (works on the frozen account — see above).
             self::force_close_all_positions($challenge_id, $user_id);
 
             // Log breach
@@ -464,15 +639,6 @@ class FXSIM_Challenge_Engine {
                 'actual_value' => $actual,
                 'description'  => $description,
             ]);
-
-            // Freeze the underlying trading account
-            $challenge = FXSIM_Challenge_DB::get_challenge($challenge_id);
-            if ($challenge) {
-                $wpdb->update($wpdb->prefix . 'fxsim_accounts',
-                    ['status' => 'frozen'],
-                    ['id' => (int)$challenge->fxsim_account_id]
-                );
-            }
 
             // Notify
             self::notify_user($user_id, 'challenge_failed', [
@@ -495,7 +661,11 @@ class FXSIM_Challenge_Engine {
     }
 
     // ── Force-close all open positions on breach ──────────────────────────────
-    private static function force_close_all_positions(int $challenge_id, int $user_id): void {
+    // Public: also called directly by the MT5-sync breach path in
+    // class-rest-api.php, which needs the same account-freeze / force-close
+    // guarantees as breach() above without going through its own (differently
+    // shaped) notification/webhook dispatch.
+    public static function force_close_all_positions(int $challenge_id, int $user_id): void {
         global $wpdb;
         $challenge = FXSIM_Challenge_DB::get_challenge($challenge_id);
         if (!$challenge) return;
@@ -765,7 +935,7 @@ class FXSIM_Challenge_Engine {
 
         // Discord webhook
         $user    = get_userdata($user_id);
-        $brand   = FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System');
+        $brand   = FXSIM_Challenge_DB::get_setting('brand_name', 'Alpha Capital');
         $subject = match($event) {
             'phase_passed'     => "Phase {$data['phase']} Passed → {$data['next']}",
             'challenge_passed' => 'Challenge Passed — Funded!',
@@ -809,6 +979,27 @@ class FXSIM_Challenge_Engine {
 
         global $wpdb;
         $now_utc = gmdate('Y-m-d H:i:s');
+
+        // ── Fail-CLOSED staleness detection ───────────────────────────────────
+        // The guard reads a locally-synced calendar table. If the sync job has
+        // stalled (no events newer than 7 days), the restriction would silently
+        // stop applying. In hard_gate mode, block news-restricted trading and
+        // alert admins instead of silently allowing it.
+        if ($mode !== 'soft_breach') {
+            static $stale_alerted = false;
+            $newest = $wpdb->get_var("SELECT MAX(event_time_utc) FROM {$wpdb->prefix}fxsim_news_events");
+            if (empty($newest) || strtotime($newest . ' UTC') < time() - 7 * DAY_IN_SECONDS) {
+                if (!$stale_alerted) {
+                    $stale_alerted = true;
+                    error_log('[PropFirm] News guard: calendar table stale (newest event: ' . ($newest ?: 'none') . ') — news-restricted trading blocked fail-closed.');
+                    if (class_exists('FXSIM_Database') && method_exists('FXSIM_Database', 'push_admin_notification')) {
+                        FXSIM_Database::push_admin_notification('warning', 'News calendar sync stale',
+                            'No news events newer than 7 days — the calendar sync job may be broken. News-restricted trading is blocked fail-closed until the feed recovers.');
+                    }
+                }
+                return 'Trading Blocked: the economic calendar feed is unavailable or stale, and this plan restricts news trading. Please try again later or contact support.';
+            }
+        }
         
         $currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'];
         $matched_currencies = [];
