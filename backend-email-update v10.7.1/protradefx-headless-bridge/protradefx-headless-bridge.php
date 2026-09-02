@@ -5,7 +5,7 @@
  *               Next.js frontend can talk to the existing fxsim/v1 namespace.
  *               Drop into wp-content/plugins/ and activate. Does not modify
  *               the parent PropFirm_System plugin.
- * Version:      11.0.0
+ * Version:      11.1.2
  * Author:       PropFirm Launcher
  * Requires PHP: 8.0
  */
@@ -18,7 +18,6 @@ class ProTradeFX_Headless_Bridge {
     const ALLOWED_ORIGINS = [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'https://demo.launchapropfirm.com',
     ];
 
     /**
@@ -43,7 +42,7 @@ class ProTradeFX_Headless_Bridge {
     public static function init() {
         // Help WP resolve the current user from the logged-in cookie on
         // cross-origin REST calls (some setups don't populate it otherwise).
-        add_filter( 'determine_current_user', [ __CLASS__, 'force_cookie_auth' ], 1 );
+        add_filter( 'determine_current_user', [ __CLASS__, 'force_cookie_auth' ], 25 );
 
         // Short-circuit WP Core's REST cookie-nonce CSRF check for the fxsim
         // namespace ONLY. The headless SPA authenticates via the logged-in
@@ -144,15 +143,11 @@ class ProTradeFX_Headless_Bridge {
             return hash_equals( $expected, $sig ) ? $user_id : 0;
         }
 
-        // Legacy Token Format (backward-compatibility during active rollout): user_id:expires:sig
-        if ( count( $parts ) === 3 ) {
-            $user_id = (int) $parts[0];
-            $expires = (int) $parts[1];
-            $sig     = (string) $parts[2];
-            if ( $user_id <= 0 || $expires < time() ) return 0;
-            $expected = hash_hmac( 'sha256', "fxsim-token|{$user_id}|{$expires}", wp_salt( 'auth' ) );
-            return hash_equals( $expected, $sig ) ? $user_id : 0;
-        }
+        // The 3-part legacy token format (no version, no password fragment) was
+        // removed: it never checked fxsim_token_version, so it survived both
+        // logout and password-change revocation for its full 30-day life. Only
+        // the 4-part format above has ever been issued, so this was pure
+        // exposure with no compatibility benefit.
         return 0;
     }
 
@@ -186,16 +181,30 @@ class ProTradeFX_Headless_Bridge {
         return '';
     }
 
+    /**
+     * determine_current_user filter (priority 25 — AFTER core's own
+     * wp_validate_auth_cookie at priority 10).
+     *
+     * WP 7.1 hardening: core's priority-10 validator treats the previous
+     * filter's return value as its $cookie STRING argument — returning an int
+     * or WP_User from a priority <10 filter fatals/short-circuits there. So
+     * this filter must run after core and only ever return user IDs (ints):
+     *   • core already resolved the logged-in cookie natively → pass through
+     *     (with the fxsim account-status gate applied);
+     *   • a bridge bearer token (mobile/API clients) overrides with its own
+     *     validated user.
+     * The old explicit wp_validate_auth_cookie() fallback duplicated core and
+     * broke under WP 7.1 — removed.
+     */
     public static function force_cookie_auth( $user_id ) {
         if ( ! empty( $user_id ) && $user_id > 0 ) {
-            $status = get_user_meta( $user_id, 'fxsim_account_status', true );
+            $status = get_user_meta( (int) $user_id, 'fxsim_account_status', true );
             if ( $status === 'suspended' || $status === 'banned' ) return 0;
-            return $user_id; // already resolved
+            return (int) $user_id; // core already resolved — pass through
         }
 
-        // 1. Check all possible ways PHP/FastCGI receives the token
+        // Bridge bearer token path (X-FXSIM-Token / Authorization header).
         $token = self::extract_token_from_request();
-
         if ( $token !== '' ) {
             $token_uid = self::validate_auth_token( $token );
             if ( $token_uid > 0 ) {
@@ -206,16 +215,7 @@ class ProTradeFX_Headless_Bridge {
             }
         }
 
-        // 2. Fallback to WordPress Logged In Cookie
-        if ( function_exists( 'wp_cookie_constants' ) ) wp_cookie_constants();
-        $validated = wp_validate_auth_cookie( '', 'logged_in' );
-        if ( $validated ) {
-            $status = get_user_meta( $validated, 'fxsim_account_status', true );
-            if ( $status === 'suspended' || $status === 'banned' ) return 0;
-            wp_set_current_user( $validated );
-            return $validated;
-        }
-        return $user_id;
+        return $user_id; // false/0 — not logged in; nothing to add
     }
 
     public static function generate_csrf_token( $user_id ) {
@@ -256,7 +256,19 @@ class ProTradeFX_Headless_Bridge {
     public static function bypass_rest_nonce( $result ) {
         if ( ! empty( $result ) ) return $result; // a prior callback already decided
         $uri = $_SERVER['REQUEST_URI'] ?? '';
-        if ( strpos( $uri, 'fxsim/v1' ) !== false || strpos( $uri, 'wp-json' ) !== false || isset( $_GET['rest_route'] ) ) {
+        // SECURITY: strip the query string before any matching. Matching the raw
+        // REQUEST_URI let attackers smuggle `?x=/fxsim/v1/auth/login` into ANY
+        // endpoint's URL and skip the CSRF check entirely (substring + end
+        // anchors matched the query string). Only the path may influence routing.
+        $uri = preg_replace( '/\?.*$/', '', $uri );
+        // Match this plugin's own namespace only — matching bare 'wp-json'/any
+        // rest_route previously short-circuited Core's real nonce check (and
+        // demanded this plugin's static CSRF token instead) for every other
+        // REST client on the install: the block editor's own writes, or any
+        // Application-Password integration, would 403 against this plugin's
+        // token instead of their real WP nonce.
+        $route_param = isset( $_GET['rest_route'] ) ? (string) $_GET['rest_route'] : '';
+        if ( strpos( $uri, 'fxsim/v1' ) !== false || strpos( $route_param, 'fxsim/v1' ) !== false ) {
             // Ensure the user is identified from bearer token or cookie
             if ( get_current_user_id() === 0 ) {
                 self::force_cookie_auth( 0 );
@@ -265,8 +277,12 @@ class ProTradeFX_Headless_Bridge {
             // Public auth endpoints establish their own session and must never demand
             // a pre-existing CSRF nonce — a stray unrelated logged-in cookie (e.g. an
             // admin's wp-admin session on the same domain) must not block a fresh
-            // login/register/2FA/logout attempt that has no session yet to have a nonce for.
-            if ( preg_match( '#/fxsim/v1/auth/(login|register|2fa/verify|logout)(?:$|[/?])#', $uri ) ) {
+            // login/register/2FA attempt that has no session yet to have a nonce for.
+            // logout is deliberately NOT exempt: unlike the others it acts on an
+            // EXISTING session (which does have a nonce to present), and a
+            // cross-site logout-CSRF can force-invalidate a signed-in victim's
+            // tokens via the fxsim_token_version bump in logout() below.
+            if ( preg_match( '#/fxsim/v1/auth/(login|register|2fa/verify)(?:$|[/?])#', $uri ) ) {
                 return true;
             }
             $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -351,14 +367,40 @@ class ProTradeFX_Headless_Bridge {
      * a 6-digit 2FA code (1-in-1,000,000 per guess) with a 10-minute TTL is
      * brute-forceable well within that window, and the password check itself
      * had no lockout at all.
+     *
+     * Budget: 10 failures per key per 15 minutes (~960 guesses/day per IP and
+     * per account). The old 50/2min budget allowed ~36k guesses/day.
      */
+    // bump/check use Redis INCRBY when available — a transient is a plain
+    // read-modify-write with no atomicity, so concurrent requests (a scripted
+    // burst hitting /auth/login at once) can all read the same low count
+    // before any of their writes land, letting the real failure count run
+    // far past the intended 10-per-15-min budget. Redis INCRBY is atomic
+    // regardless of concurrency; transients remain the fallback when Redis
+    // isn't configured, matching prior behavior rather than regressing it.
     private static function check_login_throttle( string $key ): bool {
-        return (int) get_transient( 'ptfx_fail_' . $key ) < 50;
+        if ( class_exists( 'FXSIM_Redis_Client' ) && FXSIM_Redis_Client::available() ) {
+            // INCRBY ...,0 atomically reads the counter (and creates it at 0
+            // if absent) without disturbing its value or TTL.
+            $count = FXSIM_Redis_Client::incrby( 'ptfx_fail_' . $key, 0 );
+            if ( $count !== null ) return $count < 10;
+        }
+        return (int) get_transient( 'ptfx_fail_' . $key ) < 10;
     }
     private static function bump_login_throttle( string $key ): void {
-        set_transient( 'ptfx_fail_' . $key, (int) get_transient( 'ptfx_fail_' . $key ) + 1, 2 * MINUTE_IN_SECONDS );
+        if ( class_exists( 'FXSIM_Redis_Client' ) && FXSIM_Redis_Client::available() ) {
+            $new = FXSIM_Redis_Client::incrby( 'ptfx_fail_' . $key, 1 );
+            if ( $new !== null ) {
+                if ( $new === 1 ) FXSIM_Redis_Client::expire( 'ptfx_fail_' . $key, 15 * MINUTE_IN_SECONDS );
+                return;
+            }
+        }
+        set_transient( 'ptfx_fail_' . $key, (int) get_transient( 'ptfx_fail_' . $key ) + 1, 15 * MINUTE_IN_SECONDS );
     }
     private static function clear_login_throttle( string $key ): void {
+        if ( class_exists( 'FXSIM_Redis_Client' ) && FXSIM_Redis_Client::available() ) {
+            FXSIM_Redis_Client::del( 'ptfx_fail_' . $key );
+        }
         delete_transient( 'ptfx_fail_' . $key );
     }
 
@@ -408,12 +450,35 @@ class ProTradeFX_Headless_Bridge {
             return new WP_Error( 'account_suspended', __( 'This account has been deactivated. Access revoked.' ), [ 'status' => 403 ] );
         }
 
+        // Optional hard gate: admin accounts must have 2FA enrolled before they
+        // can sign in. Enable via fxsim settings key `require_admin_2fa` = 1
+        // AFTER every admin has enrolled, otherwise they will be locked out.
+        $require_admin_2fa = class_exists( 'FXSIM_Challenge_DB' )
+            && FXSIM_Challenge_DB::get_setting( 'require_admin_2fa', '0' ) === '1';
+        $admin_has_2fa = class_exists( 'FXSIM_2FA' ) && FXSIM_2FA::is_enabled( (int) $user->ID );
+        if ( $require_admin_2fa && user_can( $user, 'manage_options' ) && ! $admin_has_2fa ) {
+            return new WP_Error(
+                'admin_2fa_required',
+                __( 'Two-factor authentication is required for staff accounts. Sign in to WordPress and enable 2FA from your profile, then try again.' ),
+                [ 'status' => 403 ]
+            );
+        }
+
         // If 2FA is enabled, do NOT establish the session yet: send exactly one
         // code and ask the SPA to complete verification via /auth/2fa/verify.
         // Throttle stays armed until verify_2fa() actually succeeds — a correct
         // password alone must not clear it, or 2FA brute-forcing is unthrottled.
         if ( class_exists( 'FXSIM_2FA' ) && FXSIM_2FA::is_enabled( (int) $user->ID ) ) {
-            FXSIM_2FA::send_code( (int) $user->ID );
+            // A correct password doesn't clear the login throttle (by design,
+            // see above) but it also didn't previously cap how often a fresh
+            // code gets sent — an attacker who already has the password could
+            // loop this call to spam the victim's email/SMS. Cap sends per uid
+            // separately from the failure-count throttle above.
+            $send_key = 'send2fa_' . (int) $user->ID;
+            if ( self::check_login_throttle( $send_key ) ) {
+                self::bump_login_throttle( $send_key );
+                FXSIM_2FA::send_code( (int) $user->ID );
+            }
             return [
                 'two_factor_required' => true,
                 'uid'                 => (int) $user->ID,
@@ -497,13 +562,27 @@ class ProTradeFX_Headless_Bridge {
             }
         }
 
+        // Unlike login, this endpoint had no throttle at all — it doubles as
+        // an unauthenticated account-creation script target otherwise. Reuses
+        // the same 10-per-15-min budget under its own key prefix so it can't
+        // burn a shared IP's login attempts (or vice versa).
+        $reg_ip_key = 'reg_' . md5( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+        if ( ! self::check_login_throttle( $reg_ip_key ) ) {
+            return new WP_Error( 'too_many_attempts', 'Too many registration attempts. Please try again later.', [ 'status' => 429 ] );
+        }
+        // Every attempt counts here (not just failures like login) — the risk
+        // is the call RATE itself (email-enumeration probing, mass account
+        // creation), not just repeated wrong credentials.
+        self::bump_login_throttle( $reg_ip_key );
+
         $username = sanitize_user( $req->get_param( 'username' ), true );
         $email    = sanitize_email( $req->get_param( 'email' ) );
         $password = (string) $req->get_param( 'password' );
         $ref_code = sanitize_text_field( (string) ( $req->get_param( 'ref' ) ?? '' ) );
 
-        if ( strlen( $password ) < 6 ) {
-            return new WP_Error( 'weak_password', 'Password must be at least 6 characters.', [ 'status' => 400 ] );
+        // Consistent policy: 8+ everywhere (matches /auth/change-password).
+        if ( strlen( $password ) < 8 ) {
+            return new WP_Error( 'weak_password', 'Password must be at least 8 characters.', [ 'status' => 400 ] );
         }
         if ( ! is_email( $email ) ) {
             return new WP_Error( 'invalid_email', 'Invalid email address.', [ 'status' => 400 ] );
@@ -571,6 +650,13 @@ class ProTradeFX_Headless_Bridge {
     }
 
     public static function logout() {
+        // Invalidate bridge bearer tokens for this user — a stolen 30-day
+        // token must not survive an explicit logout.
+        $uid = get_current_user_id();
+        if ( $uid ) {
+            $v = (int) get_user_meta( $uid, 'fxsim_token_version', true );
+            update_user_meta( $uid, 'fxsim_token_version', $v + 1 );
+        }
         wp_logout();
         self::clear_session_flag_cookie();
         return [ 'success' => true ];

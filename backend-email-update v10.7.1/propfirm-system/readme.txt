@@ -3,7 +3,7 @@ Contributors: propfirm-system
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 8.0
-Stable tag: 3.0.0
+Stable tag: 11.1.2
 License: GPLv2 or later
 
 Complete white-label prop firm platform for WordPress — challenge engine, payment verification, funded accounts, payout system, and full admin panel.
@@ -26,14 +26,15 @@ PropFirm System turns your WordPress site into a real funded trader platform. Us
 11. Admin approves payout → profit split applied
 
 **Key Features:**
-* Multi-phase challenge system (Phase 1 → Phase 2 → Funded)
-* Per-challenge isolated trading accounts (separate balance, PnL, history per challenge)
+
+* Multi-phase challenge engine (1-step, 2-step, 3-step, instant funding)
+* Strict drawdown tracking: daily loss limit + max total loss (real-time breach engine)
+* Live instruments: Forex, Metals, Crypto, Indices, and Energy (Real-time market feed with synthetic fallback)
+* TradingView professional charts with per-symbol drawing persistence (localStorage)
 * Manual payment flow with screenshot/proof upload
 * CoinPayments gateway architecture (prepared for integration)
 * Admin payment review: approve/reject with screenshot preview
 * Market hours enforcement (Forex/Metals weekdays only, Crypto 24/7)
-* 14 live instruments: Forex, Metals, Crypto (Yahoo Finance, 30-second updates)
-* TradingView professional charts with per-symbol drawing persistence (localStorage)
 * Real-time rule evaluation: daily DD, max DD, profit target, trading days
 * Auto-breach detection with force-close and account freeze
 * Payout system with configurable profit split % and minimum trading days
@@ -110,6 +111,10 @@ Base: `/wp-json/fxsim/v1/`
 | POST | /admin/force-prices | Admin |
 
 == Changelog ==
+
+= 11.1.1 =
+* Fixed dbDelta schema definitions across ~25 tables that were misformatted for MySQL 8 (multi-space column alignment, multiple index definitions on one line, a wrapped ENUM column) — these caused spurious "Multiple primary key defined" / "Duplicate key name" database errors and a slow multi-minute reconciliation pass on every plugin activation or update
+* Price feed: MT5 auto-failover and auto-freeze settings now persist and reload correctly (previously reset to defaults on every page load)
 
 = 3.0.0 =
 * Renamed from "FX Simulation" to "PropFirm System"

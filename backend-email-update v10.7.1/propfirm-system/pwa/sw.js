@@ -24,7 +24,8 @@
  */
 
 // Cache names — version suffix ensures old caches are cleaned up on SW update
-const CACHE_VERSION = self.FXSIM_SW_VERSION || '3.0.0';
+const CACHE_VERSION = self.FXSIM_SW_VERSION || '11.1.2';
+const BRAND_NAME = self.FXSIM_BRAND_NAME || 'Alpha Capital';
 const CACHE_STATIC  = `fxsim-static-${CACHE_VERSION}`;
 const CACHE_FONTS   = `fxsim-fonts-${CACHE_VERSION}`;
 
@@ -55,7 +56,7 @@ const OFFLINE_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PropFirm System — Offline</title>
+  <title>${BRAND_NAME} — Offline</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #060b14; color: #8ba4c0; font-family: system-ui, sans-serif;
@@ -73,7 +74,7 @@ const OFFLINE_HTML = `<!DOCTYPE html>
   <div class="wrap">
     <div class="icon">📡</div>
     <h1>No Connection</h1>
-    <p>PropFirm System requires an internet connection for live trading data.
+    <p>${BRAND_NAME} requires an internet connection for live trading data.
        Please check your connection and try again.</p>
     <button onclick="location.reload()">↺ Retry</button>
   </div>

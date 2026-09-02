@@ -3,7 +3,7 @@
  * Plugin Name: PropFirm System
  * Plugin URI:  https://example.com/propfirm-system
  * Description: Complete white-label prop firm platform — challenge engine, funded accounts, payout system, TradingView charts, and full admin panel.
- * Version:     11.0.0
+ * Version:     11.1.2
  * Author:      PropFirm Systems
  * Author URI:  https://propfirm.systems
  * License:     Proprietary
@@ -13,7 +13,7 @@
 defined('ABSPATH') || exit;
 
 // Version must match the plugin header
-define('FXSIM_VERSION', '11.0.3');
+define('FXSIM_VERSION', '11.1.2');
 define('FXSIM_DIR',     plugin_dir_path(__FILE__));
 define('FXSIM_URL',     plugin_dir_url(__FILE__));
 // Default SPA origin for this deployment. The `fxsim_frontend_url` option, if
@@ -61,6 +61,8 @@ require_once FXSIM_DIR . 'includes/class-scaling-engine.php';  // v11: automated
 require_once FXSIM_DIR . 'includes/class-confirmo.php';        // v11: Confirmo crypto payments
 require_once FXSIM_DIR . 'includes/class-pvp-engine.php';      // v11.1: 1v1 PvP E-Sports Arena engine
 require_once FXSIM_DIR . 'includes/class-push.php';             // v10.7.3: push notification foundation (device registry + queue)
+require_once FXSIM_DIR . 'includes/class-token-auth.php';        // v10.7.3: bearer token auth & session system
+require_once FXSIM_DIR . 'includes/class-license.php';            // v11.0.6: white-label license check-in
 
 // ── Activation / Deactivation ─────────────────────────────────────────────────
 // Activation order is intentional:
@@ -86,6 +88,7 @@ register_activation_hook(__FILE__, function () {
     update_option('fxsim_reg_default_applied', '1');
 });
 register_deactivation_hook(__FILE__, ['FXSIM_Database', 'deactivate']);
+register_deactivation_hook(__FILE__, ['FXSIM_License', 'deactivate']);
 
 // ── Auto-create required pages ────────────────────────────────────────────
 function fxsim_create_pages(): void {
@@ -93,7 +96,7 @@ function fxsim_create_pages(): void {
         'trading'      => ['title' => 'Trading Terminal',    'content' => '[fxsim_terminal]'],
         'login'        => ['title' => 'Login',               'content' => '[fxsim_login]'],
         'register'     => ['title' => 'Register',            'content' => '[fxsim_register]'],
-        'landing'      => ['title' => 'PropFirm System',     'content' => '[fxsim_landing]'],
+        'landing'      => ['title' => 'Alpha Capital',     'content' => '[fxsim_landing]'],
         'dashboard'    => ['title' => 'My Dashboard',        'content' => '[fxsim_dashboard]'],
         'challenges'   => ['title' => 'Challenge Programs',  'content' => '[fxsim_challenges]'],
         'statistics'   => ['title' => 'My Statistics',       'content' => '[fxsim_statistics]'],
@@ -206,6 +209,8 @@ add_action('plugins_loaded', function () {
     FXSIM_Emails::register(); // SMTP configuration + failure logging
     FXSIM_2FA::register();    // Two-factor authentication
     FXSIM_Push::register();   // Device registry + push queue (delivery unimplemented by design)
+    FXSIM_Token_Auth::register(); // Bearer token authentication & sessions
+    FXSIM_License::register();    // White-label license daily check-in + new-sales gate
 
     // 30-second price cron
     add_action('fxsim_price_update', ['FXSIM_Price_Feed', 'update_all_prices']);
@@ -232,7 +237,7 @@ add_action('plugins_loaded', function () {
         if (get_transient('fxsim_daily_tasks_stale_alerted')) return; // already alerted recently
         set_transient('fxsim_daily_tasks_stale_alerted', 1, 6 * HOUR_IN_SECONDS);
 
-        $brand = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System') : 'PropFirm System';
+        $brand = class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name', 'Alpha Capital') : 'Alpha Capital';
         $hours = round($stale_seconds / HOUR_IN_SECONDS, 1);
         wp_mail(get_option('admin_email'),
             "[{$brand}] ⚠ Daily Tasks Cron Not Running — Action Required",
@@ -294,8 +299,8 @@ add_action('plugins_loaded', function () {
         $last_run  = (int) get_option('fxsim_last_price_update', 0);
         $staleness = time() - $last_run;
         $brand     = class_exists('FXSIM_Challenge_DB')
-            ? FXSIM_Challenge_DB::get_setting('brand_name', 'PropFirm System')
-            : 'PropFirm System';
+            ? FXSIM_Challenge_DB::get_setting('brand_name', 'Alpha Capital')
+            : 'Alpha Capital';
 
         if ($last_run > 0 && $staleness > 600) {
             $mins = round($staleness / 60);
@@ -395,7 +400,7 @@ add_filter('body_class', function (array $classes): array {
 add_action('wp_head', function () {
     if (!class_exists('FXSIM_Challenge_DB')) return;
     $favicon = FXSIM_Challenge_DB::get_setting('favicon_url', '');
-    $color   = FXSIM_Challenge_DB::get_setting('primary_color', '#7c6ef5');
+    $color   = FXSIM_Challenge_DB::get_setting('primary_color', '#10B981');
     if ($favicon) {
         echo '<link rel="icon" type="image/x-icon" href="' . esc_url($favicon) . '">' . "\n";
         echo '<link rel="shortcut icon" href="' . esc_url($favicon) . '">' . "\n";
@@ -408,6 +413,9 @@ add_action('wp_head', function () {
 add_action('wp_head', function () {
     $plugin_pages = ['dashboard', 'challenges', 'landing', 'login', 'register', 'trading', 'statistics', 'leaderboard', 'certificate', 'reset-password', 'challenge-rules', 'profile', 'verify-2fa'];
     $is_plugin_page = false;
+    foreach ($plugin_pages as $slug) {
+        if (is_page($slug)) { $is_plugin_page = true; break; }
+    }
     if (!$is_plugin_page) return;
 
     echo '<style>
@@ -538,7 +546,7 @@ add_action('template_redirect', function () {
             wp_schedule_single_event(time(), 'fxsim_send_verification_email', [$uid]);
             // Create welcome notification
             FXSIM_Database::push_notification($uid, 'success',
-                '🎉 Welcome to ' . (class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name','PropFirm System') : 'PropFirm System') . '!',
+                '🎉 Welcome to ' . (class_exists('FXSIM_Challenge_DB') ? FXSIM_Challenge_DB::get_setting('brand_name','Alpha Capital') : 'Alpha Capital') . '!',
                 'Your account is ready. Browse challenges to get started.',
                 home_url('/challenges/')
             );
