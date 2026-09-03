@@ -577,18 +577,26 @@ class FXSIM_REST_API {
         return self::user_has_admin_cap($uid, $cap);
     }
 
-    // ── Nonce helper ──────────────────────────────────────────────────────────
-   private static function verify_nonce(WP_REST_Request $r): bool {
+    private static function verify_nonce(WP_REST_Request $r): bool {
+        // API key requests have no browser session → no nonce required.
+        if (class_exists('FXSIM_API_Keys') && FXSIM_API_Keys::is_key_request()) {
+            return true;
+        }
 
-    // API key requests have no browser session → no nonce available.
-    if (FXSIM_API_Keys::is_key_request()) {
-        return true;
+        // Bearer token requests (SPA / Mobile) cannot be sent implicitly by browsers → self-protecting against CSRF
+        $auth_header = $r->get_header('authorization') ?: '';
+        if (!empty($auth_header) && stripos($auth_header, 'Bearer ') === 0) {
+            return is_user_logged_in();
+        }
+
+        // For cookie-authenticated browser sessions, strictly enforce X-WP-Nonce header
+        if (is_user_logged_in()) {
+            $nonce = $r->get_header('x_wp_nonce') ?: $r->get_header('x-wp-nonce');
+            return $nonce ? (bool) wp_verify_nonce($nonce, 'wp_rest') : false;
+        }
+
+        return false;
     }
-
-    wp_get_current_user();
-
-    return is_user_logged_in();
-}
 
     /**
      * Convert a naive site-local MySQL datetime (as written by current_time('mysql'))
