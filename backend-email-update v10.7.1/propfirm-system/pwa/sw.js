@@ -24,7 +24,7 @@
  */
 
 // Cache names — version suffix ensures old caches are cleaned up on SW update
-const CACHE_VERSION = self.FXSIM_SW_VERSION || '11.1.2';
+const CACHE_VERSION = self.FXSIM_SW_VERSION || '11.1.3';
 const BRAND_NAME = self.FXSIM_BRAND_NAME || 'Alpha Capital';
 const CACHE_STATIC  = `fxsim-static-${CACHE_VERSION}`;
 const CACHE_FONTS   = `fxsim-fonts-${CACHE_VERSION}`;

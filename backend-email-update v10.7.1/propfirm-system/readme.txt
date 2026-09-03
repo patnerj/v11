@@ -3,7 +3,7 @@ Contributors: propfirm-system
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 8.0
-Stable tag: 11.1.2
+Stable tag: 11.1.3
 License: GPLv2 or later
 
 Complete white-label prop firm platform for WordPress — challenge engine, payment verification, funded accounts, payout system, and full admin panel.

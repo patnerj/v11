@@ -678,13 +678,13 @@ class FXSIM_Challenge_Engine {
             FXSIM_Trading_Engine::close_position($user_id, (int)$pos->id, 'breach', true);
         }
 
-        $pending = $wpdb->get_results($wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}fxsim_pending_orders WHERE account_id=%d",
-            $challenge->fxsim_account_id
+        // Atomically cancel all pending orders for the breached account
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}fxsim_pending_orders
+             SET status = 'cancelled'
+             WHERE account_id = %d AND status = 'pending'",
+            (int)$challenge->fxsim_account_id
         ));
-        foreach ($pending as $order) {
-            FXSIM_Trading_Engine::cancel_pending_order($user_id, (int)$order->id, 'breach');
-        }
     }
 
     // ── Record daily snapshot ─────────────────────────────────────────────────
@@ -749,7 +749,8 @@ class FXSIM_Challenge_Engine {
         if ($is_trailing && !empty($ch->trailing_dd_floor)) {
             $effective_val  = min($balance, $equity);
             $dd_remaining   = max(0.0, round($effective_val - (float)$ch->trailing_dd_floor, 2));
-            $current_max_dd = max(0.0, round($start - $effective_val, 2));
+            $hwm            = max((float)($ch->equity_hwm ?? $start), $effective_val);
+            $current_max_dd = max(0.0, round($hwm - $effective_val, 2));
         } else {
             $current_max_dd = max(0.0, round($start - min($balance, $equity), 2));
             $dd_remaining   = round($max_dd_val - $current_max_dd, 2);
@@ -1061,4 +1062,88 @@ class FXSIM_Challenge_Engine {
         // Hard Gate: Return rejection message
         return "Trading Blocked by Macro News Guard: High impact event '{$event_name}' ({$curr}) is within restriction window (±{$buffer_before}m).";
     }
+
+    /**
+     * Real-time floating drawdown breach evaluation on live equity ticks.
+     * Liquidates positions immediately if floating loss breaches daily or max drawdown limits.
+     */
+    public static function evaluate_floating_drawdown(int $challenge_id, float $live_equity): void {
+        global $wpdb;
+        $challenge = $wpdb->get_row($wpdb->prepare(
+            "SELECT ca.*, cp.daily_drawdown_pct, cp.max_drawdown_pct, cp.drawdown_type
+             FROM {$wpdb->prefix}fxsim_challenge_accounts ca
+             JOIN {$wpdb->prefix}fxsim_challenge_plans cp ON cp.id = ca.plan_id
+             WHERE ca.id = %d AND ca.status IN ('active', 'funded')",
+            $challenge_id
+        ));
+        if (!$challenge) return;
+
+        $start   = (float)$challenge->starting_balance;
+        $account = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}fxsim_accounts WHERE id = %d",
+            $challenge->fxsim_account_id
+        ));
+        if (!$account) return;
+
+        // 1. Daily drawdown check on live floating equity
+        $today       = current_time('Y-m-d');
+        $snapshot    = $wpdb->get_row($wpdb->prepare(
+            "SELECT opening_balance FROM {$wpdb->prefix}fxsim_challenge_snapshots
+             WHERE challenge_id = %d AND snapshot_date = %s",
+            $challenge_id, $today
+        ));
+        $daily_start = $snapshot ? (float)$snapshot->opening_balance : (float)$account->balance;
+        $daily_loss  = $daily_start - $live_equity;
+        $max_daily   = $daily_start * ((float)$challenge->daily_drawdown_pct / 100);
+
+        if ($max_daily > 0 && $daily_loss > $max_daily) {
+            self::breach(
+                $challenge,
+                'daily_drawdown',
+                sprintf('Intraday floating loss breached daily limit: lost $%s today (limit: %s%% of $%s)',
+                    number_format($daily_loss, 2),
+                    $challenge->daily_drawdown_pct,
+                    number_format($daily_start, 2)
+                ),
+                $live_equity
+            );
+            return;
+        }
+
+        // 2. Max Drawdown / Trailing floor check on live floating equity
+        $max_dd_pct = (float)$challenge->max_drawdown_pct;
+        if ($max_dd_pct > 0) {
+            $is_trailing = in_array($challenge->drawdown_type, ['trailing', 'trailing_equity', 'eod_trailing', 'trailing_balance'], true);
+            if ($is_trailing && !empty($challenge->trailing_dd_floor)) {
+                $floor = (float)$challenge->trailing_dd_floor;
+                if ($live_equity < $floor) {
+                    self::breach(
+                        $challenge,
+                        'max_drawdown',
+                        sprintf('Intraday floating equity dropped below trailing floor $%s: live equity $%s',
+                            number_format($floor, 2),
+                            number_format($live_equity, 2)
+                        ),
+                        $live_equity
+                    );
+                    return;
+                }
+            } else {
+                $static_floor = $start * (1 - $max_dd_pct / 100);
+                if ($live_equity < $static_floor) {
+                    self::breach(
+                        $challenge,
+                        'max_drawdown',
+                        sprintf('Intraday floating equity dropped below static floor $%s: live equity $%s',
+                            number_format($static_floor, 2),
+                            number_format($live_equity, 2)
+                        ),
+                        $live_equity
+                    );
+                    return;
+                }
+            }
+        }
+    }
+
 }

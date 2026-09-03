@@ -16,9 +16,9 @@ class FXSIM_Trading_Engine {
         $m   = (int) gmdate('i');
         $now = $h * 60 + $m; // minutes since midnight UTC
 
-        // Forex market: Mon 00:00 UTC to Fri 22:00 UTC
+        // Forex market: Opens Sunday 22:00 UTC, Closes Friday 22:00 UTC
         if ($dow === 6) return false; // Saturday closed all day
-        if ($dow === 7) return false; // Sunday closed all day
+        if ($dow === 7 && $now < 22 * 60) return false; // Sunday closed before 22:00 UTC
         if ($dow === 5 && $now >= 22 * 60) return false; // Friday after 22:00 UTC
 
         return true;
@@ -44,7 +44,7 @@ class FXSIM_Trading_Engine {
             $pending_payout = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT p.id FROM {$wpdb->prefix}fxsim_payouts p
                  JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.id = p.challenge_id
-                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review') LIMIT 1",
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved') LIMIT 1",
                 $explicit_account_id
             ));
             if ($pending_payout > 0) {
@@ -72,7 +72,7 @@ class FXSIM_Trading_Engine {
             $pending_payout = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts p
                  JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON p.challenge_id = ca.id
-                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review')",
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved')",
                 (int) $account->id
             ));
             if ($pending_payout > 0) {
@@ -248,7 +248,7 @@ class FXSIM_Trading_Engine {
 
             return ['success' => true, 'position_id' => $pos_id, 'open_price' => $open_px, 'margin' => $margin, 'commission' => $commission];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $wpdb->query('ROLLBACK');
             return self::err('Transaction failed: ' . $e->getMessage());
         }
@@ -457,7 +457,7 @@ class FXSIM_Trading_Engine {
 
             return ['success' => true, 'pnl' => $pnl, 'close_price' => $close_px];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $wpdb->query('ROLLBACK');
             return self::err('Close failed: ' . $e->getMessage());
         }
@@ -651,7 +651,7 @@ class FXSIM_Trading_Engine {
             $wpdb->query('COMMIT');
             do_action('fxsim_trade_closed', $account->id);
             return ['success' => true, 'pnl' => $pnl, 'close_price' => $close_px, 'remaining_lots' => $remain_lots];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $wpdb->query('ROLLBACK');
             return self::err('Partial close failed: ' . $e->getMessage());
         }
@@ -761,7 +761,9 @@ class FXSIM_Trading_Engine {
 
             $pos->current_price = $cur_px;
             $pos->pnl           = $pnl;
-            $total_pnl         += $pnl;
+            // calc_pnl() subtracts commission, but commission was already deducted from balance at open.
+            // Adding back $pos->commission prevents commission from being double-deducted against account equity.
+            $total_pnl         += $pnl + (float)$pos->commission;
             $total_margin      += (float)$pos->margin;
 
             $id_list[]     = (int)$pos->id;
@@ -1044,6 +1046,11 @@ class FXSIM_Trading_Engine {
                 $live_equity = $balance + $floating_pnl;
                 $margin_pct  = ($live_equity / $total_margin) * 100.0;
 
+                // ── Real-Time Challenge Drawdown Evaluation on Floating Equity ────────
+                if (!empty($acct->challenge_id) && class_exists('FXSIM_Challenge_Engine')) {
+                    FXSIM_Challenge_Engine::evaluate_floating_drawdown((int)$acct->challenge_id, $live_equity);
+                }
+
                 // ── Stop-Out: force-close all positions ───────────────────────
                 if ($so_level > 0 && $margin_pct <= $so_level) {
                     // Claim with a distributed per-account lock so two concurrent
@@ -1279,7 +1286,7 @@ class FXSIM_Trading_Engine {
             $pending_payout = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_payouts p
                  JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON p.challenge_id = ca.id
-                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review')",
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved')",
                 (int) $account->id
             ));
             if ($pending_payout > 0) {
@@ -1484,13 +1491,16 @@ class FXSIM_Trading_Engine {
 
             $order_id = (int)$wpdb->insert_id;
 
-            // Reserve margin in account (adds to margin_used, does NOT touch balance)
-            $wpdb->query($wpdb->prepare(
+            // Reserve margin in account atomically (ensures available free margin)
+            $margin_res = $wpdb->query($wpdb->prepare(
                 "UPDATE {$wpdb->prefix}fxsim_accounts
                  SET margin_used = margin_used + %f
-                 WHERE id = %d",
-                $reserved_margin, $account->id
+                 WHERE id = %d AND (equity - margin_used) >= %f",
+                $reserved_margin, $account->id, ($reserved_margin + $commission_est)
             ));
+            if ($margin_res !== 1) {
+                throw new \Exception('Insufficient free margin to place pending order.');
+            }
 
             $wpdb->query('COMMIT');
 
@@ -1501,7 +1511,7 @@ class FXSIM_Trading_Engine {
                 'commission_est'   => round($commission_est, 2),
             ];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $wpdb->query('ROLLBACK');
             return self::err('Order placement failed: ' . $e->getMessage());
         }
@@ -1555,7 +1565,7 @@ class FXSIM_Trading_Engine {
             $wpdb->query('COMMIT');
             return ['success' => true];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $wpdb->query('ROLLBACK');
             return self::err('Cancel failed: ' . $e->getMessage());
         }
@@ -1614,6 +1624,17 @@ class FXSIM_Trading_Engine {
         // ── Emergency Pause Trading guard ─────────────────────────────────────
         if (class_exists('FXSIM_Challenge_DB') && FXSIM_Challenge_DB::get_setting('pause_trading', '') === '1') {
             return; // Trading paused: leave order in pending state until pause is lifted
+        }
+
+        // ── Payout Active Guard at fill time ──────────────────────────────────
+        $active_payout = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT p.id FROM {$wpdb->prefix}fxsim_payouts p
+             JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.id = p.challenge_id
+             WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved') LIMIT 1",
+            $order->account_id
+        ));
+        if ($active_payout > 0) {
+            return; // Trading locked while payout is processed; do not execute
         }
 
         // ── Idempotency guard: claim the order row before creating position ───
@@ -1714,7 +1735,7 @@ class FXSIM_Trading_Engine {
             // making every rule it enforces invisible to limit/stop orders.
             self::detect_trade_patterns((int)$account->user_id, (int)$order->account_id);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $wpdb->query('ROLLBACK');
             // Revert order status so next tick retries
             $wpdb->update(

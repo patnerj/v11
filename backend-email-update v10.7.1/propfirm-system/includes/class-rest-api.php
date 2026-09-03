@@ -838,7 +838,7 @@ class FXSIM_REST_API {
             $has_pending_payout = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT p.id FROM {$wpdb->prefix}fxsim_payouts p
                  JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.id = p.challenge_id
-                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review')
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved')
                  LIMIT 1",
                 $target_acc_id
             ));
@@ -988,7 +988,7 @@ class FXSIM_REST_API {
             $has_pending = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT p.id FROM {$wpdb->prefix}fxsim_payouts p
                  JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.id = p.challenge_id
-                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review') LIMIT 1",
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved') LIMIT 1",
                 $account_id
             ));
             if ($has_pending) {
@@ -1710,12 +1710,13 @@ class FXSIM_REST_API {
         // For MariaDB/MySQL, TIMESTAMPDIFF(SECOND, created_at, closed_at).
         
         $sql = "
-            SELECT u.ID as user_id, u.user_login, COUNT(t.id) as flag_count 
+            SELECT a.user_id, u.user_login, COUNT(t.id) as flag_count 
             FROM {$pfx}fxsim_trades t
-            JOIN {$wpdb->users} u ON t.user_id = u.ID
+            JOIN {$pfx}fxsim_accounts a ON t.account_id = a.id
+            JOIN {$wpdb->users} u ON a.user_id = u.ID
             WHERE t.closed_at IS NOT NULL
-              AND TIMESTAMPDIFF(SECOND, t.created_at, t.closed_at) < 15
-            GROUP BY t.user_id, u.user_login
+              AND TIMESTAMPDIFF(SECOND, t.opened_at, t.closed_at) < 15
+            GROUP BY a.user_id, u.user_login
             HAVING flag_count > 5
             ORDER BY flag_count DESC
             LIMIT 50
@@ -2751,6 +2752,14 @@ class FXSIM_REST_API {
         ));
         if ($open_trades > 0) {
             return new WP_REST_Response(['success' => false, 'message' => 'You must close all open positions before requesting a payout.'], 400);
+        }
+
+        $pending_orders = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}fxsim_pending_orders WHERE account_id = %d AND status = 'pending'",
+            $account->id
+        ));
+        if ($pending_orders > 0) {
+            return new WP_REST_Response(['success' => false, 'message' => 'You must cancel all pending orders before requesting a payout.'], 400);
         }
 
         $profit = (float)$account->balance - (float)$ch->starting_balance;
@@ -5785,7 +5794,7 @@ class FXSIM_REST_API {
             $has_pending = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT p.id FROM {$wpdb->prefix}fxsim_payouts p
                  JOIN {$wpdb->prefix}fxsim_challenge_accounts ca ON ca.id = p.challenge_id
-                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review') LIMIT 1",
+                 WHERE ca.fxsim_account_id = %d AND p.status IN ('pending', 'under_review', 'approved') LIMIT 1",
                 $account_id
             ));
             if ($has_pending) {

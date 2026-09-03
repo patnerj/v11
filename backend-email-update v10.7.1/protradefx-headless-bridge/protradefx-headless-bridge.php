@@ -5,7 +5,7 @@
  *               Next.js frontend can talk to the existing fxsim/v1 namespace.
  *               Drop into wp-content/plugins/ and activate. Does not modify
  *               the parent PropFirm_System plugin.
- * Version:      11.1.2
+ * Version:      11.1.3
  * Author:       PropFirm Launcher
  * Requires PHP: 8.0
  */

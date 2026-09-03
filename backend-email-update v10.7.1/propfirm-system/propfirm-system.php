@@ -3,7 +3,7 @@
  * Plugin Name: PropFirm System
  * Plugin URI:  https://example.com/propfirm-system
  * Description: Complete white-label prop firm platform — challenge engine, funded accounts, payout system, TradingView charts, and full admin panel.
- * Version:     11.1.2
+ * Version:     11.1.3
  * Author:      PropFirm Systems
  * Author URI:  https://propfirm.systems
  * License:     Proprietary
@@ -13,7 +13,7 @@
 defined('ABSPATH') || exit;
 
 // Version must match the plugin header
-define('FXSIM_VERSION', '11.1.2');
+define('FXSIM_VERSION', '11.1.3');
 define('FXSIM_DIR',     plugin_dir_path(__FILE__));
 define('FXSIM_URL',     plugin_dir_url(__FILE__));
 // Default SPA origin for this deployment. The `fxsim_frontend_url` option, if
