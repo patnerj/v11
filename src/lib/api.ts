@@ -142,22 +142,45 @@ export const api = {
     reply:  (id: number, message: string) => fxsim<{ success: boolean }>(`/tickets/${id}/reply`, { body: { message } })
   },
 
-  // ── v11.4 AI Powerhouse: Zenith Copilot & Assistant ───────────────────
+  // ── v11.4 AI Powerhouse: Zenith Copilot, Journal & Coach ───────────────
   ai: {
     copilot: {
-      chat: (body: { message: string; account_id?: number }) =>
-        fxsim<AiCopilotChatResponse>('/ai/copilot/chat', { method: 'POST', body }),
-      safeLot: (body: { balance?: number; risk_pct?: number; sl_pips?: number; symbol?: string }) =>
-        fxsim<AiSafeLotResponse>('/ai/copilot/safe-lot', { method: 'POST', body }),
-      headroom: (account_id?: number) =>
-        fxsim<AiHeadroomResponse>('/ai/copilot/headroom', { query: account_id ? { account_id } : undefined, cache: 0 }),
+      chat: (data: { message?: string; query?: string; account_id?: number | string; symbol?: string; context?: Record<string, unknown> }) => {
+        const text = data.query || data.message || ''
+        return fxsim<AiCopilotChatResponse>('/ai/copilot/chat', { 
+          method: 'POST', 
+          body: { query: text, message: text, account_id: data.account_id, symbol: data.symbol, context: data.context } 
+        })
+      },
+      safeLot: (data: { balance?: number; risk_pct?: number; risk_percent?: number; sl_pips?: number; stop_loss_pips?: number; symbol?: string }) => {
+        const rPct = data.risk_pct ?? data.risk_percent ?? 1
+        const slP = data.sl_pips ?? data.stop_loss_pips ?? 20
+        return fxsim<AiSafeLotResponse>('/ai/copilot/safe-lot', { 
+          method: 'POST', 
+          body: { balance: data.balance ?? 10000, risk_pct: rPct, risk_percent: rPct, sl_pips: slP, stop_loss_pips: slP, symbol: data.symbol } 
+        })
+      },
+      headroom: (accountId?: number | string) =>
+        fxsim<AiHeadroomResponse>(`/ai/copilot/headroom${accountId ? `?account_id=${accountId}` : ''}`, { query: accountId ? { account_id: accountId } : undefined, cache: 0 }),
       newsWarnings: () =>
         fxsim<AiNewsWarning[]>('/ai/copilot/news-warnings', { cache: 15_000 }),
+    },
+    journal: {
+      autopsy: (tradeId: number) =>
+        fxsim<AiTradeAutopsy>(`/ai/journal/autopsy/${tradeId}`),
+      history: (accountId?: number, limit = 10, offset = 0) =>
+        fxsim<AiJournalHistoryResponse>(`/ai/journal/history?limit=${limit}&offset=${offset}${accountId ? `&account_id=${accountId}` : ''}`, { cache: 5_000 }),
+    },
+    coach: {
+      tiltCheck: (accountId?: number) =>
+        fxsim<AiTiltStatus>(`/ai/coach/tilt-check${accountId ? `?account_id=${accountId}` : ''}`, { cache: 5_000 }),
+      coolingOff: (data: { account_id?: number; duration_minutes?: number }) =>
+        fxsim<CoolingOffResult>('/ai/coach/cooling-off', { method: 'POST', body: data }),
     },
   },
   systemDoctor: {
     status: () => fxsim<SystemDoctorStatus>('/system-doctor/status', { cache: 0 }),
-    diagnose: (body?: Record<string, unknown>) => fxsim<{ healthy: boolean; assessment: string; auto_heal_cmd: string }>('/system-doctor/ai-diagnose', { method: 'POST', body }),
+    diagnose: (body?: Record<string, unknown>) => fxsim<SystemDoctorStatus & { healthy?: boolean; assessment?: string; auto_heal_cmd?: string }>('/system-doctor/ai-diagnose', { method: 'POST', body: body || {} }),
   },
   
   // ── Gamification ───────────────────────────────────────────────────────
@@ -249,14 +272,20 @@ export const api = {
     ai: {
       getSettings: () =>
         fxsim<AiSettings>('/admin/ai/settings', { cache: 0 }),
+      settingsGet: () =>
+        fxsim<{ success: boolean; settings: AiSettings }>('/admin/ai/settings', { cache: 0 }),
       saveSettings: (body: Partial<AiSettings>) =>
         fxsim<{ success: boolean; settings: AiSettings }>('/admin/ai/settings', { method: 'POST', body }),
+      settingsSave: (data: Partial<AiSettings>) =>
+        fxsim<{ success: boolean; message: string; settings: AiSettings }>('/admin/ai/settings', { body: data }),
       sentinelScan: () =>
-        fxsim<AiSentinelReport>('/admin/ai/sentinel/scan', { method: 'POST' }),
+        fxsim<AiSentinelReport>('/admin/ai/sentinel/scan', { method: 'POST', body: {} }),
       autoResolveTickets: () =>
-        fxsim<{ success: boolean; scanned_count: number; resolved_count: number }>('/admin/ai/tickets/auto-resolve', { method: 'POST' }),
-      draftReply: (ticket_id: number) =>
-        fxsim<{ success: boolean; draft: string }>('/admin/ai/tickets/draft-reply', { method: 'POST', body: { ticket_id } }),
+        fxsim<{ success: boolean; scanned_count: number; resolved_count: number; processed?: number; resolved?: number; details?: Array<{ ticket_id: number; subject: string; ai_resolution: string }> }>('/admin/ai/tickets/auto-resolve', { method: 'POST', body: {} }),
+      draftReply: (ticketIdOrBody: number | { ticket_id: number }) => {
+        const tid = typeof ticketIdOrBody === 'number' ? ticketIdOrBody : ticketIdOrBody.ticket_id
+        return fxsim<{ success: boolean; draft: string; confidence?: number; category?: string }>(`/admin/ai/tickets/draft-reply?ticket_id=${tid}`, { method: 'POST', body: { ticket_id: tid } })
+      },
     },
     stats:        ()                 => fxsim<AdminStats>('/admin/stats',                                { cache: 10_000 }),
     users:        (search?: string, page?: number, limit?: number)  => fxsim<{ data: AdminUserRow[]; total: number; page: number; pages: number; limit: number }>('/admin/users',                            { query: { search, page, limit }, cache: 5_000 }),
@@ -528,19 +557,6 @@ export const api = {
     pvpAnalytics: () =>
       fxsim<PvpAnalyticsResponse>('/admin/pvp/analytics', { cache: 5_000 }),
 
-    // ── AI Powerhouse Sentinel & 24/7 Helpdesk (v11.4) ────────────────────────
-    ai: {
-      settingsGet: () =>
-        fxsim<{ success: boolean; settings: AiSettings }>('/admin/ai/settings', { cache: 0 }),
-      settingsSave: (data: Partial<AiSettings>) =>
-        fxsim<{ success: boolean; message: string; settings: AiSettings }>('/admin/ai/settings', { body: data }),
-      sentinelScan: () =>
-        fxsim<AiSentinelReport>('/admin/ai/sentinel/scan', { body: {} }),
-      autoResolveTickets: () =>
-        fxsim<{ success: boolean; processed: number; resolved: number; details: Array<{ ticket_id: number; subject: string; ai_resolution: string }> }>('/admin/ai/tickets/auto-resolve', { body: {} }),
-      draftReply: (ticketId: number) =>
-        fxsim<{ success: boolean; draft: string; confidence: number; category: string }>(`/admin/ai/tickets/draft-reply?ticket_id=${ticketId}`),
-    },
   },
 
   // ── 1v1 PvP E-Sports Arena ────────────────────────────────────────────────
@@ -563,38 +579,6 @@ export const api = {
       fxsim<{ success: boolean; message: string }>(`/pvp/match/${id}/chat`, { body: { message } }),
   },
 
-  // ── Zenith AI Trader Copilot (v11.4) ──────────────────────────────────────
-  ai: {
-    copilot: {
-      chat: (data: { query: string; account_id?: number | string; symbol?: string; context?: Record<string, unknown> }) =>
-        fxsim<AiCopilotChatResponse>('/ai/copilot/chat', { body: data }),
-      safeLot: (data: { balance: number; risk_percent: number; stop_loss_pips: number; symbol?: string }) =>
-        fxsim<AiSafeLotResponse>('/ai/copilot/safe-lot', { body: data }),
-      headroom: (accountId?: number | string) =>
-        fxsim<AiHeadroomResponse>(`/ai/copilot/headroom${accountId ? `?account_id=${accountId}` : ''}`, { cache: 5_000 }),
-      newsWarnings: () =>
-        fxsim<AiNewsWarning[]>('/ai/copilot/news-warnings', { cache: 30_000 }),
-    },
-    journal: {
-      autopsy: (tradeId: number) =>
-        fxsim<AiTradeAutopsy>(`/ai/journal/autopsy/${tradeId}`),
-      history: (accountId?: number, limit = 10, offset = 0) =>
-        fxsim<AiJournalHistoryResponse>(`/ai/journal/history?limit=${limit}&offset=${offset}${accountId ? `&account_id=${accountId}` : ''}`, { cache: 5_000 }),
-    },
-    coach: {
-      tiltCheck: (accountId?: number) =>
-        fxsim<AiTiltStatus>(`/ai/coach/tilt-check${accountId ? `?account_id=${accountId}` : ''}`, { cache: 5_000 }),
-      coolingOff: (data: { account_id?: number; duration_minutes?: number }) =>
-        fxsim<CoolingOffResult>('/ai/coach/cooling-off', { body: data }),
-    },
-  },
 
-  // ── System Doctor Bridge (v11.4) ───────────────────────────────────────────
-  systemDoctor: {
-    status: () =>
-      fxsim<SystemDoctorStatus>('/system-doctor/status', { cache: 0 }),
-    diagnose: () =>
-      fxsim<SystemDoctorStatus>('/system-doctor/ai-diagnose', { body: {} }),
-  },
 }
 

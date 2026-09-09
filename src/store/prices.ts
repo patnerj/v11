@@ -20,6 +20,7 @@ interface PriceState {
   connected: boolean
   source:    'ws' | 'poll' | 'idle'
   hasFetched: boolean
+  activeSymbol?: string
   /** Active trading context: null = default (latest active challenge),
    *  challenge+accountId = a specific challenge account (multi-account),
    *  tournament = a tournament's dedicated account. */

@@ -825,7 +825,7 @@ export interface RiskExposureItem {
 export interface TicketMessage {
   id: number;
   ticket_id: number;
-  sender_type: 'trader' | 'admin' | 'user';
+  sender_type: 'trader' | 'admin' | 'user' | 'ai_assistant';
   sender_id: number;
   sender_name?: string;
   sender_email?: string;
@@ -1296,26 +1296,32 @@ export interface AiTradeAutopsy {
   account_id: number
   symbol: string
   side?: string
+  action?: string
   lot_size?: number
   pnl: number
   pnl_formatted?: string
   grade: string
-  risk_reward_ratio: number
-  sl_tp_discipline: boolean
-  autopsy_summary: string
+  risk_reward_ratio?: number
+  rr_ratio?: number
+  sl_tp_discipline?: boolean
+  sl_adherence?: boolean
+  autopsy_summary?: string
+  ai_tactical_summary?: string
   tactical_flaws?: string
   psychology_notes?: string
-  tilt_detected: boolean
-  cooling_off_recommended: boolean
+  tilt_detected?: boolean
+  cooling_off_recommended?: boolean
   created_at: string
 }
 
 export interface AiPsychologyScorecard {
   discipline_score: number
   win_rate: number
-  avg_risk_reward: number
-  tilt_incidents: number
-  status_rating: 'EXCELLENT' | 'MODERATE' | 'NEEDS_DISCIPLINE'
+  avg_risk_reward?: number
+  avg_rr?: number
+  tilt_incidents?: number
+  tilt_incidents_count?: number
+  status_rating?: 'EXCELLENT' | 'MODERATE' | 'NEEDS_DISCIPLINE'
 }
 
 export interface AiJournalHistoryResponse {

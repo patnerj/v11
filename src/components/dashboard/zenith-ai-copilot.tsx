@@ -29,7 +29,7 @@ interface ChatMessage {
 export function ZenithAiCopilot() {
   const { user } = useAuth()
   const account = usePrices((s) => s.account)
-  const activeSymbol = usePrices((s) => s.activeSymbol || 'EURUSD')
+  const activeSymbol = usePrices((s: any) => s.activeSymbol) || 'EURUSD'
   
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
@@ -142,7 +142,9 @@ export function ZenithAiCopilot() {
       const res = await api.ai.copilot.safeLot({
         balance: calcBalance,
         risk_pct: calcRiskPct,
+        risk_percent: calcRiskPct,
         sl_pips: calcSlPips,
+        stop_loss_pips: calcSlPips,
         symbol: calcSymbol
       })
       if (res.ok && res.data) {
@@ -188,6 +190,7 @@ export function ZenithAiCopilot() {
 
     try {
       const res = await api.ai.copilot.chat({
+        query: text.trim(),
         message: text.trim(),
         account_id: account?.id
       })
@@ -671,15 +674,15 @@ export function ZenithAiCopilot() {
                         <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <span className="text-[10px] text-gray-400 block">Avg R:R</span>
                           <span className="text-base font-bold text-white">
-                            1:{scorecard.avg_rr}
+                            1:{scorecard.avg_rr ?? (scorecard as any).avg_risk_reward ?? 1.5}
                           </span>
                         </div>
                         <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <span className="text-[10px] text-gray-400 block">Tilt Flags</span>
                           <span className={`text-base font-bold ${
-                            scorecard.tilt_incidents_count > 0 ? 'text-rose-400' : 'text-emerald-400'
+                            (scorecard.tilt_incidents_count ?? scorecard.tilt_incidents ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'
                           }`}>
-                            {scorecard.tilt_incidents_count}
+                            {scorecard.tilt_incidents_count ?? scorecard.tilt_incidents ?? 0}
                           </span>
                         </div>
                       </div>
@@ -738,9 +741,9 @@ export function ZenithAiCopilot() {
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-white text-xs">{item.symbol}</span>
                                     <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
-                                      item.action === 'BUY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                                      (item.action || item.side || 'BUY') === 'BUY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
                                     }`}>
-                                      {item.action}
+                                      {item.action || item.side || 'BUY'}
                                     </span>
                                     <span className="text-[10px] text-gray-500 font-mono">#{item.trade_id}</span>
                                   </div>
@@ -755,12 +758,12 @@ export function ZenithAiCopilot() {
                                 </div>
 
                                 <p className="text-[11px] text-gray-300 line-clamp-2 leading-relaxed">
-                                  {item.ai_tactical_summary}
+                                  {item.ai_tactical_summary || item.autopsy_summary || ''}
                                 </p>
 
                                 <div className="pt-1 border-t border-gray-800/80 flex items-center justify-between text-[10px]">
                                   <span className="text-gray-400">
-                                    R:R 1:{item.rr_ratio} • {item.sl_adherence ? '✅ SL Placed' : '⚠️ No SL'}
+                                    R:R 1:{item.rr_ratio ?? item.risk_reward_ratio ?? 1.5} • {(item.sl_adherence ?? item.sl_tp_discipline) ? '✅ SL Placed' : '⚠️ No SL'}
                                   </span>
                                   <button
                                     onClick={() => {

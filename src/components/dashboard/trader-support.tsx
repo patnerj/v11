@@ -184,7 +184,7 @@ export function TraderSupport() {
           <div className="space-y-4 max-h-[500px] overflow-y-auto mb-4 p-2">
             {messages.map((msg) => {
               const isMe = msg.sender_type === 'trader' || msg.sender_type === 'user'
-              const isAi = !isMe && (msg.message.includes('Autonomous AI Desk') || msg.sender_type === 'ai_assistant' || msg.sender_id === 1)
+              const isAi = !isMe && (msg.message.includes('Autonomous AI Desk') || (msg.sender_type as string) === 'ai_assistant' || msg.sender_id === 1)
               return (
                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] rounded-xl p-3.5 ${

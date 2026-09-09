@@ -44,7 +44,7 @@ export function AiTiltGuard() {
         account_id: account.id,
         duration_minutes: minutes,
       })
-      if (res.ok && res.data) {
+      if (res.ok) {
         toast.success(`🛡️ Self-imposed cooling-off engaged for ${minutes} minutes. Trading paused to protect capital.`)
         checkTilt()
       } else {

@@ -6,7 +6,7 @@ import {
   Headphones, MessageSquare, Clock, AlertCircle, CheckCircle2, 
   Send, User, Hash, Tag, Filter, Search, RefreshCw, Paperclip,
   Sparkles, ShieldCheck, ChevronRight, X, ArrowLeft, ExternalLink,
-  Flame, CheckCircle, AlertTriangle, LifeBuoy, FileText
+  Flame, CheckCircle, AlertTriangle, LifeBuoy, FileText, Zap
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -82,7 +82,9 @@ export default function AdminHelpdeskPage() {
     try {
       const res = await api.admin.ai.autoResolveTickets()
       if (res.ok && res.data) {
-        toast.success(`Autonomous Desk scanned ${res.data.scanned_count} tickets and auto-resolved ${res.data.resolved_count}!`)
+        const scanned = res.data.scanned_count ?? (res.data as any).processed ?? 0
+        const resolved = res.data.resolved_count ?? (res.data as any).resolved ?? 0
+        toast.success(`Autonomous Desk scanned ${scanned} tickets and auto-resolved ${resolved}!`)
         queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
         if (selectedTicketId) {
           queryClient.invalidateQueries({ queryKey: ['admin-ticket-detail', selectedTicketId] })
