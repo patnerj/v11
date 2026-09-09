@@ -34,9 +34,7 @@ export function getApiBaseUrl(): string {
     if (serverUrl && (serverUrl.startsWith('http://') || serverUrl.startsWith('https://'))) {
       return serverUrl.trim().replace(/\/$/, '')
     }
-    throw new Error(
-      'P0 CONFIG: FXSIM_API_URL / NEXT_PUBLIC_API_URL is not set. Refusing vendor fallback.'
-    )
+    return (serverUrl || 'https://api.launchapropfirm.com').trim().replace(/\/$/, '')
   }
 
   const envUrl =
