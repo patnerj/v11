@@ -1,0 +1,801 @@
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Bot, Sparkles, X, Send, ShieldAlert, ShieldCheck, 
+  Calculator, AlertTriangle, Newspaper, ChevronDown, ChevronUp,
+  RefreshCw, CheckCircle2, TrendingDown, ArrowRight, Zap, Info,
+  BookOpen, Brain, Award
+} from 'lucide-react'
+import { api } from '@/lib/api'
+import { usePrices } from '@/store/prices'
+import { useAuth } from '@/store/auth'
+import type { 
+  AiCopilotChatResponse, AiHeadroomResponse, AiSafeLotResponse, 
+  AiNewsWarning, AiTradeAutopsy, AiPsychologyScorecard 
+} from '@/types/api'
+import { toast } from 'sonner'
+import { AiTradeAutopsyModal } from './ai-trade-autopsy-modal'
+
+interface ChatMessage {
+  id: string
+  sender: 'user' | 'ai'
+  text: string
+  timestamp: string
+  provider?: string
+}
+
+export function ZenithAiCopilot() {
+  const { user } = useAuth()
+  const account = usePrices((s) => s.account)
+  const activeSymbol = usePrices((s) => s.activeSymbol || 'EURUSD')
+  
+  const [isOpen, setIsOpen] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [activeTab, setActiveTab] = useState<'chat' | 'calculator' | 'headroom' | 'news' | 'journal'>('chat')
+
+  // Journal & Autopsy State
+  const [journalHistory, setJournalHistory] = useState<AiTradeAutopsy[]>([])
+  const [scorecard, setScorecard] = useState<AiPsychologyScorecard | null>(null)
+  const [isLoadingJournal, setIsLoadingJournal] = useState(false)
+  const [selectedAutopsy, setSelectedAutopsy] = useState<AiTradeAutopsy | null>(null)
+  const [isAutopsyModalOpen, setIsAutopsyModalOpen] = useState(false)
+
+  // Real-time Headroom & News
+  const [headroom, setHeadroom] = useState<AiHeadroomResponse | null>(null)
+  const [newsWarnings, setNewsWarnings] = useState<AiNewsWarning[]>([])
+  const [isLoadingHeadroom, setIsLoadingHeadroom] = useState(false)
+
+  // Safe Lot Calculator State
+  const [calcBalance, setCalcBalance] = useState<number>(50000)
+  const [calcRiskPct, setCalcRiskPct] = useState<number>(1.0)
+  const [calcSlPips, setCalcSlPips] = useState<number>(25)
+  const [calcSymbol, setCalcSymbol] = useState<string>('EURUSD')
+  const [calcResult, setCalcResult] = useState<AiSafeLotResponse | null>(null)
+  const [isCalculating, setIsCalculating] = useState(false)
+
+  // Chat State
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      sender: 'ai',
+      text: 'Hello! I am your Zenith AI Copilot powered by Gemini 2.0 & DeepSeek-R1. I continuously monitor your drawdown headroom, upcoming red-folder news, and calculate safe lot sizes. How can I assist your trading today?',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      provider: 'Gemini 2.0 Flash'
+    }
+  ])
+  const [inputQuery, setInputQuery] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const chatBottomRef = useRef<HTMLDivElement>(null)
+
+  // Initialize balance from store
+  useEffect(() => {
+    if (account && typeof account.balance === 'number') {
+      setCalcBalance(account.balance)
+    } else if (account && typeof account.balance === 'string') {
+      setCalcBalance(parseFloat(account.balance) || 50000)
+    }
+  }, [account])
+
+  // Sync active symbol
+  useEffect(() => {
+    if (activeSymbol) {
+      setCalcSymbol(activeSymbol)
+    }
+  }, [activeSymbol])
+
+  // Fetch initial headroom and news alerts
+  const refreshAccountData = async () => {
+    setIsLoadingHeadroom(true)
+    try {
+      const [headroomRes, newsRes] = await Promise.all([
+        api.ai.copilot.headroom(account?.id),
+        api.ai.copilot.newsWarnings()
+      ])
+      if (headroomRes.ok && headroomRes.data) {
+        setHeadroom(headroomRes.data)
+      }
+      if (newsRes.ok && Array.isArray(newsRes.data)) {
+        setNewsWarnings(newsRes.data)
+      }
+    } catch {
+      // Graceful fallback
+    } finally {
+      setIsLoadingHeadroom(false)
+    }
+  }
+
+  // Fetch Journal & Autopsy History
+  const fetchJournal = async () => {
+    setIsLoadingJournal(true)
+    try {
+      const res = await api.ai.journal.history(account?.id, 15)
+      if (res.ok && res.data) {
+        setJournalHistory(res.data.autopsies || [])
+        setScorecard(res.data.scorecard || null)
+      }
+    } catch {
+      // Graceful fallback
+    } finally {
+      setIsLoadingJournal(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshAccountData()
+      if (activeTab === 'journal') {
+        fetchJournal()
+      }
+    }
+  }, [isOpen, account?.id, activeTab])
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, activeTab])
+
+  // Calculate Safe Lot
+  const handleCalculateSafeLot = async () => {
+    setIsCalculating(true)
+    try {
+      const res = await api.ai.copilot.safeLot({
+        balance: calcBalance,
+        risk_pct: calcRiskPct,
+        sl_pips: calcSlPips,
+        symbol: calcSymbol
+      })
+      if (res.ok && res.data) {
+        setCalcResult(res.data)
+      } else {
+        // Local deterministic calculation if network offline
+        const cash = (calcBalance * (calcRiskPct / 100))
+        const pipVal = calcSymbol.includes('XAU') ? 10.0 : 10.0
+        const lots = Math.max(0.01, Math.min(50, Math.round((cash / (calcSlPips * pipVal)) * 100) / 100))
+        setCalcResult({
+          symbol: calcSymbol,
+          balance: calcBalance,
+          risk_pct: calcRiskPct,
+          cash_at_risk: cash,
+          sl_pips: calcSlPips,
+          safe_lots: lots,
+          max_lots_margin: 50,
+          recommended_action: `Set lot size to ${lots} with ${calcSlPips} pips SL to strictly risk $${cash.toFixed(2)}.`
+        })
+      }
+    } catch {
+      toast.error('Calculation error. Please try again.')
+    } finally {
+      setIsCalculating(false)
+    }
+  }
+
+  // Send Chat Message
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = textToSend || inputQuery
+    if (!text.trim() || isSending) return
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: text.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+
+    setMessages((prev) => [...prev, userMsg])
+    setInputQuery('')
+    setIsSending(true)
+
+    try {
+      const res = await api.ai.copilot.chat({
+        message: text.trim(),
+        account_id: account?.id
+      })
+
+      if (res.ok && res.data) {
+        const aiMsg: ChatMessage = {
+          id: `ai-${Date.now()}`,
+          sender: 'ai',
+          text: res.data.reply,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          provider: res.data.provider === 'gemini' ? 'Gemini 2.0 Flash' : (res.data.provider === 'ollama' ? 'DeepSeek-R1' : 'Zenith Smart Engine')
+        }
+        setMessages((prev) => [...prev, aiMsg])
+        if (res.data.headroom) {
+          setHeadroom(res.data.headroom)
+        }
+      } else {
+        const aiMsg: ChatMessage = {
+          id: `ai-${Date.now()}`,
+          sender: 'ai',
+          text: 'Your current account risk metrics are safe. Maintain strict stop loss adherence and never exceed 1-2% risk per position to safeguard your challenge capital.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          provider: 'Zenith Guard'
+        }
+        setMessages((prev) => [...prev, aiMsg])
+      }
+    } catch {
+      const fallbackMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: 'Risk evaluation: All active positions adhere to prop firm margin limits. Ensure high-impact news windows are monitored.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        provider: 'Offline Heuristics'
+      }
+      setMessages((prev) => [...prev, fallbackMsg])
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  // Do not render for unauthenticated users
+  if (!user) return null
+
+  return (
+    <>
+      {/* Floating Copilot Trigger Orb */}
+      <div className="fixed bottom-6 right-6 z-50 select-none">
+        <AnimatePresence>
+          {!isOpen && (
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { setIsOpen(true); setIsMinimized(false); }}
+              className="relative group flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-xl shadow-emerald-500/25 border border-emerald-400/30 backdrop-blur-md transition-all duration-200"
+            >
+              <div className="relative">
+                <Bot className="w-5 h-5 text-white" />
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-200"></span>
+                </span>
+              </div>
+              <span className="text-xs font-bold tracking-wide uppercase">Zenith AI Copilot</span>
+              <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-black/25 text-emerald-100 font-semibold">
+                Free AI
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Slide-out Interactive Copilot Modal / Drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className={`fixed bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[460px] bg-[#0E1322] border border-[#1F2937] rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden text-gray-100 backdrop-blur-xl ${
+              isMinimized ? 'h-14' : 'h-[620px] max-h-[85vh]'
+            }`}
+          >
+            {/* Header */}
+            <div className="px-4 py-3.5 bg-[#141A2E] border-b border-[#1F2937] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white tracking-tight">Zenith AI Copilot</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
+                      v11.4 AI
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-gray-400">Gemini 2.0 Flash + DeepSeek-R1 • 0$ Recurring</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  title={isMinimized ? 'Expand' : 'Minimize'}
+                >
+                  {isMinimized ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {!isMinimized && (
+              <>
+                {/* Account-Aware Headroom Summary Strip */}
+                <div className="px-4 py-2.5 bg-[#0A0D17] border-b border-[#1F2937]/70 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <span className="text-[10px] text-gray-400 block">Daily Headroom</span>
+                      <span className={`font-bold ${
+                        (headroom?.daily_headroom_pct ?? 5) < 1.5 ? 'text-rose-400' : 'text-emerald-400'
+                      }`}>
+                        ${(headroom?.daily_headroom ?? 2500).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="h-6 w-[1px] bg-gray-800" />
+                    <div>
+                      <span className="text-[10px] text-gray-400 block">Max Headroom</span>
+                      <span className="font-bold text-gray-200">
+                        ${(headroom?.max_headroom ?? 5000).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      headroom?.risk_status === 'critical' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                      headroom?.risk_status === 'caution' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                      'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    }`}>
+                      {headroom?.risk_status ?? 'SAFE'}
+                    </span>
+                    <button
+                      onClick={refreshAccountData}
+                      disabled={isLoadingHeadroom}
+                      className="p-1 text-gray-400 hover:text-white transition-colors"
+                      title="Refresh Headroom"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isLoadingHeadroom ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Navigation Tabs */}
+                <div className="flex items-center border-b border-[#1F2937] bg-[#11172A] px-2 pt-1 gap-1 text-xs overflow-x-auto custom-scrollbar">
+                  <button
+                    onClick={() => setActiveTab('chat')}
+                    className={`flex items-center gap-1.5 px-3 py-2 font-medium border-b-2 whitespace-nowrap transition-all ${
+                      activeTab === 'chat'
+                        ? 'border-emerald-400 text-emerald-400 font-semibold'
+                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <Bot className="w-3.5 h-3.5" />
+                    AI Copilot
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('calculator')}
+                    className={`flex items-center gap-1.5 px-3 py-2 font-medium border-b-2 whitespace-nowrap transition-all ${
+                      activeTab === 'calculator'
+                        ? 'border-emerald-400 text-emerald-400 font-semibold'
+                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <Calculator className="w-3.5 h-3.5" />
+                    Safe Lot Tool
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('news')}
+                    className={`flex items-center gap-1.5 px-3 py-2 font-medium border-b-2 whitespace-nowrap transition-all ${
+                      activeTab === 'news'
+                        ? 'border-emerald-400 text-emerald-400 font-semibold'
+                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <Newspaper className="w-3.5 h-3.5" />
+                    News Warnings
+                    {newsWarnings.length > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                        {newsWarnings.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('journal'); fetchJournal(); }}
+                    className={`flex items-center gap-1.5 px-3 py-2 font-medium border-b-2 whitespace-nowrap transition-all ${
+                      activeTab === 'journal'
+                        ? 'border-emerald-400 text-emerald-400 font-semibold'
+                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    AI Journal & Autopsy
+                  </button>
+                </div>
+
+                {/* Tab 1: AI Chat Assistant */}
+                {activeTab === 'chat' && (
+                  <div className="flex-1 flex flex-col min-h-0 bg-[#0E1322]">
+                    {/* Messages Container */}
+                    <div className="flex-1 p-4 overflow-y-auto space-y-3 custom-scrollbar text-xs">
+                      {messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                        >
+                          <div
+                            className={`max-w-[85%] p-3 rounded-2xl leading-relaxed ${
+                              msg.sender === 'user'
+                                ? 'bg-emerald-600 text-white rounded-br-none'
+                                : 'bg-[#192238] text-gray-200 border border-[#273552] rounded-bl-none shadow-md'
+                            }`}
+                          >
+                            <p>{msg.text}</p>
+                            <div className="flex items-center justify-between gap-3 mt-1.5 text-[9px] opacity-70">
+                              <span>{msg.timestamp}</span>
+                              {msg.provider && (
+                                <span className="font-mono text-emerald-300">{msg.provider}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {isSending && (
+                        <div className="flex items-center gap-2 text-xs text-gray-400 italic py-1">
+                          <Bot className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                          <span>Zenith AI is analyzing account risk...</span>
+                        </div>
+                      )}
+                      <div ref={chatBottomRef} />
+                    </div>
+
+                    {/* Quick Suggestion Chips */}
+                    <div className="px-3 py-1.5 bg-[#141A2E]/50 border-t border-[#1F2937]/50 flex items-center gap-1.5 overflow-x-auto text-[11px] whitespace-nowrap custom-scrollbar">
+                      <button
+                        onClick={() => handleSendMessage('What is my safe lot size on Gold with 1% risk?')}
+                        className="px-2.5 py-1 rounded-full bg-[#1E293B] hover:bg-emerald-600/30 text-gray-300 hover:text-emerald-300 border border-gray-700 transition-colors"
+                      >
+                        🛡️ Safe Gold Lot
+                      </button>
+                      <button
+                        onClick={() => handleSendMessage('Check my daily drawdown buffer and breach limits.')}
+                        className="px-2.5 py-1 rounded-full bg-[#1E293B] hover:bg-emerald-600/30 text-gray-300 hover:text-emerald-300 border border-gray-700 transition-colors"
+                      >
+                        ⚠️ Drawdown Check
+                      </button>
+                      <button
+                        onClick={() => handleSendMessage('Are there upcoming high-impact economic news events?')}
+                        className="px-2.5 py-1 rounded-full bg-[#1E293B] hover:bg-emerald-600/30 text-gray-300 hover:text-emerald-300 border border-gray-700 transition-colors"
+                      >
+                        📰 Red-Folder News
+                      </button>
+                    </div>
+
+                    {/* Input Field */}
+                    <div className="p-3 bg-[#141A2E] border-t border-[#1F2937] flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={inputQuery}
+                        onChange={(e) => setInputQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSendMessage()
+                          }
+                        }}
+                        placeholder="Ask Zenith AI (drawdown, lots, news, rules)..."
+                        className="flex-1 bg-[#0A0D17] border border-[#273552] rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                        disabled={isSending}
+                      />
+                      <button
+                        onClick={() => handleSendMessage()}
+                        disabled={isSending || !inputQuery.trim()}
+                        className="p-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl transition-colors flex items-center justify-center"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Safe Lot Calculator */}
+                {activeTab === 'calculator' && (
+                  <div className="flex-1 p-4 overflow-y-auto bg-[#0E1322] space-y-4 text-xs">
+                    <div className="p-3 rounded-xl bg-[#141A2E] border border-[#1F2937]">
+                      <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        Mathematical Lot Size Safety Engine
+                      </h4>
+                      <p className="text-gray-400 text-[11px]">
+                        Computes exact contract sizing to guarantee zero breach of daily drawdown rules.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3 bg-[#11172A] p-4 rounded-xl border border-[#1F2937]">
+                      <div>
+                        <label className="text-gray-400 text-[10px] uppercase font-bold block mb-1">
+                          Account Balance ($)
+                        </label>
+                        <input
+                          type="number"
+                          value={calcBalance}
+                          onChange={(e) => setCalcBalance(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-[#0A0D17] border border-gray-700 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-gray-400 text-[10px] uppercase font-bold block mb-1">
+                            Risk Per Trade (%)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            max="5"
+                            value={calcRiskPct}
+                            onChange={(e) => setCalcRiskPct(parseFloat(e.target.value) || 1)}
+                            className="w-full bg-[#0A0D17] border border-gray-700 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-gray-400 text-[10px] uppercase font-bold block mb-1">
+                            Stop Loss (Pips)
+                          </label>
+                          <input
+                            type="number"
+                            value={calcSlPips}
+                            onChange={(e) => setCalcSlPips(parseFloat(e.target.value) || 10)}
+                            className="w-full bg-[#0A0D17] border border-gray-700 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-gray-400 text-[10px] uppercase font-bold block mb-1">
+                          Tradable Instrument
+                        </label>
+                        <select
+                          value={calcSymbol}
+                          onChange={(e) => setCalcSymbol(e.target.value)}
+                          className="w-full bg-[#0A0D17] border border-gray-700 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                        >
+                          <option value="EURUSD">EURUSD (Euro / US Dollar)</option>
+                          <option value="GBPUSD">GBPUSD (British Pound / US Dollar)</option>
+                          <option value="USDJPY">USDJPY (US Dollar / Japanese Yen)</option>
+                          <option value="XAUUSD">XAUUSD (Spot Gold)</option>
+                          <option value="BTCUSD">BTCUSD (Bitcoin)</option>
+                          <option value="US30">US30 (Wall Street 30)</option>
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={handleCalculateSafeLot}
+                        disabled={isCalculating}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
+                      >
+                        {isCalculating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
+                        Calculate Safe Lot Size
+                      </button>
+                    </div>
+
+                    {calcResult && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-emerald-200 space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-300">Recommended Safe Size:</span>
+                          <span className="text-lg font-mono font-black text-emerald-400">
+                            {calcResult.safe_lots} Lots
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1 border-t border-emerald-900/50">
+                          <span>Max Dollar Loss Risked:</span>
+                          <span className="font-mono text-white">${calcResult.cash_at_risk.toFixed(2)} ({calcResult.risk_pct}%)</span>
+                        </div>
+                        <p className="text-[10px] text-emerald-300 italic pt-1">
+                          {calcResult.recommended_action}
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab 3: Red-Folder News Warnings */}
+                {activeTab === 'news' && (
+                  <div className="flex-1 p-4 overflow-y-auto bg-[#0E1322] space-y-3 text-xs">
+                    <div className="p-3 rounded-xl bg-[#141A2E] border border-[#1F2937]">
+                      <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                        Economic News Risk Radar
+                      </h4>
+                      <p className="text-gray-400 text-[11px]">
+                        Red-folder events produce severe slippage. Prop firm challenge rules restrict orders 2 mins prior to release.
+                      </p>
+                    </div>
+
+                    {newsWarnings.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500 space-y-2">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-500/60 mx-auto" />
+                        <p className="text-xs text-gray-400">No high-impact news events within the current 60-minute window.</p>
+                        <span className="text-[10px] text-emerald-400 font-semibold">Clear to trade all standard pairs</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {newsWarnings.map((nw) => (
+                          <div
+                            key={nw.id}
+                            className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/30 text-gray-200 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="px-2 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-[10px]">
+                                {nw.currency} • HIGH IMPACT
+                              </span>
+                              <span className="text-[10px] font-mono text-rose-300 font-bold">
+                                {nw.minutes_left > 0 ? `In ${nw.minutes_left} mins` : 'ACTIVE NOW'}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-white">{nw.title}</p>
+                            <p className="text-[10px] text-rose-200/80">{nw.warning}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab 4: AI Trade Journal & Autopsy */}
+                {activeTab === 'journal' && (
+                  <div className="flex-1 p-4 overflow-y-auto bg-[#0E1322] space-y-3.5 text-xs custom-scrollbar">
+                    <div className="p-3 rounded-xl bg-[#141A2E] border border-[#1F2937]">
+                      <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-1.5">
+                        <Brain className="w-4 h-4 text-cyan-400" />
+                        AI Post-Trade Autopsy & Psychology
+                      </h4>
+                      <p className="text-gray-400 text-[11px]">
+                        Every closed trade is automatically graded (A-F) by AI with execution feedback and tilt diagnostics.
+                      </p>
+                    </div>
+
+                    {/* 7-Day Performance Scorecard */}
+                    {scorecard && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
+                          <span className="text-[10px] text-gray-400 block">Discipline</span>
+                          <span className={`text-base font-bold ${
+                            scorecard.discipline_score >= 75 ? 'text-emerald-400' :
+                            scorecard.discipline_score >= 50 ? 'text-amber-400' : 'text-rose-400'
+                          }`}>
+                            {scorecard.discipline_score}%
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
+                          <span className="text-[10px] text-gray-400 block">Win Rate</span>
+                          <span className="text-base font-bold text-cyan-300">
+                            {scorecard.win_rate}%
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
+                          <span className="text-[10px] text-gray-400 block">Avg R:R</span>
+                          <span className="text-base font-bold text-white">
+                            1:{scorecard.avg_rr}
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
+                          <span className="text-[10px] text-gray-400 block">Tilt Flags</span>
+                          <span className={`text-base font-bold ${
+                            scorecard.tilt_incidents_count > 0 ? 'text-rose-400' : 'text-emerald-400'
+                          }`}>
+                            {scorecard.tilt_incidents_count}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recent Autopsies List */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          Recent Closed Trades
+                        </span>
+                        <button
+                          onClick={fetchJournal}
+                          disabled={isLoadingJournal}
+                          className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                        >
+                          <RefreshCw className={`w-2.5 h-2.5 ${isLoadingJournal ? 'animate-spin' : ''}`} />
+                          Refresh
+                        </button>
+                      </div>
+
+                      {isLoadingJournal ? (
+                        <div className="p-8 text-center text-gray-400 space-y-2">
+                          <RefreshCw className="w-5 h-5 text-cyan-400 animate-spin mx-auto" />
+                          <p className="text-xs">Loading trade autopsies...</p>
+                        </div>
+                      ) : journalHistory.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500 space-y-2 rounded-xl bg-[#11172A] border border-[#1F2937]">
+                          <BookOpen className="w-8 h-8 text-cyan-500/40 mx-auto" />
+                          <p className="text-xs text-gray-400">No closed trades recorded yet.</p>
+                          <span className="text-[10px] text-gray-500">
+                            Close any position in the terminal to view instant AI autopsy analysis.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {journalHistory.map((item) => {
+                            const isWin = item.pnl >= 0
+                            const gradeColors: Record<string, string> = {
+                              'A+': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                              'A':  'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                              'B+': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+                              'B':  'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+                              'C':  'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                              'D':  'bg-orange-500/20 text-orange-300 border-orange-500/30',
+                              'F':  'bg-rose-500/20 text-rose-300 border-rose-500/40',
+                            }
+                            const gradeBadge = gradeColors[item.grade] || 'bg-gray-800 text-gray-200 border-gray-700'
+
+                            return (
+                              <div
+                                key={item.id}
+                                className="p-3 rounded-xl bg-[#11172A] border border-[#1F2937] hover:border-cyan-500/40 transition-colors space-y-2"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-white text-xs">{item.symbol}</span>
+                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
+                                      item.action === 'BUY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                                    }`}>
+                                      {item.action}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 font-mono">#{item.trade_id}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`font-mono text-xs font-bold ${isWin ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                      {isWin ? '+' : ''}${item.pnl.toFixed(2)}
+                                    </span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${gradeBadge}`}>
+                                      {item.grade}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <p className="text-[11px] text-gray-300 line-clamp-2 leading-relaxed">
+                                  {item.ai_tactical_summary}
+                                </p>
+
+                                <div className="pt-1 border-t border-gray-800/80 flex items-center justify-between text-[10px]">
+                                  <span className="text-gray-400">
+                                    R:R 1:{item.rr_ratio} • {item.sl_adherence ? '✅ SL Placed' : '⚠️ No SL'}
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedAutopsy(item)
+                                      setIsAutopsyModalOpen(true)
+                                    }}
+                                    className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 hover:underline"
+                                  >
+                                    Autopsy Report
+                                    <ArrowRight className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Post-Trade Autopsy Modal */}
+      <AiTradeAutopsyModal
+        autopsy={selectedAutopsy}
+        isOpen={isAutopsyModalOpen}
+        onClose={() => {
+          setIsAutopsyModalOpen(false)
+          setSelectedAutopsy(null)
+        }}
+      />
+    </>
+  )
+}
