@@ -11,6 +11,7 @@ import {
 import { api } from '@/lib/api'
 import { usePrices } from '@/store/prices'
 import { useAuth } from '@/store/auth'
+import { useBranding } from '@/store/branding'
 import type { 
   AiCopilotChatResponse, AiHeadroomResponse, AiSafeLotResponse, 
   AiNewsWarning, AiTradeAutopsy, AiPsychologyScorecard 
@@ -28,6 +29,7 @@ interface ChatMessage {
 
 export function ZenithAiCopilot() {
   const { user } = useAuth()
+  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
   const account = usePrices((s) => s.account)
   const activeSymbol = usePrices((s: any) => s.activeSymbol) || 'EURUSD'
   
@@ -60,9 +62,9 @@ export function ZenithAiCopilot() {
     {
       id: 'welcome',
       sender: 'ai',
-      text: 'Hello! I am your Zenith AI Copilot powered by Gemini 2.0 & DeepSeek-R1. I continuously monitor your drawdown headroom, upcoming red-folder news, and calculate safe lot sizes. How can I assist your trading today?',
+      text: `Hello! I am your ${brandName} AI Copilot. I continuously monitor your drawdown headroom, upcoming red-folder news, and calculate safe lot sizes. How can I assist your trading today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      provider: 'Gemini 2.0 Flash'
+      provider: `${brandName} AI Engine`
     }
   ])
   const [inputQuery, setInputQuery] = useState('')
@@ -201,7 +203,7 @@ export function ZenithAiCopilot() {
           sender: 'ai',
           text: res.data.reply,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          provider: res.data.provider === 'gemini' ? 'Gemini 2.0 Flash' : (res.data.provider === 'ollama' ? 'DeepSeek-R1' : 'Zenith Smart Engine')
+          provider: `${brandName} AI Engine`
         }
         setMessages((prev) => [...prev, aiMsg])
         if (res.data.headroom) {
@@ -213,7 +215,7 @@ export function ZenithAiCopilot() {
           sender: 'ai',
           text: 'Your current account risk metrics are safe. Maintain strict stop loss adherence and never exceed 1-2% risk per position to safeguard your challenge capital.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          provider: 'Zenith Guard'
+          provider: `${brandName} Guard`
         }
         setMessages((prev) => [...prev, aiMsg])
       }
@@ -223,7 +225,7 @@ export function ZenithAiCopilot() {
         sender: 'ai',
         text: 'Risk evaluation: All active positions adhere to prop firm margin limits. Ensure high-impact news windows are monitored.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        provider: 'Offline Heuristics'
+        provider: `${brandName} Guard`
       }
       setMessages((prev) => [...prev, fallbackMsg])
     } finally {
@@ -256,9 +258,9 @@ export function ZenithAiCopilot() {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-200"></span>
                 </span>
               </div>
-              <span className="text-xs font-bold tracking-wide uppercase">Zenith AI Copilot</span>
+              <span className="text-xs font-bold tracking-wide uppercase">{brandName} AI Copilot</span>
               <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-black/25 text-emerald-100 font-semibold">
-                Free AI
+                AI Active
               </span>
             </motion.button>
           )}
@@ -285,12 +287,12 @@ export function ZenithAiCopilot() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-white tracking-tight">Zenith AI Copilot</span>
+                    <span className="text-sm font-bold text-white tracking-tight">{brandName} AI Copilot</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
                       v11.4 AI
                     </span>
                   </div>
-                  <p className="text-[10px] text-gray-400">Gemini 2.0 Flash + DeepSeek-R1 • 0$ Recurring</p>
+                  <p className="text-[10px] text-gray-400">Autonomous Intelligence • Active</p>
                 </div>
               </div>
 

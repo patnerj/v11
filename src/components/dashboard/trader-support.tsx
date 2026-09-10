@@ -9,8 +9,10 @@ import { api } from "@/lib/api";
 import { Ticket, TicketMessage } from "@/types/api";
 import { LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
+import { useBranding } from "@/store/branding";
 
 export function TraderSupport() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm';
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -199,10 +201,10 @@ export function TraderSupport() {
                         <span>You</span>
                       ) : isAi ? (
                         <span className="flex items-center gap-1 font-bold text-emerald-400">
-                          ✨ Autonomous AI Support Desk
+                          ✨ {brandName} AI Copilot
                         </span>
                       ) : (
-                        <span>Senior Support Agent</span>
+                        <span>{brandName} Support Agent</span>
                       )}
                       <span>•</span>
                       <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>

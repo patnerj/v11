@@ -170,7 +170,7 @@ export function AiSentinelPanel() {
         <div className="p-4 rounded-xl bg-[#0F172A] border border-cyan-500/30 text-cyan-200 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-400">
             <Zap className="w-4 h-4" />
-            Autonomous Risk Recommendations (Gemini 2.0 / DeepSeek-R1)
+            Autonomous Risk Recommendations (AI Risk Sentinel)
           </div>
           <ul className="space-y-1 text-xs text-gray-300">
             {report.ai_recommendations.map((rec, i) => (

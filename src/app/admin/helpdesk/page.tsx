@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Input, Textarea, Label } from '@/components/ui/input'
 import { DataTable } from '@/components/ui/DataTable'
 import { toast } from 'sonner'
+import { useBranding } from '@/store/branding'
 
 // Canned Response Templates
 const CANNED_RESPONSES = [
@@ -42,6 +43,7 @@ const CANNED_RESPONSES = [
 
 export default function AdminHelpdeskPage() {
   const queryClient = useQueryClient()
+  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Filters State
@@ -64,14 +66,16 @@ export default function AdminHelpdeskPage() {
     setIsAutoDrafting(true)
     try {
       const res = await api.admin.ai.draftReply(selectedTicketId)
-      if (res.ok && res.data?.draft) {
-        setReplyMessage(res.data.draft)
+      const draftText = (res as any)?.data?.draft || (res as any)?.draft
+      if (res.ok && draftText) {
+        setReplyMessage(draftText)
         toast.success('AI resolution draft generated successfully!')
       } else {
-        toast.error('Could not generate AI draft.')
+        const errMsg = (res as any)?.error || (res as any)?.data?.error || 'Could not generate AI draft.'
+        toast.error(errMsg)
       }
-    } catch {
-      toast.error('AI draft service unavailable.')
+    } catch (err: any) {
+      toast.error(err?.message || 'AI draft service unavailable.')
     } finally {
       setIsAutoDrafting(false)
     }
@@ -264,7 +268,7 @@ export default function AdminHelpdeskPage() {
               </span>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">
-              Instant rule answers, breach triage & MT5 support powered by Gemini 2.0 & DeepSeek-R1. Zero monthly API cost.
+              Instant rule answers, breach triage & MT5 support powered by Autonomous AI Copilot. 24/7 automated assistance.
             </p>
           </div>
         </div>
@@ -575,7 +579,7 @@ export default function AdminHelpdeskPage() {
                       >
                         <div className="flex items-center gap-2 mb-1 text-[11px] font-mono text-gray-400">
                           <span className={isAdmin ? 'text-emerald-400 font-bold' : 'text-gray-300'}>
-                            {isAdmin ? 'Prop Firm Support Agent' : (msg.sender_name || activeTicket.display_name || 'Trader')}
+                            {isAdmin ? (msg.sender_id === 1 || msg.message?.includes('AI') ? `${brandName} AI Copilot` : `${brandName} Support Agent`) : (msg.sender_name || activeTicket.display_name || 'Trader')}
                           </span>
                           <span>•</span>
                           <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
