@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/cn'
 import { 
   Bot, Sparkles, X, Send, ShieldAlert, ShieldCheck, 
   Calculator, AlertTriangle, Newspaper, ChevronDown, ChevronUp,
@@ -29,6 +31,8 @@ interface ChatMessage {
 
 export function ZenithAiCopilot() {
   const { user } = useAuth()
+  const pathname = usePathname()
+  const isTrading = Boolean(pathname?.startsWith('/dashboard/trading'))
   const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
   const account = usePrices((s) => s.account)
   const activeSymbol = usePrices((s: any) => s.activeSymbol) || 'EURUSD'
@@ -36,6 +40,13 @@ export function ZenithAiCopilot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [activeTab, setActiveTab] = useState<'chat' | 'calculator' | 'headroom' | 'news' | 'journal'>('chat')
+
+  // Global event listener to open Copilot from topbar or buttons
+  useEffect(() => {
+    const handleOpen = () => { setIsOpen(true); setIsMinimized(false); }
+    window.addEventListener('fxsim:open-copilot', handleOpen)
+    return () => window.removeEventListener('fxsim:open-copilot', handleOpen)
+  }, [])
 
   // Journal & Autopsy State
   const [journalHistory, setJournalHistory] = useState<AiTradeAutopsy[]>([])
@@ -256,7 +267,16 @@ export function ZenithAiCopilot() {
   return (
     <>
       {/* Floating Copilot Trigger Orb */}
-      <div className="fixed bottom-6 right-6 z-50 select-none">
+      <motion.div 
+        drag
+        dragMomentum={false}
+        className={cn(
+          "fixed z-50 select-none",
+          isTrading 
+            ? "bottom-2.5 left-4 lg:left-20" 
+            : "bottom-6 right-6"
+        )}
+      >
         <AnimatePresence>
           {!isOpen && (
             <motion.button
@@ -266,23 +286,31 @@ export function ZenithAiCopilot() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => { setIsOpen(true); setIsMinimized(false); }}
-              className="relative group flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-xl shadow-emerald-500/25 border border-emerald-400/30 backdrop-blur-md transition-all duration-200"
+              className={cn(
+                "relative group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-xl shadow-emerald-500/25 border border-emerald-400/30 backdrop-blur-md transition-all duration-200 cursor-grab active:cursor-grabbing",
+                isTrading ? "px-3.5 py-2" : "px-4 py-3"
+              )}
+              title={isTrading ? `${brandName} AI Copilot (Drag to reposition)` : undefined}
             >
               <div className="relative">
-                <Bot className="w-5 h-5 text-white" />
+                <Bot className={isTrading ? "w-4 h-4 text-white" : "w-5 h-5 text-white"} />
                 <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-200"></span>
                 </span>
               </div>
-              <span className="text-xs font-bold tracking-wide uppercase">{brandName} AI Copilot</span>
-              <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-black/25 text-emerald-100 font-semibold">
-                AI Active
+              <span className="text-xs font-bold tracking-wide uppercase">
+                {isTrading ? `${brandName} AI` : `${brandName} AI Copilot`}
               </span>
+              {!isTrading && (
+                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-black/25 text-emerald-100 font-semibold">
+                  AI Active
+                </span>
+              )}
             </motion.button>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Slide-out Interactive Copilot Modal / Drawer */}
       <AnimatePresence>
@@ -292,9 +320,11 @@ export function ZenithAiCopilot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`fixed bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[460px] bg-[#0E1322] border border-[#1F2937] rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden text-gray-100 backdrop-blur-xl ${
-              isMinimized ? 'h-14' : 'h-[620px] max-h-[85vh]'
-            }`}
+            className={cn(
+              "fixed z-50 w-[calc(100vw-2rem)] sm:w-[460px] bg-[#0E1322] border border-[#1F2937] rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden text-gray-100 backdrop-blur-xl",
+              isMinimized ? "h-14" : "h-[620px] max-h-[85vh]",
+              isTrading ? "bottom-4 right-4 lg:right-[calc(24%+1rem)]" : "bottom-6 right-4 sm:right-6"
+            )}
           >
             {/* Header */}
             <div className="px-4 py-3.5 bg-[#141A2E] border-b border-[#1F2937] flex items-center justify-between">

@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useDragControls } from 'framer-motion'
 import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
@@ -73,6 +73,8 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetRef    = useRef<unknown>(null)
   const wrapRef      = useRef<HTMLDivElement>(null)
+  const chartHostRef = useRef<HTMLDivElement>(null)
+  const dragControls = useDragControls()
   const [ready, setReady]   = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [fullscreen, setFs] = useState(false)
@@ -434,7 +436,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
       </div>
 
       {/* Chart host */}
-      <div className="relative flex-1 min-h-0" style={{ touchAction: 'pan-y' }}>
+      <div ref={chartHostRef} className="relative flex-1 min-h-0" style={{ touchAction: 'pan-y' }}>
         {!ready && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface z-[1]">
             <motion.div
@@ -456,67 +458,75 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         )}
         <div ref={containerRef} className="absolute inset-0" />
 
-        {/* 1-Click Trade Box (Draggable, default bottom-center) */}
+        {/* 1-Click Trade Box (Draggable, default upper-center) */}
         {!compact && ready && showOneClick && (
-          <motion.div 
-            drag
-            dragConstraints={wrapRef}
-            dragElastic={0.05}
-            dragMomentum={false}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[25] flex items-center gap-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/80 p-1.5 shadow-2xl cursor-grab active:cursor-grabbing select-none"
-          >
-            <div className="flex items-center px-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing" title="Drag to reposition panel">
-              <GripVertical className="h-4 w-4" />
-            </div>
-
-            <div className="flex flex-col gap-0.5 items-center justify-center">
-              <button 
-                type="button"
-                onClick={() => handleOneClick('sell')}
-                disabled={busy !== null || !bid}
-                className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-xs font-semibold tabular flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+          <div className="absolute top-3 inset-x-0 flex justify-center pointer-events-none z-[25]">
+            <motion.div 
+              drag
+              dragListener={false}
+              dragControls={dragControls}
+              dragConstraints={chartHostRef}
+              dragElastic={0}
+              dragMomentum={false}
+              className="pointer-events-auto flex items-center gap-1.5 rounded-xl bg-slate-900/95 backdrop-blur-md border border-slate-700/80 p-1.5 shadow-2xl select-none"
+            >
+              <div 
+                onPointerDown={(e) => dragControls.start(e)}
+                className="flex items-center px-1.5 py-1 text-slate-400 hover:text-white cursor-grab active:cursor-grabbing touch-none select-none" 
+                title="Drag to reposition panel"
               >
-                {busy === 'sell' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (bid ? fmtPrice(bid, digits) : 'SELL')}
-              </button>
-              <div className="text-[9px] font-bold text-danger tracking-wider uppercase">Sell</div>
-            </div>
-            
-            <div className="flex flex-col justify-center px-1">
-              <input 
-                type="text"
-                value={oneClickLot}
-                onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
-                className="w-12 h-7 text-center bg-surface border border-border rounded-md text-xs tabular font-bold text-white focus-ring focus:border-accent"
-              />
-              <span className="text-[8px] text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
-            </div>
+                <GripVertical className="h-4 w-4" />
+              </div>
 
-            {isSlRequired && (
-              <div className="flex flex-col justify-center px-1 border-l border-border-subtle pl-1.5">
+              <div className="flex flex-col gap-0.5 items-center justify-center">
+                <button 
+                  type="button"
+                  onClick={() => handleOneClick('sell')}
+                  disabled={busy !== null || !bid}
+                  className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-xs font-semibold tabular flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+                >
+                  {busy === 'sell' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (bid ? fmtPrice(bid, digits) : 'SELL')}
+                </button>
+                <div className="text-[9px] font-bold text-danger tracking-wider uppercase">Sell</div>
+              </div>
+              
+              <div className="flex flex-col justify-center px-1">
                 <input 
                   type="text"
-                  value={oneClickSlPips}
-                  onChange={(e) => setOneClickSlPips(e.target.value.replace(/[^\d.]/g, ''))}
-                  className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-xs tabular font-bold text-rose-300 focus-ring focus:border-rose-400"
-                  placeholder="30"
-                  title="Stop loss distance in pips (Required by plan)"
+                  value={oneClickLot}
+                  onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
+                  className="w-12 h-7 text-center bg-surface border border-border rounded-md text-xs tabular font-bold text-white focus-ring focus:border-accent"
                 />
-                <span className="text-[8px] text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-bold">SL (Pips)</span>
+                <span className="text-[8px] text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
               </div>
-            )}
 
-            <div className="flex flex-col gap-0.5 items-center justify-center">
-              <button 
-                type="button"
-                onClick={() => handleOneClick('buy')}
-                disabled={busy !== null || !ask}
-                className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-xs font-semibold tabular flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
-              >
-                {busy === 'buy' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (ask ? fmtPrice(ask, digits) : 'BUY')}
-              </button>
-              <div className="text-[9px] font-bold text-success tracking-wider uppercase">Buy</div>
-            </div>
-          </motion.div>
+              {isSlRequired && (
+                <div className="flex flex-col justify-center px-1 border-l border-border-subtle pl-1.5">
+                  <input 
+                    type="text"
+                    value={oneClickSlPips}
+                    onChange={(e) => setOneClickSlPips(e.target.value.replace(/[^\d.]/g, ''))}
+                    className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-xs tabular font-bold text-rose-300 focus-ring focus:border-rose-400"
+                    placeholder="30"
+                    title="Stop loss distance in pips (Required by plan)"
+                  />
+                  <span className="text-[8px] text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-bold">SL (Pips)</span>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-0.5 items-center justify-center">
+                <button 
+                  type="button"
+                  onClick={() => handleOneClick('buy')}
+                  disabled={busy !== null || !ask}
+                  className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-xs font-semibold tabular flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+                >
+                  {busy === 'buy' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (ask ? fmtPrice(ask, digits) : 'BUY')}
+                </button>
+                <div className="text-[9px] font-bold text-success tracking-wider uppercase">Buy</div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </div>
 

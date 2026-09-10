@@ -14,7 +14,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon, Shield } from 'lucide-react'
+import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon, Shield, Bot } from 'lucide-react'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 
 export interface TopbarProps {
@@ -148,6 +148,19 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
             })
           }}
         />
+
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('fxsim:open-copilot'))
+            }
+          }}
+          className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold transition-colors focus-ring"
+          title="Open AI Copilot"
+        >
+          <Bot className="h-3.5 w-3.5" />
+          <span>AI Copilot</span>
+        </button>
 
         <ThemeSwitcher />
 
