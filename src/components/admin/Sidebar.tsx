@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Gauge, Shield, Wallet, 
   Settings, Megaphone, Trophy, BarChart3, LifeBuoy, 
   Bell, ChevronLeft, ChevronRight, UserCircle, LogOut,
-  Sparkles, UserCheck, CreditCard, Zap, Swords
+  Sparkles, UserCheck, CreditCard, Zap
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { SidebarBrand } from '@/components/logo'
@@ -32,7 +32,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: '/admin/marketing',   label: 'Marketing',    icon: Megaphone },
   { href: '/admin/builder',     label: 'Page Builder', icon: Sparkles },
   { href: '/admin/tournaments', label: 'Tournaments',  icon: Trophy },
-  { href: '/arena',             label: '1v1 Arena',    icon: Swords, badge: 'PVP' },
   { href: '/admin/analytics',   label: 'Analytics',    icon: BarChart3 },
   { href: '/admin/helpdesk',    label: 'Helpdesk',     icon: LifeBuoy },
   { href: '/admin/config',      label: 'Config',       icon: Settings },

@@ -14,7 +14,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon } from 'lucide-react'
+import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon, Shield } from 'lucide-react'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 
 export interface TopbarProps {
@@ -179,6 +179,11 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
                   <Link href="/dashboard/challenges"><Trophy className="h-4 w-4" /> My challenges</Link>
                 </DropdownMenuItem>
               </>
+            )}
+            {user?.is_admin && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin"><Shield className="h-4 w-4 text-emerald-400" /> Admin Panel</Link>
+              </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild onMouseEnter={() => handleLinkHover('/dashboard/settings')}>
               <Link href="/dashboard/settings"><Settings className="h-4 w-4" /> Settings</Link>

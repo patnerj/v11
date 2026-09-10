@@ -64,7 +64,8 @@ export default function ArenaLayout({ children }: { children: React.ReactNode })
   // Close mobile sidebar on route change
   useEffect(() => { setSidebarOpen(false) }, [pathname])
 
-  const role = user?.is_admin && !impersonating ? 'admin' : 'trader'
+  // Arena is exclusively a trader module — always render the trader sidebar & topbar
+  const role: 'trader' = 'trader'
 
   return (
     <div className="min-h-screen bg-[#070A12] text-white flex flex-col">
