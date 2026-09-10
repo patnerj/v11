@@ -1361,7 +1361,7 @@ export default function ConfigurationHubPage() {
               Configuration & Engine Hub
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Engine v11.1.3
+              Engine v11.4
             </Badge>
           </div>
           <p className="text-sm text-gray-400 mt-1">

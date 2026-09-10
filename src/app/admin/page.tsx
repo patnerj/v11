@@ -675,7 +675,7 @@ export default function AdminCommandCenter() {
               Command Center
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live System v11.1.3
+              Live System v11.4
             </Badge>
             {isEmergencyPaused && (
               <Badge tone="danger" size="sm" pulsing>
