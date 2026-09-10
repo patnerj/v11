@@ -67,21 +67,29 @@ function getSessionState(): Session {
 export function setSession(next: Partial<Session>) {
   const session = getSessionState()
   Object.assign(session, next)
-  // P0 SECURITY: bearer + nonce are memory-only (globalThis.__fxsim_session).
-  // Never persist to localStorage — any XSS would steal the session outright.
-  // Session survives via HttpOnly signed cookie (fxsim_sess) set by /api/auth/session.
+  // Nonce and bearer are kept in memory and tab-scoped sessionStorage (cleared on tab close).
+  // Never persist to permanent localStorage to prevent long-term credential exposure.
   if (typeof window !== 'undefined') {
     try {
       localStorage.removeItem('fxsim:bearer')
       localStorage.removeItem('fxsim:nonce')
+      if (next.bearer) sessionStorage.setItem('fxsim:bearer', next.bearer)
+      else if (next.bearer === null) sessionStorage.removeItem('fxsim:bearer')
+      if (next.nonce) sessionStorage.setItem('fxsim:nonce', next.nonce)
+      else if (next.nonce === null) sessionStorage.removeItem('fxsim:nonce')
     } catch { /* private mode */ }
   }
 }
 
 export function hydrateSession() {
   if (isServer) return
-  // P0: intentionally no localStorage restore. Memory-only session;
-  // server HttpOnly cookie is the source of truth after reload.
+  try {
+    const bearer = sessionStorage.getItem('fxsim:bearer')
+    const nonce = sessionStorage.getItem('fxsim:nonce')
+    if (bearer || nonce) {
+      setSession({ bearer: bearer || null, nonce: nonce || null })
+    }
+  } catch { /* private mode */ }
 }
 
 export function getSession(): Readonly<Session> { return getSessionState() }
@@ -366,6 +374,16 @@ async function rawFetch<T>(
     }
     const out: ApiErr = { ok: false, status: res.status, error: message, raw: parsed }
     return out
+  }
+
+  // Automatically capture fresh CSRF nonce or auth token exposed by bridge
+  const respNonce = res.headers.get('x-wp-nonce')
+  const respToken = res.headers.get('x-fxsim-token')
+  if (respNonce || respToken) {
+    setSession({
+      ...(respNonce ? { nonce: respNonce } : {}),
+      ...(respToken ? { bearer: respToken } : {}),
+    })
   }
 
   return { ok: true, status: res.status, data: parsed as T }

@@ -67,8 +67,16 @@ export const useAuth = create<AuthState>((set, get) => ({
       hydrateSession()
       set({ loading: true })
       const res = await api.auth.me(true)
-      if (res.ok) set({ user: res.data, ready: true, loading: false, error: null, lastChecked: Date.now() })
-      else        set({ user: null, ready: true, loading: false, lastChecked: Date.now() })
+      if (res.ok) {
+        const token = (res.data as any).token || (res.data as any).nonce
+        const nonce = (res.data as any).nonce
+        if (token || nonce) {
+          setSession({ nonce: nonce || null, bearer: token || null })
+        }
+        set({ user: res.data, ready: true, loading: false, error: null, lastChecked: Date.now() })
+      } else {
+        set({ user: null, ready: true, loading: false, lastChecked: Date.now() })
+      }
     })().finally(() => { bootstrapPromise = null })
     return bootstrapPromise
   },
@@ -183,7 +191,14 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (!force && Date.now() - get().lastChecked < RECHECK_INTERVAL_MS) return
     if (force) invalidateFxsim('/auth/me')          // drop any cached /auth/me so verification + impersonation-exit reflect instantly
     const res = await api.auth.me(force)
-    if (res.ok) set({ user: res.data, lastChecked: Date.now() })
+    if (res.ok) {
+      const token = (res.data as any).token || (res.data as any).nonce
+      const nonce = (res.data as any).nonce
+      if (token || nonce) {
+        setSession({ nonce: nonce || null, bearer: token || null })
+      }
+      set({ user: res.data, lastChecked: Date.now() })
+    }
     else if (res.status === 401 || res.status === 403) {
       // Session expired — clear without calling /logout (likely will 401 too)
       setSession({ nonce: null, bearer: null })
