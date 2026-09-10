@@ -52,6 +52,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/kyc',        label: 'KYC Hub',    icon: UserCheck, queryKey: ['admin', 'kyc'] },
   { href: '/admin/marketing',  label: 'Marketing',  icon: Megaphone, queryKey: ['admin', 'marketing'] },
   { href: '/admin/tournaments',label: 'Tournaments',icon: Trophy, queryKey: ['admin', 'tournaments'] },
+  { href: '/arena',            label: '1v1 Arena',  icon: Swords, badge: 'PVP' },
   { href: '/admin/operations', label: 'Operations', icon: Gauge, queryKey: ['admin', 'operations'] },
   { href: '/admin/risk',       label: 'Risk',       icon: Shield, queryKey: ['admin', 'risk'] },
   { href: '/admin/payouts',    label: 'Payouts',    icon: Wallet, queryKey: ['admin', 'payouts'] },
