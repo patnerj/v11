@@ -75,7 +75,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  let brandName = 'AlphaCapital'
+  let brandName = 'LaunchAPropFirm'
   let brandTagline = 'The Funded Trader Platform'
 
   // P3: never fetch from a half-built URL. Old code ran

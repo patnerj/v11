@@ -7,11 +7,11 @@ export default function Page() {
   return (
     <LegalPage
       title="Terms of Service"
-      intro="By using AlphaCapital you agree to the following terms. These are placeholder terms — the operator should replace this content with terms drafted by qualified legal counsel before going live."
+      intro="By using LaunchAPropFirm you agree to the following terms. These are placeholder terms — the operator should replace this content with terms drafted by qualified legal counsel before going live."
       updated="May 2026"
       sections={[
         { title: '1. The service',
-          body: <p>AlphaCapital provides a simulated trading evaluation programme. Funded accounts are demonstration accounts that mirror real-market prices; payouts represent the operator&apos;s share of allocated capital and are not the result of executions on a live broker account.</p> },
+          body: <p>LaunchAPropFirm provides a simulated trading evaluation programme. Funded accounts are demonstration accounts that mirror real-market prices; payouts represent the operator&apos;s share of allocated capital and are not the result of executions on a live broker account.</p> },
         { title: '2. Eligibility',
           body: <p>You must be at least 18 years old and reside in a jurisdiction where simulated trading evaluations are permitted by local law. You may not use the service if you are subject to sanctions or live in a sanctioned territory.</p> },
         { title: '3. Account and security',

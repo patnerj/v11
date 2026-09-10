@@ -3,6 +3,7 @@
 import { fmtUSD, fmtDate, toNum } from '@/lib/format'
 import type { Certificate as Cert, PayoutItem } from '@/types/api'
 import { Award, Sparkles } from 'lucide-react'
+import { useBranding } from '@/store/branding'
 
 /**
  * The certificate visual itself — no Card wrapper, no buttons, no chrome.
@@ -10,6 +11,7 @@ import { Award, Sparkles } from 'lucide-react'
  * /certificate/[code] page (where it is the only thing on screen / printed).
  */
 export function CertificateDocument({ cert }: { cert: Cert }) {
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
   const c = cert
   const funded = (c.status ?? '') === 'funded'
   const kind = funded ? 'Funded Trader' : 'Evaluation Pass'
@@ -26,7 +28,7 @@ export function CertificateDocument({ cert }: { cert: Cert }) {
             <div className="h-14 w-14 rounded-full bg-gradient-to-br from-warn via-accent to-success flex items-center justify-center text-white shadow-glow ring-2 ring-white/10">
               <Award className="h-7 w-7" />
             </div>
-            <div className="mt-3 text-2xs uppercase tracking-[0.25em] text-text-muted">{c.brand}</div>
+            <div className="mt-3 text-2xs uppercase tracking-[0.25em] text-text-muted">{c.brand || storeBrand}</div>
             <h2 className="mt-2 font-serif text-2xl sm:text-3xl tracking-tight">Certificate of Achievement</h2>
             <div className="mt-1 inline-flex items-center gap-1.5 text-2xs uppercase tracking-wider text-accent">
               <Sparkles className="h-3 w-3" /> {kind}
@@ -79,7 +81,8 @@ export function CertificateDocument({ cert }: { cert: Cert }) {
 }
 
 export function PayoutCertificateDocument({ payout, planName }: { payout: PayoutItem, planName?: string }) {
-  const brand = 'AlphaCapital'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brand = storeBrand
   const trader = payout.name || payout.username || 'Funded Trader'
   const splitPct = payout.profit_split_pct || 80
   const issued = payout.processed_at || payout.requested_at || new Date().toISOString()

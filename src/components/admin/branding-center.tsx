@@ -19,7 +19,7 @@ const ASSETS: { field: AssetField; key: string; title: string; size: string; hel
 ]
 
 const DEFAULTS: Record<string, string> = {
-  brand_name: 'AlphaCapital', brand_tagline: 'The Funded Trader Platform',
+  brand_name: 'LaunchAPropFirm', brand_tagline: 'The Funded Trader Platform',
   logo_url: '', login_logo_url: '', sidebar_icon_url: '', favicon_url: '',
 }
 
@@ -66,7 +66,7 @@ export function BrandingCenter() {
     else toast.error(res.ok ? 'Reset failed' : res.error)
   }
 
-  const brand = vals.brand_name || 'AlphaCapital'
+  const brand = vals.brand_name || 'LaunchAPropFirm'
 
   if (!loaded) return <Card><CardContent className="p-6 text-sm text-text-muted">Loading branding…</CardContent></Card>
 

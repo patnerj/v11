@@ -35,7 +35,7 @@ export async function downloadCertificatePdf(cert: Cert): Promise<void> {
   const kind = (funded ? 'Funded Trader' : 'Evaluation Pass').toUpperCase()
   const year = (() => { const d = new Date(cert.issued_date); return isNaN(d.getTime()) ? new Date().getFullYear() : d.getFullYear() })()
   const verificationId = `PFL-${year}-${String(cert.challenge_id).padStart(6, '0')}`
-  const brand = esc(cert.brand || 'AlphaCapital')
+  const brand = esc(cert.brand || 'LaunchAPropFirm')
   const trader = esc(cert.trader_name || 'Trader')
   const plan = esc(cert.plan_name || '')
   const issued = esc(cert.issued_date || '')

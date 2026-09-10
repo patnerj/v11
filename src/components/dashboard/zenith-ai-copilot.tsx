@@ -71,6 +71,23 @@ export function ZenithAiCopilot() {
   const [isSending, setIsSending] = useState(false)
   const chatBottomRef = useRef<HTMLDivElement>(null)
 
+  // Dynamically update welcome message when brandName is loaded
+  useEffect(() => {
+    if (brandName) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === 'welcome'
+            ? {
+                ...m,
+                text: `Hello! I am your ${brandName} AI Copilot. I continuously monitor your drawdown headroom, upcoming red-folder news, and calculate safe lot sizes. How can I assist your trading today?`,
+                provider: `${brandName} AI Engine`
+              }
+            : m
+        )
+      )
+    }
+  }, [brandName])
+
   // Initialize balance from store
   useEffect(() => {
     if (account && typeof account.balance === 'number') {

@@ -78,7 +78,7 @@ export function MarketingFooter() {
 
         <div className="mt-12 pt-6 border-t border-border-subtle flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <p className="text-xs text-text-faint">
-            {footerText || `© ${new Date().getFullYear()} ${brand || 'AlphaCapital'}. Trading involves risk. Past performance is not indicative of future results.`}
+            {footerText || `© ${new Date().getFullYear()} ${brand || 'LaunchAPropFirm'}. Trading involves risk. Past performance is not indicative of future results.`}
           </p>
           <p className="text-xs text-text-faint">
             Built for serious traders ·{' '}

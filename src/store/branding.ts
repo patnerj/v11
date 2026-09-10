@@ -20,10 +20,10 @@ export interface Branding {
 }
 
 const DEFAULTS: Branding = {
-  brand_name: 'Alpha Capital',
+  brand_name: 'LaunchAPropFirm',
   brand_tagline: 'The Funded Trader Platform',
   logo_url: '', sidebar_icon_url: '', login_logo_url: '', favicon_url: '',
-  support_email: '', primary_color: '', secondary_color: '', footer_text: '', tv_symbol_map: '',
+  support_email: 'support@launchapropfirm.com', primary_color: '#10B981', secondary_color: '#00e5a0', footer_text: '© 2026 LaunchAPropFirm. Simulation platform only.', tv_symbol_map: '',
 }
 
 interface BrandingState {
