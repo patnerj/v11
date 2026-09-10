@@ -24,6 +24,7 @@ import { PendingOrdersTable } from '@/components/dashboard/trading/pending-order
 import { AccountStrip }       from '@/components/dashboard/trading/account-strip'
 import { AccountSwitcher, buildSwitchEntries, type SwitchEntry } from '@/components/dashboard/trading/account-switcher'
 import { MobileBottomSheet }  from '@/components/dashboard/trading/mobile-bottom-sheet'
+import { ConfirmDialog }     from '@/components/ui/ConfirmDialog'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { cn }                 from '@/lib/cn'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle, type PanelImperativeHandle } from 'react-resizable-panels'
@@ -344,14 +345,12 @@ function DesktopLayout({
 
   // Close all positions handler
   const [isClosingAll, setIsClosingAll] = useState(false)
-  const handleCloseAll = async () => {
+  const [isCloseAllConfirmOpen, setIsCloseAllConfirmOpen] = useState(false)
+
+  const handleExecuteCloseAll = async () => {
     if (!positions || positions.length === 0 || isClosingAll) return
-    // P3: confirm first (bulk money action), then close SEQUENTIALLY so each
-    // result is attributable. Old Promise.all fan-out left partial fills with
-    // no per-position accounting and no confirm at all.
     const closable = positions.filter((p) => p.id > 0)
     if (closable.length === 0) return
-    if (!window.confirm(`Close all ${closable.length} open position(s)? This cannot be undone.`)) return
     setIsClosingAll(true)
     const toastId = toast.loading(`Closing ${closable.length} position(s)...`)
     try {
@@ -386,6 +385,7 @@ function DesktopLayout({
       toast.error(err?.message || 'Failed to close some positions.', { id: toastId })
     } finally {
       setIsClosingAll(false)
+      setIsCloseAllConfirmOpen(false)
     }
   }
 
@@ -504,7 +504,7 @@ function DesktopLayout({
                   {/* 1-Click Close All Positions Button */}
                   {tab === 'positions' && positions && positions.length > 0 && (
                     <button
-                      onClick={handleCloseAll}
+                      onClick={() => setIsCloseAllConfirmOpen(true)}
                       disabled={isClosingAll}
                       className="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
                       title="Close all open positions at current market price"
@@ -622,6 +622,18 @@ function DesktopLayout({
           )}
         </Panel>
       </PanelGroup>
+
+      {/* Close All Positions Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isCloseAllConfirmOpen}
+        onCancel={() => setIsCloseAllConfirmOpen(false)}
+        onConfirm={handleExecuteCloseAll}
+        title="Emergency Close All Positions"
+        description={`Are you sure you want to market-close all ${positions?.length || 0} active position(s)? This action executes immediately at current live bid/ask prices and cannot be undone.`}
+        confirmText={`Close All (${positions?.length || 0}) Positions`}
+        isDestructive={true}
+        loading={isClosingAll}
+      />
     </div>
   )
 }

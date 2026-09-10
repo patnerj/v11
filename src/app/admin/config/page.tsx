@@ -497,11 +497,14 @@ export default function ConfigurationHubPage() {
   const [selectedPlanIds, setSelectedPlanIds] = useState<number[]>([])
   const [isPurgingPlans, setIsPurgingPlans] = useState(false)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+  const [isPurgeResetConfirmOpen, setIsPurgeResetConfirmOpen] = useState(false)
+  const [bulkDeleteTarget, setBulkDeleteTarget] = useState<{ isOpen: boolean; all: boolean; count: number }>({
+    isOpen: false,
+    all: false,
+    count: 0,
+  })
 
-  const handlePurgeAndResetPlans = async () => {
-    if (!window.confirm('⚠️ FACTORY RESET PLANS:\n\nAre you sure you want to purge all custom plans and restore the 4 standard industry blueprint plans?')) {
-      return
-    }
+  const executePurgeAndResetPlans = async () => {
     setIsPurgingPlans(true)
     try {
       const res = await api.admin.purgeAndResetPlans()
@@ -517,13 +520,14 @@ export default function ConfigurationHubPage() {
       toast.error('Reset Error: ' + err.message)
     } finally {
       setIsPurgingPlans(false)
+      setIsPurgeResetConfirmOpen(false)
     }
   }
 
-  const handleBulkDeletePlans = async (all = false) => {
-    const count = all ? plans.length : selectedPlanIds.length
-    if (count === 0) return
-    if (!window.confirm(`⚠️ BULK DELETE PLANS:\n\nAre you sure you want to permanently delete ${all ? 'ALL (' + plans.length + ')' : count} selected challenge plan(s)?`)) {
+  const executeBulkDeletePlans = async () => {
+    const { all, count } = bulkDeleteTarget
+    if (count === 0) {
+      setBulkDeleteTarget({ isOpen: false, all: false, count: 0 })
       return
     }
     setIsBulkDeleting(true)
@@ -541,6 +545,7 @@ export default function ConfigurationHubPage() {
       toast.error('Bulk Delete Error: ' + err.message)
     } finally {
       setIsBulkDeleting(false)
+      setBulkDeleteTarget({ isOpen: false, all: false, count: 0 })
     }
   }
 
@@ -1585,7 +1590,7 @@ export default function ConfigurationHubPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handlePurgeAndResetPlans}
+                onClick={() => setIsPurgeResetConfirmOpen(true)}
                 disabled={isPurgingPlans}
                 className="border-amber-500/40 text-amber-300 hover:text-white hover:bg-amber-500/20 gap-1.5 text-xs h-9"
               >
@@ -1596,7 +1601,7 @@ export default function ConfigurationHubPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleBulkDeletePlans(true)}
+                onClick={() => setBulkDeleteTarget({ isOpen: true, all: true, count: plans.length })}
                 disabled={isBulkDeleting || plans.length === 0}
                 className="border-red-500/40 text-red-300 hover:text-white hover:bg-red-500/20 gap-1.5 text-xs h-9"
               >
@@ -1654,7 +1659,7 @@ export default function ConfigurationHubPage() {
                 <Button
                   variant="danger"
                   size="sm"
-                  onClick={() => handleBulkDeletePlans(false)}
+                  onClick={() => setBulkDeleteTarget({ isOpen: true, all: false, count: selectedPlanIds.length })}
                   disabled={isBulkDeleting}
                   className="h-8 text-xs gap-1.5"
                 >
@@ -4790,6 +4795,30 @@ export default function ConfigurationHubPage() {
         confirmText="Delete / Archive"
         isDestructive={true}
         loading={deletePlanMutation.isPending}
+      />
+
+      {/* Factory Reset Plans Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isPurgeResetConfirmOpen}
+        onCancel={() => setIsPurgeResetConfirmOpen(false)}
+        onConfirm={executePurgeAndResetPlans}
+        title="Factory Reset Plans to Blueprints"
+        description="Are you sure you want to purge custom challenge plans and restore the 4 standard industry blueprint plans (10k, 25k, 50k, 100k)? Existing accounts will retain their current metrics."
+        confirmText="Factory Reset Plans"
+        isDestructive={true}
+        loading={isPurgingPlans}
+      />
+
+      {/* Bulk Delete Plans Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={bulkDeleteTarget.isOpen}
+        onCancel={() => setBulkDeleteTarget((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={executeBulkDeletePlans}
+        title={bulkDeleteTarget.all ? "Delete All Challenge Plans" : "Delete Selected Plans"}
+        description={`Are you sure you want to permanently delete ${bulkDeleteTarget.all ? `ALL (${plans.length})` : bulkDeleteTarget.count} challenge plan(s)? This action cannot be undone.`}
+        confirmText={bulkDeleteTarget.all ? "Delete All Plans" : `Delete ${bulkDeleteTarget.count} Plan(s)`}
+        isDestructive={true}
+        loading={isBulkDeleting}
       />
 
       {/* Live SMTP Diagnostic Handshake Terminal Modal */}

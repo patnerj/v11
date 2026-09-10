@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Input, Label } from '@/components/ui/input'
 import { toast } from 'sonner'
 
@@ -37,6 +38,10 @@ export default function TeamHubPage() {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [newRole, setNewRole] = useState('')
   const [isUpdatingRole, setIsUpdatingRole] = useState(false)
+
+  // Deactivate Member Confirmation Dialog State
+  const [memberToDeactivate, setMemberToDeactivate] = useState<TeamMember | null>(null)
+  const [isDeactivating, setIsDeactivating] = useState(false)
 
   // Query Team Members
   const { data: team = [], isLoading, refetch } = useQuery({
@@ -69,36 +74,40 @@ export default function TeamHubPage() {
     toast.success('Generated secure 12-character temporary password.')
   }
 
-  const handleInviteSubmit = async () => {
-    if (!inviteForm.name.trim() || !inviteForm.email.trim()) {
-      toast.error('Please enter name and valid email.')
+  // Create Staff Member
+  const handleInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteForm.name || !inviteForm.email || !inviteForm.password) {
+      toast.error('All fields are required.')
       return
     }
+
     setIsInviting(true)
     try {
       const res = await api.admin.teamInvite(inviteForm)
       if (res.ok) {
-        toast.success(res.data.message || `Team member ${inviteForm.name} provisioned!`)
+        toast.success(`Staff account for ${inviteForm.name} created!`)
         setIsInviteModalOpen(false)
         setInviteForm({ name: '', email: '', role: 'support_agent', password: '' })
         queryClient.invalidateQueries({ queryKey: ['admin-team-list'] })
       } else {
-        toast.error(res.error || 'Failed to invite team member.')
+        toast.error(res.error || 'Failed to create staff member.')
       }
     } catch (err: any) {
-      toast.error('Invite Error: ' + err.message)
+      toast.error('Network error: ' + err.message)
     } finally {
       setIsInviting(false)
     }
   }
 
+  // Update Role
   const handleUpdateRole = async () => {
     if (!editingMember || !newRole) return
     setIsUpdatingRole(true)
     try {
       const res = await api.admin.teamUpdateRole(editingMember.id, newRole)
       if (res.ok) {
-        toast.success(`Role for ${editingMember.name} updated to ${newRole.toUpperCase()}!`)
+        toast.success(`Updated role for ${editingMember.name} to ${newRole.replace('_', ' ').toUpperCase()}`)
         setEditingMember(null)
         queryClient.invalidateQueries({ queryKey: ['admin-team-list'] })
       } else {
@@ -111,18 +120,22 @@ export default function TeamHubPage() {
     }
   }
 
-  const handleDeleteMember = async (member: TeamMember) => {
-    if (!confirm(`Are you sure you want to deactivate access for ${member.name}?`)) return
+  const handleConfirmDeactivate = async () => {
+    if (!memberToDeactivate) return
+    setIsDeactivating(true)
     try {
-      const res = await api.admin.teamDelete(member.id)
+      const res = await api.admin.teamDelete(memberToDeactivate.id)
       if (res.ok) {
-        toast.success(`Staff access for ${member.name} deactivated.`)
+        toast.success(`Staff access for ${memberToDeactivate.name} deactivated.`)
         queryClient.invalidateQueries({ queryKey: ['admin-team-list'] })
+        setMemberToDeactivate(null)
       } else {
         toast.error(res.error || 'Failed to deactivate staff member.')
       }
     } catch (err: any) {
       toast.error('Deactivate Error: ' + err.message)
+    } finally {
+      setIsDeactivating(false)
     }
   }
 
@@ -306,7 +319,7 @@ export default function TeamHubPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeleteMember(t)}
+                      onClick={() => setMemberToDeactivate(t)}
                       className="h-8 text-xs gap-1 border-[#1F2937] hover:bg-red-500/20 text-red-400"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -503,6 +516,18 @@ export default function TeamHubPage() {
           </div>
         </div>
       </Modal>
+
+      {/* ── Deactivate Staff Access Confirmation Dialog ──────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!memberToDeactivate}
+        onCancel={() => setMemberToDeactivate(null)}
+        onConfirm={handleConfirmDeactivate}
+        title={`Deactivate Staff Access: ${memberToDeactivate?.name}`}
+        description={`Are you sure you want to deactivate administrative access for ${memberToDeactivate?.name} (${memberToDeactivate?.email})? They will no longer be able to log into the admin backoffice.`}
+        confirmText="Deactivate Access"
+        isDestructive={true}
+        loading={isDeactivating}
+      />
 
     </div>
   )

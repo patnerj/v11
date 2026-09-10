@@ -8,6 +8,7 @@ import { useBranding } from '@/store/branding'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { UploadCloud, RotateCcw, ImageIcon, Info } from 'lucide-react'
 
 type AssetField = 'logo' | 'login_logo' | 'sidebar_icon' | 'favicon'
@@ -29,6 +30,8 @@ export function BrandingCenter() {
   const [vals, setVals] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
   const [uploading, setUploading] = useState<AssetField | null>(null)
 
   useEffect(() => {
@@ -58,12 +61,18 @@ export function BrandingCenter() {
     else toast.error(res.ok ? 'Save failed' : res.error)
   }
 
-  const reset = async () => {
-    setVals((p) => ({ ...p, ...DEFAULTS }))
-    setLive(DEFAULTS as Partial<import('@/store/branding').Branding>)
-    const res = await api.admin.whitelabelSave(DEFAULTS)
-    if (res.ok) { invalidateFxsim('/admin/whitelabel'); await reloadBranding(); toast.success('Branding reset to default') }
-    else toast.error(res.ok ? 'Reset failed' : res.error)
+  const handleConfirmReset = async () => {
+    setResetting(true)
+    try {
+      setVals((p) => ({ ...p, ...DEFAULTS }))
+      setLive(DEFAULTS as Partial<import('@/store/branding').Branding>)
+      const res = await api.admin.whitelabelSave(DEFAULTS)
+      if (res.ok) { invalidateFxsim('/admin/whitelabel'); await reloadBranding(); toast.success('Branding reset to default') }
+      else toast.error(res.ok ? 'Reset failed' : res.error)
+    } finally {
+      setResetting(false)
+      setIsResetConfirmOpen(false)
+    }
   }
 
   const brand = vals.brand_name || 'LaunchAPropFirm'
@@ -74,7 +83,9 @@ export function BrandingCenter() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2"><ImageIcon className="h-4 w-4 text-accent" /> Branding Center</CardTitle>
-        <Button variant="outline" size="sm" onClick={reset}><RotateCcw className="h-4 w-4" /> Reset to default</Button>
+        <Button variant="outline" size="sm" onClick={() => setIsResetConfirmOpen(true)} disabled={resetting}>
+          <RotateCcw className="h-4 w-4" /> Reset to default
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Identity */}
@@ -157,6 +168,17 @@ export function BrandingCenter() {
           <Button onClick={save} loading={saving}>Save branding</Button>
         </div>
       </CardContent>
+
+      <ConfirmDialog
+        isOpen={isResetConfirmOpen}
+        onCancel={() => setIsResetConfirmOpen(false)}
+        onConfirm={handleConfirmReset}
+        title="Reset Branding to Defaults"
+        description="Are you sure you want to restore default branding? This will reset the platform name, slogan, logos, favicon, and email styling to system defaults."
+        confirmText="Reset Branding"
+        isDestructive={true}
+        loading={resetting}
+      />
     </Card>
   )
 }
