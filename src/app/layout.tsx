@@ -81,9 +81,8 @@ export async function generateMetadata(): Promise<Metadata> {
   // P3: never fetch from a half-built URL. Old code ran
   // fetch(`${baseUrl}${apiPath}/branding`) with both envs empty → fetch("/branding")
   // which always failed AND could hit an unrelated route in production.
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
-  const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || ''
-  if (!baseUrl || !apiPath) return {
+  const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  if (!apiPath) return {
     title:       { default: brandName, template: '%s' },
     description: `${brandTagline}. Pass the evaluation, trade our capital, keep up to 90% of your profits.`,
   }
@@ -159,7 +158,7 @@ async function getThemeCSS() {
   // http://127.0.0.1:3000… and http://propfirm.local… — developer-laptop
   // hostnames that can never resolve on Vercel/production. Unconfigured env
   // now returns default CSS instead of phoning localhost.
-  const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || ''
+  const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
   if (!apiPath.startsWith('http')) return ''
 
   const urlsToTry: string[] = [`${apiPath}/theme`]

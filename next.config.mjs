@@ -12,10 +12,10 @@ const brandingHosts = (process.env.BRANDING_IMAGE_HOSTS || '')
 // Note for Production Release: Buyers can tighten the CSP policy by removing
 // open 'https:' / 'wss:' fallbacks and specifying exact domain-specific origins
 // (see Staging & Deployment Checklist).
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || '';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1';
 const wsUrl = process.env.NEXT_PUBLIC_FXSIM_WS_URL || '';
 
-let apiHost = '';
+let apiHost = 'https://api.launchapropfirm.com';
 if (apiUrl) {
   try {
     apiHost = new URL(apiUrl).origin;
@@ -33,6 +33,7 @@ if (wsUrl) {
 const connectSrc = [
   "'self'",
   apiHost,
+  'https://api.launchapropfirm.com',
   wsHost,
 ].filter(Boolean).join(' ');
 
@@ -93,7 +94,7 @@ const nextConfig = {
     // LocalWP hostname baked in here previously caused every production API
     // call to fail with DNS_HOSTNAME_NOT_FOUND, because Vercel can't resolve
     // a hostname that only exists on one developer's laptop.
-    const localBackend = process.env.LOCAL_WP_BACKEND_URL || 'http://propfirm.local'
+    const localBackend = process.env.LOCAL_WP_BACKEND_URL || 'https://api.launchapropfirm.com'
     return [
       {
         source: '/api/wp/:path*',

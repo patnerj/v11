@@ -25,23 +25,17 @@ import type { ApiResult, ApiErr } from '@/types/api'
  * 3. '/api/wp' (Default relative fallback)
  */
 export function getApiBaseUrl(): string {
-  if (typeof window === 'undefined') {
-    // Server-side requires absolute URL — P0: never silently phone-home to vendor.
-    const serverUrl =
-      process.env.FXSIM_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.NEXT_PUBLIC_FXSIM_API
-    if (serverUrl && (serverUrl.startsWith('http://') || serverUrl.startsWith('https://'))) {
-      return serverUrl.trim().replace(/\/$/, '')
-    }
-    return (serverUrl || 'https://api.launchapropfirm.com').trim().replace(/\/$/, '')
+  const envUrl =
+    process.env.FXSIM_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_FXSIM_API
+
+  if (envUrl && (envUrl.startsWith('http://') || envUrl.startsWith('https://'))) {
+    return envUrl.trim().replace(/\/$/, '')
   }
 
-  const envUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_FXSIM_API ||
-    '/api/wp'
-  return envUrl.trim().replace(/\/$/, '')
+  // Fallback to live production API namespace
+  return 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
 }
 
 export const FXSIM_BASE = getApiBaseUrl()

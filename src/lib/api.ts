@@ -84,7 +84,7 @@ export const api = {
     save: (data: Record<string, any>) => fxsim<{ success: boolean }>('/admin/config/whitelabel', { body: data }),
   },
 
-  symbols:       (force = false) => fxsim<Symbol[]>('/symbols', { cache: 5 * 60_000, force }), // changes rarely; force=true bypasses cache
+  symbols:       (force = false) => fxsim<Symbol[]>('/symbols', { public: true, cache: 5 * 60_000, force }), // changes rarely; force=true bypasses cache
   challengePlans: ()             => fxsim<ChallengePlan[]>('/challenge/plans', { public: true, cache: 60_000 }),
   leaderboard:   ()              => fxsim<LeaderboardRow[]>('/stats/leaderboard', { public: true, cache: 30_000 }),
 
