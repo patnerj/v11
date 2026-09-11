@@ -280,11 +280,11 @@ export const api = {
         fxsim<{ success: boolean; message: string; settings: AiSettings }>('/admin/ai/settings', { body: data }),
       sentinelScan: () =>
         fxsim<AiSentinelReport>('/admin/ai/sentinel/scan', { method: 'POST', body: {} }),
-      autoResolveTickets: () =>
-        fxsim<{ success: boolean; scanned_count: number; resolved_count: number; processed?: number; resolved?: number; details?: Array<{ ticket_id: number; subject: string; ai_resolution: string }> }>('/admin/ai/tickets/auto-resolve', { method: 'POST', body: {} }),
+      autoResolveTickets: (ticketId?: number) =>
+        fxsim<{ success: boolean; scanned_count: number; resolved_count: number; processed?: number; resolved?: number; details?: Array<{ ticket_id: number; subject: string; ai_resolution: string }> }>('/admin/ai/tickets/auto-resolve', { method: 'POST', body: { ticket_id: ticketId }, timeout: 35_000 }),
       draftReply: (ticketIdOrBody: number | { ticket_id: number }) => {
         const tid = typeof ticketIdOrBody === 'number' ? ticketIdOrBody : ticketIdOrBody.ticket_id
-        return fxsim<{ success: boolean; draft: string; confidence?: number; category?: string }>(`/admin/ai/tickets/draft-reply?ticket_id=${tid}`, { method: 'POST', body: { ticket_id: tid } })
+        return fxsim<{ success: boolean; draft: string; confidence?: number; category?: string }>(`/admin/ai/tickets/draft-reply?ticket_id=${tid}`, { method: 'POST', body: { ticket_id: tid }, timeout: 25_000 })
       },
     },
     stats:        ()                 => fxsim<AdminStats>('/admin/stats',                                { cache: 10_000 }),
