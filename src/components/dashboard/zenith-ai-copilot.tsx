@@ -8,7 +8,7 @@ import {
   Bot, Sparkles, X, Send, ShieldAlert, ShieldCheck, 
   Calculator, AlertTriangle, Newspaper, ChevronDown, ChevronUp,
   RefreshCw, CheckCircle2, TrendingDown, ArrowRight, Zap, Info,
-  BookOpen, Brain, Award
+  BookOpen, Brain, Award, ArrowLeftRight
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePrices } from '@/store/prices'
@@ -41,7 +41,22 @@ export function ZenithAiCopilot() {
   
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [dockSide, setDockSide] = useState<'right' | 'left'>('right')
   const [activeTab, setActiveTab] = useState<'chat' | 'calculator' | 'headroom' | 'news' | 'journal'>('chat')
+
+  // Load user dock preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fxsim:copilot:dock')
+      if (saved === 'left' || saved === 'right') setDockSide(saved)
+    } catch {}
+  }, [])
+
+  const toggleDock = () => {
+    const next = dockSide === 'right' ? 'left' : 'right'
+    setDockSide(next)
+    try { localStorage.setItem('fxsim:copilot:dock', next) } catch {}
+  }
 
   // Global event listener to open Copilot from topbar or buttons
   useEffect(() => {
@@ -277,7 +292,7 @@ export function ZenithAiCopilot() {
         className={cn(
           "fixed z-50 select-none",
           isTrading 
-            ? "bottom-2.5 left-4 lg:left-20" 
+            ? (dockSide === 'left' ? "bottom-14 left-4 lg:left-20" : "bottom-14 right-4 sm:right-6")
             : "bottom-6 right-6"
         )}
       >
@@ -327,7 +342,9 @@ export function ZenithAiCopilot() {
             className={cn(
               "fixed z-50 w-[calc(100vw-2rem)] sm:w-[460px] bg-[#0E1322] border border-[#1F2937] rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden text-gray-100 backdrop-blur-xl",
               isMinimized ? "h-14" : "h-[620px] max-h-[85vh]",
-              isTrading ? "bottom-4 right-4 lg:right-[calc(24%+1rem)]" : "bottom-6 right-4 sm:right-6"
+              dockSide === 'left' 
+                ? "bottom-4 left-4 sm:left-6 lg:left-20" 
+                : "bottom-4 right-4 sm:right-6"
             )}
           >
             {/* Header */}
@@ -348,6 +365,14 @@ export function ZenithAiCopilot() {
               </div>
 
               <div className="flex items-center gap-1">
+                <button
+                  onClick={toggleDock}
+                  className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  title={dockSide === 'right' ? 'Dock to left side' : 'Dock to right side'}
+                  aria-label="Switch dock side"
+                >
+                  <ArrowLeftRight className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
                   className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"

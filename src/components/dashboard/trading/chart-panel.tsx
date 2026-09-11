@@ -458,9 +458,9 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         )}
         <div ref={containerRef} className="absolute inset-0" />
 
-        {/* 1-Click Trade Box (Draggable, default upper-center) */}
+        {/* 1-Click Trade Box (Draggable, default bottom-center) */}
         {!compact && ready && showOneClick && (
-          <div className="absolute top-3 inset-x-0 flex justify-center pointer-events-none z-[25]">
+          <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-[25]">
             <motion.div 
               drag
               dragListener={false}
