@@ -267,6 +267,8 @@ export default function ConfigurationHubPage() {
     provider: 'hybrid',
     gemini_api_key: '',
     gemini_model: 'gemini-2.0-flash',
+    deepseek_api_key: '',
+    deepseek_model: 'deepseek-chat',
     ollama_endpoint: 'http://localhost:11434',
     ollama_model: 'deepseek-r1:latest',
     ai_support_autopilot: 1,
@@ -276,6 +278,7 @@ export default function ConfigurationHubPage() {
     temperature: 0.3,
   })
   const [showGeminiKey, setShowGeminiKey] = useState(false)
+  const [showDeepSeekKey, setShowDeepSeekKey] = useState(false)
 
   const { data: aiSettingsData, refetch: refetchAiSettings } = useQuery({
     queryKey: ['admin-ai-settings-config'],
@@ -292,6 +295,8 @@ export default function ConfigurationHubPage() {
         ...aiSettingsData,
         gemini_api_key: aiSettingsData.gemini_api_key || '',
         gemini_model: aiSettingsData.gemini_model || 'gemini-2.0-flash',
+        deepseek_api_key: (aiSettingsData as any).deepseek_api_key || '',
+        deepseek_model: (aiSettingsData as any).deepseek_model || 'deepseek-chat',
         provider: aiSettingsData.provider || 'hybrid',
       }))
     }
@@ -4026,7 +4031,7 @@ export default function ConfigurationHubPage() {
               </CardContent>
             </Card>
 
-            {/* 2. DeepSeek-R1 / Local Ollama Engine */}
+            {/* 2. DeepSeek-R1 Engine (Cloud API or Local VPS Ollama) */}
             <Card className="bg-[#111827] border-[#1F2937]">
               <CardHeader className="border-b border-[#1F2937]/60 pb-4">
                 <div className="flex items-center justify-between">
@@ -4035,39 +4040,86 @@ export default function ConfigurationHubPage() {
                       <Bot className="h-5 w-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-base text-gray-100">Local DeepSeek-R1 / Ollama</CardTitle>
+                      <CardTitle className="text-base text-gray-100">DeepSeek-R1 (Cloud API or Local VPS)</CardTitle>
                       <CardDescription className="text-xs text-gray-400">
-                        100% Free Offline On-Premises LLM (VPS or local server).
+                        Official DeepSeek Cloud API or 100% Free Offline Ollama daemon.
                       </CardDescription>
                     </div>
                   </div>
+                  {aiForm.deepseek_api_key ? (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      CLOUD KEY SET
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono text-gray-500 bg-gray-800/40 border border-gray-700">
+                      OLLAMA READY
+                    </span>
+                  )}
                 </div>
               </CardHeader>
 
               <CardContent className="p-6 space-y-4">
+                {/* Official DeepSeek Cloud API Key */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="ollama-endpoint">Ollama Endpoint URL</Label>
-                  <Input
-                    id="ollama-endpoint"
-                    placeholder="http://localhost:11434"
-                    value={aiForm.ollama_endpoint}
-                    onChange={(e) => setAiForm({ ...aiForm, ollama_endpoint: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-[11px] text-gray-500 font-mono">
-                    Run `ollama run deepseek-r1:latest` on your VPS
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="deepseek-key">DeepSeek Cloud API Key (Optional)</Label>
+                    <a
+                      href="https://platform.deepseek.com/api_keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
+                    >
+                      Get API Key from DeepSeek Platform &rarr;
+                    </a>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="deepseek-key"
+                      type={showDeepSeekKey ? 'text' : 'password'}
+                      placeholder="sk-..."
+                      value={aiForm.deepseek_api_key || ''}
+                      onChange={(e) => setAiForm({ ...aiForm, deepseek_api_key: e.target.value })}
+                      className="font-mono text-xs pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowDeepSeekKey(!showDeepSeekKey)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-white"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    If provided, platform routes directly to DeepSeek Cloud without requiring a VPS.
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="ollama-model">Ollama Model</Label>
-                  <Input
-                    id="ollama-model"
-                    placeholder="deepseek-r1:latest"
-                    value={aiForm.ollama_model}
-                    onChange={(e) => setAiForm({ ...aiForm, ollama_model: e.target.value })}
-                    className="font-mono text-xs"
-                  />
+                {/* Local/VPS Ollama Section */}
+                <div className="space-y-3 pt-3 border-t border-[#1F2937]/70">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ollama-endpoint">Local / VPS Ollama Endpoint URL</Label>
+                    <Input
+                      id="ollama-endpoint"
+                      placeholder="http://localhost:11434"
+                      value={aiForm.ollama_endpoint}
+                      onChange={(e) => setAiForm({ ...aiForm, ollama_endpoint: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-[11px] text-gray-500 font-mono">
+                      Run `ollama run deepseek-r1:latest` on your VPS or PC
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ollama-model">Ollama / DeepSeek Model</Label>
+                    <Input
+                      id="ollama-model"
+                      placeholder="deepseek-r1:latest"
+                      value={aiForm.ollama_model}
+                      onChange={(e) => setAiForm({ ...aiForm, ollama_model: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -4083,10 +4135,11 @@ export default function ConfigurationHubPage() {
             </CardHeader>
 
             <CardContent className="p-6 space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   { id: 'hybrid', title: 'Hybrid Dual-Engine', desc: 'Primary Gemini with automatic fallback to DeepSeek / Heuristics (Recommended)' },
                   { id: 'gemini', title: 'Gemini Cloud Only', desc: 'Queries dispatched strictly via Google Generative Language API' },
+                  { id: 'deepseek', title: 'DeepSeek Cloud Only', desc: 'Queries dispatched strictly via official DeepSeek Cloud API' },
                   { id: 'ollama', title: 'DeepSeek Local Only', desc: '100% private offline queries via local Ollama daemon' },
                 ].map((m) => (
                   <button

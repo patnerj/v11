@@ -1233,9 +1233,11 @@ export interface AiNewsWarning {
 }
 
 export interface AiSettings {
-  provider: 'gemini' | 'ollama' | 'hybrid'
+  provider: 'gemini' | 'ollama' | 'hybrid' | 'deepseek'
   gemini_api_key: string
   gemini_model: string
+  deepseek_api_key?: string
+  deepseek_model?: string
   ollama_endpoint: string
   ollama_model: string
   ai_support_autopilot: number

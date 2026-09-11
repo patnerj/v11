@@ -54,12 +54,44 @@ export function getRelevantAiResponse(message: string, subject: string = '', bra
   const text = msgLow.trim() ? msgLow : subjLow;
   const combined = `${subjLow} ${msgLow}`.toLowerCase();
 
-  // 1. Arena / PVP / Battles / Tournaments Inquiry
+  // 1a. Tournaments / Competitions / Leaderboard Inquiry
+  if (
+    text.includes('tournament') ||
+    text.includes('competition') ||
+    text.includes('leaderboard') ||
+    text.includes('muqabla')
+  ) {
+    const isRomanUrdu = /\b(karein|karna|kaise|kese|kya|mujhe|bhai|yar|main|hai|hain)\b/i.test(text);
+    if (isRomanUrdu) {
+      return `Hello! Trading Tournaments (Competitions) ke mutaliq step-by-step guide:
+
+1. Tournaments Tab Open Karein: Dashboard ke left sidebar navigation menu mein [Tournaments] (Trophy icon) par click karein.
+2. Competition Browse Karein: Active aur Upcoming tournaments ki list dekh kar prize pool, start/end dates aur entry fee check karein.
+3. Join Karein: [Join Tournament] dabayein (Free tournaments foran join ho jate hain, paid tournaments ki entry fee wallet balance se ada hoti hai).
+4. Dedicated Tournament Account: Join karte hi terminal automatically aapke tournament account par switch ho jata hai. Live charts par trade karein aur rules ke andar maximum profit % banayein.
+5. Leaderboard & Prizes: End date par leaderboard ke top ranking traders direct cash prize pool aur Free Funded Challenge Accounts jeet te hain!
+
+Abhi Tournaments tab mein enter hon aur top rank ke lye compete karein!
+
+— ${brand} Autonomous AI Support Desk`;
+    }
+
+    return `Hello! Here is your step-by-step guide to our Trading Tournaments & Competitions:
+
+1. Open Tournaments: Click on the [Tournaments] tab (Trophy icon) from the left sidebar navigation.
+2. Select a Competition: Browse active and upcoming tournaments to check prize pools, schedules, and entry criteria.
+3. Register / Join: Click [Join Tournament] (free entry or paid via your trader wallet balance).
+4. Compete on Live Leaderboard: Your trading terminal instantly connects to your dedicated tournament account. Trade live price action to achieve the highest % gain within standard risk limits.
+5. Win Prizes & Funded Accounts: Top leaderboard finishers win direct cash rewards and free Funded Challenge Accounts!
+
+— ${brand} Autonomous AI Support Desk`;
+  }
+
+  // 1b. Arena / PVP / 1v1 Battles Inquiry
   if (
     text.includes('arena') ||
     text.includes('pvp') ||
     text.includes('battle') ||
-    text.includes('tournament') ||
     text.includes('deathmatch') ||
     text.includes('1v1') ||
     combined.includes('arena') ||
