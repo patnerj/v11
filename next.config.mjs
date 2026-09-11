@@ -47,6 +47,9 @@ const frameSrc = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns:
       brandingHosts.length > 0

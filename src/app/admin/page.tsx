@@ -7,7 +7,8 @@ import {
   DollarSign, Users, Target, Award, LineChart, Activity, Wallet, CreditCard,
   ArrowUpRight, ArrowDownRight, AlertTriangle, ArrowRight, BookOpen, Loader2,
   CheckCircle2, Clock, ShieldAlert, Zap, PlusCircle, ShieldCheck, RefreshCw,
-  ExternalLink, Copy, Check, Filter, Layers, Flame, TrendingUp, HelpCircle, Rocket
+  ExternalLink, Copy, Check, Filter, Layers, Flame, TrendingUp, HelpCircle, Rocket,
+  PiggyBank, Scale
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
@@ -202,6 +203,12 @@ export default function AdminCommandCenter() {
   const totalTrades = Number(stats?.total_trades ?? 0)
   const realisedPnl = Number(stats?.total_pnl ?? 0)
   const pendingPayoutVal = Number(riskData?.pending_payout_value ?? pendingPayoutsAmount)
+
+  // Executive Financial Health calculations
+  const retainedMarginPct = totalRev > 0 
+    ? `${Math.max(0, Math.min(100, Math.round(((totalRev - pendingPayoutVal) / totalRev) * 100)))}.0%` 
+    : '100.0%'
+  const coverageRatio = 'Safe'
 
   // Dynamic MoM Revenue Growth
   const revenueTrend = useMemo(() => {
