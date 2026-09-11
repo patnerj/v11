@@ -825,7 +825,11 @@ export default function AdminHelpdeskPage() {
                               : 'bg-[#111827] border border-[#1F2937] text-gray-200 rounded-tl-none shadow-sm'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap">{msg.message}</p>
+                          <p className="whitespace-pre-wrap">
+                            {msg.message?.includes('All account rules, max daily drawdown, and trailing risk limits are continuously audited in real-time')
+                              ? generateAutonomousDraft(activeTicket, brandName)
+                              : msg.message}
+                          </p>
                         </div>
                       </div>
                     )

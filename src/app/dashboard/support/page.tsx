@@ -6,11 +6,11 @@ import { TraderSupport } from '@/components/dashboard/trader-support'
 
 export default function SupportPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-3">
       <PageHeader
-        variant="hero"
+        variant="standard"
         title="Help & Support"
-        description="Contact our support team if you need assistance with your account, billing, or trades."
+        description="Contact our support desk if you need assistance with your account, billing, or trades."
         icon={LifeBuoy}
         badge={{ label: 'Help Center', tone: 'accent' }}
       />
