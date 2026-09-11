@@ -13,7 +13,7 @@ import { useAuth } from '@/store/auth'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/cn'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin':             { title: 'Overview Dashboard', subtitle: 'Real-time performance metrics, trading volume, and system alerts' },
@@ -58,32 +58,32 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   }
 
   return (
-    <header className="h-16 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-[#1F2937] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 select-none transition-colors">
+    <header className="h-16 bg-surface border-b border-border px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 select-none transition-colors">
       
       {/* Left: Mobile Toggle & Page Title */}
       <div className="flex items-center gap-4">
         <button
           onClick={onMobileMenuToggle}
-          className="lg:hidden p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-colors"
+          className="lg:hidden p-2 -ml-2 text-text-muted hover:text-text rounded-lg hover:bg-surface-muted transition-colors"
           aria-label="Toggle mobile menu"
         >
           <Menu className="h-5 w-5" />
         </button>
 
         <div>
-          <h1 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <h1 className="text-base sm:text-lg font-bold text-text flex items-center gap-2">
             {pageInfo.title}
           </h1>
         </div>
       </div>
 
       {/* Center/Search (Hidden on small mobile) */}
-      <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-[#111827] border border-gray-200 dark:border-[#1F2937] rounded-lg text-sm text-gray-600 dark:text-gray-400 w-64 lg:w-80 focus-within:border-[#10B981] focus-within:ring-1 focus-within:ring-[#10B981] transition-all">
-        <Search className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
+      <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-surface-muted border border-border rounded-lg text-sm text-text-muted w-64 lg:w-80 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all">
+        <Search className="h-4 w-4 text-text-subtle shrink-0" />
         <input
           type="text"
           placeholder="Search accounts, traders, or rules..."
-          className="bg-transparent border-none outline-none text-gray-800 dark:text-gray-200 text-xs w-full placeholder:text-gray-400 dark:placeholder:text-gray-500"
+          className="bg-transparent border-none outline-none text-text text-xs w-full placeholder:text-text-subtle"
         />
       </div>
 
@@ -91,28 +91,28 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       <div className="flex items-center gap-2 sm:gap-3">
         
         {/* System Status Indicator */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-[#111827] border border-gray-200 dark:border-[#1F2937] text-xs font-medium text-gray-700 dark:text-gray-300">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-muted border border-border text-xs font-medium text-text-muted">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
           </span>
-          <span className="text-[11px] font-semibold text-gray-800 dark:text-gray-200">System Live</span>
+          <span className="text-[11px] font-semibold text-text">System Live</span>
         </div>
 
-        <div className="h-5 w-px bg-gray-200 dark:bg-[#1F2937] hidden sm:block" />
+        <div className="h-5 w-px bg-border hidden sm:block" />
 
-        {/* Day / Night Theme Toggle */}
-        <ThemeToggle />
+        {/* IDE Themes Switcher */}
+        <ThemeSwitcher />
 
         {/* Notifications Icon with Badge */}
         <Link
           href="/admin/activity"
-          className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-colors"
+          className="relative p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface-muted transition-colors"
           title="Activity & Notifications"
         >
           <Bell className="h-5 w-5" />
           {notifData && notifData.unread_count > 0 ? (
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0B0F19]" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-surface" />
           ) : null}
         </Link>
 
@@ -120,12 +120,12 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-colors"
+            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-surface-muted transition-colors"
           >
             <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm">
               {user?.email ? user.email.charAt(0).toUpperCase() : 'A'}
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400 hidden sm:block" />
+            <ChevronDown className="h-3.5 w-3.5 text-text-muted hidden sm:block" />
           </button>
 
           {profileDropdownOpen && (
@@ -134,50 +134,50 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                 className="fixed inset-0 z-40" 
                 onClick={() => setProfileDropdownOpen(false)} 
               />
-              <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-[#1F2937] shadow-xl z-50 p-1.5 text-xs text-gray-700 dark:text-gray-300">
-                <div className="px-3 py-2 border-b border-gray-100 dark:border-[#1F2937] mb-1">
-                  <p className="font-semibold text-gray-900 dark:text-white truncate">{user?.email || 'admin@firm.com'}</p>
-                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">Enterprise SuperAdmin</p>
+              <div className="absolute right-0 mt-2 w-56 rounded-xl bg-surface border border-border shadow-xl z-50 p-1.5 text-xs text-text">
+                <div className="px-3 py-2 border-b border-border mb-1">
+                  <p className="font-semibold text-text truncate">{user?.email || 'admin@firm.com'}</p>
+                  <p className="text-[10px] text-accent mt-0.5">Enterprise SuperAdmin</p>
                 </div>
 
-                <div className="px-3 py-1.5 flex items-center justify-between border-b border-gray-100 dark:border-[#1F2937] mb-1">
-                  <span className="text-gray-500 dark:text-gray-400">Day / Night</span>
-                  <ThemeToggle />
+                <div className="px-3 py-1.5 flex items-center justify-between border-b border-border mb-1">
+                  <span className="text-text-muted">IDE Theme</span>
+                  <ThemeSwitcher />
                 </div>
 
                 <Link
                   href="/dashboard"
                   target="_blank"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-muted text-text transition-colors"
                   onClick={() => setProfileDropdownOpen(false)}
                 >
-                  <ExternalLink className="h-4 w-4 text-gray-400" />
+                  <ExternalLink className="h-4 w-4 text-text-subtle" />
                   <span>Trader Dashboard</span>
                 </Link>
 
                 <Link
                   href="/admin/config"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-muted text-text transition-colors"
                   onClick={() => setProfileDropdownOpen(false)}
                 >
-                  <Shield className="h-4 w-4 text-gray-400" />
+                  <Shield className="h-4 w-4 text-text-subtle" />
                   <span>Firm Settings</span>
                 </Link>
 
                 <Link
                   href="/admin/helpdesk"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-muted text-text transition-colors"
                   onClick={() => setProfileDropdownOpen(false)}
                 >
-                  <LifeBuoy className="h-4 w-4 text-gray-400" />
+                  <LifeBuoy className="h-4 w-4 text-text-subtle" />
                   <span>Support Center</span>
                 </Link>
 
-                <div className="border-t border-gray-100 dark:border-[#1F2937] my-1" />
+                <div className="border-t border-border my-1" />
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-600 dark:text-red-400 transition-colors text-left"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Log Out</span>

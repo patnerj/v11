@@ -668,10 +668,10 @@ export default function AdminCommandCenter() {
     <div className="space-y-8 pb-12">
       
       {/* ── Top Header Banner & Quick Refresh ──────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1F2937]/70 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/70 pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
               Command Center
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
@@ -683,7 +683,7 @@ export default function AdminCommandCenter() {
               </Badge>
             )}
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             Real-time operations, revenue stream, risk monitor, and fast execution dispatch.
           </p>
         </div>
@@ -693,9 +693,9 @@ export default function AdminCommandCenter() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+              className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-9"
             >
-              <Rocket className="h-3.5 w-3.5 text-emerald-400" />
+              <Rocket className="h-3.5 w-3.5 text-accent" />
               Setup Wizard
             </Button>
           </Link>
@@ -703,13 +703,13 @@ export default function AdminCommandCenter() {
           <Button 
             variant="outline" 
             size="sm" 
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-9"
             onClick={() => {
               refetchStats()
               toast.success('Command center metrics refreshed')
             }}
           >
-            <RefreshCw className="h-3.5 w-3.5 text-emerald-400" />
+            <RefreshCw className="h-3.5 w-3.5 text-accent" />
             Refresh
           </Button>
 
@@ -767,7 +767,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
                   {formatCurrency(totalRev)}
                 </h3>
               </div>
@@ -906,7 +906,7 @@ export default function AdminCommandCenter() {
                   </div>
 
                   <div className="mt-3 flex items-baseline justify-between">
-                    <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                    <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
                       {metric.value}
                     </h3>
                   </div>

@@ -8,7 +8,7 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
     <div
       ref={ref}
       className={cn(
-        'rounded-xl border border-[#1F2937] bg-[#111827] text-gray-100 shadow-sm relative overflow-hidden',
+        'rounded-xl border border-border bg-surface text-text shadow-sm relative overflow-hidden',
         className,
       )}
       {...props}
@@ -21,7 +21,7 @@ export const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
   ({ className, ...props }, ref) => (
     <div 
       ref={ref} 
-      className={cn('flex flex-col space-y-1.5 p-6 border-b border-[#1F2937]/60', className)} 
+      className={cn('flex flex-col space-y-1.5 p-6 border-b border-border/60', className)} 
       {...props} 
     />
   ),
@@ -32,7 +32,7 @@ export const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttribut
   ({ className, ...props }, ref) => (
     <h3 
       ref={ref} 
-      className={cn('text-base font-semibold text-gray-100 tracking-tight flex items-center gap-2', className)} 
+      className={cn('text-base font-semibold text-text tracking-tight flex items-center gap-2', className)} 
       {...props} 
     />
   ),
@@ -43,7 +43,7 @@ export const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTML
   ({ className, ...props }, ref) => (
     <p 
       ref={ref} 
-      className={cn('text-xs text-gray-400 leading-relaxed', className)} 
+      className={cn('text-xs text-text-muted leading-relaxed', className)} 
       {...props} 
     />
   ),
@@ -61,7 +61,7 @@ export const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
   ({ className, ...props }, ref) => (
     <div 
       ref={ref} 
-      className={cn('flex items-center p-6 pt-0 border-t border-[#1F2937]/60', className)} 
+      className={cn('flex items-center p-6 pt-0 border-t border-border/60', className)} 
       {...props} 
     />
   ),

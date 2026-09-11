@@ -18,11 +18,20 @@ export function ThemeContextProvider({ children }: { children: React.ReactNode }
     // Read initial theme from localStorage on mount
     try {
       const storedTheme = localStorage.getItem('user-theme') as Theme
-      if (storedTheme) {
-        setThemeState(storedTheme)
-        document.documentElement.setAttribute('data-theme', storedTheme)
-      } else {
-        document.documentElement.setAttribute('data-theme', 'midnight-obsidian')
+      const validThemes: Theme[] = ['midnight-obsidian', 'vscode-dark', 'cyberpunk-neon', 'tokyo-night', 'clean-light']
+      const active = (storedTheme && validThemes.includes(storedTheme)) ? storedTheme : 'midnight-obsidian'
+      setThemeState(active)
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', active)
+        if (active === 'clean-light') {
+          document.documentElement.classList.remove('dark')
+          document.documentElement.classList.add('light')
+          localStorage.setItem('theme', 'light')
+        } else {
+          document.documentElement.classList.add('dark')
+          document.documentElement.classList.remove('light')
+          localStorage.setItem('theme', 'dark')
+        }
       }
     } catch (e) {}
   }, [])
@@ -31,7 +40,18 @@ export function ThemeContextProvider({ children }: { children: React.ReactNode }
     setThemeState(newTheme)
     try {
       localStorage.setItem('user-theme', newTheme)
-      document.documentElement.setAttribute('data-theme', newTheme)
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', newTheme)
+        if (newTheme === 'clean-light') {
+          document.documentElement.classList.remove('dark')
+          document.documentElement.classList.add('light')
+          localStorage.setItem('theme', 'light')
+        } else {
+          document.documentElement.classList.add('dark')
+          document.documentElement.classList.remove('light')
+          localStorage.setItem('theme', 'dark')
+        }
+      }
     } catch (e) {}
   }
 

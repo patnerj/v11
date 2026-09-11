@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-gray-900 dark:text-gray-100 flex flex-col lg:flex-row antialiased transition-colors">
+    <div className="min-h-screen bg-bg text-text flex flex-col lg:flex-row antialiased transition-colors">
       
       {/* Desktop Sidebar (Persistent) */}
       <Sidebar 

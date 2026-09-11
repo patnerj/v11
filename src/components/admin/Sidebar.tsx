@@ -57,13 +57,13 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "h-screen bg-white dark:bg-[#0B0F19] border-r border-gray-200 dark:border-[#1F2937] flex flex-col transition-all duration-300 select-none z-30",
+        "h-screen bg-surface border-r border-border flex flex-col transition-all duration-300 select-none z-30",
         collapsed ? "w-20" : "w-64",
         className
       )}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-[#1F2937] bg-gray-50 dark:bg-[#0E1322]">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-border bg-surface">
         <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "justify-center w-full")}>
           <SidebarBrand />
         </div>
@@ -71,7 +71,7 @@ export function Sidebar({
           <button
             onClick={onToggleCollapse}
             className={cn(
-              "p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-colors hidden lg:flex items-center justify-center",
+              "p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-surface-muted transition-colors hidden lg:flex items-center justify-center",
               collapsed && "hidden"
             )}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -97,21 +97,21 @@ export function Sidebar({
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group relative",
                 isActive
-                  ? "bg-[#10B981]/15 text-[#10B981] font-semibold shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50",
+                  ? "bg-accent/15 text-accent font-semibold shadow-sm"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted",
                 collapsed && "justify-center px-0"
               )}
               title={collapsed ? item.label : undefined}
             >
               {/* Active Indicator Bar */}
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#10B981] rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-r-full" />
               )}
 
               <Icon 
                 className={cn(
                   "h-5 w-5 shrink-0 transition-transform duration-150",
-                  isActive ? "text-[#10B981] scale-105" : "text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 group-hover:scale-105"
+                  isActive ? "text-accent scale-105" : "text-text-subtle group-hover:text-text group-hover:scale-105"
                 )} 
               />
               
@@ -120,7 +120,7 @@ export function Sidebar({
               )}
 
               {!collapsed && item.badge && (
-                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent">
                   {item.badge}
                 </span>
               )}
@@ -130,17 +130,17 @@ export function Sidebar({
       </nav>
 
       {/* Footer Profile Box */}
-      <div className="p-3 border-t border-gray-200 dark:border-[#1F2937] bg-gray-50 dark:bg-[#0E1322]/60 mt-auto">
+      <div className="p-3 border-t border-border bg-surface-muted/60 mt-auto">
         <div className={cn("flex items-center gap-3", collapsed ? "justify-center" : "px-2")}>
           <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md shadow-emerald-900/30">
             {user?.email ? user.email.charAt(0).toUpperCase() : 'A'}
           </div>
           {!collapsed && (
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+              <span className="text-xs font-semibold text-text truncate">
                 {user?.email || 'admin@firm.com'}
               </span>
-              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Enterprise Admin</span>
+              <span className="text-[11px] text-accent font-medium">Enterprise Admin</span>
             </div>
           )}
         </div>
