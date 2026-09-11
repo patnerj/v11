@@ -13,6 +13,20 @@ export const toNum = (v: unknown): number => {
 }
 
 /**
+ * Coerce boolean values safely. wpdb serialises TINYINT(1) columns as
+ * strings ('0' or '1'). In JS, Boolean('0') is true, so toBool is essential.
+ */
+export const toBool = (v: unknown): boolean => {
+  if (typeof v === 'boolean') return v
+  if (typeof v === 'number') return v !== 0
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase()
+    return s === 'true' || s === '1' || s === 'yes'
+  }
+  return false
+}
+
+/**
  * Sanitize free-typed numeric input.
  *  • strips anything that isn't a digit or a dot
  *  • collapses to a SINGLE decimal point (keeps the first)

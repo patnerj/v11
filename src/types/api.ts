@@ -1309,7 +1309,9 @@ export interface AiTradeAutopsy {
   autopsy_summary?: string
   ai_tactical_summary?: string
   tactical_flaws?: string
+  tactical_notes?: string
   psychology_notes?: string
+  coach_advice?: string
   tilt_detected?: boolean
   cooling_off_recommended?: boolean
   created_at: string

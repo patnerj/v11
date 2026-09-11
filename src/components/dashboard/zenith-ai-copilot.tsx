@@ -19,7 +19,7 @@ import type {
   AiNewsWarning, AiTradeAutopsy, AiPsychologyScorecard 
 } from '@/types/api'
 import { toast } from 'sonner'
-import { toNum, fmtUSD } from '@/lib/format'
+import { toNum, fmtUSD, toBool } from '@/lib/format'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { AiTradeAutopsyModal } from './ai-trade-autopsy-modal'
 
@@ -835,7 +835,7 @@ export function ZenithAiCopilot() {
 
                                 <div className="pt-1 border-t border-gray-800/80 flex items-center justify-between text-[10px]">
                                   <span className="text-gray-400">
-                                    R:R 1:{toNum(item.rr_ratio ?? item.risk_reward_ratio ?? 1.5).toFixed(2)} • {(item.sl_adherence ?? item.sl_tp_discipline) ? '✅ SL Placed' : '⚠️ No SL'}
+                                    R:R 1:{toNum(item.rr_ratio ?? item.risk_reward_ratio ?? 1.5).toFixed(2)} • {toBool(item.sl_adherence ?? item.sl_tp_discipline) ? '✅ SL Placed' : '⚠️ No SL'}
                                   </span>
                                   <button
                                     onClick={() => {
