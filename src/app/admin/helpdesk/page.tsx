@@ -58,10 +58,46 @@ export default function AdminHelpdeskPage() {
   const [replyMessage, setReplyMessage] = useState('')
   const [isSendingAndResolving, setIsSendingAndResolving] = useState(false)
 
+  // Fetch AI settings to bind AI Auto-Pilot toggle with the backend
+  const { data: aiSettings, refetch: refetchAiSettings } = useQuery({
+    queryKey: ['admin-ai-settings'],
+    queryFn: async () => {
+      const res = await api.admin.ai.getSettings()
+      return res.ok ? res.data : null
+    },
+    staleTime: 30000,
+  })
+
   // ── v11.4 AI Autonomous Support Desk State ─────────────────────────────
   const [aiAutopilotActive, setAiAutopilotActive] = useState(true)
   const [isAutoDrafting, setIsAutoDrafting] = useState(false)
   const [isAutoResolvingBatch, setIsAutoResolvingBatch] = useState(false)
+
+  // Synchronize with backend AI configuration
+  useEffect(() => {
+    if (aiSettings && typeof aiSettings.ai_support_autopilot !== 'undefined') {
+      setAiAutopilotActive(Boolean(aiSettings.ai_support_autopilot))
+    }
+  }, [aiSettings])
+
+  const toggleAutopilotMutation = useMutation({
+    mutationFn: async (active: boolean) => {
+      return await api.admin.ai.saveSettings({ ai_support_autopilot: active ? 1 : 0 } as any)
+    },
+    onSuccess: (_, active) => {
+      refetchAiSettings()
+      toast.success(`AI Auto-Pilot ${active ? 'Enabled' : 'Paused'}`)
+    },
+    onError: () => {
+      toast.error('Failed to sync AI Auto-Pilot setting with server.')
+    },
+  })
+
+  const handleToggleAutopilot = () => {
+    const nextState = !aiAutopilotActive
+    setAiAutopilotActive(nextState)
+    toggleAutopilotMutation.mutate(nextState)
+  }
 
   // Autonomous resilient client-side draft synthesizer (guarantees 100% uptime)
   const generateAutonomousDraft = (ticket: any, brand: string): string => {
@@ -335,6 +371,28 @@ export default function AdminHelpdeskPage() {
     return { total, openCount, urgentCount, resolvedCount, resolutionRate, needsReplyCount }
   }, [allTickets])
 
+  // ── Auto-Pilot Autonomous Background Dispatcher ──────────────────────────
+  // When AI Auto-Pilot is enabled, automatically resolve any inquiry needing attention
+  const pendingTicketToAutoResolve = useMemo(() => {
+    return allTickets.find(isTicketNeedingReply)
+  }, [allTickets])
+
+  useEffect(() => {
+    if (!aiAutopilotActive || !pendingTicketToAutoResolve || isAutoResolvingBatch) return
+
+    const timer = setTimeout(async () => {
+      try {
+        await api.admin.ai.autoResolveTickets(pendingTicketToAutoResolve.id)
+        queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
+        queryClient.invalidateQueries({ queryKey: ['admin-ticket-detail', pendingTicketToAutoResolve.id] })
+      } catch (err) {
+        console.error('Auto-pilot background resolution notice:', err)
+      }
+    }, 2500)
+
+    return () => clearTimeout(timer)
+  }, [aiAutopilotActive, pendingTicketToAutoResolve?.id, pendingTicketToAutoResolve?.latest_message_at, isAutoResolvingBatch, queryClient])
+
   return (
     <div className="w-full space-y-4 pb-12">
       
@@ -363,19 +421,17 @@ export default function AdminHelpdeskPage() {
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* AI Auto-Pilot Pill */}
           <div className="flex items-center gap-2 bg-[#0E131F] px-3 py-1.5 rounded-xl border border-[#1F2937] text-xs">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <Sparkles className={`w-3.5 h-3.5 ${aiAutopilotActive ? 'text-emerald-400 animate-pulse' : 'text-gray-500'}`} />
             <span className="text-gray-400">AI Auto-Pilot:</span>
             <button
               type="button"
-              onClick={() => {
-                setAiAutopilotActive(!aiAutopilotActive)
-                toast.success(`AI Auto-Pilot ${!aiAutopilotActive ? 'Enabled' : 'Paused'}`)
-              }}
+              onClick={handleToggleAutopilot}
+              disabled={toggleAutopilotMutation.isPending}
               className={`text-[11px] font-bold px-2 py-0.5 rounded cursor-pointer transition-all ${
                 aiAutopilotActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400'
               }`}
             >
-              {aiAutopilotActive ? 'ENABLED' : 'PAUSED'}
+              {toggleAutopilotMutation.isPending ? 'SYNCING...' : aiAutopilotActive ? 'ENABLED' : 'PAUSED'}
             </button>
           </div>
 
