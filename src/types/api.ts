@@ -1303,6 +1303,7 @@ export interface AiTradeAutopsy {
   grade: string
   risk_reward_ratio?: number
   rr_ratio?: number
+  execution_score?: number
   sl_tp_discipline?: boolean
   sl_adherence?: boolean
   autopsy_summary?: string

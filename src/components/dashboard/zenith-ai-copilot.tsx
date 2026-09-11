@@ -19,6 +19,8 @@ import type {
   AiNewsWarning, AiTradeAutopsy, AiPsychologyScorecard 
 } from '@/types/api'
 import { toast } from 'sonner'
+import { toNum, fmtUSD } from '@/lib/format'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { AiTradeAutopsyModal } from './ai-trade-autopsy-modal'
 
 interface ChatMessage {
@@ -142,8 +144,10 @@ export function ZenithAiCopilot() {
     try {
       const res = await api.ai.journal.history(account?.id, 15)
       if (res.ok && res.data) {
-        setJournalHistory(res.data.autopsies || [])
-        setScorecard(res.data.scorecard || null)
+        const autopsies = Array.isArray(res.data.autopsies) ? res.data.autopsies : []
+        const sc = res.data.scorecard && !Array.isArray(res.data.scorecard) ? res.data.scorecard : null
+        setJournalHistory(autopsies)
+        setScorecard(sc)
       }
     } catch {
       // Graceful fallback
@@ -636,7 +640,7 @@ export function ZenithAiCopilot() {
                         </div>
                         <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1 border-t border-emerald-900/50">
                           <span>Max Dollar Loss Risked:</span>
-                          <span className="font-mono text-white">${calcResult.cash_at_risk.toFixed(2)} ({calcResult.risk_pct}%)</span>
+                          <span className="font-mono text-white">${toNum(calcResult.cash_at_risk).toFixed(2)} ({toNum(calcResult.risk_pct)}%)</span>
                         </div>
                         <p className="text-[10px] text-emerald-300 italic pt-1">
                           {calcResult.recommended_action}
@@ -691,6 +695,23 @@ export function ZenithAiCopilot() {
 
                 {/* Tab 4: AI Trade Journal & Autopsy */}
                 {activeTab === 'journal' && (
+                  <SectionErrorBoundary
+                    fallback={
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center text-center space-y-3 bg-[#0E1322]">
+                        <Brain className="w-8 h-8 text-cyan-400/50 animate-pulse" />
+                        <div className="text-sm font-semibold text-white">Journal Temporarily Unavailable</div>
+                        <p className="text-xs text-gray-400 max-w-xs">
+                          Unable to render trade autopsies. Please try refreshing or close new trades to generate updated logs.
+                        </p>
+                        <button
+                          onClick={fetchJournal}
+                          className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold"
+                        >
+                          Retry Loading
+                        </button>
+                      </div>
+                    }
+                  >
                   <div className="flex-1 p-4 overflow-y-auto bg-[#0E1322] space-y-3.5 text-xs custom-scrollbar">
                     <div className="p-3 rounded-xl bg-[#141A2E] border border-[#1F2937]">
                       <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-1.5">
@@ -703,35 +724,35 @@ export function ZenithAiCopilot() {
                     </div>
 
                     {/* 7-Day Performance Scorecard */}
-                    {scorecard && (
+                    {scorecard && !Array.isArray(scorecard) && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <span className="text-[10px] text-gray-400 block">Discipline</span>
                           <span className={`text-base font-bold ${
-                            scorecard.discipline_score >= 75 ? 'text-emerald-400' :
-                            scorecard.discipline_score >= 50 ? 'text-amber-400' : 'text-rose-400'
+                            toNum(scorecard.discipline_score) >= 75 ? 'text-emerald-400' :
+                            toNum(scorecard.discipline_score) >= 50 ? 'text-amber-400' : 'text-rose-400'
                           }`}>
-                            {scorecard.discipline_score}%
+                            {toNum(scorecard.discipline_score)}%
                           </span>
                         </div>
                         <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <span className="text-[10px] text-gray-400 block">Win Rate</span>
                           <span className="text-base font-bold text-cyan-300">
-                            {scorecard.win_rate}%
+                            {toNum(scorecard.win_rate)}%
                           </span>
                         </div>
                         <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <span className="text-[10px] text-gray-400 block">Avg R:R</span>
                           <span className="text-base font-bold text-white">
-                            1:{scorecard.avg_rr ?? (scorecard as any).avg_risk_reward ?? 1.5}
+                            1:{toNum(scorecard.avg_rr ?? (scorecard as any).avg_risk_reward ?? 1.5).toFixed(2)}
                           </span>
                         </div>
                         <div className="p-2.5 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <span className="text-[10px] text-gray-400 block">Tilt Flags</span>
                           <span className={`text-base font-bold ${
-                            (scorecard.tilt_incidents_count ?? scorecard.tilt_incidents ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'
+                            toNum(scorecard.tilt_incidents_count ?? (scorecard as any).tilt_incidents ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'
                           }`}>
-                            {scorecard.tilt_incidents_count ?? scorecard.tilt_incidents ?? 0}
+                            {toNum(scorecard.tilt_incidents_count ?? (scorecard as any).tilt_incidents ?? 0)}
                           </span>
                         </div>
                       </div>
@@ -758,7 +779,7 @@ export function ZenithAiCopilot() {
                           <RefreshCw className="w-5 h-5 text-cyan-400 animate-spin mx-auto" />
                           <p className="text-xs">Loading trade autopsies...</p>
                         </div>
-                      ) : journalHistory.length === 0 ? (
+                      ) : !Array.isArray(journalHistory) || journalHistory.length === 0 ? (
                         <div className="p-8 text-center text-gray-500 space-y-2 rounded-xl bg-[#11172A] border border-[#1F2937]">
                           <BookOpen className="w-8 h-8 text-cyan-500/40 mx-auto" />
                           <p className="text-xs text-gray-400">No closed trades recorded yet.</p>
@@ -769,7 +790,8 @@ export function ZenithAiCopilot() {
                       ) : (
                         <div className="space-y-2.5">
                           {journalHistory.map((item) => {
-                            const isWin = item.pnl >= 0
+                            const pnlNum = toNum(item.pnl)
+                            const isWin = pnlNum >= 0
                             const gradeColors: Record<string, string> = {
                               'A+': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
                               'A':  'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
@@ -779,7 +801,8 @@ export function ZenithAiCopilot() {
                               'D':  'bg-orange-500/20 text-orange-300 border-orange-500/30',
                               'F':  'bg-rose-500/20 text-rose-300 border-rose-500/40',
                             }
-                            const gradeBadge = gradeColors[item.grade] || 'bg-gray-800 text-gray-200 border-gray-700'
+                            const gradeBadge = (item.grade && gradeColors[item.grade]) || 'bg-gray-800 text-gray-200 border-gray-700'
+                            const side = (item.action || item.side || 'BUY').toUpperCase()
 
                             return (
                               <div
@@ -790,18 +813,18 @@ export function ZenithAiCopilot() {
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-white text-xs">{item.symbol}</span>
                                     <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
-                                      (item.action || item.side || 'BUY') === 'BUY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                                      side === 'BUY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
                                     }`}>
-                                      {item.action || item.side || 'BUY'}
+                                      {side}
                                     </span>
                                     <span className="text-[10px] text-gray-500 font-mono">#{item.trade_id}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <span className={`font-mono text-xs font-bold ${isWin ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                      {isWin ? '+' : ''}${item.pnl.toFixed(2)}
+                                      {fmtUSD(pnlNum, { sign: true })}
                                     </span>
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${gradeBadge}`}>
-                                      {item.grade}
+                                      {item.grade || 'N/A'}
                                     </span>
                                   </div>
                                 </div>
@@ -812,7 +835,7 @@ export function ZenithAiCopilot() {
 
                                 <div className="pt-1 border-t border-gray-800/80 flex items-center justify-between text-[10px]">
                                   <span className="text-gray-400">
-                                    R:R 1:{item.rr_ratio ?? item.risk_reward_ratio ?? 1.5} • {(item.sl_adherence ?? item.sl_tp_discipline) ? '✅ SL Placed' : '⚠️ No SL'}
+                                    R:R 1:{toNum(item.rr_ratio ?? item.risk_reward_ratio ?? 1.5).toFixed(2)} • {(item.sl_adherence ?? item.sl_tp_discipline) ? '✅ SL Placed' : '⚠️ No SL'}
                                   </span>
                                   <button
                                     onClick={() => {
@@ -832,6 +855,7 @@ export function ZenithAiCopilot() {
                       )}
                     </div>
                   </div>
+                  </SectionErrorBoundary>
                 )}
               </>
             )}
