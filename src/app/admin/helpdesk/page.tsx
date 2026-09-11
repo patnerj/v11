@@ -336,67 +336,44 @@ export default function AdminHelpdeskPage() {
   }, [allTickets])
 
   return (
-    <div className="w-full space-y-6 pb-16">
+    <div className="w-full space-y-4 pb-12">
       
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Support & Helpdesk Hub
-            </h1>
-            <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live Queue
-            </Badge>
-          </div>
-          <p className="text-sm text-gray-400 mt-1">
-            Resolve trader inquiries, dispute tickets, and dispatch real-time admin assistance.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            refetchTickets()
-            refetchActiveTicket()
-            toast.info('Ticket queue refreshed.')
-          }}
-          className="gap-1.5 border-[#1F2937] hover:border-emerald-500 self-start sm:self-center"
-        >
-          <RefreshCw className="h-4 w-4 text-emerald-400" />
-          Refresh Queue
-        </Button>
-      </div>
-
-      {/* ── 24/7 Autonomous AI Auto-Resolver Banner ─────────────────────── */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-[#111827] border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg shadow-emerald-950/20">
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
-            <Sparkles className="w-5 h-5 animate-pulse" />
+      {/* ── Top Header Row ────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1F2937]/70 pb-4 w-full">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+            <Headphones className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white tracking-tight">24/7 Autonomous AI Support Desk</h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                ACTIVE • ZERO STAFF OVERHEAD
-              </span>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                Support & Helpdesk Hub
+              </h1>
+              <Badge tone="accent" size="sm" pulsing className="font-mono">
+                Live Queue
+              </Badge>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">
-              Instant rule answers, breach triage & MT5 support powered by Autonomous AI Copilot. 24/7 automated assistance.
+              Resolve trader inquiries, dispute tickets, and dispatch real-time admin assistance.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#0A0D17] px-3 py-1.5 rounded-xl border border-gray-800 text-xs text-gray-300">
-            <span className="text-gray-500">Auto-Pilot:</span>
+        {/* Action Controls in Header */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* AI Auto-Pilot Pill */}
+          <div className="flex items-center gap-2 bg-[#0E131F] px-3 py-1.5 rounded-xl border border-[#1F2937] text-xs">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-gray-400">AI Auto-Pilot:</span>
             <button
+              type="button"
               onClick={() => {
                 setAiAutopilotActive(!aiAutopilotActive)
                 toast.success(`AI Auto-Pilot ${!aiAutopilotActive ? 'Enabled' : 'Paused'}`)
               }}
-              className={`text-xs font-bold px-2 py-0.5 rounded ${aiAutopilotActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}
+              className={`text-[11px] font-bold px-2 py-0.5 rounded cursor-pointer transition-all ${
+                aiAutopilotActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400'
+              }`}
             >
               {aiAutopilotActive ? 'ENABLED' : 'PAUSED'}
             </button>
@@ -407,167 +384,98 @@ export default function AdminHelpdeskPage() {
             size="sm"
             onClick={handleBatchAutoResolve}
             loading={isAutoResolvingBatch}
-            className="gap-2 text-xs font-semibold shadow-emerald-500/20 whitespace-nowrap"
+            className="gap-1.5 text-xs font-semibold shadow-emerald-500/20 h-8"
           >
             <Zap className="w-3.5 h-3.5" />
-            Batch Auto-Resolve ({metrics.openCount})
+            Auto-Resolve ({metrics.openCount})
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              refetchTickets()
+              refetchActiveTicket()
+              toast.info('Ticket queue refreshed.')
+            }}
+            className="gap-1.5 border-[#1F2937] hover:border-emerald-500 h-8 text-xs"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-emerald-400" />
+            Refresh
           </Button>
         </div>
       </div>
 
-      {/* ── Summary Metric Cards ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-        <Card className="bg-[#111827] border-[#1F2937]">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Total Tickets</span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <Headphones className="h-3.5 w-3.5" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-white mt-1.5 font-mono">
-              {metrics.total}
-            </div>
-            <span className="text-[10px] text-gray-500 font-mono">All-time inquiries</span>
-          </CardContent>
-        </Card>
+      {/* ── Sleek KPI Strip (Saves 250px vertical screen space) ───────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
+          <span className="text-xs text-gray-400 font-medium">Total Tickets</span>
+          <span className="text-base font-bold text-white font-mono">{metrics.total}</span>
+        </div>
 
-        <Card className="bg-[#111827] border-[#1F2937]">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                Needs Reply
-              </span>
-              <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                <Clock className="h-3.5 w-3.5" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-amber-400 mt-1.5 font-mono">
-              {metrics.needsReplyCount}
-            </div>
-            <span className="text-[10px] text-gray-500 font-mono">Trader awaiting reply</span>
-          </CardContent>
-        </Card>
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
+          <span className="text-xs text-amber-300 font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            Needs Reply
+          </span>
+          <span className="text-base font-bold text-amber-400 font-mono">{metrics.needsReplyCount}</span>
+        </div>
 
-        <Card className="bg-[#111827] border-[#1F2937]">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Urgent Escalations</span>
-              <div className="h-7 w-7 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center">
-                <Flame className="h-3.5 w-3.5" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-red-400 mt-1.5 font-mono">
-              {metrics.urgentCount}
-            </div>
-            <span className="text-[10px] text-gray-500 font-mono">Priority triage</span>
-          </CardContent>
-        </Card>
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
+          <span className="text-xs text-gray-400 font-medium">Urgent Triage</span>
+          <span className="text-base font-bold text-red-400 font-mono">{metrics.urgentCount}</span>
+        </div>
 
-        <Card className="bg-[#111827] border-[#1F2937]">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Resolution Rate</span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <CheckCircle className="h-3.5 w-3.5" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-emerald-400 mt-1.5 font-mono">
-              {metrics.resolutionRate}%
-            </div>
-            <span className="text-[10px] text-gray-500 font-mono">{metrics.resolvedCount} of {metrics.total} resolved</span>
-          </CardContent>
-        </Card>
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
+          <span className="text-xs text-gray-400 font-medium">Resolution Rate</span>
+          <span className="text-base font-bold text-emerald-400 font-mono">{metrics.resolutionRate}%</span>
+        </div>
       </div>
 
-      {/* ── Filters & Search Toolbar ──────────────────────────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-3 text-gray-500" />
+      {/* ── Main Workspace: 4-Col Queue + 8-Col Spacious Chat & Reply ─────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start">
+        
+        {/* ── Left Column: Ticket Queue (4 Cols) ─────────────────────────── */}
+        <div className="lg:col-span-4 space-y-2.5">
+          {/* Search & Category Filter */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-gray-500" />
               <Input
-                placeholder="Search ticket #, trader name, email..."
+                placeholder="Search ticket #, trader, subject..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 text-xs"
+                className="pl-8 h-8 text-xs bg-[#0B0F19] border-[#1F2937] rounded-lg"
               />
             </div>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
-            >
-              <option value="all">All Statuses</option>
-              <option value="open">Open (Unread)</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-            </select>
-
-            {/* Priority Filter */}
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
-            >
-              <option value="all">All Priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-
-            {/* Category Filter */}
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+              className="h-8 px-2 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-[11px] text-gray-300 focus:outline-none focus:border-emerald-500 font-mono shrink-0"
             >
               <option value="all">All Categories</option>
-              <option value="billing">Billing & Checkout</option>
-              <option value="rules">Trading Rules & Breaches</option>
-              <option value="tech_mt5">MT5 Gateway / Bridge</option>
-              <option value="kyc">KYC & Identity</option>
-              <option value="general">General Support</option>
+              <option value="billing">Billing</option>
+              <option value="rules">Rules</option>
+              <option value="tech_mt5">MT5 Bridge</option>
+              <option value="kyc">KYC</option>
+              <option value="general">General</option>
             </select>
-
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Master-Detail 2-Column Main Layout ────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
-        
-        {/* ── Left Column: Ticket Queue Table (5 Cols) ──────────────────────── */}
-        <div className="lg:col-span-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-200 flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-emerald-400" />
-              Ticket Queue ({displayedTickets.length})
-            </h3>
-            <span className="text-[11px] text-gray-500">Click card to view</span>
           </div>
 
-          {/* Quick Segmented Filter Tabs */}
+          {/* Quick Segmented Filter Tabs (Spacious, No Truncated Text) */}
           <div className="grid grid-cols-4 gap-1 p-1 bg-[#0A0D17] border border-[#1F2937] rounded-xl text-xs font-semibold">
             <button
               type="button"
               onClick={() => setQuickQueueFilter('needs_reply')}
-              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 quickQueueFilter === 'needs_reply'
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${queueCounts.needsReply > 0 ? 'bg-amber-400 animate-pulse' : 'bg-gray-500'}`} />
-              <span className="truncate">Needs Reply</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${queueCounts.needsReply > 0 ? 'bg-amber-400 animate-pulse' : 'bg-gray-500'}`} />
+              <span className="text-[11px] font-medium truncate">Needs Reply</span>
+              <span className="text-[10px] font-mono px-1 rounded-full bg-amber-500/20 text-amber-300 font-bold">
                 {queueCounts.needsReply}
               </span>
             </button>
@@ -575,14 +483,14 @@ export default function AdminHelpdeskPage() {
             <button
               type="button"
               onClick={() => setQuickQueueFilter('open')}
-              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 quickQueueFilter === 'open'
                   ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
               }`}
             >
-              <span className="truncate">Active</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">
+              <span className="text-[11px] font-medium truncate">Active</span>
+              <span className="text-[10px] font-mono px-1 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">
                 {queueCounts.inProgress}
               </span>
             </button>
@@ -590,14 +498,14 @@ export default function AdminHelpdeskPage() {
             <button
               type="button"
               onClick={() => setQuickQueueFilter('resolved')}
-              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 quickQueueFilter === 'resolved'
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
               }`}
             >
-              <span className="truncate">Resolved</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
+              <span className="text-[11px] font-medium truncate">Resolved</span>
+              <span className="text-[10px] font-mono px-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
                 {queueCounts.resolved}
               </span>
             </button>
@@ -605,20 +513,21 @@ export default function AdminHelpdeskPage() {
             <button
               type="button"
               onClick={() => setQuickQueueFilter('all')}
-              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 quickQueueFilter === 'all'
                   ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
               }`}
             >
-              <span className="truncate">All</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-gray-800 text-gray-300 font-bold">
+              <span className="text-[11px] font-medium truncate">All</span>
+              <span className="text-[10px] font-mono px-1 rounded-full bg-gray-800 text-gray-300 font-bold">
                 {queueCounts.total}
               </span>
             </button>
           </div>
 
-          <div className="space-y-2.5 max-h-[calc(100vh-320px)] min-h-[500px] overflow-y-auto pr-1.5 custom-scrollbar">
+          {/* Ticket Cards List */}
+          <div className="space-y-2 max-h-[calc(100vh-210px)] min-h-[580px] overflow-y-auto pr-1 custom-scrollbar">
             {displayedTickets.length === 0 ? (
               <Card className="bg-[#111827] border-[#1F2937]">
                 <CardContent className="py-12 text-center text-gray-400 space-y-2">
@@ -739,13 +648,13 @@ export default function AdminHelpdeskPage() {
           </div>
         </div>
 
-        {/* ── Right Column: Conversation & Response Panel (7 Cols) ─────────── */}
-        <div className="lg:col-span-7">
+        {/* ── Right Column: Conversation & Response Panel (8 Cols - Highly Spacious) ── */}
+        <div className="lg:col-span-8">
           {activeTicket ? (
-            <Card className="bg-[#111827] border-[#1F2937] flex flex-col h-[calc(100vh-270px)] min-h-[580px] justify-between overflow-hidden shadow-xl">
+            <Card className="bg-[#111827] border-[#1F2937] flex flex-col h-[calc(100vh-210px)] min-h-[580px] justify-between overflow-hidden shadow-2xl">
               
               {/* Ticket Detail Header */}
-              <CardHeader className="border-b border-[#1F2937]/80 pb-3 shrink-0 bg-[#0B0F19]/50">
+              <CardHeader className="border-b border-[#1F2937]/80 py-3 px-5 shrink-0 bg-[#0B0F19]/70">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2.5">
@@ -757,11 +666,11 @@ export default function AdminHelpdeskPage() {
                       </h3>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400 mt-1 font-mono">
-                      <span>Trader: {activeTicket.display_name || activeTicket.user_login}</span>
+                      <span>Trader: <strong className="text-gray-200 font-semibold">{activeTicket.display_name || activeTicket.user_login}</strong></span>
                       <span>•</span>
                       <span>{activeTicket.user_email || 'No Email'}</span>
                       <span>•</span>
-                      <span className="text-emerald-400 uppercase">{activeTicket.category}</span>
+                      <span className="text-emerald-400 uppercase font-semibold">{activeTicket.category}</span>
                     </div>
                   </div>
 
@@ -772,7 +681,7 @@ export default function AdminHelpdeskPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => updateStatusMutation.mutate({ id: activeTicket.id, status: 'resolved' })}
-                        className="h-8 text-xs gap-1 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                        className="h-8 text-xs gap-1.5 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Mark Resolved
@@ -782,7 +691,7 @@ export default function AdminHelpdeskPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => updateStatusMutation.mutate({ id: activeTicket.id, status: 'in_progress' })}
-                        className="h-8 text-xs gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                        className="h-8 text-xs gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         Reopen
@@ -816,7 +725,7 @@ export default function AdminHelpdeskPage() {
 
               {/* Trader Waiting Alert Banner */}
               {isTicketNeedingReply(activeTicket) && (
-                <div className="px-5 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-300 flex items-center justify-between shrink-0">
+                <div className="px-5 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-300 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -832,7 +741,7 @@ export default function AdminHelpdeskPage() {
               )}
 
               {/* Scrollable Message Thread */}
-              <CardContent className="p-5 flex-1 overflow-y-auto space-y-4 font-sans bg-[#0B0F19]/20">
+              <CardContent className="p-5 flex-1 overflow-y-auto space-y-4 font-sans bg-[#080C14]/30">
                 {activeMessages.length === 0 ? (
                   <div className="py-16 text-center text-gray-500 text-xs">
                     No message history loaded for this ticket.
@@ -846,7 +755,7 @@ export default function AdminHelpdeskPage() {
                         className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
                       >
                         <div className="flex items-center gap-2 mb-1 text-[11px] font-mono text-gray-400">
-                          <span className={isAdmin ? 'text-emerald-400 font-bold' : 'text-gray-300'}>
+                          <span className={isAdmin ? 'text-emerald-400 font-bold' : 'text-gray-300 font-medium'}>
                             {isAdmin ? (msg.sender_id === 1 || msg.message?.includes('AI') ? `${brandName} AI Copilot` : `${brandName} Support Agent`) : (msg.sender_name || activeTicket.display_name || 'Trader')}
                           </span>
                           <span>•</span>
@@ -854,7 +763,7 @@ export default function AdminHelpdeskPage() {
                         </div>
 
                         <div 
-                          className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed ${
+                          className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                             isAdmin 
                               ? 'bg-emerald-500/10 border border-emerald-500/30 text-gray-100 rounded-tr-none' 
                               : 'bg-[#111827] border border-[#1F2937] text-gray-200 rounded-tl-none shadow-sm'
@@ -869,64 +778,79 @@ export default function AdminHelpdeskPage() {
                 <div ref={messagesEndRef} />
               </CardContent>
 
-              {/* Canned Response Presets & Reply Box */}
-              <CardFooter className="border-t border-[#1F2937]/80 p-4 flex flex-col gap-3 bg-[#0B0F19]/60 shrink-0">
+              {/* ── Beautiful, Spacious Admin Reply Composer ──────────────────────── */}
+              <CardFooter className="border-t border-[#1F2937]/80 p-4 flex flex-col gap-3 bg-[#0B0F19]/90 shrink-0">
                 
                 {/* Canned Responses Row */}
-                <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1">
-                  <button
-                    type="button"
-                    onClick={handleAiDraftReply}
-                    disabled={isAutoDrafting || !selectedTicketId}
-                    className="px-3 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-[11px] shadow-sm flex items-center gap-1.5 shrink-0 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <Sparkles className={`h-3 w-3 ${isAutoDrafting ? 'animate-spin' : ''}`} />
-                    {isAutoDrafting ? 'Drafting with AI...' : '✨ AI Auto-Draft'}
-                  </button>
-
-                  <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider shrink-0 mx-1 flex items-center gap-1">
-                    Presets:
-                  </span>
-                  {CANNED_RESPONSES.map((cr) => (
+                <div className="w-full flex items-center justify-between gap-2 overflow-x-auto pb-0.5">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
-                      key={cr.title}
                       type="button"
-                      onClick={() => setReplyMessage(cr.text)}
-                      className="px-2.5 py-1 rounded-md bg-[#111827] hover:bg-emerald-500/20 border border-[#1F2937] hover:border-emerald-500/40 text-[11px] text-gray-300 hover:text-emerald-300 transition-all shrink-0 cursor-pointer"
+                      onClick={handleAiDraftReply}
+                      disabled={isAutoDrafting || !selectedTicketId}
+                      className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950/40 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                     >
-                      {cr.title}
+                      <Sparkles className={`h-3.5 w-3.5 ${isAutoDrafting ? 'animate-spin' : ''}`} />
+                      {isAutoDrafting ? 'Drafting with AI...' : '✨ AI Auto-Draft'}
                     </button>
-                  ))}
+                    <span className="text-[11px] text-gray-500 font-mono hidden md:inline">| Presets:</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-x-auto">
+                    {CANNED_RESPONSES.map((cr) => (
+                      <button
+                        key={cr.title}
+                        type="button"
+                        onClick={() => setReplyMessage(cr.text)}
+                        className="px-2.5 py-1 rounded-md bg-[#111827] hover:bg-emerald-500/20 border border-[#1F2937] hover:border-emerald-500/40 text-[11px] text-gray-300 hover:text-emerald-300 transition-all shrink-0 cursor-pointer"
+                      >
+                        {cr.title}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Reply Form */}
-                <form onSubmit={handleSendReplySubmit} className="w-full space-y-2">
-                  <div className="relative">
-                    <Textarea
-                      placeholder="Type admin response (supports markdown and quick guidelines)..."
-                      value={replyMessage}
-                      onChange={(e) => setReplyMessage(e.target.value)}
-                      rows={3}
-                      className="text-xs bg-[#0B0F19] border-[#1F2937] focus:border-emerald-500 pr-56"
-                    />
-                    <div className="absolute right-2.5 bottom-2.5 flex items-center gap-2">
+                {/* Reply Form (Spacious Canvas, NO overlapping buttons) */}
+                <form onSubmit={handleSendReplySubmit} className="w-full space-y-2.5">
+                  <Textarea
+                    placeholder="Type your official admin response here... (Markdown supported, Press Ctrl+Enter to send)"
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault()
+                        handleSendReplySubmit(e)
+                      }
+                    }}
+                    rows={4}
+                    className="w-full text-xs sm:text-sm bg-[#080C14] border-[#1F2937] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 p-3.5 rounded-xl text-gray-100 placeholder:text-gray-500 leading-relaxed resize-y min-h-[95px]"
+                  />
+
+                  {/* Dedicated Action Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>Press <kbd className="px-1.5 py-0.5 rounded bg-[#111827] border border-gray-700 font-mono text-[10px] text-gray-300">Ctrl + Enter</kbd> to quickly send</span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 self-end sm:self-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         disabled={sendReplyMutation.isPending || isSendingAndResolving}
                         onClick={handleSendAndResolve}
-                        className="gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 h-8 text-xs font-semibold"
+                        className="gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 h-9 px-4 text-xs font-semibold"
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                         Send & Mark Resolved
                       </Button>
+
                       <Button
                         type="submit"
                         variant="primary"
                         size="sm"
                         loading={sendReplyMutation.isPending && !isSendingAndResolving}
-                        className="gap-1.5 shadow-emerald-500/20 h-8 text-xs font-semibold"
+                        className="gap-2 shadow-emerald-500/20 h-9 px-5 text-xs font-semibold"
                       >
                         <Send className="h-3.5 w-3.5" />
                         Send Reply
@@ -939,7 +863,7 @@ export default function AdminHelpdeskPage() {
 
             </Card>
           ) : (
-            <Card className="bg-[#111827] border-[#1F2937] h-[calc(100vh-270px)] min-h-[580px] flex items-center justify-center text-center p-8">
+            <Card className="bg-[#111827] border-[#1F2937] h-[calc(100vh-210px)] min-h-[580px] flex items-center justify-center text-center p-8 shadow-xl">
               <div className="space-y-3">
                 <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
                   <Headphones className="h-6 w-6" />
