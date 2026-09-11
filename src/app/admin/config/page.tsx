@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { ChallengePlan, SmtpConfig, WebhookConfig, ScalingRules, ScalingQueueItem, ScalingEvent } from '@/types/api'
+import type { ChallengePlan, SmtpConfig, WebhookConfig, ScalingRules, ScalingQueueItem, ScalingEvent, AiSettings } from '@/types/api'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
 } from '@/components/ui/card'
@@ -258,7 +258,61 @@ export default function ConfigurationHubPage() {
   const queryClient = useQueryClient()
 
   // Main Tab: 'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling'
-  const [activeTab, setActiveTab] = useState<'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling' | 'license'>('plans')
+  const [activeTab, setActiveTab] = useState<'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling' | 'license' | 'ai_engine'>('plans')
+
+  // ─────────────────────────────────────────────────────────────────
+  // AI POWERHOUSE (GEMINI 2.0 FLASH & DEEPSEEK) ENGINE STATE
+  // ─────────────────────────────────────────────────────────────────
+  const [aiForm, setAiForm] = useState<AiSettings>({
+    provider: 'hybrid',
+    gemini_api_key: '',
+    gemini_model: 'gemini-2.0-flash',
+    ollama_endpoint: 'http://localhost:11434',
+    ollama_model: 'deepseek-r1:latest',
+    ai_support_autopilot: 1,
+    ai_sentinel_autoban: 0,
+    service_key: '',
+    max_tokens: 1024,
+    temperature: 0.3,
+  })
+  const [showGeminiKey, setShowGeminiKey] = useState(false)
+
+  const { data: aiSettingsData, refetch: refetchAiSettings } = useQuery({
+    queryKey: ['admin-ai-settings-config'],
+    queryFn: async () => {
+      const res = await api.admin.ai.getSettings()
+      return res.ok && res.data ? res.data : null
+    },
+  })
+
+  useEffect(() => {
+    if (aiSettingsData) {
+      setAiForm(prev => ({
+        ...prev,
+        ...aiSettingsData,
+        gemini_api_key: aiSettingsData.gemini_api_key || '',
+        gemini_model: aiSettingsData.gemini_model || 'gemini-2.0-flash',
+        provider: aiSettingsData.provider || 'hybrid',
+      }))
+    }
+  }, [aiSettingsData])
+
+  const saveAiSettingsMutation = useMutation({
+    mutationFn: async (payload: Partial<AiSettings>) => {
+      const res = await api.admin.ai.saveSettings(payload)
+      if (!res.ok) throw new Error(res.error || 'Failed to save AI settings.')
+      return res.data
+    },
+    onSuccess: () => {
+      toast.success('✨ Gemini API Key & AI Engine configuration saved!')
+      queryClient.invalidateQueries({ queryKey: ['admin-ai-settings-config'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-ai-settings'] })
+    },
+    onError: (err: any) => {
+      toast.error('Save Error: ' + err.message)
+    },
+  })
+
 
   // ─────────────────────────────────────────────────────────────────
   // AUTOMATED SCALING PLAN ENGINE STATE
@@ -3031,6 +3085,43 @@ export default function ConfigurationHubPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* AI Engine & Gemini Banner Card */}
+            <Card className="col-span-1 md:col-span-2 bg-gradient-to-r from-emerald-950/40 via-[#111827] to-[#0B0F19] border-emerald-500/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      Google Gemini 2.0 Flash &amp; DeepSeek AI Engine
+                      {aiForm.gemini_api_key ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/40">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/40">
+                          Key Required
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-xs text-gray-400">
+                      Configure your free Google Gemini API key or local DeepSeek model to power AI Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setActiveTab('ai_engine')}
+                  className="gap-1.5 text-xs shrink-0 shadow-emerald-500/20"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Configure Gemini Key &rarr;
+                </Button>
+              </div>
+            </Card>
+
             
             {/* 1. Discord Webhook Channel */}
             <Card className="bg-[#111827] border-[#1F2937]">
@@ -3825,6 +3916,218 @@ export default function ConfigurationHubPage() {
               </Card>
             </>
           )}
+        </div>
+      )}
+
+      
+      {/* ── TAB: AI ENGINE & GEMINI ─────────────────────────────────────────── */}
+      {activeTab === 'ai_engine' && (
+        <div className="space-y-6 w-full max-w-4xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-400" />
+                AI Powerhouse &amp; LLM Engine Settings
+              </h2>
+              <p className="text-xs text-gray-400">
+                Connect Google Gemini 2.0 Flash or local DeepSeek-R1 to power Zenith Trader Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => saveAiSettingsMutation.mutate(aiForm)}
+              loading={saveAiSettingsMutation.isPending}
+              className="gap-1.5 shadow-emerald-500/20 shrink-0"
+            >
+              <Save className="h-4 w-4" />
+              Save AI Configuration
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 1. Google Gemini Cloud Engine */}
+            <Card className="bg-[#111827] border-[#1F2937]">
+              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                        Google Gemini 2.0 Flash
+                        {aiForm.gemini_api_key ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            CONNECTED
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            KEY REQUIRED
+                          </span>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-xs text-gray-400">
+                        Zero-cost free tier with 2M context window &amp; instant responses.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="gemini-key">Gemini API Key</Label>
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 underline"
+                    >
+                      Get Free API Key from Google AI Studio &rarr;
+                    </a>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="gemini-key"
+                      type={showGeminiKey ? 'text' : 'password'}
+                      placeholder="AIzaSy..."
+                      value={aiForm.gemini_api_key}
+                      onChange={(e) => setAiForm({ ...aiForm, gemini_api_key: e.target.value })}
+                      className="font-mono text-xs pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGeminiKey(!showGeminiKey)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-white"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    Your key is stored securely in your WordPress database and only used for your prop firm.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="gemini-model">Gemini Model</Label>
+                  <select
+                    id="gemini-model"
+                    value={aiForm.gemini_model}
+                    onChange={(e) => setAiForm({ ...aiForm, gemini_model: e.target.value })}
+                    className="w-full bg-[#0B0F19] border border-[#1F2937] rounded-xl text-xs px-3 py-2 text-gray-200 focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="gemini-2.0-flash">gemini-2.0-flash (Recommended: Free, Fastest, Highest Accuracy)</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Fast Tier)</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning)</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 2. DeepSeek-R1 / Local Ollama Engine */}
+            <Card className="bg-[#111827] border-[#1F2937]">
+              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+                      <Bot className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-gray-100">Local DeepSeek-R1 / Ollama</CardTitle>
+                      <CardDescription className="text-xs text-gray-400">
+                        100% Free Offline On-Premises LLM (VPS or local server).
+                      </CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ollama-endpoint">Ollama Endpoint URL</Label>
+                  <Input
+                    id="ollama-endpoint"
+                    placeholder="http://localhost:11434"
+                    value={aiForm.ollama_endpoint}
+                    onChange={(e) => setAiForm({ ...aiForm, ollama_endpoint: e.target.value })}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-gray-500 font-mono">
+                    Run `ollama run deepseek-r1:latest` on your VPS
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="ollama-model">Ollama Model</Label>
+                  <Input
+                    id="ollama-model"
+                    placeholder="deepseek-r1:latest"
+                    value={aiForm.ollama_model}
+                    onChange={(e) => setAiForm({ ...aiForm, ollama_model: e.target.value })}
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 3. Routing Provider & Autonomous Toggles */}
+          <Card className="bg-[#111827] border-[#1F2937]">
+            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+              <CardTitle className="text-base text-gray-100">Routing Mode &amp; Autonomous Autopilot</CardTitle>
+              <CardDescription className="text-xs text-gray-400">
+                Choose how queries are dispatched between Gemini, DeepSeek, and deterministic failover.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-6 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { id: 'hybrid', title: 'Hybrid Dual-Engine', desc: 'Primary Gemini with automatic fallback to DeepSeek / Heuristics (Recommended)' },
+                  { id: 'gemini', title: 'Gemini Cloud Only', desc: 'Queries dispatched strictly via Google Generative Language API' },
+                  { id: 'ollama', title: 'DeepSeek Local Only', desc: '100% private offline queries via local Ollama daemon' },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setAiForm({ ...aiForm, provider: m.id as any })}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1 ${
+                      aiForm.provider === m.id
+                        ? 'bg-emerald-500/15 border-emerald-500 text-white'
+                        : 'bg-[#0B0F19] border-[#1F2937] text-gray-300 hover:border-gray-700'
+                    }`}
+                  >
+                    <span className="text-xs font-bold">{m.title}</span>
+                    <span className="text-[11px] text-gray-400">{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-[#1F2937] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-gray-200">24/7 AI Support Desk Autopilot</div>
+                  <div className="text-[11px] text-gray-400">Automatically answers incoming trader support tickets in real-time.</div>
+                </div>
+                <Switch
+                  checked={Boolean(aiForm.ai_support_autopilot)}
+                  onCheckedChange={(checked) => setAiForm({ ...aiForm, ai_support_autopilot: checked ? 1 : 0 })}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-[#1F2937] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-gray-200">AI Sentinel Toxic Scalper &amp; Syndicate Autoban</div>
+                  <div className="text-[11px] text-gray-400">Automatically freezes accounts identified in severe microsecond copy-trading clusters.</div>
+                </div>
+                <Switch
+                  checked={Boolean(aiForm.ai_sentinel_autoban)}
+                  onCheckedChange={(checked) => setAiForm({ ...aiForm, ai_sentinel_autoban: checked ? 1 : 0 })}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
