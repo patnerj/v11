@@ -451,13 +451,13 @@ export default function OperationsHubPage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-[#111827] p-1.5 rounded-xl border border-[#1F2937]">
+        <div className="flex flex-wrap items-center gap-1.5 bg-surface-muted p-1.5 rounded-xl border border-border">
           <button
             onClick={() => setActiveTab('health')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'health'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
             }`}
           >
             <Activity className="h-3.5 w-3.5" />
@@ -468,8 +468,8 @@ export default function OperationsHubPage() {
             onClick={() => setActiveTab('feed')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'feed'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
             }`}
           >
             <Radio className="h-3.5 w-3.5" />
@@ -480,8 +480,8 @@ export default function OperationsHubPage() {
             onClick={() => setActiveTab('mt5')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'mt5'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
             }`}
           >
             <Server className="h-3.5 w-3.5" />
@@ -492,8 +492,8 @@ export default function OperationsHubPage() {
             onClick={() => setActiveTab('news')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'news'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
             }`}
           >
             <Calendar className="h-3.5 w-3.5" />
@@ -504,8 +504,8 @@ export default function OperationsHubPage() {
             onClick={() => setActiveTab('challenges')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'challenges'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
             }`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />

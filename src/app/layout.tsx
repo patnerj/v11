@@ -252,7 +252,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             try {
-              var theme = localStorage.getItem('user-theme') || 'midnight-obsidian';
+              var nextTheme = localStorage.getItem('theme');
+              var theme = localStorage.getItem('user-theme');
+              if (!theme) {
+                theme = (nextTheme === 'light') ? 'clean-light' : 'midnight-obsidian';
+              } else if (nextTheme === 'light' && theme !== 'clean-light') {
+                theme = 'clean-light';
+              }
               document.documentElement.setAttribute('data-theme', theme);
 
               var savedFont = localStorage.getItem('fxsim:theme-font') || 'poppins';
