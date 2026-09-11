@@ -27,7 +27,7 @@ const t = {
 const grayFamily = (bright: string, dim: string, faint: string) => ({
   50: bright, 100: bright, 200: bright, 300: bright,
   400: dim, 500: dim, 600: faint,
-  700: t.surfaceStrong, 800: t.surfaceMuted, 900: t.bg, 950: t.bg,
+  700: t.surfaceStrong, 800: t.surfaceMuted, 900: t.text, 950: t.text,
 })
 
 const stockBridge = {

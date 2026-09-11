@@ -593,17 +593,17 @@ export default function TradersHubPage() {
       <Mt5UnassignedBanner />
 
       {/* ── Top Bar Header ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
               Traders Management
             </h1>
             <Badge tone="accent" size="sm" className="font-mono">
               {allTraders.length} Active Accounts
             </Badge>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             Directory of registered prop traders, challenge progression, KYC verification, and custom risk overrides.
           </p>
         </div>
@@ -613,7 +613,7 @@ export default function TradersHubPage() {
             variant="outline" 
             size="sm" 
             onClick={handleExportCSV}
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-border text-text hover:bg-surface-muted gap-2 h-9"
           >
             <Download className="h-4 w-4 text-emerald-400" />
             Export CSV
@@ -639,23 +639,23 @@ export default function TradersHubPage() {
       </div>
 
       {/* ── Filter Bar Card ───────────────────────────────────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
+      <Card className="bg-surface border-border">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             
             {/* Search Input */}
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
               <Input
                 placeholder="Search by trader name, email, or #TRD-88219..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-[#0B0F19] border-[#1F2937] text-sm"
+                className="pl-10 bg-surface border-border text-text text-sm"
               />
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted hover:text-text"
                 >
                   Clear
                 </button>
@@ -667,11 +667,11 @@ export default function TradersHubPage() {
               
               {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-gray-400">Status:</span>
+                <span className="text-xs font-semibold text-text-muted">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-emerald-500 cursor-pointer"
                 >
                   <option value="all">All Statuses</option>
                   <option value="phase1">Phase 1 Evaluation</option>
@@ -684,11 +684,11 @@ export default function TradersHubPage() {
 
               {/* KYC Status Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-gray-400">KYC:</span>
+                <span className="text-xs font-semibold text-text-muted">KYC:</span>
                 <select
                   value={kycFilter}
                   onChange={(e) => setKycFilter(e.target.value)}
-                  className="h-10 rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-emerald-500 cursor-pointer"
                 >
                   <option value="all">All KYC</option>
                   <option value="verified">Verified</option>
@@ -707,7 +707,7 @@ export default function TradersHubPage() {
                     setStatusFilter('all')
                     setKycFilter('all')
                   }}
-                  className="text-xs text-gray-400 hover:text-emerald-400 h-9"
+                  className="text-xs text-text-muted hover:text-accent h-9"
                 >
                   Reset
                 </Button>
@@ -720,17 +720,17 @@ export default function TradersHubPage() {
       </Card>
 
       {/* ── Traders Data Table ────────────────────────────────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
+      <Card className="bg-surface border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="text-base text-gray-100">
+            <CardTitle className="text-base text-text">
               Traders Directory ({filteredTraders.length})
             </CardTitle>
-            <CardDescription className="text-xs text-gray-400">
+            <CardDescription className="text-xs text-text-muted">
               Active evaluations, funded accounts, and balance health
             </CardDescription>
           </div>
-          <span className="text-xs font-mono text-gray-500">
+          <span className="text-xs font-mono text-text-muted">
             Showing {filteredTraders.length} of {allTraders.length} records
           </span>
         </CardHeader>
@@ -747,8 +747,8 @@ export default function TradersHubPage() {
 
         {/* Pagination Bar */}
         {usersData && (usersData.pages > 1 || (usersData.total && usersData.total > 25)) && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-[#1F2937] bg-[#0B0F19]/50">
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-border bg-surface-muted/30">
+            <div className="flex items-center gap-2 text-xs text-text-muted font-mono">
               <span>Rows per page:</span>
               <select
                 value={pageSize}
@@ -756,7 +756,7 @@ export default function TradersHubPage() {
                   setPageSize(Number(e.target.value))
                   setPage(1)
                 }}
-                className="bg-[#111827] border border-[#1F2937] rounded px-2 py-1 text-xs text-gray-200 focus:outline-none"
+                className="bg-surface border border-border rounded px-2 py-1 text-xs text-text focus:outline-none"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -764,7 +764,7 @@ export default function TradersHubPage() {
                 <option value={100}>100</option>
               </select>
               <span className="ml-2">
-                Page <strong className="text-white">{page}</strong> of <strong className="text-white">{usersData.pages || 1}</strong> ({usersData.total} total traders)
+                Page <strong className="text-text">{page}</strong> of <strong className="text-text">{usersData.pages || 1}</strong> ({usersData.total} total traders)
               </span>
             </div>
 
@@ -919,8 +919,8 @@ function AdjustBalanceDialog({ user, onClose, onSaved }: {
               </span>
             </div>
             <div className="flex justify-between pt-1 border-t border-[#1F2937]">
-              <span className="font-medium text-gray-300">New balance</span>
-              <span className="font-mono font-medium text-white">{formatExactMoney(newBalance)}</span>
+              <span className="font-medium text-text">New balance</span>
+              <span className="font-mono font-medium text-text">{formatExactMoney(newBalance)}</span>
             </div>
           </div>
           <div className="space-y-1.5">

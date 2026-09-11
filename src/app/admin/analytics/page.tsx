@@ -206,8 +206,8 @@ export default function AdminAnalyticsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1F2937]/80 pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans">
-              Platform Analytics
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
+              Advanced Analytics &amp; Risk Insights
             </h1>
             <Badge tone="accent" size="sm" className="font-mono">
               Live Feed

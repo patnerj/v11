@@ -379,17 +379,17 @@ export default function PayoutsHubPage() {
     <div className="space-y-8 pb-12">
       
       {/* ── Top Bar Header ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
               Payouts & Billing Engine
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
               Live Billing v11.4
             </Badge>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             Audit profit split calculations, verify crypto destination addresses, and disburse withdrawals.
           </p>
         </div>
@@ -399,7 +399,7 @@ export default function PayoutsHubPage() {
             variant="outline" 
             size="sm" 
             onClick={handleExportCSV}
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-border text-text hover:bg-surface-muted gap-2 h-9"
           >
             <Download className="h-4 w-4 text-accent" />
             Export CSV
@@ -425,24 +425,24 @@ export default function PayoutsHubPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Total Pending Requests */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Total Pending Requests
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
                   <Clock className="h-4 w-4" />
                 </div>
               </div>
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
                   {formatMoney(metrics.pendingTotal)}
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Awaiting audit approval
                 </span>
                 <Badge tone={metrics.pendingCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
@@ -453,14 +453,14 @@ export default function PayoutsHubPage() {
           </Card>
 
           {/* Card 2: Total Approved & Paid */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Total Approved & Paid
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
               </div>
@@ -470,7 +470,7 @@ export default function PayoutsHubPage() {
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Disbursed on-chain
                 </span>
                 <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
@@ -481,24 +481,24 @@ export default function PayoutsHubPage() {
           </Card>
 
           {/* Card 3: Rejected Requests */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Rejected Requests
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-red-400 group-hover:border-red-500/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-red-400 group-hover:border-red-500/40 transition-colors">
                   <XCircle className="h-4 w-4" />
                 </div>
               </div>
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
                   {metrics.rejectedCount}
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Failed compliance check
                 </span>
                 <Badge tone={metrics.rejectedCount > 0 ? "danger" : "neutral"} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
@@ -509,14 +509,14 @@ export default function PayoutsHubPage() {
           </Card>
 
           {/* Card 4: Average Processing Time */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Avg Processing Speed
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
                   <Clock className="h-4 w-4" />
                 </div>
               </div>
@@ -526,7 +526,7 @@ export default function PayoutsHubPage() {
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Target SLA &lt; {SLA_TARGET_HOURS.toFixed(1)} hrs {metrics.slaSampleSize > 0 && `(${metrics.slaSampleSize} resolved)`}
                 </span>
                 <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
@@ -543,7 +543,7 @@ export default function PayoutsHubPage() {
       <div className="space-y-4">
         
         {/* Status Tab Navigation */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#1F2937] pb-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
           {TAB_ITEMS.map((tab) => {
             const isActive = activeTab === tab.key
             return (
@@ -553,12 +553,12 @@ export default function PayoutsHubPage() {
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-accent text-slate-950 shadow-sm font-bold'
-                    : 'bg-[#111827] text-gray-400 hover:text-white hover:bg-slate-800 border border-[#1F2937]'
+                    : 'bg-surface text-text-muted hover:text-text hover:bg-surface-muted border border-border'
                 }`}
               >
                 <span>{tab.label}</span>
                 <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
-                  isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-[#0B0F19] text-gray-400'
+                  isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-surface-muted text-text-muted'
                 }`}>
                   {tab.count}
                 </span>
@@ -568,30 +568,30 @@ export default function PayoutsHubPage() {
         </div>
 
         {/* Search & Filter Bar */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-border">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               
               <div className="relative w-full sm:max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
                 <Input
                   placeholder="Search by Trader Name, Email, PO-3, or Wallet Address..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-[#0B0F19] border-[#1F2937] text-sm"
+                  className="pl-10 bg-surface-muted border-border text-text text-sm"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted hover:text-text"
                   >
                     Clear
                   </button>
                 )}
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-end text-xs text-gray-400">
-                <span>Showing <strong className="text-white font-mono">{filteredPayouts.length}</strong> of {allPayouts.length} requests</span>
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end text-xs text-text-muted">
+                <span>Showing <strong className="text-text font-mono">{filteredPayouts.length}</strong> of {allPayouts.length} requests</span>
               </div>
 
             </div>
@@ -601,14 +601,14 @@ export default function PayoutsHubPage() {
       </div>
 
       {/* ── 3. Payout Requests Data Table ─────────────────────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
+      <Card className="bg-surface border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+            <CardTitle className="text-base text-text flex items-center gap-2">
               <Wallet className="h-4 w-4 text-accent" />
               Payout Requests Queue ({filteredPayouts.length})
             </CardTitle>
-            <CardDescription className="text-xs text-gray-400">
+            <CardDescription className="text-xs text-text-muted">
               Audit profit split calculation and approve on-chain disbursement
             </CardDescription>
           </div>

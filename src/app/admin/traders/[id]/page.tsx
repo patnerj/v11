@@ -534,7 +534,7 @@ export default function Trader360ProfilePage() {
             
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
                   {trader.name}
                 </h1>
                 <Badge tone="accent" size="sm" className="font-mono">

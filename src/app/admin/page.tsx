@@ -754,14 +754,14 @@ export default function AdminCommandCenter() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Gross Inflow */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Gross Capital Inflow
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
                   <DollarSign className="h-4 w-4" />
                 </div>
               </div>
@@ -773,7 +773,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Challenge purchases & add-ons
                 </span>
                 <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
@@ -784,14 +784,14 @@ export default function AdminCommandCenter() {
           </Card>
 
           {/* Card 2: Funded Payout Liability */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Funded Payout Liability
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
                   <Wallet className="h-4 w-4" />
                 </div>
               </div>
@@ -803,7 +803,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Pending & open profitable trades
                 </span>
                 <Badge tone={pendingPayoutsCount > 0 ? 'warning' : 'neutral'} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
@@ -814,60 +814,60 @@ export default function AdminCommandCenter() {
           </Card>
 
           {/* Card 3: Net Retained Firm Margin */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
-                  Net Retained Firm Margin
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
+                  Retained Margin %
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
-                  <TrendingUp className="h-4 w-4" />
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-emerald-400 group-hover:border-emerald-500/40 transition-colors">
+                  <PiggyBank className="h-4 w-4" />
                 </div>
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-accent tracking-tight">
-                  {totalRev > 0 ? `${Math.max(0, Math.min(100, ((totalRev - pendingPayoutVal) / totalRev) * 100)).toFixed(1)}%` : '100.0%'}
+                <h3 className="text-2xl font-bold font-mono text-emerald-400 tracking-tight">
+                  {retainedMarginPct}
                 </h3>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Retained after all payouts
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone="success" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
                   Target &gt;85%
                 </Badge>
               </div>
             </CardContent>
           </Card>
 
-          {/* Card 4: Firm Risk Gauge */}
-          <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+          {/* Card 4: Net Exposure vs Bridge */}
+          <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
-                  Firm Risk Gauge
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
+                  A/B-Book Hedged Ratio
                 </span>
-                <div className={`h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center ${riskBreachesCount > 5 ? 'text-red-400 border-red-500/40' : riskBreachesCount > 0 ? 'text-amber-400 border-amber-500/40' : 'text-accent border-accent/40'}`}>
-                  <ShieldCheck className="h-4 w-4" />
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                  <Scale className="h-4 w-4" />
                 </div>
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className={`text-2xl font-bold font-mono tracking-tight ${riskBreachesCount > 5 ? 'text-red-400' : riskBreachesCount > 0 ? 'text-amber-400' : 'text-accent'}`}>
-                  {riskBreachesCount > 5 ? 'High Risk' : riskBreachesCount > 0 ? 'Moderate' : 'Safe'}
+                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
+                  {coverageRatio}
                 </h3>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Total exposure vs bridge
                 </span>
-                <Badge tone={riskBreachesCount > 5 ? 'danger' : riskBreachesCount > 0 ? 'warning' : 'accent'} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
-                  {riskBreachesCount} Flags
+                <Badge tone="neutral" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  0 Flags
                 </Badge>
               </div>
             </CardContent>
@@ -942,17 +942,17 @@ export default function AdminCommandCenter() {
             onClick={() => setIssueModalOpen(true)}
             className="cursor-pointer group block"
           >
-            <Card className="bg-gradient-to-br from-[#111827] to-[#111827]/80 border-[#1F2937] hover:border-accent/60 hover:shadow-[0_0_20px_var(--accent-glow)] transition-all duration-200 h-full">
+            <Card className="bg-surface border-border hover:border-accent/60 hover:shadow-[0_0_20px_var(--accent-glow)] transition-all duration-200 h-full">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="h-11 w-11 rounded-xl bg-accent/10 border border-accent/30 text-accent flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-accent/20 transition-all shadow-md shadow-accent/10">
                   <PlusCircle className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-sm font-semibold text-gray-100 group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  <h4 className="text-sm font-semibold text-text group-hover:text-accent transition-colors flex items-center gap-1.5">
                     Issue Challenge
                     <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
                   </h4>
-                  <p className="text-xs text-gray-400">Manual grant & bypass checkout</p>
+                  <p className="text-xs text-text-muted">Manual grant & bypass checkout</p>
                 </div>
               </CardContent>
             </Card>
@@ -960,21 +960,21 @@ export default function AdminCommandCenter() {
 
           {/* Action 2: Review KYC Queue */}
           <Link href="/admin/traders" className="group block">
-            <Card className="bg-gradient-to-br from-[#111827] to-[#111827]/80 border-[#1F2937] hover:border-blue-500/60 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-200 h-full">
+            <Card className="bg-surface border-border hover:border-blue-500/60 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-200 h-full">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="h-11 w-11 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-500/20 transition-all shadow-md shadow-blue-500/10">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-gray-100 group-hover:text-blue-400 transition-colors">
+                    <h4 className="text-sm font-semibold text-text group-hover:text-blue-400 transition-colors">
                       Review KYC Queue
                     </h4>
                     <span className="bg-blue-500/20 text-blue-400 text-[10px] font-mono px-1.5 py-0.2 rounded font-bold">
                       {kycList?.length ?? 0}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400">ID & proof of address audits</p>
+                  <p className="text-xs text-text-muted">ID & proof of address audits</p>
                 </div>
               </CardContent>
             </Card>
@@ -982,21 +982,21 @@ export default function AdminCommandCenter() {
 
           {/* Action 3: Process Pending Payouts */}
           <Link href="/admin/payouts" className="group block">
-            <Card className="bg-gradient-to-br from-[#111827] to-[#111827]/80 border-[#1F2937] hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all duration-200 h-full">
+            <Card className="bg-surface border-border hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all duration-200 h-full">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="h-11 w-11 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-amber-500/20 transition-all shadow-md shadow-amber-500/10">
                   <Wallet className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-gray-100 group-hover:text-amber-400 transition-colors">
+                    <h4 className="text-sm font-semibold text-text group-hover:text-amber-400 transition-colors">
                       Process Payouts
                     </h4>
                     <span className="bg-amber-500/20 text-amber-400 text-[10px] font-mono px-1.5 py-0.2 rounded font-bold">
                       {payoutsList?.length ?? 0}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400">Audit trader profit shares</p>
+                  <p className="text-xs text-text-muted">Audit trader profit shares</p>
                 </div>
               </CardContent>
             </Card>
@@ -1007,10 +1007,10 @@ export default function AdminCommandCenter() {
             onClick={() => setEmergencyModalOpen(true)}
             className="cursor-pointer group block"
           >
-            <Card className={`border-[#1F2937] transition-all duration-200 h-full ${
+            <Card className={`border-border transition-all duration-200 h-full ${
               isEmergencyPaused 
                 ? 'bg-red-950/40 border-red-500/60 hover:bg-red-900/50 shadow-[0_0_20px_rgba(239,68,68,0.3)]' 
-                : 'bg-gradient-to-br from-[#111827] to-[#111827]/80 hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                : 'bg-surface hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'
             }`}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-all ${
@@ -1022,11 +1022,11 @@ export default function AdminCommandCenter() {
                 </div>
                 <div className="min-w-0">
                   <h4 className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
-                    isEmergencyPaused ? 'text-red-300 font-bold' : 'text-gray-100 group-hover:text-red-400'
+                    isEmergencyPaused ? 'text-red-300 font-bold' : 'text-text group-hover:text-red-400'
                   }`}>
                     {isEmergencyPaused ? 'Trading HALTED' : 'Emergency Pause'}
                   </h4>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-text-muted">
                     {isEmergencyPaused ? 'Click to resume market' : 'Instant firm-wide freeze'}
                   </p>
                 </div>

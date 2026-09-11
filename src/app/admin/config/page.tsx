@@ -1421,7 +1421,7 @@ export default function ConfigurationHubPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
               Configuration & Engine Hub
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">

@@ -47,7 +47,7 @@ export default function AdminSetupWizardPage() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text flex items-center gap-3">
               Platform Setup &amp; Onboarding
               <Badge tone="accent" size="sm" className="font-mono">Step {step + 1} of {STEPS.length}</Badge>
             </h1>

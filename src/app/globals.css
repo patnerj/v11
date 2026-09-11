@@ -135,6 +135,55 @@
     --accent: 247 84% 62%;
   }
 
+  /* ── Clean Light Mode Universal Text & Surface Contrast Protection ── */
+  [data-theme="clean-light"] h1,
+  [data-theme="clean-light"] h2,
+  [data-theme="clean-light"] h3,
+  [data-theme="clean-light"] h4,
+  [data-theme="clean-light"] h5,
+  [data-theme="clean-light"] h6 {
+    color: hsl(var(--text));
+  }
+
+  /* Elements with text-white outside colored buttons or badges adapt to dark text */
+  [data-theme="clean-light"] .text-white:not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]) {
+    color: hsl(var(--text)) !important;
+  }
+
+  [data-theme="clean-light"] .text-slate-950,
+  [data-theme="clean-light"] .text-slate-900,
+  [data-theme="clean-light"] .text-gray-950,
+  [data-theme="clean-light"] .text-gray-900 {
+    color: hsl(var(--text)) !important;
+  }
+
+  [data-theme="clean-light"] .text-gray-100,
+  [data-theme="clean-light"] .text-gray-200,
+  [data-theme="clean-light"] .text-gray-300,
+  [data-theme="clean-light"] .text-slate-100,
+  [data-theme="clean-light"] .text-slate-200,
+  [data-theme="clean-light"] .text-slate-300 {
+    color: hsl(var(--text)) !important;
+  }
+
+  /* Hardcoded pitch-black cards adapt to clean white surfaces */
+  [data-theme="clean-light"] .bg-\[\#111827\],
+  [data-theme="clean-light"] .bg-\[\#0B0F19\],
+  [data-theme="clean-light"] .bg-\[\#0E131F\],
+  [data-theme="clean-light"] .bg-\[\#080C14\],
+  [data-theme="clean-light"] .bg-\[\#0A0D17\],
+  [data-theme="clean-light"] .bg-\[\#161F30\],
+  [data-theme="clean-light"] .bg-\[\#1E293B\] {
+    background-color: hsl(var(--surface)) !important;
+  }
+
+  [data-theme="clean-light"] .border-\[\#1F2937\],
+  [data-theme="clean-light"] .border-\[\#1F2937\]\/70,
+  [data-theme="clean-light"] .border-\[\#1F2937\]\/80,
+  [data-theme="clean-light"] .border-\[\#1F2937\]\/60 {
+    border-color: hsl(var(--border)) !important;
+  }
+
   html {
     color-scheme: light dark;
     scroll-behavior: smooth;

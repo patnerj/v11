@@ -252,29 +252,29 @@ export default function PaymentsHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header Banner ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
               Payment Gateways & Order Approvals
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
               Treasury Desk
             </Badge>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             Configure credit card processors, automated crypto checkout APIs, and review offline payment proofs.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 bg-[#111827] p-1.5 rounded-xl border border-[#1F2937]">
+        <div className="flex items-center gap-1.5 bg-surface-muted p-1.5 rounded-xl border border-border">
           <button
             onClick={() => setActiveTab('gateways')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'gateways'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             <CreditCard className="h-3.5 w-3.5" />
@@ -285,8 +285,8 @@ export default function PaymentsHubPage() {
             onClick={() => setActiveTab('queue')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'queue'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             <Clock className="h-3.5 w-3.5" />
@@ -307,16 +307,16 @@ export default function PaymentsHubPage() {
           )}
 
           {/* Stripe Card */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
                     <CreditCard className="h-5 w-5" />
                   </div>
                   <div>
-                    <CardTitle className="text-base text-gray-100">Stripe Credit & Debit Cards</CardTitle>
-                    <CardDescription className="text-xs text-gray-400">
+                    <CardTitle className="text-base text-text">Stripe Credit & Debit Cards</CardTitle>
+                    <CardDescription className="text-xs text-text-muted">
                       Direct credit/debit card checkout via Stripe Elements and Checkout sessions.
                     </CardDescription>
                   </div>
@@ -404,17 +404,17 @@ export default function PaymentsHubPage() {
             </CardContent>
           </Card>
 
-          {/* Cryptomus & Crypto Processor */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          {/* Cryptomus Crypto Gateway */}
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
                     <Cpu className="h-5 w-5" />
                   </div>
                   <div>
-                    <CardTitle className="text-base text-gray-100">Cryptomus & Crypto Settlement</CardTitle>
-                    <CardDescription className="text-xs text-gray-400">
+                    <CardTitle className="text-base text-text">Cryptomus & Crypto Settlement</CardTitle>
+                    <CardDescription className="text-xs text-text-muted">
                       Automated cryptocurrency checkout with instant blockchain confirmations (USDT, BTC, ETH).
                     </CardDescription>
                   </div>
@@ -455,16 +455,16 @@ export default function PaymentsHubPage() {
           </Card>
 
           {/* PayPal Commerce */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-400 flex items-center justify-center">
                     <Globe className="h-5 w-5" />
                   </div>
                   <div>
-                    <CardTitle className="text-base text-gray-100">PayPal Gateway</CardTitle>
-                    <CardDescription className="text-xs text-gray-400">
+                    <CardTitle className="text-base text-text">PayPal Gateway</CardTitle>
+                    <CardDescription className="text-xs text-text-muted">
                       Standard PayPal wallet and alternative card payments.
                     </CardDescription>
                   </div>
@@ -526,7 +526,7 @@ export default function PaymentsHubPage() {
       {/* ── TAB 2: MANUAL PAYMENT PROOFS QUEUE ────────────────────────────── */}
       {activeTab === 'queue' && (
         <div className="space-y-6">
-          <div className="bg-[#111827] border border-[#1F2937] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-xl">
             <DataTable
               data={orders}
               loading={isOrdersLoading}
@@ -536,7 +536,7 @@ export default function PaymentsHubPage() {
                   key: 'id',
                   header: 'Order #',
                   render: (o: PaymentOrder) => (
-                    <span className="font-mono font-bold text-white text-xs">#{o.id}</span>
+                    <span className="font-mono font-bold text-text text-xs">#{o.id}</span>
                   ),
                 },
                 {
@@ -546,7 +546,7 @@ export default function PaymentsHubPage() {
                     const isTourn = (o as any).order_type === 'tournament' || o.admin_note?.startsWith('tournament_entry:') || (o as any).plan_name?.startsWith('Tournament:')
                     return (
                       <div>
-                        <span className="font-bold text-white text-xs block">{o.user_email || `User #${o.user_id}`}</span>
+                        <span className="font-bold text-text text-xs block">{o.user_email || `User #${o.user_id}`}</span>
                         {isTourn ? (
                           <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 font-mono">
                             🏆 {(o as any).tournament_title ? `Tournament: ${(o as any).tournament_title}` : (o as any).plan_name || 'Tournament Entry Fee'}

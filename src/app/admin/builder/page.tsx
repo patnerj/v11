@@ -107,7 +107,7 @@ export default function AdminPageBuilder() {
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <h1 className="font-bold text-sm text-white leading-tight">Homepage Visual Builder</h1>
+              <h1 className="font-bold text-sm text-text leading-tight">Homepage Visual Builder</h1>
               <p className="text-[10px] text-gray-400 font-mono">Puck Drag &amp; Drop Component Engine</p>
             </div>
           </div>

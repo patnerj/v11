@@ -162,7 +162,7 @@ export default function AdminActivityPage() {
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-sans">
+              <h1 className="text-xl sm:text-2xl font-bold text-text tracking-tight font-sans">
                 Global Activity & Audit Hub
               </h1>
               {unreadCount > 0 && (
