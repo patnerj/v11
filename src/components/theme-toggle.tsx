@@ -3,25 +3,72 @@
 import * as React from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { useThemeContext } from '@/context/ThemeContext'
-import { Button } from '@/components/ui/button'
+import { useTheme } from 'next-themes'
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useThemeContext()
+export function ThemeToggle({ className }: { className?: string }) {
+  const { theme: ctxTheme, setTheme: setCtxTheme } = useThemeContext()
+  const { resolvedTheme, setTheme: setNextTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
 
-  // Consider anything other than clean-light as a 'dark' mode variant for the toggle state
-  const isDark = theme !== 'clean-light'
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Consider anything other than clean-light / light as a dark mode variant
+  const isDark = resolvedTheme === 'dark' || (ctxTheme !== 'clean-light' && resolvedTheme !== 'light')
+
+  const toggleTheme = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (isDark) {
+      setNextTheme('light')
+      setCtxTheme('clean-light')
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.setAttribute('data-theme', 'clean-light')
+      }
+      try {
+        localStorage.setItem('theme', 'light')
+        localStorage.setItem('user-theme', 'clean-light')
+      } catch (err) {}
+    } else {
+      setNextTheme('dark')
+      setCtxTheme('midnight-obsidian')
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.add('dark')
+        document.documentElement.setAttribute('data-theme', 'midnight-obsidian')
+      }
+      try {
+        localStorage.setItem('theme', 'dark')
+        localStorage.setItem('user-theme', 'midnight-obsidian')
+      } catch (err) {}
+    }
+  }
+
+  if (!mounted) {
+    return (
+      <div className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-[#1F2937] bg-gray-100 dark:bg-[#111827] flex items-center justify-center text-gray-400 ${className || ''}`}>
+        <Sun className="h-4 w-4" />
+      </div>
+    )
+  }
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={() => setTheme(isDark ? 'clean-light' : 'midnight-obsidian')}
-      className="h-9 w-9 rounded-full border-border-subtle bg-surface text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
-      title="Toggle Daylight/Night Light"
+    <button
+      type="button"
+      onClick={toggleTheme}
+      className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all shadow-sm group ${className || ''}`}
+      title={isDark ? "Switch to Day Mode (Light)" : "Switch to Night Mode (Dark)"}
+      aria-label="Toggle Day/Night Mode"
     >
-      <Sun className={`h-[1.2rem] w-[1.2rem] transition-all ${isDark ? '-rotate-90 scale-0' : 'rotate-0 scale-100'}`} />
-      <Moon className={`absolute h-[1.2rem] w-[1.2rem] transition-all ${isDark ? 'rotate-0 scale-100' : 'rotate-90 scale-0'}`} />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+      {isDark ? (
+        <Sun className="h-4 w-4 text-amber-400 group-hover:rotate-45 transition-transform" />
+      ) : (
+        <Moon className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:-rotate-12 transition-transform" />
+      )}
+      <span className="sr-only">{isDark ? 'Day Mode' : 'Night Mode'}</span>
+    </button>
   )
 }
