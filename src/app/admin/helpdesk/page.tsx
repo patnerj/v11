@@ -110,6 +110,10 @@ export default function AdminHelpdeskPage() {
     const msg = (ticket.latest_message || '').toLowerCase()
     const text = `${sub} ${msg}`
 
+    if (cat === 'arena' || text.includes('arena') || text.includes('pvp') || text.includes('battle') || text.includes('tournament') || text.includes('deathmatch') || text.includes('1v1')) {
+      return `Hello ${traderName},\n\nThank you for contacting ${brand} Support regarding our Trading Arena (1v1 PVP & Battles)!\n\nHere is how you can participate:\n1. Open Arena: Navigate to the [Arena (PVP)] tab from the left navigation sidebar.\n2. Select or Host a Match:\n   • Join Open Battles: Browse live open matches created by other traders in the lobby and click [Join Battle].\n   • Create Your Own Battle: Click [Create Match], choose your trading symbol (e.g. BTC/USDT, ETH/USDT, EUR/USD), stake amount (entry pool), and battle duration (e.g. 5m, 15m, 1h).\n3. Real-Time Head-to-Head Trading: When the match starts, both traders trade live price action with equal starting capital and live order book execution.\n4. Winning & Payout: The trader with the highest percentage return (% gain) at the end of the timer wins the match! The total prize pool (minus platform fee) is automatically and instantly credited to your trader wallet balance.\n\nPlease let us know if you need any assistance setting up your match!\n\nBest regards,\n${brand} Arena Desk`
+    }
+
     if (cat === 'payout' || cat === 'billing' || text.includes('withdraw') || text.includes('payout') || text.includes('profit')) {
       return `Hello ${traderName},\n\nThank you for reaching out regarding your payouts. Our compliance team has reviewed your inquiry. Payout requests undergo standard automated risk verification and compliance audit. Provided your KYC documents are approved in your dashboard settings and your account has no outstanding drawdown rule breaches, eligible profit split disbursements are processed within 24 business hours directly to your verified payout destination.\n\nBest regards,\n${brand} Support Team`
     }
