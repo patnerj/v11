@@ -68,7 +68,7 @@ export default function ArenaLayout({ children }: { children: React.ReactNode })
   const role: 'trader' = 'trader'
 
   return (
-    <div className="min-h-screen bg-[#070A12] text-white flex flex-col">
+    <div className="min-h-screen bg-bg text-text flex flex-col">
       <ImpersonationBanner />
       <Sidebar
         open={sidebarOpen}

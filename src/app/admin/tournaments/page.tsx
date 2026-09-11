@@ -342,7 +342,7 @@ export default function AdminTournamentsPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeNavTab === 'tournaments'
               ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-              : 'text-gray-400 hover:text-white bg-[#111827] border border-[#1F2937]'
+              : 'text-text-muted hover:text-text bg-surface border border-border'
           }`}
         >
           <Trophy className="h-4 w-4" />
@@ -354,12 +354,12 @@ export default function AdminTournamentsPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeNavTab === 'pvp'
               ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-600/20'
-              : 'text-gray-400 hover:text-white bg-[#111827] border border-[#1F2937]'
+              : 'text-text-muted hover:text-text bg-surface border border-border'
           }`}
         >
-          <Swords className="h-4 w-4 text-red-400" />
+          <Swords className="h-4 w-4 text-red-500" />
           1v1 PvP Arena & Rake Revenue
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-red-500/20 text-red-300 border border-red-500/30">
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-red-500/20 text-red-500 dark:text-red-300 border border-red-500/30">
             15% Rake
           </span>
         </button>
@@ -369,75 +369,75 @@ export default function AdminTournamentsPage() {
         <>
           {/* ── Summary Metric Cards ──────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-border shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Total Competitions</span>
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-text-muted">Total Competitions</span>
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                     <Trophy className="h-3.5 w-3.5" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-white mt-1.5 font-mono">
+                <div className="text-2xl font-bold text-text mt-1.5 font-mono">
                   {metrics.total}
                 </div>
-                <span className="text-[10px] text-gray-500 font-mono">Hosted all-time</span>
+                <span className="text-[10px] text-text-muted font-mono">Hosted all-time</span>
               </CardContent>
             </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-border shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Active Contests</span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <span className="text-xs font-semibold text-text-muted">Active Contests</span>
+              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                 <Flame className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-emerald-400 mt-1.5 font-mono">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 font-mono">
               {metrics.active}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Live trading sprints</span>
+            <span className="text-[10px] text-text-muted font-mono">Live trading sprints</span>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-border shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Enrolled Traders</span>
-              <div className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
+              <span className="text-xs font-semibold text-text-muted">Enrolled Traders</span>
+              <div className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
                 <Users className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-blue-400 mt-1.5 font-mono">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1.5 font-mono">
               {metrics.totalEnrolled.toLocaleString()}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Community participants</span>
+            <span className="text-[10px] text-text-muted font-mono">Community participants</span>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-border shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Total Prize Pool</span>
-              <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <span className="text-xs font-semibold text-text-muted">Total Prize Pool</span>
+              <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
                 <DollarSign className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-amber-400 mt-1.5 font-mono">
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1.5 font-mono">
               {metrics.prizeSumFormatted}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Guaranteed cash & funded</span>
+            <span className="text-[10px] text-text-muted font-mono">Guaranteed cash & funded</span>
           </CardContent>
         </Card>
       </div>
 
       {/* ── Filter & Search Toolbar ───────────────────────────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
+      <Card className="bg-surface border-border shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
-              <Search className="h-4 w-4 absolute left-3 top-3 text-gray-500" />
+              <Search className="h-4 w-4 absolute left-3 top-3 text-text-muted" />
               <Input
                 placeholder="Search tournaments by name or description..."
                 value={searchQuery}
@@ -447,7 +447,7 @@ export default function AdminTournamentsPage() {
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-lg border border-[#1F2937]">
+            <div className="flex items-center gap-1 bg-surface-muted p-1 rounded-lg border border-border">
               {['all', 'active', 'upcoming', 'completed'].map((tab) => (
                 <button
                   key={tab}
@@ -456,7 +456,7 @@ export default function AdminTournamentsPage() {
                   className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-all cursor-pointer ${
                     statusFilter === tab
                       ? 'bg-emerald-500 text-black font-semibold shadow-sm'
-                      : 'text-gray-400 hover:text-white'
+                      : 'text-text-muted hover:text-text'
                   }`}
                 >
                   {tab}
@@ -470,11 +470,11 @@ export default function AdminTournamentsPage() {
 
       {/* ── Tournament Cards Grid ─────────────────────────────────────────── */}
       {tournaments.length === 0 ? (
-        <Card className="bg-[#111827] border-[#1F2937]">
-          <CardContent className="py-16 text-center text-gray-400">
-            <Trophy className="h-10 w-10 mx-auto text-gray-600 mb-3" />
-            <h3 className="font-semibold text-white text-base">No Tournaments Found</h3>
-            <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+        <Card className="bg-surface border-border">
+          <CardContent className="py-16 text-center text-text-muted">
+            <Trophy className="h-10 w-10 mx-auto text-text-muted mb-3" />
+            <h3 className="font-semibold text-text text-base">No Tournaments Found</h3>
+            <p className="text-xs text-text-muted mt-1 max-w-md mx-auto">
               No tournaments match your current filter settings. Click "+ Create Tournament" to configure your first prop contest.
             </p>
             <Button
@@ -498,15 +498,15 @@ export default function AdminTournamentsPage() {
             return (
               <Card 
                 key={t.id} 
-                className="bg-[#111827] border-[#1F2937] hover:border-gray-600 transition-all flex flex-col justify-between overflow-hidden shadow-lg group"
+                className="bg-surface border-border hover:border-accent/40 transition-all flex flex-col justify-between overflow-hidden shadow-sm group"
               >
                 <div>
                   {/* Card Header Top */}
-                  <CardHeader className="pb-3 border-b border-[#1F2937]/50 bg-[#0B0F19]/40">
+                  <CardHeader className="pb-3 border-b border-border bg-surface-muted">
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          <span className="font-mono font-bold text-xs text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                             #{t.id}
                           </span>
                           <Badge 
@@ -523,13 +523,13 @@ export default function AdminTournamentsPage() {
                           </Badge>
                         </div>
 
-                        <CardTitle className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1 mt-1">
+                        <CardTitle className="text-base font-bold text-text group-hover:text-emerald-500 transition-colors line-clamp-1 mt-1">
                           {t.title || t.name}
                         </CardTitle>
                       </div>
 
                       <div className="text-right">
-                        <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20 inline-block">
+                        <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20 inline-block">
                           {t.prize_pool}
                         </span>
                       </div>
@@ -538,44 +538,44 @@ export default function AdminTournamentsPage() {
 
                   {/* Card Body */}
                   <CardContent className="p-5 space-y-4 text-xs font-sans">
-                    <p className="text-gray-400 line-clamp-2 leading-relaxed min-h-[36px]">
+                    <p className="text-text-muted line-clamp-2 leading-relaxed min-h-[36px]">
                       {t.description || 'Global simulated trading tournament. Compete against top prop traders for funded accounts and cash prizes.'}
                     </p>
 
                     {/* Specifications Grid */}
-                    <div className="grid grid-cols-2 gap-2 bg-[#0B0F19] p-3 rounded-lg border border-[#1F2937]/80 font-mono text-[11px]">
+                    <div className="grid grid-cols-2 gap-2 bg-surface-muted p-3 rounded-lg border border-border font-mono text-[11px]">
                       <div>
-                        <span className="text-gray-500 block text-[10px]">Starting Equity</span>
-                        <span className="font-bold text-white">${Number(t.starting_balance || 10000).toLocaleString()}</span>
+                        <span className="text-text-muted block text-[10px]">Starting Equity</span>
+                        <span className="font-bold text-text">${Number(t.starting_balance || 10000).toLocaleString()}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500 block text-[10px]">Entry Fee</span>
-                        <span className="font-bold text-emerald-400">
+                        <span className="text-text-muted block text-[10px]">Entry Fee</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
                           {Number(t.entry_fee) === 0 ? 'FREE' : `$${t.entry_fee}`}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500 block text-[10px]">Start Date</span>
-                        <span className="text-gray-300">{new Date(t.start_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                        <span className="text-text-muted block text-[10px]">Start Date</span>
+                        <span className="text-text">{new Date(t.start_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500 block text-[10px]">End Date</span>
-                        <span className="text-gray-300">{new Date(t.end_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                        <span className="text-text-muted block text-[10px]">End Date</span>
+                        <span className="text-text">{new Date(t.end_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
                       </div>
                     </div>
 
                     {/* Participant Fill Bar */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-[11px] font-mono">
-                        <span className="text-gray-400 flex items-center gap-1">
-                          <Users className="h-3 w-3 text-emerald-400" />
+                        <span className="text-text-muted flex items-center gap-1">
+                          <Users className="h-3 w-3 text-emerald-500" />
                           Enrollment
                         </span>
-                        <span className="font-bold text-white">
+                        <span className="font-bold text-text">
                           {currentCount} / {maxCount} ({fillPct}%)
                         </span>
                       </div>
-                      <div className="w-full h-1.5 rounded-full bg-[#0B0F19] overflow-hidden border border-[#1F2937]">
+                      <div className="w-full h-1.5 rounded-full bg-surface-muted overflow-hidden border border-border">
                         <div 
                           className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all rounded-full"
                           style={{ width: `${fillPct}%` }}
@@ -586,7 +586,7 @@ export default function AdminTournamentsPage() {
                 </div>
 
                 {/* Card Footer Actions */}
-                <CardFooter className="border-t border-[#1F2937]/70 p-3 bg-[#0B0F19]/60 flex items-center justify-between gap-2">
+                <CardFooter className="border-t border-border p-3 bg-surface-muted flex items-center justify-between gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -594,7 +594,7 @@ export default function AdminTournamentsPage() {
                       setSelectedTournamentForLeaderboard(t)
                       setIsLeaderboardModalOpen(true)
                     }}
-                    className="gap-1.5 text-xs border-emerald-500/30 hover:border-emerald-500 text-emerald-400 flex-1"
+                    className="gap-1.5 text-xs border-emerald-500/30 hover:border-emerald-500 text-emerald-600 dark:text-emerald-400 flex-1"
                   >
                     <Trophy className="h-3.5 w-3.5" />
                     Leaderboard
@@ -604,7 +604,7 @@ export default function AdminTournamentsPage() {
                     <select
                       value={t.status}
                       onChange={(e) => updateStatusMutation.mutate({ id: t.id, status: e.target.value })}
-                      className="bg-[#0B0F19] border border-[#1F2937] text-gray-300 text-[11px] font-mono rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                      className="bg-surface border border-border text-text text-[11px] font-mono rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
                       title="Change Status"
                     >
                       <option value="upcoming">Upcoming</option>
@@ -617,7 +617,7 @@ export default function AdminTournamentsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenEditModal(t)}
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                      className="h-8 w-8 p-0 text-text-muted hover:text-text"
                       title="Edit Tournament"
                     >
                       <Edit className="h-3.5 w-3.5" />
@@ -627,7 +627,7 @@ export default function AdminTournamentsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setTournamentToDelete(t)}
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-400"
+                      className="h-8 w-8 p-0 text-text-muted hover:text-red-500"
                       title="Delete Tournament"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -647,76 +647,76 @@ export default function AdminTournamentsPage() {
           
           {/* PvP Telemetry 4-Pack */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-            <Card className="bg-[#111827] border-red-500/30 shadow-lg shadow-red-950/20">
+            <Card className="bg-surface border-red-500/30 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Total Volume Staked</span>
-                  <div className="h-7 w-7 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-text-muted">Total Volume Staked</span>
+                  <div className="h-7 w-7 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center">
                     <DollarSign className="h-3.5 w-3.5" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-white mt-1.5 font-mono">
+                <div className="text-2xl font-bold text-text mt-1.5 font-mono">
                   ${(pvpData?.analytics?.total_staked || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
-                <span className="text-[10px] text-gray-500 font-mono">Cumulative 1v1 turnover</span>
+                <span className="text-[10px] text-text-muted font-mono">Cumulative 1v1 turnover</span>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#111827] border-amber-500/30 shadow-lg shadow-amber-950/20">
+            <Card className="bg-surface border-amber-500/30 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-amber-400 font-bold">House Rake (15%)</span>
-                  <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 font-bold">House Rake (15%)</span>
+                  <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
                     <Trophy className="h-3.5 w-3.5" />
                   </div>
                 </div>
-                <div className="text-2xl font-black text-amber-400 mt-1.5 font-mono">
+                <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1.5 font-mono">
                   ${(pvpData?.analytics?.total_rake || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono">100% Risk-Free Platform Profit</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">100% Risk-Free Platform Profit</span>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-border shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Active Live Duels</span>
-                  <div className="h-7 w-7 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-text-muted">Active Live Duels</span>
+                  <div className="h-7 w-7 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center">
                     <Radio className="h-3.5 w-3.5 animate-ping" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-red-400 mt-1.5 font-mono">
+                <div className="text-2xl font-bold text-red-500 dark:text-red-400 mt-1.5 font-mono">
                   {pvpData?.analytics?.active_matches || 0} LIVE
                 </div>
-                <span className="text-[10px] text-gray-500 font-mono">Real-time spectator rooms</span>
+                <span className="text-[10px] text-text-muted font-mono">Real-time spectator rooms</span>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-border shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Settled Matches</span>
-                  <div className="h-7 w-7 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-text-muted">Settled Matches</span>
+                  <div className="h-7 w-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-purple-400 mt-1.5 font-mono">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1.5 font-mono">
                   {pvpData?.analytics?.completed_matches || 0} Duels
                 </div>
-                <span className="text-[10px] text-gray-500 font-mono">Automated escrow payouts</span>
+                <span className="text-[10px] text-text-muted font-mono">Automated escrow payouts</span>
               </CardContent>
             </Card>
           </div>
 
           {/* PvP Matches Table */}
-          <Card className="bg-[#111827] border-[#1F2937] overflow-hidden">
-            <CardHeader className="border-b border-[#1F2937] pb-4 bg-[#0B0F19]/60 flex flex-row items-center justify-between">
+          <Card className="bg-surface border-border overflow-hidden">
+            <CardHeader className="border-b border-border pb-4 bg-surface-muted flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                <CardTitle className="text-base text-text flex items-center gap-2">
                   <Swords className="h-4 w-4 text-red-500" />
                   1v1 Arena Matches & Escrow Ledger
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-400">
+                <CardDescription className="text-xs text-text-muted">
                   Monitor live gladiator trading duels, review profit splits, and force-settle arena matches.
                 </CardDescription>
               </div>
@@ -725,7 +725,7 @@ export default function AdminTournamentsPage() {
                 href="/arena"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-950/30 px-3 py-1.5 rounded-lg border border-red-500/30 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/30 transition-colors"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Open Public Arena Lobby
@@ -735,7 +735,7 @@ export default function AdminTournamentsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-[#1F2937] text-gray-400 font-mono uppercase text-[11px] bg-[#0B0F19]/40">
+                  <tr className="border-b border-border text-text-muted font-mono uppercase text-[11px] bg-surface-muted">
                     <th className="py-3 px-4">Match Code</th>
                     <th className="py-3 px-4">Gladiator A (Creator)</th>
                     <th className="py-3 px-4">Gladiator B (Challenger)</th>
@@ -745,71 +745,71 @@ export default function AdminTournamentsPage() {
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1F2937]/60">
+                <tbody className="divide-y divide-border">
                   {(!pvpData?.matches || pvpData.matches.length === 0) ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-gray-500">
+                      <td colSpan={7} className="py-12 text-center text-text-muted">
                         No arena matches registered yet.
                       </td>
                     </tr>
                   ) : (
                     pvpData.matches.map((m) => (
-                      <tr key={m.id} className="hover:bg-slate-800/30 transition-colors">
+                      <tr key={m.id} className="hover:bg-surface-muted/50 transition-colors">
                         <td className="py-3.5 px-4">
-                          <div className="font-mono font-bold text-white flex items-center gap-1.5">
+                          <div className="font-mono font-bold text-text flex items-center gap-1.5">
                             <span>{m.match_code}</span>
                             <Badge tone="info" size="sm" className="font-mono text-[10px]">
                               {m.symbol}
                             </Badge>
                           </div>
-                          <div className="text-[10px] text-gray-500 font-mono mt-0.5">
+                          <div className="text-[10px] text-text-muted font-mono mt-0.5">
                             {m.duration_minutes} Mins Duration
                           </div>
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <div className="font-semibold text-gray-200">{m.creator_name || 'Gladiator A'}</div>
-                          <div className="text-[10px] text-gray-500 font-mono">{m.creator_email || m.creator_login || (m.creator_user_id ? `User #${m.creator_user_id}` : '-')}</div>
-                          <div className="text-[11px] font-mono mt-0.5 text-blue-400">
+                          <div className="font-semibold text-text">{m.creator_name || 'Gladiator A'}</div>
+                          <div className="text-[10px] text-text-muted font-mono">{m.creator_email || m.creator_login || (m.creator_user_id ? `User #${m.creator_user_id}` : '-')}</div>
+                          <div className="text-[11px] font-mono mt-0.5 text-blue-500 dark:text-blue-400">
                             PnL: {Number(m.creator_pnl) >= 0 ? '+' : ''}${Number(m.creator_pnl).toFixed(2)}
                           </div>
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <div className="font-semibold text-gray-200">
+                          <div className="font-semibold text-text">
                             {m.challenger_name || (m.status === 'waiting' ? 'Waiting for Challenger...' : 'Gladiator B')}
                           </div>
-                          <div className="text-[10px] text-gray-500 font-mono">{m.challenger_email || m.challenger_login || (m.challenger_user_id ? `User #${m.challenger_user_id}` : '-')}</div>
-                          <div className="text-[11px] font-mono mt-0.5 text-amber-400">
+                          <div className="text-[10px] text-text-muted font-mono">{m.challenger_email || m.challenger_login || (m.challenger_user_id ? `User #${m.challenger_user_id}` : '-')}</div>
+                          <div className="text-[11px] font-mono mt-0.5 text-amber-600 dark:text-amber-400">
                             PnL: {Number(m.challenger_pnl) >= 0 ? '+' : ''}${Number(m.challenger_pnl).toFixed(2)}
                           </div>
                         </td>
 
                         <td className="py-3.5 px-4 text-center font-mono">
-                          <div className="text-white font-bold">${Number(m.stake_amount).toFixed(2)} Stake</div>
-                          <div className="text-[10px] text-amber-400 font-semibold mt-0.5">
+                          <div className="text-text font-bold">${Number(m.stake_amount).toFixed(2)} Stake</div>
+                          <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
                             Prize: ${Number(m.prize_pool).toFixed(2)}
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4 text-center font-mono font-bold text-emerald-400">
+                        <td className="py-3.5 px-4 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
                           +${Number(m.platform_rake).toFixed(2)}
                         </td>
 
                         <td className="py-3.5 px-4 text-center">
                           {m.status === 'active' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse inline-flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse inline-flex items-center gap-1">
                               <Radio className="h-2.5 w-2.5" />
                               LIVE DUEL
                             </span>
                           )}
                           {m.status === 'waiting' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
                               WAITING
                             </span>
                           )}
                           {m.status === 'completed' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                               SETTLED ({m.winner_name || 'Champion'})
                             </span>
                           )}
@@ -821,7 +821,7 @@ export default function AdminTournamentsPage() {
                               href={`/arena/${m.id}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg bg-slate-800 text-gray-300 hover:text-white hover:bg-slate-700 transition-colors"
+                              className="p-1.5 rounded-lg bg-surface-muted text-text-muted hover:text-text border border-border transition-colors"
                               title="Spectate Arena"
                             >
                               <Eye className="h-3.5 w-3.5" />
@@ -833,9 +833,9 @@ export default function AdminTournamentsPage() {
                                 variant="outline"
                                 onClick={() => setMatchToSettle(m)}
                                 loading={settlePvpMutation.isPending && settlePvpMutation.variables === m.id}
-                                className="h-7 text-[10px] font-mono text-red-400 border-red-500/30 hover:bg-red-500/10 px-2"
+                                className="h-7 text-[10px] font-mono text-red-500 dark:text-red-400 border-red-500/30 hover:bg-red-500/10 px-2"
                               >
-                                <StopCircle className="h-3 w-3 mr-1" />
+                                <StopCircle className="h-3.5 w-3.5 mr-1" />
                                 Force Settle
                               </Button>
                             )}
@@ -865,28 +865,28 @@ export default function AdminTournamentsPage() {
         className="max-w-4xl"
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#1F2937]">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
             <div className="flex items-center gap-2">
               <Badge tone="accent" size="sm" pulsing className="font-mono">
                 Real-Time Telemetry
               </Badge>
-              <span className="text-xs text-gray-400">Rankings update on every MT5 trade tick</span>
+              <span className="text-xs text-text-muted">Rankings update on every MT5 trade tick</span>
             </div>
             
             <Button
               variant="outline"
               size="sm"
               onClick={() => refetchLeaderboard()}
-              className="gap-1 text-xs border-[#1F2937] h-7"
+              className="gap-1 text-xs border-border h-7"
             >
-              <RefreshCw className="h-3 w-3 text-emerald-400" />
+              <RefreshCw className="h-3 w-3 text-emerald-500" />
               Refresh Rankings
             </Button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-[#1F2937] max-h-[480px]">
+          <div className="overflow-x-auto rounded-xl border border-border max-h-[480px]">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-[#0B0F19] text-gray-400 uppercase font-mono text-[10px] tracking-wider border-b border-[#1F2937] sticky top-0">
+              <thead className="bg-surface-muted text-text-muted uppercase font-mono text-[10px] tracking-wider border-b border-border sticky top-0">
                 <tr>
                   <th className="py-3 px-4">Rank</th>
                   <th className="py-3 px-4">Trader</th>
@@ -897,26 +897,26 @@ export default function AdminTournamentsPage() {
                   <th className="py-3 px-4">Prize Tier</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1F2937]/60 bg-[#111827]">
+              <tbody className="divide-y divide-border bg-surface">
                 {isLoadingLeaderboard ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-gray-400">
+                    <td colSpan={7} className="py-12 text-center text-text-muted">
                       Loading live leaderboard ranks...
                     </td>
                   </tr>
                 ) : !leaderboardData?.leaderboard || leaderboardData.leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-gray-400">
+                    <td colSpan={7} className="py-12 text-center text-text-muted">
                       No participants registered yet for this tournament.
                     </td>
                   </tr>
                 ) : (
                   leaderboardData.leaderboard.map((p: TournamentParticipant, index: number) => {
                     const isTop3 = p.rank <= 3
-                    const rankTone = p.rank === 1 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
-                                     p.rank === 2 ? 'text-gray-300 bg-gray-500/10 border-gray-400/30' :
-                                     p.rank === 3 ? 'text-amber-600 bg-amber-700/10 border-amber-700/30' :
-                                     'text-gray-400 bg-gray-800/40 border-transparent'
+                    const rankTone = p.rank === 1 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30' :
+                                     p.rank === 2 ? 'text-text-muted bg-surface-muted border-border' :
+                                     p.rank === 3 ? 'text-amber-700 dark:text-amber-600 bg-amber-700/10 border-amber-700/30' :
+                                     'text-text-muted bg-surface-muted border-transparent'
 
                     let prizes: any = {}
                     const rawBreakdown = selectedTournamentForLeaderboard?.prizes_breakdown || (leaderboardData?.tournament as any)?.prizes_breakdown
@@ -933,7 +933,7 @@ export default function AdminTournamentsPage() {
                     else if (p.rank <= 10 && prizes['top10']) prizeLabel = `🎖️ Top 10: ${prizes['top10']}`
 
                     return (
-                      <tr key={p.id || index} className="hover:bg-[#1A2234] transition-colors">
+                      <tr key={p.id || index} className="hover:bg-surface-muted/50 transition-colors">
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center justify-center font-mono font-bold text-xs h-6 w-6 rounded-md border ${rankTone}`}>
                             {p.rank}
@@ -941,24 +941,24 @@ export default function AdminTournamentsPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <span className="font-semibold text-white block">{p.display_name || p.user_login || 'Trader'}</span>
-                            <span className="text-[10px] text-gray-400 font-mono">{p.user_email || '—'}</span>
+                            <span className="font-semibold text-text block">{p.display_name || p.user_login || 'Trader'}</span>
+                            <span className="text-[10px] text-text-muted font-mono">{p.user_email || '—'}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-mono text-gray-300">
+                        <td className="py-3 px-4 font-mono text-text">
                           #{p.account_id || `TRD-${p.id}`}
                         </td>
-                        <td className="py-3 px-4 text-right font-mono font-bold text-white">
+                        <td className="py-3 px-4 text-right font-mono font-bold text-text">
                           ${Number(p.current_equity).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
-                        <td className={`py-3 px-4 text-right font-mono font-bold ${Number(p.roi_pct) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <td className={`py-3 px-4 text-right font-mono font-bold ${Number(p.roi_pct) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
                           {Number(p.roi_pct) >= 0 ? '+' : ''}{Number(p.roi_pct).toFixed(2)}%
                         </td>
-                        <td className="py-3 px-4 text-right font-mono text-gray-400">
+                        <td className="py-3 px-4 text-right font-mono text-text-muted">
                           {p.max_dd_reached != null ? Number(p.max_dd_reached).toFixed(1) : '0.0'}%
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`text-[11px] font-semibold ${isTop3 ? 'text-amber-400' : 'text-gray-400'}`}>
+                          <span className={`text-[11px] font-semibold ${isTop3 ? 'text-amber-600 dark:text-amber-400' : 'text-text-muted'}`}>
                             {prizeLabel}
                           </span>
                         </td>
@@ -1077,7 +1077,7 @@ export default function AdminTournamentsPage() {
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono capitalize"
+                className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-emerald-500 font-mono capitalize"
               >
                 <option value="upcoming">Upcoming</option>
                 <option value="active">Active</option>
@@ -1088,13 +1088,13 @@ export default function AdminTournamentsPage() {
           </div>
 
           {/* Prize Breakdown */}
-          <div className="p-3 bg-[#0B0F19] rounded-xl border border-[#1F2937] space-y-3">
-            <span className="text-[11px] font-semibold text-gray-300 block font-mono">
+          <div className="p-3 bg-surface-muted rounded-xl border border-border space-y-3">
+            <span className="text-[11px] font-semibold text-text block font-mono">
               🏆 Prize Distribution Breakdown
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-[10px] text-amber-400">🥇 1st Place Prize</Label>
+                <Label className="text-[10px] text-amber-600 dark:text-amber-400">🥇 1st Place Prize</Label>
                 <Input
                   placeholder="$10,000 + $100K Account"
                   value={formData.first_prize}
@@ -1103,7 +1103,7 @@ export default function AdminTournamentsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-gray-300">🥈 2nd Place Prize</Label>
+                <Label className="text-[10px] text-text-muted">🥈 2nd Place Prize</Label>
                 <Input
                   placeholder="$5,000 + $50K Account"
                   value={formData.second_prize}
@@ -1112,7 +1112,7 @@ export default function AdminTournamentsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-amber-600">🥉 3rd Place Prize</Label>
+                <Label className="text-[10px] text-amber-700 dark:text-amber-600">🥉 3rd Place Prize</Label>
                 <Input
                   placeholder="$2,500 + $25K Account"
                   value={formData.third_prize}
@@ -1148,13 +1148,13 @@ export default function AdminTournamentsPage() {
           </div>
 
           {/* Risk Rules */}
-          <div className="p-3 bg-[#0B0F19] rounded-xl border border-[#1F2937] space-y-3">
-            <span className="text-[11px] font-semibold text-gray-300 block font-mono">
+          <div className="p-3 bg-surface-muted rounded-xl border border-border space-y-3">
+            <span className="text-[11px] font-semibold text-text block font-mono">
               ⚡ Tournament Risk Rules
             </span>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-[10px] text-gray-400">Daily DD (%)</Label>
+                <Label className="text-[10px] text-text-muted">Daily DD (%)</Label>
                 <Input
                   type="number"
                   value={formData.daily_dd}
@@ -1163,7 +1163,7 @@ export default function AdminTournamentsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-gray-400">Max DD (%)</Label>
+                <Label className="text-[10px] text-text-muted">Max DD (%)</Label>
                 <Input
                   type="number"
                   value={formData.max_dd}
@@ -1172,7 +1172,7 @@ export default function AdminTournamentsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-gray-400">Leverage (1:X)</Label>
+                <Label className="text-[10px] text-text-muted">Leverage (1:X)</Label>
                 <Input
                   type="number"
                   value={formData.leverage}
@@ -1183,7 +1183,7 @@ export default function AdminTournamentsPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"

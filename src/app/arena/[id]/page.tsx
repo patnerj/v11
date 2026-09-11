@@ -155,20 +155,20 @@ export default function PvpLiveBattleArenaPage() {
   const LOT_BUTTONS = [0.5, 1.0, 2.0, 5.0]
 
   return (
-    <div className="min-h-screen bg-[#06080F] text-slate-100 pb-20">
+    <div className="min-h-screen bg-bg text-text pb-20">
       
       {/* ── TOP NAV BAR ────────────────────────────────────────────────────── */}
-      <header className="border-b border-[#1F2937]/70 bg-[#0B0F19]/80 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-40">
+      <header className="border-b border-border bg-surface/80 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <Link 
             href="/arena"
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800"
+            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text transition-colors bg-surface-muted px-3 py-1.5 rounded-lg border border-border"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Arena Lobby
           </Link>
-          <div className="h-4 w-[1px] bg-slate-800" />
-          <span className="font-mono text-xs font-bold text-gray-300">
+          <div className="h-4 w-[1px] bg-border" />
+          <span className="font-mono text-xs font-bold text-text">
             {match?.match_code || 'PVP-MATCH'}
           </span>
           <Badge tone="accent" size="sm" className="font-mono text-[10px]">
@@ -177,67 +177,67 @@ export default function PvpLiveBattleArenaPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-gray-300 bg-red-950/40 border border-red-500/30 px-2.5 py-1 rounded-md">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-text bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-md">
             <Radio className="h-3 w-3 text-red-500 animate-pulse" />
-            <span className="font-semibold tracking-wider text-red-300">LIVE BROADCAST</span>
+            <span className="font-semibold tracking-wider text-red-500 dark:text-red-300">LIVE BROADCAST</span>
           </div>
 
           <Button
             size="sm"
             variant="outline"
             onClick={() => refetch()}
-            className="border-slate-800 text-gray-300 h-8 gap-1"
+            className="border-border text-text-muted hover:text-text hover:bg-surface-muted h-8 gap-1"
           >
-            <RefreshCw className="h-3.5 w-3.5 text-red-400" />
+            <RefreshCw className="h-3.5 w-3.5 text-red-500" />
             Refresh
           </Button>
         </div>
       </header>
 
       {/* ── GLADIATOR FACE-OFF STADIUM HUD ─────────────────────────────────── */}
-      <section className="relative bg-gradient-to-b from-red-950/30 via-slate-950/60 to-[#06080F] border-b border-[#1F2937] py-8 px-4 sm:px-8 overflow-hidden">
+      <section className="relative bg-gradient-to-b from-red-500/10 via-surface-muted/50 to-bg border-b border-border py-8 px-4 sm:px-8 overflow-hidden">
         
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
           
           {/* 1. FIGHTER A (CREATOR) */}
-          <div className="bg-[#111827]/90 border border-blue-500/30 p-5 rounded-2xl relative overflow-hidden shadow-lg shadow-blue-950/20">
+          <div className="bg-surface border border-blue-500/30 p-5 rounded-2xl relative overflow-hidden shadow-lg shadow-blue-950/10">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
             
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 font-mono text-[10px] font-bold uppercase tracking-wider">
                   Gladiator A (Blue Corner)
                 </span>
-                <h2 className="text-lg font-bold text-white flex items-center gap-1.5">
+                <h2 className="text-lg font-bold text-text flex items-center gap-1.5">
                   {creator.name}
                 </h2>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold font-mono">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-500 dark:text-blue-400 font-bold font-mono">
                 P1
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-[#1F2937] grid grid-cols-2 gap-3">
+            <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
               <div>
-                <div className="text-[10px] font-mono text-gray-400 uppercase">Live Equity</div>
-                <div className="text-xl font-bold font-mono text-white mt-0.5">
+                <div className="text-[10px] font-mono text-text-muted uppercase">Live Equity</div>
+                <div className="text-xl font-bold font-mono text-text mt-0.5">
                   {formatMoney(creator.equity)}
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] font-mono text-gray-400 uppercase">Floating PnL</div>
+                <div className="text-[10px] font-mono text-text-muted uppercase">Floating PnL</div>
                 <div className={`text-xl font-extrabold font-mono mt-0.5 ${
-                  creator.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'
+                  creator.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                 }`}>
                   {creator.pnl >= 0 ? '+' : ''}{formatMoney(creator.pnl)}
                 </div>
               </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-gray-500">
+            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-text-muted">
               <span>{creator.trades_count} Orders Executed</span>
-              <span className="text-blue-400 font-semibold">{((creator.pnl / 10000) * 100).toFixed(2)}% ROI</span>
+              <span className="text-blue-500 dark:text-blue-400 font-semibold">{((creator.pnl / 10000) * 100).toFixed(2)}% ROI</span>
             </div>
           </div>
 
@@ -247,103 +247,103 @@ export default function PvpLiveBattleArenaPage() {
             {/* Status Badge */}
             <div>
               {isActive && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse">
                   <Flame className="h-3.5 w-3.5 text-red-500" />
                   1v1 Battle In Progress
                 </span>
               )}
 
               {isWaiting && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                  <Clock className="h-3.5 w-3.5 text-amber-400" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40">
+                  <Clock className="h-3.5 w-3.5 text-amber-500" />
                   Waiting For Challenger
                 </span>
               )}
 
               {isCompleted && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                  <Trophy className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                  <Trophy className="h-3.5 w-3.5 text-emerald-500" />
                   Match Concluded
                 </span>
               )}
             </div>
 
             {/* Countdown Clock */}
-            <div className="bg-[#0B0F19] border border-[#1F2937] p-4 rounded-2xl inline-block shadow-2xl">
-              <div className="text-[10px] uppercase font-mono text-gray-400 tracking-wider">
+            <div className="bg-surface border border-border p-4 rounded-2xl inline-block shadow-xl">
+              <div className="text-[10px] uppercase font-mono text-text-muted tracking-wider">
                 Time Remaining
               </div>
               <div className={`text-4xl sm:text-5xl font-black font-mono tracking-tight mt-1 ${
-                secondsLeft <= 60 && isActive ? 'text-red-500 animate-ping' : 'text-cyan-400'
+                secondsLeft <= 60 && isActive ? 'text-red-500 animate-ping' : 'text-cyan-600 dark:text-cyan-400'
               }`}>
                 {isActive ? formatTimer(secondsLeft) : isWaiting ? `${match?.duration_minutes}:00` : '00:00'}
               </div>
             </div>
 
             {/* Lead Delta Bar */}
-            <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 max-w-sm mx-auto">
+            <div className="bg-surface-muted p-2.5 rounded-xl border border-border max-w-sm mx-auto">
               <div className="text-xs font-mono font-bold">
                 {leadDelta > 0 ? (
-                  <span className="text-blue-400 flex items-center justify-center gap-1">
+                  <span className="text-blue-500 dark:text-blue-400 flex items-center justify-center gap-1">
                     <TrendingUp className="h-3.5 w-3.5" />
                     {creator.name} Leading by +{formatMoney(leadDelta)}
                   </span>
                 ) : leadDelta < 0 ? (
-                  <span className="text-amber-400 flex items-center justify-center gap-1">
+                  <span className="text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
                     <TrendingUp className="h-3.5 w-3.5" />
                     {challenger.name} Leading by +{formatMoney(Math.abs(leadDelta))}
                   </span>
                 ) : (
-                  <span className="text-gray-400">Battle Tied • Even PnL</span>
+                  <span className="text-text-muted">Battle Tied • Even PnL</span>
                 )}
               </div>
 
-              <div className="text-[10px] text-gray-400 font-mono mt-1">
-                Prize Pool: <strong className="text-amber-400">{formatMoney(match?.prize_pool)} USDC</strong> (15% Rake)
+              <div className="text-[10px] text-text-muted font-mono mt-1">
+                Prize Pool: <strong className="text-amber-600 dark:text-amber-400">{formatMoney(match?.prize_pool)} USDC</strong> (15% Rake)
               </div>
             </div>
 
           </div>
 
           {/* 3. FIGHTER B (CHALLENGER) */}
-          <div className="bg-[#111827]/90 border border-amber-500/30 p-5 rounded-2xl relative overflow-hidden shadow-lg shadow-amber-950/20">
+          <div className="bg-surface border border-amber-500/30 p-5 rounded-2xl relative overflow-hidden shadow-lg shadow-amber-950/10">
             <div className="absolute top-0 right-0 w-1.5 h-full bg-amber-500" />
             
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider">
                   Gladiator B (Red Corner)
                 </span>
-                <h2 className="text-lg font-bold text-white flex items-center gap-1.5">
+                <h2 className="text-lg font-bold text-text flex items-center gap-1.5">
                   {challenger.name}
                 </h2>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold font-mono">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold font-mono">
                 P2
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-[#1F2937] grid grid-cols-2 gap-3">
+            <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
               <div>
-                <div className="text-[10px] font-mono text-gray-400 uppercase">Live Equity</div>
-                <div className="text-xl font-bold font-mono text-white mt-0.5">
+                <div className="text-[10px] font-mono text-text-muted uppercase">Live Equity</div>
+                <div className="text-xl font-bold font-mono text-text mt-0.5">
                   {formatMoney(challenger.equity)}
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] font-mono text-gray-400 uppercase">Floating PnL</div>
+                <div className="text-[10px] font-mono text-text-muted uppercase">Floating PnL</div>
                 <div className={`text-xl font-extrabold font-mono mt-0.5 ${
-                  challenger.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'
+                  challenger.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                 }`}>
                   {challenger.pnl >= 0 ? '+' : ''}{formatMoney(challenger.pnl)}
                 </div>
               </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-gray-500">
+            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-text-muted">
               <span>{challenger.trades_count} Orders Executed</span>
-              <span className="text-amber-400 font-semibold">{((challenger.pnl / 10000) * 100).toFixed(2)}% ROI</span>
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">{((challenger.pnl / 10000) * 100).toFixed(2)}% ROI</span>
             </div>
           </div>
 
@@ -357,22 +357,22 @@ export default function PvpLiveBattleArenaPage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Order Execution Deck */}
-          <Card className="bg-[#111827] border-[#1F2937] overflow-hidden">
-            <CardHeader className="border-b border-[#1F2937] pb-4 bg-[#0B0F19]/60">
+          <Card className="bg-surface border border-border overflow-hidden">
+            <CardHeader className="border-b border-border pb-4 bg-surface-muted">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-amber-400" />
+                  <CardTitle className="text-base text-text flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-500" />
                     Gladiator Order Execution Deck
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-text-muted">
                     Execute high-frequency market orders on {match?.symbol || 'EURUSD'} with sub-millisecond fill latency.
                   </CardDescription>
                 </div>
 
                 <div className="text-right font-mono">
-                  <div className="text-[10px] uppercase text-gray-400">Market Price</div>
-                  <div className="text-sm font-extrabold text-white">
+                  <div className="text-[10px] uppercase text-text-muted">Market Price</div>
+                  <div className="text-sm font-extrabold text-text">
                     {liveState?.prices?.ask?.toFixed(4) || '1.0845'}
                   </div>
                 </div>
@@ -383,7 +383,7 @@ export default function PvpLiveBattleArenaPage() {
               
               {/* Lot Selector */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-300">Select Lot Sizing Leg</Label>
+                <Label className="text-xs font-semibold text-text">Select Lot Sizing Leg</Label>
                 <div className="grid grid-cols-4 gap-3">
                   {LOT_BUTTONS.map((lot) => (
                     <button
@@ -393,7 +393,7 @@ export default function PvpLiveBattleArenaPage() {
                       className={`py-3 rounded-xl font-mono text-sm font-bold border transition-all ${
                         selectedLot === lot
                           ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
-                          : 'bg-[#0B0F19] text-gray-400 border-[#1F2937] hover:text-white'
+                          : 'bg-surface-muted text-text-muted border-border hover:text-text'
                       }`}
                     >
                       {lot.toFixed(1)} Lots
@@ -404,12 +404,12 @@ export default function PvpLiveBattleArenaPage() {
 
               {/* Participant Controls vs Spectator View */}
               {!isParticipant ? (
-                <div className="rounded-xl border border-border-subtle bg-[#0B0F19]/80 p-5 text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-sm font-bold text-amber-400">
+                <div className="rounded-xl border border-border bg-surface-muted p-5 text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-sm font-bold text-amber-500">
                     <Radio className="h-4 w-4 animate-pulse" />
                     <span>Spectator Mode Active</span>
                   </div>
-                  <p className="text-xs text-gray-400 max-w-md mx-auto">
+                  <p className="text-xs text-text-muted max-w-md mx-auto">
                     You are viewing this battle live in the spectator arena. Live order execution and settlement calls are restricted to the matched gladiators.
                   </p>
                 </div>
@@ -442,8 +442,8 @@ export default function PvpLiveBattleArenaPage() {
 
                   {/* Match Controller for Admin / Manual Finish */}
                   {isActive && (
-                    <div className="pt-4 border-t border-[#1F2937] flex items-center justify-between">
-                      <div className="text-xs text-gray-500 font-mono">
+                    <div className="pt-4 border-t border-border flex items-center justify-between">
+                      <div className="text-xs text-text-muted font-mono">
                         Duel auto-settles when clock strikes 00:00
                       </div>
                       <Button
@@ -451,7 +451,7 @@ export default function PvpLiveBattleArenaPage() {
                         size="sm"
                         onClick={() => settleMatchMutation.mutate()}
                         loading={settleMatchMutation.isPending}
-                        className="border-red-500/40 text-red-400 hover:bg-red-500/10 text-xs h-8"
+                        className="border-red-500/40 text-red-500 hover:bg-red-500/10 text-xs h-8"
                       >
                         <StopCircle className="h-3.5 w-3.5 mr-1" />
                         Call Match Conclusion
@@ -459,8 +459,8 @@ export default function PvpLiveBattleArenaPage() {
                     </div>
                   )}
                   {isWaiting && currentUserId === Number(match?.creator_user_id) && (
-                    <div className="pt-4 border-t border-[#1F2937] flex flex-col sm:flex-row items-center justify-between gap-3 bg-amber-500/5 p-4 rounded-xl border border-amber-500/20">
-                      <div className="text-xs text-amber-300">
+                    <div className="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 bg-amber-500/5 p-4 rounded-xl border border-amber-500/20">
+                      <div className="text-xs text-amber-600 dark:text-amber-300">
                         You created this challenge. It is currently waiting for an opponent. You may withdraw and receive a 100% stake refund.
                       </div>
                       <Button
@@ -482,16 +482,16 @@ export default function PvpLiveBattleArenaPage() {
 
           {/* Victory Modal Overlay if Completed */}
           {isCompleted && (
-            <Card className="bg-gradient-to-r from-amber-950/40 via-yellow-950/20 to-slate-900/60 border border-amber-500/40 p-6 text-center space-y-4">
-              <Trophy className="h-14 w-14 text-amber-400 mx-auto animate-bounce" />
+            <Card className="bg-surface border border-amber-500/40 p-6 text-center space-y-4 shadow-xl">
+              <Trophy className="h-14 w-14 text-amber-500 mx-auto animate-bounce" />
               <div className="space-y-1">
-                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40">
                   DUEL COMPLETED & PRIZE AWARDED
                 </span>
-                <h2 className="text-2xl font-black text-white mt-2">
+                <h2 className="text-2xl font-black text-text mt-2">
                   Champion: {match?.winner_name || 'Gladiator Champion'} 🏆
                 </h2>
-                <p className="text-xs text-gray-300">
+                <p className="text-xs text-text-muted">
                   Payout of <strong>{formatMoney(match?.prize_pool)} USDC</strong> credited to winner wallet.
                 </p>
               </div>
@@ -511,13 +511,13 @@ export default function PvpLiveBattleArenaPage() {
         {/* Right Col: Live Spectator Ticker & Stadium Chat Feed */}
         <div className="space-y-6">
           
-          <Card className="bg-[#111827] border-[#1F2937] flex flex-col h-[520px]">
-            <CardHeader className="border-b border-[#1F2937] pb-3 bg-[#0B0F19]/80">
-              <CardTitle className="text-sm text-gray-100 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-cyan-400" />
+          <Card className="bg-surface border border-border flex flex-col h-[520px]">
+            <CardHeader className="border-b border-border pb-3 bg-surface-muted">
+              <CardTitle className="text-sm text-text flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-cyan-500" />
                 Live Arena Action Feed
               </CardTitle>
-              <CardDescription className="text-[11px] text-gray-400">
+              <CardDescription className="text-[11px] text-text-muted">
                 Real-time trade telemetry and stadium commentary
               </CardDescription>
             </CardHeader>
@@ -525,8 +525,8 @@ export default function PvpLiveBattleArenaPage() {
             <CardContent className="p-4 flex-1 overflow-y-auto space-y-3 text-xs font-mono">
               {/* Local & Server Events */}
               {localEvents.map((msg, i) => (
-                <div key={`local-${i}`} className="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/20 text-cyan-300">
-                  <span className="font-bold text-white">You: </span>
+                <div key={`local-${i}`} className="p-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-300">
+                  <span className="font-bold text-text">You: </span>
                   {msg}
                 </div>
               ))}
@@ -545,16 +545,16 @@ export default function PvpLiveBattleArenaPage() {
                     key={ev.id}
                     className={`p-2.5 rounded-lg border ${
                       isSettled 
-                        ? 'bg-amber-950/30 border-amber-500/30 text-amber-300 font-bold'
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold'
                         : isStarted
-                        ? 'bg-red-950/30 border-red-500/30 text-red-300 font-bold'
+                        ? 'bg-red-500/10 border-red-500/30 text-red-500 dark:text-red-300 font-bold'
                         : isChat
-                        ? 'bg-cyan-950/20 border-cyan-500/30 text-cyan-200'
-                        : 'bg-slate-900/60 border-slate-800 text-gray-300'
+                        ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-200'
+                        : 'bg-surface-muted border border-border text-text'
                     }`}
                   >
-                    <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
-                      <span className="font-semibold text-gray-400">{isChat ? (author || 'Spectator') : ev.event_type}</span>
+                    <div className="flex items-center justify-between text-[10px] text-text-muted mb-1">
+                      <span className="font-semibold text-text">{isChat ? (author || 'Spectator') : ev.event_type}</span>
                       <span>{ev.created_at}</span>
                     </div>
                     <div>{ev.message}</div>
@@ -563,13 +563,13 @@ export default function PvpLiveBattleArenaPage() {
               })}
             </CardContent>
 
-            <CardFooter className="p-3 bg-[#0B0F19] border-t border-[#1F2937]">
+            <CardFooter className="p-3 bg-surface-muted border-t border-border">
               <form onSubmit={handleSendChat} className="flex gap-2 w-full">
                 <Input
                   placeholder="Send cheer in stadium..."
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
-                  className="bg-slate-900 border-slate-800 text-xs h-9 font-mono"
+                  className="bg-surface border-border text-text text-xs h-9 font-mono"
                 />
                 <Button type="submit" size="sm" loading={sendingChat} className="bg-red-600 hover:bg-red-700 h-9 px-3">
                   <Send className="h-3.5 w-3.5" />

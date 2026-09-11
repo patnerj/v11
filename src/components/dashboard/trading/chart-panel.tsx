@@ -468,11 +468,11 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
               dragConstraints={chartHostRef}
               dragElastic={0}
               dragMomentum={false}
-              className="pointer-events-auto flex items-center gap-1.5 rounded-xl bg-slate-900/95 backdrop-blur-md border border-slate-700/80 p-1.5 shadow-2xl select-none"
+              className="pointer-events-auto flex items-center gap-1.5 rounded-xl bg-surface/95 backdrop-blur-md border border-border p-1.5 shadow-2xl select-none"
             >
               <div 
                 onPointerDown={(e) => dragControls.start(e)}
-                className="flex items-center px-1.5 py-1 text-slate-400 hover:text-white cursor-grab active:cursor-grabbing touch-none select-none" 
+                className="flex items-center px-1.5 py-1 text-text-muted hover:text-text cursor-grab active:cursor-grabbing touch-none select-none" 
                 title="Drag to reposition panel"
               >
                 <GripVertical className="h-4 w-4" />
@@ -495,7 +495,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                   type="text"
                   value={oneClickLot}
                   onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
-                  className="w-12 h-7 text-center bg-surface border border-border rounded-md text-xs tabular font-bold text-white focus-ring focus:border-accent"
+                  className="w-12 h-7 text-center bg-surface border border-border rounded-md text-xs tabular font-bold text-text focus-ring focus:border-accent"
                 />
                 <span className="text-[8px] text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
               </div>
@@ -506,11 +506,11 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                     type="text"
                     value={oneClickSlPips}
                     onChange={(e) => setOneClickSlPips(e.target.value.replace(/[^\d.]/g, ''))}
-                    className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-xs tabular font-bold text-rose-300 focus-ring focus:border-rose-400"
+                    className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-xs tabular font-bold text-rose-600 dark:text-rose-300 focus-ring focus:border-rose-400"
                     placeholder="30"
                     title="Stop loss distance in pips (Required by plan)"
                   />
-                  <span className="text-[8px] text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-bold">SL (Pips)</span>
+                  <span className="text-[8px] text-rose-500 dark:text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-bold">SL (Pips)</span>
                 </div>
               )}
 

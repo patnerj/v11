@@ -58,8 +58,8 @@ export function TradingScreenLoader({
       className={cn(
         'flex flex-col items-center justify-center p-6 select-none',
         fullscreen
-          ? 'fixed inset-0 z-50 bg-[#0B0F19]/90 backdrop-blur-md min-h-screen'
-          : 'min-h-[360px] w-full bg-[#0B0F19]/50 rounded-2xl border border-[#1F2937]/80',
+          ? 'fixed inset-0 z-50 bg-bg/90 backdrop-blur-md min-h-screen'
+          : 'min-h-[360px] w-full bg-surface rounded-2xl border border-border shadow-sm',
         className
       )}
     >
@@ -70,15 +70,15 @@ export function TradingScreenLoader({
           <div className="absolute w-24 h-24 rounded-full bg-accent/20 blur-xl animate-pulse" />
           
           {/* Main Card Icon Box */}
-          <div className="relative h-16 w-16 rounded-2xl bg-[#111827] border-2 border-accent/40 flex items-center justify-center shadow-2xl shadow-accent/20">
+          <div className="relative h-16 w-16 rounded-2xl bg-surface border-2 border-accent/40 flex items-center justify-center shadow-2xl shadow-accent/20">
             <CandlestickChart className="h-8 w-8 text-accent animate-pulse" />
             
             {/* Corner Badges */}
-            <div className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-[#0B0F19] border border-accent/40 shadow-sm">
+            <div className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-surface-muted border border-accent/40 shadow-sm">
               <TrendingUp className="h-3.5 w-3.5 text-accent animate-bounce" />
             </div>
             
-            <div className="absolute -top-2 -left-2 p-1.5 rounded-lg bg-[#0B0F19] border border-accent/40 shadow-sm">
+            <div className="absolute -top-2 -left-2 p-1.5 rounded-lg bg-surface-muted border border-accent/40 shadow-sm">
               <Activity className="h-3.5 w-3.5 text-accent animate-pulse" />
             </div>
           </div>
@@ -87,20 +87,20 @@ export function TradingScreenLoader({
         {/* Text & Telemetry Badges */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-center gap-2">
-            <h3 className="text-base font-bold text-white tracking-tight">{label}</h3>
+            <h3 className="text-base font-bold text-text tracking-tight">{label}</h3>
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
             </span>
           </div>
 
-          <p className="text-xs text-gray-400 leading-relaxed font-normal">
+          <p className="text-xs text-text-muted leading-relaxed font-normal">
             {subtitle}
           </p>
         </div>
 
         {/* Animated Market Feed Sync Bar */}
-        <div className="w-48 h-1.5 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/50">
+        <div className="w-48 h-1.5 rounded-full bg-surface-muted overflow-hidden border border-border">
           <div className="h-full bg-accent rounded-full animate-[shimmer_1.5s_infinite_linear] w-2/3 shadow-sm shadow-accent" />
         </div>
       </div>

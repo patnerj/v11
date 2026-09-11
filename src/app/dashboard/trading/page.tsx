@@ -546,18 +546,18 @@ function DesktopLayout({
                     {account && (
                       <div className="shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-mono select-none overflow-x-auto no-scrollbar">
                         <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-text-muted">
-                          <span>Balance: <strong className="text-white font-semibold">{fmtUSD(balance)}</strong></span>
+                          <span>Balance: <strong className="text-text font-semibold">{fmtUSD(balance)}</strong></span>
                           <span>
-                            Equity: <strong className={equity >= balance ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{fmtUSD(equity)}</strong>
+                            Equity: <strong className={equity >= balance ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{fmtUSD(equity)}</strong>
                           </span>
-                          <span>Margin: <strong className="text-gray-200 font-medium">{fmtUSD(used)}</strong></span>
-                          <span>Free Margin: <strong className="text-white font-semibold">{fmtUSD(free)}</strong></span>
-                          <span>Margin Level: <strong className={level !== null && level <= 120 ? 'text-rose-400 font-bold' : 'text-gray-200'}>{level !== null ? fmtPct(level, 1) : '—'}</strong></span>
-                          <span>Leverage: <strong className="text-gray-300">1:{lev}</strong></span>
+                          <span>Margin: <strong className="text-text font-medium">{fmtUSD(used)}</strong></span>
+                          <span>Free Margin: <strong className="text-text font-semibold">{fmtUSD(free)}</strong></span>
+                          <span>Margin Level: <strong className={level !== null && level <= 120 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-text font-medium'}>{level !== null ? fmtPct(level, 1) : '—'}</strong></span>
+                          <span>Leverage: <strong className="text-text font-medium">1:{lev}</strong></span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-text-muted">Total P/L:</span>
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold tabular ${pnl >= 0 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold tabular ${pnl >= 0 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'}`}>
                             {fmtUSD(pnl, { sign: true })}
                           </span>
                         </div>
