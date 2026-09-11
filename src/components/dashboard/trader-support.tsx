@@ -209,6 +209,7 @@ export function TraderSupport() {
   const [newMessage, setNewMessage] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch Tickets List
   const { data: ticketsData, refetch: refetchTickets, isFetching: isFetchingTickets } = useQuery({
@@ -286,10 +287,10 @@ export function TraderSupport() {
     });
   }, [rawMessages, activeTicket, brandName]);
 
-  // Auto-scroll to bottom of conversation
+  // Auto-scroll to bottom of conversation (internal chat container only, never scroll outer window)
   useEffect(() => {
-    if (selectedTicketId && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (selectedTicketId && messages.length > 0 && chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages.length, selectedTicketId]);
 
@@ -446,7 +447,7 @@ export function TraderSupport() {
       </div>
 
       {/* ── 2-COLUMN LUXURY WORKSPACE (Zero Page Scrolling) ───────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 h-[calc(100vh-170px)] min-h-[620px] max-h-[880px] w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 h-[calc(100vh-140px)] min-h-[580px] max-h-[860px] w-full">
         
         {/* ── LEFT COLUMN (4 Cols): Tickets Queue Sidebar ─────────────────── */}
         <div className="lg:col-span-4 flex flex-col h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
@@ -582,7 +583,7 @@ export function TraderSupport() {
               </div>
 
               {/* Chat Messages Stream (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/15 dark:bg-[#080C14]/40">
+              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/15 dark:bg-[#080C14]/40">
                 {messages.length === 0 ? (
                   <div className="py-16 text-center text-muted-foreground dark:text-gray-500 text-xs font-mono">
                     <Sparkles className="w-6 h-6 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 animate-pulse" />

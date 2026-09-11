@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/store/auth'
@@ -23,6 +23,23 @@ export interface TopbarProps {
   user?: AuthUser | null
 }
 
+const ROUTE_NAV_TITLES: Record<string, { title: string; section?: string }> = {
+  '/dashboard': { title: 'Dashboard Overview', section: 'Trader Hub' },
+  '/dashboard/trading': { title: 'Trading Terminal', section: 'Live Execution' },
+  '/dashboard/challenges': { title: 'Evaluation Challenges', section: 'Accounts' },
+  '/dashboard/tournaments': { title: 'Tournaments & Contests', section: 'Arena' },
+  '/arena': { title: 'PvP Trading Arena', section: 'Esports' },
+  '/dashboard/history': { title: 'Trade History & Journal', section: 'Analytics' },
+  '/dashboard/analytics': { title: 'Performance Analytics', section: 'Analytics' },
+  '/dashboard/payouts': { title: 'Profit Payouts & Escrow', section: 'Finance' },
+  '/dashboard/affiliate': { title: 'Affiliate Portal', section: 'Growth' },
+  '/dashboard/certificates': { title: 'Funded Certificates', section: 'Achievements' },
+  '/dashboard/notifications': { title: 'Notifications & Alerts', section: 'System' },
+  '/dashboard/support': { title: 'Help & Support Desk', section: 'Support' },
+  '/dashboard/settings': { title: 'Account Settings', section: 'Security' },
+  '/dashboard/kyc': { title: 'Identity Verification (KYC)', section: 'Compliance' },
+}
+
 function toAppPath(link: string): string {
   if (!link) return '/dashboard'
   try {
@@ -33,11 +50,15 @@ function toAppPath(link: string): string {
 
 export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const authUser = useAuth((s) => s.user)
   const user = userProp !== undefined ? userProp : authUser
   const signout = useAuth((s) => s.signout)
   const impersonating = useImpersonation((s) => !!s.record)
   const adminMode = role === 'admin' || (role === undefined && user?.is_admin === true && !impersonating)
+  const navMeta = ROUTE_NAV_TITLES[pathname || ''] || 
+    Object.entries(ROUTE_NAV_TITLES).find(([k]) => pathname?.startsWith(k))?.[1] || 
+    { title: 'Dashboard', section: 'Trader Hub' }
   const [mounted, setMounted] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
   const queryClient = useQueryClient()
@@ -102,6 +123,13 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      {/* Desktop Section & Title Breadcrumb */}
+      <div className="hidden sm:flex items-center gap-2 text-xs select-none">
+        <span className="text-text-muted font-medium">{navMeta.section}</span>
+        <span className="text-border text-xs">/</span>
+        <span className="font-semibold text-text text-sm tracking-tight">{navMeta.title}</span>
+      </div>
 
       <div className="flex-1" />
 
