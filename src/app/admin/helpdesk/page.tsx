@@ -51,10 +51,12 @@ export default function AdminHelpdeskPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [quickQueueFilter, setQuickQueueFilter] = useState<'needs_reply' | 'open' | 'resolved' | 'all'>('needs_reply')
 
   // Selected Ticket State
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [replyMessage, setReplyMessage] = useState('')
+  const [isSendingAndResolving, setIsSendingAndResolving] = useState(false)
 
   // ── v11.4 AI Autonomous Support Desk State ─────────────────────────────
   const [aiAutopilotActive, setAiAutopilotActive] = useState(true)
@@ -83,6 +85,16 @@ export default function AdminHelpdeskPage() {
     }
     if (cat === 'kyc' || text.includes('kyc') || text.includes('verify') || text.includes('document') || text.includes('passport')) {
       return `Hello ${traderName},\n\nThank you for contacting our verification desk. KYC approval requires a clear government-issued photo ID (Passport, National ID, or Driver's License) along with proof of address (utility bill or bank statement issued within the last 90 days). You can upload these directly inside your dashboard KYC tab, and our compliance desk will audit and approve them within 2 to 4 hours.\n\nBest regards,\n${brand} Compliance Team`
+    }
+    if (cat === 'trading' || text.includes('trade') || text.includes('btc') || text.includes('eur') || text.includes('crypto') || text.includes('forex') || text.includes('order') || text.includes('symbol') || text.includes('lot') || text.includes('pair') || text.includes('cant') || text.includes("can't")) {
+      const isCrypto = text.includes('btc') || text.includes('crypto') || text.includes('eth') || text.includes('usdt')
+      const isForex = text.includes('eur') || text.includes('forex') || text.includes('fx') || text.includes('gbp')
+      const marketHours = isCrypto
+        ? "Crypto pairs (such as BTC/USDT, ETH/USDT) trade 24/7 with continuous pricing."
+        : (isForex
+          ? "Forex currency pairs (such as EUR/USD, GBP/USD) trade 24/5 from Monday 00:00 UTC through Friday 21:00 UTC (markets close on weekends)."
+          : "Forex pairs trade 24/5 while Crypto assets trade 24/7 continuously.")
+      return `Hello ${traderName},\n\nThank you for contacting ${brand} Support regarding your trading inquiry.\n\nTo place orders on WebTrader or MT5, please note:\n1. Active Account Required: To execute market or pending orders, your account must have an active evaluation or funded challenge assigned. If you have not started a challenge yet, please choose a plan from the Challenges tab.\n2. Trading Hours & Market Sessions: ${marketHours}\n3. Order Placement: Select your symbol from the market list on the left, specify your desired lot size (minimum 0.01 lots), configure your Stop Loss / Take Profit parameters, and execute. If an order fails, confirm your margin requirements and daily loss buffer are sufficient.\n\nPlease let us know if you need any further assistance with your trading setup!\n\nBest regards,\n${brand} Trade Desk`
     }
     return `Hello ${traderName},\n\nThank you for contacting ${brand} Support regarding "${ticket.subject}". We have verified your inquiry and account status in our system. Your account is active and in good standing with all risk metrics operating within standard challenge guidelines. Please let us know if there is anything specific we can assist you with regarding your trading evaluation, and our dedicated team is here to help 24/7.\n\nBest regards,\n${brand} Support Team`
   }
@@ -189,12 +201,44 @@ export default function AdminHelpdeskPage() {
     refetchInterval: 15_000,
   })
 
-  // Auto-select first ticket on load if none selected
+  // Helper to determine if a ticket is actively awaiting an admin response
+  const isTicketNeedingReply = (t: any): boolean => {
+    if (!t) return false
+    const isClosedOrResolved = t.status === 'resolved' || t.status === 'closed'
+    if (isClosedOrResolved) return false
+    return t.latest_sender_type === 'trader' || t.latest_sender_type === 'user' || t.status === 'open' || !t.latest_sender_type
+  }
+
+  // Segmented queue counts
+  const queueCounts = useMemo(() => {
+    const needsReply = allTickets.filter(t => isTicketNeedingReply(t)).length
+    const inProgress = allTickets.filter(t => (t.status === 'in_progress' || t.status === 'open') && !isTicketNeedingReply(t)).length
+    const resolved = allTickets.filter(t => t.status === 'resolved' || t.status === 'closed').length
+    const total = allTickets.length
+    return { needsReply, inProgress, resolved, total }
+  }, [allTickets])
+
+  // Filtered tickets based on active segmented queue filter
+  const displayedTickets = useMemo(() => {
+    return tickets.filter(t => {
+      if (quickQueueFilter === 'needs_reply') return isTicketNeedingReply(t)
+      if (quickQueueFilter === 'open') return (t.status === 'open' || t.status === 'in_progress') && !isTicketNeedingReply(t)
+      if (quickQueueFilter === 'resolved') return t.status === 'resolved' || t.status === 'closed'
+      return true
+    })
+  }, [tickets, quickQueueFilter])
+
+  // Auto-select first displayed ticket if current selection is not visible
   useEffect(() => {
-    if (tickets.length > 0 && selectedTicketId === null) {
+    if (displayedTickets.length > 0) {
+      const isSelectedInView = displayedTickets.some(t => t.id === selectedTicketId)
+      if (!isSelectedInView) {
+        setSelectedTicketId(displayedTickets[0].id)
+      }
+    } else if (tickets.length > 0 && selectedTicketId === null) {
       setSelectedTicketId(tickets[0].id)
     }
-  }, [tickets, selectedTicketId])
+  }, [displayedTickets, tickets, selectedTicketId])
 
   // ─────────────────────────────────────────────────────────────
   // 2. FETCH ACTIVE TICKET DETAILS & MESSAGES
@@ -263,18 +307,32 @@ export default function AdminHelpdeskPage() {
     sendReplyMutation.mutate({ id: selectedTicketId, message: replyMessage.trim() })
   }
 
-  // Summary Metrics Computation — from allTickets (unfiltered), not the
-  // currently-filtered `tickets` list above. These headline numbers look
-  // global; deriving them from the filtered set meant switching to e.g. the
-  // "Resolved" status filter showed a false 100% resolution rate and a false
-  // 0 pending queue.
+  const handleSendAndResolve = async () => {
+    if (!selectedTicketId || !replyMessage.trim()) {
+      toast.error('Please enter a response message.')
+      return
+    }
+    setIsSendingAndResolving(true)
+    try {
+      await sendReplyMutation.mutateAsync({ id: selectedTicketId, message: replyMessage.trim() })
+      await updateStatusMutation.mutateAsync({ id: selectedTicketId, status: 'resolved' })
+      toast.success('Response delivered and ticket marked as resolved!')
+    } catch (err: any) {
+      toast.error(err?.message || 'Error processing response.')
+    } finally {
+      setIsSendingAndResolving(false)
+    }
+  }
+
+  // Summary Metrics Computation — from allTickets (unfiltered)
   const metrics = useMemo(() => {
     const total = allTickets.length
     const openCount = allTickets.filter(t => t.status === 'open' || t.status === 'in_progress').length
     const urgentCount = allTickets.filter(t => t.priority === 'urgent').length
     const resolvedCount = allTickets.filter(t => t.status === 'resolved' || t.status === 'closed').length
     const resolutionRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 100
-    return { total, openCount, urgentCount, resolvedCount, resolutionRate }
+    const needsReplyCount = allTickets.filter(isTicketNeedingReply).length
+    return { total, openCount, urgentCount, resolvedCount, resolutionRate, needsReplyCount }
   }, [allTickets])
 
   return (
@@ -377,15 +435,18 @@ export default function AdminHelpdeskPage() {
         <Card className="bg-[#111827] border-[#1F2937]">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Pending Queue</span>
+              <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                Needs Reply
+              </span>
               <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
                 <Clock className="h-3.5 w-3.5" />
               </div>
             </div>
             <div className="text-2xl font-bold text-amber-400 mt-1.5 font-mono">
-              {metrics.openCount}
+              {metrics.needsReplyCount}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Awaiting admin review</span>
+            <span className="text-[10px] text-gray-500 font-mono">Trader awaiting reply</span>
           </CardContent>
         </Card>
 
@@ -488,31 +549,117 @@ export default function AdminHelpdeskPage() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-gray-200 flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-emerald-400" />
-              Ticket Queue ({tickets.length})
+              Ticket Queue ({displayedTickets.length})
             </h3>
-            <span className="text-[11px] text-gray-500">Click row to open thread</span>
+            <span className="text-[11px] text-gray-500">Click card to view</span>
           </div>
 
-          <div className="space-y-2.5 max-h-[780px] overflow-y-auto pr-1">
-            {tickets.length === 0 ? (
+          {/* Quick Segmented Filter Tabs */}
+          <div className="grid grid-cols-4 gap-1 p-1 bg-[#0A0D17] border border-[#1F2937] rounded-xl text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setQuickQueueFilter('needs_reply')}
+              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                quickQueueFilter === 'needs_reply'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${queueCounts.needsReply > 0 ? 'bg-amber-400 animate-pulse' : 'bg-gray-500'}`} />
+              <span className="truncate">Needs Reply</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
+                {queueCounts.needsReply}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setQuickQueueFilter('open')}
+              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                quickQueueFilter === 'open'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <span className="truncate">Active</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">
+                {queueCounts.inProgress}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setQuickQueueFilter('resolved')}
+              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                quickQueueFilter === 'resolved'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <span className="truncate">Resolved</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
+                {queueCounts.resolved}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setQuickQueueFilter('all')}
+              className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                quickQueueFilter === 'all'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+            >
+              <span className="truncate">All</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-gray-800 text-gray-300 font-bold">
+                {queueCounts.total}
+              </span>
+            </button>
+          </div>
+
+          <div className="space-y-2.5 max-h-[calc(100vh-320px)] min-h-[500px] overflow-y-auto pr-1.5 custom-scrollbar">
+            {displayedTickets.length === 0 ? (
               <Card className="bg-[#111827] border-[#1F2937]">
-                <CardContent className="py-12 text-center text-gray-400">
-                  <Headphones className="h-8 w-8 mx-auto text-gray-600 mb-2" />
-                  <p className="font-semibold text-white text-xs">No tickets match active filter</p>
-                  <p className="text-[10px] text-gray-500 mt-1">Clear filters to view all customer support conversations.</p>
+                <CardContent className="py-12 text-center text-gray-400 space-y-2">
+                  <Headphones className="h-8 w-8 mx-auto text-gray-600 mb-1" />
+                  <p className="font-semibold text-white text-xs">
+                    {quickQueueFilter === 'needs_reply' 
+                      ? '🎉 All caught up! No tickets waiting for reply.' 
+                      : 'No tickets match active filter'}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    {quickQueueFilter === 'needs_reply'
+                      ? 'All incoming trader inquiries have been answered or resolved.'
+                      : 'Clear filters or switch tabs to view conversations.'}
+                  </p>
+                  {quickQueueFilter === 'needs_reply' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuickQueueFilter('all')}
+                      className="mt-2 text-xs border-[#1F2937] hover:border-emerald-500"
+                    >
+                      View All Inquiries
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ) : (
-              tickets.map((t) => {
+              displayedTickets.map((t) => {
                 const isSelected = selectedTicketId === t.id
+                const needsReply = isTicketNeedingReply(t)
+                const isResolved = t.status === 'resolved' || t.status === 'closed'
                 return (
                   <div
                     key={t.id}
                     onClick={() => setSelectedTicketId(t.id)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer space-y-2.5 ${
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-2 ${
                       isSelected
                         ? 'bg-[#111827] border-emerald-500 shadow-md shadow-emerald-500/10'
-                        : 'bg-[#111827]/70 border-[#1F2937] hover:border-gray-600 hover:bg-[#111827]'
+                        : needsReply
+                          ? 'bg-[#111827]/90 border-l-4 border-l-amber-500 border-t-[#1F2937] border-r-[#1F2937] border-b-[#1F2937] hover:border-amber-500/80 hover:bg-[#111827]'
+                          : 'bg-[#111827]/70 border-[#1F2937] hover:border-gray-600 hover:bg-[#111827]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -534,17 +681,30 @@ export default function AdminHelpdeskPage() {
                         </Badge>
                       </div>
 
-                      <Badge 
-                        tone={
-                          t.status === 'open' ? 'success' :
-                          t.status === 'in_progress' ? 'accent' :
-                          t.status === 'resolved' ? 'neutral' : 'neutral'
-                        } 
-                        size="sm"
-                        className="text-[10px] capitalize"
-                      >
-                        {t.status.replace('_', ' ')}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        {needsReply ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                            Needs Reply
+                          </span>
+                        ) : isResolved ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            Resolved
+                          </span>
+                        ) : (
+                          <Badge 
+                            tone={
+                              t.status === 'open' ? 'success' :
+                              t.status === 'in_progress' ? 'accent' : 'neutral'
+                            } 
+                            size="sm"
+                            className="text-[10px] capitalize"
+                          >
+                            {t.status.replace('_', ' ')}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     <div>
@@ -556,9 +716,21 @@ export default function AdminHelpdeskPage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-[#1F2937]/50 text-[10px] text-gray-500 font-mono">
-                      <span>{t.display_name || t.user_login || `User #${t.trader_id}`}</span>
-                      <span>{new Date(t.updated_at || t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex items-center justify-between pt-2 border-t border-[#1F2937]/50 text-[10px] font-mono">
+                      <span className="text-gray-400 flex items-center gap-1">
+                        <User className="w-2.5 h-2.5 text-gray-500" />
+                        {t.display_name || t.user_login || `User #${t.trader_id}`}
+                      </span>
+                      {needsReply ? (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" />
+                          Trader waiting • {new Date(t.latest_message_at || t.updated_at || t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      ) : (
+                        <span className="text-gray-500">
+                          {new Date(t.updated_at || t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )
@@ -570,10 +742,10 @@ export default function AdminHelpdeskPage() {
         {/* ── Right Column: Conversation & Response Panel (7 Cols) ─────────── */}
         <div className="lg:col-span-7">
           {activeTicket ? (
-            <Card className="bg-[#111827] border-[#1F2937] flex flex-col h-[780px] justify-between overflow-hidden shadow-xl">
+            <Card className="bg-[#111827] border-[#1F2937] flex flex-col h-[calc(100vh-270px)] min-h-[580px] justify-between overflow-hidden shadow-xl">
               
               {/* Ticket Detail Header */}
-              <CardHeader className="border-b border-[#1F2937]/80 pb-4 shrink-0 bg-[#0B0F19]/50">
+              <CardHeader className="border-b border-[#1F2937]/80 pb-3 shrink-0 bg-[#0B0F19]/50">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2.5">
@@ -593,8 +765,30 @@ export default function AdminHelpdeskPage() {
                     </div>
                   </div>
 
-                  {/* Status & Priority Modifiers */}
-                  <div className="flex items-center gap-2">
+                  {/* Status & Priority Modifiers + Quick Actions */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {activeTicket.status !== 'resolved' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateStatusMutation.mutate({ id: activeTicket.id, status: 'resolved' })}
+                        className="h-8 text-xs gap-1 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Mark Resolved
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateStatusMutation.mutate({ id: activeTicket.id, status: 'in_progress' })}
+                        className="h-8 text-xs gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Reopen
+                      </Button>
+                    )}
+
                     <select
                       value={activeTicket.status}
                       onChange={(e) => updateStatusMutation.mutate({ id: activeTicket.id, status: e.target.value })}
@@ -619,6 +813,23 @@ export default function AdminHelpdeskPage() {
                   </div>
                 </div>
               </CardHeader>
+
+              {/* Trader Waiting Alert Banner */}
+              {isTicketNeedingReply(activeTicket) && (
+                <div className="px-5 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-300 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    <span className="font-semibold">Trader is waiting for your reply</span>
+                    <span className="text-amber-400/70 text-[11px] hidden sm:inline">— Last inquiry by {activeTicket.display_name || activeTicket.user_login || 'Trader'}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-amber-400/80">
+                    {new Date(activeTicket.latest_message_at || activeTicket.updated_at || activeTicket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
 
               {/* Scrollable Message Thread */}
               <CardContent className="p-5 flex-1 overflow-y-auto space-y-4 font-sans bg-[#0B0F19]/20">
@@ -696,14 +907,25 @@ export default function AdminHelpdeskPage() {
                       value={replyMessage}
                       onChange={(e) => setReplyMessage(e.target.value)}
                       rows={3}
-                      className="text-xs bg-[#0B0F19] border-[#1F2937] focus:border-emerald-500 pr-24"
+                      className="text-xs bg-[#0B0F19] border-[#1F2937] focus:border-emerald-500 pr-56"
                     />
                     <div className="absolute right-2.5 bottom-2.5 flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={sendReplyMutation.isPending || isSendingAndResolving}
+                        onClick={handleSendAndResolve}
+                        className="gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 h-8 text-xs font-semibold"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Send & Mark Resolved
+                      </Button>
                       <Button
                         type="submit"
                         variant="primary"
                         size="sm"
-                        loading={sendReplyMutation.isPending}
+                        loading={sendReplyMutation.isPending && !isSendingAndResolving}
                         className="gap-1.5 shadow-emerald-500/20 h-8 text-xs font-semibold"
                       >
                         <Send className="h-3.5 w-3.5" />
@@ -717,7 +939,7 @@ export default function AdminHelpdeskPage() {
 
             </Card>
           ) : (
-            <Card className="bg-[#111827] border-[#1F2937] h-[780px] flex items-center justify-center text-center p-8">
+            <Card className="bg-[#111827] border-[#1F2937] h-[calc(100vh-270px)] min-h-[580px] flex items-center justify-center text-center p-8">
               <div className="space-y-3">
                 <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
                   <Headphones className="h-6 w-6" />

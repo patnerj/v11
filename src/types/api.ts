@@ -850,6 +850,8 @@ export interface Ticket {
   display_name?: string;
   message_count?: number;
   latest_message?: string;
+  latest_sender_type?: 'trader' | 'admin' | 'user' | 'ai_assistant';
+  latest_message_at?: string;
   created_at: string;
   updated_at: string;
 }
