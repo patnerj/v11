@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // P0 FIX: Missing secret means we cannot mint a verified session cookie.
     // Return a clear 500 so developers immediately identify the misconfiguration.
     console.error('[session/route] FATAL: FXSIM_SESSION_SECRET is not set. Cannot create signed session cookies.')
-    return NextResponse.json({ error: 'Server misconfiguration: FXSIM_SESSION_SECRET not set' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'Server misconfiguration: FXSIM_SESSION_SECRET not set' }, { status: 500 })
   }
 
   // Verify the token against the backend (server-to-server — never trust the client).
