@@ -294,13 +294,62 @@ export default function ConfigurationHubPage() {
         ...prev,
         ...aiSettingsData,
         gemini_api_key: aiSettingsData.gemini_api_key || '',
-        gemini_model: aiSettingsData.gemini_model || 'gemini-2.0-flash',
+        gemini_model: aiSettingsData.gemini_model || 'gemini-3.6-flash',
         deepseek_api_key: (aiSettingsData as any).deepseek_api_key || '',
         deepseek_model: (aiSettingsData as any).deepseek_model || 'deepseek-chat',
-        provider: aiSettingsData.provider || 'hybrid',
+        provider: aiSettingsData.provider || 'gemini',
       }))
     }
   }, [aiSettingsData])
+
+  const [testingGemini, setTestingGemini] = useState(false)
+  const [geminiTestResult, setGeminiTestResult] = useState<{
+    success: boolean
+    latency_ms?: number
+    model?: string
+    reply?: string
+    error?: string
+  } | null>(null)
+
+  const handleTestGemini = async () => {
+    if (!aiForm.gemini_api_key) {
+      toast.error('Please enter your Gemini API Key first.')
+      return
+    }
+    setTestingGemini(true)
+    setGeminiTestResult(null)
+    try {
+      const res = await api.admin.ai.testConnection({
+        provider: 'gemini',
+        gemini_api_key: aiForm.gemini_api_key,
+        gemini_model: aiForm.gemini_model,
+      })
+      if (res.ok && res.data?.success) {
+        setGeminiTestResult({
+          success: true,
+          latency_ms: res.data.latency_ms,
+          model: res.data.model,
+          reply: res.data.reply,
+        })
+        toast.success(`✨ Gemini Online! Response in ${res.data.latency_ms}ms`)
+      } else {
+        const errMsg = res.data?.error || res.error || 'Connection check failed'
+        setGeminiTestResult({
+          success: false,
+          error: errMsg,
+        })
+        toast.error(`Gemini Error: ${errMsg}`)
+      }
+    } catch (err: any) {
+      setGeminiTestResult({
+        success: false,
+        error: err.message || 'Unknown network error',
+      })
+      toast.error(`Connection check failed: ${err.message}`)
+    } finally {
+      setTestingGemini(false)
+    }
+  }
 
   const saveAiSettingsMutation = useMutation({
     mutationFn: async (payload: Partial<AiSettings>) => {
@@ -3099,7 +3148,7 @@ export default function ConfigurationHubPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      Google Gemini 2.0 Flash &amp; DeepSeek AI Engine
+                      Google Gemini (Ultra-Fast Free Tier) &amp; DeepSeek AI Engine
                       {aiForm.gemini_api_key ? (
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/40">
                           Active
@@ -3961,7 +4010,7 @@ export default function ConfigurationHubPage() {
                     </div>
                     <div>
                       <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                        Google Gemini 2.0 Flash
+                        Google Gemini AI Engine
                         {aiForm.gemini_api_key ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             CONNECTED
@@ -4023,11 +4072,74 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setAiForm({ ...aiForm, gemini_model: e.target.value })}
                     className="w-full bg-[#0B0F19] border border-[#1F2937] rounded-xl text-xs px-3 py-2 text-gray-200 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="gemini-2.0-flash">gemini-2.0-flash (Recommended: Free, Fastest, Highest Accuracy)</option>
-                    <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Fast Tier)</option>
-                    <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning)</option>
+                    <option value="gemini-3.6-flash">gemini-3.6-flash (Recommended: Free Tier, Ultra Fast, 2026 Active)</option>
+                    <option value="gemini-flash-latest">gemini-flash-latest (Auto-Updating Latest Flash)</option>
+                    <option value="gemini-3.5-flash">gemini-3.5-flash (High Throughput Production)</option>
+                    <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Lightweight High RPM Free Tier)</option>
+                    <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning &amp; Complex Analysis)</option>
                   </select>
                 </div>
+
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestGemini}
+                    disabled={testingGemini || !aiForm.gemini_api_key}
+                    className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center gap-2 text-xs font-semibold py-2"
+                  >
+                    {testingGemini ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        Testing Gemini Connection...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" />
+                        ⚡ Test Gemini Connection
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {geminiTestResult && (
+                  <div className={cn(
+                    "p-3 rounded-xl border text-xs space-y-1.5 animate-in fade-in duration-200",
+                    geminiTestResult.success 
+                      ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-200"
+                      : "bg-rose-950/40 border-rose-500/40 text-rose-200"
+                  )}>
+                    <div className="flex items-center justify-between font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        {geminiTestResult.success ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                        )}
+                        <span>{geminiTestResult.success ? 'Gemini API Connected Successfully' : 'Connection Failed'}</span>
+                      </div>
+                      {geminiTestResult.latency_ms !== undefined && (
+                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                          {geminiTestResult.latency_ms}ms
+                        </span>
+                      )}
+                    </div>
+                    {geminiTestResult.model && (
+                      <p className="text-[11px] opacity-80 font-mono">Verified Model: {geminiTestResult.model}</p>
+                    )}
+                    {geminiTestResult.reply && (
+                      <p className="text-[11px] italic bg-black/30 p-2 rounded border border-emerald-500/20 text-emerald-100">
+                        &ldquo;{geminiTestResult.reply}&rdquo;
+                      </p>
+                    )}
+                    {geminiTestResult.error && (
+                      <p className="text-[11px] text-rose-300 font-mono break-all">
+                        Error: {geminiTestResult.error}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

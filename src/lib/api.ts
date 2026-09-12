@@ -286,6 +286,8 @@ export const api = {
         const tid = typeof ticketIdOrBody === 'number' ? ticketIdOrBody : ticketIdOrBody.ticket_id
         return fxsim<{ success: boolean; draft: string; confidence?: number; category?: string }>(`/admin/ai/tickets/draft-reply?ticket_id=${tid}`, { method: 'POST', body: { ticket_id: tid }, timeout: 25_000 })
       },
+      testConnection: (body?: { provider?: string; gemini_api_key?: string; gemini_model?: string }) =>
+        fxsim<{ success: boolean; provider: string; model?: string; latency_ms: number; reply?: string; error?: string }>('/admin/ai/test', { method: 'POST', body: body || {}, timeout: 15_000 }),
     },
     stats:        ()                 => fxsim<AdminStats>('/admin/stats',                                { cache: 10_000 }),
     users:        (search?: string, page?: number, limit?: number)  => fxsim<{ data: AdminUserRow[]; total: number; page: number; pages: number; limit: number }>('/admin/users',                            { query: { search, page, limit }, cache: 5_000 }),
