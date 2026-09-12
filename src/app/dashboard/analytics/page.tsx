@@ -2,7 +2,7 @@
 
 import { useTheme } from 'next-themes'
 import { api } from '@/lib/api'
-import { fmtUSD, fmtDate } from '@/lib/format'
+import { fmtUSD, fmtDate, toNum } from '@/lib/format'
 import { useQuery } from '@tanstack/react-query'
 import { useChallengeMyQuery } from '@/hooks/useApi'
 import { AccountSwitcher, buildSwitchEntries } from '@/components/dashboard/trading/account-switcher'
@@ -152,10 +152,10 @@ export default function AnalyticsPage() {
       )}
 
       <StatGrid columns={4}>
-        <StatCard label="Win Rate" value={`${full.win_rate.toFixed(1)}%`} icon={Target} tone="info" />
-        <StatCard label="Avg R:R" value={adv?.avg_rr ? `1:${adv.avg_rr.toFixed(2)}` : 'N/A'} icon={TrendingUp} tone="accent" />
-        <StatCard label="Max Drawdown" value={`${full.max_drawdown_pct.toFixed(2)}%`} icon={Activity} tone="danger" />
-        <StatCard label="Profit Factor" value={full.profit_factor.toFixed(2)} icon={BarChart3} tone={full.profit_factor >= 1 ? 'success' : 'danger'} />
+        <StatCard label="Win Rate" value={`${toNum(full.win_rate).toFixed(1)}%`} icon={Target} tone="info" />
+        <StatCard label="Avg R:R" value={adv?.avg_rr ? `1:${toNum(adv.avg_rr).toFixed(2)}` : 'N/A'} icon={TrendingUp} tone="accent" />
+        <StatCard label="Max Drawdown" value={`${toNum(full.max_drawdown_pct).toFixed(2)}%`} icon={Activity} tone="danger" />
+        <StatCard label="Profit Factor" value={toNum(full.profit_factor).toFixed(2)} icon={BarChart3} tone={toNum(full.profit_factor) >= 1 ? 'success' : 'danger'} />
         
         <StatCard label="Best Trade" value={fmtUSD(full.best_trade, { sign: true })} icon={TrendingUp} tone="success" />
         <StatCard label="Worst Trade" value={fmtUSD(full.worst_trade, { sign: true })} icon={TrendingUp} tone="danger" />
@@ -225,7 +225,7 @@ export default function AnalyticsPage() {
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: chartTextColor, fontSize: 12 }} tickFormatter={(val) => `${val}%`} />
                   <RechartsTooltip
                     contentStyle={{ backgroundColor: 'hsl(var(--surface))', border: '1px solid hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--text))' }}
-                    formatter={(val: number) => [`${val.toFixed(1)}%`, 'Win Rate']}
+                    formatter={(val: number) => [`${toNum(val).toFixed(1)}%`, 'Win Rate']}
                   />
                   <Line type="monotone" dataKey="winRate" stroke="hsl(var(--info))" strokeWidth={3} dot={{ r: 4, fill: 'hsl(var(--info))' }} activeDot={{ r: 6 }} />
                 </LineChart>
@@ -306,10 +306,10 @@ export default function AnalyticsPage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#333' : '#e5e5e5'} />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: chartTextColor, fontSize: 12 }} dy={10} minTickGap={30} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: chartTextColor, fontSize: 12 }} tickFormatter={(val) => `${val.toFixed(1)}%`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: chartTextColor, fontSize: 12 }} tickFormatter={(val) => `${toNum(val).toFixed(1)}%`} />
                   <RechartsTooltip
                     contentStyle={{ backgroundColor: 'hsl(var(--surface))', border: '1px solid hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--text))' }}
-                    formatter={(val: number) => [`${val.toFixed(2)}%`, 'Drawdown']}
+                    formatter={(val: number) => [`${toNum(val).toFixed(2)}%`, 'Drawdown']}
                   />
                   <Area type="monotone" dataKey="drawdown" stroke="hsl(var(--danger))" fillOpacity={1} fill="url(#colorDd)" />
                 </AreaChart>
@@ -335,7 +335,7 @@ export default function AnalyticsPage() {
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: chartTextColor, fontSize: 12 }} tickFormatter={(val) => `1:${val}`} />
                   <RechartsTooltip
                     contentStyle={{ backgroundColor: 'hsl(var(--surface))', border: '1px solid hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--text))' }}
-                    formatter={(val: number) => [`1:${val.toFixed(2)}`, 'Risk/Reward']}
+                    formatter={(val: number) => [`1:${toNum(val).toFixed(2)}`, 'Risk/Reward']}
                   />
                   <Line type="stepAfter" dataKey="rr" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--success))' }} />
                 </LineChart>

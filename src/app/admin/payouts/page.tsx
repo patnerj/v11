@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { PayoutManagementModal, PayoutItemTarget } from '@/components/admin/PayoutManagementModal'
 import { toast } from 'sonner'
+import { toNum } from '@/lib/format'
 
 function formatMoney(val: number | string | undefined | null) {
   const num = typeof val === 'string' ? parseFloat(val) : (val ?? 0)
@@ -155,7 +156,7 @@ export default function PayoutsHubPage() {
       approvedCount: approvedList.length,
       approvedTotal: approvedSum,
       rejectedCount: rejectedList.length,
-      avgTimeHours: avgTimeHours !== null ? `${avgTimeHours.toFixed(1)} Hours` : '--',
+      avgTimeHours: avgTimeHours !== null ? `${toNum(avgTimeHours).toFixed(1)} Hours` : '--',
       slaSampleSize: resolvedWithTimes.length,
       slaPct,
     }
@@ -222,9 +223,9 @@ export default function PayoutsHubPage() {
       `"${p.payout_code}"`,
       `"${p.trader_name.replace(/"/g, '""')}"`,
       `"${p.email}"`,
-      p.amount_requested.toFixed(2),
-      p.trader_amount.toFixed(2),
-      p.firm_amount.toFixed(2),
+      toNum(p.amount_requested).toFixed(2),
+      toNum(p.trader_amount).toFixed(2),
+      toNum(p.firm_amount).toFixed(2),
       `${p.profit_split_pct}%`,
       `"${p.payment_method}"`,
       `"${p.payment_address.replace(/"/g, '""')}"`,
@@ -527,10 +528,10 @@ export default function PayoutsHubPage() {
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
-                  Target SLA &lt; {SLA_TARGET_HOURS.toFixed(1)} hrs {metrics.slaSampleSize > 0 && `(${metrics.slaSampleSize} resolved)`}
+                  Target SLA &lt; {toNum(SLA_TARGET_HOURS).toFixed(1)} hrs {metrics.slaSampleSize > 0 && `(${metrics.slaSampleSize} resolved)`}
                 </span>
                 <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
-                  {metrics.slaPct !== null ? `${metrics.slaPct.toFixed(1)}% SLA` : 'No data yet'}
+                  {metrics.slaPct !== null ? `${toNum(metrics.slaPct).toFixed(1)}% SLA` : 'No data yet'}
                 </Badge>
               </div>
             </CardContent>

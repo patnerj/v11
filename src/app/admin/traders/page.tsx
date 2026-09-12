@@ -14,6 +14,7 @@ import { api } from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { setSession, clearFxsimCache } from '@/lib/fxsim'
+import { toNum } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -348,8 +349,8 @@ export default function TradersHubPage() {
       `"${t.plan_name}"`,
       t.phase_name || `Phase ${t.phase}`,
       t.status,
-      t.balance.toFixed(2),
-      t.equity.toFixed(2),
+      toNum(t.balance).toFixed(2),
+      toNum(t.equity).toFixed(2),
       t.kyc_status,
       t.profit_split ?? 80,
       `"${new Date(t.created_at).toLocaleDateString()}"`,

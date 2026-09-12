@@ -27,6 +27,7 @@ import { Input, Label } from '@/components/ui/input'
 import { FounderActionCenter } from '@/components/admin/founder-action-center'
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
+import { toNum } from '@/lib/format'
 
 // Helper formatters
 function formatCurrency(val: number | string | undefined | null) {
@@ -218,7 +219,7 @@ export default function AdminCommandCenter() {
       const prev = Number(monthly[monthly.length - 2]?.total || (monthly[monthly.length - 2] as any)?.amount || 0)
       if (prev > 0) {
         const pct = ((cur - prev) / prev) * 100
-        return `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% MoM`
+        return `${pct >= 0 ? '+' : ''}${toNum(pct).toFixed(1)}% MoM`
       } else if (cur > 0) {
         return '+100% MoM'
       }
@@ -324,7 +325,7 @@ export default function AdminCommandCenter() {
         // tooltip and "Avg Pass" badge. 0 is the honest value when there's
         // genuinely no funded data for that month yet.
         const passedCount = fundedMatch ? fundedMatch.count : 0
-        const rate = item.count > 0 ? ((passedCount / item.count) * 100).toFixed(1) + '%' : '0%'
+        const rate = item.count > 0 ? toNum((passedCount / item.count) * 100).toFixed(1) + '%' : '0%'
         return {
           name: item.month ? item.month.split('-').slice(1).join('-') : 'Mo',
           registrations: item.count || 0,
@@ -1213,7 +1214,7 @@ export default function AdminCommandCenter() {
               </CardDescription>
             </div>
             <Badge tone="neutral" size="sm" className="font-mono text-[10px]">
-              {avgPassRate !== null ? `Avg Pass: ${avgPassRate.toFixed(1)}%` : 'Avg Pass: —'}
+              {avgPassRate !== null ? `Avg Pass: ${toNum(avgPassRate).toFixed(1)}%` : 'Avg Pass: —'}
             </Badge>
           </CardHeader>
 
@@ -1262,7 +1263,7 @@ export default function AdminCommandCenter() {
                     if (active && payload && payload.length) {
                       const reg = payload.find(p => p.dataKey === 'registrations')?.value as number || 0
                       const pass = payload.find(p => p.dataKey === 'passes')?.value as number || 0
-                      const rate = reg > 0 ? ((pass / reg) * 100).toFixed(1) + '%' : '0%'
+                      const rate = reg > 0 ? toNum((pass / reg) * 100).toFixed(1) + '%' : '0%'
                       return (
                         <div className="bg-[#111827] border border-[#1F2937] p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
                           <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1 font-mono">

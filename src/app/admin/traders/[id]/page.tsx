@@ -17,6 +17,7 @@ import { api } from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { setSession, clearFxsimCache } from '@/lib/fxsim'
+import { toNum } from '@/lib/format'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
 } from '@/components/ui/card'
@@ -676,7 +677,7 @@ export default function Trader360ProfilePage() {
                 {trader.pnl >= 0 ? '+' : ''}{formatExactCurrency(trader.pnl)}
               </div>
               <Badge tone={trader.pnl >= 0 ? 'success' : 'danger'} size="sm" className="mt-1 font-mono text-[10px]">
-                {trader.pnl_pct >= 0 ? '+' : ''}{trader.pnl_pct.toFixed(2)}% Net Yield
+                {trader.pnl_pct >= 0 ? '+' : ''}{toNum(trader.pnl_pct).toFixed(2)}% Net Yield
               </Badge>
             </CardContent>
           </Card>
@@ -686,10 +687,10 @@ export default function Trader360ProfilePage() {
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Daily Drawdown</span>
               <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-gray-100">
-                {trader.daily_dd.toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.daily_dd_limit}% Max</span>
+                {toNum(trader.daily_dd).toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.daily_dd_limit}% Max</span>
               </div>
               <Badge tone={trader.daily_dd > trader.daily_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 font-mono text-[10px]">
-                {Math.max(0, trader.daily_dd_limit - trader.daily_dd).toFixed(1)}% Headroom
+                {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(1)}% Headroom
               </Badge>
             </CardContent>
           </Card>
@@ -699,10 +700,10 @@ export default function Trader360ProfilePage() {
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Total Trailing DD</span>
               <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-gray-100">
-                {trader.max_dd.toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.max_dd_limit}% Max</span>
+                {toNum(trader.max_dd).toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.max_dd_limit}% Max</span>
               </div>
               <Badge tone={trader.max_dd > trader.max_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 font-mono text-[10px]">
-                {Math.max(0, trader.max_dd_limit - trader.max_dd).toFixed(1)}% Headroom
+                {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(1)}% Headroom
               </Badge>
             </CardContent>
           </Card>
@@ -923,10 +924,10 @@ export default function Trader360ProfilePage() {
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-200">Profit Target Progress</span>
                   <span className="font-mono font-bold text-emerald-400">
-                    {formatExactCurrency(trader.pnl)} ({trader.pnl_pct.toFixed(2)}%)
+                    {formatExactCurrency(trader.pnl)} ({toNum(trader.pnl_pct).toFixed(2)}%)
                   </span>
                 </div>
-                <Progress value={Math.min(100, Math.max(0, trader.pnl_pct * 10))} tone="success" className="h-2.5" />
+                <Progress value={Math.min(100, Math.max(0, toNum(trader.pnl_pct) * 10))} tone="success" className="h-2.5" />
                 <p className="text-[11px] text-gray-500 flex justify-between">
                   <span>Starting Balance: {formatCurrency(trader.starting_balance)}</span>
                   <span className="text-emerald-400 font-medium">Target: +8.0% ($8,000.00)</span>
@@ -938,10 +939,10 @@ export default function Trader360ProfilePage() {
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-200">Daily Drawdown Ceiling (Max {trader.daily_dd_limit}%)</span>
                   <span className="font-mono font-semibold text-gray-300">
-                    {trader.daily_dd.toFixed(1)}% used • {Math.max(0, trader.daily_dd_limit - trader.daily_dd).toFixed(1)}% remaining
+                    {toNum(trader.daily_dd).toFixed(1)}% used • {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(1)}% remaining
                   </span>
                 </div>
-                <Progress value={(trader.daily_dd / trader.daily_dd_limit) * 100} tone="accent" className="h-2.5" />
+                <Progress value={(toNum(trader.daily_dd) / (toNum(trader.daily_dd_limit) || 1)) * 100} tone="accent" className="h-2.5" />
               </div>
 
               {/* Progress 3: Total Trailing Drawdown */}
@@ -949,10 +950,10 @@ export default function Trader360ProfilePage() {
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-200">Max Trailing Drawdown (Max {trader.max_dd_limit}%)</span>
                   <span className="font-mono font-semibold text-gray-300">
-                    {trader.max_dd.toFixed(1)}% used • {Math.max(0, trader.max_dd_limit - trader.max_dd).toFixed(1)}% remaining
+                    {toNum(trader.max_dd).toFixed(1)}% used • {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(1)}% remaining
                   </span>
                 </div>
-                <Progress value={(trader.max_dd / trader.max_dd_limit) * 100} tone="accent" className="h-2.5" />
+                <Progress value={(toNum(trader.max_dd) / (toNum(trader.max_dd_limit) || 1)) * 100} tone="accent" className="h-2.5" />
               </div>
 
             </CardContent>

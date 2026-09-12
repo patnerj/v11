@@ -211,7 +211,7 @@ export default function HistoryPage() {
       {/* Summary Stat Grid */}
       <StatGrid columns={4}>
         <StatCard label="Total trades" value={String(stats.total)} icon={History} tone="accent" />
-        <StatCard label="Win rate" value={`${stats.winRate.toFixed(1)}%`} icon={Trophy} tone="info" />
+        <StatCard label="Win rate" value={`${toNum(stats.winRate).toFixed(1)}%`} icon={Trophy} tone="info" />
         <StatCard label="Wins / Losses" value={`${stats.wins} / ${stats.losses}`} icon={Award} tone="warn" />
         <StatCard
           label="Net P&L"

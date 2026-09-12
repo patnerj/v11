@@ -170,7 +170,7 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
         <KV label="Peak balance"     value={fmtUSD(c.peak_balance)} mono />
         <hr className="border-border-subtle" />
         <KV label="Win rate"      value={fmtPct(m.win_rate)} />
-        <KV label="Profit factor" value={m.profit_factor.toFixed(2)} mono />
+        <KV label="Profit factor" value={toNum(m.profit_factor).toFixed(2)} mono />
         <KV label="Total trades"  value={String(m.total_trades)} />
       </CardContent>
     </Card>
