@@ -96,6 +96,33 @@ export function ZenithAiCopilot() {
   const [inputQuery, setInputQuery] = useState('')
   const [isSending, setIsSending] = useState(false)
   const chatBottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-scroll chat to latest message
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isSending])
+
+  // Auto-focus input when drawer opens
+  useEffect(() => {
+    if (isOpen && activeTab === 'chat') {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, activeTab])
+
+  // Body scroll lock while drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      const origOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = origOverflow
+      }
+    }
+  }, [isOpen])
 
   // Dynamically update welcome message when brandName is loaded
   useEffect(() => {
@@ -501,6 +528,7 @@ export function ZenithAiCopilot() {
                     {/* Input Field */}
                     <div className="p-3 bg-white dark:bg-[#141A2E] border-t border-slate-200 dark:border-[#1F2937] flex items-center gap-2">
                       <input
+                        ref={inputRef}
                         type="text"
                         value={inputQuery}
                         onChange={(e) => setInputQuery(e.target.value)}

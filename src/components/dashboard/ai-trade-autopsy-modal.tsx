@@ -47,7 +47,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -55,17 +55,17 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.2 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-2xl bg-[#0F172A] border border-[#1E293B] shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-[#1E293B] shadow-2xl overflow-hidden text-slate-800 dark:text-gray-100"
       >
         {/* Top Decorative Banner */}
-        <div className="p-5 bg-gradient-to-r from-cyan-950/60 via-[#1E293B]/60 to-purple-950/60 border-b border-[#1E293B] flex items-center justify-between">
+        <div className="p-5 bg-slate-50 dark:bg-gradient-to-r dark:from-cyan-950/60 dark:via-[#1E293B]/60 dark:to-purple-950/60 border-b border-slate-200 dark:border-[#1E293B] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+            <div className="p-2.5 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
               <Brain className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white tracking-tight">AI Post-Trade Autopsy</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">AI Post-Trade Autopsy</h3>
                 <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-mono">
                   Trade #{autopsy.trade_id || (autopsy as any).id || '—'}
                 </span>
@@ -83,14 +83,14 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
 
         <div className="p-5 space-y-5 max-h-[80vh] overflow-y-auto">
           {/* Scorecard Hero Strip */}
-          <div className="p-4 rounded-xl bg-[#141E33] border border-[#1E293B] flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#141E33] border border-slate-200 dark:border-[#1E293B] flex items-center justify-between">
             <div>
-              <span className="text-[11px] uppercase tracking-wider text-gray-400 font-mono">Trade Result</span>
+              <span className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-mono">Trade Result</span>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xl font-black font-mono ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`text-xl font-black font-mono ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {autopsy.pnl_formatted || fmtUSD(pnlNum, { sign: true })}
                 </span>
-                <span className="text-xs text-gray-400 font-mono">
+                <span className="text-xs text-slate-600 dark:text-gray-400 font-mono">
                   {autopsy.symbol || 'TRADE'} {side ? `${side} ` : ''}({lotSize.toFixed(2)}L)
                 </span>
               </div>
@@ -98,7 +98,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
 
             {/* Execution Grade Badge */}
             <div className="text-center">
-              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-mono block mb-0.5">Grade</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-mono block mb-0.5">Grade</span>
               <span className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-xl font-black border shadow-lg ${gradeClass}`}>
                 {gradeKey || 'N/A'}
               </span>
@@ -107,33 +107,33 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
 
           {/* Quick Metrics Bar */}
           <div className={`grid ${executionScore !== null ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'} gap-3`}>
-            <div className="p-3 rounded-xl bg-[#111827] border border-gray-800 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-400 text-xs">
-                <Target className="w-4 h-4 text-cyan-400" />
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-gray-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400 text-xs">
+                <Target className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
                 <span>Risk : Reward</span>
               </div>
-              <span className="font-mono font-bold text-xs text-white">
+              <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
                 {rrRatio > 0 ? `${rrRatio.toFixed(2)}:1` : '1.50:1'}
               </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#111827] border border-gray-800 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-400 text-xs">
-                <CheckCircle2 className={`w-4 h-4 ${slDisciplined ? 'text-emerald-400' : 'text-rose-400'}`} />
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-gray-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400 text-xs">
+                <CheckCircle2 className={`w-4 h-4 ${slDisciplined ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`} />
                 <span>SL Discipline</span>
               </div>
-              <span className={`font-mono font-bold text-xs ${slDisciplined ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`font-mono font-bold text-xs ${slDisciplined ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {slDisciplined ? 'Protected' : 'Naked Entry'}
               </span>
             </div>
 
             {executionScore !== null && (
-              <div className="p-3 rounded-xl bg-[#111827] border border-gray-800 flex items-center justify-between col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-2 text-gray-400 text-xs">
-                  <Award className="w-4 h-4 text-purple-400" />
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-gray-800 flex items-center justify-between col-span-2 sm:col-span-1">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400 text-xs">
+                  <Award className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                   <span>Exec Score</span>
                 </div>
-                <span className="font-mono font-bold text-xs text-purple-300">
+                <span className="font-mono font-bold text-xs text-purple-600 dark:text-purple-300">
                   {executionScore.toFixed(0)}/100
                 </span>
               </div>
@@ -143,10 +143,10 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
           {/* Tilt Warning Banner if detected */}
           {isTilt && (
             <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
               <div className="text-xs">
-                <span className="font-bold text-rose-300 block">Revenge / Tilt Trade Flagged</span>
-                <p className="text-rose-200/80 mt-0.5">
+                <span className="font-bold text-rose-700 dark:text-rose-300 block">Revenge / Tilt Trade Flagged</span>
+                <p className="text-rose-800/80 dark:text-rose-200/80 mt-0.5">
                   This trade occurred in a rapid losing cluster. High risk of capital bleeding.
                 </p>
               </div>
@@ -155,11 +155,11 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
 
           {/* Section 1: Execution Summary */}
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-bold text-cyan-600 dark:text-cyan-300 uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
               Execution Summary
             </div>
-            <p className="text-xs text-gray-300 bg-[#111827] p-3.5 rounded-xl border border-gray-800/80 leading-relaxed">
+            <p className="text-xs text-slate-800 dark:text-gray-300 bg-slate-50 dark:bg-[#111827] p-3.5 rounded-xl border border-slate-200 dark:border-gray-800/80 leading-relaxed">
               {autopsy.autopsy_summary || (autopsy as any).ai_tactical_summary || 'No execution summary available.'}
             </p>
           </div>
@@ -167,11 +167,11 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
           {/* Section 2: Tactical Feedback */}
           {(autopsy.tactical_flaws || autopsy.tactical_notes) && (
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-300 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-300 uppercase tracking-wider">
                 <Target className="w-3.5 h-3.5" />
                 Tactical & Technical Feedback
               </div>
-              <p className="text-xs text-gray-300 bg-[#111827] p-3.5 rounded-xl border border-gray-800/80 leading-relaxed">
+              <p className="text-xs text-slate-800 dark:text-gray-300 bg-slate-50 dark:bg-[#111827] p-3.5 rounded-xl border border-slate-200 dark:border-gray-800/80 leading-relaxed">
                 {autopsy.tactical_flaws || autopsy.tactical_notes}
               </p>
             </div>
@@ -180,11 +180,11 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
           {/* Section 3: Performance Psychology */}
           {(autopsy.psychology_notes || autopsy.coach_advice) && (
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-purple-300 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-bold text-purple-600 dark:text-purple-300 uppercase tracking-wider">
                 <Brain className="w-3.5 h-3.5" />
                 AI Performance Coach Advice
               </div>
-              <p className="text-xs text-gray-300 bg-[#111827] p-3.5 rounded-xl border border-gray-800/80 leading-relaxed">
+              <p className="text-xs text-slate-800 dark:text-gray-300 bg-slate-50 dark:bg-[#111827] p-3.5 rounded-xl border border-slate-200 dark:border-gray-800/80 leading-relaxed">
                 {autopsy.psychology_notes || autopsy.coach_advice}
               </p>
             </div>
@@ -192,7 +192,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
         </div>
 
         {/* Footer Action */}
-        <div className="p-4 bg-[#0A0E1A] border-t border-[#1E293B] flex items-center justify-end">
+        <div className="p-4 bg-slate-50 dark:bg-[#0A0E1A] border-t border-slate-200 dark:border-[#1E293B] flex items-center justify-end">
           <Button
             variant="primary"
             size="sm"
