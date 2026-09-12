@@ -148,6 +148,11 @@ export const useAuth = create<AuthState>((set, get) => ({
         useImpersonation.getState().end()
       } catch { /* private mode or already unmounted */ }
       set({ user: res.data.user, loading: false, ready: true, lastChecked: Date.now(), error: null })
+      try {
+        const { saveBiometricSession } = await import('@/lib/biometrics')
+        const u = res.data.user?.user_login || (res.data as any)?.user?.username || ''
+        if (token && u) await saveBiometricSession(u, token)
+      } catch {}
       return { ok: true }
     }
     set({ loading: false, error: res.error })
@@ -164,6 +169,10 @@ export const useAuth = create<AuthState>((set, get) => ({
       clearFxsimCache()
       notifySessionCleared()
       set({ user: res.data.user, loading: false, ready: true, lastChecked: Date.now(), error: null })
+      try {
+        const { saveBiometricSession } = await import('@/lib/biometrics')
+        if (token && username) await saveBiometricSession(username, token)
+      } catch {}
       return { ok: true }
     }
     set({ loading: false, error: res.error })

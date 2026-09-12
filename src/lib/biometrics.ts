@@ -35,7 +35,8 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 
 async function deriveBiometricKey(username: string, salt: Uint8Array): Promise<CryptoKey> {
   const origin = typeof window !== 'undefined' ? (window.location?.origin || 'fxsim-vault') : 'fxsim-vault'
-  const keyMaterialText = `${origin}:${username}:fxsim_biometrics_v11.4:vault`
+  const normalizedUser = (username || '').trim().toLowerCase()
+  const keyMaterialText = `${origin}:${normalizedUser}:fxsim_biometrics_v11.4:vault`
   const enc = new TextEncoder()
   const baseKey = await crypto.subtle.importKey(
     'raw',
@@ -176,19 +177,25 @@ export async function authenticateWithBiometrics(): Promise<{ ok: boolean; token
       const challenge = new Uint8Array(32)
       window.crypto.getRandomValues(challenge)
 
-      await navigator.credentials.get({
-        publicKey: {
-          challenge,
-          timeout: 60000,
-          userVerification: 'required',
-          rpId: window.location.hostname,
-        }
-      }).catch((err) => {
-        if (err.name === 'NotAllowedError') {
-          throw new Error('Biometric authentication canceled.')
-        }
-        return null
-      })
+      const hostname = window.location.hostname
+      const isIpHost = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) || hostname === '::1'
+
+      if (!isIpHost) {
+        await navigator.credentials.get({
+          publicKey: {
+            challenge,
+            timeout: 60000,
+            userVerification: 'preferred',
+            rpId: hostname,
+          }
+        }).catch((err) => {
+          if ((err.name === 'NotAllowedError' || err.name === 'AbortError') &&
+              /cancel|abort/i.test(err.message || '')) {
+            throw new Error('Biometric authentication canceled.')
+          }
+          return null
+        })
+      }
     } catch (e: any) {
       if (e.message?.includes('canceled')) {
         return { ok: false, error: 'Thumb authentication was canceled.' }
