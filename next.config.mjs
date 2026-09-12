@@ -105,5 +105,14 @@ const nextConfig = {
       }
     ]
   },
+  async redirects() {
+    return [
+      { source: '/dashboard/accounts', destination: '/dashboard', permanent: true },
+      { source: '/dashboard/pvp', destination: '/arena', permanent: true },
+      { source: '/dashboard/competitions', destination: '/dashboard/tournaments', permanent: true },
+      { source: '/admin/settings', destination: '/admin/config', permanent: true },
+      { source: '/admin/audit-log', destination: '/admin/activity', permanent: true },
+    ]
+  },
 };
 export default nextConfig;
