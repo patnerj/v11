@@ -110,7 +110,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       set({ user: res.data.user, loading: false, ready: true, lastChecked: Date.now(), error: null })
       try {
         const { saveBiometricSession } = await import('@/lib/biometrics')
-        if (token) saveBiometricSession(username, token)
+        if (token) await saveBiometricSession(username, token)
       } catch {}
       return { ok: true }
     }
