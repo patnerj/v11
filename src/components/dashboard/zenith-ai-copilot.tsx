@@ -14,6 +14,7 @@ import { api } from '@/lib/api'
 import { usePrices } from '@/store/prices'
 import { useAuth } from '@/store/auth'
 import { useBranding } from '@/store/branding'
+import { useCopilotStore } from '@/store/copilot'
 import type { 
   AiCopilotChatResponse, AiHeadroomResponse, AiSafeLotResponse, 
   AiNewsWarning, AiTradeAutopsy, AiPsychologyScorecard 
@@ -39,10 +40,12 @@ export function ZenithAiCopilot() {
   const account = usePrices((s) => s.account)
   const activeSymbol = usePrices((s: any) => s.activeSymbol) || 'EURUSD'
   
-  const [isOpen, setIsOpen] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const { 
+    isOpen, setIsOpen, toggleOpen, 
+    isMinimized, setIsMinimized, 
+    activeTab, setActiveTab 
+  } = useCopilotStore()
   const [dockSide, setDockSide] = useState<'right' | 'left'>('right')
-  const [activeTab, setActiveTab] = useState<'chat' | 'calculator' | 'headroom' | 'news' | 'journal'>('chat')
 
   // Load user dock preference
   useEffect(() => {
@@ -304,9 +307,10 @@ export function ZenithAiCopilot() {
               exit={{ scale: 0, opacity: 0 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => { setIsOpen(true); setIsMinimized(false); }}
+              onClick={() => toggleOpen()}
+              onTap={() => toggleOpen()}
               className={cn(
-                "relative group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-xl shadow-emerald-500/25 border border-emerald-400/30 backdrop-blur-md transition-all duration-200 cursor-grab active:cursor-grabbing",
+                "relative group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-xl shadow-emerald-500/25 border border-emerald-400/30 backdrop-blur-md transition-all duration-200 cursor-pointer",
                 isTrading ? "px-3.5 py-2" : "px-4 py-3"
               )}
               title={isTrading ? `${brandName} AI Copilot (Drag to reposition)` : undefined}
@@ -340,7 +344,7 @@ export function ZenithAiCopilot() {
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-50 w-[calc(100vw-2rem)] sm:w-[460px] bg-white dark:bg-[#0E1322] border border-slate-200 dark:border-[#1F2937] rounded-2xl shadow-2xl shadow-slate-900/10 dark:shadow-black/80 flex flex-col overflow-hidden text-slate-800 dark:text-gray-100 backdrop-blur-xl",
+              "fixed z-[100] w-[calc(100vw-2rem)] sm:w-[460px] bg-white dark:bg-[#0E1322] border border-slate-200 dark:border-[#1F2937] rounded-2xl shadow-2xl shadow-slate-900/10 dark:shadow-black/80 flex flex-col overflow-hidden text-slate-800 dark:text-gray-100 backdrop-blur-xl",
               isMinimized ? "h-14" : "h-[620px] max-h-[85vh]",
               dockSide === 'left' 
                 ? "bottom-4 left-4 sm:left-6 lg:left-20" 

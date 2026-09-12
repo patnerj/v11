@@ -24,18 +24,7 @@ const t = {
   infoTint: 'hsl(var(--info) / 0.12)',
 }
 
-const grayFamily = (bright: string, dim: string, faint: string) => ({
-  50: bright, 100: bright, 200: bright, 300: bright,
-  400: dim, 500: dim, 600: faint,
-  700: t.surfaceStrong, 800: t.surfaceMuted, 900: t.text, 950: t.text,
-})
-
 const stockBridge = {
-  gray:   grayFamily(t.text, t.muted, t.subtle),
-  zinc:   grayFamily(t.text, t.muted, t.subtle),
-  neutral: grayFamily(t.text, t.muted, t.subtle),
-  stone:  grayFamily(t.text, t.muted, t.subtle),
-  slate:  grayFamily(t.text, t.muted, t.subtle),
   emerald: { 50: t.accentTint, 100: t.accentTint, 200: t.accentTint, 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 800: t.accent, 900: t.accent, 950: t.accentTint },
   green:  { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
   teal:   { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },

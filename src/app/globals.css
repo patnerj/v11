@@ -199,6 +199,21 @@
     border-color: hsl(var(--border)) !important;
   }
 
+  /* Explicit daylight surface and border guarantees */
+  html.light .bg-slate-50, [data-theme="clean-light"] .bg-slate-50, html:not(.dark) .bg-slate-50,
+  html.light .bg-gray-50, [data-theme="clean-light"] .bg-gray-50, html:not(.dark) .bg-gray-50 {
+    background-color: #f8fafc !important;
+  }
+
+  html.light .bg-slate-100, [data-theme="clean-light"] .bg-slate-100, html:not(.dark) .bg-slate-100,
+  html.light .bg-gray-100, [data-theme="clean-light"] .bg-gray-100, html:not(.dark) .bg-gray-100 {
+    background-color: #f1f5f9 !important;
+  }
+
+  html.light .border-slate-200, [data-theme="clean-light"] .border-slate-200, html:not(.dark) .border-slate-200 {
+    border-color: #e2e8f0 !important;
+  }
+
   html {
     color-scheme: light dark;
     scroll-behavior: smooth;

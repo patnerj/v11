@@ -417,13 +417,17 @@ export default function RiskManagementHubPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'syndicate'
                   ? 'bg-red-600 text-white font-bold shadow-sm shadow-red-600/30'
-                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <ShieldAlert className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
+              <ShieldAlert className={`h-3.5 w-3.5 ${activeTab === 'syndicate' ? 'text-white' : 'text-red-600 dark:text-red-400'}`} />
               Syndicate Risk Radar
               {flaggedClustersCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-red-500/20 text-red-700 dark:text-red-300 border border-red-500/40 font-bold">
+                <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold border ${
+                  activeTab === 'syndicate'
+                    ? 'bg-white/20 text-white border-white/40'
+                    : 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30'
+                }`}>
                   {flaggedClustersCount}
                 </span>
               )}
@@ -434,12 +438,16 @@ export default function RiskManagementHubPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'sentinel'
                   ? 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30'
-                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Zap className="h-3.5 w-3.5 text-emerald-300" />
+              <Zap className={`h-3.5 w-3.5 ${activeTab === 'sentinel' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
               AI Sentinel (Watchtower)
-              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+              <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold border ${
+                activeTab === 'sentinel'
+                  ? 'bg-white/20 text-white border-white/30'
+                  : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+              }`}>
                 v11.4
               </span>
             </button>
@@ -706,7 +714,7 @@ export default function RiskManagementHubPage() {
         <div className="space-y-8 w-full">
           
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-red-50 via-rose-50/40 to-slate-50 dark:from-red-950/40 dark:via-red-900/20 dark:to-slate-900/60 p-6 rounded-2xl border border-red-200 dark:border-red-500/30 shadow-sm dark:shadow-none backdrop-blur-sm">
+          <div className="bg-gradient-to-r from-rose-50/90 via-white to-rose-50/40 dark:from-red-950/40 dark:via-red-900/20 dark:to-slate-900/60 p-6 rounded-2xl border border-red-200 dark:border-red-500/30 shadow-sm dark:shadow-none backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2.5">
@@ -775,7 +783,7 @@ export default function RiskManagementHubPage() {
                       step={100}
                       value={syndicateSettingsForm.time_delta_ms}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, time_delta_ms: Number(e.target.value) })}
-                      className="bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10"
+                      className="bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10 shadow-xs"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">ms</span>
                   </div>
@@ -798,7 +806,7 @@ export default function RiskManagementHubPage() {
                       step={1}
                       value={syndicateSettingsForm.lot_match_pct}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, lot_match_pct: Number(e.target.value) })}
-                      className="bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10"
+                      className="bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10 shadow-xs"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">%</span>
                   </div>
@@ -820,11 +828,11 @@ export default function RiskManagementHubPage() {
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'subnet_24'
                           ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
-                          : 'bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                          : 'bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Subnet /24
-                      <span className="block text-[9px] text-slate-500 dark:text-gray-500 font-normal">Proxy/VPN Cluster</span>
+                      <span className="block text-[9px] text-slate-500 dark:text-gray-400 font-normal">Proxy/VPN Cluster</span>
                     </button>
 
                     <button
@@ -833,7 +841,7 @@ export default function RiskManagementHubPage() {
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'exact'
                           ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
-                          : 'bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                          : 'bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Exact Match

@@ -67,7 +67,7 @@ export function AiSentinelPanel() {
   return (
     <div className="space-y-6">
       {/* ── Sentinel Status Header ─────────────────────────────────────────── */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-100 via-white to-slate-50 dark:from-[#141A2E] dark:via-[#101726] dark:to-[#0A0D17] border border-slate-200 dark:border-[#1F2937] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50/60 via-white to-slate-50/60 dark:from-[#141A2E] dark:via-[#101726] dark:to-[#0A0D17] border border-slate-200 dark:border-[#1F2937] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
             <ShieldAlert className="w-7 h-7" />

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon, Shield, Bot } from 'lucide-react'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { useCopilotStore } from '@/store/copilot'
 
 export interface TopbarProps {
   onMenuClick?: () => void
@@ -179,6 +180,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
 
         <button
           onClick={() => {
+            useCopilotStore.getState().toggleOpen()
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('fxsim:open-copilot'))
             }
