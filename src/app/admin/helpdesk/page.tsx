@@ -20,6 +20,7 @@ import { Input, Textarea, Label } from '@/components/ui/input'
 import { DataTable } from '@/components/ui/DataTable'
 import { toast } from 'sonner'
 import { useBranding } from '@/store/branding'
+import { useAuth } from '@/store/auth'
 
 // Canned Response Templates
 const CANNED_RESPONSES = [
@@ -44,6 +45,7 @@ const CANNED_RESPONSES = [
 export default function AdminHelpdeskPage() {
   const queryClient = useQueryClient()
   const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const { user, ready } = useAuth()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Filters State
@@ -51,7 +53,7 @@ export default function AdminHelpdeskPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [quickQueueFilter, setQuickQueueFilter] = useState<'needs_reply' | 'open' | 'resolved' | 'all'>('needs_reply')
+  const [quickQueueFilter, setQuickQueueFilter] = useState<'needs_reply' | 'open' | 'resolved' | 'all'>('all')
 
   // Selected Ticket State
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
@@ -223,31 +225,18 @@ export default function AdminHelpdeskPage() {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 1. FETCH TICKETS LIST
+  // 1. FETCH TICKETS LIST (Single Unified Authenticated Query)
   // ─────────────────────────────────────────────────────────────
-  const { data: tickets = [], isLoading: isLoadingTickets, refetch: refetchTickets } = useQuery({
-    queryKey: ['admin-tickets', statusFilter, priorityFilter, categoryFilter, searchQuery],
-    queryFn: async () => {
-      const res = await api.admin.tickets.list({
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-        category: categoryFilter !== 'all' ? categoryFilter : undefined,
-        search: searchQuery ? searchQuery : undefined,
-      })
-      return res.ok && Array.isArray(res.data) ? res.data : []
-    },
-    refetchInterval: 15_000,
-  })
-
-  // Always-unfiltered fetch for the headline metrics below (see `metrics`),
-  // independent of whatever status/priority/category filter the list view
-  // currently has applied.
-  const { data: allTickets = [] } = useQuery({
-    queryKey: ['admin-tickets', 'all'],
+  const { data: allTickets = [], isLoading: isLoadingTickets, refetch: refetchTickets } = useQuery<Ticket[]>({
+    queryKey: ['admin-tickets'],
     queryFn: async () => {
       const res = await api.admin.tickets.list({})
-      return res.ok && Array.isArray(res.data) ? res.data : []
+      if (!res.ok) {
+        throw new Error(res.error || 'Failed to fetch tickets')
+      }
+      return Array.isArray(res.data) ? res.data : []
     },
+    enabled: ready && !!user?.id,
     refetchInterval: 15_000,
   })
 
@@ -268,15 +257,40 @@ export default function AdminHelpdeskPage() {
     return { needsReply, inProgress, resolved, total }
   }, [allTickets])
 
-  // Filtered tickets based on active segmented queue filter
+  // Filtered tickets based on active queue & dropdown filters
   const displayedTickets = useMemo(() => {
-    return tickets.filter(t => {
-      if (quickQueueFilter === 'needs_reply') return isTicketNeedingReply(t)
-      if (quickQueueFilter === 'open') return (t.status === 'open' || t.status === 'in_progress') && !isTicketNeedingReply(t)
-      if (quickQueueFilter === 'resolved') return t.status === 'resolved' || t.status === 'closed'
+    return allTickets.filter(t => {
+      // 1. Quick queue segmented tab filter
+      if (quickQueueFilter === 'needs_reply') {
+        if (!isTicketNeedingReply(t)) return false
+      } else if (quickQueueFilter === 'open') {
+        if ((t.status !== 'open' && t.status !== 'in_progress') || isTicketNeedingReply(t)) return false
+      } else if (quickQueueFilter === 'resolved') {
+        if (t.status !== 'resolved' && t.status !== 'closed') return false
+      }
+
+      // 2. Dropdown Status filter
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false
+
+      // 3. Dropdown Priority filter
+      if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false
+
+      // 4. Dropdown Category filter
+      if (categoryFilter !== 'all' && t.category !== categoryFilter) return false
+
+      // 5. Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        const matchNum = (t.ticket_number || '').toLowerCase().includes(q)
+        const matchSub = (t.subject || '').toLowerCase().includes(q)
+        const matchUser = `${t.display_name || ''} ${t.user_login || ''} ${t.user_email || ''}`.toLowerCase().includes(q)
+        const matchMsg = (t.latest_message || '').toLowerCase().includes(q)
+        if (!matchNum && !matchSub && !matchUser && !matchMsg) return false
+      }
+
       return true
     })
-  }, [tickets, quickQueueFilter])
+  }, [allTickets, quickQueueFilter, statusFilter, priorityFilter, categoryFilter, searchQuery])
 
   // Auto-select first displayed ticket if current selection is not visible
   useEffect(() => {
@@ -285,10 +299,10 @@ export default function AdminHelpdeskPage() {
       if (!isSelectedInView) {
         setSelectedTicketId(displayedTickets[0].id)
       }
-    } else if (tickets.length > 0 && selectedTicketId === null) {
-      setSelectedTicketId(tickets[0].id)
+    } else if (allTickets.length > 0 && selectedTicketId === null) {
+      setSelectedTicketId(allTickets[0].id)
     }
-  }, [displayedTickets, tickets, selectedTicketId])
+  }, [displayedTickets, allTickets, selectedTicketId])
 
   // ─────────────────────────────────────────────────────────────
   // 2. FETCH ACTIVE TICKET DETAILS & MESSAGES
@@ -300,11 +314,11 @@ export default function AdminHelpdeskPage() {
       const res = await api.admin.tickets.get(selectedTicketId)
       return res.ok ? res.data : null
     },
-    enabled: !!selectedTicketId,
+    enabled: ready && !!user?.id && !!selectedTicketId,
     refetchInterval: 6_000,
   })
 
-  const activeTicket = activeTicketData?.ticket || tickets.find(t => t.id === selectedTicketId) || null
+  const activeTicket = activeTicketData?.ticket || allTickets.find(t => t.id === selectedTicketId) || null
   const activeMessages = activeTicketData?.messages || []
 
   // Scroll to bottom when messages update
@@ -384,28 +398,6 @@ export default function AdminHelpdeskPage() {
     const needsReplyCount = allTickets.filter(isTicketNeedingReply).length
     return { total, openCount, urgentCount, resolvedCount, resolutionRate, needsReplyCount }
   }, [allTickets])
-
-  // ── Auto-Pilot Autonomous Background Dispatcher ──────────────────────────
-  // When AI Auto-Pilot is enabled, automatically resolve any inquiry needing attention
-  const pendingTicketToAutoResolve = useMemo(() => {
-    return allTickets.find(isTicketNeedingReply)
-  }, [allTickets])
-
-  useEffect(() => {
-    if (!aiAutopilotActive || !pendingTicketToAutoResolve || isAutoResolvingBatch) return
-
-    const timer = setTimeout(async () => {
-      try {
-        await api.admin.ai.autoResolveTickets(pendingTicketToAutoResolve.id)
-        queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
-        queryClient.invalidateQueries({ queryKey: ['admin-ticket-detail', pendingTicketToAutoResolve.id] })
-      } catch (err) {
-        console.error('Auto-pilot background resolution notice:', err)
-      }
-    }, 2500)
-
-    return () => clearTimeout(timer)
-  }, [aiAutopilotActive, pendingTicketToAutoResolve?.id, pendingTicketToAutoResolve?.latest_message_at, isAutoResolvingBatch, queryClient])
 
   return (
     <div className="w-full space-y-4 pb-12">
@@ -598,7 +590,15 @@ export default function AdminHelpdeskPage() {
 
           {/* Ticket Cards List */}
           <div className="space-y-2 max-h-[calc(100vh-210px)] min-h-[580px] overflow-y-auto pr-1 custom-scrollbar">
-            {displayedTickets.length === 0 ? (
+            {isLoadingTickets && allTickets.length === 0 ? (
+              <Card className="bg-surface border-border">
+                <CardContent className="py-12 text-center text-text-muted space-y-2">
+                  <RefreshCw className="h-6 w-6 mx-auto animate-spin text-emerald-500 mb-1" />
+                  <p className="font-semibold text-text text-xs">Loading support tickets...</p>
+                  <p className="text-[10px] text-text-muted">Synchronizing with helpdesk queue</p>
+                </CardContent>
+              </Card>
+            ) : displayedTickets.length === 0 ? (
               <Card className="bg-surface border-border">
                 <CardContent className="py-12 text-center text-text-muted space-y-2">
                   <Headphones className="h-8 w-8 mx-auto text-text-muted mb-1" />
