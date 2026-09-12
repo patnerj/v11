@@ -941,6 +941,7 @@ export default function RiskManagementHubPage() {
                       <th className="py-3.5 px-4 text-center">Syndicate Risk</th>
                       <th className="py-3.5 px-4 text-right">Action</th>
                     </tr>
+                  </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#1F2937]/50">
                     {isLoadingSyndicates ? (
                       <tr>
