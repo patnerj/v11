@@ -214,6 +214,38 @@
     border-color: #e2e8f0 !important;
   }
 
+  /* Universal Daylight overrides for dark slate utility classes & borders */
+  html.light .bg-slate-800:not(button):not(input):not(select),
+  [data-theme="clean-light"] .bg-slate-800:not(button):not(input):not(select),
+  [data-theme="light"] .bg-slate-800:not(button):not(input):not(select),
+  html:not(.dark) .bg-slate-800:not(button):not(input):not(select),
+  html.light .bg-slate-800\/80, [data-theme="clean-light"] .bg-slate-800\/80, [data-theme="light"] .bg-slate-800\/80, html:not(.dark) .bg-slate-800\/80,
+  html.light .bg-slate-800\/60, [data-theme="clean-light"] .bg-slate-800\/60, [data-theme="light"] .bg-slate-800\/60, html:not(.dark) .bg-slate-800\/60,
+  html.light .bg-slate-800\/50, [data-theme="clean-light"] .bg-slate-800\/50, [data-theme="light"] .bg-slate-800\/50, html:not(.dark) .bg-slate-800\/50,
+  html.light .bg-slate-800\/40, [data-theme="clean-light"] .bg-slate-800\/40, [data-theme="light"] .bg-slate-800\/40, html:not(.dark) .bg-slate-800\/40,
+  html.light .bg-slate-900:not(button):not(input):not(select),
+  [data-theme="clean-light"] .bg-slate-900:not(button):not(input):not(select),
+  [data-theme="light"] .bg-slate-900:not(button):not(input):not(select),
+  html:not(.dark) .bg-slate-900:not(button):not(input):not(select),
+  html.light .bg-slate-900\/60, [data-theme="clean-light"] .bg-slate-900\/60, [data-theme="light"] .bg-slate-900\/60, html:not(.dark) .bg-slate-900\/60 {
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
+  }
+
+  html.light .border-slate-700, [data-theme="clean-light"] .border-slate-700, [data-theme="light"] .border-slate-700, html:not(.dark) .border-slate-700,
+  html.light .border-slate-700\/60, [data-theme="clean-light"] .border-slate-700\/60, [data-theme="light"] .border-slate-700\/60, html:not(.dark) .border-slate-700\/60,
+  html.light .border-slate-700\/50, [data-theme="clean-light"] .border-slate-700\/50, [data-theme="light"] .border-slate-700\/50, html:not(.dark) .border-slate-700\/50,
+  html.light .border-slate-800, [data-theme="clean-light"] .border-slate-800, [data-theme="light"] .border-slate-800, html:not(.dark) .border-slate-800 {
+    border-color: #e2e8f0 !important;
+  }
+
+  html.light .hover\:bg-slate-800:hover, [data-theme="clean-light"] .hover\:bg-slate-800:hover, html:not(.dark) .hover\:bg-slate-800:hover,
+  html.light .hover\:bg-slate-800\/40:hover, [data-theme="clean-light"] .hover\:bg-slate-800\/40:hover, html:not(.dark) .hover\:bg-slate-800\/40:hover,
+  html.light .hover\:bg-slate-800\/30:hover, [data-theme="clean-light"] .hover\:bg-slate-800\/30:hover, html:not(.dark) .hover\:bg-slate-800\/30:hover {
+    background-color: #f1f5f9 !important;
+  }
+
+
   html {
     color-scheme: light dark;
     scroll-behavior: smooth;

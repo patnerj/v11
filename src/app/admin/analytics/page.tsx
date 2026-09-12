@@ -284,13 +284,13 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Total Revenue
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
                     <DollarSign className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
                     {formatShortMoney(totalRevenueVal)}
                   </h3>
                 </div>
@@ -314,13 +314,13 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Total Traders
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/40 transition-colors">
                     <UsersIcon className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
                     {totalUsersVal.toLocaleString()}
                   </h3>
                 </div>
@@ -344,13 +344,13 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Challenges Sold
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-purple-400 group-hover:border-purple-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-purple-400 group-hover:border-purple-500/40 transition-colors">
                     <Trophy className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
                     {totalChallengesVal.toLocaleString()}
                   </h3>
                 </div>
@@ -374,7 +374,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Funded Accounts
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
                     <TrendingUp className="h-4 w-4" />
                   </div>
                 </div>

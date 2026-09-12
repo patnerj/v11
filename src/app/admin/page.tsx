@@ -391,7 +391,7 @@ export default function AdminCommandCenter() {
       header: 'Payout ID',
       className: 'whitespace-nowrap',
       render: (row) => (
-        <span className="font-mono text-xs text-gray-300 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
+        <span className="font-mono text-xs text-slate-700 dark:text-gray-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
           #PAY-{row.id}
         </span>
       )
@@ -907,7 +907,7 @@ export default function AdminCommandCenter() {
                     <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                       {metric.title}
                     </span>
-                    <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                    <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
                       <Icon className="h-4 w-4" />
                     </div>
                   </div>

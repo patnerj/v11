@@ -490,13 +490,13 @@ export default function RiskManagementHubPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Total Funded Liability
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
                     <Wallet className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
                     {formatMoney(fundedCap)}
                   </h3>
                 </div>
@@ -520,13 +520,13 @@ export default function RiskManagementHubPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Net Unhedged Exposure
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/40 transition-colors">
                     <Scale className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
                     {formatMoney(unhedgedExp)}
                   </h3>
                 </div>
@@ -550,13 +550,13 @@ export default function RiskManagementHubPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     High Drawdown Accounts
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
                     <TrendingDown className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
                     {highRiskCount}
                   </h3>
                 </div>
@@ -580,7 +580,7 @@ export default function RiskManagementHubPage() {
                   <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
                     Algorithmic Violations
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-gray-400 group-hover:text-red-400 group-hover:border-red-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-red-400 group-hover:border-red-500/40 transition-colors">
                     <ShieldAlert className="h-4 w-4" />
                   </div>
                 </div>
@@ -645,12 +645,12 @@ export default function RiskManagementHubPage() {
                     <CardContent className="space-y-3 pt-2">
                       <div className="flex justify-between items-baseline text-xs font-mono">
                         <span className="text-gray-400">Total Volume:</span>
-                        <span className="text-white font-bold">{total.toFixed(1)} Lots</span>
+                        <span className="text-slate-900 dark:text-white font-bold">{total.toFixed(1)} Lots</span>
                       </div>
 
                       {/* Long vs Short visual split bar */}
                       <div className="space-y-1">
-                        <div className="h-2 w-full rounded-full bg-slate-800 flex overflow-hidden">
+                        <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 flex overflow-hidden">
                           <div 
                             style={{ width: `${total > 0 ? longPct : 0}%` }}
                             className="bg-accent h-full transition-all"

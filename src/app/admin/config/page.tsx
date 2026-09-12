@@ -4329,7 +4329,7 @@ export default function ConfigurationHubPage() {
                 >
                   <div className={cn(
                     "p-2 rounded-lg shrink-0 transition-colors",
-                    modalSection === 'basics' ? "bg-accent text-slate-950 font-bold" : "bg-slate-800 text-gray-400 group-hover:text-white"
+                    modalSection === 'basics' ? "bg-accent text-slate-950 font-bold" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white"
                   )}>
                     <Layers className="h-4 w-4" />
                   </div>
@@ -4359,7 +4359,7 @@ export default function ConfigurationHubPage() {
                 >
                   <div className={cn(
                     "p-2 rounded-lg shrink-0 transition-colors",
-                    modalSection === 'drawdown' ? "bg-accent text-slate-950 font-bold" : "bg-slate-800 text-gray-400 group-hover:text-white"
+                    modalSection === 'drawdown' ? "bg-accent text-slate-950 font-bold" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white"
                   )}>
                     <Scale className="h-4 w-4" />
                   </div>
@@ -4389,7 +4389,7 @@ export default function ConfigurationHubPage() {
                 >
                   <div className={cn(
                     "p-2 rounded-lg shrink-0 transition-colors",
-                    modalSection === 'rules' ? "bg-accent text-slate-950 font-bold" : "bg-slate-800 text-gray-400 group-hover:text-white"
+                    modalSection === 'rules' ? "bg-accent text-slate-950 font-bold" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white"
                   )}>
                     <ShieldCheck className="h-4 w-4" />
                   </div>
@@ -4418,7 +4418,7 @@ export default function ConfigurationHubPage() {
                 >
                   <div className={cn(
                     "p-2 rounded-lg shrink-0 transition-colors",
-                    modalSection === 'scaling' ? "bg-accent text-slate-950 font-bold" : "bg-slate-800 text-gray-400 group-hover:text-white"
+                    modalSection === 'scaling' ? "bg-accent text-slate-950 font-bold" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white"
                   )}>
                     <Sparkles className="h-4 w-4" />
                   </div>
