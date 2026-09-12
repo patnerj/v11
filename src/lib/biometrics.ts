@@ -8,7 +8,7 @@
  * by encrypting with AES-GCM (256-bit) and PBKDF2 key derivation.
  * Tokens are decrypted only upon successful platform biometric authentication.
  * 
- * @version 11.4.0
+ * @version 11.5.0
  */
 
 const BIOMETRIC_USER_KEY = 'fxsim:biometric_user'
@@ -33,10 +33,10 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer
 }
 
-async function deriveBiometricKey(username: string, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveBiometricKey(username: string, salt: Uint8Array, version: string = 'v11.5'): Promise<CryptoKey> {
   const origin = typeof window !== 'undefined' ? (window.location?.origin || 'fxsim-vault') : 'fxsim-vault'
   const normalizedUser = (username || '').trim().toLowerCase()
-  const keyMaterialText = `${origin}:${normalizedUser}:fxsim_biometrics_v11.4:vault`
+  const keyMaterialText = `${origin}:${normalizedUser}:fxsim_biometrics_${version}:vault`
   const enc = new TextEncoder()
   const baseKey = await crypto.subtle.importKey(
     'raw',
@@ -48,7 +48,7 @@ async function deriveBiometricKey(username: string, salt: Uint8Array): Promise<C
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as unknown as BufferSource,
       iterations: 100000,
       hash: 'SHA-256',
     },
@@ -107,14 +107,24 @@ async function decryptToken(username: string, payloadStr: string): Promise<strin
     const iv = new Uint8Array(base64ToArrayBuffer(payload.iv))
     const cipherBuf = base64ToArrayBuffer(payload.cipher)
 
-    const key = await deriveBiometricKey(username, salt)
-    const decryptedBuf = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      cipherBuf
-    )
-
-    return new TextDecoder().decode(decryptedBuf)
+    try {
+      const key = await deriveBiometricKey(username, salt, 'v11.5')
+      const decryptedBuf = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        cipherBuf
+      )
+      return new TextDecoder().decode(decryptedBuf)
+    } catch {
+      // Backward compatibility fallback for vaults created in v11.4
+      const legacyKey = await deriveBiometricKey(username, salt, 'v11.4')
+      const decryptedBuf = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        legacyKey,
+        cipherBuf
+      )
+      return new TextDecoder().decode(decryptedBuf)
+    }
   } catch {
     return null
   }

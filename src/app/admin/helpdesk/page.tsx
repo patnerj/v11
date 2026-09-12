@@ -70,7 +70,7 @@ export default function AdminHelpdeskPage() {
     staleTime: 30000,
   })
 
-  // ── v11.4 AI Autonomous Support Desk State ─────────────────────────────
+  // ── v11.5 AI Autonomous Support Desk State ─────────────────────────────
   const [aiAutopilotActive, setAiAutopilotActive] = useState(true)
   const [isAutoDrafting, setIsAutoDrafting] = useState(false)
   const [isAutoResolvingBatch, setIsAutoResolvingBatch] = useState(false)

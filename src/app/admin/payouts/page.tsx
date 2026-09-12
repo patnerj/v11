@@ -387,7 +387,7 @@ export default function PayoutsHubPage() {
               Payouts & Billing Engine
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live Billing v11.4
+              Live Billing v11.5
             </Badge>
           </div>
           <p className="text-sm text-text-muted mt-1">

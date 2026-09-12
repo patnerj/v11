@@ -1187,7 +1187,7 @@ export interface TournamentMine {
   joined_at:        string
 }
 
-// ── v11.4 AI Powerhouse Types ───────────────────────────────────────────────
+// ── v11.5 AI Powerhouse Types ───────────────────────────────────────────────
 export interface AiCopilotChatResponse {
   reply: string
   provider: 'gemini' | 'ollama' | 'heuristic_engine' | string

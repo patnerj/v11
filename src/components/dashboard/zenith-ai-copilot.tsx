@@ -348,7 +348,7 @@ export function ZenithAiCopilot() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">{brandName} AI Copilot</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-500/30">
-                      v11.4 AI
+                      v11.5 AI
                     </span>
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-gray-400">Autonomous Intelligence • Active</p>

@@ -333,7 +333,7 @@ export default function ConfigurationHubPage() {
         })
         toast.success(`✨ Gemini Online! Response in ${res.data.latency_ms}ms`)
       } else {
-        const errMsg = res.data?.error || res.error || 'Connection check failed'
+        const errMsg = ('error' in res ? res.error : (res as any)?.data?.error) || 'Connection check failed'
         setGeminiTestResult({
           success: false,
           error: errMsg,
@@ -1474,7 +1474,7 @@ export default function ConfigurationHubPage() {
               Configuration & Engine Hub
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Engine v11.4
+              Engine v11.5
             </Badge>
           </div>
           <p className="text-sm text-gray-400 mt-1">

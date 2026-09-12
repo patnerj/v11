@@ -27,7 +27,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: '/admin/kyc',         label: 'KYC Hub',      icon: UserCheck },
   { href: '/admin/operations',  label: 'Operations',   icon: Gauge },
   { href: '/admin/risk',        label: 'Risk Control', icon: Shield },
-  { href: '/admin/risk?tab=sentinel', label: 'AI Sentinel', icon: Zap, badge: 'v11.4' },
+  { href: '/admin/risk?tab=sentinel', label: 'AI Sentinel', icon: Zap, badge: 'v11.5' },
   { href: '/admin/payouts',     label: 'Payouts Hub',  icon: Wallet },
   { href: '/admin/marketing',   label: 'Marketing',    icon: Megaphone },
   { href: '/admin/builder',     label: 'Page Builder', icon: Sparkles },

@@ -448,7 +448,7 @@ export default function RiskManagementHubPage() {
                   ? 'bg-white/20 text-white border-white/30'
                   : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
               }`}>
-                v11.4
+                v11.5
               </span>
             </button>
           </div>
