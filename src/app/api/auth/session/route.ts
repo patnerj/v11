@@ -48,9 +48,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Missing token.' }, { status: 400 })
   }
   if (!secret) {
-    // Deployment not configured for signed sessions — do not silently mint a
-    // forgeable cookie. The middleware falls back to legacy mode on its side.
-    return NextResponse.json({ ok: false, legacy: true, error: 'FXSIM_SESSION_SECRET not configured.' }, { status: 503 })
+    // P0 FIX: Missing secret means we cannot mint a verified session cookie.
+    // Return a clear 500 so developers immediately identify the misconfiguration.
+    console.error('[session/route] FATAL: FXSIM_SESSION_SECRET is not set. Cannot create signed session cookies.')
+    return NextResponse.json({ error: 'Server misconfiguration: FXSIM_SESSION_SECRET not set' }, { status: 500 })
   }
 
   // Verify the token against the backend (server-to-server — never trust the client).
