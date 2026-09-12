@@ -42,31 +42,26 @@ export function ZenithAiCopilot() {
   
   const { 
     isOpen, setIsOpen, toggleOpen, 
-    isMinimized, setIsMinimized, 
     activeTab, setActiveTab 
   } = useCopilotStore()
-  const [dockSide, setDockSide] = useState<'right' | 'left'>('right')
-
-  // Load user dock preference
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('fxsim:copilot:dock')
-      if (saved === 'left' || saved === 'right') setDockSide(saved)
-    } catch {}
-  }, [])
-
-  const toggleDock = () => {
-    const next = dockSide === 'right' ? 'left' : 'right'
-    setDockSide(next)
-    try { localStorage.setItem('fxsim:copilot:dock', next) } catch {}
-  }
 
   // Global event listener to open Copilot from topbar or buttons
   useEffect(() => {
-    const handleOpen = () => { setIsOpen(true); setIsMinimized(false); }
+    const handleOpen = () => { setIsOpen(true) }
     window.addEventListener('fxsim:open-copilot', handleOpen)
     return () => window.removeEventListener('fxsim:open-copilot', handleOpen)
-  }, [])
+  }, [setIsOpen])
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, setIsOpen])
 
   // Journal & Autopsy State
   const [journalHistory, setJournalHistory] = useState<AiTradeAutopsy[]>([])
@@ -288,71 +283,36 @@ export function ZenithAiCopilot() {
 
   return (
     <>
-      {/* Floating Copilot Trigger Orb */}
-      <motion.div 
-        drag
-        dragMomentum={false}
-        className={cn(
-          "fixed z-50 select-none",
-          isTrading 
-            ? (dockSide === 'left' ? "bottom-14 left-4 lg:left-20" : "bottom-14 right-4 sm:right-6")
-            : "bottom-6 right-6"
-        )}
-      >
-        <AnimatePresence>
-          {!isOpen && (
-            <motion.button
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleOpen()}
-              onTap={() => toggleOpen()}
-              className={cn(
-                "relative group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-xl shadow-emerald-500/25 border border-emerald-400/30 backdrop-blur-md transition-all duration-200 cursor-pointer",
-                isTrading ? "px-3.5 py-2" : "px-4 py-3"
-              )}
-              title={isTrading ? `${brandName} AI Copilot (Drag to reposition)` : undefined}
-            >
-              <div className="relative">
-                <Bot className={isTrading ? "w-4 h-4 text-white" : "w-5 h-5 text-white"} />
-                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-200"></span>
-                </span>
-              </div>
-              <span className="text-xs font-bold tracking-wide uppercase">
-                {isTrading ? `${brandName} AI` : `${brandName} AI Copilot`}
-              </span>
-              {!isTrading && (
-                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-black/25 text-emerald-100 font-semibold">
-                  AI Active
-                </span>
-              )}
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Slide-out Interactive Copilot Modal / Drawer */}
+      {/* Backdrop overlay (dismiss on click) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={cn(
-              "fixed z-[100] w-[calc(100vw-2rem)] sm:w-[460px] bg-white dark:bg-[#0E1322] border border-slate-200 dark:border-[#1F2937] rounded-2xl shadow-2xl shadow-slate-900/10 dark:shadow-black/80 flex flex-col overflow-hidden text-slate-800 dark:text-gray-100 backdrop-blur-xl",
-              isMinimized ? "h-14" : "h-[620px] max-h-[85vh]",
-              dockSide === 'left' 
-                ? "bottom-4 left-4 sm:left-6 lg:left-20" 
-                : "bottom-4 right-4 sm:right-6"
-            )}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-[99] bg-black/40 dark:bg-black/60 backdrop-blur-xs"
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Slide-over Interactive Copilot Right Sidebar / Drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${brandName} AI Copilot`}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed z-[100] top-0 right-0 bottom-0 h-full w-full sm:w-[460px] md:w-[480px] max-w-[100vw] bg-white dark:bg-[#0E1322] border-l border-slate-200 dark:border-[#1F2937] shadow-2xl shadow-slate-950/20 dark:shadow-black/90 flex flex-col overflow-hidden text-slate-800 dark:text-gray-100 backdrop-blur-2xl"
           >
             {/* Header */}
-            <div className="px-4 py-3.5 bg-slate-100/90 dark:bg-[#141A2E] border-b border-slate-200 dark:border-[#1F2937] flex items-center justify-between">
+            <div className="px-4 py-3 bg-slate-100/90 dark:bg-[#141A2E] border-b border-slate-200 dark:border-[#1F2937] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   <Bot className="w-4 h-4" />
@@ -368,36 +328,28 @@ export function ZenithAiCopilot() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
-                  onClick={toggleDock}
-                  className="p-1 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors"
-                  title={dockSide === 'right' ? 'Dock to left side' : 'Dock to right side'}
-                  aria-label="Switch dock side"
+                  onClick={refreshAccountData}
+                  disabled={isLoadingHeadroom}
+                  className="p-1.5 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors"
+                  title="Refresh Copilot Intelligence"
                 >
-                  <ArrowLeftRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="p-1 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors"
-                  title={isMinimized ? 'Expand' : 'Minimize'}
-                >
-                  {isMinimized ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingHeadroom ? 'animate-spin' : ''}`} />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors"
-                  title="Close"
+                  className="p-1.5 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors"
+                  title="Close Copilot (Esc)"
+                  aria-label="Close"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {!isMinimized && (
-              <>
-                {/* Account-Aware Headroom Summary Strip */}
-                <div className="px-4 py-2.5 bg-slate-50 dark:bg-[#0A0D17] border-b border-slate-200 dark:border-[#1F2937]/70 flex items-center justify-between text-xs">
+            {/* Account-Aware Headroom Summary Strip */}
+            <div className="px-4 py-2.5 bg-slate-50 dark:bg-[#0A0D17] border-b border-slate-200 dark:border-[#1F2937]/70 flex items-center justify-between text-xs shrink-0">
                   <div className="flex items-center gap-3">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-gray-400 block">Daily Headroom</span>
@@ -886,9 +838,7 @@ export function ZenithAiCopilot() {
                   </div>
                   </SectionErrorBoundary>
                 )}
-              </>
-            )}
-          </motion.div>
+          </motion.aside>
         )}
       </AnimatePresence>
 

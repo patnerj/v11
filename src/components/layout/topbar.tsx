@@ -185,11 +185,11 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
               window.dispatchEvent(new CustomEvent('fxsim:open-copilot'))
             }
           }}
-          className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold transition-colors focus-ring"
-          title="Open AI Copilot"
+          className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold transition-colors focus-ring"
+          title="Toggle AI Copilot"
         >
           <Bot className="h-3.5 w-3.5" />
-          <span>AI Copilot</span>
+          <span className="hidden sm:inline">AI Copilot</span>
         </button>
 
         <ThemeSwitcher />
