@@ -185,17 +185,17 @@
   }
 
   /* Hardcoded pitch-black cards adapt to clean white surfaces */
-  html.light .bg-\[\#111827\], html.light .bg-\[\#0B0F19\], html.light .bg-\[\#0E131F\], html.light .bg-\[\#080C14\], html.light .bg-\[\#0A0D17\], html.light .bg-\[\#161F30\], html.light .bg-\[\#1E293B\],
-  [data-theme="clean-light"] .bg-\[\#111827\], [data-theme="clean-light"] .bg-\[\#0B0F19\], [data-theme="clean-light"] .bg-\[\#0E131F\], [data-theme="clean-light"] .bg-\[\#080C14\], [data-theme="clean-light"] .bg-\[\#0A0D17\], [data-theme="clean-light"] .bg-\[\#161F30\], [data-theme="clean-light"] .bg-\[\#1E293B\],
-  [data-theme="light"] .bg-\[\#111827\], [data-theme="light"] .bg-\[\#0B0F19\], [data-theme="light"] .bg-\[\#0E131F\], [data-theme="light"] .bg-\[\#080C14\], [data-theme="light"] .bg-\[\#0A0D17\], [data-theme="light"] .bg-\[\#161F30\], [data-theme="light"] .bg-\[\#1E293B\],
-  html:not(.dark) .bg-\[\#111827\], html:not(.dark) .bg-\[\#0B0F19\], html:not(.dark) .bg-\[\#0E131F\], html:not(.dark) .bg-\[\#080C14\], html:not(.dark) .bg-\[\#0A0D17\], html:not(.dark) .bg-\[\#161F30\], html:not(.dark) .bg-\[\#1E293B\] {
+  html.light .bg-\[\#111827\], html.light .bg-\[\#0B0F19\], html.light .bg-\[\#0E131F\], html.light .bg-\[\#080C14\], html.light .bg-\[\#0A0D17\], html.light .bg-\[\#161F30\], html.light .bg-\[\#1E293B\], html.light .bg-\[\#0E1322\], html.light .bg-\[\#192238\], html.light .bg-\[\#141A2E\], html.light .bg-\[\#101726\], html.light .bg-\[\#0F172A\], html.light .bg-\[\#11172A\],
+  [data-theme="clean-light"] .bg-\[\#111827\], [data-theme="clean-light"] .bg-\[\#0B0F19\], [data-theme="clean-light"] .bg-\[\#0E131F\], [data-theme="clean-light"] .bg-\[\#080C14\], [data-theme="clean-light"] .bg-\[\#0A0D17\], [data-theme="clean-light"] .bg-\[\#161F30\], [data-theme="clean-light"] .bg-\[\#1E293B\], [data-theme="clean-light"] .bg-\[\#0E1322\], [data-theme="clean-light"] .bg-\[\#192238\], [data-theme="clean-light"] .bg-\[\#141A2E\], [data-theme="clean-light"] .bg-\[\#101726\], [data-theme="clean-light"] .bg-\[\#0F172A\], [data-theme="clean-light"] .bg-\[\#11172A\],
+  [data-theme="light"] .bg-\[\#111827\], [data-theme="light"] .bg-\[\#0B0F19\], [data-theme="light"] .bg-\[\#0E131F\], [data-theme="light"] .bg-\[\#080C14\], [data-theme="light"] .bg-\[\#0A0D17\], [data-theme="light"] .bg-\[\#161F30\], [data-theme="light"] .bg-\[\#1E293B\], [data-theme="light"] .bg-\[\#0E1322\], [data-theme="light"] .bg-\[\#192238\], [data-theme="light"] .bg-\[\#141A2E\], [data-theme="light"] .bg-\[\#101726\], [data-theme="light"] .bg-\[\#0F172A\], [data-theme="light"] .bg-\[\#11172A\],
+  html:not(.dark) .bg-\[\#111827\], html:not(.dark) .bg-\[\#0B0F19\], html:not(.dark) .bg-\[\#0E131F\], html:not(.dark) .bg-\[\#080C14\], html:not(.dark) .bg-\[\#0A0D17\], html:not(.dark) .bg-\[\#161F30\], html:not(.dark) .bg-\[\#1E293B\], html:not(.dark) .bg-\[\#0E1322\], html:not(.dark) .bg-\[\#192238\], html:not(.dark) .bg-\[\#141A2E\], html:not(.dark) .bg-\[\#101726\], html:not(.dark) .bg-\[\#0F172A\], html:not(.dark) .bg-\[\#11172A\] {
     background-color: hsl(var(--surface)) !important;
   }
 
-  html.light .border-\[\#1F2937\], html.light .border-\[\#1F2937\]\/70, html.light .border-\[\#1F2937\]\/80, html.light .border-\[\#1F2937\]\/60,
-  [data-theme="clean-light"] .border-\[\#1F2937\], [data-theme="clean-light"] .border-\[\#1F2937\]\/70, [data-theme="clean-light"] .border-\[\#1F2937\]\/80, [data-theme="clean-light"] .border-\[\#1F2937\]\/60,
-  [data-theme="light"] .border-\[\#1F2937\], [data-theme="light"] .border-\[\#1F2937\]\/70, [data-theme="light"] .border-\[\#1F2937\]\/80, [data-theme="light"] .border-\[\#1F2937\]\/60,
-  html:not(.dark) .border-\[\#1F2937\], html:not(.dark) .border-\[\#1F2937\]\/70, html:not(.dark) .border-\[\#1F2937\]\/80, html:not(.dark) .border-\[\#1F2937\]\/60 {
+  html.light .border-\[\#1F2937\], html.light .border-\[\#1F2937\]\/70, html.light .border-\[\#1F2937\]\/80, html.light .border-\[\#1F2937\]\/60, html.light .border-\[\#273552\],
+  [data-theme="clean-light"] .border-\[\#1F2937\], [data-theme="clean-light"] .border-\[\#1F2937\]\/70, [data-theme="clean-light"] .border-\[\#1F2937\]\/80, [data-theme="clean-light"] .border-\[\#1F2937\]\/60, [data-theme="clean-light"] .border-\[\#273552\],
+  [data-theme="light"] .border-\[\#1F2937\], [data-theme="light"] .border-\[\#1F2937\]\/70, [data-theme="light"] .border-\[\#1F2937\]\/80, [data-theme="light"] .border-\[\#1F2937\]\/60, [data-theme="light"] .border-\[\#273552\],
+  html:not(.dark) .border-\[\#1F2937\], html:not(.dark) .border-\[\#1F2937\]\/70, html:not(.dark) .border-\[\#1F2937\]\/80, html:not(.dark) .border-\[\#1F2937\]\/60, html:not(.dark) .border-\[\#273552\] {
     border-color: hsl(var(--border)) !important;
   }
 

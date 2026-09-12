@@ -399,13 +399,13 @@ export default function RiskManagementHubPage() {
 
         {/* Navigation Tabs */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center bg-[#111827] p-1 rounded-xl border border-[#1F2937]">
+          <div className="flex items-center bg-slate-100 dark:bg-[#111827] p-1 rounded-xl border border-slate-200 dark:border-[#1F2937]">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'overview'
-                  ? 'bg-accent text-slate-950 font-bold shadow-sm'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-white dark:bg-accent text-slate-900 dark:text-slate-950 font-bold shadow-xs'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Activity className="h-3.5 w-3.5" />
@@ -417,13 +417,13 @@ export default function RiskManagementHubPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'syndicate'
                   ? 'bg-red-600 text-white font-bold shadow-sm shadow-red-600/30'
-                  : 'text-gray-400 hover:text-white'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <ShieldAlert className="h-3.5 w-3.5 text-red-400" />
+              <ShieldAlert className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
               Syndicate Risk Radar
               {flaggedClustersCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-red-500/20 text-red-300 border border-red-500/40 font-bold">
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-red-500/20 text-red-700 dark:text-red-300 border border-red-500/40 font-bold">
                   {flaggedClustersCount}
                 </span>
               )}
@@ -434,7 +434,7 @@ export default function RiskManagementHubPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'sentinel'
                   ? 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30'
-                  : 'text-gray-400 hover:text-white'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Zap className="h-3.5 w-3.5 text-emerald-300" />
@@ -706,21 +706,21 @@ export default function RiskManagementHubPage() {
         <div className="space-y-8 w-full">
           
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-red-950/40 via-red-900/20 to-slate-900/60 p-6 rounded-2xl border border-red-500/30 backdrop-blur-sm">
+          <div className="bg-gradient-to-r from-red-50 via-rose-50/40 to-slate-50 dark:from-red-950/40 dark:via-red-900/20 dark:to-slate-900/60 p-6 rounded-2xl border border-red-200 dark:border-red-500/30 shadow-sm dark:shadow-none backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400">
+                  <div className="h-9 w-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-600 dark:text-red-400">
                     <ShieldAlert className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       Anti-Syndicate Fraud & Group Hedging Radar
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-red-500/20 text-red-300 border border-red-500/40 font-bold animate-pulse">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/30 font-bold animate-pulse">
                         Active Interceptor
                       </span>
                     </h2>
-                    <p className="text-xs text-gray-300">
+                    <p className="text-xs text-slate-600 dark:text-gray-300">
                       Autonomous real-time detection of coordinated reverse-hedging clusters, identical subnet trade execution, and group risk exploitation.
                     </p>
                   </div>
@@ -728,17 +728,17 @@ export default function RiskManagementHubPage() {
               </div>
 
               <div className="flex items-center gap-4 flex-wrap">
-                <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-red-500/20 text-right">
-                  <div className="text-[10px] font-mono uppercase text-gray-400">Flagged Clusters</div>
-                  <div className="text-xl font-bold font-mono text-red-400 flex items-center justify-end gap-1.5">
+                <div className="bg-white dark:bg-slate-950/80 px-4 py-2 rounded-xl border border-red-200 dark:border-red-500/20 text-right shadow-xs">
+                  <div className="text-[10px] font-mono uppercase text-slate-500 dark:text-gray-400">Flagged Clusters</div>
+                  <div className="text-xl font-bold font-mono text-red-600 dark:text-red-400 flex items-center justify-end gap-1.5">
                     <Radio className="h-4 w-4 animate-ping text-red-500" />
                     {flaggedClustersCount} Threat(s)
                   </div>
                 </div>
 
-                <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-emerald-500/20 text-right">
-                  <div className="text-[10px] font-mono uppercase text-gray-400">Radar Sensitivity</div>
-                  <div className="text-xl font-bold font-mono text-emerald-400">
+                <div className="bg-white dark:bg-slate-950/80 px-4 py-2 rounded-xl border border-emerald-200 dark:border-emerald-500/20 text-right shadow-xs">
+                  <div className="text-[10px] font-mono uppercase text-slate-500 dark:text-gray-400">Radar Sensitivity</div>
+                  <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
                     {syndicateSettingsForm.time_delta_ms} ms
                   </div>
                 </div>
@@ -747,13 +747,13 @@ export default function RiskManagementHubPage() {
           </div>
 
           {/* 1. Cluster Detection Settings Card */}
-          <Card className="bg-[#111827] border-[#1F2937] overflow-hidden">
-            <CardHeader className="border-b border-[#1F2937]/70 pb-4">
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                <Sliders className="h-4 w-4 text-emerald-400" />
+          <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] overflow-hidden shadow-xs">
+            <CardHeader className="border-b border-slate-100 dark:border-[#1F2937]/70 pb-4">
+              <CardTitle className="text-base text-slate-900 dark:text-gray-100 flex items-center gap-2">
+                <Sliders className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                 Cluster Detection & Cross-Account Sensitivity Settings
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-slate-500 dark:text-gray-400">
                 Configure millisecond time thresholds, lot size correlation tolerances, and IP subnet matching modes for autonomous cluster identification.
               </CardDescription>
             </CardHeader>
@@ -763,8 +763,8 @@ export default function RiskManagementHubPage() {
                 
                 {/* Time Delta Sensitivity */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-blue-400" />
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                     Time Delta Sensitivity (ms)
                   </Label>
                   <div className="relative">
@@ -775,19 +775,19 @@ export default function RiskManagementHubPage() {
                       step={100}
                       value={syndicateSettingsForm.time_delta_ms}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, time_delta_ms: Number(e.target.value) })}
-                      className="bg-[#0B0F19] border-[#1F2937] text-white font-mono h-10"
+                      className="bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">ms</span>
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">ms</span>
                   </div>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-slate-500 dark:text-gray-500">
                     Maximum time window between opposing trades to trigger syndicate flagging (Default: 1,500ms).
                   </p>
                 </div>
 
                 {/* Lot Size Match Ratio */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                    <Scale className="h-3.5 w-3.5 text-amber-400" />
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <Scale className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                     Lot Size Match Ratio (%)
                   </Label>
                   <div className="relative">
@@ -798,19 +798,19 @@ export default function RiskManagementHubPage() {
                       step={1}
                       value={syndicateSettingsForm.lot_match_pct}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, lot_match_pct: Number(e.target.value) })}
-                      className="bg-[#0B0F19] border-[#1F2937] text-white font-mono h-10"
+                      className="bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">%</span>
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">%</span>
                   </div>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-slate-500 dark:text-gray-500">
                     Volume symmetry requirement between Buy & Sell legs to qualify as reverse hedging (Default: 85%).
                   </p>
                 </div>
 
                 {/* Strict IP Matching Mode */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                    <Shield className="h-3.5 w-3.5 text-purple-400" />
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <Shield className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" />
                     IP Address Correlation Mode
                   </Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -819,12 +819,12 @@ export default function RiskManagementHubPage() {
                       onClick={() => setSyndicateSettingsForm({ ...syndicateSettingsForm, ip_mode: 'subnet_24' })}
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'subnet_24'
-                          ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-sm'
-                          : 'bg-[#0B0F19] border-[#1F2937] text-gray-400 hover:text-white'
+                          ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
+                          : 'bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Subnet /24
-                      <span className="block text-[9px] text-gray-500 font-normal">Proxy/VPN Cluster</span>
+                      <span className="block text-[9px] text-slate-500 dark:text-gray-500 font-normal">Proxy/VPN Cluster</span>
                     </button>
 
                     <button
@@ -832,15 +832,15 @@ export default function RiskManagementHubPage() {
                       onClick={() => setSyndicateSettingsForm({ ...syndicateSettingsForm, ip_mode: 'exact' })}
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'exact'
-                          ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-sm'
-                          : 'bg-[#0B0F19] border-[#1F2937] text-gray-400 hover:text-white'
+                          ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
+                          : 'bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Exact Match
-                      <span className="block text-[9px] text-gray-500 font-normal">Identical IP Only</span>
+                      <span className="block text-[9px] text-slate-500 dark:text-gray-500 font-normal">Identical IP Only</span>
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-slate-500 dark:text-gray-500">
                     Subnet /24 detects VPN colluders rotating within the same data center range.
                   </p>
                 </div>
@@ -848,9 +848,9 @@ export default function RiskManagementHubPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="bg-[#0B0F19]/60 border-t border-[#1F2937]/70 p-4 flex items-center justify-between">
-              <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <CardFooter className="bg-slate-50 dark:bg-[#0B0F19]/60 border-t border-slate-200 dark:border-[#1F2937]/70 p-4 flex items-center justify-between">
+              <div className="text-xs text-slate-600 dark:text-gray-400 flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                 <span>Real-time cross-account matcher updates immediately upon saving</span>
               </div>
 
@@ -867,15 +867,15 @@ export default function RiskManagementHubPage() {
           </Card>
 
           {/* 2. Live Syndicate Detection Table */}
-          <Card className="bg-[#111827] border-[#1F2937] overflow-hidden">
-            <CardHeader className="border-b border-[#1F2937]/70 pb-4">
+          <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] overflow-hidden shadow-xs">
+            <CardHeader className="border-b border-slate-100 dark:border-[#1F2937]/70 pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                    <Radio className="h-4 w-4 text-red-400" />
+                  <CardTitle className="text-base text-slate-900 dark:text-gray-100 flex items-center gap-2">
+                    <Radio className="h-4 w-4 text-red-500 dark:text-red-400" />
                     Live Syndicate Detection & Collusion Queue
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-slate-500 dark:text-gray-400">
                     Detected reverse-hedging pairs and coordinated account networks flagged by the trading engine interceptor.
                   </CardDescription>
                 </div>
@@ -883,22 +883,22 @@ export default function RiskManagementHubPage() {
                 {/* Filters */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="relative">
-                    <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-gray-500" />
+                    <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-500" />
                     <Input
                       placeholder="Search cluster, trader, IP..."
                       value={syndicateSearch}
                       onChange={(e) => setSyndicateSearch(e.target.value)}
-                      className="pl-8 h-8 text-xs bg-[#0B0F19] border-[#1F2937] text-white w-48 font-mono"
+                      className="pl-8 h-8 text-xs bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white w-48 font-mono"
                     />
                   </div>
 
-                  <div className="flex items-center bg-[#0B0F19] p-0.5 rounded-lg border border-[#1F2937]">
+                  <div className="flex items-center bg-slate-100 dark:bg-[#0B0F19] p-0.5 rounded-lg border border-slate-200 dark:border-[#1F2937]">
                     <button
                       onClick={() => setSyndicateStatusFilter('all')}
                       className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
                         syndicateStatusFilter === 'all'
-                          ? 'bg-slate-800 text-white'
-                          : 'text-gray-400 hover:text-white'
+                          ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       All ({clusters.length})
@@ -907,8 +907,8 @@ export default function RiskManagementHubPage() {
                       onClick={() => setSyndicateStatusFilter('flagged')}
                       className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
                         syndicateStatusFilter === 'flagged'
-                          ? 'bg-red-500/20 text-red-300 font-bold'
-                          : 'text-gray-400 hover:text-white'
+                          ? 'bg-red-500/20 text-red-700 dark:text-red-300 font-bold'
+                          : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Active Flags ({flaggedClustersCount})
@@ -917,8 +917,8 @@ export default function RiskManagementHubPage() {
                       onClick={() => setSyndicateStatusFilter('frozen')}
                       className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
                         syndicateStatusFilter === 'frozen'
-                          ? 'bg-slate-800 text-white'
-                          : 'text-gray-400 hover:text-white'
+                          ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Frozen ({clusters.filter(c => c.status === 'frozen').length})
@@ -932,7 +932,7 @@ export default function RiskManagementHubPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-[#1F2937] bg-[#0B0F19]/80 text-gray-400 font-mono uppercase text-[11px]">
+                    <tr className="border-b border-slate-200 dark:border-[#1F2937] bg-slate-100/90 dark:bg-[#0B0F19]/80 text-slate-700 dark:text-gray-400 font-mono uppercase text-[11px]">
                       <th className="py-3.5 px-4">Cluster ID & Symbol</th>
                       <th className="py-3.5 px-4">Flagged Accounts</th>
                       <th className="py-3.5 px-4">Opposing Positions</th>
@@ -941,8 +941,7 @@ export default function RiskManagementHubPage() {
                       <th className="py-3.5 px-4 text-center">Syndicate Risk</th>
                       <th className="py-3.5 px-4 text-right">Action</th>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1F2937]/50">
+                  <tbody className="divide-y divide-slate-100 dark:divide-[#1F2937]/50">
                     {isLoadingSyndicates ? (
                       <tr>
                         <td colSpan={7} className="py-12 text-center text-gray-500">
@@ -964,20 +963,20 @@ export default function RiskManagementHubPage() {
                           <tr 
                             key={cluster.id} 
                             className={`transition-colors ${
-                              isFrozen ? 'bg-slate-950/40 opacity-75' : 'hover:bg-red-950/10'
+                              isFrozen ? 'bg-slate-100/60 dark:bg-slate-950/40 opacity-75' : 'hover:bg-slate-50 dark:hover:bg-red-950/10'
                             }`}
                           >
                             {/* Cluster ID & Symbol */}
                             <td className="py-4 px-4 align-top">
                               <div className="space-y-1">
-                                <span className="font-mono font-bold text-gray-100 flex items-center gap-1.5">
-                                  <ShieldAlert className={`h-3.5 w-3.5 ${isFrozen ? 'text-gray-500' : 'text-red-400'}`} />
+                                <span className="font-mono font-bold text-slate-900 dark:text-gray-100 flex items-center gap-1.5">
+                                  <ShieldAlert className={`h-3.5 w-3.5 ${isFrozen ? 'text-slate-400 dark:text-gray-500' : 'text-red-500 dark:text-red-400'}`} />
                                   {cluster.cluster_code}
                                 </span>
                                 <Badge tone="info" size="sm" className="font-mono text-[10px]">
                                   {cluster.symbol}
                                 </Badge>
-                                <div className="text-[10px] text-gray-500 font-mono">
+                                <div className="text-[10px] text-slate-500 dark:text-gray-500 font-mono">
                                   {cluster.created_at}
                                 </div>
                               </div>
@@ -987,36 +986,36 @@ export default function RiskManagementHubPage() {
                             <td className="py-4 px-4 align-top">
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono text-[10px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-mono text-[10px] font-bold">
                                     Leg A
                                   </span>
                                   <div>
                                     <Link 
                                       href={`/admin/traders/${cluster.user_a_id}`}
-                                      className="font-semibold text-gray-200 hover:text-emerald-400 transition-colors text-xs flex items-center gap-1"
+                                      className="font-semibold text-slate-900 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-xs flex items-center gap-1"
                                     >
                                       {cluster.trader_a_name || `Trader #${cluster.user_a_id}`}
                                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                                     </Link>
-                                    <div className="text-[11px] text-gray-500 font-mono">
+                                    <div className="text-[11px] text-slate-500 dark:text-gray-500 font-mono">
                                       Acc #{cluster.account_a_id} • {cluster.trader_a_email || 'trader@propfirm.com'}
                                     </div>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-[10px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-mono text-[10px] font-bold">
                                     Leg B
                                   </span>
                                   <div>
                                     <Link 
                                       href={`/admin/traders/${cluster.user_b_id}`}
-                                      className="font-semibold text-gray-200 hover:text-emerald-400 transition-colors text-xs flex items-center gap-1"
+                                      className="font-semibold text-slate-900 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-xs flex items-center gap-1"
                                     >
                                       {cluster.trader_b_name || `Trader #${cluster.user_b_id}`}
                                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                                     </Link>
-                                    <div className="text-[11px] text-gray-500 font-mono">
+                                    <div className="text-[11px] text-slate-500 dark:text-gray-500 font-mono">
                                       Acc #{cluster.account_b_id} • {cluster.trader_b_email || 'trader@propfirm.com'}
                                     </div>
                                   </div>
@@ -1028,19 +1027,19 @@ export default function RiskManagementHubPage() {
                             <td className="py-4 px-4 align-top">
                               <div className="space-y-1.5 font-mono text-xs">
                                 <div className="flex items-center gap-1.5">
-                                  <span className={cluster.action_a === 'BUY' ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                                  <span className={cluster.action_a === 'BUY' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold'}>
                                     {cluster.action_a} {cluster.lot_a} Lots
                                   </span>
-                                  <span className="text-gray-500 text-[10px]">on {cluster.symbol}</span>
+                                  <span className="text-slate-500 dark:text-gray-500 text-[10px]">on {cluster.symbol}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                  <span className={cluster.action_b === 'BUY' ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                                  <span className={cluster.action_b === 'BUY' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold'}>
                                     {cluster.action_b} {cluster.lot_b} Lots
                                   </span>
-                                  <span className="text-gray-500 text-[10px]">on {cluster.symbol}</span>
+                                  <span className="text-slate-500 dark:text-gray-500 text-[10px]">on {cluster.symbol}</span>
                                 </div>
-                                <div className="text-[10px] text-gray-400 flex items-center gap-1">
-                                  <Scale className="h-3 w-3 text-amber-400" />
+                                <div className="text-[10px] text-slate-600 dark:text-gray-400 flex items-center gap-1">
+                                  <Scale className="h-3 w-3 text-amber-500 dark:text-amber-400" />
                                   <span>Hedging Ratio: <strong>{Math.round((Math.min(Number(cluster.lot_a), Number(cluster.lot_b)) / Math.max(Number(cluster.lot_a), Number(cluster.lot_b))) * 100)}%</strong></span>
                                 </div>
                               </div>
@@ -1049,11 +1048,11 @@ export default function RiskManagementHubPage() {
                             {/* IP Correlation */}
                             <td className="py-4 px-4 align-top">
                               <div className="space-y-1 font-mono text-[11px]">
-                                <div className="text-gray-300 flex items-center gap-1">
-                                  <span className="text-gray-500">A:</span> {cluster.ip_a}
+                                <div className="text-slate-700 dark:text-gray-300 flex items-center gap-1">
+                                  <span className="text-slate-500 dark:text-gray-500">A:</span> {cluster.ip_a}
                                 </div>
-                                <div className="text-gray-300 flex items-center gap-1">
-                                  <span className="text-gray-500">B:</span> {cluster.ip_b}
+                                <div className="text-slate-700 dark:text-gray-300 flex items-center gap-1">
+                                  <span className="text-slate-500 dark:text-gray-500">B:</span> {cluster.ip_b}
                                 </div>
                                 <Badge 
                                   tone={cluster.ip_match_type === 'exact' ? 'danger' : 'warning'} 
@@ -1067,10 +1066,10 @@ export default function RiskManagementHubPage() {
 
                             {/* Time Delta */}
                             <td className="py-4 px-4 align-top text-center">
-                              <span className="inline-block px-2.5 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-xs font-bold">
+                              <span className="inline-block px-2.5 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-mono text-xs font-bold">
                                 +{cluster.time_delta_ms} ms
                               </span>
-                              <div className="text-[10px] text-gray-500 font-mono mt-1">
+                              <div className="text-[10px] text-slate-500 dark:text-gray-500 font-mono mt-1">
                                 Execution Gap
                               </div>
                             </td>
@@ -1079,17 +1078,17 @@ export default function RiskManagementHubPage() {
                             <td className="py-4 px-4 align-top text-center">
                               <div className="inline-flex flex-col items-center gap-1">
                                 <span className={`font-mono text-sm font-extrabold ${
-                                  Number(cluster.risk_score) >= 95 ? 'text-red-400 animate-pulse' : 'text-amber-400'
+                                  Number(cluster.risk_score) >= 95 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'
                                 }`}>
                                   {Number(cluster.risk_score).toFixed(1)}% Risk
                                 </span>
-                                <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                   <div 
                                     style={{ width: `${cluster.risk_score}%` }}
                                     className="bg-red-500 h-full rounded-full"
                                   />
                                 </div>
-                                <span className="text-[9px] uppercase font-mono tracking-wider text-red-400/80">
+                                <span className="text-[9px] uppercase font-mono tracking-wider text-red-600/80 dark:text-red-400/80">
                                   Critical Collusion
                                 </span>
                               </div>

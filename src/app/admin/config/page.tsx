@@ -3140,26 +3140,26 @@ export default function ConfigurationHubPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* AI Engine & Gemini Banner Card */}
-            <Card className="col-span-1 md:col-span-2 bg-gradient-to-r from-emerald-950/40 via-[#111827] to-[#0B0F19] border-emerald-500/30 p-4">
+            <Card className="col-span-1 md:col-span-2 bg-gradient-to-r from-emerald-50 via-slate-50 to-white dark:from-emerald-950/40 dark:via-[#111827] dark:to-[#0B0F19] border border-emerald-200 dark:border-emerald-500/30 p-4 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       Google Gemini (Ultra-Fast Free Tier) &amp; DeepSeek AI Engine
                       {aiForm.gemini_api_key ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/40">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/40">
                           Active
                         </span>
                       ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/40">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/40">
                           Key Required
                         </span>
                       )}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-slate-600 dark:text-gray-400">
                       Configure your free Google Gemini API key or local DeepSeek model to power AI Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
                     </p>
                   </div>
@@ -4107,34 +4107,34 @@ export default function ConfigurationHubPage() {
                   <div className={cn(
                     "p-3 rounded-xl border text-xs space-y-1.5 animate-in fade-in duration-200",
                     geminiTestResult.success 
-                      ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-200"
-                      : "bg-rose-950/40 border-rose-500/40 text-rose-200"
+                      ? "bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-500/40 dark:text-emerald-200"
+                      : "bg-rose-50 border-rose-300 text-rose-900 dark:bg-rose-950/40 dark:border-rose-500/40 dark:text-rose-200"
                   )}>
-                    <div className="flex items-center justify-between font-semibold">
+                    <div className="flex items-center justify-between font-bold">
                       <div className="flex items-center gap-1.5">
                         {geminiTestResult.success ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         ) : (
-                          <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                          <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
                         )}
                         <span>{geminiTestResult.success ? 'Gemini API Connected Successfully' : 'Connection Failed'}</span>
                       </div>
                       {geminiTestResult.latency_ms !== undefined && (
-                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">
                           {geminiTestResult.latency_ms}ms
                         </span>
                       )}
                     </div>
                     {geminiTestResult.model && (
-                      <p className="text-[11px] opacity-80 font-mono">Verified Model: {geminiTestResult.model}</p>
+                      <p className="text-[11px] opacity-90 font-mono">Verified Model: {geminiTestResult.model}</p>
                     )}
                     {geminiTestResult.reply && (
-                      <p className="text-[11px] italic bg-black/30 p-2 rounded border border-emerald-500/20 text-emerald-100">
+                      <p className="text-[11px] italic bg-emerald-100/60 dark:bg-black/30 p-2 rounded border border-emerald-200 dark:border-emerald-500/20 text-emerald-900 dark:text-emerald-100">
                         &ldquo;{geminiTestResult.reply}&rdquo;
                       </p>
                     )}
                     {geminiTestResult.error && (
-                      <p className="text-[11px] text-rose-300 font-mono break-all">
+                      <p className="text-[11px] text-rose-700 dark:text-rose-300 font-mono font-semibold break-all">
                         Error: {geminiTestResult.error}
                       </p>
                     )}
