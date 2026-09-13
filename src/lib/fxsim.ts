@@ -60,7 +60,15 @@ const isServer = typeof window === 'undefined'
 
 function getSessionState(): Session {
   if (isServer) return { nonce: null, bearer: null }
-  if (!(globalThis as any).__fxsim_session) (globalThis as any).__fxsim_session = { nonce: null, bearer: null }
+  if (!(globalThis as any).__fxsim_session) {
+    (globalThis as any).__fxsim_session = { nonce: null, bearer: null }
+    try {
+      const bearer = sessionStorage.getItem('fxsim:bearer')
+      const nonce = sessionStorage.getItem('fxsim:nonce')
+      if (bearer) (globalThis as any).__fxsim_session.bearer = bearer
+      if (nonce) (globalThis as any).__fxsim_session.nonce = nonce
+    } catch { /* private mode */ }
+  }
   return (globalThis as any).__fxsim_session
 }
 

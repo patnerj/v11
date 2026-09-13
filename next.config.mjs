@@ -76,9 +76,9 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://*.tradingview.com https://client.crisp.chat https://*.tawk.to",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://rsms.me",
               "img-src 'self' https: data: blob:",
-              "font-src 'self' https://fonts.gstatic.com data:",
+              "font-src 'self' https://fonts.gstatic.com https://rsms.me data:",
               `connect-src ${connectSrc}`,
               `frame-src ${frameSrc}`,
               "object-src 'none'",
@@ -112,6 +112,7 @@ const nextConfig = {
       { source: '/dashboard/competitions', destination: '/dashboard/tournaments', permanent: true },
       { source: '/admin/settings', destination: '/admin/config', permanent: true },
       { source: '/admin/audit-log', destination: '/admin/activity', permanent: true },
+      { source: '/admin/challenges', destination: '/admin/operations?tab=challenges', permanent: false },
     ]
   },
 };

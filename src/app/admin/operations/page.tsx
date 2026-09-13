@@ -29,6 +29,16 @@ export default function OperationsHubPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges'>('health')
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health') {
+        setActiveTab(tabParam)
+      }
+    }
+  }, [])
+
   // ─────────────────────────────────────────────────────────────────
   // CHALLENGE LIFECYCLE & TEST TOOLS STATE
   // ─────────────────────────────────────────────────────────────────
