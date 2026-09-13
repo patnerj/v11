@@ -9,25 +9,24 @@ import type { AuthUser } from '@/types/api'
 
 /**
  * Establish the signed middleware cookie AFTER a successful backend login.
- * Awaited (never fire-and-forget): the caller navigates immediately after we
- * resolve, and navigation hits the middleware which requires this cookie —
- * a fire-and-forget here caused a login→login bounce race. One retry absorbs
- * transient network blips; 'legacy' (server has no session secret) proceeds
- * with a warning since the middleware tolerates it for /dashboard.
+ * Returns true if session cookie is established (or tolerated in legacy mode),
+ * false if verification failed. Fails fast on permanent errors without wasting 15s.
  */
-async function establishSessionSafe(token: string, remember = true): Promise<void> {
-  // 429-aware: the establish call can itself be rate-limited during a burst.
-  // Retry with real backoff — giving up here locks the user out of /dashboard.
+async function establishSessionSafe(token: string, remember = true): Promise<boolean> {
   let result = await sessionEstablish(token, remember)
-  for (let i = 0; i < 3 && result === 'failed'; i++) {
-    await new Promise((r) => setTimeout(r, 2500 * (i + 1)))
+  if (result === 'retry') {
+    // Only retry transient 429 / network drops at most once after 500ms
+    await new Promise((r) => setTimeout(r, 500))
     result = await sessionEstablish(token, remember)
   }
-  if (result === 'failed') {
-    toast.error('Session cookie could not be established — refresh the page to retry.')
-  } else if (result === 'legacy') {
+  if (result === 'failed' || result === 'retry') {
+    toast.error('Session cookie could not be established. Please try logging in again.')
+    return false
+  }
+  if (result === 'legacy') {
     console.warn('[auth] FXSIM_SESSION_SECRET not configured — signed sessions inactive.')
   }
+  return true
 }
 
 interface AuthState {
@@ -94,7 +93,14 @@ export const useAuth = create<AuthState>((set, get) => ({
       const token = (res.data as any).token || res.data.nonce
       setSession({ nonce: res.data.nonce, bearer: token })
       // Server-verified signed cookie for middleware route protection.
-      if ((res.data as any).token) await establishSessionSafe((res.data as any).token, remember)
+      if ((res.data as any).token) {
+        const sessionOk = await establishSessionSafe((res.data as any).token, remember)
+        if (!sessionOk) {
+          setSession({ nonce: null, bearer: null })
+          set({ loading: false, error: 'Session cookie could not be established. Please try again.' })
+          return { ok: false, error: 'Session cookie could not be established. Please try again.' }
+        }
+      }
       // Clear any cached anonymous responses, AND any react-query cache left
       // over from a previous user's session on this device (see
       // notifySessionCleared's own comment in lib/session.ts).
@@ -121,7 +127,12 @@ export const useAuth = create<AuthState>((set, get) => ({
   signinWithBiometricToken: async (token: string) => {
     set({ loading: true, error: null })
     setSession({ bearer: token })
-    await establishSessionSafe(token, true)
+    const sessionOk = await establishSessionSafe(token, true)
+    if (!sessionOk) {
+      setSession({ nonce: null, bearer: null })
+      set({ loading: false, error: 'Thumb authentication expired. Please login with password.' })
+      return { ok: false, error: 'Thumb authentication expired. Please login with password.' }
+    }
     clearFxsimCache()
     notifySessionCleared()
     const res = await api.auth.me(true)
@@ -139,7 +150,14 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (res.ok) {
       const token = (res.data as any)?.token || res.data?.nonce
       setSession({ nonce: res.data.nonce, bearer: token })
-      if ((res.data as any)?.token) await establishSessionSafe((res.data as any).token, remember ?? true)
+      if ((res.data as any)?.token) {
+        const sessionOk = await establishSessionSafe((res.data as any).token, remember ?? true)
+        if (!sessionOk) {
+          setSession({ nonce: null, bearer: null })
+          set({ loading: false, error: 'Session cookie could not be established. Please try again.' })
+          return { ok: false, error: 'Session cookie could not be established. Please try again.' }
+        }
+      }
       clearFxsimCache()
       notifySessionCleared()
       try {
@@ -165,7 +183,14 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (res.ok) {
       const token = (res.data as any)?.token || res.data?.nonce
       setSession({ nonce: res.data.nonce, bearer: token })
-      if ((res.data as any)?.token) await establishSessionSafe((res.data as any).token, true)
+      if ((res.data as any)?.token) {
+        const sessionOk = await establishSessionSafe((res.data as any).token, true)
+        if (!sessionOk) {
+          setSession({ nonce: null, bearer: null })
+          set({ loading: false, error: 'Session cookie could not be established. Please try logging in.' })
+          return { ok: false, error: 'Session cookie could not be established. Please try logging in.' }
+        }
+      }
       clearFxsimCache()
       notifySessionCleared()
       set({ user: res.data.user, loading: false, ready: true, lastChecked: Date.now(), error: null })

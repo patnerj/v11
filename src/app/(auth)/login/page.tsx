@@ -62,10 +62,18 @@ function LoginForm() {
 
   useEffect(() => {
     if (ready && user) {
+      // If we landed on /login with an explicit ?next= parameter, the edge middleware
+      // rejected our session cookie (missing or expired). Do NOT auto-redirect back to
+      // the protected route — that causes an infinite redirect loop. Instead, clear
+      // the stale client session so the user can re-authenticate cleanly.
+      if (params.get('next')) {
+        useAuth.getState().signout()
+        return
+      }
       const target = user.is_admin && next === '/dashboard' ? '/admin' : next
       router.replace(target)
     }
-  }, [ready, user, next, router])
+  }, [ready, user, next, router, params])
 
   const finishLogin = () => {
     toast.success('Welcome back')

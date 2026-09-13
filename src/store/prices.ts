@@ -44,7 +44,7 @@ interface PriceState {
   removeOptimisticPending: (id: number) => void
 }
 
-let pollTimer:   ReturnType<typeof setInterval> | null = null
+let pollTimer:   ReturnType<typeof setTimeout> | ReturnType<typeof setInterval> | null = null
 let stream:      WebSocket | null = null
 let visListener: (() => void) | null = null
 let refCount     = 0
@@ -60,7 +60,11 @@ export function buildContextParams(ctx: TradingContext): { account_id?: number; 
 }
 
 function clearPoll() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  if (pollTimer) {
+    clearTimeout(pollTimer)
+    clearInterval(pollTimer as any)
+    pollTimer = null
+  }
 }
 function closeStream() {
   if (stream) { stream.close(); stream = null }
@@ -135,11 +139,11 @@ export const usePrices = create<PriceState>((set, get) => {
           const patch: Partial<PriceState> = {}
           if (acc.ok) patch.account = toAccount(acc)
           if (pos.ok) {
-            patch.positions = pos.data
+            patch.positions = Array.isArray(pos.data) ? pos.data : []
             // If real position arrives, clear out optimistic ones with same symbol/side approx matching?
             // Actually, we'll just let usePlaceOrder remove it by ID once api.open resolves.
           }
-          if (pen.ok) patch.pending = pen.data
+          if (pen.ok) patch.pending = Array.isArray(pen.data) ? pen.data : []
 
           if (shouldPollPrices) {
             const res = await api.prices()
@@ -163,8 +167,25 @@ export const usePrices = create<PriceState>((set, get) => {
 
           stableSet(patch)
         }
-        tick()
-        pollTimer = setInterval(tick, POLL_MS)
+
+        const scheduleNext = () => {
+          if (pollTimer) clearTimeout(pollTimer)
+          pollTimer = setTimeout(async () => {
+            try {
+              await tick()
+            } finally {
+              if (typeof document !== 'undefined' && !document.hidden && get().source !== 'idle') {
+                scheduleNext()
+              }
+            }
+          }, POLL_MS)
+        }
+
+        tick().finally(() => {
+          if (typeof document !== 'undefined' && !document.hidden && get().source !== 'idle') {
+            scheduleNext()
+          }
+        })
       }
 
       const tryStream = () => {
@@ -184,8 +205,7 @@ export const usePrices = create<PriceState>((set, get) => {
           } catch { /* malformed */ }
         })
 
-        s.onopen  = () => { reconnectAttempts = 0; set({ connected: true }) }
-        s.onerror = () => {
+        const handleDisconnect = () => {
           set({ connected: false })
           closeStream()
 
@@ -194,14 +214,20 @@ export const usePrices = create<PriceState>((set, get) => {
             set({ source: 'poll' })
           } else {
             const backoff = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000)
-            reconnectTimeout = setTimeout(tryStream, backoff)
+            const jitter = Math.floor(Math.random() * 500)
+            reconnectTimeout = setTimeout(tryStream, backoff + jitter)
           }
         }
+
+        s.onopen  = () => { reconnectAttempts = 0; set({ connected: true }) }
+        s.onerror = handleDisconnect
+        s.onclose = handleDisconnect
       }
 
       // Pause everything when tab hidden, resume on visible.
       visListener = () => {
         if (document.hidden) {
+          set({ connected: false })
           closeStream()
           clearPoll()
         } else if (get().source === 'idle' || (!stream && !pollTimer)) {
@@ -220,8 +246,8 @@ export const usePrices = create<PriceState>((set, get) => {
         .then(([res, acc, pos, pen]) => {
           const patch: Partial<PriceState> = { hasFetched: true }
           if (acc.ok) patch.account = toAccount(acc)
-          if (pos.ok) patch.positions = pos.data
-          if (pen.ok) patch.pending = pen.data
+          if (pos.ok) patch.positions = Array.isArray(pos.data) ? pos.data : []
+          if (pen.ok) patch.pending = Array.isArray(pen.data) ? pen.data : []
           if (res.ok) {
             patch.prices = res.data
             patch.ts = Date.now()
@@ -261,10 +287,10 @@ export const usePrices = create<PriceState>((set, get) => {
       const patch: Partial<PriceState> = {}
       if (acc.ok) patch.account = toAccount(acc)
       if (pos.ok) {
-        patch.positions = pos.data
+        patch.positions = Array.isArray(pos.data) ? pos.data : []
         set({ optimisticPositions: [] })
       }
-      if (pen.ok) patch.pending = pen.data
+      if (pen.ok) patch.pending = Array.isArray(pen.data) ? pen.data : []
       stableSet(patch)
       return acc.ok
     },

@@ -15,9 +15,13 @@ export const SESSION_COOKIE = 'fxsim_sess'
  * Returns:
  *   'ok'     — signed cookie set
  *   'legacy' — server has no FXSIM_SESSION_SECRET configured (503 legacy mode)
- *   'failed' — verification or network failed (cookie NOT set)
+ *   'failed' — non-retryable failure (400, 401, 500) or permanent error
+ *   'retry'  — transient rate-limit (429) or network interruption eligible for backoff
  */
-export async function sessionEstablish(token: string, remember = true): Promise<'ok' | 'legacy' | 'failed'> {
+export async function sessionEstablish(
+  token: string,
+  remember = true
+): Promise<'ok' | 'legacy' | 'failed' | 'retry'> {
   if (typeof window === 'undefined' || !token) return 'failed'
   try {
     const res = await fetch('/api/auth/session', {
@@ -27,6 +31,7 @@ export async function sessionEstablish(token: string, remember = true): Promise<
       credentials: 'same-origin',
     })
     if (res.ok) return 'ok'
+    if (res.status === 429) return 'retry'
     if (res.status === 503) {
       try {
         const body = await res.json()
@@ -35,7 +40,7 @@ export async function sessionEstablish(token: string, remember = true): Promise<
     }
     return 'failed'
   } catch {
-    return 'failed'
+    return 'retry'
   }
 }
 
