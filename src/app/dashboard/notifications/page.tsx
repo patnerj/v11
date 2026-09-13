@@ -34,17 +34,18 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (data) {
+      const notifs = Array.isArray(data.notifications) ? data.notifications : []
       if (page === 1) {
-        setItems(data.notifications)
+        setItems(notifs)
       } else {
         setItems(prev => {
           const ids = new Set(prev.map(p => p.id))
-          const fresh = data.notifications.filter(n => !ids.has(n.id))
+          const fresh = notifs.filter(n => !ids.has(n.id))
           return [...prev, ...fresh]
         })
       }
       setHasMore(!!data.has_more)
-      setTotalCount(data.total ?? data.notifications.length)
+      setTotalCount(data.total ?? notifs.length)
       setUnreadCount(data.unread_count ?? 0)
     }
   }, [data, page])

@@ -26,7 +26,7 @@ export default function CertificatesPage() {
       let certsData: Record<number, Cert | null> = {}
       let payoutsData: PayoutItem[] = []
 
-      if (res.ok) {
+      if (res.ok && Array.isArray(res.data)) {
         eligible = res.data.filter((c) => c.status === 'passed' || c.status === 'funded')
         
         const results = await Promise.all(eligible.map(async (c) => {
@@ -36,7 +36,7 @@ export default function CertificatesPage() {
         certsData = Object.fromEntries(results)
       }
 
-      if (poRes.ok && poRes.data?.history) {
+      if (poRes.ok && Array.isArray(poRes.data?.history)) {
         payoutsData = poRes.data.history.filter(p => p.status === 'paid')
       }
 

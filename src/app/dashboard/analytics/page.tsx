@@ -44,11 +44,11 @@ export default function AnalyticsPage() {
       let full = null
       let adv = null
       
-      if (!fRes.ok || ('no_challenge' in fRes.data && fRes.data.no_challenge)) {
+      if (!fRes.ok || (fRes.data && typeof fRes.data === 'object' && 'no_challenge' in fRes.data && (fRes.data as any).no_challenge)) {
         error = !fRes.ok ? (fRes.error || 'Failed to load') : 'You need an active challenge to view analytics.'
       } else {
         full = fRes.data as FullStats
-        if (aRes.ok && !('no_challenge' in aRes.data)) {
+        if (aRes.ok && aRes.data && typeof aRes.data === 'object' && !('no_challenge' in aRes.data)) {
           adv = aRes.data as AdvancedStats
         }
       }
@@ -106,17 +106,17 @@ export default function AnalyticsPage() {
     )
   }
 
-  const dayData = adv?.days.map(d => ({
-    name: d.name.substring(0, 3),
+  const dayData = (Array.isArray(adv?.days) ? adv.days : []).map(d => ({
+    name: (d.name || '').substring(0, 3),
     winRate: d.win_rate,
     pnl: d.pnl
-  })) || []
+  }))
 
-  const hourData = adv?.hours.map(h => ({
+  const hourData = (Array.isArray(adv?.hours) ? adv.hours : []).map(h => ({
     hour: `${h.hour}:00`,
     winRate: h.win_rate,
     pnl: h.pnl
-  })) || []
+  }))
 
   const symbolData = Object.entries(full.by_symbol || {}).map(([sym, d]) => ({
     name: sym,
@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
     pnl: d.pnl
   })).sort((a, b) => b.trades - a.trades).slice(0, 5)
 
-  const drawdownData = (adv?.drawdown_curve || []).map(d => ({
+  const drawdownData = (Array.isArray(adv?.drawdown_curve) ? adv.drawdown_curve : []).map(d => ({
     date: fmtDate(d.date),
     drawdown: d.drawdown_pct
   }))

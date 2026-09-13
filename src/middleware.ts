@@ -48,7 +48,7 @@ async function verifySession(value: string | undefined, secret: string): Promise
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
-  const DEFAULT_FALLBACK_SECRET = 'fxsim_sec_production_v11_5_99882244aaccbbff1122334455667788'
+  const DEFAULT_FALLBACK_SECRET = 'e7b92f4c8a1d5e3b6a9f0c2e4d8b1a7f6c3e9a2d5b8e1f4a7c0d3e6b9a2c5f8'
   const secret = process.env.FXSIM_SESSION_SECRET || process.env.SESSION_SECRET || DEFAULT_FALLBACK_SECRET
 
   // P0: fail-closed — no secret = no verified session = redirect to login.
@@ -95,8 +95,8 @@ export async function middleware(request: NextRequest) {
     if (!isAdmin) return loginRedirect()
   }
 
-  // Protect /dashboard routes
-  if (path.startsWith('/dashboard')) {
+  // Protect /dashboard and /arena routes
+  if (path.startsWith('/dashboard') || path === '/arena' || path.startsWith('/arena/')) {
     if (!hasAuthCookie) return loginRedirect()
   }
 
@@ -108,5 +108,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/register', '/admin', '/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/arena', '/arena/:path*', '/login', '/register', '/admin', '/admin/:path*'],
 }

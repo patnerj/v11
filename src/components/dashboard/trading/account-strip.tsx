@@ -95,7 +95,7 @@ export const AccountStrip = memo(function AccountStrip({ account, openPnL, metri
         {/* Max DD */}
         <div className="rounded-md px-3 py-2 border bg-bg-subtle/40 border-border-subtle flex flex-col justify-center gap-1.5">
           <div className="flex items-center justify-between text-2xs uppercase tracking-wider text-text-muted">
-            <span>Max Loss Limit ({metrics.plan.drawdown_type.replace('_', ' ')})</span>
+            <span>Max Loss Limit ({metrics.plan?.drawdown_type ? metrics.plan.drawdown_type.replace('_', ' ') : 'Static'})</span>
             <span className={cn('font-semibold', maxDdPct >= 95 ? 'text-danger' : maxDdPct >= 80 ? 'text-warn' : 'text-text')}>
               {fmtUSD(metrics.current_dd)} / {fmtUSD(metrics.max_dd_val)}
             </span>

@@ -181,3 +181,34 @@ export const TIMEFRAMES: { code: string; label: string }[] = [
   { code: '1d',  label: '1D' },
   { code: '1w',  label: '1W' },
 ]
+
+/**
+ * Map symbols (forex, indices, commodities, crypto) to their relevant currencies
+ * for economic calendar news restriction matching.
+ * Matches backend mapping in class-challenge-engine.php:1014-1022:
+ * US30/NAS100/SPX500 -> USD; GER40 -> EUR; UK100 -> GBP; JPN225 -> JPY;
+ * XAUUSD/XAGUSD/USOIL -> USD; Forex pairs -> [base, quote].
+ */
+export function symbolCurrencies(sym: string): string[] {
+  if (!sym) return []
+  const s = sym.toUpperCase()
+  if (['US30', 'NAS100', 'SPX500', 'DJI', 'US2000', 'USOIL', 'XAUUSD', 'XAGUSD', 'BTCUSD', 'ETHUSD'].includes(s)) {
+    return ['USD']
+  }
+  if (['GER40', 'GER30', 'FRA40', 'EUSTX50'].includes(s)) {
+    return ['EUR']
+  }
+  if (['UK100', 'FTSE100'].includes(s)) {
+    return ['GBP']
+  }
+  if (['JPN225', 'NKY225'].includes(s)) {
+    return ['JPY']
+  }
+  if (['AUS200'].includes(s)) {
+    return ['AUD']
+  }
+  if (s.length === 6) {
+    return [s.slice(0, 3), s.slice(3, 6)]
+  }
+  return []
+}

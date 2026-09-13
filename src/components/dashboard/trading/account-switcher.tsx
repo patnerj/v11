@@ -75,7 +75,10 @@ export function buildSwitchEntries(
   activeOnly = false,
 ): SwitchEntry[] {
   const entries: SwitchEntry[] = []
-  for (const ch of challenges) {
+  const safeChallenges = Array.isArray(challenges) ? challenges : []
+  const safeTournaments = Array.isArray(tournaments) ? tournaments : []
+  for (const ch of safeChallenges) {
+    if (!ch) continue
     const st = (ch.status ?? '').toLowerCase()
     // activeOnly (terminal): only tradeable accounts. Dashboard: all, so a
     // failed challenge's final stats stay reviewable.
@@ -93,7 +96,8 @@ export function buildSwitchEntries(
       ctx: { kind: 'challenge', accountId: ch.fxsim_account_id, title: ch.plan_name },
     })
   }
-  for (const t of tournaments) {
+  for (const t of safeTournaments) {
+    if (!t) continue
     entries.push({
       key: `t-${t.tournament_id}`,
       label: `🏆 ${t.title}`,

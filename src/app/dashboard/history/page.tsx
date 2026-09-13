@@ -64,10 +64,23 @@ export default function HistoryPage() {
   const [editingNotes, setEditingNotes] = useState<Record<number, { note: string; tags: string[]; screenshot_url?: string }>>({})
   const [savingTradeId, setSavingTradeId] = useState<number | null>(null)
 
+  const parseTags = (raw: any): string[] => {
+    if (Array.isArray(raw)) return raw
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) return parsed
+      } catch {
+        return raw.split(',').map(s => s.trim()).filter(Boolean)
+      }
+    }
+    return []
+  }
+
   const getTradeNote = (t: Trade) => {
     return editingNotes[t.id] ?? {
       note: t.note || '',
-      tags: t.tags || [],
+      tags: parseTags(t.tags),
       screenshot_url: (t as any).screenshot_url || '',
     }
   }
@@ -76,7 +89,7 @@ export default function HistoryPage() {
     setEditingNotes(prev => ({
       ...prev,
       [id]: {
-        ...(prev[id] ?? { note: t.note || '', tags: t.tags || [], screenshot_url: (t as any).screenshot_url || '' }),
+        ...(prev[id] ?? { note: t.note || '', tags: parseTags(t.tags), screenshot_url: (t as any).screenshot_url || '' }),
         ...patch,
       }
     }))

@@ -13,7 +13,7 @@ import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { cn } from '@/lib/cn'
 import { fmtPrice, fmtUSD, toNum, fmtLots } from '@/lib/format'
-import { symbolDigits, pipSize, estimatedPipValue } from '@/lib/symbol-meta'
+import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies } from '@/lib/symbol-meta'
 import { useQuery } from '@tanstack/react-query'
 import type { Account, ChallengePlan } from '@/types/api'
 import { playOrderSuccessSound } from '@/lib/sound'
@@ -71,11 +71,15 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
     const windowMs = (plan.news_window_minutes || 2) * 60 * 1000
     const now = Date.now()
+    const currencies = symbolCurrencies(active)
     
     return events.some((event: any) => {
       if (event.impact !== 'High') return false
-      // The symbol (e.g. EURUSD) must include the currency (e.g. USD)
-      if (!active.includes(event.currency)) return false
+      // The symbol (e.g. EURUSD, US30, GER40) must match the event currency
+      const matches = currencies.length > 0
+        ? currencies.includes(event.currency)
+        : active.includes(event.currency)
+      if (!matches) return false
       const eventTime = new Date(event.event_time_utc.replace(' ', 'T') + 'Z').getTime()
       return Math.abs(eventTime - now) <= windowMs
     })
@@ -132,7 +136,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   const allPrices = usePrices((s) => s.prices)
 
   // Approximate margin for the order (mirrors backend calc_margin_usd)
-  const leverage = toNum(account?.leverage) || 100
+  const accountLev = toNum(account?.leverage) || 100
+  const planLev = plan?.max_leverage ? toNum(plan.max_leverage) : accountLev
+  const leverage = Math.min(accountLev, planLev > 0 ? planLev : accountLev)
   const entryPx  = mode === 'market' ? ask : (targetN || ask)
   
   const margin = useMemo(() => {
@@ -199,12 +205,31 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   const submitMarket = async (side: 'buy' | 'sell') => {
+    if (!ask || !bid || ask <= 0 || bid <= 0) {
+      toast.error('Market price is not available yet'); return
+    }
     if (!Number.isFinite(lotN) || lotN < minLot) {
       toast.error(`Lot size must be at least ${minLot}`); return
     }
     if (rejectIfNoMargin()) return
-    if (plan?.stop_loss_required && slN === null) {
+    if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
+    }
+    const entryPrice = side === 'buy' ? ask : bid
+    if (side === 'buy') {
+      if (slN !== null && slN >= entryPrice) {
+        toast.error('Stop Loss must be below current ask price for BUY'); return
+      }
+      if (tpN !== null && tpN <= entryPrice) {
+        toast.error('Take Profit must be above current ask price for BUY'); return
+      }
+    } else {
+      if (slN !== null && slN <= entryPrice) {
+        toast.error('Stop Loss must be above current bid price for SELL'); return
+      }
+      if (tpN !== null && tpN >= entryPrice) {
+        toast.error('Take Profit must be below current bid price for SELL'); return
+      }
     }
     if (isNewsRestricted) {
       toast.error(`Trading restricted: High-impact news event window (${plan?.news_window_minutes}m)`); return
@@ -265,13 +290,28 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   const submitPending = async () => {
-    if (!targetN) { toast.error('Enter a trigger price'); return }
+    if (!targetN || targetN <= 0) { toast.error('Enter a valid trigger price'); return }
     if (!Number.isFinite(lotN) || lotN < minLot) {
       toast.error(`Lot size must be at least ${minLot}`); return
     }
     if (rejectIfNoMargin()) return
-    if (plan?.stop_loss_required && slN === null) {
+    if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
+    }
+    if (pendingType.startsWith('buy')) {
+      if (slN !== null && slN >= targetN) {
+        toast.error('Stop Loss must be below trigger price for BUY order'); return
+      }
+      if (tpN !== null && tpN <= targetN) {
+        toast.error('Take Profit must be above trigger price for BUY order'); return
+      }
+    } else {
+      if (slN !== null && slN <= targetN) {
+        toast.error('Stop Loss must be above trigger price for SELL order'); return
+      }
+      if (tpN !== null && tpN >= targetN) {
+        toast.error('Take Profit must be below trigger price for SELL order'); return
+      }
     }
     if (isNewsRestricted) {
       toast.error(`Trading restricted: High-impact news event window (${plan?.news_window_minutes}m)`); return

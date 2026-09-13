@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { TradingScreenLoader } from '@/components/ui/trading-loader'
 
 function formatMoney(val: number | string | undefined | null) {
   const num = typeof val === 'string' ? parseFloat(val) : (val ?? 0)
@@ -154,6 +155,18 @@ export default function PvpLiveBattleArenaPage() {
 
   const LOT_BUTTONS = [0.5, 1.0, 2.0, 5.0]
 
+  if (isLoading && !liveState) {
+    return (
+      <div className="min-h-screen bg-bg text-text flex items-center justify-center p-6">
+        <TradingScreenLoader
+          fullscreen={false}
+          label="Connecting to 1v1 Battle Arena"
+          subtitle="Loading gladiator telemetry, live order deck, and tick stream..."
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-bg text-text pb-20">
       
@@ -228,16 +241,16 @@ export default function PvpLiveBattleArenaPage() {
               <div className="text-right">
                 <div className="text-[10px] font-mono text-text-muted uppercase">Floating PnL</div>
                 <div className={`text-xl font-extrabold font-mono mt-0.5 ${
-                  creator.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
+                  (creator?.pnl ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                 }`}>
-                  {creator.pnl >= 0 ? '+' : ''}{formatMoney(creator.pnl)}
+                  {(creator?.pnl ?? 0) >= 0 ? '+' : ''}{formatMoney(creator?.pnl ?? 0)}
                 </div>
               </div>
             </div>
 
             <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-text-muted">
-              <span>{creator.trades_count} Orders Executed</span>
-              <span className="text-blue-500 dark:text-blue-400 font-semibold">{((creator.pnl / 10000) * 100).toFixed(2)}% ROI</span>
+              <span>{creator?.trades_count ?? 0} Orders Executed</span>
+              <span className="text-blue-500 dark:text-blue-400 font-semibold">{(((creator?.pnl ?? 0) / 10000) * 100).toFixed(2)}% ROI</span>
             </div>
           </div>
 
@@ -334,16 +347,16 @@ export default function PvpLiveBattleArenaPage() {
               <div className="text-right">
                 <div className="text-[10px] font-mono text-text-muted uppercase">Floating PnL</div>
                 <div className={`text-xl font-extrabold font-mono mt-0.5 ${
-                  challenger.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
+                  (challenger?.pnl ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                 }`}>
-                  {challenger.pnl >= 0 ? '+' : ''}{formatMoney(challenger.pnl)}
+                  {(challenger?.pnl ?? 0) >= 0 ? '+' : ''}{formatMoney(challenger?.pnl ?? 0)}
                 </div>
               </div>
             </div>
 
             <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-text-muted">
-              <span>{challenger.trades_count} Orders Executed</span>
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">{((challenger.pnl / 10000) * 100).toFixed(2)}% ROI</span>
+              <span>{challenger?.trades_count ?? 0} Orders Executed</span>
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">{(((challenger?.pnl ?? 0) / 10000) * 100).toFixed(2)}% ROI</span>
             </div>
           </div>
 
@@ -531,7 +544,7 @@ export default function PvpLiveBattleArenaPage() {
                 </div>
               ))}
 
-              {(liveState?.events || []).map((ev) => {
+              {(Array.isArray(liveState?.events) ? liveState.events : []).map((ev) => {
                 let author = (ev as any).author_name;
                 if (!author && (ev as any).payload) {
                   try { author = JSON.parse((ev as any).payload)?.author_name; } catch {}

@@ -64,6 +64,10 @@ export default function ArenaLayout({ children }: { children: React.ReactNode })
   // Close mobile sidebar on route change
   useEffect(() => { setSidebarOpen(false) }, [pathname])
 
+  if (!ready || !user) {
+    return <ArenaSkeleton />
+  }
+
   // Arena is exclusively a trader module — always render the trader sidebar & topbar
   const role: 'trader' = 'trader'
 
@@ -87,6 +91,17 @@ export default function ArenaLayout({ children }: { children: React.ReactNode })
       </div>
       <ZenithAiCopilot />
       <AiTiltGuard />
+    </div>
+  )
+}
+
+function ArenaSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-bg">
+      <div className="space-y-3 text-center">
+        <div className="inline-block h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+        <div className="text-sm text-text-muted">Loading 1v1 Arena…</div>
+      </div>
     </div>
   )
 }

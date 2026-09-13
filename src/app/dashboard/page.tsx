@@ -397,7 +397,9 @@ export default function DashboardOverview() {
             </div>
             <div className="lg:col-span-1 flex flex-col gap-6">
               <QuickActions />
-              <OtherChallengesCard challenges={challenges} />
+              <SectionErrorBoundary sectionName="Account Switcher">
+                <OtherChallengesCard challenges={challenges} />
+              </SectionErrorBoundary>
             </div>
           </div>
         </>
@@ -474,7 +476,7 @@ function NoChallengeCTA() {
   )
 }
 
-function RecentTradesTable({ trades, isLoading = false }: { trades: Trade[] | null; isLoading?: boolean }) {
+function RecentTradesTable({ trades, isLoading }: { trades: Trade[] | null; isLoading: boolean }) {
   if (isLoading || trades === null) {
     return (
       <div className="p-5 space-y-2">
@@ -482,7 +484,8 @@ function RecentTradesTable({ trades, isLoading = false }: { trades: Trade[] | nu
       </div>
     )
   }
-  if (trades.length === 0) {
+  const safeTrades = Array.isArray(trades) ? trades : []
+  if (safeTrades.length === 0) {
     return (
       <div className="p-8 text-center">
         <Calendar className="h-8 w-8 mx-auto text-text-faint mb-3" />
@@ -504,11 +507,11 @@ function RecentTradesTable({ trades, isLoading = false }: { trades: Trade[] | nu
         </TableRow>
       </TableHeader>
       <TableBody>
-        {trades.slice(0, 6).map((t) => (
+        {safeTrades.slice(0, 6).map((t) => (
           <TableRow key={t.id}>
             <TableCell><span className="font-medium tabular">{t.symbol}</span></TableCell>
             <TableCell>
-              <Badge tone={t.type === 'buy' ? 'success' : 'danger'}>{t.type.toUpperCase()}</Badge>
+              <Badge tone={t.type === 'buy' ? 'success' : 'danger'}>{(t.type || 'trade').toUpperCase()}</Badge>
             </TableCell>
             <TableCell align="right" hideOn="sm"><span className="tabular text-text-muted">{toNum(t.lot_size).toFixed(2)}</span></TableCell>
             <TableCell align="right"><span className={`tabular font-semibold ${pnlClass(t.pnl)}`}>{fmtUSD(t.pnl, { sign: true })}</span></TableCell>
@@ -524,12 +527,13 @@ function OtherChallengesCard({ challenges }: { challenges: ChallengeAccount[] | 
   if (challenges === null) {
     return <Card className="p-6 h-full"><Skeleton className="h-64 w-full" /></Card>
   }
-  const list = challenges.slice(0, 5)
+  const safeChallenges = Array.isArray(challenges) ? challenges : []
+  const list = safeChallenges.slice(0, 5)
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between p-5 md:p-6">
         <CardTitle>Your challenges</CardTitle>
-        <span className="text-2xs text-text-muted tabular font-medium">{challenges.length} total</span>
+        <span className="text-2xs text-text-muted tabular font-medium">{safeChallenges.length} total</span>
       </CardHeader>
       <CardContent className="p-5 md:p-6 pt-0 space-y-2.5">
         {list.length === 0

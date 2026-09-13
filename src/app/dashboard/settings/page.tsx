@@ -149,17 +149,17 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4 pb-4 border-b border-border-subtle">
                 <div className="h-14 w-14 rounded-full bg-accent/15 text-accent flex items-center justify-center text-lg font-bold border border-accent/20">
-                  {(user.display_name || user.username).slice(0, 2).toUpperCase()}
+                  {(user?.display_name || user?.username || 'TR').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-semibold text-text">{user.display_name || user.username}</div>
-                  <div className="text-sm text-text-muted">@{user.username}</div>
+                  <div className="font-semibold text-text">{user?.display_name || user?.username || 'Trader'}</div>
+                  <div className="text-sm text-text-muted">@{user?.username || 'trader'}</div>
                 </div>
-                {user.is_admin && <Badge tone="accent" className="ml-auto">Admin</Badge>}
+                {user?.is_admin && <Badge tone="accent" className="ml-auto">Admin</Badge>}
               </div>
 
-              <ReadOnlyField icon={User}  label="Username" value={user.username} />
-              <ReadOnlyField icon={AtSign} label="Display name" value={user.display_name} />
+              <ReadOnlyField icon={User}  label="Username" value={user?.username || ''} />
+              <ReadOnlyField icon={AtSign} label="Display name" value={user?.display_name || ''} />
               <div>
                 <Label>Email</Label>
                 <div className="mt-1.5 flex items-center gap-2 px-3 h-10 rounded-md border border-border-subtle bg-surface-muted/50 text-sm">

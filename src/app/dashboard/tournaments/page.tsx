@@ -28,24 +28,25 @@ export default function DashboardTournamentsPage() {
 
   const { data: tournaments = [], isLoading } = useQuery({
     queryKey: ['tournaments-public'],
-    queryFn: () => api.tournaments.list({ status: 'active' }).then(r => (r.ok ? r.data : [])),
+    queryFn: () => api.tournaments.list({ status: 'active' }).then(r => (r.ok && Array.isArray(r.data) ? r.data : [])),
   })
 
   const { data: mine = [] } = useQuery({
     queryKey: ['tournaments-mine'],
-    queryFn: () => api.tournaments.mine().then(r => (r.ok ? r.data : [])),
+    queryFn: () => api.tournaments.mine().then(r => (r.ok && Array.isArray(r.data) ? r.data : [])),
   })
 
   const { data: myOrders = [] } = useQuery({
     queryKey: ['payment-my-orders'],
-    queryFn: () => api.paymentMyOrders(true).then(r => (r.ok ? r.data : [])),
+    queryFn: () => api.paymentMyOrders(true).then(r => (r.ok && Array.isArray(r.data) ? r.data : [])),
     refetchInterval: 10_000,
     staleTime: 0,
   })
 
   const pendingOrdersByTournament = useMemo(() => {
     const map = new Map<number, PaymentOrder>()
-    for (const o of myOrders) {
+    const safeOrders = Array.isArray(myOrders) ? myOrders : []
+    for (const o of safeOrders) {
       const isPending = o.status === 'pending' || o.status === 'submitted'
       if (!isPending) continue
       const tid = (o as any).tournament_id != null

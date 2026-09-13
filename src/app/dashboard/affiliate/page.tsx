@@ -224,7 +224,13 @@ export default function AffiliatePage() {
     )
   }
 
-  const s = me.stats!
+  const s = me.stats ?? {
+    referrals: 0,
+    conversions: 0,
+    total: 0,
+    unpaid: 0,
+    paid: 0,
+  }
 
   return (
     <div className="space-y-8">
@@ -401,7 +407,7 @@ export default function AffiliatePage() {
             </div>
           </div>
 
-          {payouts && payouts.length > 0 && (
+          {Array.isArray(payouts) && payouts.length > 0 && (
             <div className="rounded-lg border border-border-subtle divide-y divide-border-subtle">
               {payouts.map((p) => (
                 <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
@@ -433,7 +439,7 @@ export default function AffiliatePage() {
         <CardContent className="p-0">
           {!commissions ? (
             <div className="p-5 space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : commissions.length === 0 ? (
+          ) : !Array.isArray(commissions) || commissions.length === 0 ? (
             <div className="p-12 flex flex-col items-center justify-center text-center">
               <div className="inline-flex h-12 w-12 rounded-xl bg-accent/10 text-accent items-center justify-center mb-4">
                 <DollarSign className="h-6 w-6" />

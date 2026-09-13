@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
 import { ChallengeProgressCard } from '@/components/dashboard/challenge-progress-card'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { ChevronDown, Plus, Trophy } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
@@ -30,7 +31,7 @@ export default function DashboardChallenges() {
     refetchInterval: 15_000,
   })
 
-  const list = (rawList as ChallengeAccount[]) || null
+  const list = Array.isArray(rawList) ? (rawList as ChallengeAccount[]) : null
   const loading = isPending && !list
 
   useEffect(() => {
@@ -133,10 +134,12 @@ export default function DashboardChallenges() {
                     >
                       <div className="p-4 sm:p-5">
                         {m ? (
-                          <div className="grid lg:grid-cols-2 gap-4">
-                            <ChallengeProgressCard metrics={m} />
-                            <ChallengeDetailCard challenge={c} metrics={m} />
-                          </div>
+                          <SectionErrorBoundary sectionName="Challenge Progress">
+                            <div className="grid lg:grid-cols-2 gap-4">
+                              <ChallengeProgressCard metrics={m} />
+                              <ChallengeDetailCard challenge={c} metrics={m} />
+                            </div>
+                          </SectionErrorBoundary>
                         ) : (
                           <Skeleton className="h-64 w-full" />
                         )}

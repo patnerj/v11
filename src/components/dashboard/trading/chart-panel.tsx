@@ -133,9 +133,26 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   }
   
   const handleOneClick = async (type: 'buy' | 'sell') => {
+    const account = usePrices.getState().account
+    if (account?.status === 'frozen' || account?.status === 'breached' || (account as any)?.is_ip_restricted || (account as any)?.read_only) {
+      toast.error('Account is not allowed to trade (account status: ' + (account?.status || 'restricted') + ')')
+      return
+    }
+
     const lotSize = toNum(oneClickLot)
     if (lotSize <= 0) {
       toast.error('Invalid lot size')
+      return
+    }
+
+    const minLot = toNum(plan?.min_lot_size) || 0.01
+    const maxLot = toNum(plan?.max_lot_size) || 100
+    if (lotSize < minLot) {
+      toast.error(`Minimum lot size is ${minLot}`)
+      return
+    }
+    if (maxLot > 0 && lotSize > maxLot) {
+      toast.error(`Maximum lot size is ${maxLot}`)
       return
     }
 
@@ -148,6 +165,10 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
     const pSize = pipSize(active)
     const bid = toNum(tick?.bid)
     const ask = toNum(tick?.ask)
+    if (!ask || !bid || ask <= 0 || bid <= 0) {
+      toast.error('Market price is not available yet')
+      return
+    }
     const digits = meta?.digits || symbolDigits(active)
 
     let calculatedSl: number | null = null
@@ -243,13 +264,19 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   }, [isDark])
 
   // Clear cache if theme changes so the widget rebuilds with new colors
-  const prevIsDarkRef = useRef(isDark)
-  if (prevIsDarkRef.current !== isDark) {
-    prevIsDarkRef.current = isDark
+  useEffect(() => {
+    cacheRef.current.forEach((el) => {
+      try {
+        el.querySelectorAll('iframe').forEach((ifr) => {
+          try { ifr.src = 'about:blank' } catch {}
+        })
+      } catch {}
+      el.remove()
+    })
     cacheRef.current.clear()
     orderRef.current = []
     if (containerRef.current) containerRef.current.innerHTML = ''
-  }
+  }, [isDark])
 
   // Widget lifecycle.
   //  • Mobile (compact): single instance, rebuilt on symbol or toolbar-toggle
@@ -310,7 +337,16 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         while (orderRef.current.length > WIDGET_CACHE_MAX) {
           const evict = orderRef.current.shift()!
           const el = cache.get(evict)
-          if (el) { el.remove(); cache.delete(evict) }
+          if (el) {
+            try {
+              el.querySelectorAll('iframe').forEach((ifr) => {
+                try { ifr.src = 'about:blank' } catch {}
+              })
+            } catch {}
+            el.innerHTML = ''
+            el.remove()
+            cache.delete(evict)
+          }
         }
         setReady(true)
       } catch (e) { setError((e as Error).message || 'Chart failed to load') }
@@ -328,6 +364,14 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
     const container = containerRef.current
     const cache = cacheRef.current
     return () => {
+      cache.forEach((el) => {
+        try {
+          el.querySelectorAll('iframe').forEach((ifr) => {
+            try { ifr.src = 'about:blank' } catch {}
+          })
+        } catch {}
+        el.remove()
+      })
       cache.clear()
       orderRef.current = []
       if (container) container.innerHTML = ''

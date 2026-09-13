@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useCallback } from 'react'
+import { memo, useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { Pencil, X, Check, ChevronDown, Trash2 } from 'lucide-react'
@@ -9,6 +9,7 @@ import { invalidateFxsim } from '@/lib/fxsim'
 import { fmtPrice, fmtUSD, fmtLots, toNum, timeAgo, pnlClass } from '@/lib/format'
 import { symbolDigits } from '@/lib/symbol-meta'
 import { useTerminal } from '@/store/terminal'
+import { usePrices } from '@/store/prices'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/cn'
 import type { Position } from '@/types/api'
@@ -77,12 +78,35 @@ function PositionRow({ pos, index, onChanged, compact }: {
   const [showPartial, setShowPartial] = useState(false)
   const [partialLots, setPartialLots] = useState(() => (toNum(pos.lot_size) / 2).toFixed(2))
 
-  // P3: two-tap close confirm. Old code fired an irreversible money action on
-  // a single tap (mobile already confirms in PositionActionModal).
-  const [confirmClose, setConfirmClose] = useState(false)
+  // Ref-managed 3s countdown hook for 2-tap close with visual countdown (3s... 2s... 1s)
+  // and timeout cleanup on unmount/re-click.
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const armClose = useCallback(() => {
-    setConfirmClose(true)
-    window.setTimeout(() => setConfirmClose(false), 3000)
+    if (timerRef.current) clearInterval(timerRef.current)
+    setCountdown(3)
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current)
+            timerRef.current = null
+          }
+          return null
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
   }, [])
 
   const saveSltp = useCallback(async () => {
@@ -102,8 +126,12 @@ function PositionRow({ pos, index, onChanged, compact }: {
   }, [pos.id, slDraft, tpDraft, onChanged])
 
   const closePos = useCallback(async () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
     setBusy(true)
-    setConfirmClose(false)
+    setCountdown(null)
     const res = await api.close(pos.id)
     setBusy(false)
     if (res.ok && res.data.success) {
@@ -136,7 +164,22 @@ function PositionRow({ pos, index, onChanged, compact }: {
     }
   }, [pos.id, pos.lot_size, pos.symbol, partialLots, onChanged])
 
-  const pnl = toNum(pos.pnl) + toNum(pos.swap) - toNum(pos.commission)
+  // Live price tick subscription & real-time PnL calculation
+  const tick = usePrices((s) => s.prices[pos.symbol])
+  const currentPx = pos.type === 'buy'
+    ? (toNum(tick?.bid) || toNum(pos.current_price))
+    : (toNum(tick?.ask) || toNum(pos.current_price))
+
+  const pnl = useMemo(() => {
+    if (tick && currentPx > 0 && toNum(pos.open_price) > 0) {
+      const openPx = toNum(pos.open_price)
+      const diff = pos.type === 'buy' ? currentPx - openPx : openPx - currentPx
+      const contractSize = toNum(meta?.contract_size) || 100000
+      const calcPnl = diff * contractSize * toNum(pos.lot_size)
+      return calcPnl + toNum(pos.swap) - toNum(pos.commission)
+    }
+    return toNum(pos.pnl) + toNum(pos.swap) - toNum(pos.commission)
+  }, [tick, currentPx, pos.open_price, pos.type, meta?.contract_size, pos.lot_size, pos.swap, pos.commission, pos.pnl])
 
   return (
     <>
@@ -162,7 +205,7 @@ function PositionRow({ pos, index, onChanged, compact }: {
           <span className="tabular text-text-muted">{fmtPrice(pos.open_price, digits)}</span>
         </Td>
         <Td align="right" hideOn="sm">
-          <span className="tabular">{fmtPrice(pos.current_price, digits)}</span>
+          <span className="tabular">{fmtPrice(currentPx, digits)}</span>
         </Td>
         <Td align="right" hideOn="md">
           {editSltp ? (
@@ -216,16 +259,16 @@ function PositionRow({ pos, index, onChanged, compact }: {
               ½
             </button>
             <button
-              onClick={() => { if (confirmClose) closePos(); else armClose() }}
+              onClick={() => { if (countdown !== null) closePos(); else armClose() }}
               disabled={busy}
-              title={confirmClose ? 'Click again to confirm close' : 'Close position'}
+              title={countdown !== null ? `Click again to confirm close (${countdown}s)` : 'Close position'}
               className="h-7 px-2 inline-flex items-center justify-center gap-1 rounded text-danger hover:bg-danger-muted focus-ring disabled:opacity-50"
-              aria-label={confirmClose ? `Confirm close position ${pos.symbol}` : `Close position ${pos.symbol}`}
+              aria-label={countdown !== null ? `Confirm close position ${pos.symbol} within ${countdown} seconds` : `Close position ${pos.symbol}`}
             >
               {busy ? (
                 <span className="h-3 w-3 rounded-full border-2 border-danger/40 border-t-danger animate-spin" />
-              ) : confirmClose ? (
-                <span className="text-2xs font-bold">Sure?</span>
+              ) : countdown !== null ? (
+                <span className="text-2xs font-bold">{countdown}s</span>
               ) : (
                 <Trash2 className="h-3.5 w-3.5" />
               )}

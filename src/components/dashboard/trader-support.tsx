@@ -221,7 +221,7 @@ export function TraderSupport() {
     },
     refetchInterval: 6000,
   });
-  const tickets = ticketsData ?? [];
+  const tickets = Array.isArray(ticketsData) ? ticketsData : [];
 
   // Auto-select the first ticket if none selected
   useEffect(() => {
@@ -243,7 +243,7 @@ export function TraderSupport() {
     refetchInterval: 3500,
   });
 
-  const rawMessages = activeTicketData?.messages ?? [];
+  const rawMessages = Array.isArray(activeTicketData?.messages) ? activeTicketData.messages : [];
   const activeTicket = (activeTicketData as any)?.ticket || tickets.find(t => Number(t.id) === selectedTicketId) || null;
 
   // Transform and sanitize messages: replace generic robotic fallback or mismatched response with relevant answer

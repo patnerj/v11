@@ -30,7 +30,7 @@ export default function PayoutsPage() {
     queryFn: async () => {
       const [ch, pm, po] = await Promise.all([api.challengeMy(), api.payoutMethodGet(), api.payouts()])
       return {
-        funded: ch.ok ? ch.data.filter((c) => c.status === 'funded') : [],
+        funded: ch.ok && Array.isArray(ch.data) ? ch.data.filter((c) => c.status === 'funded') : [],
         savedMethod: pm.ok ? pm.data : null,
         pdata: po.ok ? po.data : null,
         kycApproved: po.ok ? po.data.kyc_approved : null
@@ -46,7 +46,7 @@ export default function PayoutsPage() {
   const kycApproved = data?.kycApproved ?? null
   const pdata = data?.pdata ?? null
 
-  const totalPaid = (pdata?.history ?? [])
+  const totalPaid = (Array.isArray(pdata?.history) ? pdata.history : [])
     .filter((p) => p.status === 'paid')
     .reduce((s, p) => s + (p.trader_amount || 0), 0)
 
@@ -363,6 +363,7 @@ function PayoutOrdersList() {
   })
 
   const loading = isPending && !orders
+  const safeOrders = Array.isArray(orders) ? orders : []
 
   return (
     <Card>
@@ -370,7 +371,7 @@ function PayoutOrdersList() {
       <CardContent className="p-0">
         {loading ? (
           <div className="p-5 space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-        ) : !orders || orders.length === 0 ? (
+        ) : safeOrders.length === 0 ? (
           <div className="p-8 text-center text-sm text-text-muted">No purchase orders yet</div>
         ) : (
           <div className="overflow-x-auto">
@@ -385,7 +386,7 @@ function PayoutOrdersList() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((o) => (
+                {safeOrders.map((o) => (
                   <tr key={o.id} className="border-b border-border-subtle/40 last:border-0">
                     <td className="px-4 py-3 tabular text-text-muted">#{o.id}</td>
                     <td className="px-4 py-3 capitalize hidden sm:table-cell">{o.gateway}</td>
