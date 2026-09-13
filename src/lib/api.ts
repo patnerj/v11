@@ -377,6 +377,30 @@ export const api = {
     },
     healthRepair:  () =>
       fxsim<{ success: boolean; message: string; repaired: string[]; warnings: string[]; timestamp: number }>('/admin/health/repair', { body: {} }),
+    redisStatus: () =>
+      fxsim<{
+        success: boolean
+        enabled: boolean
+        connected: boolean
+        host: string
+        port: number
+        db: number
+        has_password: boolean
+        latency_ms: number | null
+        dbsize: number | null
+        version: string | null
+        uptime_days: number | null
+        used_memory_human: string | null
+        cache_backend: string
+        fallback_active: boolean
+        fail_soft: boolean
+      }>('/admin/redis/status', { cache: 0 }),
+    redisTest: (data: { host: string; port: number; password?: string; db?: number }) =>
+      fxsim<{ success: boolean; latency_ms: number | null; error: string | null }>('/admin/redis/test', { method: 'POST', body: data }),
+    redisSave: (data: { enabled?: boolean; host?: string; port?: number; password?: string; clear_password?: boolean; db?: number }) =>
+      fxsim<{ success: boolean; connected: boolean; latency_ms: number | null; config: Record<string, any> }>('/admin/redis/save', { method: 'POST', body: data }),
+    redisFlush: () =>
+      fxsim<{ success: boolean; cleared_keys: number; message: string }>('/admin/redis/flush', { method: 'POST' }),
     cryptoGet:     () => fxsim<{ networks: CryptoNetwork[] }>('/admin/crypto', { cache: 0 }),
     cryptoSave:    (networks: CryptoNetwork[]) =>
       fxsim<{ success: boolean; networks: CryptoNetwork[] }>('/admin/crypto/save', { body: { networks } }),

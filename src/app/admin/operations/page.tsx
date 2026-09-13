@@ -23,17 +23,18 @@ import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PriceFeedCard } from '@/components/admin/price-feed-card'
+import { RedisCacheCard } from '@/components/admin/redis-cache-card'
 import { toast } from 'sonner'
 
 export default function OperationsHubPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges'>('health')
+  const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges' | 'redis'>('health')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const tabParam = params.get('tab')
-      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health') {
+      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health' || tabParam === 'redis') {
         setActiveTab(tabParam)
       }
     }
@@ -256,11 +257,12 @@ export default function OperationsHubPage() {
     storage: { name: 'Media Storage & Logs', category: 'Storage & Assets', icon: Database },
     cron: { name: 'Scheduled Cron Workers', category: 'Background Tasks', icon: Cpu },
     ssl: { name: 'SSL / TLS Security', category: 'Network Security', icon: Lock },
+    redis_cache: { name: 'In-Memory Redis Cache', category: 'High-Speed Memory', icon: Zap },
   }
 
   const ORDER = [
     'php_runtime', 'database_tables', 'permalinks', 'challenge_plans', 'trading_symbols',
-    'mt5_feed', 'last_price_update', 'stripe', 'stripe_webhook',
+    'redis_cache', 'mt5_feed', 'last_price_update', 'stripe', 'stripe_webhook',
     'smtp', 'rest_api', 'certificates', 'storage', 'cron', 'ssl',
   ] as const
 
@@ -520,6 +522,18 @@ export default function OperationsHubPage() {
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Challenge Lifecycle & Test Tools
+          </button>
+
+          <button
+            onClick={() => setActiveTab('redis')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'redis'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
+            }`}
+          >
+            <Zap className="h-3.5 w-3.5" />
+            Redis In-Memory Engine
           </button>
         </div>
       </div>
@@ -1571,6 +1585,13 @@ export default function OperationsHubPage() {
             }}
             onCancel={() => setChallengeConfirmTarget(null)}
           />
+        </div>
+      )}
+
+      {/* ── TAB 6: REDIS IN-MEMORY ENGINE ─────────────────────────────────── */}
+      {activeTab === 'redis' && (
+        <div className="space-y-6 w-full">
+          <RedisCacheCard />
         </div>
       )}
 
