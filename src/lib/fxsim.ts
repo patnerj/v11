@@ -401,11 +401,12 @@ async function rawFetch<T>(
 // P0: no port-guessing, no 127.0.0.1 fallback — misconfig must fail loudly,
 // never silently connect somewhere unexpected.
 export function getWsUrl(): string {
-  if (process.env.NEXT_PUBLIC_FXSIM_WS_URL) {
-    return process.env.NEXT_PUBLIC_FXSIM_WS_URL
+  const url = process.env.NEXT_PUBLIC_FXSIM_WS_URL || process.env.NEXT_PUBLIC_WS_URL
+  if (url && url.trim() !== '') {
+    return url.trim()
   }
   throw new Error(
-    'P0 CONFIG: NEXT_PUBLIC_FXSIM_WS_URL is not set. Set wss://ws.yourbrand.com explicitly.'
+    'P0 CONFIG: NEXT_PUBLIC_FXSIM_WS_URL or NEXT_PUBLIC_WS_URL is not set. Set wss://ws.yourbrand.com explicitly.'
   )
 }
 
