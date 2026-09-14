@@ -24,17 +24,18 @@ import { Input, Label } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PriceFeedCard } from '@/components/admin/price-feed-card'
 import { RedisCacheCard } from '@/components/admin/redis-cache-card'
+import { DisasterRecoveryCard } from '@/components/admin/disaster-recovery-card'
 import { toast } from 'sonner'
 
 export default function OperationsHubPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges' | 'redis'>('health')
+  const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges' | 'redis' | 'backup'>('health')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const tabParam = params.get('tab')
-      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health' || tabParam === 'redis') {
+      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health' || tabParam === 'redis' || tabParam === 'backup') {
         setActiveTab(tabParam)
       }
     }
@@ -534,6 +535,18 @@ export default function OperationsHubPage() {
           >
             <Zap className="h-3.5 w-3.5" />
             Redis In-Memory Engine
+          </button>
+
+          <button
+            onClick={() => setActiveTab('backup')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'backup'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Disaster Recovery & Encrypted Backups
           </button>
         </div>
       </div>
@@ -1592,6 +1605,13 @@ export default function OperationsHubPage() {
       {activeTab === 'redis' && (
         <div className="space-y-6 w-full">
           <RedisCacheCard />
+        </div>
+      )}
+
+      {/* ── TAB 7: DISASTER RECOVERY & ENCRYPTED VAULT ──────────────────────── */}
+      {activeTab === 'backup' && (
+        <div className="space-y-6 w-full">
+          <DisasterRecoveryCard />
         </div>
       )}
 

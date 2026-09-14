@@ -15,7 +15,7 @@ import type {
   AffiliateMe, Commission, AdminAffiliate, TestToolChallenge, AffiliatePayout,
   CryptoNetwork, StripeStatus, HealthReport, SmtpConfig, DemoStatus, ApiResult, LicenseStatus,
   KycSubmission, PaymentGatewaysConfig, TeamMember, CertificateTemplate, CertificateTemplates,
-  WebhookConfig, NewsGuardSettings, NewsEvent,
+  WebhookConfig, BackupStatusResponse, BackupSnapshot, NewsGuardSettings, NewsEvent,
   ScalingRules, ScalingQueueItem, ScalingEvent,
   SyndicateRadarSettings, SyndicateCluster,
   PvpMatch, PvpLobbyResponse, PvpLiveStateResponse, PvpAnalyticsResponse,
@@ -542,6 +542,12 @@ export const api = {
       fxsim<{ success: boolean; message: string }>('/admin/webhooks/save', { body: data }),
     webhooksTest: (channel: 'discord' | 'telegram', data?: Partial<WebhookConfig>) =>
       fxsim<{ success: boolean; message: string }>('/admin/webhooks/test', { body: { channel, ...(data || {}) } }),
+
+    // ── Disaster Recovery & Encrypted Database Backups ───────────────────────
+    backupStatus: () =>
+      fxsim<BackupStatusResponse>('/admin/backup/status', { cache: 0 }),
+    backupCreate: () =>
+      fxsim<{ success: boolean; message: string; backup: BackupSnapshot }>('/admin/backup/create', { body: {} }),
 
     // ── Macro-Economic News Guard ───────────────────────────────────────────
     newsSettingsGet: () =>

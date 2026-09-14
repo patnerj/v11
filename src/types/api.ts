@@ -976,6 +976,33 @@ export interface WebhookConfig {
   notify_on_kyc: boolean;
 }
 
+// ── Disaster Recovery & Encrypted Database Backups ───────────────────────────
+export interface BackupSnapshot {
+  id: string;
+  filename: string;
+  checksum_sha256: string;
+  timestamp_utc: string;
+  database: string;
+  raw_size_bytes?: number;
+  compressed_size_bytes?: number;
+  encrypted_size_bytes: number;
+  cipher: string;
+  iterations: number;
+  platform_version: string;
+  verified: boolean;
+}
+
+export interface BackupStatusResponse {
+  success: boolean;
+  status: string;
+  dr_readiness_score: number;
+  cipher: string;
+  retention_policy: string;
+  total_snapshots: number;
+  latest_backup: BackupSnapshot | null;
+  history: BackupSnapshot[];
+}
+
 // ── Macro-Economic News Guard ───────────────────────────────────────────────
 export interface NewsGuardSettings {
   enabled: boolean;

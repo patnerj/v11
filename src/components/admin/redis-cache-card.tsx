@@ -432,12 +432,13 @@ export function RedisCacheCard() {
 
       {/* Confirmation Dialog for Purging Cache */}
       <ConfirmDialog
-        open={flushConfirmOpen}
-        onOpenChange={setFlushConfirmOpen}
+        isOpen={flushConfirmOpen}
+        onCancel={() => setFlushConfirmOpen(false)}
         title="Flush In-Memory Redis Cache?"
         description="This will instantly purge all cached price feed ticks, distributed rate counters, and active memory keys prefixed with fxsim:*. Any subsequent requests will automatically fetch fresh data from the broker feed. Trading operations will not be interrupted."
-        confirmLabel="Flush Cache Now"
-        danger
+        confirmText="Flush Cache Now"
+        isDestructive
+        loading={flushing}
         onConfirm={handleFlushCache}
       />
     </Card>
