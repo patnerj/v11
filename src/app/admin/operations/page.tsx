@@ -8,7 +8,7 @@ import {
   RefreshCw, Cpu, Zap, Radio, ShieldCheck, Power, Flame, Sparkles,
   Sliders, Save, ArrowRight, TrendingUp, AlertOctagon, Wifi, BarChart3,
   Calendar, Filter, Search, Plus, Trash2, SlidersHorizontal, Trophy, RotateCcw,
-  CheckCircle, PlayCircle, Award, Copy, Terminal, ExternalLink, AlertCircle
+  CheckCircle, PlayCircle, Award, Copy, Terminal, ExternalLink, AlertCircle, Bug
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -25,17 +25,18 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PriceFeedCard } from '@/components/admin/price-feed-card'
 import { RedisCacheCard } from '@/components/admin/redis-cache-card'
 import { DisasterRecoveryCard } from '@/components/admin/disaster-recovery-card'
+import { SentryMonitoringCard } from '@/components/admin/sentry-monitoring-card'
 import { toast } from 'sonner'
 
 export default function OperationsHubPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges' | 'redis' | 'backup'>('health')
+  const [activeTab, setActiveTab] = useState<'health' | 'feed' | 'mt5' | 'news' | 'challenges' | 'redis' | 'backup' | 'sentry'>('health')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const tabParam = params.get('tab')
-      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health' || tabParam === 'redis' || tabParam === 'backup') {
+      if (tabParam === 'challenges' || tabParam === 'mt5' || tabParam === 'feed' || tabParam === 'news' || tabParam === 'health' || tabParam === 'redis' || tabParam === 'backup' || tabParam === 'sentry') {
         setActiveTab(tabParam)
       }
     }
@@ -547,6 +548,18 @@ export default function OperationsHubPage() {
           >
             <ShieldCheck className="h-3.5 w-3.5" />
             Disaster Recovery & Encrypted Backups
+          </button>
+
+          <button
+            onClick={() => setActiveTab('sentry')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'sentry'
+                ? 'bg-emerald-500 text-white font-bold shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface'
+            }`}
+          >
+            <Bug className="h-3.5 w-3.5" />
+            Sentry Crash Sentinel
           </button>
         </div>
       </div>
@@ -1612,6 +1625,13 @@ export default function OperationsHubPage() {
       {activeTab === 'backup' && (
         <div className="space-y-6 w-full">
           <DisasterRecoveryCard />
+        </div>
+      )}
+
+      {/* ── TAB 8: SENTRY CRASH SENTINEL ──────────────────────────────────── */}
+      {activeTab === 'sentry' && (
+        <div className="space-y-6 w-full">
+          <SentryMonitoringCard />
         </div>
       )}
 

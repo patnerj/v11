@@ -29,12 +29,15 @@ if (wsUrl) {
   } catch {}
 }
 
-// connect-src: binds current origin, explicit API host, and WebSocket feed host (no broad wildcards)
+// connect-src: binds current origin, explicit API host, WebSocket feed host, and Sentry monitoring ingest
 const connectSrc = [
   "'self'",
   apiHost,
   'https://api.launchapropfirm.com',
   wsHost,
+  'https://*.ingest.sentry.io',
+  'https://*.ingest.us.sentry.io',
+  'https://*.sentry.io',
 ].filter(Boolean).join(' ');
 
 // frame-src: explicitly whitelists TradingView chart widgets & embeds (no broad wildcards)
@@ -116,4 +119,15 @@ const nextConfig = {
     ]
   },
 };
-export default nextConfig;
+
+import { withSentryConfig } from '@sentry/nextjs/config';
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: true,
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+});
+
+
