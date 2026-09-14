@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getApiBaseUrl } from '@/lib/fxsim'
-import { SESSION_COOKIE } from '@/lib/session'
+import { SESSION_COOKIE, getSessionSecret } from '@/lib/session'
 
 export const runtime = 'nodejs'
 
@@ -38,8 +38,7 @@ async function hmacSign(payload: string, secret: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const DEFAULT_FALLBACK_SECRET = 'fxsim_sec_production_v11_5_99882244aaccbbff1122334455667788'
-  const secret = process.env.FXSIM_SESSION_SECRET || process.env.SESSION_SECRET || DEFAULT_FALLBACK_SECRET
+  const secret = getSessionSecret()
   let body: { token?: string; remember?: boolean } = {}
   try { body = await req.json() } catch { /* handled below */ }
   const token = (body.token || '').trim()

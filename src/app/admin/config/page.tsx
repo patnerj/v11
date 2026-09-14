@@ -984,7 +984,6 @@ export default function ConfigurationHubPage() {
       is_active: Number(planForm.is_active ?? 1),
     }
 
-    console.log("Submitting Plan Form Payload:", payload)
     savePlanMutation.mutate(payload)
   }
 

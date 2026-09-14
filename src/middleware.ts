@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { SESSION_COOKIE, getSessionSecret } from './lib/session'
 
 /**
  * Route protection via a server-minted, HMAC-signed HttpOnly session cookie
@@ -9,8 +10,6 @@ import type { NextRequest } from 'next/server'
  * dashboard AND admin both redirect to /login. The old forgeable
  * `fxsim_authed=1` / `wordpress_logged_in_*` presence-flag fallback is removed.
  */
-
-const SESSION_COOKIE = 'fxsim_sess'
 
 type SessionPayload = { uid: number; role: 'admin' | 'user'; exp: number }
 
@@ -48,8 +47,7 @@ async function verifySession(value: string | undefined, secret: string): Promise
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
-  const DEFAULT_FALLBACK_SECRET = 'e7b92f4c8a1d5e3b6a9f0c2e4d8b1a7f6c3e9a2d5b8e1f4a7c0d3e6b9a2c5f8'
-  const secret = process.env.FXSIM_SESSION_SECRET || process.env.SESSION_SECRET || DEFAULT_FALLBACK_SECRET
+  const secret = getSessionSecret()
 
   // P0: fail-closed — no secret = no verified session = redirect to login.
   // Never trust client-settable cookies (fxsim_authed / wordpress_logged_in_*).

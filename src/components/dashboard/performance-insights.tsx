@@ -22,7 +22,7 @@ export function PerformanceInsights({ trades }: Props) {
   }
 
   // Calculate metrics
-  let totalTrades = trades.length
+  const totalTrades = trades.length
   let winningTrades = 0
   let grossProfit = 0
   let grossLoss = 0

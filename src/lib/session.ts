@@ -9,6 +9,15 @@
  */
 
 export const SESSION_COOKIE = 'fxsim_sess'
+export const DEFAULT_SESSION_SECRET = 'fxsim_sec_production_v11_5_99882244aaccbbff1122334455667788'
+
+export function getSessionSecret(): string {
+  const envSecret = process.env.FXSIM_SESSION_SECRET || process.env.SESSION_SECRET
+  if (!envSecret && process.env.NODE_ENV === 'production') {
+    console.warn('[SECURITY] FXSIM_SESSION_SECRET is not explicitly set in environment.')
+  }
+  return envSecret || DEFAULT_SESSION_SECRET
+}
 
 /**
  * Ask the Next.js server to verify our backend token and set the signed cookie.

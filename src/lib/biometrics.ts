@@ -206,8 +206,9 @@ export async function authenticateWithBiometrics(): Promise<{ ok: boolean; token
           return null
         })
       }
-    } catch (e: any) {
-      if (e.message?.includes('canceled')) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('canceled')) {
         return { ok: false, error: 'Thumb authentication was canceled.' }
       }
     }

@@ -179,8 +179,8 @@ async function getThemeCSS() {
         const data: ThemeSettings = await res.json()
         if (data && data.primaryColor) {
           const accentHsl = hexToHsl(data.primaryColor);
-          const foreground = data.primaryForeground || '#ffffff';
-          const fontFamily = data.fontFamily || 'var(--font-poppins), Poppins, sans-serif';
+          const foreground = safeCssValue(data.primaryForeground, '#ffffff');
+          const fontFamily = safeCssValue(data.fontFamily, 'var(--font-poppins), Poppins, sans-serif');
           return `
             :root { --accent: ${accentHsl}; --accent-hover: ${accentHsl}; --font-sans: ${fontFamily}; }
             .dark { --accent: ${accentHsl}; --accent-hover: ${accentHsl}; }

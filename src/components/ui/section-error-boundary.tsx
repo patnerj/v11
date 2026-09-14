@@ -23,7 +23,9 @@ export class SectionErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('SectionErrorBoundary caught an error:', error, errorInfo)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('SectionErrorBoundary caught an error:', error, errorInfo)
+    }
     Sentry.captureException(error, {
       extra: {
         sectionName: this.props.sectionName,

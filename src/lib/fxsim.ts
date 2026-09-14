@@ -55,21 +55,28 @@ export function apiUrl(path: string): string {
 
 // ── Session ────────────────────────────────────────────────────────────────
 type Session = { nonce: string | null; bearer: string | null }
+interface CacheEntry<T = unknown> { at: number; ttl: number; value: ApiResult<T> }
+
+declare global {
+  var __fxsim_session: Session | undefined
+  var __fxsim_cache: Map<string, CacheEntry> | undefined
+  var __fxsim_inflight: Map<string, Promise<ApiResult<unknown>>> | undefined
+}
 
 const isServer = typeof window === 'undefined'
 
 function getSessionState(): Session {
   if (isServer) return { nonce: null, bearer: null }
-  if (!(globalThis as any).__fxsim_session) {
-    (globalThis as any).__fxsim_session = { nonce: null, bearer: null }
+  if (!globalThis.__fxsim_session) {
+    globalThis.__fxsim_session = { nonce: null, bearer: null }
     try {
       const bearer = sessionStorage.getItem('fxsim:bearer')
       const nonce = sessionStorage.getItem('fxsim:nonce')
-      if (bearer) (globalThis as any).__fxsim_session.bearer = bearer
-      if (nonce) (globalThis as any).__fxsim_session.nonce = nonce
+      if (bearer) globalThis.__fxsim_session.bearer = bearer
+      if (nonce) globalThis.__fxsim_session.nonce = nonce
     } catch { /* private mode */ }
   }
-  return (globalThis as any).__fxsim_session
+  return globalThis.__fxsim_session
 }
 
 export function setSession(next: Partial<Session>) {
@@ -132,18 +139,16 @@ function buildQuery(query?: RequestOptions['query']): string {
 }
 
 // ── Dedup + cache for idempotent GETs ──────────────────────────────────────
-interface CacheEntry<T = unknown> { at: number; ttl: number; value: ApiResult<T> }
-
 function getCache(): Map<string, CacheEntry> {
   if (isServer) return new Map()
-  if (!(globalThis as any).__fxsim_cache) (globalThis as any).__fxsim_cache = new Map()
-  return (globalThis as any).__fxsim_cache
+  if (!globalThis.__fxsim_cache) globalThis.__fxsim_cache = new Map()
+  return globalThis.__fxsim_cache
 }
 
 function getInflight(): Map<string, Promise<ApiResult<unknown>>> {
   if (isServer) return new Map()
-  if (!(globalThis as any).__fxsim_inflight) (globalThis as any).__fxsim_inflight = new Map()
-  return (globalThis as any).__fxsim_inflight
+  if (!globalThis.__fxsim_inflight) globalThis.__fxsim_inflight = new Map()
+  return globalThis.__fxsim_inflight
 }
 
 function cacheKey(method: string, url: string) { return `${method}|${url}` }
