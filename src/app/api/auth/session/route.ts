@@ -38,7 +38,7 @@ async function hmacSign(payload: string, secret: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const secret = getSessionSecret()
+  const secret = process.env.FXSIM_SESSION_SECRET || process.env.SESSION_SECRET || getSessionSecret()
   let body: { token?: string; remember?: boolean } = {}
   try { body = await req.json() } catch { /* handled below */ }
   const token = (body.token || '').trim()
