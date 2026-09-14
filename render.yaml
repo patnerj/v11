@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: alphacapital-ws-gateway
+    env: node
+    rootDir: ws-server
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: SECRET_TOKEN
+        value: a4f9b8c2e1d74653a928f01b54e76c3d82a10e4b7c6d5e9f1a2b3c4d5e6f7a8b
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: MAX_TOTAL_CLIENTS
+        value: "10000"
+      - key: MAX_CLIENTS_PER_IP
+        value: "50"
