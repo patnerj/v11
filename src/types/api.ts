@@ -990,6 +990,7 @@ export interface BackupSnapshot {
   iterations: number;
   platform_version: string;
   verified: boolean;
+  is_automated?: boolean;
 }
 
 export interface BackupStatusResponse {
@@ -998,6 +999,10 @@ export interface BackupStatusResponse {
   dr_readiness_score: number;
   cipher: string;
   retention_policy: string;
+  retention_days?: number;
+  automated_schedule_active?: boolean;
+  next_scheduled_utc?: string;
+  vps_cron_schedule?: string;
   total_snapshots: number;
   latest_backup: BackupSnapshot | null;
   history: BackupSnapshot[];

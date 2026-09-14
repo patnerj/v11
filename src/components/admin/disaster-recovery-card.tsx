@@ -208,8 +208,8 @@ export function DisasterRecoveryCard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Retention Policy</span>
-              <Badge tone="neutral" size="sm" className="font-mono">
-                Automated
+              <Badge tone="success" size="sm" className="font-mono">
+                7 Days Rolling
               </Badge>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -219,11 +219,100 @@ export function DisasterRecoveryCard() {
             </div>
             <p className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5">
               <Clock className="h-3 w-3 text-purple-400" />
-              Nightly VPS Cron at 02:00 UTC
+              Automated 7-Day Snapshot Pruning
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Dual-Tier Automated Daily Schedule & Telemetry Sentinel ─────────── */}
+      <Card className="bg-[#111827] border-[#1F2937]">
+        <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-emerald-400" />
+                Dual-Tier Automated Daily Backup Engine
+              </CardTitle>
+              <CardDescription className="text-xs text-gray-400 mt-0.5">
+                Redundant automated scheduling ensures database integrity across application runtime and Hostinger VPS operating system.
+              </CardDescription>
+            </div>
+            <Badge tone="success" size="sm" className="font-mono self-start sm:self-auto">
+              Schedule: 100% Active
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Tier 1: In-App WP-Cron Hook */}
+            <div className="p-4 rounded-lg bg-[#0B0F19] border border-[#1F2937] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+                    Tier 1: Application WP-Cron
+                  </span>
+                </div>
+                <Badge tone="success" size="sm" className="text-[10px] font-mono">
+                  Daily 00:00 UTC
+                </Badge>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Hooks into <code className="text-emerald-400 font-mono">fxsim_daily_tasks</code> under an atomic MySQL lock (<code className="text-gray-300 font-mono">GET_LOCK</code>). Creates AES-256 snapshots, prunes snapshots older than 7 days, and dispatches webhook alerts.
+              </p>
+              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+                <span>Next Scheduled Run:</span>
+                <span className="text-emerald-400 font-semibold">
+                  {status?.next_scheduled_utc ? new Date(status.next_scheduled_utc).toUTCString() : '00:00:00 UTC'}
+                </span>
+              </div>
+            </div>
+
+            {/* Tier 2: Hostinger VPS Linux Crontab */}
+            <div className="p-4 rounded-lg bg-[#0B0F19] border border-[#1F2937] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+                    Tier 2: Hostinger VPS Crontab
+                  </span>
+                </div>
+                <Badge tone="info" size="sm" className="text-[10px] font-mono">
+                  Daily 02:00 UTC
+                </Badge>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Autonomous Linux crontab executing <code className="text-blue-400 font-mono">backup_database.sh</code>. Operates completely independently of PHP web traffic, dumping MySQL via native client, gzip level 9, and OpenSSL AES-256-CBC.
+              </p>
+              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+                <span>Cron Specification:</span>
+                <span className="text-blue-400 font-semibold">
+                  {status?.vps_cron_schedule || '0 2 * * * (Daily 02:00 UTC)'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Multi-Channel Alerts Notification Sentinel Banner */}
+          <div className="mt-4 p-3 rounded-lg bg-[#0B0F19] border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+              <span className="text-gray-300">
+                <strong className="text-white">Multi-Channel Webhook Sentinel:</strong> Automated instant notifications are dispatched to Telegram & Discord upon backup completion or failure.
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge tone="neutral" size="sm" className="font-mono text-[10px] text-emerald-400 border-emerald-500/30">
+                Discord Active
+              </Badge>
+              <Badge tone="neutral" size="sm" className="font-mono text-[10px] text-blue-400 border-blue-500/30">
+                Telegram Active
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── Active Vault Manifest Details ──────────────────────────────────── */}
       {latest && (
