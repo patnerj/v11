@@ -212,6 +212,14 @@ export const usePrices = create<PriceState>((set, get) => {
           reconnectAttempts++
           if (reconnectAttempts > 5) {
             set({ source: 'poll' })
+            // Periodic background probe to recover WebSocket connection instead of abandoning permanently
+            if (!reconnectTimeout) {
+              reconnectTimeout = setTimeout(() => {
+                reconnectTimeout = null
+                reconnectAttempts = 0
+                tryStream()
+              }, 25000)
+            }
           } else {
             const backoff = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000)
             const jitter = Math.floor(Math.random() * 500)
@@ -230,7 +238,9 @@ export const usePrices = create<PriceState>((set, get) => {
           set({ connected: false })
           closeStream()
           clearPoll()
-        } else if (get().source === 'idle' || (!stream && !pollTimer)) {
+        } else {
+          // Reset attempts and re-probe WebSocket stream on tab refocus
+          reconnectAttempts = 0
           tryStream()
           startPollingUser()
         }
