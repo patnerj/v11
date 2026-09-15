@@ -285,7 +285,7 @@ export function ZenithAiCopilot() {
         const aiMsg: ChatMessage = {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: 'Your current account risk metrics are safe. Maintain strict stop loss adherence and never exceed 1-2% risk per position to safeguard your challenge capital.',
+          text: '[Offline] Your current account risk metrics are safe. Maintain strict stop loss adherence and never exceed 1-2% risk per position to safeguard your challenge capital.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           provider: `${brandName} Guard`
         }
@@ -295,7 +295,7 @@ export function ZenithAiCopilot() {
       const fallbackMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: 'Risk evaluation: All active positions adhere to prop firm margin limits. Ensure high-impact news windows are monitored.',
+        text: '[Offline] Risk evaluation: All active positions adhere to prop firm margin limits. Ensure high-impact news windows are monitored.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         provider: `${brandName} Guard`
       }

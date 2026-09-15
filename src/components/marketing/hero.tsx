@@ -86,15 +86,15 @@ export function Hero({ puckProps }: { puckProps?: { title: string, highlight: st
           >
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-success" />
-              <span>SOC 2 compliant</span>
+              <span>Encrypted & secure</span>
             </div>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-success" />
-              <span>$48M+ paid out</span>
+              <span>Transparent payouts</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              <span>12,400+ active traders</span>
+              <span>Live market pricing</span>
             </div>
           </motion.div>
         </div>

@@ -166,11 +166,11 @@ export default function AdminHelpdeskPage() {
       // Backend unreachable or network latency — seamless autonomous fallback below
     }
 
-    // High-speed autonomous smart fallback ensures 100% guaranteed availability
+    // Template-based fallback when AI API is unavailable
     try {
       const fallbackDraft = generateAutonomousDraft(activeTicket, brandName)
       setReplyMessage(fallbackDraft)
-      toast.success('✨ AI resolution draft generated (Autonomous Smart Engine)!')
+      toast.info('📝 Template-based draft generated (AI unavailable)')
     } catch (err: any) {
       toast.error(err?.message || 'Could not generate AI draft.')
     } finally {

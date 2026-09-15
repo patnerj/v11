@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Risk Disclosure"
-      intro="Trading involves substantial risk. This disclosure explains the nature of the evaluation product and the risks involved. It is placeholder content — the operator should have it reviewed by qualified counsel for their jurisdiction before launch."
+      intro="Trading involves substantial risk. This disclosure explains the nature of the evaluation product and the risks involved."
       updated="June 2026"
       sections={[
         { title: '1. Nature of the evaluation product',

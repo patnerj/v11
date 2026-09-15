@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Terms of Service"
-      intro="By using LaunchAPropFirm you agree to the following terms. These are placeholder terms — the operator should replace this content with terms drafted by qualified legal counsel before going live."
+      intro="By using LaunchAPropFirm you agree to the following terms."
       updated="May 2026"
       sections={[
         { title: '1. The service',

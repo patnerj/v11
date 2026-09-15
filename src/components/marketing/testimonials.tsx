@@ -5,35 +5,19 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Quote, TrendingUp } from 'lucide-react'
 
-const STORIES = [
-  {
-    name: 'Sebastian Müller',
-    role: 'Forex trader · Berlin',
-    quote: 'Passed the $100K challenge in 18 days. First payout hit my wallet 22 hours after request. The drawdown UI is the cleanest I have used.',
-    pnl: '+$8,420',
-    account: '$100K funded',
-  },
-  {
-    name: 'Maya Patel',
-    role: 'Day trader · London',
-    quote: 'I have tried four prop firms. The rule transparency here, the live R:R tracker, and the certificate — this is the only one I will recommend.',
-    pnl: '+$12,180',
-    account: '$200K funded',
-  },
-  {
-    name: 'Hiro Tanaka',
-    role: 'Swing trader · Tokyo',
-    quote: 'The hourly heatmap showed me that 78% of my losses came in the first hour of London open. I changed my routine and tripled my win rate.',
-    pnl: '+$4,930',
-    account: '$50K funded',
-  },
-]
+/* Default stories are intentionally empty — operators add real, verified
+   trader testimonials via the page builder or by editing this array.
+   Fake testimonials with fabricated names and P&L numbers have been removed
+   to avoid regulatory risk (FTC / ASA compliance). */
+const STORIES: { name: string; role: string; quote: string; pnl: string; account: string }[] = []
 
 export function Testimonials({ puckProps }: { puckProps?: any }) {
   const badge = puckProps?.badge || "Trader stories";
   const titleText1 = puckProps?.titleText1 || "From challenge to";
   const titleAccent = puckProps?.titleAccent || "first payout";
   const stories = puckProps?.stories || STORIES;
+
+  if (!stories.length) return null;
 
   return (
     <section className="py-20 lg:py-28 bg-bg-subtle/40">

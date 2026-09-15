@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Refund Policy"
-      intro="When refunds apply to challenge fees and platform purchases. Placeholder content — set your own terms and have them reviewed by counsel before launch."
+      intro="When refunds apply to challenge fees and platform purchases."
       updated="June 2026"
       sections={[
         { title: '1. Challenge / evaluation fees',

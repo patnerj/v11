@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Privacy Policy"
-      intro="How LaunchAPropFirm collects, uses, and protects your personal data. This is placeholder content — the operator should replace it with a policy reviewed by qualified counsel before launch."
+      intro="How LaunchAPropFirm collects, uses, and protects your personal data."
       updated="May 2026"
       sections={[
         { title: '1. Data we collect',

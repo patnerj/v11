@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="How this platform uses cookies and similar technologies. Placeholder content — have it reviewed for your jurisdiction before launch."
+      intro="How this platform uses cookies and similar technologies."
       updated="June 2026"
       sections={[
         { title: '1. What cookies we use',

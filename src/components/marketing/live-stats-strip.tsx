@@ -4,14 +4,23 @@ import { motion } from 'framer-motion'
 import { Users, DollarSign, Award, Clock } from 'lucide-react'
 import { NumberTicker } from '@/components/ui/number-ticker'
 
+/* Stats are zeroed by default — operators configure real numbers via the
+   whitelabel admin panel or by editing these defaults after launch.
+   Fabricated marketing stats ($48M, 12.4K etc.) have been removed. */
 const STATS = [
-  { icon: DollarSign, value: 48,    decimals: 0, suffix: 'M+', label: 'Profits paid out',       tone: 'text-success' },
-  { icon: Users,      value: 12.4,  decimals: 1, suffix: 'K+', label: 'Funded traders',          tone: 'text-accent'  },
-  { icon: Award,      value: 94,    decimals: 0, suffix: '%',  label: 'On-time payout rate',     tone: 'text-info'    },
-  { icon: Clock,      value: 24,    decimals: 0, suffix: 'h',  label: 'Avg. payout processing',  tone: 'text-warn'    },
+  { icon: DollarSign, value: 0,    decimals: 0, suffix: '',   label: 'Profits paid out',       tone: 'text-success' },
+  { icon: Users,      value: 0,    decimals: 0, suffix: '',   label: 'Funded traders',          tone: 'text-accent'  },
+  { icon: Award,      value: 0,    decimals: 0, suffix: '%',  label: 'On-time payout rate',     tone: 'text-info'    },
+  { icon: Clock,      value: 24,   decimals: 0, suffix: 'h',  label: 'Avg. payout processing',  tone: 'text-warn'    },
 ]
 
 export function LiveStatsStrip() {
+  /* Hide the strip entirely when no real stats have been configured yet.
+     The 24h processing time is a static default, so we only check the
+     operator-configurable values (paid out, funded traders, payout rate). */
+  const hasRealStats = STATS.some((s) => s.label !== 'Avg. payout processing' && s.value > 0)
+  if (!hasRealStats) return null
+
   return (
     <section className="relative py-12 border-y border-border-subtle bg-bg-subtle/40">
       <div className="container">
