@@ -116,7 +116,7 @@ export function Sidebar({ open = false, onClose = () => {}, collapsed = false, o
                 </Link>
                 <button
                   onClick={onClose}
-                  className="h-9 w-9 inline-flex items-center justify-center rounded-lg hover:bg-surface-muted text-text-muted hover:text-white focus-ring shrink-0 ml-2"
+                  className="h-9 w-9 inline-flex items-center justify-center rounded-lg hover:bg-surface-muted text-text-muted hover:text-text focus-ring shrink-0 ml-2"
                   aria-label="Close menu"
                 >
                   <X className="h-5 w-5" />

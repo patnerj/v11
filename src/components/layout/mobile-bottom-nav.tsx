@@ -34,7 +34,7 @@ export function MobileBottomNav() {
   return (
     <nav 
       aria-label="Mobile Navigation"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070C18]/95 backdrop-blur-xl border-t border-border/60 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] px-3 pt-2 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-xl border-t border-border/60 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] px-3 pt-2 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_25px_rgba(0,0,0,0.5)]"
     >
       <div className="flex items-center justify-around max-w-md mx-auto">
         {tabs.map((tab) => {
@@ -53,13 +53,13 @@ export function MobileBottomNav() {
                 "relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200",
                 isActive 
                   ? "text-accent scale-105" 
-                  : "text-text-muted hover:text-text hover:bg-surface-muted/30"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted/60"
               )}
             >
               <div className="relative">
                 <Icon className={cn("h-5 w-5 transition-transform", isActive && "stroke-[2.5px]")} />
                 {tab.badge && (
-                  <span className="absolute -top-1.5 -right-2 px-1 py-0.2 text-[8px] font-black text-[#070C18] bg-accent rounded-full animate-pulse">
+                  <span className="absolute -top-1.5 -right-2 px-1 py-0.2 text-[8px] font-black text-slate-950 bg-accent rounded-full animate-pulse">
                     {tab.badge}
                   </span>
                 )}
