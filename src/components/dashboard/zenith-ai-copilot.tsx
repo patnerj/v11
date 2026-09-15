@@ -270,10 +270,24 @@ export function ZenithAiCopilot() {
       })
 
       if (res.ok && res.data) {
+        let cleanText = (res.data.reply || '')
+          .replace(/LaunchAPropFirm/gi, brandName)
+          .replace(/PropFirm System/gi, brandName)
+          .replace(/Zenith AI/gi, `${brandName} AI`)
+          .replace(/\bZenith\b/gi, brandName)
+
+        // If this is an ongoing conversation, avoid robotic repetitive greetings at the start
+        if (messages.length > 1) {
+          cleanText = cleanText.replace(/^(Hello!|Hi!|Hey!)\s*(Thank you for (contacting|reaching out to)[^.]*\.\s*)?/i, '')
+          if (cleanText.length > 0) {
+            cleanText = cleanText.charAt(0).toUpperCase() + cleanText.slice(1)
+          }
+        }
+
         const aiMsg: ChatMessage = {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: res.data.reply,
+          text: cleanText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           provider: `${brandName} AI Engine`
         }
@@ -497,7 +511,7 @@ export function ZenithAiCopilot() {
                       {isSending && (
                         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400 italic py-1">
                           <Bot className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 animate-pulse" />
-                          <span>Zenith AI is analyzing account risk...</span>
+                          <span>{brandName} AI is analyzing account risk...</span>
                         </div>
                       )}
                       <div ref={chatBottomRef} />
@@ -538,7 +552,7 @@ export function ZenithAiCopilot() {
                             handleSendMessage()
                           }
                         }}
-                        placeholder="Ask Zenith AI (drawdown, lots, news, rules)..."
+                        placeholder={`Ask ${brandName} AI (drawdown, lots, news, rules)...`}
                         className="flex-1 bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-[#273552] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
                         disabled={isSending}
                       />
