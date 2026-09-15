@@ -60,7 +60,7 @@ export function Logo({
     return (
       <div className={cn('flex items-center', className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt={name} className="h-10 w-auto max-w-[240px] object-contain" />
+        <img src={imageUrl} alt={name} className="h-9 md:h-10 w-auto max-w-[220px] object-contain rounded-lg" />
       </div>
     )
   }
@@ -69,7 +69,7 @@ export function Logo({
     <div className={cn('flex items-center gap-2.5', className)}>
       <BrandInitialMark name={name} className="h-8 w-8" />
       {wordmark && (
-        <span className={cn('font-extrabold tracking-tight text-white transition-opacity duration-200 text-base', loaded ? 'opacity-100' : 'opacity-0')}>
+        <span className={cn('font-extrabold tracking-tight text-text transition-opacity duration-200 text-base', loaded ? 'opacity-100' : 'opacity-0')}>
           {loaded ? name : '\u00A0'}
         </span>
       )}
@@ -104,7 +104,7 @@ export function SidebarBrand({ collapsed = false, className }: { collapsed?: boo
         <div className="h-8 w-8 rounded-lg skel shrink-0" aria-hidden />
       )}
       {!collapsed && (
-        <span className={cn('font-bold tracking-tight text-white truncate text-sm transition-opacity duration-200', loaded ? 'opacity-100' : 'opacity-0')}>
+        <span className={cn('font-bold tracking-tight text-text truncate text-sm transition-opacity duration-200', loaded ? 'opacity-100' : 'opacity-0')}>
           {loaded ? name : '\u00A0'}
         </span>
       )}

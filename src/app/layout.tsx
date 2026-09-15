@@ -75,7 +75,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  let brandName = 'LaunchAPropFirm'
+  let brandName = 'Alpha Capital'
   let brandTagline = 'The Funded Trader Platform'
 
   // P3: never fetch from a half-built URL. Old code ran
@@ -83,7 +83,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // which always failed AND could hit an unrelated route in production.
   const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
   if (!apiPath) return {
-    title:       { default: brandName, template: '%s' },
+    title:       { default: brandName, template: `%s | ${brandName}` },
     description: `${brandTagline}. Pass the evaluation, trade our capital, keep up to 90% of your profits.`,
   }
 
@@ -103,7 +103,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (res.ok) {
       const data = await res.json()
-      if (data.brand_name) brandName = data.brand_name
+      if (data.brand_name && data.brand_name.toLowerCase() !== 'launchapropfirm' && data.brand_name.toLowerCase() !== 'propfirm system') {
+        brandName = data.brand_name
+      }
       if (data.brand_tagline) brandTagline = data.brand_tagline
     }
   } catch (e) {
@@ -111,7 +113,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   return {
-    title:       { default: brandName, template: '%s' },
+    title:       { default: brandName, template: `%s | ${brandName}` },
     description: `${brandTagline}. Pass the evaluation, trade our capital, keep up to 90% of your profits.`,
     applicationName: brandName,
     openGraph: {

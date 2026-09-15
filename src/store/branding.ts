@@ -20,10 +20,10 @@ export interface Branding {
 }
 
 const DEFAULTS: Branding = {
-  brand_name: 'LaunchAPropFirm',
+  brand_name: 'Alpha Capital',
   brand_tagline: 'The Funded Trader Platform',
   logo_url: '', sidebar_icon_url: '', login_logo_url: '', favicon_url: '',
-  support_email: 'support@launchapropfirm.com', primary_color: '#10B981', secondary_color: '#00e5a0', footer_text: '© 2026 LaunchAPropFirm. Simulation platform only.', tv_symbol_map: '',
+  support_email: 'support@alphacapital.com', primary_color: '#10B981', secondary_color: '#00e5a0', footer_text: '© 2026 Alpha Capital. Simulation platform only.', tv_symbol_map: '',
 }
 
 interface BrandingState {
@@ -36,6 +36,18 @@ interface BrandingState {
 
 let loadPromise: Promise<void> | null = null
 
+function normalizeBranding(data: Partial<Branding>): Branding {
+  const b = { ...DEFAULTS, ...data }
+  // Dynamic fallback: If API returns vendor default or empty, dynamically fall back to Alpha Capital
+  if (!b.brand_name || b.brand_name.toLowerCase() === 'launchapropfirm' || b.brand_name.toLowerCase() === 'propfirm system') {
+    b.brand_name = 'Alpha Capital'
+  }
+  if (!b.footer_text || b.footer_text.includes('LaunchAPropFirm') || b.footer_text.includes('PropFirm System')) {
+    b.footer_text = `© ${new Date().getFullYear()} ${b.brand_name}. Simulation platform only.`
+  }
+  return b
+}
+
 export const useBranding = create<BrandingState>((set, get) => ({
   branding: DEFAULTS,
   loaded: false,
@@ -44,11 +56,12 @@ export const useBranding = create<BrandingState>((set, get) => ({
     loadPromise = (async () => {
       const res = await api.branding()
       if (res.ok) {
-        const b = { ...DEFAULTS, ...res.data }
+        const b = normalizeBranding(res.data)
         set({ branding: b, loaded: true })
         applyDocumentBranding(b)
       } else {
         set({ loaded: true })
+        applyDocumentBranding(DEFAULTS)
       }
     })().finally(() => { loadPromise = null })
     return loadPromise
@@ -59,15 +72,11 @@ export const useBranding = create<BrandingState>((set, get) => ({
     set({ branding: next })
     applyDocumentBranding(next)
   },
-  // Re-fetch from the server, bypassing the one-shot `loaded` guard. Called
-  // after an admin saves branding so the global store (sidebar/login/title/
-  // favicon) reconciles with the persisted values — no hard refresh, no route
-  // change, and no reversion to the previously-cached branding.
   reload: async () => {
-    invalidateFxsim('/branding')          // drop the 60s public cache so we read fresh
+    invalidateFxsim('/branding')
     const res = await api.branding()
     if (res.ok) {
-      const b = { ...DEFAULTS, ...res.data }
+      const b = normalizeBranding(res.data)
       set({ branding: b, loaded: true })
       applyDocumentBranding(b)
     }
@@ -77,7 +86,10 @@ export const useBranding = create<BrandingState>((set, get) => ({
 /** Apply title + favicon at runtime (true white-label without rebuild). */
 function applyDocumentBranding(b: Branding) {
   if (typeof document === 'undefined') return
-  if (b.brand_name) document.title = b.brand_name
+  const title = b.brand_name || 'Alpha Capital'
+  if (document.title !== title) {
+    document.title = title
+  }
   if (b.favicon_url) {
     let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
     if (!link) {

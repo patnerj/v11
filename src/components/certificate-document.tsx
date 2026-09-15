@@ -11,7 +11,7 @@ import { useBranding } from '@/store/branding'
  * /certificate/[code] page (where it is the only thing on screen / printed).
  */
 export function CertificateDocument({ cert }: { cert: Cert }) {
-  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
   const c = cert
   const funded = (c.status ?? '') === 'funded'
   const kind = funded ? 'Funded Trader' : 'Evaluation Pass'
@@ -81,7 +81,7 @@ export function CertificateDocument({ cert }: { cert: Cert }) {
 }
 
 export function PayoutCertificateDocument({ payout, planName }: { payout: PayoutItem, planName?: string }) {
-  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
   const brand = storeBrand
   const trader = payout.name || payout.username || 'Funded Trader'
   const splitPct = payout.profit_split_pct || 80

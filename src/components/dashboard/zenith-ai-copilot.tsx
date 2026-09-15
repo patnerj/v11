@@ -36,7 +36,7 @@ export function ZenithAiCopilot() {
   const { user } = useAuth()
   const pathname = usePathname()
   const isTrading = Boolean(pathname?.startsWith('/dashboard/trading'))
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
   const account = usePrices((s) => s.account)
   const activeSymbol = usePrices((s: any) => s.activeSymbol) || 'EURUSD'
   

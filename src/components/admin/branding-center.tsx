@@ -20,7 +20,7 @@ const ASSETS: { field: AssetField; key: string; title: string; size: string; hel
 ]
 
 const DEFAULTS: Record<string, string> = {
-  brand_name: 'LaunchAPropFirm', brand_tagline: 'The Funded Trader Platform',
+  brand_name: 'Alpha Capital', brand_tagline: 'The Funded Trader Platform',
   logo_url: '', login_logo_url: '', sidebar_icon_url: '', favicon_url: '',
 }
 
@@ -75,7 +75,7 @@ export function BrandingCenter() {
     }
   }
 
-  const brand = vals.brand_name || 'LaunchAPropFirm'
+  const brand = vals.brand_name || 'Alpha Capital'
 
   if (!loaded) return <Card><CardContent className="p-6 text-sm text-text-muted">Loading branding…</CardContent></Card>
 

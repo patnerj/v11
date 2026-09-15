@@ -44,7 +44,7 @@ const CANNED_RESPONSES = [
 
 export default function AdminHelpdeskPage() {
   const queryClient = useQueryClient()
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
   const { user, ready } = useAuth()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 

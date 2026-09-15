@@ -47,7 +47,7 @@ const CATEGORIES: CategoryMeta[] = [
  * Intelligent client-side AI support synthesizer.
  * Guarantees that every trader inquiry receives an exact, highly relevant, step-by-step response.
  */
-export function getRelevantAiResponse(message: string, subject: string = '', brand: string = 'LaunchAPropFirm'): string {
+export function getRelevantAiResponse(message: string, subject: string = '', brand: string = 'Alpha Capital'): string {
   const msgLow = (message || '').toLowerCase();
   const subjLow = (subject || '').toLowerCase();
   // If a specific message is provided, prioritize it over the generic ticket subject
@@ -193,7 +193,7 @@ Our trade desk is standing by if you need assistance with any specific symbol or
 }
 
 export function TraderSupport() {
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm';
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Alpha Capital';
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(false);

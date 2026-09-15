@@ -58,12 +58,12 @@ export function MarketingHeader() {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         'fixed top-0 inset-x-0 z-40 transition-all duration-300',
-        'pt-[max(0.25rem,env(safe-area-inset-top,0px))] bg-[#070C18]/95 backdrop-blur-xl border-b border-border/40 shadow-lg',
+        'pt-[max(0.25rem,env(safe-area-inset-top,0px))] bg-surface/85 backdrop-blur-xl border-b border-border/60 shadow-sm',
       )}
     >
       <BannerBar placement="top" />
       <div className="container flex h-14 md:h-16 items-center justify-between px-4">
-        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand} home`}>
+        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'Alpha Capital'} home`}>
           <Logo />
         </Link>
 
@@ -72,7 +72,7 @@ export function MarketingHeader() {
             <Link
               key={it.href}
               href={it.href}
-              className="px-3 py-2 text-sm text-text-muted hover:text-text transition-colors focus-ring rounded-md"
+              className="px-3.5 py-2 text-sm font-medium text-text-muted hover:text-text hover:bg-surface-muted/60 transition-colors focus-ring rounded-lg"
             >
               {it.label}
             </Link>
@@ -113,7 +113,7 @@ export function MarketingHeader() {
             </Button>
           )}
           <button
-            className="p-1.5 rounded-lg hover:bg-surface-muted text-text-muted hover:text-white border border-border/40 focus-ring"
+            className="p-2 rounded-lg hover:bg-surface-muted text-text-muted hover:text-text border border-border/60 focus-ring transition-colors"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
@@ -132,7 +132,7 @@ export function MarketingHeader() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-border-subtle bg-[#070C18]/98 backdrop-blur-2xl shadow-2xl pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
+            className="md:hidden border-t border-border-subtle bg-surface/95 backdrop-blur-2xl shadow-2xl pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
           >
             <div className="container py-4 flex flex-col gap-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
               {NAV.map((it) => (
@@ -140,7 +140,7 @@ export function MarketingHeader() {
                   key={it.href}
                   href={it.href}
                   onClick={() => setOpen(false)}
-                  className="px-3 py-2.5 text-sm text-text-muted hover:text-text hover:bg-surface-muted rounded-md transition-colors"
+                  className="px-3 py-2.5 text-sm font-medium text-text-muted hover:text-text hover:bg-surface-muted rounded-md transition-colors"
                 >
                   {it.label}
                 </Link>

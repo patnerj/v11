@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Privacy Policy"
-      intro="How LaunchAPropFirm collects, uses, and protects your personal data."
+      intro="How Alpha Capital collects, uses, and protects your personal data."
       updated="May 2026"
       sections={[
         { title: '1. Data we collect',
