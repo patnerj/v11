@@ -28,9 +28,18 @@ async function getPageSchema() {
     const res = await fetch(`${baseUrl}/page-schema`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      if (data) {
-        if (data.schema) return data.schema;
-        if (data.content) return data;
+      const schema = data?.schema || (data?.content ? data : null);
+      if (schema?.content && Array.isArray(schema.content)) {
+        const hasFaq = schema.content.some((c: any) => c.type === 'FAQSection');
+        if (!hasFaq) {
+          const ctaIdx = schema.content.findIndex((c: any) => c.type === 'CTASection');
+          if (ctaIdx !== -1) {
+            schema.content.splice(ctaIdx, 0, { type: 'FAQSection', props: { id: 'faq-1' } });
+          } else {
+            schema.content.push({ type: 'FAQSection', props: { id: 'faq-1' } });
+          }
+        }
+        return schema;
       }
     }
   } catch (err) {
