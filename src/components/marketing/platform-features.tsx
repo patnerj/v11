@@ -11,7 +11,7 @@ const FEATURES = [
   { icon: Bell,       title: 'Real-time alerts',     body: 'Notifications for fills, breaches, payout approvals — instant.' },
   { icon: Zap,        title: 'API access',           body: 'Generate scoped API keys. Run your own algos against our infrastructure.' },
   { icon: Globe2,     title: 'Global markets',       body: 'Forex majors, indices, metals, crypto. Trade what you know.' },
-  { icon: Lock,       title: 'Institutional-grade',  body: '2FA, scoped API keys, full audit log, SOC 2 controls.' },
+  { icon: Lock,       title: 'Institutional-grade',  body: '2FA, scoped API keys, full audit logs & end-to-end encryption.' },
 ]
 
 export function PlatformFeatures({ puckProps }: { puckProps?: any }) {

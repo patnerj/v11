@@ -76,6 +76,13 @@ function PayoutVisual() {
     <div className="relative rounded-xl border border-border bg-surface overflow-hidden shadow-card-lg">
       <div className="absolute inset-0 bg-grid-overlay opacity-50 pointer-events-none" />
       <div className="relative p-6">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-border-subtle/60">
+          <span className="text-[10px] font-semibold tracking-wider uppercase text-text-faint">
+            Sample Dashboard Preview
+          </span>
+          <span className="text-[10px] text-text-faint">Bi-Weekly Cycle</span>
+        </div>
+
         <div className="flex items-center justify-between mb-1">
           <div>
             <div className="text-xs text-text-muted">Total earnings</div>

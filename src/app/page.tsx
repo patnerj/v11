@@ -16,6 +16,7 @@ const defaultData = {
     { type: "PlatformFeatures", props: { id: "feat-1" } },
     { type: "PayoutsSection", props: { id: "payout-1" } },
     { type: "Testimonials", props: { id: "test-1" } },
+    { type: "FAQSection", props: { id: "faq-1" } },
     { type: "CTASection", props: { id: "cta-1" } }
   ],
   root: {}

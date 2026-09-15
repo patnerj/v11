@@ -80,7 +80,7 @@ export default function FAQPage() {
                 Common <span className="text-info">questions</span>
               </h1>
               <p className="mt-4 text-lg text-text-muted">
-                Can&apos;t find what you&apos;re looking for? Email <a className="text-accent hover:underline" href="mailto:support@propfirmlauncher.com">support@propfirmlauncher.com</a>.
+                Can&apos;t find what you&apos;re looking for? Visit our <a className="text-accent hover:underline" href="/support">Support Center</a> or open a ticket.
               </p>
             </div>
           </div>

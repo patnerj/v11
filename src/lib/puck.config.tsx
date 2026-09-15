@@ -7,12 +7,13 @@ import { ChallengesPreview } from "@/components/marketing/challenges-preview";
 import { PlatformFeatures } from "@/components/marketing/platform-features";
 import { PayoutsSection } from "@/components/marketing/payouts-section";
 import { Testimonials } from "@/components/marketing/testimonials";
+import { FAQSection } from "@/components/marketing/faq-section";
 import { HeadingBlock, TextBlock, ButtonBlock, SectionBlock, ColumnsBlock } from "@/components/puck/basic-blocks";
 
 type Props = {
   Hero: { title: string; highlight: string; subtitle: string; badge: string };
   CTASection: { title: string; highlight: string; description: string };
-  LiveStatsStrip: {};
+  LiveStatsStrip: { items?: Array<{ label: string; value: string; subtext?: string }> };
   HowItWorks: { 
     badge: string; 
     titleText1: string; 
@@ -40,6 +41,13 @@ type Props = {
     titleAccent: string;
     stories: Array<{ name: string; role: string; quote: string; pnl: string; account: string }>;
   };
+  FAQSection: {
+    badge: string;
+    titleText1: string;
+    titleAccent: string;
+    description: string;
+    faqs: Array<{ q: string; a: string }>;
+  };
   Heading: { text: string; size: "sm" | "md" | "lg" | "xl"; align: "left" | "center" | "right" };
   Text: { text: string; size: "sm" | "md" | "lg"; align: "left" | "center" | "right" };
   Button: { text: string; url: string; variant: "primary" | "secondary" | "outline" };
@@ -50,7 +58,7 @@ type Props = {
 export const config: Config<Props> = {
   categories: {
     marketing: {
-      components: ["Hero", "CTASection", "LiveStatsStrip", "HowItWorks", "ChallengesPreview", "PlatformFeatures", "PayoutsSection", "Testimonials"],
+      components: ["Hero", "CTASection", "LiveStatsStrip", "HowItWorks", "ChallengesPreview", "PlatformFeatures", "PayoutsSection", "Testimonials", "FAQSection"],
     },
     layout: {
       components: ["Section", "Columns"],
@@ -102,7 +110,20 @@ export const config: Config<Props> = {
       ),
     },
     LiveStatsStrip: {
-      render: () => <LiveStatsStrip />,
+      fields: {
+        items: {
+          type: "array",
+          arrayFields: {
+            label: { type: "text" },
+            value: { type: "text" },
+            subtext: { type: "text" },
+          },
+        },
+      },
+      defaultProps: {
+        items: [],
+      },
+      render: ({ items }) => <LiveStatsStrip puckProps={{ items }} />,
     },
     HowItWorks: {
       fields: {
@@ -189,7 +210,7 @@ export const config: Config<Props> = {
           { title: 'Real-time alerts',     body: 'Notifications for fills, breaches, payout approvals — instant.' },
           { title: 'API access',           body: 'Generate scoped API keys. Run your own algos against our infrastructure.' },
           { title: 'Global markets',       body: 'Forex majors, indices, metals, crypto. Trade what you know.' },
-          { title: 'Institutional-grade',  body: '2FA, scoped API keys, full audit log, SOC 2 controls.' },
+          { title: 'Institutional-grade',  body: '2FA, scoped API keys, full audit logs & end-to-end encryption.' },
         ]
       },
       render: ({ titleText1, titleAccent, description, features }) => (
@@ -246,14 +267,56 @@ export const config: Config<Props> = {
         badge: "Trader stories",
         titleText1: "From challenge to",
         titleAccent: "first payout",
-        stories: [
-          { name: 'Sebastian Müller', role: 'Forex trader · Berlin', quote: 'Passed the $100K challenge in 18 days. First payout hit my wallet 22 hours after request. The drawdown UI is the cleanest I have used.', pnl: '+$8,420', account: '$100K funded' },
-          { name: 'Maya Patel', role: 'Day trader · London', quote: 'I have tried four prop firms. The rule transparency here, the live R:R tracker, and the certificate — this is the only one I will recommend.', pnl: '+$12,180', account: '$200K funded' },
-          { name: 'Hiro Tanaka', role: 'Swing trader · Tokyo', quote: 'The hourly heatmap showed me that 78% of my losses came in the first hour of London open. I changed my routine and tripled my win rate.', pnl: '+$4,930', account: '$50K funded' },
-        ]
+        stories: [],
       },
       render: ({ badge, titleText1, titleAccent, stories }) => (
         <Testimonials puckProps={{ badge, titleText1, titleAccent, stories }} />
+      ),
+    },
+    FAQSection: {
+      fields: {
+        badge: { type: "text" },
+        titleText1: { type: "text" },
+        titleAccent: { type: "text" },
+        description: { type: "textarea" },
+        faqs: {
+          type: "array",
+          arrayFields: {
+            q: { type: "text" },
+            a: { type: "textarea" },
+          },
+        },
+      },
+      defaultProps: {
+        badge: "Common questions",
+        titleText1: "Frequently Asked",
+        titleAccent: "Questions",
+        description: "Everything you need to know about our evaluation process, rules, and payouts.",
+        faqs: [
+          {
+            q: "How does the two-phase evaluation work?",
+            a: "You choose an account size from $10,000 to $200,000. Complete Phase 1 with an 8% profit target, and Phase 2 with a 5% target, while respecting daily and total drawdown rules. Once passed, you are allocated a funded account to trade our capital."
+          },
+          {
+            q: "When and how do I receive my payouts?",
+            a: "Your first payout is eligible 14 days after your funded account is activated. Subsequent payouts occur on a bi-weekly schedule. Payouts are processed within 24 hours via Crypto (USDT) or direct bank transfer via Wise."
+          },
+          {
+            q: "Are Expert Advisors (EAs) and news trading allowed?",
+            a: "Yes, algorithmic trading, EAs, and trading during macroeconomic news releases are fully permitted across both evaluation and funded phases."
+          },
+          {
+            q: "What are the drawdown and risk limits?",
+            a: "The daily drawdown limit is 5% based on your daily starting equity/balance (resets at 00:00 UTC). The maximum total drawdown is a static 10% from your initial account balance."
+          },
+          {
+            q: "What platforms and spreads do you provide?",
+            a: "We offer full integration with MetaTrader 5 (MT5) and TradingView powered charts, with direct market execution and institutional raw spreads starting from 0.0 pips."
+          }
+        ],
+      },
+      render: ({ badge, titleText1, titleAccent, description, faqs }) => (
+        <FAQSection puckProps={{ badge, titleText1, titleAccent, description, faqs }} />
       ),
     },
     Heading: {
