@@ -446,11 +446,11 @@ export function TraderSupport() {
         </div>
       </div>
 
-      {/* ── 2-COLUMN LUXURY WORKSPACE (Zero Page Scrolling) ───────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 h-[calc(100vh-140px)] min-h-[580px] max-h-[860px] w-full">
+      {/* ── 2-COLUMN LUXURY WORKSPACE (Zero Page Scrolling on Desktop) ────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 h-auto lg:h-[calc(100vh-140px)] min-h-0 lg:min-h-[580px] lg:max-h-[860px] w-full">
         
         {/* ── LEFT COLUMN (4 Cols): Tickets Queue Sidebar ─────────────────── */}
-        <div className="lg:col-span-4 flex flex-col h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
+        <div className="lg:col-span-4 flex flex-col h-[340px] lg:h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
           {/* Queue Header & Filters */}
           <div className="p-3 border-b border-border dark:border-[#1F2937]/80 bg-muted/40 dark:bg-[#0E131F]/80 space-y-2.5 shrink-0">
             <div className="flex items-center justify-between">
@@ -554,7 +554,7 @@ export function TraderSupport() {
         </div>
 
         {/* ── RIGHT COLUMN (8 Cols): Active Conversation & Pinned Reply Composer */}
-        <div className="lg:col-span-8 flex flex-col h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
+        <div className="lg:col-span-8 flex flex-col min-h-[520px] lg:h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
           {activeTicket ? (
             <>
               {/* Active Ticket Header */}

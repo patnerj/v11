@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <main className={
           isTerminal ? 'flex-1 min-w-0 w-full p-3 md:p-4 pb-20 md:pb-4' :
-          isSupport ? 'flex-1 p-3 md:p-4 max-w-[1400px] w-full mx-auto pb-4 md:pb-4' :
+          isSupport ? 'flex-1 p-3 md:p-4 max-w-[1400px] w-full mx-auto pb-28 lg:pb-4' :
           'flex-1 p-4 md:p-8 max-w-[1400px] w-full mx-auto pb-28 md:pb-8'
         }>
           {children}
