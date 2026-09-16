@@ -8,7 +8,7 @@ import {
   Bot, Sparkles, X, Send, ShieldAlert, ShieldCheck, 
   Calculator, AlertTriangle, Newspaper, ChevronDown, ChevronUp,
   RefreshCw, CheckCircle2, TrendingDown, ArrowRight, Zap, Info,
-  BookOpen, Brain, Award, ArrowLeftRight
+  BookOpen, Brain, Award, ArrowLeftRight, Lightbulb
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePrices } from '@/store/prices'
@@ -60,7 +60,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
       )
     } else if (token.startsWith('*') && token.endsWith('*')) {
       tokens.push(
-        <em key={`i-${match.index}`} className="italic text-slate-700 dark:text-gray-300">
+        <em key={`i-${match.index}`} className="italic text-inherit">
           {token.slice(1, -1)}
         </em>
       )
@@ -85,7 +85,7 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
     .replace(/([^\n])\s+(\*\*[A-Za-z0-9\s$—–-]{2,50}:\*\*)/g, '$1\n\n$2\n')
     .replace(/([^\n])\s+(\*\s+\*\*)/g, '$1\n* **')
     .replace(/([^\n])\s+(\d+\.\s+\*\*)/g, '$1\n\n$2')
-    .replace(/([^\n])\s+((?:Bhai|Remember|Pro-Tip|Note)\s*[,:])/g, '$1\n\n$2')
+    .replace(/([^\n])\s+((?:💡\s*)?(?:\*)?(?:Bhai|Remember|Pro-Tip|Note)\s*[,:])/g, '$1\n\n$2')
 
   const lines = processed.split('\n').map((l) => l.trim()).filter(Boolean)
 
@@ -105,7 +105,7 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
           return (
             <div
               key={idx}
-              className="pt-2 pb-1 border-b border-slate-100 dark:border-[#273552] flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-[12px] tracking-tight"
+              className="pt-2 pb-1 border-b border-slate-200 dark:border-[#273552] flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-[12px] tracking-tight"
             >
               <span>{icon}</span>
               <span>{title}</span>
@@ -135,7 +135,7 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
           return (
             <div key={idx} className="flex items-start gap-2 pl-1 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-              <div className="flex-1 text-[11.5px] leading-snug">
+              <div className="flex-1 text-[11.5px] leading-snug text-slate-800 dark:text-gray-200">
                 {renderInlineMarkdown(cleanBullet)}
               </div>
             </div>
@@ -150,12 +150,12 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
           return (
             <div
               key={idx}
-              className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-[#141A2E] border border-slate-100 dark:border-[#1F2937]/70 shadow-2xs"
+              className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-[#141A2E] border border-slate-200 dark:border-[#1F2937]/70 shadow-2xs"
             >
               <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-500/30">
                 {num}
               </span>
-              <div className="flex-1 text-[11.5px] leading-snug">
+              <div className="flex-1 text-[11.5px] leading-snug text-slate-800 dark:text-gray-200">
                 {renderInlineMarkdown(rest)}
               </div>
             </div>
@@ -163,16 +163,19 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
         }
 
         // 5. Coach Note / Urdu Discipline Tip
-        const isCoachTip = /^(?:Bhai|Remember|Pro-Tip|Note)\s*[,:]/i.test(line)
+        const isCoachTip = /^(?:💡\s*)?(?:\*)?(?:Bhai|Remember|Pro-Tip|Note)\s*[,:]/i.test(line)
         if (isCoachTip) {
+          const cleanLine = line
+            .replace(/^💡\s*/, '')
+            .replace(/^\*+|\*+$/g, '')
           return (
             <div
               key={idx}
-              className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-300/60 dark:border-emerald-500/30 text-emerald-950 dark:text-emerald-200 text-[11px] leading-relaxed flex items-start gap-2 shadow-2xs"
+              className="mt-2.5 p-3 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 dark:border-emerald-500/40 flex items-start gap-2.5 shadow-2xs"
             >
-              <span className="text-sm shrink-0 mt-0.5">💡</span>
-              <div className="font-medium italic">
-                {renderInlineMarkdown(line)}
+              <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5 fill-amber-500/20" />
+              <div className="flex-1 font-semibold text-slate-900 dark:text-emerald-300 leading-relaxed text-[11.5px]">
+                {renderInlineMarkdown(cleanLine)}
               </div>
             </div>
           )
@@ -656,9 +659,13 @@ export function ZenithAiCopilot() {
                             }`}
                           >
                             <AiMessageContent content={msg.text} isUser={msg.sender === 'user'} />
-                            <div className="flex items-center justify-between gap-3 mt-2.5 pt-1.5 border-t border-slate-100 dark:border-[#202B44] text-[9px] text-slate-500 dark:text-gray-400 opacity-80">
+                            <div className={`flex items-center justify-between gap-3 mt-2 pt-1.5 border-t text-[9px] ${
+                              msg.sender === 'user'
+                                ? 'border-emerald-500/50 text-white/85'
+                                : 'border-slate-100 dark:border-[#202B44] text-slate-500 dark:text-gray-400 opacity-80'
+                            }`}>
                               <span>{msg.timestamp}</span>
-                              {msg.provider && (
+                              {msg.provider && msg.sender !== 'user' && (
                                 <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">{msg.provider}</span>
                               )}
                             </div>
@@ -810,7 +817,7 @@ export function ZenithAiCopilot() {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/40 text-emerald-900 dark:text-emerald-200 space-y-2 shadow-xs"
+                        className="p-4 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 dark:border-emerald-500/40 text-slate-900 dark:text-white space-y-2 shadow-xs"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">Recommended Safe Size:</span>
@@ -818,11 +825,11 @@ export function ZenithAiCopilot() {
                             {calcResult.safe_lots} Lots
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-gray-400 pt-1 border-t border-emerald-200 dark:border-emerald-900/50">
+                        <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-gray-400 pt-1 border-t border-emerald-500/20 dark:border-emerald-500/30">
                           <span>Max Dollar Loss Risked:</span>
                           <span className="font-mono text-slate-900 dark:text-white font-semibold">${toNum(calcResult.cash_at_risk).toFixed(2)} ({toNum(calcResult.risk_pct)}%)</span>
                         </div>
-                        <p className="text-[10px] text-emerald-700 dark:text-emerald-300 italic pt-1">
+                        <p className="text-[10px] text-emerald-800 dark:text-emerald-300 font-medium italic pt-1">
                           {calcResult.recommended_action}
                         </p>
                       </motion.div>
