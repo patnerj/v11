@@ -28,6 +28,7 @@ import { cn } from '@/lib/cn'
 import { PaymentsCenter } from '@/components/admin/payments-center'
 import { ChartSymbolMap } from '@/components/admin/chart-symbol-map'
 import { PriceFeedCard } from '@/components/admin/price-feed-card'
+import { APP_DISPLAY_VERSION } from '@/lib/version'
 
 // Slugify helper to auto-generate URL-friendly slugs from Plan Title
 const slugify = (text: string) => {
@@ -1473,7 +1474,7 @@ export default function ConfigurationHubPage() {
               Configuration & Engine Hub
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Engine v11.5
+              Engine {APP_DISPLAY_VERSION}
             </Badge>
           </div>
           <p className="text-sm text-gray-400 mt-1">

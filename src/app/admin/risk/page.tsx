@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { toast } from 'sonner'
 import { AiSentinelPanel } from '@/components/admin/risk/ai-sentinel-panel'
+import { APP_DISPLAY_VERSION } from '@/lib/version'
 
 function formatMoney(val: number | string | undefined | null) {
   const num = typeof val === 'string' ? parseFloat(val) : (val ?? 0)
@@ -448,7 +449,7 @@ export default function RiskManagementHubPage() {
                   ? 'bg-white/20 text-white border-white/30'
                   : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
               }`}>
-                v11.5
+                {APP_DISPLAY_VERSION}
               </span>
             </button>
           </div>

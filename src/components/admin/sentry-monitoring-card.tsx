@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import * as Sentry from '@sentry/nextjs'
+import { APP_NAME_VERSION } from '@/lib/version'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +34,7 @@ export function SentryMonitoringCard() {
       Sentry.captureMessage(`[TEST_ALERT] AlphaCapital Sentry Sentinel Handshake Verified at ${testTimestamp}`, {
         level: 'info',
         extra: {
-          platform: 'AlphaCapital Enterprise v11.5',
+          platform: APP_NAME_VERSION,
           environment: process.env.NODE_ENV,
           testTriggeredBy: 'Admin Operations Hub',
         },

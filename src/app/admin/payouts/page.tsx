@@ -21,6 +21,7 @@ import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { PayoutManagementModal, PayoutItemTarget } from '@/components/admin/PayoutManagementModal'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
+import { APP_DISPLAY_VERSION } from '@/lib/version'
 
 function formatMoney(val: number | string | undefined | null) {
   const num = typeof val === 'string' ? parseFloat(val) : (val ?? 0)
@@ -387,7 +388,7 @@ export default function PayoutsHubPage() {
               Payouts & Billing Engine
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live Billing v11.5
+              Live Billing {APP_DISPLAY_VERSION}
             </Badge>
           </div>
           <p className="text-sm text-text-muted mt-1">

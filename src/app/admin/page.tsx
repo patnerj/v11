@@ -28,6 +28,7 @@ import { FounderActionCenter } from '@/components/admin/founder-action-center'
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
+import { APP_DISPLAY_VERSION } from '@/lib/version'
 
 // Helper formatters
 function formatCurrency(val: number | string | undefined | null) {
@@ -683,7 +684,7 @@ export default function AdminCommandCenter() {
               Command Center
             </h1>
             <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live System v11.5
+              Live System {APP_DISPLAY_VERSION}
             </Badge>
             {isEmergencyPaused && (
               <Badge tone="danger" size="sm" pulsing>

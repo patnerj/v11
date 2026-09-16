@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/cn'
 import { SidebarBrand } from '@/components/logo'
 import { useAuth } from '@/store/auth'
+import { APP_DISPLAY_VERSION } from '@/lib/version'
 
 export interface NavItem {
   href: string
@@ -27,7 +28,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: '/admin/kyc',         label: 'KYC Hub',      icon: UserCheck },
   { href: '/admin/operations',  label: 'Operations',   icon: Gauge },
   { href: '/admin/risk',        label: 'Risk Control', icon: Shield },
-  { href: '/admin/risk?tab=sentinel', label: 'AI Sentinel', icon: Zap, badge: 'v11.5' },
+  { href: '/admin/risk?tab=sentinel', label: 'AI Sentinel', icon: Zap, badge: APP_DISPLAY_VERSION },
   { href: '/admin/payouts',     label: 'Payouts Hub',  icon: Wallet },
   { href: '/admin/marketing',   label: 'Marketing',    icon: Megaphone },
   { href: '/admin/builder',     label: 'Page Builder', icon: Sparkles },
