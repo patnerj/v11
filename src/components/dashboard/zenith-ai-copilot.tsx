@@ -32,6 +32,163 @@ interface ChatMessage {
   provider?: string
 }
 
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const tokens: React.ReactNode[] = []
+  const regex = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push(text.substring(lastIndex, match.index))
+    }
+    const token = match[0]
+    if (token.startsWith('**') && token.endsWith('**')) {
+      tokens.push(
+        <strong key={`b-${match.index}`} className="font-bold text-slate-900 dark:text-white">
+          {token.slice(2, -2)}
+        </strong>
+      )
+    } else if (token.startsWith('`') && token.endsWith('`')) {
+      tokens.push(
+        <code
+          key={`c-${match.index}`}
+          className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono font-semibold text-[11px] border border-emerald-500/20 break-all"
+        >
+          {token.slice(1, -1)}
+        </code>
+      )
+    } else if (token.startsWith('*') && token.endsWith('*')) {
+      tokens.push(
+        <em key={`i-${match.index}`} className="italic text-slate-700 dark:text-gray-300">
+          {token.slice(1, -1)}
+        </em>
+      )
+    }
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    tokens.push(text.substring(lastIndex))
+  }
+
+  return tokens.length > 0 ? tokens : [text]
+}
+
+function AiMessageContent({ content, isUser }: { content: string; isUser: boolean }) {
+  if (isUser) {
+    return <p className="whitespace-pre-wrap leading-relaxed text-xs">{content}</p>
+  }
+
+  // Normalize contiguous run-on text by inserting clean line breaks before headings, bullets, numbers, and coach notes
+  const processed = content
+    .replace(/([^\n])\s+(\*\*[A-Za-z0-9\s$—–-]{2,50}:\*\*)/g, '$1\n\n$2\n')
+    .replace(/([^\n])\s+(\*\s+\*\*)/g, '$1\n* **')
+    .replace(/([^\n])\s+(\d+\.\s+\*\*)/g, '$1\n\n$2')
+    .replace(/([^\n])\s+((?:Bhai|Remember|Pro-Tip|Note)\s*[,:])/g, '$1\n\n$2')
+
+  const lines = processed.split('\n').map((l) => l.trim()).filter(Boolean)
+
+  return (
+    <div className="space-y-2 text-xs leading-relaxed text-slate-800 dark:text-gray-200">
+      {lines.map((line, idx) => {
+        // 1. Section Header: **Title:**
+        const isHeader = /^(\*\*[A-Za-z0-9\s$—–-]{2,50}:\*\*)$/.test(line)
+        if (isHeader) {
+          const title = line.replace(/^\*\*|\*\*$/g, '')
+          let icon = '✨'
+          if (/formula/i.test(title)) icon = '📐'
+          else if (/example|calculation/i.test(title)) icon = '📊'
+          else if (/tip|risk|rule/i.test(title)) icon = '🛡️'
+          else if (/target|drawdown/i.test(title)) icon = '🎯'
+
+          return (
+            <div
+              key={idx}
+              className="pt-2 pb-1 border-b border-slate-100 dark:border-[#273552] flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-[12px] tracking-tight"
+            >
+              <span>{icon}</span>
+              <span>{title}</span>
+            </div>
+          )
+        }
+
+        // 2. Standalone Formula or Calculation Box
+        const isFormula = line.startsWith('`') && line.endsWith('`')
+        if (isFormula) {
+          const formulaCode = line.replace(/^`|`$/g, '')
+          return (
+            <div
+              key={idx}
+              className="p-2.5 rounded-xl bg-slate-950 text-emerald-300 dark:bg-[#080C16] dark:text-emerald-400 font-mono text-[11px] border border-emerald-500/30 flex items-center gap-2 shadow-xs overflow-x-auto"
+            >
+              <span className="text-xs shrink-0">📐</span>
+              <span className="font-semibold tracking-wide">{formulaCode}</span>
+            </div>
+          )
+        }
+
+        // 3. Bullet list item: * or -
+        const isBullet = /^[\*\-]\s+/.test(line)
+        if (isBullet) {
+          const cleanBullet = line.replace(/^[\*\-]\s+/, '')
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1 py-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+              <div className="flex-1 text-[11.5px] leading-snug">
+                {renderInlineMarkdown(cleanBullet)}
+              </div>
+            </div>
+          )
+        }
+
+        // 4. Numbered list item: 1. , 2. , etc.
+        const numMatch = line.match(/^(\d+)\.\s+(.*)$/)
+        if (numMatch) {
+          const num = numMatch[1]
+          const rest = numMatch[2]
+          return (
+            <div
+              key={idx}
+              className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-[#141A2E] border border-slate-100 dark:border-[#1F2937]/70 shadow-2xs"
+            >
+              <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-500/30">
+                {num}
+              </span>
+              <div className="flex-1 text-[11.5px] leading-snug">
+                {renderInlineMarkdown(rest)}
+              </div>
+            </div>
+          )
+        }
+
+        // 5. Coach Note / Urdu Discipline Tip
+        const isCoachTip = /^(?:Bhai|Remember|Pro-Tip|Note)\s*[,:]/i.test(line)
+        if (isCoachTip) {
+          return (
+            <div
+              key={idx}
+              className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-300/60 dark:border-emerald-500/30 text-emerald-950 dark:text-emerald-200 text-[11px] leading-relaxed flex items-start gap-2 shadow-2xs"
+            >
+              <span className="text-sm shrink-0 mt-0.5">💡</span>
+              <div className="font-medium italic">
+                {renderInlineMarkdown(line)}
+              </div>
+            </div>
+          )
+        }
+
+        // 6. Normal Paragraph
+        return (
+          <p key={idx} className="text-slate-800 dark:text-gray-200 leading-relaxed text-[11.5px]">
+            {renderInlineMarkdown(line)}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 export function ZenithAiCopilot() {
   const { user } = useAuth()
   const pathname = usePathname()
@@ -492,17 +649,17 @@ export function ZenithAiCopilot() {
                           className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
                         >
                           <div
-                            className={`max-w-[85%] p-3 rounded-2xl leading-relaxed ${
+                            className={`max-w-[92%] sm:max-w-[88%] p-3.5 sm:p-4 rounded-2xl leading-relaxed shadow-sm ${
                               msg.sender === 'user'
-                                ? 'bg-emerald-600 text-white rounded-br-none shadow-sm'
-                                : 'bg-white text-slate-900 border border-slate-200 shadow-sm dark:bg-[#192238] dark:text-gray-200 dark:border-[#273552] rounded-bl-none'
+                                ? 'bg-emerald-600 text-white rounded-br-none'
+                                : 'bg-white text-slate-900 border border-slate-200/90 dark:bg-[#151D30] dark:text-gray-200 dark:border-[#24314D] rounded-bl-none'
                             }`}
                           >
-                            <p className="text-slate-900 dark:text-gray-100">{msg.text}</p>
-                            <div className="flex items-center justify-between gap-3 mt-1.5 text-[9px] text-slate-500 dark:text-gray-400 opacity-80">
+                            <AiMessageContent content={msg.text} isUser={msg.sender === 'user'} />
+                            <div className="flex items-center justify-between gap-3 mt-2.5 pt-1.5 border-t border-slate-100 dark:border-[#202B44] text-[9px] text-slate-500 dark:text-gray-400 opacity-80">
                               <span>{msg.timestamp}</span>
                               {msg.provider && (
-                                <span className="font-mono text-emerald-600 dark:text-emerald-300 font-medium">{msg.provider}</span>
+                                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">{msg.provider}</span>
                               )}
                             </div>
                           </div>
