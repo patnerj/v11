@@ -6,11 +6,20 @@ import type { Trade } from '@/types/api'
 import { Target, TrendingUp, Award, BarChart3 } from 'lucide-react'
 
 interface Props {
-  trades: Trade[] | null
+  trades: Trade[] | null | unknown
+}
+
+function normalizeTrades(trades: unknown): Trade[] {
+  if (Array.isArray(trades)) return trades
+  if (trades && typeof trades === 'object' && Array.isArray((trades as any).trades)) {
+    return (trades as any).trades
+  }
+  return []
 }
 
 export function PerformanceInsights({ trades }: Props) {
-  if (!trades || trades.length === 0) {
+  const tradeList = normalizeTrades(trades)
+  if (tradeList.length === 0) {
     return (
       <Card className="border-accent/20 bg-surface/40 h-full">
         <CardContent className="p-6 flex flex-col items-center justify-center text-sm text-text-muted h-full text-center gap-2">
@@ -22,13 +31,13 @@ export function PerformanceInsights({ trades }: Props) {
   }
 
   // Calculate metrics
-  const totalTrades = trades.length
+  const totalTrades = tradeList.length
   let winningTrades = 0
   let grossProfit = 0
   let grossLoss = 0
   const assetPnL: Record<string, number> = {}
 
-  trades.forEach((t) => {
+  tradeList.forEach((t) => {
     const pnl = toNum(t.pnl)
     if (pnl > 0) {
       winningTrades++
@@ -37,8 +46,10 @@ export function PerformanceInsights({ trades }: Props) {
       grossLoss += Math.abs(pnl)
     }
 
-    if (!assetPnL[t.symbol]) assetPnL[t.symbol] = 0
-    assetPnL[t.symbol] += pnl
+    if (t.symbol) {
+      if (!assetPnL[t.symbol]) assetPnL[t.symbol] = 0
+      assetPnL[t.symbol] += pnl
+    }
   })
 
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0

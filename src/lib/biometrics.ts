@@ -8,7 +8,7 @@
  * by encrypting with AES-GCM (256-bit) and PBKDF2 key derivation.
  * Tokens are decrypted only upon successful platform biometric authentication.
  * 
- * @version 11.5.0
+ * @version 11.5.1
  */
 
 const BIOMETRIC_USER_KEY = 'fxsim:biometric_user'

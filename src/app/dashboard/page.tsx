@@ -369,13 +369,29 @@ export default function DashboardOverview() {
           {/* Insights row */}
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <SectionErrorBoundary>
-                <PerformanceInsights trades={recent} />
+              <SectionErrorBoundary sectionName="Performance Insights">
+                {isPendingHistory && !recent ? (
+                  <Card className="h-full border-border/60">
+                    <CardContent className="p-6 flex items-center justify-center min-h-[160px]">
+                      <Skeleton className="h-28 w-full" />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <PerformanceInsights trades={recent} />
+                )}
               </SectionErrorBoundary>
             </div>
             <div className="lg:col-span-1">
-              <SectionErrorBoundary>
-                <TraderBadges trades={recent} />
+              <SectionErrorBoundary sectionName="Trader Badges">
+                {isPendingHistory && !recent ? (
+                  <Card className="h-full border-border/60">
+                    <CardContent className="p-6 flex items-center justify-center min-h-[160px]">
+                      <Skeleton className="h-28 w-full" />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <TraderBadges trades={recent} />
+                )}
               </SectionErrorBoundary>
             </div>
           </div>
@@ -389,7 +405,7 @@ export default function DashboardOverview() {
                   <Link href="/dashboard/history" className="text-2xs text-accent hover:underline font-semibold">View all →</Link>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <SectionErrorBoundary>
+                  <SectionErrorBoundary sectionName="Recent Trades">
                     <RecentTradesTable trades={recent} isLoading={isPendingHistory && !recent} />
                   </SectionErrorBoundary>
                 </CardContent>
@@ -476,7 +492,7 @@ function NoChallengeCTA() {
   )
 }
 
-function RecentTradesTable({ trades, isLoading }: { trades: Trade[] | null; isLoading: boolean }) {
+function RecentTradesTable({ trades, isLoading }: { trades: Trade[] | null | unknown; isLoading: boolean }) {
   if (isLoading || trades === null) {
     return (
       <div className="p-5 space-y-2">
@@ -484,7 +500,9 @@ function RecentTradesTable({ trades, isLoading }: { trades: Trade[] | null; isLo
       </div>
     )
   }
-  const safeTrades = Array.isArray(trades) ? trades : []
+  const safeTrades: Trade[] = Array.isArray(trades)
+    ? trades
+    : (trades && typeof trades === 'object' && Array.isArray((trades as any).trades) ? (trades as any).trades : [])
   if (safeTrades.length === 0) {
     return (
       <div className="p-8 text-center">

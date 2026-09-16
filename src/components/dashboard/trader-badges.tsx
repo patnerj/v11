@@ -13,7 +13,15 @@ import {
 import { cn } from '@/lib/cn'
 
 interface Props {
-  trades: Trade[] | null
+  trades: Trade[] | null | unknown
+}
+
+function normalizeTrades(trades: unknown): Trade[] {
+  if (Array.isArray(trades)) return trades
+  if (trades && typeof trades === 'object' && Array.isArray((trades as any).trades)) {
+    return (trades as any).trades
+  }
+  return []
 }
 
 interface BadgeDef {
@@ -29,18 +37,17 @@ interface BadgeDef {
 
 export function TraderBadges({ trades }: Props) {
   // Simple client-side badge logic based on recent trades
-  const totalTrades = trades?.length || 0
+  const tradeList = normalizeTrades(trades)
+  const totalTrades = tradeList.length
   const winRate = totalTrades > 0 
-    ? (trades!.filter(t => toNum(t.pnl) > 0).length / totalTrades) 
+    ? (tradeList.filter(t => toNum(t.pnl) > 0).length / totalTrades) 
     : 0
   
   // Calculate win streak
   let currentStreak = 0
-  if (trades) {
-    for (const t of trades) {
-      if (toNum(t.pnl) > 0) currentStreak++
-      else break
-    }
+  for (const t of tradeList) {
+    if (toNum(t.pnl) > 0) currentStreak++
+    else break
   }
 
   const badges: BadgeDef[] = [

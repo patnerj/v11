@@ -1,7 +1,7 @@
 import { useQuery, type QueryKey } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { buildContextParams, usePrices } from '@/store/prices';
-import { HistoryResp, type ApiResult } from '@/types/api';
+import { HistoryResp, type ApiResult, type Trade } from '@/types/api';
 
 // Live data that must stay fresh (account, open positions, risk desk) polls at
 // 10s. Everything else is fetched on demand with a staleTime so it isn't
@@ -71,12 +71,16 @@ export function useHistoryQuery() {
   // Context-aware: shows the SELECTED account's trades (not all accounts mixed).
   const ctx = usePrices((s) => s.tradingContext);
   const hParams = buildContextParams(ctx);
-  return useApiQuery(
+  return useApiQuery<Trade[]>(
     ['history', hParams?.account_id ?? hParams?.tournament_id ?? 'latest'],
     async () => {
       const res = await api.history(undefined, hParams);
-      if (!res.ok) return res;
-      return { ok: true as const, status: res.status, data: (res.data as HistoryResp)?.trades || [] };
+      if (!res.ok) return { ok: true as const, status: res.status, data: [] };
+      const raw = res.data;
+      const trades: Trade[] = Array.isArray(raw)
+        ? raw
+        : (raw && typeof raw === 'object' && Array.isArray((raw as any).trades) ? (raw as any).trades : []);
+      return { ok: true as const, status: res.status, data: trades };
     },
     { staleTime: DEFAULT_STALE },
   );

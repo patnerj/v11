@@ -179,7 +179,8 @@ function SidebarBody({
         queryKey: ['history', 'latest'],
         queryFn: async () => {
           const res = await api.history()
-          return res.ok ? res.data : []
+          const raw = res.ok ? res.data : null
+          return Array.isArray(raw) ? raw : (raw as any)?.trades || []
         },
       })
     } else if (item.href === '/dashboard/trading') {
