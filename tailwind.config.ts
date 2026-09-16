@@ -61,7 +61,7 @@ const config: Config = {
         surface:   { DEFAULT: 'hsl(var(--surface) / <alpha-value>)', muted: 'hsl(var(--surface-muted) / <alpha-value>)', strong: 'hsl(var(--surface-strong) / <alpha-value>)' },
         border:    { DEFAULT: 'hsl(var(--border) / <alpha-value>)', strong: 'hsl(var(--border-strong) / <alpha-value>)', subtle: 'hsl(var(--border-subtle) / <alpha-value>)' },
         text:      { DEFAULT: 'hsl(var(--text) / <alpha-value>)', muted: 'hsl(var(--text-muted) / <alpha-value>)', subtle: 'hsl(var(--text-subtle) / <alpha-value>)' },
-        accent:    { DEFAULT: 'hsl(var(--accent, 246 87% 70.5%) / <alpha-value>)', hover: 'hsl(var(--accent-hover, 246 87% 65%) / <alpha-value>)', muted: 'hsl(var(--accent, 246 87% 70.5%) / 0.14)' },
+        accent:    { DEFAULT: 'hsl(var(--accent) / <alpha-value>)', hover: 'hsl(var(--accent-hover, var(--accent)) / <alpha-value>)', muted: 'hsl(var(--accent) / 0.14)' },
         success:   { DEFAULT: 'hsl(var(--success) / <alpha-value>)', hover: 'hsl(var(--success-hover) / <alpha-value>)', muted: 'hsl(var(--success) / 0.14)' },
         danger:    { DEFAULT: 'hsl(var(--danger) / <alpha-value>)', hover: 'hsl(var(--danger-hover) / <alpha-value>)', muted: 'hsl(var(--danger) / 0.14)' },
         warn:      { DEFAULT: 'hsl(var(--warn) / <alpha-value>)', hover: 'hsl(var(--warn) / <alpha-value>)', muted: 'hsl(var(--warn) / 0.14)' },
@@ -69,14 +69,14 @@ const config: Config = {
         // shadcn aliases (used by ported primitives)
         background:  'hsl(var(--bg) / <alpha-value>)',
         foreground:  'hsl(var(--text) / <alpha-value>)',
-        primary:     { DEFAULT: 'hsl(var(--accent, 246 87% 70.5%) / <alpha-value>)', foreground: 'hsl(var(--surface) / <alpha-value>)' },
+        primary:     { DEFAULT: 'hsl(var(--accent) / <alpha-value>)', foreground: 'hsl(var(--surface) / <alpha-value>)' },
         secondary:   { DEFAULT: 'hsl(var(--surface-muted) / <alpha-value>)', foreground: 'hsl(var(--text) / <alpha-value>)' },
         destructive: { DEFAULT: 'hsl(var(--danger) / <alpha-value>)', foreground: 'hsl(var(--surface) / <alpha-value>)' },
         muted:       { DEFAULT: 'hsl(var(--surface-muted) / <alpha-value>)', foreground: 'hsl(var(--text-muted) / <alpha-value>)' },
         popover:     { DEFAULT: 'hsl(var(--surface) / <alpha-value>)', foreground: 'hsl(var(--text) / <alpha-value>)' },
         card:        { DEFAULT: 'hsl(var(--surface) / <alpha-value>)', foreground: 'hsl(var(--text) / <alpha-value>)' },
         input:       'hsl(var(--border) / <alpha-value>)',
-        ring:        'hsl(var(--accent, 246 87% 70.5%) / <alpha-value>)',
+        ring:        'hsl(var(--accent) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'var(--font-poppins)', 'Poppins', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
@@ -111,13 +111,13 @@ const config: Config = {
       boxShadow: {
         'card':      '0 1px 2px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.02) inset',
         'card-lg':   '0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset',
-        'glow':      '0 0 0 1px rgba(124,110,245,.4), 0 0 24px rgba(124,110,245,.25)',
+        'glow':      '0 0 0 1px rgba(var(--accent-rgb, 16, 185, 129), .4), 0 0 24px rgba(var(--accent-rgb, 16, 185, 129), .25)',
         'glow-success': '0 0 0 1px rgba(16,185,129,.4), 0 0 24px rgba(16,185,129,.25)',
       },
       backgroundImage: {
         'grid':      'linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px)',
         'noise':     'url("data:image/svg+xml;utf8,<svg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'n\'><feTurbulence type=\'fractalNoise\' baseFrequency=\'.9\'/></filter><rect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'.4\'/></svg>")',
-        'aurora':    'radial-gradient(circle at 20% 0%, rgba(124,110,245,.18) 0%, transparent 50%), radial-gradient(circle at 80% 100%, rgba(16,185,129,.12) 0%, transparent 50%)',
+        'aurora':    'radial-gradient(circle at 20% 0%, rgba(var(--accent-rgb, 16, 185, 129), .18) 0%, transparent 50%), radial-gradient(circle at 80% 100%, rgba(16,185,129,.12) 0%, transparent 50%)',
       },
       keyframes: {
         pulseGlow: {
@@ -133,8 +133,8 @@ const config: Config = {
           '100%': { backgroundPosition: '200% 0' },
         },
         breathingGlow: {
-          '0%, 100%': { boxShadow: '0 0 0 1px hsl(var(--accent, 246 87% 70.5%) / 0.2), 0 0 12px hsl(var(--accent, 246 87% 70.5%) / 0.1)' },
-          '50%': { boxShadow: '0 0 0 1px hsl(var(--accent, 246 87% 70.5%) / 0.5), 0 0 24px hsl(var(--accent, 246 87% 70.5%) / 0.25)' },
+          '0%, 100%': { boxShadow: '0 0 0 1px hsl(var(--accent) / 0.2), 0 0 12px hsl(var(--accent) / 0.1)' },
+          '50%': { boxShadow: '0 0 0 1px hsl(var(--accent) / 0.5), 0 0 24px hsl(var(--accent) / 0.25)' },
         }
       },
       animation: {

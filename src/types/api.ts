@@ -857,10 +857,13 @@ export interface Ticket {
 }
 
 export interface ThemeSettings {
-  primaryColor: string;
-  primaryForeground: string;
-  radius: string;
-  fontFamily: string;
+  primaryColor?: string;
+  primaryForeground?: string;
+  radius?: string;
+  fontFamily?: string;
+  primary_color?: string;
+  primary_foreground?: string;
+  font_family?: string;
   heroTitle?: string;
   heroHighlight?: string;
   heroSubtitle?: string;

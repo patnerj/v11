@@ -31,9 +31,12 @@ export function ThemeLoader() {
           const res = await api.admin.whitelabelGet();
           if (res.ok && res.data) {
             const data = res.data as any
-            if (data.primary_color) applyThemeAccent(data.primary_color);
-            if (data.font_family) applyFontFamily(data.font_family);
-            if (data.radius) applyRadius(data.radius);
+            const color = data.primary_color || data.primaryColor;
+            const font = data.font_family || data.fontFamily;
+            const radius = data.radius;
+            if (color) applyThemeAccent(color);
+            if (font) applyFontFamily(font);
+            if (radius) applyRadius(radius);
             return;
           }
         }
@@ -44,9 +47,12 @@ export function ThemeLoader() {
           const res = await api.branding();
           if (res.ok && res.data) {
             const data = res.data as any
-            if (data.primary_color) applyThemeAccent(data.primary_color);
-            if (data.font_family) applyFontFamily(data.font_family);
-            if (data.radius) applyRadius(data.radius);
+            const color = data.primary_color || data.primaryColor;
+            const font = data.font_family || data.fontFamily;
+            const radius = data.radius;
+            if (color) applyThemeAccent(color);
+            if (font) applyFontFamily(font);
+            if (radius) applyRadius(radius);
           }
         }
       } catch (e) {}

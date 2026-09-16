@@ -8,10 +8,11 @@ import { api } from "@/lib/api";
 import { ThemeSettings } from "@/types/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from "sonner";
+import { applyThemeAccent } from "@/lib/theme-accent";
 
 export function ThemeEditor() {
   const defaultSettings: ThemeSettings = {
-    primaryColor: "#7c6ef5",
+    primaryColor: "#10B981",
     primaryForeground: "#ffffff",
     radius: "0.5rem",
     fontFamily: "Inter, sans-serif",
@@ -31,7 +32,14 @@ export function ThemeEditor() {
   useEffect(() => {
     api.theme.get().then((res) => {
       if (res.ok && res.data) {
-        setSettings({ ...defaultSettings, ...res.data });
+        const color = (res.data as any).primary_color || (res.data as any).primaryColor;
+        const font = (res.data as any).font_family || (res.data as any).fontFamily;
+        setSettings({
+          ...defaultSettings,
+          ...res.data,
+          ...(color ? { primaryColor: color, primary_color: color } : {}),
+          ...(font ? { fontFamily: font, font_family: font } : {}),
+        });
       }
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -40,6 +48,11 @@ export function ThemeEditor() {
   const updateLocalThemeCache = (data: ThemeSettings) => {
     try {
       localStorage.setItem('fxsim-theme', JSON.stringify(data));
+      const color = data.primaryColor || data.primary_color;
+      if (color) {
+        localStorage.setItem('fxsim:theme-accent', color);
+        document.cookie = "fxsim-theme-accent=" + encodeURIComponent(color) + "; path=/; max-age=31536000; SameSite=Lax";
+      }
       document.cookie = "fxsim-theme-data=" + encodeURIComponent(JSON.stringify(data)) + "; path=/; max-age=31536000; SameSite=Lax";
     } catch (e) {}
   };
@@ -49,6 +62,9 @@ export function ThemeEditor() {
     try {
       await api.admin.theme.save(settings);
       updateLocalThemeCache(settings);
+      if (settings.primaryColor) {
+        applyThemeAccent(settings.primaryColor);
+      }
       toast.success("Theme settings saved successfully.");
       window.location.reload();
     } catch (err) {

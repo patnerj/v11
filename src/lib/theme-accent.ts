@@ -268,6 +268,12 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
   if (persist) {
     try {
       localStorage.setItem('fxsim:theme-accent', cleanHex)
+      // Set cookie for instant SSR detection on page reloads/first paint
+      document.cookie = 'fxsim-theme-accent=' + encodeURIComponent(cleanHex) + '; path=/; max-age=31536000; SameSite=Lax'
+      // Overwrite legacy keys so old #7c6ef5 purple is eradicated forever
+      const legacyData = { primaryColor: cleanHex, primary_color: cleanHex }
+      localStorage.setItem('fxsim-theme', JSON.stringify(legacyData))
+      document.cookie = 'fxsim-theme-data=' + encodeURIComponent(JSON.stringify(legacyData)) + '; path=/; max-age=31536000; SameSite=Lax'
     } catch {
       /* private mode */
     }
@@ -372,7 +378,29 @@ export function initializeSavedTheme() {
   if (typeof window === 'undefined') return
 
   try {
-    const savedAccent = localStorage.getItem('fxsim:theme-accent')
+    let savedAccent = localStorage.getItem('fxsim:theme-accent')
+    if (!savedAccent) {
+      // Check cookie fallback
+      const cookies = document.cookie ? document.cookie.split(';') : []
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim()
+        if (c.indexOf('fxsim-theme-accent=') === 0) {
+          try {
+            savedAccent = decodeURIComponent(c.substring('fxsim-theme-accent='.length)).trim()
+          } catch {}
+          break
+        }
+      }
+    }
+    if (!savedAccent) {
+      try {
+        const legacy = localStorage.getItem('fxsim-theme')
+        if (legacy) {
+          const parsed = JSON.parse(legacy)
+          savedAccent = parsed?.primary_color || parsed?.primaryColor
+        }
+      } catch {}
+    }
     if (savedAccent) {
       applyThemeAccent(savedAccent)
     }

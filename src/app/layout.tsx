@@ -155,15 +155,106 @@ function hexToHsl(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  hex = hex.replace(/^#/, '');
+  if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+  if (hex.length !== 6) return { r: 16, g: 185, b: 129 };
+  return {
+    r: parseInt(hex.substring(0, 2), 16),
+    g: parseInt(hex.substring(2, 4), 16),
+    b: parseInt(hex.substring(4, 6), 16),
+  };
+}
+
+/**
+ * Sanitize a theme value before splicing it into a CSS string. The theme
+ * cookie is client-writable, so an unsanitized fontFamily/primaryForeground
+ * is a persistent CSS-injection sink (e.g. `x} body{background:url(//evil)}`).
+ * Allow only a safe charset and cap length; anything else falls back.
+ */
+function safeCssValue(v: unknown, fallback: string): string {
+  const s = typeof v === 'string' ? v.trim() : ''
+  return /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(s) ? s : fallback
+}
+
+function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: string): string {
+  const cleanHex = colorHex.startsWith('#') ? colorHex : `#${colorHex}`;
+  if (!/^#[0-9a-fA-F]{3,8}$/.test(cleanHex)) return '';
+  const { r, g, b } = hexToRgb(cleanHex);
+  const hsl = hexToHsl(cleanHex);
+  const glow = `rgba(${r}, ${g}, ${b}, 0.25)`;
+  const safeFont = safeCssValue(rawFont, 'var(--font-poppins), Poppins, sans-serif');
+  const safeFg = safeCssValue(rawForeground, '#ffffff');
+
+  return `
+    :root, [data-theme], .dark {
+      --accent: ${hsl} !important;
+      --accent-hover: ${hsl} !important;
+      --accent-hex: ${cleanHex} !important;
+      --accent-rgb: ${r}, ${g}, ${b} !important;
+      --accent-glow: ${glow} !important;
+      --primary: ${cleanHex} !important;
+      --primary-rgb: ${r}, ${g}, ${b} !important;
+      --primary-hover: ${cleanHex} !important;
+      --font-sans: ${safeFont};
+    }
+    .text-accent,
+    .text-emerald-400,
+    .text-emerald-500 {
+      color: ${cleanHex} !important;
+    }
+    .bg-accent,
+    .bg-emerald-500,
+    .bg-emerald-600 {
+      background-color: ${cleanHex} !important;
+    }
+    .border-accent,
+    .border-emerald-500,
+    .border-emerald-500\\/40,
+    .border-emerald-500\\/30,
+    .border-emerald-500\\/20 {
+      border-color: ${cleanHex} !important;
+    }
+    .bg-accent\\/15,
+    .bg-emerald-500\\/15,
+    .bg-emerald-500\\/10,
+    .bg-emerald-500\\/20,
+    .bg-emerald-600\\/10 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.15) !important;
+    }
+    .hover\\:bg-emerald-500\\/20:hover,
+    .hover\\:bg-emerald-500\\/10:hover {
+      background-color: rgba(${r}, ${g}, ${b}, 0.2) !important;
+    }
+    .hover\\:border-emerald-500:hover,
+    .hover\\:border-emerald-500\\/50:hover {
+      border-color: ${cleanHex} !important;
+    }
+    .hover\\:text-emerald-300:hover,
+    .hover\\:text-emerald-400:hover {
+      color: ${cleanHex} !important;
+    }
+    .shadow-accent,
+    .shadow-emerald-500\\/20,
+    .shadow-emerald-500\\/10 {
+      box-shadow: 0 0 15px ${glow} !important;
+    }
+    .focus-within\\:border-\\[\\#10B981\\]:focus-within {
+      border-color: ${cleanHex} !important;
+    }
+    .focus-within\\:ring-\\[\\#10B981\\]:focus-within {
+      --tw-ring-color: ${cleanHex} !important;
+    }
+    body, html { font-family: ${safeFont} !important; }
+    .bg-primary { color: ${safeFg} !important; }
+  `;
+}
+
 async function getThemeCSS() {
-  // P3: SSR must only call the CONFIGURED backend. Old code fell through to
-  // http://127.0.0.1:3000… and http://propfirm.local… — developer-laptop
-  // hostnames that can never resolve on Vercel/production. Unconfigured env
-  // now returns default CSS instead of phoning localhost.
   const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
   if (!apiPath.startsWith('http')) return ''
 
-  const urlsToTry: string[] = [`${apiPath}/theme`]
+  const urlsToTry: string[] = [`${apiPath}/theme`, `${apiPath}/branding`]
 
   for (const fetchUrl of urlsToTry) {
     try {
@@ -178,17 +269,12 @@ async function getThemeCSS() {
       clearTimeout(timeoutId)
       
       if (res.ok) {
-        const data: ThemeSettings = await res.json()
-        if (data && data.primaryColor) {
-          const accentHsl = hexToHsl(data.primaryColor);
-          const foreground = safeCssValue(data.primaryForeground, '#ffffff');
-          const fontFamily = safeCssValue(data.fontFamily, 'var(--font-poppins), Poppins, sans-serif');
-          return `
-            :root { --accent: ${accentHsl}; --accent-hover: ${accentHsl}; --font-sans: ${fontFamily}; }
-            .dark { --accent: ${accentHsl}; --accent-hover: ${accentHsl}; }
-            body, html { font-family: ${fontFamily} !important; }
-            .bg-primary { color: ${foreground} !important; }
-          `;
+        const data = await res.json()
+        const primary = data?.primary_color || data?.primaryColor;
+        if (primary) {
+          const font = data.font_family || data.fontFamily;
+          const foreground = data.primary_foreground || data.primaryForeground;
+          return buildThemeCss(primary, font, foreground);
         }
       }
     } catch (e) {
@@ -198,35 +284,29 @@ async function getThemeCSS() {
   return '';
 }
 
-/**
- * Sanitize a theme value before splicing it into a CSS string. The theme
- * cookie is client-writable, so an unsanitized fontFamily/primaryForeground
- * is a persistent CSS-injection sink (e.g. `x} body{background:url(//evil)}`).
- * Allow only a safe charset and cap length; anything else falls back.
- */
-function safeCssValue(v: unknown, fallback: string): string {
-  const s = typeof v === 'string' ? v.trim() : ''
-  return /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(s) ? s : fallback
-}
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let themeCss = '';
   try {
     const cookieStore = await cookies();
-    const rawCookie = cookieStore.get('fxsim-theme-data')?.value;
-    if (rawCookie) {
-      const decoded = decodeURIComponent(rawCookie);
-      const data: ThemeSettings = JSON.parse(decoded);
-      if (data && data.primaryColor) {
-        const accentHsl = hexToHsl(data.primaryColor);
-        const foreground = safeCssValue(data.primaryForeground, '#ffffff');
-        const fontFamily = safeCssValue(data.fontFamily, 'var(--font-poppins), Poppins, sans-serif');
-        themeCss = `
-          :root { --accent: ${accentHsl}; --accent-hover: ${accentHsl}; --font-sans: ${fontFamily}; }
-          .dark { --accent: ${accentHsl}; --accent-hover: ${accentHsl}; }
-          body, html { font-family: ${fontFamily} !important; }
-          .bg-primary { color: ${foreground} !important; }
-        `;
+    const accentCookie = cookieStore.get('fxsim-theme-accent')?.value;
+    if (accentCookie) {
+      const decoded = decodeURIComponent(accentCookie).trim();
+      if (/^#?[0-9a-fA-F]{3,8}$/.test(decoded)) {
+        themeCss = buildThemeCss(decoded);
+      }
+    }
+
+    if (!themeCss) {
+      const rawCookie = cookieStore.get('fxsim-theme-data')?.value;
+      if (rawCookie) {
+        const decoded = decodeURIComponent(rawCookie);
+        const data = JSON.parse(decoded);
+        const color = data?.primary_color || data?.primaryColor;
+        if (color && typeof color === 'string' && /^#?[0-9a-fA-F]{3,8}$/.test(color)) {
+          const font = data.font_family || data.fontFamily;
+          const foreground = data.primary_foreground || data.primaryForeground;
+          themeCss = buildThemeCss(color, font, foreground);
+        }
       }
     }
   } catch (e) {
@@ -251,6 +331,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <head>
+        <style id="fxsim-dynamic-theme-ssr" dangerouslySetInnerHTML={{ __html: themeCss || '' }} suppressHydrationWarning />
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             try {
@@ -276,63 +357,130 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               var chosenFont = fontMap[savedFont] || fontMap['poppins'];
               document.documentElement.style.setProperty('--font-sans', chosenFont);
 
-              var data = null;
+              var accent = null;
+              try {
+                accent = localStorage.getItem('fxsim:theme-accent');
+              } catch (e) {}
+
               var cookies = document.cookie ? document.cookie.split(';') : [];
-              for (var i = 0; i < cookies.length; i++) {
-                var c = cookies[i].trim();
-                if (c.indexOf('fxsim-theme-data=') === 0) {
-                  try {
-                    var val = c.substring('fxsim-theme-data='.length);
-                    data = JSON.parse(decodeURIComponent(val));
-                  } catch (e) {}
-                  break;
+              if (!accent) {
+                for (var i = 0; i < cookies.length; i++) {
+                  var c = cookies[i].trim();
+                  if (c.indexOf('fxsim-theme-accent=') === 0) {
+                    try {
+                      accent = decodeURIComponent(c.substring('fxsim-theme-accent='.length)).trim();
+                    } catch (e) {}
+                    break;
+                  }
                 }
               }
 
-              if (!data) {
+              var legacyFont = null;
+              var legacyFg = '#ffffff';
+              if (!accent) {
+                for (var j = 0; j < cookies.length; j++) {
+                  var ck = cookies[j].trim();
+                  if (ck.indexOf('fxsim-theme-data=') === 0) {
+                    try {
+                      var val = ck.substring('fxsim-theme-data='.length);
+                      var parsed = JSON.parse(decodeURIComponent(val));
+                      accent = parsed.primary_color || parsed.primaryColor;
+                      legacyFont = parsed.font_family || parsed.fontFamily;
+                      legacyFg = parsed.primary_foreground || parsed.primaryForeground || legacyFg;
+                    } catch (e) {}
+                    break;
+                  }
+                }
+              }
+
+              if (!accent) {
                 try {
-                  var saved = localStorage.getItem('fxsim-theme');
-                  if (saved) {
-                    data = JSON.parse(saved);
+                  var savedLegacy = localStorage.getItem('fxsim-theme');
+                  if (savedLegacy) {
+                    var parsedLegacy = JSON.parse(savedLegacy);
+                    accent = parsedLegacy.primary_color || parsedLegacy.primaryColor;
+                    legacyFont = parsedLegacy.font_family || parsedLegacy.fontFamily;
+                    legacyFg = parsedLegacy.primary_foreground || parsedLegacy.primaryForeground || legacyFg;
                   }
                 } catch (e) {}
               }
 
-              if (data && data.primaryColor) {
-                var safeVal = function(v, fb) {
-                  if (typeof v !== 'string') return fb;
-                  v = v.trim();
-                  return (/^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(v) && v) || fb;
-                };
-                var safeFont = safeVal(data.fontFamily, chosenFont);
-                var safeFg = safeVal(data.primaryForeground, '#ffffff');
-                var hex = data.primaryColor.replace(/^#/, '');
-                if (!/^[0-9a-fA-F]{3}$/.test(hex) && !/^[0-9a-fA-F]{6}$/.test(hex)) { return; }
-                if (hex.length === 3) hex = hex.split('').map(function(x){return x+x}).join('');
-                var r = parseInt(hex.substring(0, 2), 16) / 255, g = parseInt(hex.substring(2, 4), 16) / 255, b = parseInt(hex.substring(4, 6), 16) / 255;
-                var max = Math.max(r, g, b), min = Math.min(r, g, b);
-                var h = 0, s = 0, l = (max + min) / 2;
-                if (max !== min) {
-                  var d = max - min;
-                  s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                  if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
-                  else if (max === g) h = (b - r) / d + 2;
-                  else h = (r - g) / d + 4;
-                  h /= 6;
+              if (accent && typeof accent === 'string') {
+                var hex = accent.trim().replace(/^#/, '');
+                if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+                  hex = hex.split('').map(function(x){ return x + x; }).join('');
                 }
-                var accentHsl = Math.round(h * 360) + ' ' + Math.round(s * 100) + '% ' + Math.round(l * 100) + '%';
-                var styleEl = document.getElementById('fxsim-dynamic-theme-local');
-                if (!styleEl) {
-                  styleEl = document.createElement('style');
-                  styleEl.id = 'fxsim-dynamic-theme-local';
-                  document.head.appendChild(styleEl);
+                if (/^[0-9a-fA-F]{6}$/.test(hex)) {
+                  var cleanHex = '#' + hex;
+                  var r = parseInt(hex.substring(0, 2), 16);
+                  var g = parseInt(hex.substring(2, 4), 16);
+                  var b = parseInt(hex.substring(4, 6), 16);
+                  var rNorm = r / 255, gNorm = g / 255, bNorm = b / 255;
+                  var max = Math.max(rNorm, gNorm, bNorm), min = Math.min(rNorm, gNorm, bNorm);
+                  var h = 0, s = 0, l = (max + min) / 2;
+                  if (max !== min) {
+                    var d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    if (max === rNorm) h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0);
+                    else if (max === gNorm) h = (bNorm - rNorm) / d + 2;
+                    else h = (rNorm - gNorm) / d + 4;
+                    h /= 6;
+                  }
+                  var accentHsl = Math.round(h * 360) + ' ' + Math.round(s * 100) + '% ' + Math.round(l * 100) + '%';
+                  var glow = 'rgba(' + r + ', ' + g + ', ' + b + ', 0.25)';
+
+                  var root = document.documentElement;
+                  root.style.setProperty('--accent', accentHsl);
+                  root.style.setProperty('--accent-hover', accentHsl);
+                  root.style.setProperty('--accent-hex', cleanHex);
+                  root.style.setProperty('--accent-rgb', r + ', ' + g + ', ' + b);
+                  root.style.setProperty('--accent-glow', glow);
+                  root.style.setProperty('--primary', cleanHex);
+                  root.style.setProperty('--primary-rgb', r + ', ' + g + ', ' + b);
+                  root.style.setProperty('--primary-hover', cleanHex);
+
+                  var safeFont = (legacyFont && /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(legacyFont)) ? legacyFont : chosenFont;
+                  var safeFgVal = (legacyFg && /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(legacyFg)) ? legacyFg : '#ffffff';
+
+                  var styleEl = document.getElementById('fxsim-dynamic-theme-local');
+                  if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'fxsim-dynamic-theme-local';
+                    document.head.appendChild(styleEl);
+                  }
+                  styleEl.innerHTML = ':root, [data-theme], .dark {' +
+                    '--accent: ' + accentHsl + ' !important;' +
+                    '--accent-hover: ' + accentHsl + ' !important;' +
+                    '--accent-hex: ' + cleanHex + ' !important;' +
+                    '--accent-rgb: ' + r + ', ' + g + ', ' + b + ' !important;' +
+                    '--accent-glow: ' + glow + ' !important;' +
+                    '--primary: ' + cleanHex + ' !important;' +
+                    '--primary-rgb: ' + r + ', ' + g + ', ' + b + ' !important;' +
+                    '--primary-hover: ' + cleanHex + ' !important;' +
+                    '--font-sans: ' + safeFont + ';' +
+                  '}' +
+                  '.text-accent, .text-emerald-400, .text-emerald-500 { color: ' + cleanHex + ' !important; }' +
+                  '.bg-accent, .bg-emerald-500, .bg-emerald-600 { background-color: ' + cleanHex + ' !important; }' +
+                  '.border-accent, .border-emerald-500, .border-emerald-500\\\\/40, .border-emerald-500\\\\/30, .border-emerald-500\\\\/20 { border-color: ' + cleanHex + ' !important; }' +
+                  '.bg-accent\\\\/15, .bg-emerald-500\\\\/15, .bg-emerald-500\\\\/10, .bg-emerald-500\\\\/20, .bg-emerald-600\\\\/10 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.15) !important; }' +
+                  '.hover\\\\:bg-emerald-500\\\\/20:hover, .hover\\\\:bg-emerald-500\\\\/10:hover { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
+                  '.hover\\\\:border-emerald-500:hover, .hover\\\\:border-emerald-500\\\\/50:hover { border-color: ' + cleanHex + ' !important; }' +
+                  '.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover { color: ' + cleanHex + ' !important; }' +
+                  '.shadow-accent, .shadow-emerald-500\\\\/20, .shadow-emerald-500\\\\/10 { box-shadow: 0 0 15px ' + glow + ' !important; }' +
+                  '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
+                  '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +
+                  'body, html { font-family: ' + safeFont + ' !important; }' +
+                  '.bg-primary { color: ' + safeFgVal + ' !important; }';
+
+                  var ssrEl = document.getElementById('fxsim-dynamic-theme-ssr');
+                  if (ssrEl) {
+                    ssrEl.innerHTML = styleEl.innerHTML;
+                  }
                 }
-                styleEl.innerHTML = ':root { --accent: ' + accentHsl + '; --accent-hover: ' + accentHsl + '; --font-sans: ' + safeFont + '; } .dark { --accent: ' + accentHsl + '; --accent-hover: ' + accentHsl + '; } body, html { font-family: ' + safeFont + ' !important; } .bg-primary { color: ' + safeFg + ' !important; }';
               }
             } catch (e) {}
           })();
         ` }} suppressHydrationWarning />
-        <style id="fxsim-dynamic-theme-ssr" dangerouslySetInnerHTML={{ __html: themeCss || '' }} suppressHydrationWarning />
       </head>
       <body className={`min-h-screen antialiased font-sans ${poppins.className}`} style={{ fontFamily: 'var(--font-sans, var(--font-poppins))' }} suppressHydrationWarning>
         <Providers>{children}</Providers>
