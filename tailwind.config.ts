@@ -121,8 +121,8 @@ const config: Config = {
       },
       keyframes: {
         pulseGlow: {
-          '0%,100%': { boxShadow: '0 0 0 0 rgba(16,185,129,.4)' },
-          '50%':     { boxShadow: '0 0 0 8px rgba(16,185,129,0)' },
+          '0%,100%': { boxShadow: '0 0 0 0 rgba(var(--accent-rgb, 16, 185, 129), .4)' },
+          '50%':     { boxShadow: '0 0 0 8px rgba(var(--accent-rgb, 16, 185, 129), 0)' },
         },
         slideUp: {
           from: { opacity: '0', transform: 'translateY(8px)' },

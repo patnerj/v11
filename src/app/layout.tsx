@@ -157,7 +157,11 @@ function hexToHsl(hex: string): string {
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   hex = hex.replace(/^#/, '');
-  if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+  if (hex.length === 3 || hex.length === 4) {
+    hex = hex.split('').slice(0, 3).map(x => x + x).join('');
+  } else if (hex.length > 6) {
+    hex = hex.substring(0, 6);
+  }
   if (hex.length !== 6) return { r: 16, g: 185, b: 129 };
   return {
     r: parseInt(hex.substring(0, 2), 16),
@@ -209,18 +213,30 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       background-color: ${cleanHex} !important;
     }
     .border-accent,
+    .border-accent\\/40,
+    .border-accent\\/30,
+    .border-accent\\/20,
     .border-emerald-500,
     .border-emerald-500\\/40,
     .border-emerald-500\\/30,
     .border-emerald-500\\/20 {
       border-color: ${cleanHex} !important;
     }
+    .bg-accent\\/20,
+    .bg-emerald-500\\/20 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.2) !important;
+    }
     .bg-accent\\/15,
     .bg-emerald-500\\/15,
     .bg-emerald-500\\/10,
-    .bg-emerald-500\\/20,
     .bg-emerald-600\\/10 {
       background-color: rgba(${r}, ${g}, ${b}, 0.15) !important;
+    }
+    .bg-accent\\/10 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.1) !important;
+    }
+    .bg-accent\\/5 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.05) !important;
     }
     .hover\\:bg-emerald-500\\/20:hover,
     .hover\\:bg-emerald-500\\/10:hover {
@@ -235,6 +251,8 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       color: ${cleanHex} !important;
     }
     .shadow-accent,
+    .shadow-accent\\/20,
+    .shadow-accent\\/10,
     .shadow-emerald-500\\/20,
     .shadow-emerald-500\\/10 {
       box-shadow: 0 0 15px ${glow} !important;
@@ -407,8 +425,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
               if (accent && typeof accent === 'string') {
                 var hex = accent.trim().replace(/^#/, '');
-                if (/^[0-9a-fA-F]{3}$/.test(hex)) {
-                  hex = hex.split('').map(function(x){ return x + x; }).join('');
+                if (/^[0-9a-fA-F]{3,4}$/.test(hex)) {
+                  hex = hex.substring(0, 3).split('').map(function(x){ return x + x; }).join('');
+                } else if (/^[0-9a-fA-F]{8}$/.test(hex)) {
+                  hex = hex.substring(0, 6);
                 }
                 if (/^[0-9a-fA-F]{6}$/.test(hex)) {
                   var cleanHex = '#' + hex;
@@ -442,13 +462,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   var safeFont = (legacyFont && /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(legacyFont)) ? legacyFont : chosenFont;
                   var safeFgVal = (legacyFg && /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(legacyFg)) ? legacyFg : '#ffffff';
 
-                  var styleEl = document.getElementById('fxsim-dynamic-theme-local');
-                  if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = 'fxsim-dynamic-theme-local';
-                    document.head.appendChild(styleEl);
-                  }
-                  styleEl.innerHTML = ':root, [data-theme], .dark {' +
+                  var cssText = ':root, [data-theme], .dark {' +
                     '--accent: ' + accentHsl + ' !important;' +
                     '--accent-hover: ' + accentHsl + ' !important;' +
                     '--accent-hex: ' + cleanHex + ' !important;' +
@@ -461,12 +475,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   '}' +
                   '.text-accent, .text-emerald-400, .text-emerald-500 { color: ' + cleanHex + ' !important; }' +
                   '.bg-accent, .bg-emerald-500, .bg-emerald-600 { background-color: ' + cleanHex + ' !important; }' +
-                  '.border-accent, .border-emerald-500, .border-emerald-500\\\\/40, .border-emerald-500\\\\/30, .border-emerald-500\\\\/20 { border-color: ' + cleanHex + ' !important; }' +
-                  '.bg-accent\\\\/15, .bg-emerald-500\\\\/15, .bg-emerald-500\\\\/10, .bg-emerald-500\\\\/20, .bg-emerald-600\\\\/10 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.15) !important; }' +
+                  '.border-accent, .border-accent\\\\/40, .border-accent\\\\/30, .border-accent\\\\/20, .border-emerald-500, .border-emerald-500\\\\/40, .border-emerald-500\\\\/30, .border-emerald-500\\\\/20 { border-color: ' + cleanHex + ' !important; }' +
+                  '.bg-accent\\\\/20, .bg-emerald-500\\\\/20 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
+                  '.bg-accent\\\\/15, .bg-emerald-500\\\\/15, .bg-emerald-500\\\\/10, .bg-emerald-600\\\\/10 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.15) !important; }' +
+                  '.bg-accent\\\\/10 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.1) !important; }' +
+                  '.bg-accent\\\\/5 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.05) !important; }' +
                   '.hover\\\\:bg-emerald-500\\\\/20:hover, .hover\\\\:bg-emerald-500\\\\/10:hover { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
                   '.hover\\\\:border-emerald-500:hover, .hover\\\\:border-emerald-500\\\\/50:hover { border-color: ' + cleanHex + ' !important; }' +
                   '.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover { color: ' + cleanHex + ' !important; }' +
-                  '.shadow-accent, .shadow-emerald-500\\\\/20, .shadow-emerald-500\\\\/10 { box-shadow: 0 0 15px ' + glow + ' !important; }' +
+                  '.shadow-accent, .shadow-accent\\\\/20, .shadow-accent\\\\/10, .shadow-emerald-500\\\\/20, .shadow-emerald-500\\\\/10 { box-shadow: 0 0 15px ' + glow + ' !important; }' +
                   '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
                   '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +
                   'body, html { font-family: ' + safeFont + ' !important; }' +
@@ -474,8 +491,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
                   var ssrEl = document.getElementById('fxsim-dynamic-theme-ssr');
                   if (ssrEl) {
-                    ssrEl.innerHTML = styleEl.innerHTML;
+                    ssrEl.innerHTML = cssText;
                   }
+                  var styleEl = document.getElementById('fxsim-dynamic-theme-local');
+                  if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'fxsim-dynamic-theme-local';
+                    document.head.appendChild(styleEl);
+                  }
+                  styleEl.innerHTML = cssText;
                 }
               }
             } catch (e) {}

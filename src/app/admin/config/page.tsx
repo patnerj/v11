@@ -1066,9 +1066,9 @@ export default function ConfigurationHubPage() {
 
   useEffect(() => {
     if (whitelabelData && Object.keys(whitelabelData).length > 0) {
-      const activeAccent = whitelabelData.primary_color || '#10B981'
-      const activeFont = whitelabelData.font_family || 'poppins'
-      const activeRadius = whitelabelData.radius || 'md'
+      const activeAccent = (whitelabelData as any).primary_color || (whitelabelData as any).primaryColor || '#10B981'
+      const activeFont = (whitelabelData as any).font_family || (whitelabelData as any).fontFamily || 'poppins'
+      const activeRadius = (whitelabelData as any).radius || 'md'
       setBrandingForm((prev) => ({
         ...prev,
         brand_name: whitelabelData.brand_name || prev.brand_name,

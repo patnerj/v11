@@ -127,8 +127,10 @@ export const FONT_PRESETS = [
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   let cleanHex = hex.replace(/^#/, '')
-  if (cleanHex.length === 3) {
-    cleanHex = cleanHex.split('').map((c) => c + c).join('')
+  if (cleanHex.length === 3 || cleanHex.length === 4) {
+    cleanHex = cleanHex.split('').slice(0, 3).map((c) => c + c).join('')
+  } else if (cleanHex.length > 6) {
+    cleanHex = cleanHex.substring(0, 6)
   }
   if (cleanHex.length !== 6) {
     return { r: 16, g: 185, b: 129 } // Default Emerald
@@ -184,6 +186,7 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
   const root = document.documentElement
 
   root.style.setProperty('--accent', hsl)
+  root.style.setProperty('--accent-hover', hsl)
   root.style.setProperty('--accent-hex', cleanHex)
   root.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`)
   root.style.setProperty('--accent-glow', glow)
@@ -200,7 +203,7 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
     document.head.appendChild(styleEl)
   }
   styleEl.innerHTML = `
-    :root, [data-theme] {
+    :root, [data-theme], .dark {
       --accent: ${hsl} !important;
       --accent-hover: ${hsl} !important;
       --accent-hex: ${cleanHex} !important;
@@ -208,6 +211,7 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
       --accent-glow: ${glow} !important;
       --primary: ${cleanHex} !important;
       --primary-rgb: ${r}, ${g}, ${b} !important;
+      --primary-hover: ${cleanHex} !important;
     }
     .text-accent,
     .text-emerald-400,
@@ -220,18 +224,30 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
       background-color: ${cleanHex} !important;
     }
     .border-accent,
+    .border-accent\\/40,
+    .border-accent\\/30,
+    .border-accent\\/20,
     .border-emerald-500,
     .border-emerald-500\\/40,
     .border-emerald-500\\/30,
     .border-emerald-500\\/20 {
       border-color: ${cleanHex} !important;
     }
+    .bg-accent\\/20,
+    .bg-emerald-500\\/20 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.2) !important;
+    }
     .bg-accent\\/15,
     .bg-emerald-500\\/15,
     .bg-emerald-500\\/10,
-    .bg-emerald-500\\/20,
     .bg-emerald-600\\/10 {
       background-color: rgba(${r}, ${g}, ${b}, 0.15) !important;
+    }
+    .bg-accent\\/10 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.1) !important;
+    }
+    .bg-accent\\/5 {
+      background-color: rgba(${r}, ${g}, ${b}, 0.05) !important;
     }
     .hover\\:bg-emerald-500\\/20:hover,
     .hover\\:bg-emerald-500\\/10:hover {
@@ -246,6 +262,8 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
       color: ${cleanHex} !important;
     }
     .shadow-accent,
+    .shadow-accent\\/20,
+    .shadow-accent\\/10,
     .shadow-emerald-500\\/20,
     .shadow-emerald-500\\/10 {
       box-shadow: 0 0 15px ${glow} !important;

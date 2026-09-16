@@ -62,8 +62,9 @@ export function ThemeEditor() {
     try {
       await api.admin.theme.save(settings);
       updateLocalThemeCache(settings);
-      if (settings.primaryColor) {
-        applyThemeAccent(settings.primaryColor);
+      const colorToApply = settings.primaryColor || settings.primary_color;
+      if (colorToApply) {
+        applyThemeAccent(colorToApply);
       }
       toast.success("Theme settings saved successfully.");
       window.location.reload();
