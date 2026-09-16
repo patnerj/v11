@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Trophy, Users, ArrowLeft, ArrowRight, TrendingUp, Activity } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { Competition, LeaderboardRow } from '@/types/api'
+import type { Competition, TournamentParticipant, PaymentOrder } from '@/types/api'
 import { toast } from 'sonner'
 
 export default function PublicTournamentArena() {
@@ -13,8 +13,8 @@ export default function PublicTournamentArena() {
   const id = Number(params.id)
 
   const [tournament, setTournament] = useState<Competition | null>(null)
-  const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([])
-  const [pendingOrder, setPendingOrder] = useState<any | null>(null)
+  const [leaderboard, setLeaderboard] = useState<TournamentParticipant[]>([])
+  const [pendingOrder, setPendingOrder] = useState<PaymentOrder | null>(null)
   const [loading, setLoading] = useState(true)
   const [registering, setRegistering] = useState(false)
   const [registered, setRegistered] = useState(false)
@@ -29,27 +29,29 @@ export default function PublicTournamentArena() {
       const [tRes, lRes, oRes] = await Promise.all([
         api.tournaments.get(id),
         api.tournaments.leaderboard(id),
-        api.paymentMyOrders(true).catch(() => ({ ok: false as const, data: [] }))
+        api.paymentMyOrders(true).catch(() => ({ ok: false as const, data: [] as PaymentOrder[] }))
       ])
       
       if (tRes.ok) {
         setTournament(tRes.data)
-        if ((tRes.data as any)?.is_registered || (tRes.data as any)?.is_joined) {
+        if (tRes.data?.is_registered || tRes.data?.is_joined || tRes.data?.joined) {
           setRegistered(true)
         }
       }
       if (lRes.ok) {
         const lbData = lRes.data
         if (Array.isArray(lbData)) {
-          setLeaderboard(lbData as any)
-        } else if (lbData && Array.isArray((lbData as any).leaderboard)) {
-          setLeaderboard((lbData as any).leaderboard)
+          setLeaderboard(lbData)
+        } else if (lbData && typeof lbData === 'object' && 'leaderboard' in lbData && Array.isArray(lbData.leaderboard)) {
+          setLeaderboard(lbData.leaderboard)
         }
       }
       if (oRes.ok && Array.isArray(oRes.data)) {
-        const po = oRes.data.find((o: any) => {
+        const po = oRes.data.find((o: PaymentOrder) => {
           if (o.status !== 'pending' && o.status !== 'submitted') return false
-          const tid = (o as any).tournament_id ? Number((o as any).tournament_id) : (o.admin_note?.match(/tournament_entry:(\d+)/)?.[1] ? Number(o.admin_note.match(/tournament_entry:(\d+)/)[1]) : null)
+          const tid = (o as PaymentOrder & { tournament_id?: number }).tournament_id 
+            ? Number((o as PaymentOrder & { tournament_id?: number }).tournament_id) 
+            : (o.admin_note?.match(/tournament_entry:(\d+)/)?.[1] ? Number(o.admin_note.match(/tournament_entry:(\d+)/)![1]) : null)
           return tid === id
         })
         setPendingOrder(po || null)
@@ -242,11 +244,11 @@ export default function PublicTournamentArena() {
                     ) : (
                       leaderboard.map((row, index) => {
                         const isTop3 = index < 3
-                        const returnPct = Number((row as any).roi_pct ?? (row as any).profit_pct ?? (row as any).return_pct ?? 0)
+                        const returnPct = Number(row.roi_pct ?? 0)
                         const isPositive = returnPct > 0
-                        const traderName = (row as any).display_name || (row as any).user_login || (row as any).trader_name || `Trader #${(row as any).user_id || index + 1}`
-                        const currentVal = Number((row as any).current_equity ?? (row as any).current_balance ?? (row as any).equity ?? 0)
-                        const rankNum = (row as any).rank || index + 1
+                        const traderName = row.display_name || row.user_login || `Trader #${row.user_id || index + 1}`
+                        const currentVal = Number(row.current_equity ?? 0)
+                        const rankNum = row.rank || index + 1
                         
                         return (
                           <tr key={index} className={`transition-colors hover:bg-surface-muted/20 ${isTop3 ? 'bg-accent/5' : ''}`}>

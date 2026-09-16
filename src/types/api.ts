@@ -544,16 +544,23 @@ export interface Banner {
 export interface LeaderboardRow {
   user_id?:          number
   trader_name:       string
-  phase:             number
+  display_name?:     string
+  user_login?:       string
+  phase?:            number
   status:            string
-  plan_name:         string
-  account_size:      number | string
-  current_balance:   number | string
-  starting_balance:  number | string
-  profit_pct:        number | string
-  trading_days:      number
-  funded_at:         string | null
-  total_trades:      number
+  plan_name?:        string
+  account_size?:     number | string
+  current_balance?:  number | string
+  starting_balance?: number | string
+  profit_pct?:       number | string
+  roi_pct?:          number | string
+  return_pct?:       number | string
+  current_equity?:   number | string
+  equity?:           number | string
+  rank?:             number
+  trading_days?:     number
+  funded_at?:        string | null
+  total_trades?:     number
 }
 
 // ── Payment ──────────────────────────────────────────────────────────────────
@@ -898,6 +905,8 @@ export interface Tournament {
   created_at?: string;
   participants_count?: number;
   joined?: boolean;
+  is_registered?: boolean;
+  is_joined?: boolean;
 }
 
 export type Competition = Tournament;

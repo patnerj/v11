@@ -63,7 +63,7 @@ export function getRelevantAiResponse(message: string, subject: string = '', bra
   ) {
     const isRomanUrdu = /\b(karein|karna|kaise|kese|kya|mujhe|bhai|yar|main|hai|hain)\b/i.test(text);
     if (isRomanUrdu) {
-      return `Hello! Trading Tournaments (Competitions) ke mutaliq step-by-step guide:
+      return `Trading Tournaments (Competitions) ke mutaliq step-by-step guide:
 
 1. Tournaments Tab Open Karein: Dashboard ke left sidebar navigation menu mein [Tournaments] (Trophy icon) par click karein.
 2. Competition Browse Karein: Active aur Upcoming tournaments ki list dekh kar prize pool, start/end dates aur entry fee check karein.
@@ -73,10 +73,10 @@ export function getRelevantAiResponse(message: string, subject: string = '', bra
 
 Abhi Tournaments tab mein enter hon aur top rank ke lye compete karein!
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
     }
 
-    return `Hello! Here is your step-by-step guide to our Trading Tournaments & Competitions:
+    return `Here is your step-by-step guide to our Trading Tournaments & Competitions:
 
 1. Open Tournaments: Click on the [Tournaments] tab (Trophy icon) from the left sidebar navigation.
 2. Select a Competition: Browse active and upcoming tournaments to check prize pools, schedules, and entry criteria.
@@ -84,7 +84,7 @@ Abhi Tournaments tab mein enter hon aur top rank ke lye compete karein!
 4. Compete on Live Leaderboard: Your trading terminal instantly connects to your dedicated tournament account. Trade live price action to achieve the highest % gain within standard risk limits.
 5. Win Prizes & Funded Accounts: Top leaderboard finishers win direct cash rewards and free Funded Challenge Accounts!
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
   }
 
   // 1b. Arena / PVP / 1v1 Battles Inquiry
@@ -99,7 +99,7 @@ Abhi Tournaments tab mein enter hon aur top rank ke lye compete karein!
   ) {
     const isRomanUrdu = /\b(karein|karna|kaise|kese|kya|mujhe|bhai|yar|main|hai|hain)\b/i.test(text);
     if (isRomanUrdu) {
-      return `Hello! Trading Arena (1v1 PVP & Battles) mein participate karne ka step-by-step guide:
+      return `Trading Arena (1v1 PVP & Battles) mein participate karne ka guide:
 
 1. Arena Tab Open Karein: Dashboard ke left sidebar navigation menu mein [Arena] par click karein.
 2. Match Select ya Create Karein:
@@ -111,10 +111,10 @@ Abhi Tournaments tab mein enter hon aur top rank ke lye compete karein!
 
 Lobby mein abhi enter hon aur dosre traders ke sath compete karein!
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
     }
 
-    return `Hello! Here is your step-by-step guide on how to participate in the Trading Arena (1v1 PVP & Battles):
+    return `Here is your guide on participating in the Trading Arena (1v1 PVP & Battles):
 
 1. Access the Arena: Click on the [Arena (PVP)] tab from the left navigation sidebar.
 2. Select or Create a Match:
@@ -124,40 +124,38 @@ Lobby mein abhi enter hon aur dosre traders ke sath compete karein!
 4. Winning Condition: The trader with the highest percentage return (% gain) at the close of the match timer wins the entire prize pool!
 5. Instant Settlement: Prize pool winnings (minus platform rake) are instantly credited to your trader wallet balance upon match conclusion.
 
-Jump into the Arena lobby now and put your trading skills to the test!
-
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
   }
 
   // 2. Roman Urdu & Casual greetings
   if (/\b(aur suna|suna|kya haal|hal chal|haal chal|kaise ho|theek ho|kya chal raha|kese ho|salam|assalam|bhai|yar|boss|kaisay|kaisi)\b/i.test(text)) {
-    return `Walaikum Assalam! Sab theek-thaak hai, alhamdulillah! Main aapka ${brand} AI Support Desk hoon.
+    return `Walaikum Assalam! Sab theek-thaak hai, alhamdulillah! Main aapka ${brand} Support Desk hoon.
 
 Aapka challenge account bilkul active aur healthy hai. Trading platform, order placement, drawdown rules, Arena battles ya payout ke mutaliq koi bhi sawal hai toh batayein, main foran madad kar deta hoon!
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
   }
 
   // 3. Payouts / Withdrawals / Profit Split / KYC
   if (text.includes('payout') || text.includes('withdraw') || text.includes('profit split')) {
-    return `Hello! Regarding your payout inquiry:
+    return `Regarding your payout and profit split inquiry:
 
 1. Eligibility: Profit splits (up to 90%) are disbursed on active, unbreached Funded challenge accounts.
 2. KYC Verification: Ensure your identity documents are approved in Account Settings -> KYC.
 3. Processing Timeline: Requests undergo automated compliance audit and are disbursed within 24 business hours directly to your designated crypto wallet or bank destination.
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
   }
 
   // 4. Rules / Drawdown / Max Daily Loss
   if (text.includes('rule') || text.includes('drawdown') || text.includes('breach') || text.includes('daily loss') || text.includes('headroom')) {
-    return `Hello! Regarding your account evaluation rules:
+    return `Regarding your account evaluation rules and drawdown limits:
 
 1. Daily Max Loss: Calculated relative to your 00:00 UTC starting balance/equity baseline.
 2. Maximum Total Drawdown: Fixed trailing threshold from starting account balance.
 3. Consistency & Headroom: Always maintain a minimum 2% equity buffer below the daily loss watermark.
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
   }
 
   // 5. Placing a Trade / Order Execution / Can't understand how to trade
@@ -173,7 +171,7 @@ Aapka challenge account bilkul active aur healthy hai. Trading platform, order p
     text.includes('trade execution') ||
     text.includes('market order')
   ) {
-    return `Hello! Here is your step-by-step guide on how to place a trade on WebTrader & MT5:
+    return `Here is your step-by-step guide on order execution for WebTrader and MT5:
 
 1. Select Symbol: In the Market Watch panel on the left, click the pair you want to trade (e.g. BTC/USDT, ETH/USDT, or EUR/USD).
 2. Choose Lot Size: In the Order Ticket panel on the right, enter your volume (minimum 0.01 lots). Sizing between 0.25 to 0.50 lots is recommended for strict 1% risk management.
@@ -183,13 +181,13 @@ Aapka challenge account bilkul active aur healthy hai. Trading platform, order p
 
 Our trade desk is standing by if you need assistance with any specific symbol or execution error!
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
   }
 
   // 6. Default General Support
-  return `Hello! Thank you for contacting ${brand} Support regarding "${subject || 'your trading inquiry'}". Our automated risk and trading desk telemetry confirms your account is currently active and operating within standard guidelines. If you need any specific platform guidance, order execution assistance, Arena access, or account checks, please reply directly and we will assist you immediately!
+  return `Thank you for contacting ${brand} Support regarding "${subject || 'your trading inquiry'}". Your account is currently active and operating within standard guidelines. If you need any specific platform guidance, order execution assistance, Arena access, or account evaluations, please reply directly with details and we will assist you immediately!
 
-— ${brand} Autonomous AI Support Desk`;
+— ${brand} Support Desk`;
 }
 
 export function TraderSupport() {

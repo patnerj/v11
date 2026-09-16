@@ -245,10 +245,10 @@ export function RedisCacheCard() {
           </div>
           <div className="space-y-1">
             <span className="font-bold text-slate-900 dark:text-white text-xs block">
-              100% Fail-Soft Architecture Guarantee:
+              Automatic Database Fallback:
             </span>
             <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed font-normal">
-              If Redis disconnects or encounters latency spikes, every single trade execution, balance update, and price feed request seamlessly falls back to local database transients without throwing runtime exceptions.
+              If Redis disconnects, operations automatically fall back to local database transients without interrupting service.
             </p>
           </div>
         </div>

@@ -1,8 +1,10 @@
 /**
- * Centralized Fallback & Mock Fixtures for Offline / Unwired API Endpoints.
- * Ensures the Next.js Admin Panel renders graceful fallback states when
- * backend endpoints are offline, unreachable, or in development.
+ * Development & Offline Test Fixtures ONLY.
+ * NEVER IMPORTED OR USED IN PRODUCTION BUILDS.
  */
+if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+  console.warn('[SECURITY] mock-data.ts is reserved for offline test fixtures and should not be bundled in production.')
+}
 
 import type {
   AdminStats,

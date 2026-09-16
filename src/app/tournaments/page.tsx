@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react'
 import { Trophy, Clock, Users, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import type { Competition } from '@/types/api'
+import type { Competition, PaymentOrder } from '@/types/api'
 import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
 
 export default function PublicTournamentsPage() {
   const [tournaments, setTournaments] = useState<Competition[]>([])
-  const [pendingOrders, setPendingOrders] = useState<Map<number, any>>(new Map())
+  const [pendingOrders, setPendingOrders] = useState<Map<number, PaymentOrder>>(new Map())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,14 +18,16 @@ export default function PublicTournamentsPage() {
       try {
         const [res, ord] = await Promise.all([
           api.tournaments.list(),
-          api.paymentMyOrders(true).catch(() => ({ ok: false as const, data: [] }))
+          api.paymentMyOrders(true).catch(() => ({ ok: false as const, data: [] as PaymentOrder[] }))
         ])
         if (res.ok) setTournaments(res.data)
         if (ord.ok && Array.isArray(ord.data)) {
-          const map = new Map<number, any>()
+          const map = new Map<number, PaymentOrder>()
           for (const o of ord.data) {
             if (o.status === 'pending' || o.status === 'submitted') {
-              const tid = (o as any).tournament_id ? Number((o as any).tournament_id) : (o.admin_note?.match(/tournament_entry:(\d+)/)?.[1] ? Number(o.admin_note.match(/tournament_entry:(\d+)/)![1]) : null)
+              const tid = (o as PaymentOrder & { tournament_id?: number }).tournament_id 
+                ? Number((o as PaymentOrder & { tournament_id?: number }).tournament_id) 
+                : (o.admin_note?.match(/tournament_entry:(\d+)/)?.[1] ? Number(o.admin_note.match(/tournament_entry:(\d+)/)![1]) : null)
               if (tid && !isNaN(tid)) map.set(tid, o)
             }
           }

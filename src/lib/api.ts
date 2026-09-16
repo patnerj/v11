@@ -142,7 +142,7 @@ export const api = {
     reply:  (id: number, message: string) => fxsim<{ success: boolean }>(`/tickets/${id}/reply`, { body: { message } })
   },
 
-  // ── v11.5 AI Powerhouse: Zenith Copilot, Journal & Coach ───────────────
+  // ── AI Services: Copilot, Journal & Analysis ─────────────────────────
   ai: {
     copilot: {
       chat: (data: { message?: string; query?: string; account_id?: number | string; symbol?: string; context?: Record<string, unknown> }) => {

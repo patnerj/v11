@@ -381,8 +381,8 @@ function DesktopLayout({
         const names = failed.map((f) => f.symbol).join(', ')
         toast.warning(`Closed ${succeeded} position(s), but ${failed.length} failed: ${names}.`, { id: toastId })
       }
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to close some positions.', { id: toastId })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to close some positions.', { id: toastId })
     } finally {
       setIsClosingAll(false)
       setIsCloseAllConfirmOpen(false)

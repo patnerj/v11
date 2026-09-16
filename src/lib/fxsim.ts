@@ -34,8 +34,8 @@ export function getApiBaseUrl(): string {
     return envUrl.trim().replace(/\/$/, '')
   }
 
-  // Fallback to live production API namespace
-  return 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  // Fallback to relative proxy route
+  return '/api/wp'
 }
 
 export const FXSIM_BASE = getApiBaseUrl()

@@ -38,11 +38,10 @@ let loadPromise: Promise<void> | null = null
 
 function normalizeBranding(data: Partial<Branding>): Branding {
   const b = { ...DEFAULTS, ...data }
-  // Dynamic fallback: If API returns vendor default or empty, dynamically fall back to Alpha Capital
-  if (!b.brand_name || b.brand_name.toLowerCase() === 'launchapropfirm' || b.brand_name.toLowerCase() === 'propfirm system') {
-    b.brand_name = 'Alpha Capital'
+  if (!b.brand_name?.trim()) {
+    b.brand_name = DEFAULTS.brand_name
   }
-  if (!b.footer_text || b.footer_text.includes('LaunchAPropFirm') || b.footer_text.includes('PropFirm System')) {
+  if (!b.footer_text?.trim()) {
     b.footer_text = `© ${new Date().getFullYear()} ${b.brand_name}. Simulation platform only.`
   }
   return b

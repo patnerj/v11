@@ -479,7 +479,7 @@ export default function Trader360ProfilePage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="h-10 w-10 text-emerald-400 animate-spin" />
         <p className="text-gray-400 font-mono text-sm animate-pulse">
-          Loading 360 Trader Profile for #{userId}...
+          Loading Trader Profile for #{userId}...
         </p>
       </div>
     )

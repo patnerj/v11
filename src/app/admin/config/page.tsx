@@ -3984,7 +3984,7 @@ export default function ConfigurationHubPage() {
                 AI Powerhouse &amp; LLM Engine Settings
               </h2>
               <p className="text-xs text-gray-400">
-                Connect Google Gemini 2.0 Flash or local DeepSeek-R1 to power Zenith Trader Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
+                Connect Google Gemini 2.0 Flash or local DeepSeek-R1 to power Trader AI Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
               </p>
             </div>
             <Button
