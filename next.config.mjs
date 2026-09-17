@@ -12,11 +12,11 @@ const brandingHosts = (process.env.BRANDING_IMAGE_HOSTS || '')
 // Note for Production Release: Buyers can tighten the CSP policy by removing
 // open 'https:' / 'wss:' fallbacks and specifying exact domain-specific origins
 // (see Staging & Deployment Checklist).
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || '';
+const apiUrl = process.env.LOCAL_WP_BACKEND_URL || process.env.FXSIM_API_URL || process.env.NEXT_PUBLIC_API_URL || '';
 const wsUrl = process.env.NEXT_PUBLIC_FXSIM_WS_URL || '';
 
 let apiHost = '';
-if (apiUrl) {
+if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
   try {
     apiHost = new URL(apiUrl).origin;
   } catch {}
@@ -99,11 +99,12 @@ const nextConfig = {
     // LocalWP hostname baked in here previously caused every production API
     // call to fail with DNS_HOSTNAME_NOT_FOUND, because Vercel can't resolve
     // a hostname that only exists on one developer's laptop.
-    const localBackend = process.env.LOCAL_WP_BACKEND_URL || (apiHost || 'http://127.0.0.1:8080')
+    const rawBackend = process.env.LOCAL_WP_BACKEND_URL || process.env.FXSIM_API_URL || (apiHost || 'http://127.0.0.1:8080')
+    const cleanBackend = rawBackend.trim().replace(/\/wp-json\/fxsim\/v1\/?$/, '').replace(/\/$/, '')
     return [
       {
         source: '/api/wp/:path*',
-        destination: `${localBackend}/wp-json/fxsim/v1/:path*`
+        destination: `${cleanBackend}/wp-json/fxsim/v1/:path*`
       }
     ]
   },

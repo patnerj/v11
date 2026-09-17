@@ -79,9 +79,8 @@ export async function generateMetadata(): Promise<Metadata> {
   let brandTagline = 'The Funded Trader Platform'
 
   // P3: never fetch from a half-built URL. Old code ran
-  // fetch(`${baseUrl}${apiPath}/branding`) with both envs empty → fetch("/branding")
-  // which always failed AND could hit an unrelated route in production.
-  const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath) return {
     title:       { default: brandName, template: `%s | ${brandName}` },
     description: `${brandTagline}. Pass the evaluation, trade our capital, keep up to 90% of your profits.`,
@@ -269,7 +268,8 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
 }
 
 async function getThemeCSS() {
-  const apiPath = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FXSIM_API || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath.startsWith('http')) return ''
 
   const urlsToTry: string[] = [`${apiPath}/theme`, `${apiPath}/branding`]

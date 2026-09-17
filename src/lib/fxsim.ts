@@ -25,32 +25,36 @@ import type { ApiResult, ApiErr } from '@/types/api'
  * 3. '/api/wp' (Default relative fallback)
  */
 export function getApiBaseUrl(): string {
-  const envUrl =
+  // In the browser (client-side), ALWAYS route requests through the same-origin proxy '/api/wp'.
+  // This completely eliminates cross-origin timeouts, ISP packet loss, CORS preflight delays,
+  // and regional firewall drops between end users and the hosting server.
+  if (typeof window !== 'undefined') {
+    return '/api/wp'
+  }
+
+  // On the server (SSR / API route handlers), use the absolute URL for server-to-server calls.
+  const serverUrl =
     process.env.FXSIM_API_URL ||
+    process.env.LOCAL_WP_BACKEND_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
     process.env.NEXT_PUBLIC_FXSIM_API
 
-  if (envUrl && (envUrl.startsWith('http://') || envUrl.startsWith('https://'))) {
-    return envUrl.trim().replace(/\/$/, '')
+  if (serverUrl && (serverUrl.startsWith('http://') || serverUrl.startsWith('https://'))) {
+    const trimmed = serverUrl.trim().replace(/\/$/, '')
+    return trimmed.endsWith('/wp-json/fxsim/v1') ? trimmed : `${trimmed}/wp-json/fxsim/v1`
   }
 
-  // Fallback to relative proxy route
   return '/api/wp'
 }
 
 export const FXSIM_BASE = getApiBaseUrl()
 
 /**
- * Resolve a backend-relative path (e.g. '/admin/payments/36/proof') against
- * whichever base is actually active — the same-origin /api/wp proxy in dev
- * (so the browser's session cookie, scoped to THIS origin via the Next.js
- * rewrite, is sent) or the real cross-origin backend URL in production.
- * Endpoints that return a raw rest_url()-built absolute backend URL bypass
- * the dev proxy entirely and 401 in local dev, because the auth cookie set
- * during login was scoped to the proxy's origin, not propfirm.local.
+ * Resolve a backend-relative path against the active base URL.
  */
 export function apiUrl(path: string): string {
-  return FXSIM_BASE + (path.startsWith('/') ? path : '/' + path)
+  const base = getApiBaseUrl()
+  return base + (path.startsWith('/') ? path : '/' + path)
 }
 
 // ── Session ────────────────────────────────────────────────────────────────
@@ -158,7 +162,8 @@ export function clearFxsimCache() { getCache().clear(); getInflight().clear() }
 
 /** Invalidate by URL prefix (e.g. clear all /account* entries after a mutation). */
 export function invalidateFxsim(prefix: string) {
-  const fullPrefix = `GET|${FXSIM_BASE}${prefix}`
+  const base = getApiBaseUrl()
+  const fullPrefix = `GET|${base}${prefix}`
   const cache = getCache()
   const inflight = getInflight()
   for (const k of [...cache.keys()])    if (k.startsWith(fullPrefix)) cache.delete(k)
@@ -173,12 +178,13 @@ export async function fxsim<T = unknown>(
   path: string,
   opts: RequestOptions = {},
 ): Promise<ApiResult<T>> {
-  if (!FXSIM_BASE) {
+  const base = getApiBaseUrl()
+  if (!base) {
     return { ok: false, status: 0, error: 'FXSIM API base URL not configured.' }
   }
 
   const method = opts.method ?? (opts.body || opts.form ? 'POST' : 'GET')
-  const url    = FXSIM_BASE + path + buildQuery(opts.query)
+  const url    = base + path + buildQuery(opts.query)
   const key    = cacheKey(method, url)
 
   // Retries are ONLY safe for idempotent GETs. Mutations (payments, payouts,
