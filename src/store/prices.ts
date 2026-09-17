@@ -236,6 +236,10 @@ export const usePrices = create<PriceState>((set, get) => {
       visListener = () => {
         if (document.hidden) {
           set({ connected: false })
+          if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout)
+            reconnectTimeout = null
+          }
           closeStream()
           clearPoll()
         } else {

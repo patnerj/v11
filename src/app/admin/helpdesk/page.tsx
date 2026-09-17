@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea, Label } from '@/components/ui/input'
 import { DataTable } from '@/components/ui/DataTable'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { toast } from 'sonner'
 import { useBranding } from '@/store/branding'
 import { useAuth } from '@/store/auth'
@@ -74,6 +75,7 @@ export default function AdminHelpdeskPage() {
   const [aiAutopilotActive, setAiAutopilotActive] = useState(true)
   const [isAutoDrafting, setIsAutoDrafting] = useState(false)
   const [isAutoResolvingBatch, setIsAutoResolvingBatch] = useState(false)
+  const [isAutoResolveConfirmOpen, setIsAutoResolveConfirmOpen] = useState(false)
 
   // Synchronize with backend AI configuration
   useEffect(() => {
@@ -444,13 +446,27 @@ export default function AdminHelpdeskPage() {
           <Button
             variant="primary"
             size="sm"
-            onClick={handleBatchAutoResolve}
+            onClick={() => setIsAutoResolveConfirmOpen(true)}
             loading={isAutoResolvingBatch}
             className="gap-1.5 text-xs font-semibold shadow-emerald-500/20 h-8"
           >
             <Zap className="w-3.5 h-3.5" />
             Auto-Resolve ({metrics.openCount})
           </Button>
+
+          <ConfirmDialog
+            isOpen={isAutoResolveConfirmOpen}
+            title="Auto-Resolve Open Tickets?"
+            description={`This will automatically evaluate, triage, and resolve up to ${metrics.openCount} open tickets using the Autonomous Support Desk. This action cannot be undone.`}
+            confirmText="Auto-Resolve"
+            isDestructive={true}
+            loading={isAutoResolvingBatch}
+            onConfirm={async () => {
+              setIsAutoResolveConfirmOpen(false)
+              await handleBatchAutoResolve()
+            }}
+            onCancel={() => setIsAutoResolveConfirmOpen(false)}
+          />
 
           <Button
             variant="outline"

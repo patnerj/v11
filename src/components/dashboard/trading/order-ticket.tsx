@@ -211,6 +211,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     if (!Number.isFinite(lotN) || lotN < minLot) {
       toast.error(`Lot size must be at least ${minLot}`); return
     }
+    if (lotN > maxLot) {
+      toast.error(`Lot size cannot exceed ${maxLot}`); return
+    }
     if (rejectIfNoMargin()) return
     if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
@@ -253,39 +256,43 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     }
     injectOptimisticPosition(optPos)
 
-    const tCtx = usePrices.getState().tradingContext
-    const ctxParams = tCtx
-      ? tCtx.kind === 'tournament'
-        ? { tournament_id: tCtx.tournamentId }
-        : tCtx.accountId ? { account_id: tCtx.accountId } : {}
-      : {}
-    const res = await api.open({
-      symbol:   active,
-      type:     side,
-      lot_size: lotN,
-      sl:       slN ?? null,
-      tp:       tpN ?? null,
-      ...ctxParams,
-    })
-    setBusy(null)
-    if (res.ok && res.data.success) {
-      playOrderSuccessSound()
-      toast.success(`${side.toUpperCase()} ${lotN} ${active} opened`)
-      // P3: always clear OUR ghost explicitly — refresh() also clears, but the
-      // onChanged branch below never calls it, which used to leak phantoms.
-      removeOptimisticPosition(optId)
-      if (onChanged) {
-        onChanged()
+    try {
+      const tCtx = usePrices.getState().tradingContext
+      const ctxParams = tCtx
+        ? tCtx.kind === 'tournament'
+          ? { tournament_id: tCtx.tournamentId }
+          : tCtx.accountId ? { account_id: tCtx.accountId } : {}
+        : {}
+      const res = await api.open({
+        symbol:   active,
+        type:     side,
+        lot_size: lotN,
+        sl:       slN ?? null,
+        tp:       tpN ?? null,
+        ...ctxParams,
+      })
+      if (res.ok && res.data.success) {
+        playOrderSuccessSound()
+        toast.success(`${side.toUpperCase()} ${lotN} ${active} opened`)
+        removeOptimisticPosition(optId)
+        if (onChanged) {
+          onChanged()
+        } else {
+          refreshUser()
+          invalidateFxsim('/positions')
+          invalidateFxsim('/account')
+        }
+        setSl(''); setTp('')
+        onSubmitted?.()
       } else {
-        refreshUser()
-        invalidateFxsim('/positions')
-        invalidateFxsim('/account')
+        removeOptimisticPosition(optId)
+        toast.error(res.ok ? (res.data.message || 'Order rejected') : res.error)
       }
-      setSl(''); setTp('')
-      onSubmitted?.()
-    } else {
+    } catch (err: any) {
       removeOptimisticPosition(optId)
-      toast.error(res.ok ? (res.data.message || 'Order rejected') : res.error)
+      toast.error(err?.message || 'Order execution failed. Please try again.')
+    } finally {
+      setBusy(null)
     }
   }
 
@@ -293,6 +300,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     if (!targetN || targetN <= 0) { toast.error('Enter a valid trigger price'); return }
     if (!Number.isFinite(lotN) || lotN < minLot) {
       toast.error(`Lot size must be at least ${minLot}`); return
+    }
+    if (lotN > maxLot) {
+      toast.error(`Lot size cannot exceed ${maxLot}`); return
     }
     if (rejectIfNoMargin()) return
     if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
@@ -342,41 +352,46 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     }
     injectOptimisticPending(optOrd)
 
-    const tCtx = usePrices.getState().tradingContext
-    const ctxParams = tCtx
-      ? tCtx.kind === 'tournament'
-        ? { tournament_id: tCtx.tournamentId }
-        : tCtx.accountId ? { account_id: tCtx.accountId } : {}
-      : {}
-    const res = await api.pendingPlace({
-      symbol:       active,
-      order_type:   pendingType,
-      type:         side,
-      lot_size:     lotN,
-      target_price: targetN,
-      sl:           slN ?? null,
-      tp:           tpN ?? null,
-      ...ctxParams,
-    })
-    setBusy(null)
-    if (res.ok && res.data.success) {
-      playOrderSuccessSound()
-      toast.success(`${pendingType.replace('_', ' ')} ${lotN} ${active} placed @ ${fmtPrice(targetN, digits)}`)
-      // P3: same explicit ghost cleanup as market orders above.
-      removeOptimisticPending(optId)
-      if (onChanged) {
-        onChanged()
+    try {
+      const tCtx = usePrices.getState().tradingContext
+      const ctxParams = tCtx
+        ? tCtx.kind === 'tournament'
+          ? { tournament_id: tCtx.tournamentId }
+          : tCtx.accountId ? { account_id: tCtx.accountId } : {}
+        : {}
+      const res = await api.pendingPlace({
+        symbol:       active,
+        order_type:   pendingType,
+        type:         side,
+        lot_size:     lotN,
+        target_price: targetN,
+        sl:           slN ?? null,
+        tp:           tpN ?? null,
+        ...ctxParams,
+      })
+      if (res.ok && res.data.success) {
+        playOrderSuccessSound()
+        toast.success(`${pendingType.replace('_', ' ')} ${lotN} ${active} placed @ ${fmtPrice(targetN, digits)}`)
+        removeOptimisticPending(optId)
+        if (onChanged) {
+          onChanged()
+        } else {
+          refreshUser()
+          invalidateFxsim('/pending-order/my')
+          invalidateFxsim('/pending-order')
+          invalidateFxsim('/account')
+        }
+        setSl(''); setTp(''); setTarget('')
+        onSubmitted?.()
       } else {
-        refreshUser()
-        invalidateFxsim('/pending-order/my')
-        invalidateFxsim('/pending-order')
-        invalidateFxsim('/account')
+        removeOptimisticPending(optId)
+        toast.error(res.ok ? (res.data.message || 'Order rejected') : res.error)
       }
-      setSl(''); setTp(''); setTarget('')
-      onSubmitted?.()
-    } else {
+    } catch (err: any) {
       removeOptimisticPending(optId)
-      toast.error(res.ok ? (res.data.message || 'Order rejected') : res.error)
+      toast.error(err?.message || 'Pending order placement failed. Please try again.')
+    } finally {
+      setBusy(null)
     }
   }
 

@@ -341,8 +341,15 @@ async function rawFetch<T>(
     signal: opts.signal,
     cache:  'no-store',
   }
-  if (opts.form)      init.body = opts.form
-  else if (opts.body) init.body = JSON.stringify(opts.body)
+  if (opts.form) {
+    init.body = opts.form
+  } else if (opts.body) {
+    try {
+      init.body = JSON.stringify(opts.body)
+    } catch {
+      return { ok: false, status: 0, error: 'Failed to serialize request body' }
+    }
+  }
 
   let res: Response
   try {

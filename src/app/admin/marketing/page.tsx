@@ -125,6 +125,7 @@ export default function MarketingHubPage() {
     audience: string
     message: string
   } | null>(null)
+  const [isBroadcastConfirmOpen, setIsBroadcastConfirmOpen] = useState(false)
 
   const handleSendBroadcast = async () => {
     if (!broadcastForm.subject.trim()) {
@@ -1617,13 +1618,27 @@ export default function MarketingHubPage() {
                 </span>
                 <Button
                   variant="primary"
-                  onClick={handleSendBroadcast}
+                  onClick={() => setIsBroadcastConfirmOpen(true)}
                   loading={isSendingBroadcast}
                   className="gap-2 shadow-emerald-500/20"
                 >
                   <Send className="h-4 w-4" />
                   Dispatch Email Broadcast
                 </Button>
+
+                <ConfirmDialog
+                  isOpen={isBroadcastConfirmOpen}
+                  title="Dispatch Email Broadcast?"
+                  description={`Are you sure you want to dispatch this email blast to the ${broadcastForm.audience.toUpperCase()} cohort with subject "${broadcastForm.subject}"? Emails will be queued and sent immediately.`}
+                  confirmText="Dispatch Broadcast"
+                  isDestructive={false}
+                  loading={isSendingBroadcast}
+                  onConfirm={async () => {
+                    setIsBroadcastConfirmOpen(false)
+                    await handleSendBroadcast()
+                  }}
+                  onCancel={() => setIsBroadcastConfirmOpen(false)}
+                />
               </CardFooter>
             </Card>
           </div>
