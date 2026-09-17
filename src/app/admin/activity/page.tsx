@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -138,9 +138,17 @@ export default function AdminActivityPage() {
     }
   }
 
+  const [now, setNow] = useState<number | null>(null)
+
+  useEffect(() => {
+    setNow(Date.now())
+    const timer = setInterval(() => setNow(Date.now()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+
   const timeAgo = (dateStr?: string) => {
-    if (!dateStr) return 'just now'
-    const ms = Date.now() - new Date(dateStr.replace(' ', 'T')).getTime()
+    if (!dateStr || !now) return 'just now'
+    const ms = now - new Date(dateStr.replace(' ', 'T')).getTime()
     const s = Math.max(1, Math.round(ms / 1000))
     const m = Math.round(s / 60)
     const h = Math.round(m / 60)

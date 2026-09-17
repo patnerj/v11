@@ -23,7 +23,9 @@ export function useVisibilityPoll(
 ) {
   // Keep the latest fn in a ref so the effect doesn't re-tick on each render
   const fnRef = useRef(fn)
-  fnRef.current = fn
+  useEffect(() => {
+    fnRef.current = fn
+  }, [fn])
 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined') return
