@@ -60,16 +60,19 @@ function LoginForm() {
     setBioUser(getSavedBiometricUser())
   }, [])
 
+  // On initial mount only: if we landed on /login with an explicit ?next= parameter,
+  // any pre-existing session was rejected by edge middleware (cookie expired/invalid).
+  // Clear that stale session ONCE on mount so the user gets a fresh login form,
+  // and NEVER clear sessions freshly established by submitting this form!
   useEffect(() => {
-    if (ready && user) {
-      // If we landed on /login with an explicit ?next= parameter, the edge middleware
-      // rejected our session cookie (missing or expired). Do NOT auto-redirect back to
-      // the protected route — that causes an infinite redirect loop. Instead, clear
-      // the stale client session so the user can re-authenticate cleanly.
-      if (params.get('next')) {
-        useAuth.getState().signout()
-        return
-      }
+    if (params.get('next') && useAuth.getState().user) {
+      useAuth.getState().signout()
+    }
+  }, []) // Mount-only: runs once when landing on the page
+
+  // If already authenticated and visiting /login directly (no ?next= bounce), redirect to target
+  useEffect(() => {
+    if (ready && user && !params.get('next')) {
       const target = user.is_admin && next === '/dashboard' ? '/admin' : next
       router.replace(target)
     }
