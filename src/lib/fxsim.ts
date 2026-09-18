@@ -209,13 +209,12 @@ export async function fxsim<T = unknown>(
       // immediate retry (counted by the rate limiter as a fresh request)
       // amplifies into a self-sustaining storm that pins the window at the
       // limit. Only transient server/network failures are retried.
-      // status 0 (network error/reset) is NOT retried: when the server is
-      // overloaded, connection resets + retries amplify into a storm that
-      // keeps the rate-limit window pinned. Only true 5xx are retried.
+      // Transient network error (status 0 / ERR_FAILED) is safely retried for
+      // idempotent GETs to handle momentary connection multiplexing bursts.
       const shouldRetry =
         !result.ok &&
         attempt < maxRetries &&
-        result.status >= 500 && result.status < 600
+        ((result.status >= 500 && result.status < 600) || (method === 'GET' && result.status === 0))
       if (!shouldRetry) return result
 
       // Exponential backoff with jitter: 400ms, 900ms, 1900ms (capped at 4s)

@@ -49,13 +49,13 @@ export async function mockApiResponse<T>(
 export const api = {
   auth: {
     login:    (body: { username: string; password: string; remember?: boolean }) =>
-      fxsim<{ user?: AuthUser; nonce?: string; two_factor_required?: boolean; uid?: number }>('/auth/login', { body, public: true }),
+      fxsim<{ user?: AuthUser; nonce?: string; two_factor_required?: boolean; uid?: number }>('/auth/login', { body, public: true, timeout: 25_000 }),
     verify2fa: (uid: number, code: string, remember?: boolean) =>
-      fxsim<{ user: AuthUser; nonce: string }>('/auth/2fa/verify', { body: { uid, code, remember: !!remember }, public: true }),
+      fxsim<{ user: AuthUser; nonce: string }>('/auth/2fa/verify', { body: { uid, code, remember: !!remember }, public: true, timeout: 25_000 }),
     register: (body: { username: string; email: string; password: string; ref?: string }) =>
-      fxsim<{ user: AuthUser; nonce: string }>('/auth/register', { body, public: true }),
-    logout:   () => fxsim<{ success: true }>('/auth/logout', { method: 'POST' }),
-    me:       (force = true) => fxsim<AuthUser>('/auth/me', { cache: 0, force: true }),
+      fxsim<{ user: AuthUser; nonce: string }>('/auth/register', { body, public: true, timeout: 25_000 }),
+    logout:   () => fxsim<{ success: true }>('/auth/logout', { method: 'POST', timeout: 15_000 }),
+    me:       (force = true) => fxsim<AuthUser>('/auth/me', { cache: 0, force: true, timeout: 20_000 }),
     requestReset: (login: string)   => fxsim<{ success: true; message: string }>('/auth/request-reset', { body: { login }, public: true }),
     doReset:      (key: string, login: string, password: string) =>
       fxsim<{ success: true; message: string }>('/auth/do-reset', { body: { key, login, password }, public: true }),
@@ -373,7 +373,7 @@ export const api = {
     mt5BridgeTest: (data?: Record<string, any>) =>
       fxsim<{ success: boolean; connected: boolean; latency_ms: number; message: string; server?: string; build?: number }>('/admin/mt5/bridge/test', { body: data || {} }),
     health:        async (refresh?: boolean) => {
-      return fxsim<HealthReport>('/admin/health', { query: { deep: refresh ? '1' : '0' }, cache: 0 })
+      return fxsim<HealthReport>('/admin/health', { query: { deep: refresh ? '1' : '0' }, cache: 0, timeout: 20_000 })
     },
     healthRepair:  () =>
       fxsim<{ success: boolean; message: string; repaired: string[]; warnings: string[]; timestamp: number }>('/admin/health/repair', { body: {} }),
