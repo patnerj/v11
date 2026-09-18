@@ -596,7 +596,12 @@
 }
 
 /* Global Font Family Rule */
-html, body, button, input, select, textarea, [data-theme] {
-  font-family: var(--font-sans) !important;
+html, body {
+  font-family: var(--font-sans);
 }
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
 

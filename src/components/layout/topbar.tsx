@@ -138,7 +138,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
 
       <div className="flex items-center gap-1.5">
         {mounted && (
-          <div className="hidden sm:inline-flex items-center gap-2 h-8 px-2.5 rounded-lg text-xs font-mono font-medium bg-surface-muted/60 border border-border-subtle text-text select-none">
+          <div className="hidden sm:inline-flex items-center gap-2 h-8 px-2.5 rounded-lg text-xs font-medium bg-surface-muted/60 border border-border-subtle text-text select-none">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-rose-400'}`} />
               <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
@@ -162,7 +162,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
           <button
             type="button"
             onClick={() => setMt5ModalOpen(true)}
-            className="hidden xl:inline-flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/25 text-cyan-300 text-xs font-semibold font-mono transition-colors focus-ring cursor-pointer"
+            className="hidden xl:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/25 text-cyan-300 text-xs font-medium transition-colors focus-ring cursor-pointer"
             title="Open MT5 Credentials"
           >
             <KeyRound className="h-3.5 w-3.5 text-cyan-400" />

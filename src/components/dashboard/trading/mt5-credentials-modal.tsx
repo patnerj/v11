@@ -48,7 +48,7 @@ export function LiveBrokerPingBadge({
       onClick={onClick}
       title="Live Broker Latency · MetaQuotes MT5 Direct Bridge (Click to view MT5 credentials)"
       className={cn(
-        'group inline-flex items-center gap-2 h-8 px-2.5 rounded-lg text-xs font-mono font-medium select-none transition-all duration-200',
+        'group inline-flex items-center gap-2 h-8 px-2.5 rounded-lg text-xs font-medium select-none transition-all duration-200',
         'bg-surface-muted/60 hover:bg-surface-muted border border-border-subtle hover:border-emerald-500/40 text-text',
         'shadow-xs focus-ring cursor-pointer',
         className
@@ -58,11 +58,11 @@ export function LiveBrokerPingBadge({
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
       </span>
-      <span className="font-semibold text-emerald-400 group-hover:text-emerald-300 transition-colors">
+      <span className="font-mono font-bold text-emerald-400 group-hover:text-emerald-300 tabular transition-colors">
         18ms
       </span>
       <span className="text-text-muted/50 hidden sm:inline">·</span>
-      <span className="text-text-muted group-hover:text-text transition-colors hidden sm:inline whitespace-nowrap">
+      <span className="text-text-muted group-hover:text-text font-sans text-xs transition-colors hidden sm:inline whitespace-nowrap">
         MetaQuotes MT5
       </span>
     </button>
@@ -168,14 +168,14 @@ export function MT5CredentialsModal({
             {/* Broker */}
             <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <span className="text-3xs font-mono uppercase tracking-wider text-text-muted block">
+                <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block">
                   Broker
                 </span>
                 <span className="text-xs sm:text-sm font-mono font-bold text-text truncate block mt-0.5">
                   {broker}
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded text-3xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+              <span className="px-2 py-0.5 rounded text-3xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0">
                 Tier-1 LP
               </span>
             </div>
@@ -183,7 +183,7 @@ export function MT5CredentialsModal({
             {/* Server */}
             <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <span className="text-3xs font-mono uppercase tracking-wider text-text-muted block">
+                <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block">
                   Server
                 </span>
                 <span className="text-xs sm:text-sm font-mono font-bold text-cyan-400 truncate block mt-0.5">
@@ -217,7 +217,7 @@ export function MT5CredentialsModal({
             {/* Login */}
             <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <span className="text-3xs font-mono uppercase tracking-wider text-text-muted block">
+                <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block">
                   Login ID
                 </span>
                 <span className="text-xs sm:text-sm font-mono font-bold text-text truncate block mt-0.5">
@@ -252,10 +252,10 @@ export function MT5CredentialsModal({
             <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-3xs font-mono uppercase tracking-wider text-text-muted block truncate">
+                  <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block truncate">
                     Trader Password
                   </span>
-                  <span className="px-1 py-0.2 rounded text-3xs font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0">
+                  <span className="px-1.5 py-0.2 rounded text-3xs font-mono font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0">
                     Trade
                   </span>
                 </div>
@@ -301,10 +301,10 @@ export function MT5CredentialsModal({
             <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-3xs font-mono uppercase tracking-wider text-text-muted block truncate">
+                  <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block truncate">
                     Investor Password
                   </span>
-                  <span className="px-1 py-0.2 rounded text-3xs font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 shrink-0">
+                  <span className="px-1.5 py-0.2 rounded text-3xs font-mono font-semibold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 shrink-0">
                     Read-Only
                   </span>
                 </div>
@@ -353,7 +353,7 @@ export function MT5CredentialsModal({
               type="button"
               onClick={copyAll}
               className={cn(
-                'w-full sm:w-auto inline-flex items-center justify-center gap-2 h-8 px-4 rounded-lg text-xs font-semibold font-mono transition-all focus-ring cursor-pointer shadow-xs',
+                'w-full sm:w-auto inline-flex items-center justify-center gap-2 h-8 px-4 rounded-lg text-xs font-medium font-sans transition-all focus-ring cursor-pointer shadow-xs',
                 copiedKey === 'all'
                   ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                   : 'bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300'
@@ -376,7 +376,7 @@ export function MT5CredentialsModal({
 
         {/* Platform Direct Download Links */}
         <div className="relative z-10 pt-3 border-t border-border/60 shrink-0">
-          <span className="text-3xs font-mono uppercase tracking-wider text-text-muted block mb-2">
+          <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block mb-2">
             Download MetaTrader 5 Terminal
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
