@@ -21,7 +21,6 @@ import { ChartPanel }         from '@/components/dashboard/trading/chart-panel'
 import { OrderTicket }        from '@/components/dashboard/trading/order-ticket'
 import { PositionsTable }     from '@/components/dashboard/trading/positions-table'
 import { PendingOrdersTable } from '@/components/dashboard/trading/pending-orders-table'
-import { AccountStrip }       from '@/components/dashboard/trading/account-strip'
 import { AccountSwitcher, buildSwitchEntries, type SwitchEntry } from '@/components/dashboard/trading/account-switcher'
 import { MobileBottomSheet }  from '@/components/dashboard/trading/mobile-bottom-sheet'
 import { ConfirmDialog }     from '@/components/ui/ConfirmDialog'
@@ -401,7 +400,6 @@ function DesktopLayout({
     <div className="flex flex-col gap-2 h-[calc(100dvh-4.5rem)] min-h-[600px]">
       {/* Account switcher — Challenge ↔ Tournament trading context */}
       <AccountSwitcher entries={switchEntries} />
-      <AccountStrip account={account} openPnL={openPnL} metrics={metrics} />
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
         {/* Left: market watch */}
         <Panel
@@ -702,11 +700,10 @@ function MobileLayout({
 
   return (
     <div className="flex flex-col gap-2 h-[calc(100dvh-5rem)] -mx-3 -my-3 md:-mx-4 md:-my-4">
-      {/* Account strip with real-time drawdown telemetry */}
+      {/* Account switcher — Challenge ↔ Tournament trading context */}
       {account && (
         <div className="px-3 pt-2 shrink-0">
           <AccountSwitcher entries={switchEntries} />
-          <AccountStrip account={account} openPnL={openPnL} metrics={metrics} compact />
         </div>
       )}
 
