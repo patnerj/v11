@@ -194,19 +194,19 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
             <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
               <div>
                 <span className="text-text-muted text-[10px] block">Broker Server</span>
-                <span className="font-mono font-medium text-text">{c.mt5_server || 'Pepperstone-Demo'}</span>
+                <span className="font-mono font-medium text-text">{c.mt5_server || 'MetaQuotes-Demo'}</span>
               </div>
               <div>
                 <span className="text-text-muted text-[10px] block">MT5 Login ID</span>
                 <span className="font-mono font-bold text-emerald-400">{c.mt5_login}</span>
               </div>
               <div>
-                <span className="text-text-muted text-[10px] block">Platform</span>
-                <span className="font-medium text-text">MetaTrader 5</span>
+                <span className="text-text-muted text-[10px] block">Trader Password</span>
+                <span className="font-mono text-text">{c.mt5_password || '-0DxOxMu'}</span>
               </div>
               <div>
-                <span className="text-text-muted text-[10px] block">Trader Password</span>
-                <span className="font-mono text-text">AlphaTrader2026!</span>
+                <span className="text-text-muted text-[10px] block">Investor (Myfxbook)</span>
+                <span className="font-mono text-text">RwYd*t3t</span>
               </div>
             </div>
           </div>
