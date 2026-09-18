@@ -22,7 +22,7 @@ import {
   ShieldCheck,
   KeyRound,
 } from 'lucide-react'
-import { LiveBrokerPingBadge, MT5CredentialsModal } from './mt5-credentials-modal'
+import { MT5CredentialsModal } from './mt5-credentials-modal'
 
 export interface SwitchEntry {
   key: string
@@ -146,36 +146,36 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
         disabled={busy || switching}
         onClick={() => switchTo(e)}
         className={cn(
-          "w-full text-left p-2.5 rounded-lg border transition-all flex items-center justify-between gap-3 group focus-ring select-none",
+          "w-full text-left p-2 sm:p-2.5 rounded-lg border transition-all flex items-center justify-between gap-2.5 group focus-ring select-none cursor-pointer",
           active
             ? "bg-accent/15 border-accent/50 text-text shadow-xs"
             : isFailed
-              ? "bg-surface/40 border-border/40 opacity-75 hover:opacity-100 hover:bg-surface-muted/60"
-              : "bg-surface/70 border-border/60 hover:bg-surface-muted/80 hover:border-border-strong text-text"
+              ? "bg-surface/40 border-border/40 opacity-75 hover:opacity-100 hover:bg-surface-muted/60 text-text-muted"
+              : "bg-surface/60 border-border/60 hover:bg-surface-muted/80 hover:border-border-strong text-text"
         )}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          {/* Icon indicator */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {/* Status Icon */}
           <div className="shrink-0">
             {e.kind === 'tournament' ? (
-              <div className="w-7 h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Trophy className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Trophy className="w-3.5 h-3.5" />
               </div>
             ) : isFunded ? (
-              <div className="w-7 h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Sparkles className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Sparkles className="w-3.5 h-3.5" />
               </div>
             ) : isFailed ? (
-              <div className="w-7 h-7 rounded-md bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
-                <X className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <X className="w-3.5 h-3.5" />
               </div>
             ) : isPassed ? (
-              <div className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
               </div>
             ) : (
-              <div className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <Briefcase className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <Briefcase className="w-3.5 h-3.5" />
               </div>
             )}
           </div>
@@ -183,7 +183,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           {/* Details */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-xs text-text truncate max-w-[200px]">
+              <span className="font-semibold text-xs text-text truncate max-w-[160px] sm:max-w-[220px]">
                 {e.planName || e.label}
               </span>
               {e.accountId && (
@@ -213,11 +213,10 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
               )}
             </div>
 
-            {e.sub && (
-              <p className="text-3xs text-text-muted truncate mt-0.5 font-mono">
-                {e.sub}
-              </p>
-            )}
+            {/* Sub details: clean single row */}
+            <p className="text-3xs text-text-muted truncate mt-0.5 font-mono">
+              {e.sub || (e.startingBalance ? `Starting ${fmtUSD(e.startingBalance, { decimals: 0 })}` : '')}
+            </p>
           </div>
         </div>
 
@@ -230,10 +229,10 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           )}
 
           {busy ? (
-            <Loader2 className="w-4 h-4 animate-spin text-accent" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
           ) : active ? (
-            <div className="w-5 h-5 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
-              <Check className="w-3.5 h-3.5" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
+              <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </div>
           ) : null}
         </div>
@@ -243,10 +242,11 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
   return (
     <div ref={dropdownRef} className="relative z-40 w-full">
-      {/* Sleek single-row trigger bar */}
-      <div className="flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg bg-surface/90 border border-border/80 shadow-xs backdrop-blur-md">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-3xs text-text-muted font-mono uppercase tracking-wider shrink-0 hidden sm:inline">
+      {/* Sleek institutional trigger bar with zero overflow on any viewport */}
+      <div className="flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg bg-surface/90 border border-border/80 shadow-xs backdrop-blur-md w-full">
+        {/* Left: Account trigger button */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="text-3xs text-text-muted font-mono uppercase tracking-wider shrink-0 hidden md:inline">
             Active Account
           </span>
 
@@ -255,14 +255,14 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             disabled={pendingKey !== null || switching}
             onClick={() => setIsOpen((prev) => !prev)}
             className={cn(
-              "group inline-flex items-center gap-2.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-all focus-ring select-none cursor-pointer",
+              "group flex-1 sm:flex-initial min-w-0 inline-flex items-center justify-between sm:justify-start gap-2 px-2 sm:px-2.5 py-1.5 rounded-md border text-xs font-semibold transition-all focus-ring select-none cursor-pointer",
               isOpen
                 ? "bg-accent/15 border-accent/60 text-accent shadow-xs"
                 : "bg-surface-muted/80 border-border hover:border-border-strong hover:bg-surface-muted text-text"
             )}
             title={activeEntry?.sub}
           >
-            {/* Pulsing indicator dot */}
+            {/* Status dot */}
             <span className="relative flex h-2 w-2 shrink-0">
               {activeEntry?.status === 'funded' ? (
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
@@ -276,14 +276,14 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
               )}
             </span>
 
-            {/* Account Title / Plan Name */}
-            <span className="font-semibold text-text max-w-[140px] sm:max-w-[220px] md:max-w-[280px] truncate">
+            {/* Account Title */}
+            <span className="font-semibold text-text truncate min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[260px]">
               {activeEntry?.planName || activeEntry?.label || 'Select Account'}
             </span>
 
             {/* Account ID */}
             {activeEntry?.accountId && (
-              <span className="text-3xs font-mono text-text-muted shrink-0">
+              <span className="text-3xs font-mono text-text-muted shrink-0 hidden xs:inline">
                 #{activeEntry.accountId}
               </span>
             )}
@@ -297,7 +297,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
             {/* Live Balance */}
             {activeEntry?.balance !== undefined && (
-              <span className="text-xs font-mono font-bold text-emerald-400 shrink-0">
+              <span className="text-xs font-mono font-bold text-emerald-400 shrink-0 ml-auto sm:ml-0">
                 {fmtUSD(activeEntry.balance, { decimals: 0 })}
               </span>
             )}
@@ -311,7 +311,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             />
           </button>
 
-          {/* Total accounts count badge */}
+          {/* Accounts Count Badge */}
           {entries.length > 1 && (
             <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-mono text-text-muted bg-surface-muted border border-border/50 shrink-0">
               {entries.length} Accounts
@@ -319,39 +319,37 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           )}
         </div>
 
-        {/* Right side: status, Live Broker Ping Badge, and MT5 Credentials */}
+        {/* Right side: 1-Click MT5 Credentials or Switching State */}
         <div className="flex items-center gap-2 shrink-0">
           {(switching || pendingKey !== null) ? (
             <div className="flex items-center gap-1.5 text-xs text-accent font-mono animate-pulse">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Switching account…</span>
+              <span className="hidden sm:inline">Switching…</span>
             </div>
           ) : (
-            <span className="hidden 2xl:inline-block text-3xs font-mono text-text-faint">
-              Instant MT5 &amp; WebTrader context sync
-            </span>
+            <>
+              {/* 1-Click MT5 Credentials button (compact icon on mobile, full on desktop) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  setIsCredentialsOpen(true)
+                }}
+                className="inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold font-mono bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
+                title="Open MetaTrader 5 Credentials"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span className="hidden sm:inline">MT5 Credentials</span>
+              </button>
+            </>
           )}
-
-          {/* Institutional Live Broker Latency Ping Badge */}
-          <LiveBrokerPingBadge onClick={() => setIsCredentialsOpen(true)} />
-
-          {/* 1-Click MT5 Credentials button */}
-          <button
-            type="button"
-            onClick={() => setIsCredentialsOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold font-mono bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
-            title="Open MT5 Credentials"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xs:inline">MT5 Credentials</span>
-          </button>
         </div>
       </div>
 
       {/* Dropdown Menu Popover */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-full sm:w-[480px] max-w-[95vw] rounded-xl bg-[#0d121f]/95 border border-border/80 shadow-2xl backdrop-blur-xl p-2.5 flex flex-col gap-2 animate-in fade-in-0 zoom-in-95 duration-150 z-50">
-          {/* Search box if multiple accounts */}
+        <div className="absolute left-0 top-full mt-1.5 w-[calc(100vw-1.5rem)] sm:w-[460px] max-w-[460px] rounded-xl bg-[#0b0f19]/98 border border-border/80 shadow-2xl backdrop-blur-2xl p-2.5 flex flex-col gap-2 animate-in fade-in-0 zoom-in-95 duration-150 z-50">
+          {/* Search box */}
           {entries.length > 3 && (
             <div className="relative flex items-center">
               <Search className="absolute left-2.5 w-3.5 h-3.5 text-text-muted pointer-events-none" />
@@ -376,7 +374,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           )}
 
           {/* Categorized Accounts List */}
-          <div className="max-h-[360px] overflow-y-auto pr-1 space-y-2.5 divide-y divide-border/20 custom-scrollbar">
+          <div className="max-h-[340px] overflow-y-auto pr-1 space-y-2 divide-y divide-border/20 custom-scrollbar">
             {/* Active Challenges */}
             {activeChallenges.length > 0 && (
               <div className="space-y-1">
@@ -461,23 +459,23 @@ export function buildSwitchEntries(
   for (const ch of safeChallenges) {
     if (!ch) continue
     const st = (ch.status ?? '').toLowerCase()
-    // activeOnly (terminal): only tradeable accounts. Dashboard: all, so a
-    // failed challenge's final stats stay reviewable.
     if (activeOnly && st !== 'active' && st !== 'funded') continue
 
-    const sub = st === 'funded' ? 'Funded Account'
-      : st === 'failed' ? 'Failed (Review Only)'
-      : st === 'passed' ? 'Passed (Review Only)'
-      : `Balance: ${fmtUSD(toNum(ch.current_balance || ch.starting_balance), { decimals: 0 })}`
+    const sub = st === 'funded' 
+      ? `Funded · Start ${fmtUSD(toNum(ch.starting_balance), { decimals: 0 })}`
+      : st === 'failed' 
+        ? 'Failed (Review Only)'
+        : st === 'passed' 
+          ? 'Passed (Review Only)'
+          : `Phase ${ch.phase ?? 1} · Start ${fmtUSD(toNum(ch.starting_balance), { decimals: 0 })}`
     
-    const mt5Tag = ch.mt5_login ? ` [MT5: #${ch.mt5_login}]` : ''
     const plan = ch.plan_name || `Challenge #${ch.fxsim_account_id}`
-    const label = plan + mt5Tag + (st === 'failed' ? ' (Failed)' : '')
+    const label = plan + (st === 'failed' ? ' (Failed)' : '')
 
     entries.push({
       key: `c-${ch.fxsim_account_id}`,
       label,
-      sub: (ch.mt5_login ? `MT5 #${ch.mt5_login} · ` : '') + sub,
+      sub,
       ctx: { kind: 'challenge', accountId: ch.fxsim_account_id, title: ch.plan_name },
       kind: 'challenge',
       status: st,
@@ -495,7 +493,7 @@ export function buildSwitchEntries(
     entries.push({
       key: `t-${t.tournament_id}`,
       label: `🏆 ${t.title}`,
-      sub: `Tournament · start ${fmtUSD(toNum(t.starting_balance), { decimals: 0 })}`,
+      sub: `Tournament · Start ${fmtUSD(toNum(t.starting_balance), { decimals: 0 })}`,
       ctx: { kind: 'tournament', tournamentId: t.tournament_id, title: t.title },
       kind: 'tournament',
       status: t.tournament_status ?? 'active',
