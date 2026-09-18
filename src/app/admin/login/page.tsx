@@ -23,14 +23,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (ready && user?.is_admin) {
-      const searchParams = new URLSearchParams(window.location.search)
-      const next = searchParams.get('next')
-      const target = next && next.startsWith('/admin') && next !== '/admin/login' ? next : '/admin'
-      window.location.href = target
-    }
-  }, [ready, user])
+
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault()
