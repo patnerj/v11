@@ -25,9 +25,12 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (ready && user?.is_admin) {
-      router.replace('/admin')
+      const searchParams = new URLSearchParams(window.location.search)
+      const next = searchParams.get('next')
+      const target = next && next.startsWith('/admin') && next !== '/admin/login' ? next : '/admin'
+      window.location.href = target
     }
-  }, [ready, user, router])
+  }, [ready, user])
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault()
@@ -39,7 +42,10 @@ export default function AdminLoginPage() {
       const res = await signin(username, password, remember)
       if (res.ok) {
         toast.success('Admin authentication verified. Welcome back!')
-        router.replace('/admin')
+        const searchParams = new URLSearchParams(window.location.search)
+        const next = searchParams.get('next')
+        const target = next && next.startsWith('/admin') && next !== '/admin/login' ? next : '/admin'
+        window.location.href = target
       } else {
         setError(res.error || 'Authentication failed. Please check credentials.')
       }
