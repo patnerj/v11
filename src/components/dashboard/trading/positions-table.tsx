@@ -3,7 +3,7 @@
 import { memo, useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Pencil, X, Check, ChevronDown, Trash2 } from 'lucide-react'
+import { Pencil, X, Check, ChevronDown, Trash2, Share2 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { fmtPrice, fmtUSD, fmtLots, toNum, timeAgo, pnlClass } from '@/lib/format'
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/cn'
 import type { Position } from '@/types/api'
 import { playOrderCloseSound } from '@/lib/sound'
+import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
 
 interface Props {
   positions: Position[] | null
@@ -24,6 +25,8 @@ interface Props {
 }
 
 export const PositionsTable = memo(function PositionsTable({ positions, onChanged, compact }: Props) {
+  const [shareTrade, setShareTrade] = useState<ShareTradeData | null>(null)
+
   if (positions === null) {
     return <SkeletonRows />
   }
@@ -38,33 +41,48 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
     )
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border-subtle bg-bg-subtle/40">
-            <Th>Symbol</Th>
-            <Th>Side</Th>
-            <Th align="right" hideOn={compact ? 'sm' : undefined}>Volume</Th>
-            <Th align="right" hideOn="md">Open</Th>
-            <Th align="right" hideOn="sm">Current</Th>
-            <Th align="right" hideOn="md">SL / TP</Th>
-            <Th align="right">P&L</Th>
-            <Th align="right" hideOn="lg">Opened</Th>
-            <Th align="right">{''}</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {positions.map((p, i) => (
-            <PositionRow key={p.id} pos={p} index={i} onChanged={onChanged} compact={compact} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border-subtle bg-bg-subtle/40">
+              <Th>Symbol</Th>
+              <Th>Side</Th>
+              <Th align="right" hideOn={compact ? 'sm' : undefined}>Volume</Th>
+              <Th align="right" hideOn="md">Open</Th>
+              <Th align="right" hideOn="sm">Current</Th>
+              <Th align="right" hideOn="md">SL / TP</Th>
+              <Th align="right">P&L</Th>
+              <Th align="right" hideOn="lg">Opened</Th>
+              <Th align="right">{''}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {positions.map((p, i) => (
+              <PositionRow
+                key={p.id}
+                pos={p}
+                index={i}
+                onChanged={onChanged}
+                compact={compact}
+                onShare={setShareTrade}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <SocialProfitShareModal
+        open={Boolean(shareTrade)}
+        onClose={() => setShareTrade(null)}
+        trade={shareTrade}
+      />
+    </>
   )
 })
 
-function PositionRow({ pos, index, onChanged, compact }: {
-  pos: Position; index: number; onChanged?: () => void; compact?: boolean
+function PositionRow({ pos, index, onChanged, compact, onShare }: {
+  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void
 }) {
   const getMeta = useTerminal((s) => s.getMeta)
   const meta    = getMeta(pos.symbol)
@@ -125,6 +143,16 @@ function PositionRow({ pos, index, onChanged, compact }: {
     }
   }, [pos.id, slDraft, tpDraft, onChanged])
 
+  // Live price tick subscription & real-time PnL calculation
+  const tick = usePrices((s) => s.prices[pos.symbol])
+  const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 100000)
+
+  const currentPx = isMt5Synced && toNum(pos.current_price) > 0
+    ? toNum(pos.current_price)
+    : pos.type === 'buy'
+      ? (toNum(tick?.bid) || toNum(pos.current_price))
+      : (toNum(tick?.ask) || toNum(pos.current_price))
+
   const closePos = useCallback(async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
@@ -136,14 +164,27 @@ function PositionRow({ pos, index, onChanged, compact }: {
     setBusy(false)
     if (res.ok && res.data.success) {
       playOrderCloseSound()
-      const pnl = toNum(res.data.pnl)
-      toast.success(`Closed ${pos.symbol} · ${fmtUSD(pnl, { sign: true })}`)
+      const closePnl = toNum(res.data.pnl)
+      toast.success(`Closed ${pos.symbol} · ${fmtUSD(closePnl, { sign: true })}`, {
+        action: closePnl > 0 ? {
+          label: 'Flex Win 🚀',
+          onClick: () => onShare?.({
+            symbol: pos.symbol,
+            type: pos.type,
+            lotSize: pos.lot_size,
+            openPrice: fmtPrice(pos.open_price, digits),
+            currentPrice: fmtPrice(currentPx, digits),
+            pnl: closePnl,
+            isClosed: true,
+          })
+        } : undefined
+      })
       invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
       onChanged?.()
     } else {
       toast.error(res.ok ? (res.data.message || 'Close failed') : res.error)
     }
-  }, [pos.id, pos.symbol, onChanged])
+  }, [pos.id, pos.symbol, pos.type, pos.lot_size, pos.open_price, currentPx, digits, onChanged, onShare])
 
   const submitPartial = useCallback(async () => {
     const n = toNum(partialLots)
@@ -163,16 +204,6 @@ function PositionRow({ pos, index, onChanged, compact }: {
       toast.error(res.ok ? (res.data.message || 'Partial close failed') : res.error)
     }
   }, [pos.id, pos.lot_size, pos.symbol, partialLots, onChanged])
-
-  // Live price tick subscription & real-time PnL calculation
-  const tick = usePrices((s) => s.prices[pos.symbol])
-  const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 100000)
-
-  const currentPx = isMt5Synced && toNum(pos.current_price) > 0
-    ? toNum(pos.current_price)
-    : pos.type === 'buy'
-      ? (toNum(tick?.bid) || toNum(pos.current_price))
-      : (toNum(tick?.ask) || toNum(pos.current_price))
 
   const pnl = useMemo(() => {
     if (isMt5Synced) {
@@ -257,7 +288,28 @@ function PositionRow({ pos, index, onChanged, compact }: {
           <span className="text-2xs text-text-muted whitespace-nowrap">{timeAgo(pos.opened_at_iso || pos.opened_at)}</span>
         </Td>
         <Td align="right">
-          <div className="flex justify-end gap-0.5">
+          <div className="flex justify-end items-center gap-1">
+            <button
+              onClick={() => onShare?.({
+                symbol: pos.symbol,
+                type: pos.type,
+                lotSize: pos.lot_size,
+                openPrice: fmtPrice(pos.open_price, digits),
+                currentPrice: fmtPrice(currentPx, digits),
+                pnl: pnl,
+                openedAt: pos.opened_at_iso || pos.opened_at,
+              })}
+              title="Flex Trade / Share Profit Card"
+              className={cn(
+                "h-7 px-2 inline-flex items-center gap-1 rounded text-2xs font-medium transition-colors focus-ring",
+                pnl > 0
+                  ? "text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle"
+              )}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Flex</span>
+            </button>
             <button
               onClick={() => setShowPartial((v) => !v)}
               disabled={busy}

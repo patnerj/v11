@@ -25,6 +25,7 @@ import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
 import { FounderActionCenter } from '@/components/admin/founder-action-center'
+import { Mt5GatewayMonitorCard } from '@/components/admin/mt5-gateway-monitor-card'
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
@@ -1044,6 +1045,15 @@ export default function AdminCommandCenter() {
           </div>
 
         </div>
+      </section>
+
+      {/* ── 2.5 Live MT5 Bridge Gateway Telemetry Monitor ─────────────────────── */}
+      <section>
+        <Mt5GatewayMonitorCard
+          onConfigureClick={() => {
+            window.location.href = '/admin/operations?tab=mt5'
+          }}
+        />
       </section>
 
       {/* ── 3. Interactive Analytics Section (Recharts 2-Col) ────────────────── */}

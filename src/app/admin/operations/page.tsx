@@ -26,6 +26,7 @@ import { PriceFeedCard } from '@/components/admin/price-feed-card'
 import { RedisCacheCard } from '@/components/admin/redis-cache-card'
 import { DisasterRecoveryCard } from '@/components/admin/disaster-recovery-card'
 import { SentryMonitoringCard } from '@/components/admin/sentry-monitoring-card'
+import { Mt5GatewayMonitorCard } from '@/components/admin/mt5-gateway-monitor-card'
 import { toast } from 'sonner'
 
 export default function OperationsHubPage() {
@@ -858,11 +859,13 @@ export default function OperationsHubPage() {
       {/* ── TAB 3: MT5 BRIDGE GATEWAY ──────────────────────────────────────── */}
       {activeTab === 'mt5' && (
         <div className="space-y-6 max-w-4xl">
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Mt5GatewayMonitorCard />
+
+          <Card className="bg-surface border-border text-text shadow-card">
+            <CardHeader className="border-b border-border-subtle pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                  <Server className="h-4 w-4 text-emerald-400" />
+                <CardTitle className="text-base text-text flex items-center gap-2">
+                  <Server className="h-4 w-4 text-accent" />
                   MetaTrader 5 Manager Gateway Settings
                 </CardTitle>
                 <Badge tone="accent" size="sm">Bridge Protocol</Badge>

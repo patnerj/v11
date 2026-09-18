@@ -16,7 +16,8 @@ import { AccountSwitcher, buildSwitchEntries } from '@/components/dashboard/trad
 import { usePrices, buildContextParams } from '@/store/prices'
 import { useChallengeMyQuery } from '@/hooks/useApi'
 import { StatCard, StatGrid } from '@/components/ui/stat-card'
-import { Search, ChevronDown, TrendingUp, TrendingDown, BarChart3, Tag, MessageSquare, Save, History, Trophy, Award, DollarSign, Download } from 'lucide-react'
+import { Search, ChevronDown, TrendingUp, TrendingDown, BarChart3, Tag, MessageSquare, Save, History, Trophy, Award, DollarSign, Download, Share2 } from 'lucide-react'
+import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
 import { toast } from 'sonner'
 
 export default function HistoryPage() {
@@ -63,6 +64,7 @@ export default function HistoryPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [editingNotes, setEditingNotes] = useState<Record<number, { note: string; tags: string[]; screenshot_url?: string }>>({})
   const [savingTradeId, setSavingTradeId] = useState<number | null>(null)
+  const [shareTrade, setShareTrade] = useState<ShareTradeData | null>(null)
 
   const parseTags = (raw: any): string[] => {
     if (Array.isArray(raw)) return raw
@@ -374,7 +376,31 @@ export default function HistoryPage() {
                     <td className="px-4 py-3 text-right tabular text-text-muted hidden md:table-cell">{toNum(t.open_price).toFixed(5)}</td>
                     <td className="px-4 py-3 text-right tabular text-text-muted hidden md:table-cell">{toNum(t.close_price).toFixed(5)}</td>
                     <td className={`px-4 py-3 text-right tabular font-medium ${pnlClass(pnl)}`}>
-                      {fmtUSD(pnl, { sign: true })}
+                      <div className="flex items-center justify-end gap-2">
+                        <span>{fmtUSD(pnl, { sign: true })}</span>
+                        {pnl > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShareTrade({
+                                symbol: t.symbol,
+                                type: type === 'sell' ? 'sell' : 'buy',
+                                lotSize: t.lot_size,
+                                openPrice: toNum(t.open_price).toFixed(5),
+                                currentPrice: toNum(t.close_price).toFixed(5),
+                                pnl: pnl,
+                                isClosed: true,
+                                openedAt: t.opened_at_iso || t.opened_at,
+                                closedAt: t.closed_at_iso || t.closed_at,
+                              })
+                            }}
+                            className="p-1 rounded text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30 transition-colors"
+                            title="Flex Profit / Share Trade Card"
+                          >
+                            <Share2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right text-2xs text-text-muted hidden lg:table-cell">{fmtDate(t.closed_at_iso || t.closed_at, true)}</td>
                   </motion.tr>
@@ -487,6 +513,12 @@ export default function HistoryPage() {
           </div>
         )}
       </Card>
+
+      <SocialProfitShareModal
+        open={Boolean(shareTrade)}
+        onClose={() => setShareTrade(null)}
+        trade={shareTrade}
+      />
     </div>
   )
 }
