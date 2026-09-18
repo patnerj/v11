@@ -14,9 +14,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon, Shield, Bot } from 'lucide-react'
+import { Menu, Bell, User as UserIcon, LogOut, Settings, Trophy, Sun, Moon, Shield, Bot, KeyRound } from 'lucide-react'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { useCopilotStore } from '@/store/copilot'
+import { LiveBrokerPingBadge, MT5CredentialsModal } from '@/components/dashboard/trading/mt5-credentials-modal'
 
 export interface TopbarProps {
   onMenuClick?: () => void
@@ -62,6 +63,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
     { title: 'Dashboard', section: 'Trader Hub' }
   const [mounted, setMounted] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
+  const [mt5ModalOpen, setMt5ModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
   useEffect(() => { 
@@ -145,6 +147,27 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
               {isOnline ? 'Connected' : 'Offline'}
             </span>
           </div>
+        )}
+
+        {/* Live Broker Latency Ping Badge */}
+        {mounted && (
+          <LiveBrokerPingBadge
+            onClick={() => setMt5ModalOpen(true)}
+            className="hidden md:inline-flex"
+          />
+        )}
+
+        {/* 1-Click MT5 Credentials button */}
+        {mounted && (
+          <button
+            type="button"
+            onClick={() => setMt5ModalOpen(true)}
+            className="hidden xl:inline-flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/25 text-cyan-300 text-xs font-semibold font-mono transition-colors focus-ring cursor-pointer"
+            title="Open MT5 Credentials"
+          >
+            <KeyRound className="h-3.5 w-3.5 text-cyan-400" />
+            <span>MT5 Credentials</span>
+          </button>
         )}
 
         <NotificationsButton 
@@ -238,6 +261,17 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* 1-Click MT5 Credentials Dialog Modal */}
+      <MT5CredentialsModal
+        isOpen={mt5ModalOpen}
+        onClose={() => setMt5ModalOpen(false)}
+        broker="MetaQuotes-Demo"
+        server="MetaQuotes-Demo"
+        login="5056177670"
+        traderPassword="-0DxOxMu"
+        investorPassword="RwYd*t3t"
+      />
     </header>
   )
 }

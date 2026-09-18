@@ -19,8 +19,10 @@ import {
   Briefcase,
   Sparkles,
   Loader2,
-  ShieldCheck
+  ShieldCheck,
+  KeyRound,
 } from 'lucide-react'
+import { LiveBrokerPingBadge, MT5CredentialsModal } from './mt5-credentials-modal'
 
 export interface SwitchEntry {
   key: string
@@ -43,6 +45,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
   const switching = usePrices((s) => s.contextSwitching)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [isCredentialsOpen, setIsCredentialsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -316,7 +319,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           )}
         </div>
 
-        {/* Right side: status or loading */}
+        {/* Right side: status, Live Broker Ping Badge, and MT5 Credentials */}
         <div className="flex items-center gap-2 shrink-0">
           {(switching || pendingKey !== null) ? (
             <div className="flex items-center gap-1.5 text-xs text-accent font-mono animate-pulse">
@@ -324,10 +327,24 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
               <span>Switching account…</span>
             </div>
           ) : (
-            <span className="hidden xl:inline-block text-3xs font-mono text-text-faint">
+            <span className="hidden 2xl:inline-block text-3xs font-mono text-text-faint">
               Instant MT5 &amp; WebTrader context sync
             </span>
           )}
+
+          {/* Institutional Live Broker Latency Ping Badge */}
+          <LiveBrokerPingBadge onClick={() => setIsCredentialsOpen(true)} />
+
+          {/* 1-Click MT5 Credentials button */}
+          <button
+            type="button"
+            onClick={() => setIsCredentialsOpen(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold font-mono bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
+            title="Open MT5 Credentials"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden xs:inline">MT5 Credentials</span>
+          </button>
         </div>
       </div>
 
@@ -401,6 +418,18 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           </div>
         </div>
       )}
+
+      {/* 1-Click MT5 Credentials Dialog Modal */}
+      <MT5CredentialsModal
+        isOpen={isCredentialsOpen}
+        onClose={() => setIsCredentialsOpen(false)}
+        broker="MetaQuotes-Demo"
+        server="MetaQuotes-Demo"
+        login={activeEntry?.mt5Login || '5056177670'}
+        traderPassword="-0DxOxMu"
+        investorPassword="RwYd*t3t"
+        accountLabel={activeEntry?.planName || activeEntry?.label}
+      />
     </div>
   )
 }
