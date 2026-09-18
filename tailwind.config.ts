@@ -80,10 +80,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'var(--font-poppins)', 'Poppins', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-        // Mono follows the admin-configured theme font so admin and trader
-        // dashboards render identical typography; tabular-nums keeps
-        // numeric columns aligned (see globals.css .font-mono rule).
-        mono: ['var(--font-sans)', 'var(--font-poppins)', 'Poppins', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-jetbrains)', 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
         poppins: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
         inter: ['var(--font-inter)', 'Inter', 'sans-serif'],
         jakarta: ['var(--font-plus-jakarta)', 'Plus Jakarta Sans', 'sans-serif'],

@@ -129,6 +129,15 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillText('ALPHACAPITAL', 0, 0)
     ctx.restore()
 
+    // 3.6 Instrument Pair Watermark (Subtle background accent)
+    ctx.save()
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)'
+    ctx.font = '900 76px "JetBrains Mono", monospace'
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'top'
+    ctx.fillText(trade.symbol.toUpperCase(), width - 60, 140)
+    ctx.restore()
+
     // 4. Card Outer Border with Neon Accent Line
     ctx.strokeStyle = '#1F2937'
     ctx.lineWidth = 3
@@ -176,29 +185,30 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
 
     ctx.fillStyle = '#E5E7EB'
-    ctx.font = '700 13px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+    ctx.font = '700 13px "JetBrains Mono", monospace'
     ctx.fillText('VERIFIED TELEMETRY', width - 275, 92)
 
     // 6. Hero Badge: Symbol & Side
     const isBuy = trade.type === 'buy'
-    const sideText = `${trade.type.toUpperCase()} ${Number(trade.lotSize).toFixed(2)} ${trade.symbol}`
+    const symbolFormatted = trade.symbol.toUpperCase()
+    const sideText = `${symbolFormatted} · ${trade.type.toUpperCase()} ${Number(trade.lotSize).toFixed(2)} LOTS`
     
     ctx.fillStyle = isBuy ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
     ctx.strokeStyle = isBuy ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.roundRect(width / 2 - 140, 160, 280, 42, 21)
+    ctx.roundRect(width / 2 - 180, 155, 360, 44, 22)
     ctx.fill()
     ctx.stroke()
 
     ctx.fillStyle = isBuy ? '#34D399' : '#F87171'
-    ctx.font = '800 16px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+    ctx.font = '800 16px "JetBrains Mono", monospace'
     ctx.textAlign = 'center'
-    ctx.fillText(sideText, width / 2, 187)
+    ctx.fillText(sideText, width / 2, 183)
 
     // 7. Hero PnL Typography (JetBrains Mono tabular font)
     ctx.fillStyle = isProfit ? '#10B981' : '#EF4444'
-    ctx.font = '900 84px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+    ctx.font = '900 84px "JetBrains Mono", monospace'
     const pnlFormatted = fmtUSD(trade.pnl, { sign: true })
     ctx.fillText(pnlFormatted, width / 2, 290)
 
@@ -213,7 +223,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isProfit ? '#34D399' : '#F87171'
-    ctx.font = '800 15px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+    ctx.font = '800 15px "JetBrains Mono", monospace'
     ctx.fillText(pctText, width / 2, 339)
 
     // 8. Stats Quad Grid (Entry, Current/Exit, Volume, Execution)
@@ -222,10 +232,10 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     const colW = (width - 160) / 4
 
     const stats = [
+      { label: 'TRADING PAIR', val: `${symbolFormatted} (${trade.type.toUpperCase()})` },
       { label: 'ENTRY PRICE', val: String(trade.openPrice) },
       { label: trade.isClosed ? 'EXIT PRICE' : 'MARKET PRICE', val: String(trade.currentPrice) },
-      { label: 'POSITION VOLUME', val: `${Number(trade.lotSize).toFixed(2)} Lots` },
-      { label: 'EXECUTION PROTOCOL', val: 'MT5 Live Parity' },
+      { label: 'VOLUME & PROTOCOL', val: `${Number(trade.lotSize).toFixed(2)}L · MT5 Parity` },
     ]
 
     stats.forEach((s, idx) => {
@@ -244,8 +254,8 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ctx.font = '600 11px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
       ctx.fillText(s.label, colX + 16, statsBoxY + 30)
 
-      ctx.fillStyle = '#F3F4F6'
-      ctx.font = '700 16px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+      ctx.fillStyle = idx === 0 ? (isBuy ? '#34D399' : '#F87171') : '#F3F4F6'
+      ctx.font = '700 16px "JetBrains Mono", monospace'
       ctx.fillText(s.val, colX + 16, statsBoxY + 58)
     })
 
@@ -270,7 +280,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillText(traderHandle, 145, footerY + 22)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 13px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+    ctx.font = '600 13px "JetBrains Mono", monospace'
     ctx.fillText(`Account ID: ${accountId} · Zero-Drift Verified`, 145, footerY + 42)
 
     // Verification QR Code Matrix Box
@@ -290,7 +300,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillRect(qrX + 38, qrY + 38, 10, 10)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 11px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
+    ctx.font = '600 11px "JetBrains Mono", monospace'
     ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
     ctx.fillStyle = '#6B7280'
     ctx.font = '500 10px "Plus Jakarta Sans", -apple-system, sans-serif'
@@ -459,7 +469,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 ref={canvasRef}
                 className="w-full h-auto block select-none pointer-events-none"
               />
-              <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur px-2 py-1 rounded text-3xs font-mono text-text-muted border border-border-subtle">
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur px-2.5 py-1 rounded-md text-3xs font-mono text-text-muted border border-border-subtle shadow-xs">
                 1200 x 675 Ultra HD
               </div>
             </div>
@@ -468,28 +478,35 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
                 <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
+                  Trading Pair
+                </span>
+                <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                  <span className="text-base font-extrabold font-mono text-text">
+                    {trade.symbol}
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded text-3xs font-mono font-bold uppercase ${
+                    trade.type === 'buy' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                  }`}>
+                    {trade.type} {Number(trade.lotSize).toFixed(2)}L
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
+                <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
                   Net Profit
                 </span>
-                <span className={`text-base font-extrabold font-mono ${isProfit ? 'text-accent' : 'text-danger'}`}>
+                <span className={`text-base font-extrabold font-mono ${isProfit ? 'text-accent' : 'text-danger'} block mt-0.5`}>
                   {fmtUSD(trade.pnl, { sign: true })}
                 </span>
               </div>
 
               <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
                 <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
-                  Return
+                  ROI Return
                 </span>
-                <span className={`text-base font-extrabold font-mono ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'}`}>
+                <span className={`text-base font-extrabold font-mono ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'} block mt-0.5`}>
                   {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
-                <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
-                  Position
-                </span>
-                <span className="text-base font-bold font-mono text-text truncate block">
-                  {trade.symbol}
                 </span>
               </div>
             </div>

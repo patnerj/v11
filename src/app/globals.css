@@ -264,8 +264,13 @@
     background-attachment: fixed;
   }
 
-  /* Numeric column alignment everywhere */
-  .num, td.num, .font-mono {
+  /* Numeric column alignment and monospace font precision everywhere */
+  .font-mono {
+    font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+  .num, td.num, .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum';
   }

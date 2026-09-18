@@ -138,12 +138,12 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
 
       <div className="flex items-center gap-1.5">
         {mounted && (
-          <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-surface-muted/50 border border-border-subtle mr-1">
-            <span className="relative flex h-2 w-2">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-success' : 'bg-danger'}`}></span>
-              <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-success' : 'bg-danger'}`}></span>
+          <div className="hidden sm:inline-flex items-center gap-2 h-8 px-2.5 rounded-lg text-xs font-mono font-medium bg-surface-muted/60 border border-border-subtle text-text select-none">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
             </span>
-            <span className={isOnline ? 'text-success' : 'text-danger'}>
+            <span className={isOnline ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
               {isOnline ? 'Connected' : 'Offline'}
             </span>
           </div>

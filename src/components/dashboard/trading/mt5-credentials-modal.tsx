@@ -46,24 +46,24 @@ export function LiveBrokerPingBadge({
     <button
       type="button"
       onClick={onClick}
-      title="Live Broker Latency · MetaQuotes-Demo Direct Bridge (Click to view MT5 credentials)"
+      title="Live Broker Latency · MetaQuotes MT5 Direct Bridge (Click to view MT5 credentials)"
       className={cn(
-        'group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-mono font-medium select-none transition-all duration-200',
-        'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 hover:border-cyan-500/40 hover:text-cyan-300',
+        'group inline-flex items-center gap-2 h-8 px-2.5 rounded-lg text-xs font-mono font-medium select-none transition-all duration-200',
+        'bg-surface-muted/60 hover:bg-surface-muted border border-border-subtle hover:border-emerald-500/40 text-text',
         'shadow-xs focus-ring cursor-pointer',
         className
       )}
     >
-      <span className="relative flex h-1.5 w-1.5 shrink-0">
+      <span className="relative flex h-2 w-2 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
       </span>
-      <span className="font-semibold text-emerald-300 group-hover:text-cyan-300 transition-colors">
-        ⚡ 18ms
+      <span className="font-semibold text-emerald-400 group-hover:text-emerald-300 transition-colors">
+        18ms
       </span>
-      <span className="text-text-faint hidden sm:inline">·</span>
-      <span className="text-emerald-400/90 group-hover:text-cyan-200 transition-colors hidden sm:inline truncate max-w-[120px]">
-        MetaQuotes-Demo
+      <span className="text-text-muted/50 hidden sm:inline">·</span>
+      <span className="text-text-muted group-hover:text-text transition-colors hidden sm:inline whitespace-nowrap">
+        MetaQuotes MT5
       </span>
     </button>
   )
@@ -111,15 +111,15 @@ export function MT5CredentialsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg bg-[#0b0f19]/98 border border-border/80 shadow-2xl backdrop-blur-2xl rounded-2xl p-4 sm:p-6 overflow-hidden max-h-[92vh] flex flex-col">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg bg-surface border border-border shadow-2xl backdrop-blur-2xl rounded-2xl p-4 sm:p-6 overflow-hidden max-h-[92vh] flex flex-col">
         {/* Ambient background glow accents */}
         <div className="pointer-events-none absolute -top-24 -right-24 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl" />
 
-        <DialogHeader className="relative z-10 pb-3 border-b border-border/60 shrink-0">
+        <DialogHeader className="relative z-10 pb-3 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-3 pr-6">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-xs shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shadow-xs shrink-0">
                 <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="min-w-0">
@@ -140,7 +140,7 @@ export function MT5CredentialsModal({
         {/* Scrollable body content */}
         <div className="relative z-10 space-y-3 py-3 overflow-y-auto custom-scrollbar flex-1 pr-0.5">
           {/* Live Parity & Latency Status Banner */}
-          <div className="rounded-xl bg-surface-muted/40 border border-border/60 p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="rounded-xl bg-surface-muted/60 border border-border p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -152,11 +152,11 @@ export function MT5CredentialsModal({
             </div>
 
             <div className="flex items-center gap-1.5 font-mono text-3xs text-text-muted shrink-0">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-border/60 text-emerald-300">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-border text-emerald-300">
                 <Zap className="w-3 h-3 text-emerald-400" />
                 18ms Latency
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-border/60 text-cyan-300">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-border text-cyan-300">
                 <Layers className="w-3 h-3 text-cyan-400" />
                 FIX 4.4
               </span>
