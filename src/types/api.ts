@@ -340,6 +340,10 @@ export interface ChallengeAccount {
   last_scaled_at:     string | null
   created_at:         string
   ip_mismatched?:     boolean
+  mt5_login?:         string | null
+  mt5_server?:        string | null
+  mt5_password?:      string | null
+  mt5_account_type?:  string | null
   // Joined from plan in /challenge/my
   plan_name?:           string
   account_size?:        number | string

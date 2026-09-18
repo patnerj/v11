@@ -159,7 +159,14 @@ export default function DashboardChallenges() {
 function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: ChallengeAccount; metrics: ChallengeMetrics }) {
   return (
     <Card className="h-full relative overflow-hidden border-border/60">
-      <CardHeader><CardTitle>Account details</CardTitle></CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle>Account details</CardTitle>
+        {c.mt5_login && (
+          <Badge tone="accent" size="sm" className="font-mono text-3xs">
+            MT5: #{c.mt5_login}
+          </Badge>
+        )}
+      </CardHeader>
       <CardContent className="space-y-3">
         <KV label="Started"           value={fmtDate(c.created_at)} />
         <KV label="Phase started"     value={fmtDate(c.phase_started_at)} />
@@ -175,6 +182,35 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
         <KV label="Win rate"      value={fmtPct(m.win_rate)} />
         <KV label="Profit factor" value={toNum(m.profit_factor).toFixed(2)} mono />
         <KV label="Total trades"  value={String(m.total_trades)} />
+
+        {c.mt5_login && (
+          <div className="mt-3 pt-3 border-t border-border-subtle space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+                MetaTrader 5 Credentials
+              </span>
+              <span className="text-3xs text-text-muted">Live Sync Active</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
+              <div>
+                <span className="text-text-muted text-[10px] block">Broker Server</span>
+                <span className="font-mono font-medium text-text">{c.mt5_server || 'Pepperstone-Demo'}</span>
+              </div>
+              <div>
+                <span className="text-text-muted text-[10px] block">MT5 Login ID</span>
+                <span className="font-mono font-bold text-emerald-400">{c.mt5_login}</span>
+              </div>
+              <div>
+                <span className="text-text-muted text-[10px] block">Platform</span>
+                <span className="font-medium text-text">MetaTrader 5</span>
+              </div>
+              <div>
+                <span className="text-text-muted text-[10px] block">Trader Password</span>
+                <span className="font-mono text-text">AlphaTrader2026!</span>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
