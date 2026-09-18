@@ -70,7 +70,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
 /** Build switcher entries from active challenges + joined tournaments. */
 export function buildSwitchEntries(
-  challenges: Array<{ fxsim_account_id: number; status?: string; plan_name?: string; current_balance?: number | string }>,
+  challenges: Array<{ fxsim_account_id: number; status?: string; plan_name?: string; current_balance?: number | string; mt5_login?: string }>,
   tournaments: Array<{ tournament_id: number; title: string; starting_balance: number | string }>,
   activeOnly = false,
 ): SwitchEntry[] {
@@ -89,10 +89,11 @@ export function buildSwitchEntries(
       : st === 'failed' ? 'Failed (view only)'
       : st === 'passed' ? 'Passed (view only)'
       : fmtUSD(toNum(ch.current_balance), { decimals: 0 })
+    const mt5Tag = ch.mt5_login ? ` [MT5: #${ch.mt5_login}]` : ''
     entries.push({
       key: `c-${ch.fxsim_account_id}`,
-      label: (ch.plan_name ? ch.plan_name : `Challenge #${ch.fxsim_account_id}`) + (st === 'failed' ? ' (Failed)' : ''),
-      sub,
+      label: (ch.plan_name ? ch.plan_name : `Challenge #${ch.fxsim_account_id}`) + mt5Tag + (st === 'failed' ? ' (Failed)' : ''),
+      sub: (ch.mt5_login ? `MT5 #${ch.mt5_login} · ` : '') + sub,
       ctx: { kind: 'challenge', accountId: ch.fxsim_account_id, title: ch.plan_name },
     })
   }
