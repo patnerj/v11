@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
-import { api } from '@/lib/api'
+import { api, getApiBaseUrl } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -51,9 +51,10 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
 
   // Ingestion endpoint path
   const ingestionEndpoint = '/wp-json/fxsim/v1/mt5/sync'
-  const fullIngestUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}${ingestionEndpoint}`
-    : `https://demo.launchapropfirm.com${ingestionEndpoint}`
+  const fullIngestUrl = useMemo(() => {
+    const apiBase = getApiBaseUrl().replace(/\/wp-json\/fxsim\/v1\/?$/, '')
+    return `${apiBase}${ingestionEndpoint}`
+  }, [ingestionEndpoint])
 
   // Fetch MT5 Bridge Config
   const loadConfig = useCallback(async () => {
@@ -174,9 +175,9 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
                 <Badge tone={isOnline ? 'success' : 'danger'} size="sm" className="font-mono gap-1.5 py-0.5">
                   <span className="relative flex h-2 w-2">
                     {isOnline && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
                     )}
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-accent' : 'bg-danger'}`} />
                   </span>
                   {isOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴'}
                 </Badge>
@@ -208,7 +209,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               size="sm"
               onClick={handleTestTelemetrySync}
               disabled={syncing}
-              className="gap-1.5 text-xs font-semibold shadow-emerald-500/20"
+              className="gap-1.5 text-xs font-semibold shadow-accent/20"
             >
               <Zap className={`h-3.5 w-3.5 ${syncing ? 'animate-pulse' : ''}`} />
               {syncing ? 'Syncing...' : 'Test Telemetry Sync'}
@@ -230,7 +231,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <Activity className="h-3.5 w-3.5 text-accent" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold font-mono text-emerald-400">
+              <span className="text-xl font-extrabold font-mono text-accent">
                 ONLINE
               </span>
               <span className="text-xs font-mono text-text-muted">
@@ -256,7 +257,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               </span>
             </div>
             <p className="text-2xs text-text-muted flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="h-3 w-3 text-accent shrink-0" />
               <span>JIT XChaCha20 Decrypted</span>
             </p>
           </div>
@@ -273,7 +274,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <span className="text-xl font-extrabold font-mono text-text">
                 {heartbeatSec}s ago
               </span>
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="inline-block h-2 w-2 rounded-full bg-accent animate-ping" />
             </div>
             <p className="text-2xs text-text-muted">
               Sync Cadence: 2,000ms polling
@@ -289,7 +290,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <ShieldCheck className="h-3.5 w-3.5 text-accent" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold font-mono text-emerald-400">
+              <span className="text-xl font-extrabold font-mono text-accent">
                 {parityDrift}
               </span>
               <Badge tone="success" size="sm" className="font-mono text-[9px] px-1.5 py-0">
@@ -336,7 +337,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
             </div>
             <div className="h-6 w-px bg-border-subtle" />
             <div className="flex flex-col items-end">
-              <span className="text-emerald-400 font-bold">0 Drop</span>
+              <span className="text-accent font-bold">0 Drop</span>
               <span className="text-text-muted">Packet Loss</span>
             </div>
             {onConfigureClick && (
@@ -357,18 +358,18 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
         {lastPingResult && (
           <div className={`p-3 rounded-lg border text-xs flex items-center justify-between ${
             lastPingResult.connected
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-              : 'border-red-500/30 bg-red-500/10 text-red-300'
+              ? 'border-accent/30 bg-accent/10 text-accent'
+              : 'border-danger/30 bg-danger/10 text-danger'
           }`}>
             <div className="flex items-center gap-2">
               {lastPingResult.connected ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
               ) : (
-                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+                <AlertTriangle className="h-4 w-4 text-danger shrink-0" />
               )}
-              <span className="font-medium">{lastPingResult.message}</span>
+              <span className="font-medium text-text">{lastPingResult.message}</span>
             </div>
-            <span className="font-mono text-2xs font-bold px-2 py-0.5 rounded bg-surface border border-border-subtle">
+            <span className="font-mono text-2xs font-bold px-2 py-0.5 rounded bg-surface border border-border-subtle text-text">
               Roundtrip: {lastPingResult.latency_ms}ms
             </span>
           </div>

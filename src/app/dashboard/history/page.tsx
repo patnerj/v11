@@ -390,11 +390,12 @@ export default function HistoryPage() {
                                 currentPrice: toNum(t.close_price).toFixed(5),
                                 pnl: pnl,
                                 isClosed: true,
+                                accountId: t.account_id ? `ACC-${t.account_id}` : undefined,
                                 openedAt: t.opened_at_iso || t.opened_at,
                                 closedAt: t.closed_at_iso || t.closed_at,
                               })
                             }}
-                            className="p-1 rounded text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30 transition-colors"
+                            className="p-1 rounded text-accent hover:bg-accent/10 border border-accent/30 transition-colors"
                             title="Flex Profit / Share Trade Card"
                           >
                             <Share2 className="h-3.5 w-3.5" />

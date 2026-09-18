@@ -23,6 +23,7 @@ export interface ShareTradeData {
   pnlPercent?: number
   traderHandle?: string
   accountId?: string | number
+  margin?: number | string
   openedAt?: string
   closedAt?: string
   isClosed?: boolean
@@ -44,18 +45,33 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Resolve handle & account ID
-  const traderHandle = trade?.traderHandle || (authUser?.username ? `@${authUser.username}` : '@haris')
+  // Resolve handle & account ID (never default to developer name)
+  const traderHandle = trade?.traderHandle || (
+    authUser?.username 
+      ? `@${authUser.username}` 
+      : authUser?.email 
+        ? `@${authUser.email.split('@')[0]}` 
+        : '@AlphaTrader'
+  )
   const accountId = trade?.accountId || (account?.id ? `ACC-${account.id}` : '#5056177670')
   const isProfit = (trade?.pnl ?? 0) >= 0
 
-  // Calculate percentage gain
+  // Calculate percentage gain mathematically soundly (leveraged ROI or price delta)
   const pnlPercent = trade?.pnlPercent ?? (() => {
+    const pnlVal = trade?.pnl ?? 0
+    const margin = toNum(trade?.margin)
+    if (margin > 0 && Math.abs(pnlVal) > 0) {
+      return (pnlVal / margin) * 100
+    }
+    const bal = toNum(account?.balance)
+    if (bal > 0 && Math.abs(pnlVal) > 0) {
+      return (pnlVal / bal) * 100
+    }
     const openPx = toNum(trade?.openPrice)
     const curPx = toNum(trade?.currentPrice)
     if (openPx <= 0) return 0
     const diff = trade?.type === 'buy' ? curPx - openPx : openPx - curPx
-    return (diff / openPx) * 100 * 10 // leveraged representation
+    return (diff / openPx) * 100
   })()
 
   // High-res Canvas Drawer for PNG Export
@@ -80,7 +96,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
 
     // 2. Subtle Aurora Glow behind Hero PnL
     const glowGrad = ctx.createRadialGradient(width / 2, 280, 20, width / 2, 280, 420)
-    glowGrad.addColorStop(0, isProfit ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)')
+    glowGrad.addColorStop(0, isProfit ? 'rgba(16, 185, 129, 0.20)' : 'rgba(239, 68, 68, 0.20)')
     glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
     ctx.fillStyle = glowGrad
     ctx.fillRect(0, 0, width, height)
@@ -102,6 +118,17 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ctx.stroke()
     }
 
+    // 3.5 Large Institutional Brand Watermark (Subtle background rotation)
+    ctx.save()
+    ctx.translate(width / 2, height / 2 - 10)
+    ctx.rotate(-Math.PI / 18)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.025)'
+    ctx.font = '900 115px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('ALPHACAPITAL', 0, 0)
+    ctx.restore()
+
     // 4. Card Outer Border with Neon Accent Line
     ctx.strokeStyle = '#1F2937'
     ctx.lineWidth = 3
@@ -120,18 +147,18 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     // 5. Header: Logo & Title
-    // Shield Icon
     ctx.fillStyle = isProfit ? '#10B981' : '#EF4444'
     ctx.beginPath()
     ctx.arc(80, 85, 18, 0, Math.PI * 2)
     ctx.fill()
 
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = '900 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '900 24px "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.textAlign = 'left'
     ctx.fillText('ALPHACAPITAL', 115, 84)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '600 12px "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     ctx.fillText('INSTITUTIONAL PROPRIETARY TRADING', 115, 102)
 
     // Header Right: Verified Telemetry Badge
@@ -149,7 +176,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
 
     ctx.fillStyle = '#E5E7EB'
-    ctx.font = '700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '700 13px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
     ctx.fillText('VERIFIED TELEMETRY', width - 275, 92)
 
     // 6. Hero Badge: Symbol & Side
@@ -165,18 +192,18 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isBuy ? '#34D399' : '#F87171'
-    ctx.font = '800 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '800 16px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
     ctx.textAlign = 'center'
     ctx.fillText(sideText, width / 2, 187)
 
     // 7. Hero PnL Typography (JetBrains Mono tabular font)
     ctx.fillStyle = isProfit ? '#10B981' : '#EF4444'
-    ctx.font = '900 84px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace'
+    ctx.font = '900 84px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
     const pnlFormatted = fmtUSD(trade.pnl, { sign: true })
     ctx.fillText(pnlFormatted, width / 2, 290)
 
     // Return percentage pill
-    const pctText = `${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}% RETURN`
+    const pctText = `${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}% ROI`
     ctx.fillStyle = isProfit ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)'
     ctx.strokeStyle = isProfit ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'
     ctx.lineWidth = 1.5
@@ -186,7 +213,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isProfit ? '#34D399' : '#F87171'
-    ctx.font = '800 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace'
+    ctx.font = '800 15px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
     ctx.fillText(pctText, width / 2, 339)
 
     // 8. Stats Quad Grid (Entry, Current/Exit, Volume, Execution)
@@ -214,11 +241,11 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ctx.stroke()
 
       ctx.fillStyle = '#9CA3AF'
-      ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.font = '600 11px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
       ctx.fillText(s.label, colX + 16, statsBoxY + 30)
 
       ctx.fillStyle = '#F3F4F6'
-      ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace'
+      ctx.font = '700 16px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
       ctx.fillText(s.val, colX + 16, statsBoxY + 58)
     })
 
@@ -235,25 +262,27 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = '#10B981'
-    ctx.font = '900 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '900 18px "Plus Jakarta Sans", -apple-system, sans-serif'
     ctx.fillText(traderHandle.charAt(1)?.toUpperCase() || 'A', 98, footerY + 32)
 
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '700 18px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
     ctx.fillText(traderHandle, 145, footerY + 22)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace'
+    ctx.font = '600 13px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
     ctx.fillText(`Account ID: ${accountId} · Zero-Drift Verified`, 145, footerY + 42)
 
-    // Verification QR Code simulation
+    // Verification QR Code Matrix Box
     const qrX = width - 180
     const qrY = footerY
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(qrX, qrY, 60, 60)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
+    ctx.beginPath()
+    ctx.roundRect(qrX, qrY, 60, 60, 8)
+    ctx.fill()
     
     // QR Pattern mock
-    ctx.fillStyle = '#000000'
+    ctx.fillStyle = '#0B0F19'
     ctx.fillRect(qrX + 6, qrY + 6, 16, 16)
     ctx.fillRect(qrX + 38, qrY + 6, 16, 16)
     ctx.fillRect(qrX + 6, qrY + 38, 16, 16)
@@ -261,19 +290,28 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillRect(qrX + 38, qrY + 38, 10, 10)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '600 11px "JetBrains Mono", var(--font-jetbrains), -apple-system, monospace'
     ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
     ctx.fillStyle = '#6B7280'
-    ctx.font = '500 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '500 10px "Plus Jakarta Sans", -apple-system, sans-serif'
     ctx.fillText('launchapropfirm.com', qrX - 110, footerY + 42)
 
   }, [trade, traderHandle, accountId, isProfit, pnlPercent])
 
   useEffect(() => {
     if (open && trade) {
-      // Delay slightly for modal mount
-      const t = setTimeout(drawCanvas, 100)
-      return () => clearTimeout(t)
+      let active = true
+      const render = () => {
+        if (active) drawCanvas()
+      }
+      if (typeof document !== 'undefined' && document.fonts) {
+        document.fonts.ready.then(render)
+      }
+      const t = setTimeout(render, 60)
+      return () => {
+        active = false
+        clearTimeout(t)
+      }
     }
   }, [open, trade, drawCanvas])
 
@@ -297,81 +335,78 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     }
   }
 
-  // Action 2: Copy to Clipboard (Image or Text)
+  // Action 2: Copy to Clipboard (Safari / iOS WebKit compatible Promise flow)
   const handleCopyClipboard = async () => {
     if (!canvasRef.current || !trade) return
     setCopying(true)
     try {
       if (typeof window !== 'undefined' && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-        canvasRef.current.toBlob(async (blob) => {
-          if (blob) {
-            try {
-              await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob })
-              ])
-              setCopied(true)
-              toast.success('Profit Card PNG copied to clipboard!')
-              setTimeout(() => setCopied(false), 2500)
-              return
-            } catch {
-              // Fallback to text copy
-              copySocialText()
-            }
-          } else {
-            copySocialText()
-          }
-        }, 'image/png')
+        // Modern Safari / WebKit requires ClipboardItem to receive a Promise<Blob> synchronously
+        // inside the transient user gesture activation window.
+        const blobPromise = new Promise<Blob>((resolve, reject) => {
+          canvasRef.current?.toBlob((blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error('Canvas rasterization failed'))
+          }, 'image/png')
+        })
+
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blobPromise })
+        ])
+        setCopied(true)
+        toast.success('Profit Card PNG copied to clipboard!')
+        setTimeout(() => setCopied(false), 2500)
       } else {
-        copySocialText()
+        await copySocialText()
       }
     } catch {
-      copySocialText()
+      // Fallback to rich formatted text
+      await copySocialText()
     } finally {
       setCopying(false)
     }
   }
 
-  const copySocialText = () => {
+  const copySocialText = async () => {
     if (!trade) return
     const text = `🚀 Verified Profit Flex: ${fmtUSD(trade.pnl, { sign: true })} (${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%) on ${trade.symbol} with @AlphaCapital Prop Firm! 📈 https://demo.launchapropfirm.com`
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    toast.success('Trade share text copied to clipboard!')
-    setTimeout(() => setCopied(false), 2500)
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      toast.success('Trade share text copied to clipboard!')
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      toast.error('Clipboard write permission denied')
+    }
   }
 
   // Action 3: Share (Native Web Share or Twitter intent)
   const handleShare = async () => {
-    if (!trade) return
+    if (!trade || !canvasRef.current) return
     setSharing(true)
     try {
       const shareText = `🚀 Verified Profit Flex: ${fmtUSD(trade.pnl, { sign: true })} on ${trade.symbol} with @AlphaCapital! 📈`
-      const shareUrl = 'https://demo.launchapropfirm.com'
+      const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://demo.launchapropfirm.com'
 
-      if (typeof navigator !== 'undefined' && navigator.share && canvasRef.current) {
-        canvasRef.current.toBlob(async (blob) => {
-          if (blob) {
-            const file = new File([blob], `AlphaCapital-${trade.symbol}.png`, { type: 'image/png' })
-            try {
-              await navigator.share({
-                title: 'AlphaCapital Profit Share Card',
-                text: shareText,
-                url: shareUrl,
-                files: [file],
-              })
-              toast.success('Shared successfully!')
-            } catch (err: any) {
-              if (err.name !== 'AbortError') {
-                openTwitterShare(shareText, shareUrl)
-              }
-            }
-          } else {
-            openTwitterShare(shareText, shareUrl)
+      const blob = await new Promise<Blob | null>((resolve) => canvasRef.current?.toBlob(resolve, 'image/png'))
+      if (blob && typeof navigator !== 'undefined' && navigator.share) {
+        const file = new File([blob], `AlphaCapital-${trade.symbol}.png`, { type: 'image/png' })
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: 'AlphaCapital Profit Share Card',
+              text: shareText,
+              url: shareUrl,
+              files: [file],
+            })
+            toast.success('Shared successfully!')
+            return
+          } catch (err: any) {
+            if (err.name === 'AbortError') return
           }
-        })
-      } else {
-        openTwitterShare(shareText, shareUrl)
+        }
       }
+      openTwitterShare(shareText, shareUrl)
     } finally {
       setSharing(false)
     }
@@ -419,7 +454,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
           <div className="p-6 space-y-6">
             
             {/* Live Interactive Card Canvas Container */}
-            <div className="rounded-xl border border-border overflow-hidden bg-bg-subtle shadow-card relative group">
+            <div className="rounded-xl border border-border overflow-hidden bg-surface-muted shadow-card relative group">
               <canvas
                 ref={canvasRef}
                 className="w-full h-auto block select-none pointer-events-none"
@@ -435,7 +470,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
                   Net Profit
                 </span>
-                <span className={`text-base font-extrabold font-mono ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`text-base font-extrabold font-mono ${isProfit ? 'text-accent' : 'text-danger'}`}>
                   {fmtUSD(trade.pnl, { sign: true })}
                 </span>
               </div>
@@ -444,7 +479,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
                   Return
                 </span>
-                <span className={`text-base font-extrabold font-mono ${pnlPercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`text-base font-extrabold font-mono ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'}`}>
                   {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
                 </span>
               </div>
@@ -465,7 +500,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 variant="primary"
                 onClick={handleDownloadPNG}
                 disabled={downloading}
-                className="w-full sm:flex-1 gap-2 shadow-emerald-500/20 text-xs font-semibold h-10"
+                className="w-full sm:flex-1 gap-2 shadow-accent/20 text-xs font-semibold h-10"
               >
                 <Download className="h-4 w-4" />
                 {downloading ? 'Rendering PNG...' : 'Download PNG'}

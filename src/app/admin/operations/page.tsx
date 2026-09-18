@@ -870,7 +870,7 @@ export default function OperationsHubPage() {
                 </CardTitle>
                 <Badge tone="accent" size="sm">Bridge Protocol</Badge>
               </div>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 Direct integration with MetaTrader 5 Manager API for automatic account provisioning, group assignments, and real-time equity synchronization.
               </CardDescription>
             </CardHeader>
@@ -930,7 +930,7 @@ export default function OperationsHubPage() {
               </div>
 
               {/* Group Mappings */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#1F2937]/60">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border-subtle">
                 <div className="space-y-1.5">
                   <Label htmlFor="mt5-ops-demo-group">Demo / Evaluation Group Mapping</Label>
                   <Input
@@ -940,7 +940,7 @@ export default function OperationsHubPage() {
                     onChange={(e) => setMt5OpsForm({ ...mt5OpsForm, demo_group: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <span className="text-[10px] text-gray-500">Group assigned for Phase 1 & 2 accounts</span>
+                  <span className="text-[10px] text-text-muted">Group assigned for Phase 1 & 2 accounts</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -952,16 +952,16 @@ export default function OperationsHubPage() {
                     onChange={(e) => setMt5OpsForm({ ...mt5OpsForm, funded_group: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <span className="text-[10px] text-gray-500">Group assigned when passing into Funded status</span>
+                  <span className="text-[10px] text-text-muted">Group assigned when passing into Funded status</span>
                 </div>
               </div>
 
               {/* Ping Gateway Diagnostic Card */}
-              <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-3">
+              <div className="p-4 rounded-xl border border-border-subtle bg-surface-muted/60 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs font-bold text-white">Live MT5 Gateway Connection Ping</span>
+                    <Activity className="h-4 w-4 text-accent" />
+                    <span className="text-xs font-bold text-text">Live MT5 Gateway Connection Ping</span>
                   </div>
                   <Button
                     type="button"
@@ -969,7 +969,7 @@ export default function OperationsHubPage() {
                     size="sm"
                     onClick={handleTestMt5Ops}
                     loading={isTestingMt5Ops}
-                    className="text-xs gap-1.5"
+                    className="text-xs gap-1.5 border-border hover:bg-surface"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     Test MT5 Manager Connection
@@ -979,16 +979,16 @@ export default function OperationsHubPage() {
                 {mt5OpsPingResult && (
                   <div className={`p-3 rounded-lg border text-xs flex items-center justify-between ${
                     mt5OpsPingResult.connected
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : 'border-red-500/40 bg-red-500/10 text-red-300'
+                      ? 'border-accent/30 bg-accent/10 text-accent'
+                      : 'border-danger/30 bg-danger/10 text-danger'
                   }`}>
                     <div className="flex items-center gap-2">
                       {mt5OpsPingResult.connected ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
                       ) : (
-                        <AlertOctagon className="h-4 w-4 text-red-400 shrink-0" />
+                        <AlertOctagon className="h-4 w-4 text-danger shrink-0" />
                       )}
-                      <span>{mt5OpsPingResult.message}</span>
+                      <span className="text-text">{mt5OpsPingResult.message}</span>
                     </div>
                     {mt5OpsPingResult.connected && (
                       <Badge tone="success" size="sm" className="font-mono">
@@ -1001,12 +1001,12 @@ export default function OperationsHubPage() {
 
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-border-subtle p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveMt5OpsMutation.mutate(mt5OpsForm)}
                 loading={saveMt5OpsMutation.isPending}
-                className="gap-1.5 shadow-emerald-500/20"
+                className="gap-1.5 shadow-accent/20"
               >
                 <Save className="h-4 w-4" />
                 Save MT5 Gateway Settings

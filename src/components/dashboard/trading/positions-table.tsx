@@ -176,6 +176,8 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
             currentPrice: fmtPrice(currentPx, digits),
             pnl: closePnl,
             isClosed: true,
+            accountId: pos.account_id ? `ACC-${pos.account_id}` : undefined,
+            margin: pos.margin,
           })
         } : undefined
       })
@@ -184,7 +186,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
     } else {
       toast.error(res.ok ? (res.data.message || 'Close failed') : res.error)
     }
-  }, [pos.id, pos.symbol, pos.type, pos.lot_size, pos.open_price, currentPx, digits, onChanged, onShare])
+  }, [pos.id, pos.symbol, pos.type, pos.lot_size, pos.open_price, pos.account_id, pos.margin, currentPx, digits, onChanged, onShare])
 
   const submitPartial = useCallback(async () => {
     const n = toNum(partialLots)
@@ -298,12 +300,14 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
                 currentPrice: fmtPrice(currentPx, digits),
                 pnl: pnl,
                 openedAt: pos.opened_at_iso || pos.opened_at,
+                accountId: pos.account_id ? `ACC-${pos.account_id}` : undefined,
+                margin: pos.margin,
               })}
               title="Flex Trade / Share Profit Card"
               className={cn(
                 "h-7 px-2 inline-flex items-center gap-1 rounded text-2xs font-medium transition-colors focus-ring",
                 pnl > 0
-                  ? "text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30"
+                  ? "text-accent hover:bg-accent/10 border border-accent/30"
                   : "text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle"
               )}
             >

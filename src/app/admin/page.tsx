@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { 
   DollarSign, Users, Target, Award, LineChart, Activity, Wallet, CreditCard,
   ArrowUpRight, ArrowDownRight, AlertTriangle, ArrowRight, BookOpen, Loader2,
@@ -68,6 +69,7 @@ const DEFAULT_GROWTH_SERIES: Array<{ name: string; registrations: number; passes
 ]
 
 export default function AdminCommandCenter() {
+  const router = useRouter()
   const queryClient = useQueryClient()
 
   // State for interactive modals
@@ -1051,7 +1053,7 @@ export default function AdminCommandCenter() {
       <section>
         <Mt5GatewayMonitorCard
           onConfigureClick={() => {
-            window.location.href = '/admin/operations?tab=mt5'
+            router.push('/admin/operations?tab=mt5')
           }}
         />
       </section>
@@ -1060,19 +1062,19 @@ export default function AdminCommandCenter() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Chart 1: Revenue & Payout Trend (Area Chart) */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-border text-text shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+              <CardTitle className="text-base text-text flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-accent" />
                 Revenue & Payout Dynamics
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 Monthly gross fee collections vs profit disbursements
               </CardDescription>
             </div>
             
-            <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-lg border border-[#1F2937]">
+            <div className="flex items-center gap-1 bg-surface-muted p-1 rounded-lg border border-border-subtle">
               {(['7m', '1y'] as const).map((r) => (
                 <button
                   key={r}
@@ -1195,7 +1197,7 @@ export default function AdminCommandCenter() {
             </ResponsiveContainer>
           </CardContent>
 
-          <CardFooter className="pt-0 border-t border-[#1F2937]/50 flex items-center justify-between text-xs text-gray-400">
+          <CardFooter className="pt-0 border-t border-border-subtle flex items-center justify-between text-xs text-text-muted">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-accent" />
@@ -1213,14 +1215,14 @@ export default function AdminCommandCenter() {
         </Card>
 
         {/* Chart 2: Platform Growth & Pass Rates (Bar Chart) */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-border text-text shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-400" />
+              <CardTitle className="text-base text-text flex items-center gap-2">
+                <Target className="h-4 w-4 text-accent" />
                 Challenge Growth & Pass Rates
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 New challenge account signups vs successful trader evaluations
               </CardDescription>
             </div>
@@ -1315,7 +1317,7 @@ export default function AdminCommandCenter() {
             </ResponsiveContainer>
           </CardContent>
 
-          <CardFooter className="pt-0 border-t border-[#1F2937]/50 flex items-center justify-between text-xs text-gray-400">
+          <CardFooter className="pt-0 border-t border-border-subtle flex items-center justify-between text-xs text-text-muted">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-accent" />
