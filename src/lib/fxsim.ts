@@ -25,26 +25,18 @@ import type { ApiResult, ApiErr } from '@/types/api'
  * 3. '/api/wp' (Default relative fallback)
  */
 export function getApiBaseUrl(): string {
-  // In the browser (client-side), ALWAYS route requests through the same-origin proxy '/api/wp'.
-  // This completely eliminates cross-origin timeouts, ISP packet loss, CORS preflight delays,
-  // and regional firewall drops between end users and the hosting server.
-  if (typeof window !== 'undefined') {
-    return '/api/wp'
-  }
-
-  // On the server (SSR / API route handlers), use the absolute URL for server-to-server calls.
-  const serverUrl =
-    process.env.FXSIM_API_URL ||
-    process.env.LOCAL_WP_BACKEND_URL ||
+  const envUrl =
     process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_FXSIM_API
+    process.env.NEXT_PUBLIC_FXSIM_API ||
+    process.env.FXSIM_API_URL ||
+    process.env.LOCAL_WP_BACKEND_URL
 
-  if (serverUrl && (serverUrl.startsWith('http://') || serverUrl.startsWith('https://'))) {
-    const trimmed = serverUrl.trim().replace(/\/$/, '')
+  if (envUrl && (envUrl.startsWith('http://') || envUrl.startsWith('https://'))) {
+    const trimmed = envUrl.trim().replace(/\/$/, '')
     return trimmed.endsWith('/wp-json/fxsim/v1') ? trimmed : `${trimmed}/wp-json/fxsim/v1`
   }
 
-  return '/api/wp'
+  return 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
 }
 
 export const FXSIM_BASE = getApiBaseUrl()

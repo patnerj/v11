@@ -88,9 +88,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Allow access to /admin/login freely (or redirect to /admin if already admin)
+  if (path === '/admin/login' || path === '/admin/login/') {
+    if (isAdmin) {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
+    return NextResponse.next()
+  }
+
   // Protect /admin routes — a verified admin-role session is mandatory, always.
   if (path === '/admin' || path.startsWith('/admin/')) {
-    if (!isAdmin) return loginRedirect()
+    if (!isAdmin) {
+      const url = new URL('/admin/login', request.url)
+      url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+      return NextResponse.redirect(url)
+    }
   }
 
   // Protect /dashboard and /arena routes

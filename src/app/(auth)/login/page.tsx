@@ -81,7 +81,7 @@ function LoginForm() {
   const finishLogin = () => {
     toast.success('Welcome back')
     const u = useAuth.getState().user
-    const target = u?.is_admin && next === '/dashboard' ? '/admin' : next
+    const target = u?.is_admin && (next === '/dashboard' || next.startsWith('/admin')) ? '/admin' : next
     router.replace(target)
   }
 
