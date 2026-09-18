@@ -70,6 +70,7 @@ export interface Position {
   opened_at:    string
   opened_at_iso?: string | null
   isOptimistic?: boolean
+  order_id?:    number | string
 }
 
 // ── Trade (history) ──────────────────────────────────────────────────────────
