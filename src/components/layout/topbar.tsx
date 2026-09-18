@@ -38,6 +38,7 @@ const ROUTE_NAV_TITLES: Record<string, { title: string; section?: string }> = {
   '/dashboard/certificates': { title: 'Funded Certificates', section: 'Achievements' },
   '/dashboard/notifications': { title: 'Notifications & Alerts', section: 'System' },
   '/dashboard/support': { title: 'Help & Support Desk', section: 'Support' },
+  '/dashboard/copilot': { title: 'AI Copilot Command Center', section: 'Vision System' },
   '/dashboard/settings': { title: 'Account Settings', section: 'Security' },
   '/dashboard/kyc': { title: 'Identity Verification (KYC)', section: 'Compliance' },
 }
@@ -201,19 +202,17 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
           }}
         />
 
-        <button
-          onClick={() => {
-            useCopilotStore.getState().toggleOpen()
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('fxsim:open-copilot'))
-            }
-          }}
+        <Link
+          href="/dashboard/copilot"
           className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold transition-colors focus-ring"
-          title="Toggle AI Copilot"
+          title="AI Vision Command Center"
         >
           <Bot className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">AI Copilot</span>
-        </button>
+          <span className="hidden md:inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase rounded bg-emerald-500/20 text-emerald-300">
+            RADAR
+          </span>
+        </Link>
 
         <ThemeSwitcher />
 
