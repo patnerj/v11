@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { Sidebar } from '@/components/admin/Sidebar'
@@ -12,6 +12,8 @@ import { cn } from '@/lib/cn'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const isLoginPage = pathname === '/admin/login'
   const { user, ready } = useAuth()
   const impersonating = useImpersonation((s) => s.record)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -19,22 +21,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Auth & Impersonation Guard
   useEffect(() => {
+    if (isLoginPage) return
     if (!ready) return
     // Re-verify the role against the SERVER on every admin mount — never trust
     // cached client state for an authorization decision.
     void useAuth.getState().refresh(true)
     if (!user) {
-      router.replace('/login')
+      router.replace('/admin/login')
       return
     }
     if (impersonating || !user.is_admin) {
       router.replace('/dashboard')
     }
-    // Depend on the user's stable identity/role, not the `user` object
-    // itself — refresh() above replaces it with a new object every call, so
-    // depending on the object re-triggered this effect (and thus another
-    // refresh()) continuously for as long as any admin tab stayed open.
-  }, [ready, user?.id, user?.is_admin, impersonating, router])
+  }, [ready, user?.id, user?.is_admin, impersonating, router, isLoginPage])
+
+  // If on admin login page, bypass layout shell and loaders completely
+  if (isLoginPage) {
+    return <>{children}</>
+  }
 
   if (!ready || !user || !user.is_admin || impersonating) {
     return (
