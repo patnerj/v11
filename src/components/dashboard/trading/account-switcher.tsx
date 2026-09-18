@@ -146,7 +146,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
         disabled={busy || switching}
         onClick={() => switchTo(e)}
         className={cn(
-          "w-full text-left p-2 sm:p-2.5 rounded-lg border transition-all flex items-center justify-between gap-2.5 group focus-ring select-none cursor-pointer",
+          "w-full text-left px-3 py-2 rounded-lg border transition-all flex items-center justify-between gap-2.5 group focus-ring select-none cursor-pointer",
           active
             ? "bg-accent/15 border-accent/50 text-text shadow-xs"
             : isFailed
@@ -158,23 +158,23 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
           {/* Status Icon */}
           <div className="shrink-0">
             {e.kind === 'tournament' ? (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <div className="w-7 h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
                 <Trophy className="w-3.5 h-3.5" />
               </div>
             ) : isFunded ? (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <div className="w-7 h-7 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
                 <Sparkles className="w-3.5 h-3.5" />
               </div>
             ) : isFailed ? (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <div className="w-7 h-7 rounded-md bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
                 <X className="w-3.5 h-3.5" />
               </div>
             ) : isPassed ? (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                 <ShieldCheck className="w-3.5 h-3.5" />
               </div>
             ) : (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                 <Briefcase className="w-3.5 h-3.5" />
               </div>
             )}
@@ -182,57 +182,61 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
           {/* Details */}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-xs text-text truncate max-w-[160px] sm:max-w-[220px]">
+            {/* Row 1: Plan Name + Live Balance */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-xs text-text truncate max-w-[180px] sm:max-w-[240px]">
                 {e.planName || e.label}
               </span>
+              {e.balance !== undefined && (
+                <span className="font-mono text-xs font-bold text-emerald-400 shrink-0">
+                  {fmtUSD(e.balance, { decimals: 0 })}
+                </span>
+              )}
+            </div>
+
+            {/* Row 2: Metadata Pills & Starting info */}
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {e.accountId && (
                 <span className="text-3xs font-mono text-text-muted">
                   #{e.accountId}
                 </span>
               )}
               {e.mt5Login && (
-                <span className="px-1 py-0.5 rounded text-3xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                <span className="px-1 py-0.2 rounded text-3xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                   MT5: #{e.mt5Login}
                 </span>
               )}
               {isFunded && (
-                <span className="px-1 py-0.5 rounded text-3xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="px-1 py-0.2 rounded text-3xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
                   Funded
                 </span>
               )}
               {isFailed && (
-                <span className="px-1 py-0.5 rounded text-3xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                <span className="px-1 py-0.2 rounded text-3xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
                   Failed
                 </span>
               )}
               {isPassed && (
-                <span className="px-1 py-0.5 rounded text-3xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span className="px-1 py-0.2 rounded text-3xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   Passed
                 </span>
               )}
+              {e.startingBalance && (
+                <span className="text-3xs text-text-muted font-mono ml-auto hidden xs:inline">
+                  Start {fmtUSD(e.startingBalance, { decimals: 0 })}
+                </span>
+              )}
             </div>
-
-            {/* Sub details: clean single row */}
-            <p className="text-3xs text-text-muted truncate mt-0.5 font-mono">
-              {e.sub || (e.startingBalance ? `Starting ${fmtUSD(e.startingBalance, { decimals: 0 })}` : '')}
-            </p>
           </div>
         </div>
 
-        {/* Right: Balance & Active indicator */}
-        <div className="flex items-center gap-2 shrink-0">
-          {e.balance !== undefined && (
-            <span className="font-mono text-xs font-bold text-emerald-400">
-              {fmtUSD(e.balance, { decimals: 0 })}
-            </span>
-          )}
-
+        {/* Right: Active Checkmark or Loading */}
+        <div className="flex items-center gap-1 shrink-0 ml-1">
           {busy ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
           ) : active ? (
-            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
-              <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <div className="w-4 h-4 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
+              <Check className="w-3 h-3" />
             </div>
           ) : null}
         </div>
