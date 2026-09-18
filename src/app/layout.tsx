@@ -111,16 +111,38 @@ export async function generateMetadata(): Promise<Metadata> {
     // silently fallback on timeout or fetch error
   }
 
+  const siteUrl = 'https://demo.launchapropfirm.com'
+  const ogTitle = `${brandName} — Trade Up to $200,000 in Funded Capital`
+  const ogDescription = `${brandTagline}. Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.`
+
   return {
+    metadataBase: new URL(siteUrl),
     title:       { default: brandName, template: `%s | ${brandName}` },
-    description: `${brandTagline}. Pass the evaluation, trade our capital, keep up to 90% of your profits.`,
+    description: ogDescription,
     applicationName: brandName,
     openGraph: {
-      title:       brandName,
-      description: `${brandTagline}. Pass the evaluation, trade our capital, keep up to 90% of your profits.`,
+      title:       ogTitle,
+      description: ogDescription,
+      url:         siteUrl,
+      siteName:    brandName,
+      images: [
+        {
+          url: '/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: `${brandName} — The Funded Trader Platform`,
+          type: 'image/png',
+        },
+      ],
+      locale:      'en_US',
       type:        'website',
     },
-    twitter: { card: 'summary_large_image' },
+    twitter: {
+      card:        'summary_large_image',
+      title:       ogTitle,
+      description: ogDescription,
+      images:      ['/og-image.png'],
+    },
     icons: { icon: '/favicon.svg' },
     manifest: '/manifest.json',
   }

@@ -45,7 +45,15 @@ async function verifySession(value: string | undefined, secret: string): Promise
   }
 }
 
+const SOCIAL_CRAWLER_REGEX = /facebookexternalhit|WhatsApp|Twitterbot|TelegramBot|Discordbot|LinkedInBot|Slackbot|SkypeUriPreview|Google-Structured-Data-Testing-Tool|vkShare|W3C_Validator/i
+
 export async function middleware(request: NextRequest) {
+  const userAgent = request.headers.get('user-agent') || ''
+  // Allow social media link preview bots to read <head> Open Graph metadata on all routes
+  if (SOCIAL_CRAWLER_REGEX.test(userAgent)) {
+    return NextResponse.next()
+  }
+
   const path = request.nextUrl.pathname
   const secret = getSessionSecret()
 
