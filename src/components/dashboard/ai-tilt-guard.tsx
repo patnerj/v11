@@ -65,11 +65,11 @@ export function AiTiltGuard() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-cyan-400 animate-pulse" />
           <span className="font-semibold text-white">Self-Imposed Cooling-Off Active:</span>
-          <span className="font-mono text-cyan-300 font-bold">{minsLeft} minutes remaining</span>
+          <span className="font-bold tabular text-cyan-300">{minsLeft} minutes remaining</span>
           <span className="text-gray-400 hidden sm:inline">— New orders are temporarily locked to protect your drawdown.</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+          <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
             Capital Protection Shield
           </span>
         </div>
@@ -103,7 +103,7 @@ export function AiTiltGuard() {
                   <h4 className="text-sm font-bold text-white tracking-tight">
                     AI Performance Coach Intervention
                   </h4>
-                  <span className="text-[10px] font-mono text-rose-300 uppercase tracking-wider font-bold">
+                  <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider">
                     Revenge Trading Risk Detected
                   </span>
                 </div>

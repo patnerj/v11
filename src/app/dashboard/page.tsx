@@ -527,12 +527,12 @@ function RecentTradesTable({ trades, isLoading }: { trades: Trade[] | null | unk
       <TableBody>
         {safeTrades.slice(0, 6).map((t) => (
           <TableRow key={t.id}>
-            <TableCell><span className="font-mono font-semibold text-text">{t.symbol}</span></TableCell>
+            <TableCell><span className="font-semibold text-text">{t.symbol}</span></TableCell>
             <TableCell>
               <Badge tone={t.type === 'buy' ? 'success' : 'danger'}>{(t.type || 'trade').toUpperCase()}</Badge>
             </TableCell>
-            <TableCell align="right" hideOn="sm"><span className="font-mono text-text-muted">{toNum(t.lot_size).toFixed(2)}</span></TableCell>
-            <TableCell align="right"><span className={`font-mono font-semibold ${pnlClass(t.pnl)}`}>{fmtUSD(t.pnl, { sign: true })}</span></TableCell>
+            <TableCell align="right" hideOn="sm"><span className="tabular text-text-muted">{toNum(t.lot_size).toFixed(2)}</span></TableCell>
+            <TableCell align="right"><span className={`tabular font-bold ${pnlClass(t.pnl)}`}>{fmtUSD(t.pnl, { sign: true })}</span></TableCell>
             <TableCell align="right" hideOn="md"><span className="text-2xs text-text-muted">{timeAgo(t.closed_at_iso || t.closed_at)}</span></TableCell>
           </TableRow>
         ))}

@@ -188,7 +188,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
                 {e.planName || e.label}
               </span>
               {e.balance !== undefined && (
-                <span className="font-mono text-xs font-bold text-emerald-400 shrink-0">
+                <span className="text-xs font-bold tabular text-emerald-400 shrink-0">
                   {fmtUSD(e.balance, { decimals: 0 })}
                 </span>
               )}
@@ -197,12 +197,12 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             {/* Row 2: Metadata Pills & Starting info */}
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {e.accountId && (
-                <span className="text-3xs font-mono text-text-muted">
+                <span className="text-3xs font-medium tabular text-text-muted">
                   #{e.accountId}
                 </span>
               )}
               {e.mt5Login && (
-                <span className="px-1 py-0.2 rounded text-3xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                <span className="px-1 py-0.2 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                   MT5: #{e.mt5Login}
                 </span>
               )}
@@ -222,7 +222,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
                 </span>
               )}
               {e.startingBalance && (
-                <span className="text-3xs text-text-muted font-mono ml-auto hidden xs:inline">
+                <span className="text-3xs text-text-muted font-medium tabular ml-auto hidden xs:inline">
                   Start {fmtUSD(e.startingBalance, { decimals: 0 })}
                 </span>
               )}
@@ -250,7 +250,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
       <div className="flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg bg-surface/90 border border-border/80 shadow-xs backdrop-blur-md w-full">
         {/* Left: Account trigger button */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="text-3xs text-text-muted font-mono uppercase tracking-wider shrink-0 hidden md:inline">
+          <span className="text-3xs text-text-muted font-semibold uppercase tracking-wider shrink-0 hidden md:inline">
             Active Account
           </span>
 
@@ -287,21 +287,21 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
             {/* Account ID */}
             {activeEntry?.accountId && (
-              <span className="text-3xs font-mono text-text-muted shrink-0 hidden xs:inline">
+              <span className="text-3xs font-medium tabular text-text-muted shrink-0 hidden xs:inline">
                 #{activeEntry.accountId}
               </span>
             )}
 
             {/* MT5 Badge if connected */}
             {activeEntry?.mt5Login && (
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
                 MT5: #{activeEntry.mt5Login}
               </span>
             )}
 
             {/* Live Balance */}
             {activeEntry?.balance !== undefined && (
-              <span className="text-xs font-mono font-bold text-emerald-400 shrink-0 ml-auto sm:ml-0">
+              <span className="text-xs font-bold tabular text-emerald-400 shrink-0 ml-auto sm:ml-0">
                 {fmtUSD(activeEntry.balance, { decimals: 0 })}
               </span>
             )}
@@ -317,7 +317,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
           {/* Accounts Count Badge */}
           {entries.length > 1 && (
-            <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-mono text-text-muted bg-surface-muted border border-border/50 shrink-0">
+            <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-medium tabular text-text-muted bg-surface-muted border border-border/50 shrink-0">
               {entries.length} Accounts
             </span>
           )}
@@ -326,7 +326,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
         {/* Right side: 1-Click MT5 Credentials or Switching State */}
         <div className="flex items-center gap-2 shrink-0">
           {(switching || pendingKey !== null) ? (
-            <div className="flex items-center gap-1.5 text-xs text-accent font-mono animate-pulse">
+            <div className="flex items-center gap-1.5 text-xs text-accent font-medium animate-pulse">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span className="hidden sm:inline">Switching…</span>
             </div>
@@ -339,7 +339,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
                   setIsOpen(false)
                   setIsCredentialsOpen(true)
                 }}
-                className="inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold font-mono bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
                 title="Open MetaTrader 5 Credentials"
               >
                 <KeyRound className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
@@ -382,9 +382,9 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             {/* Active Challenges */}
             {activeChallenges.length > 0 && (
               <div className="space-y-1">
-                <div className="px-2 py-1 text-3xs font-mono uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
+                <div className="px-2 py-1 text-3xs uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
                   <span>Active Challenges</span>
-                  <span>{activeChallenges.length}</span>
+                  <span className="tabular font-bold">{activeChallenges.length}</span>
                 </div>
                 {activeChallenges.map(renderItem)}
               </div>
@@ -393,9 +393,9 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             {/* Tournaments */}
             {tournaments.length > 0 && (
               <div className="pt-2 space-y-1">
-                <div className="px-2 py-1 text-3xs font-mono uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
+                <div className="px-2 py-1 text-3xs uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
                   <span>Tournaments</span>
-                  <span>{tournaments.length}</span>
+                  <span className="tabular font-bold">{tournaments.length}</span>
                 </div>
                 {tournaments.map(renderItem)}
               </div>
@@ -404,9 +404,9 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             {/* Past / Review Challenges */}
             {reviewChallenges.length > 0 && (
               <div className="pt-2 space-y-1">
-                <div className="px-2 py-1 text-3xs font-mono uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
+                <div className="px-2 py-1 text-3xs uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
                   <span>Past / Review Accounts</span>
-                  <span>{reviewChallenges.length}</span>
+                  <span className="tabular font-bold">{reviewChallenges.length}</span>
                 </div>
                 {reviewChallenges.map(renderItem)}
               </div>

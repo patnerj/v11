@@ -162,7 +162,7 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle>Account details</CardTitle>
         {c.mt5_login && (
-          <Badge tone="accent" size="sm" className="font-mono text-3xs">
+          <Badge tone="accent" size="sm" className="tabular font-semibold text-3xs">
             MT5: #{c.mt5_login}
           </Badge>
         )}
@@ -194,19 +194,19 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
             <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
               <div>
                 <span className="text-text-muted text-[10px] block">Broker Server</span>
-                <span className="font-mono font-medium text-text">{c.mt5_server || 'MetaQuotes-Demo'}</span>
+                <span className="font-medium text-text">{c.mt5_server || 'MetaQuotes-Demo'}</span>
               </div>
               <div>
                 <span className="text-text-muted text-[10px] block">MT5 Login ID</span>
-                <span className="font-mono font-bold text-emerald-400">{c.mt5_login}</span>
+                <span className="font-bold tabular text-emerald-400">{c.mt5_login}</span>
               </div>
               <div>
                 <span className="text-text-muted text-[10px] block">Trader Password</span>
-                <span className="font-mono text-text">{c.mt5_password || '-0DxOxMu'}</span>
+                <span className="font-medium tabular text-text">{c.mt5_password || '-0DxOxMu'}</span>
               </div>
               <div>
                 <span className="text-text-muted text-[10px] block">Investor (Myfxbook)</span>
-                <span className="font-mono text-text">RwYd*t3t</span>
+                <span className="font-medium tabular text-text">RwYd*t3t</span>
               </div>
             </div>
           </div>

@@ -156,7 +156,7 @@ export default function PublicTournamentArena() {
                 </div>
                 <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs text-text-muted px-1">
                   <span>Entry Requirement:</span>
-                  <span className="font-bold text-text font-mono">{entryFee > 0 ? `$${entryFee.toFixed(2)}` : 'Free Entry'}</span>
+                  <span className="font-bold text-text tabular">{entryFee > 0 ? `$${entryFee.toFixed(2)}` : 'Free Entry'}</span>
                 </div>
               </div>
 
@@ -277,7 +277,7 @@ export default function PublicTournamentArena() {
                                 {isPositive && '+'}{returnPct.toFixed(2)}%
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right font-mono font-medium text-text">
+                            <td className="px-6 py-4 text-right tabular font-medium text-text">
                               ${currentVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                           </tr>
@@ -304,7 +304,7 @@ export default function PublicTournamentArena() {
                 </li>
                 <li className="flex gap-3">
                   <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                  <p>Starting Balance: <strong className="text-text font-mono">${Number(tournament.starting_balance ?? tournament.initial_balance ?? 100000).toLocaleString()}</strong></p>
+                  <p>Starting Balance: <strong className="text-text tabular">${Number(tournament.starting_balance ?? tournament.initial_balance ?? 100000).toLocaleString()}</strong></p>
                 </li>
                 <li className="flex gap-3">
                   <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />

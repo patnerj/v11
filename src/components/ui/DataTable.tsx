@@ -62,7 +62,7 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
             <TableCell colSpan={columns.length} className="h-44 text-center">
               <div className="flex flex-col items-center justify-center gap-2">
                 <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                <span className="text-xs text-gray-400 font-mono">Loading data...</span>
+                <span className="text-xs text-gray-400 font-sans font-medium">Loading data...</span>
               </div>
             </TableCell>
           </TableRow>

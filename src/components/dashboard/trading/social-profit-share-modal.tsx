@@ -202,13 +202,13 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isBuy ? '#34D399' : '#F87171'
-    ctx.font = '800 16px "JetBrains Mono", monospace'
+    ctx.font = '800 16px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
     ctx.textAlign = 'center'
     ctx.fillText(sideText, width / 2, 183)
 
-    // 7. Hero PnL Typography (JetBrains Mono tabular font)
+    // 7. Hero PnL Typography (clean institutional sans font)
     ctx.fillStyle = isProfit ? '#10B981' : '#EF4444'
-    ctx.font = '900 84px "JetBrains Mono", monospace'
+    ctx.font = '900 84px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
     const pnlFormatted = fmtUSD(trade.pnl, { sign: true })
     ctx.fillText(pnlFormatted, width / 2, 290)
 
@@ -223,7 +223,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isProfit ? '#34D399' : '#F87171'
-    ctx.font = '800 15px "JetBrains Mono", monospace'
+    ctx.font = '800 15px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
     ctx.fillText(pctText, width / 2, 339)
 
     // 8. Stats Quad Grid (Entry, Current/Exit, Volume, Execution)
@@ -255,7 +255,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ctx.fillText(s.label, colX + 16, statsBoxY + 30)
 
       ctx.fillStyle = idx === 0 ? (isBuy ? '#34D399' : '#F87171') : '#F3F4F6'
-      ctx.font = '700 16px "JetBrains Mono", monospace'
+      ctx.font = '700 16px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
       ctx.fillText(s.val, colX + 16, statsBoxY + 58)
     })
 
@@ -280,7 +280,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillText(traderHandle, 145, footerY + 22)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 13px "JetBrains Mono", monospace'
+    ctx.font = '600 13px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
     ctx.fillText(`Account ID: ${accountId} · Zero-Drift Verified`, 145, footerY + 42)
 
     // Verification QR Code Matrix Box
@@ -469,7 +469,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 ref={canvasRef}
                 className="w-full h-auto block select-none pointer-events-none"
               />
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur px-2.5 py-1 rounded-md text-3xs font-mono text-text-muted border border-border-subtle shadow-xs">
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur px-2.5 py-1 rounded-md text-3xs tabular text-text-muted border border-border-subtle shadow-xs">
                 1200 x 675 Ultra HD
               </div>
             </div>
@@ -481,10 +481,10 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                   Trading Pair
                 </span>
                 <div className="flex items-center justify-center gap-1.5 mt-0.5">
-                  <span className="text-base font-extrabold font-mono text-text">
+                  <span className="text-base font-extrabold text-text">
                     {trade.symbol}
                   </span>
-                  <span className={`px-1.5 py-0.5 rounded text-3xs font-mono font-bold uppercase ${
+                  <span className={`px-1.5 py-0.5 rounded text-3xs font-bold uppercase tabular ${
                     trade.type === 'buy' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
                   }`}>
                     {trade.type} {Number(trade.lotSize).toFixed(2)}L
@@ -496,7 +496,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
                   Net Profit
                 </span>
-                <span className={`text-base font-extrabold font-mono ${isProfit ? 'text-accent' : 'text-danger'} block mt-0.5`}>
+                <span className={`text-base font-extrabold tabular ${isProfit ? 'text-accent' : 'text-danger'} block mt-0.5`}>
                   {fmtUSD(trade.pnl, { sign: true })}
                 </span>
               </div>
@@ -505,7 +505,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
                   ROI Return
                 </span>
-                <span className={`text-base font-extrabold font-mono ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'} block mt-0.5`}>
+                <span className={`text-base font-extrabold tabular ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'} block mt-0.5`}>
                   {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
                 </span>
               </div>

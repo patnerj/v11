@@ -66,7 +66,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-text tracking-tight font-sans">AI Post-Trade Autopsy</h3>
-                <span className="text-3xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/25 font-mono font-bold">
+                <span className="text-3xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/25 font-bold tabular">
                   Trade #{autopsy.trade_id || (autopsy as any).id || '—'}
                 </span>
               </div>
@@ -88,10 +88,10 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
             <div>
               <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Trade Result</span>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xl font-black font-mono tabular ${isProfit ? 'text-accent' : 'text-danger'}`}>
+                <span className={`text-xl font-black tabular ${isProfit ? 'text-accent' : 'text-danger'}`}>
                   {autopsy.pnl_formatted || fmtUSD(pnlNum, { sign: true })}
                 </span>
-                <span className="text-xs text-text-muted font-mono">
+                <span className="text-xs text-text-muted tabular">
                   {autopsy.symbol || 'TRADE'} {side ? `${side} ` : ''}({lotSize.toFixed(2)}L)
                 </span>
               </div>
@@ -100,7 +100,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
             {/* Execution Grade Badge */}
             <div className="text-center">
               <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block mb-0.5">Grade</span>
-              <span className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-xl font-mono font-black border shadow-lg ${gradeClass}`}>
+              <span className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-xl font-black border shadow-lg ${gradeClass}`}>
                 {gradeKey || 'N/A'}
               </span>
             </div>
@@ -113,7 +113,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
                 <Target className="w-4 h-4 text-accent" />
                 <span>Risk : Reward</span>
               </div>
-              <span className="font-mono font-bold tabular text-xs text-text">
+              <span className="font-bold tabular text-xs text-text">
                 {rrRatio > 0 ? `${rrRatio.toFixed(2)}:1` : '1.50:1'}
               </span>
             </div>
@@ -123,7 +123,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
                 <CheckCircle2 className={`w-4 h-4 ${slDisciplined ? 'text-accent' : 'text-danger'}`} />
                 <span>SL Discipline</span>
               </div>
-              <span className={`font-mono font-bold text-xs ${slDisciplined ? 'text-accent' : 'text-danger'}`}>
+              <span className={`font-bold text-xs ${slDisciplined ? 'text-accent' : 'text-danger'}`}>
                 {slDisciplined ? 'Protected' : 'Naked Entry'}
               </span>
             </div>
@@ -134,7 +134,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
                   <Award className="w-4 h-4 text-accent" />
                   <span>Exec Score</span>
                 </div>
-                <span className="font-mono font-bold tabular text-xs text-accent">
+                <span className="font-bold tabular text-xs text-accent">
                   {executionScore.toFixed(0)}/100
                 </span>
               </div>

@@ -520,7 +520,7 @@ export function TraderSupport() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1.5">
-                    <span className="font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    <span className="font-bold tabular text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                       {t.ticket_number || `#TICK-${t.id}`}
                     </span>
                     {getStatusBadge(t.status)}
@@ -530,7 +530,7 @@ export function TraderSupport() {
                     {t.subject}
                   </h3>
 
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground dark:text-gray-500 font-mono pt-0.5">
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground dark:text-gray-500 tabular pt-0.5">
                     <span className="inline-flex items-center gap-1">
                       <CatIcon className="w-3 h-3 text-muted-foreground dark:text-gray-500" />
                       {cat.label}
@@ -559,7 +559,7 @@ export function TraderSupport() {
               <div className="p-3.5 border-b border-border dark:border-[#1F2937]/80 bg-muted/40 dark:bg-[#0E131F]/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                    <span className="font-bold tabular text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                       {activeTicket.ticket_number || `#TICK-${activeTicket.id}`}
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted dark:bg-[#111827] text-foreground/80 dark:text-gray-300 border border-border dark:border-[#1F2937] text-xs font-medium">
@@ -574,7 +574,7 @@ export function TraderSupport() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                  <div className="text-right text-[11px] text-muted-foreground dark:text-gray-500 font-mono hidden md:block">
+                  <div className="text-right text-[11px] text-muted-foreground dark:text-gray-500 tabular hidden md:block">
                     <span>{new Date(activeTicket.created_at).toLocaleString()}</span>
                   </div>
                 </div>
@@ -583,7 +583,7 @@ export function TraderSupport() {
               {/* Chat Messages Stream (Scrollable) */}
               <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/15 dark:bg-[#080C14]/40">
                 {messages.length === 0 ? (
-                  <div className="py-16 text-center text-muted-foreground dark:text-gray-500 text-xs font-mono">
+                  <div className="py-16 text-center text-muted-foreground dark:text-gray-500 text-xs">
                     <Sparkles className="w-6 h-6 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 animate-pulse" />
                     Connecting to support thread...
                   </div>
@@ -606,7 +606,7 @@ export function TraderSupport() {
                         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
                         {/* Header line above bubble */}
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground dark:text-gray-400 mb-1 px-1 font-mono">
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground dark:text-gray-400 mb-1 px-1 tabular">
                           {isMe ? (
                             <>
                               <span className="font-semibold text-foreground/80 dark:text-gray-300 flex items-center gap-1">
@@ -676,7 +676,7 @@ export function TraderSupport() {
                   />
 
                   <div className="flex items-center justify-between gap-2 pt-0.5">
-                    <span className="text-[10px] text-muted-foreground dark:text-gray-500 font-mono hidden sm:inline">
+                    <span className="text-[10px] text-muted-foreground dark:text-gray-500 font-sans hidden sm:inline">
                       Press <kbd className="px-1 py-0.5 rounded bg-muted dark:bg-[#111827] border border-border dark:border-gray-700 text-foreground/80 dark:text-gray-300">Ctrl + Enter</kbd> to send
                     </span>
 

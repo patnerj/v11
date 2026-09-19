@@ -522,7 +522,7 @@ export function ZenithAiCopilot() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-text tracking-tight font-sans">{brandName} AI Copilot</span>
-                    <span className="text-3xs px-1.5 py-0.5 rounded bg-accent/10 text-accent font-mono font-bold border border-accent/25">
+                    <span className="text-3xs px-1.5 py-0.5 rounded bg-accent/10 text-accent font-bold tabular border border-accent/25">
                       {APP_DISPLAY_VERSION} AI
                     </span>
                   </div>
@@ -555,7 +555,7 @@ export function ZenithAiCopilot() {
                   <div className="flex items-center gap-3">
                     <div>
                       <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold font-sans block">Daily Headroom</span>
-                      <span className={`font-mono font-bold tabular ${
+                      <span className={`font-bold tabular ${
                         (headroom?.daily_headroom_pct ?? 5) < 1.5 ? 'text-danger' : 'text-accent'
                       }`}>
                         ${(headroom?.daily_headroom ?? 2500).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -564,14 +564,14 @@ export function ZenithAiCopilot() {
                     <div className="h-6 w-[1px] bg-border-subtle" />
                     <div>
                       <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold font-sans block">Max Headroom</span>
-                      <span className="font-mono font-bold tabular text-text">
+                      <span className="font-bold tabular text-text">
                         ${(headroom?.max_headroom ?? 5000).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    <span className={`px-2 py-0.5 rounded-full text-3xs font-mono font-bold uppercase tracking-wider ${
+                    <span className={`px-2 py-0.5 rounded-full text-3xs font-bold uppercase tracking-wider ${
                       headroom?.risk_status === 'critical' ? 'bg-danger/15 text-danger border border-danger/30' :
                       headroom?.risk_status === 'caution' ? 'bg-warn/15 text-warn border border-warn/30' :
                       'bg-accent/15 text-accent border border-accent/30'
@@ -624,7 +624,7 @@ export function ZenithAiCopilot() {
                     <Newspaper className="w-3.5 h-3.5" />
                     News Warnings
                     {newsWarnings.length > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-danger text-surface text-3xs font-mono font-bold">
+                      <span className="px-1.5 py-0.2 rounded-full bg-danger text-surface text-3xs font-bold tabular">
                         {newsWarnings.length}
                       </span>
                     )}
@@ -667,7 +667,7 @@ export function ZenithAiCopilot() {
                             }`}>
                               <span>{msg.timestamp}</span>
                               {msg.provider && msg.sender !== 'user' && (
-                                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">{msg.provider}</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{msg.provider}</span>
                               )}
                             </div>
                           </div>
@@ -754,7 +754,7 @@ export function ZenithAiCopilot() {
                           type="number"
                           value={calcBalance}
                           onChange={(e) => setCalcBalance(parseFloat(e.target.value) || 0)}
-                          className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                          className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-sans text-xs focus:border-emerald-500 outline-none"
                         />
                       </div>
 
@@ -770,7 +770,7 @@ export function ZenithAiCopilot() {
                             max="5"
                             value={calcRiskPct}
                             onChange={(e) => setCalcRiskPct(parseFloat(e.target.value) || 1)}
-                            className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                            className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-sans text-xs focus:border-emerald-500 outline-none"
                           />
                         </div>
                         <div>
@@ -781,7 +781,7 @@ export function ZenithAiCopilot() {
                             type="number"
                             value={calcSlPips}
                             onChange={(e) => setCalcSlPips(parseFloat(e.target.value) || 10)}
-                            className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                            className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-sans text-xs focus:border-emerald-500 outline-none"
                           />
                         </div>
                       </div>
@@ -793,7 +793,7 @@ export function ZenithAiCopilot() {
                         <select
                           value={calcSymbol}
                           onChange={(e) => setCalcSymbol(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                          className="w-full bg-slate-50 dark:bg-[#0A0D17] border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-sans text-xs focus:border-emerald-500 outline-none"
                         >
                           <option value="EURUSD">EURUSD (Euro / US Dollar)</option>
                           <option value="GBPUSD">GBPUSD (British Pound / US Dollar)</option>
@@ -822,13 +822,13 @@ export function ZenithAiCopilot() {
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">Recommended Safe Size:</span>
-                          <span className="text-lg font-mono font-black text-emerald-600 dark:text-emerald-400">
+                          <span className="text-lg font-bold tabular text-emerald-600 dark:text-emerald-400">
                             {calcResult.safe_lots} Lots
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-gray-400 pt-1 border-t border-emerald-500/20 dark:border-emerald-500/30">
                           <span>Max Dollar Loss Risked:</span>
-                          <span className="font-mono text-slate-900 dark:text-white font-semibold">${toNum(calcResult.cash_at_risk).toFixed(2)} ({toNum(calcResult.risk_pct)}%)</span>
+                          <span className="tabular text-slate-900 dark:text-white font-semibold">${toNum(calcResult.cash_at_risk).toFixed(2)} ({toNum(calcResult.risk_pct)}%)</span>
                         </div>
                         <p className="text-[10px] text-emerald-800 dark:text-emerald-300 font-medium italic pt-1">
                           {calcResult.recommended_action}
@@ -868,7 +868,7 @@ export function ZenithAiCopilot() {
                               <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
                                 {nw.currency} • HIGH IMPACT
                               </span>
-                              <span className="text-[10px] font-mono text-rose-600 dark:text-rose-300 font-bold">
+                              <span className="text-[10px] font-sans font-bold tabular text-rose-600 dark:text-rose-300">
                                 {nw.minutes_left > 0 ? `In ${nw.minutes_left} mins` : 'ACTIVE NOW'}
                               </span>
                             </div>
@@ -916,7 +916,7 @@ export function ZenithAiCopilot() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <div className="p-2.5 rounded-xl bg-surface-muted/40 border border-border-subtle shadow-xs">
                           <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Discipline</span>
-                          <span className={`text-base font-mono font-bold tabular ${
+                          <span className={`text-base font-bold tabular ${
                             toNum(scorecard.discipline_score) >= 75 ? 'text-accent' :
                             toNum(scorecard.discipline_score) >= 50 ? 'text-warn' : 'text-danger'
                           }`}>
@@ -925,19 +925,19 @@ export function ZenithAiCopilot() {
                         </div>
                         <div className="p-2.5 rounded-xl bg-surface-muted/40 border border-border-subtle shadow-xs">
                           <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Win Rate</span>
-                          <span className="text-base font-mono font-bold tabular text-accent">
+                          <span className="text-base font-bold tabular text-accent">
                             {toNum(scorecard.win_rate)}%
                           </span>
                         </div>
                         <div className="p-2.5 rounded-xl bg-surface-muted/40 border border-border-subtle shadow-xs">
                           <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Avg R:R</span>
-                          <span className="text-base font-mono font-bold tabular text-text">
+                          <span className="text-base font-bold tabular text-text">
                             1:{toNum(scorecard.avg_rr ?? (scorecard as any).avg_risk_reward ?? 1.5).toFixed(2)}
                           </span>
                         </div>
                         <div className="p-2.5 rounded-xl bg-surface-muted/40 border border-border-subtle shadow-xs">
                           <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Tilt Flags</span>
-                          <span className={`text-base font-mono font-bold tabular ${
+                          <span className={`text-base font-bold tabular ${
                             toNum(scorecard.tilt_incidents_count ?? (scorecard as any).tilt_incidents ?? 0) > 0 ? 'text-danger' : 'text-accent'
                           }`}>
                             {toNum(scorecard.tilt_incidents_count ?? (scorecard as any).tilt_incidents ?? 0)}
@@ -999,19 +999,19 @@ export function ZenithAiCopilot() {
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-mono font-bold text-text text-xs">{item.symbol}</span>
-                                    <span className={`px-1.5 py-0.2 rounded text-3xs font-mono font-bold uppercase ${
+                                    <span className="font-bold text-text text-xs">{item.symbol}</span>
+                                    <span className={`px-1.5 py-0.2 rounded text-3xs font-bold uppercase tabular ${
                                       side === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
                                     }`}>
                                       {side}
                                     </span>
-                                    <span className="text-3xs text-text-muted font-mono">#{item.trade_id}</span>
+                                    <span className="text-3xs text-text-muted tabular font-medium">#{item.trade_id}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className={`font-mono text-xs font-bold tabular ${isWin ? 'text-accent' : 'text-danger'}`}>
+                                    <span className={`text-xs font-bold tabular ${isWin ? 'text-accent' : 'text-danger'}`}>
                                       {fmtUSD(pnlNum, { sign: true })}
                                     </span>
-                                    <span className={`px-2 py-0.5 rounded text-2xs font-mono font-extrabold border ${gradeBadge}`}>
+                                    <span className={`px-2 py-0.5 rounded text-2xs font-extrabold border ${gradeBadge}`}>
                                       {item.grade || 'N/A'}
                                     </span>
                                   </div>
@@ -1022,7 +1022,7 @@ export function ZenithAiCopilot() {
                                 </p>
 
                                 <div className="pt-2 border-t border-border-subtle flex items-center justify-between text-3xs font-sans">
-                                  <span className="text-text-muted font-mono">
+                                  <span className="text-text-muted tabular">
                                     R:R 1:{toNum(item.rr_ratio ?? item.risk_reward_ratio ?? 1.5).toFixed(2)} • {toBool(item.sl_adherence ?? item.sl_tp_discipline) ? '✅ SL Placed' : '⚠️ No SL'}
                                   </span>
                                   <button

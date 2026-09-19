@@ -542,7 +542,7 @@ function DesktopLayout({
 
                     {/* MT5 Bottom Telemetry Summary Row with Dynamic Glow */}
                     {account && (
-                      <div className="shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-mono select-none overflow-x-auto no-scrollbar">
+                      <div className="shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-sans tabular select-none overflow-x-auto no-scrollbar">
                         <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-text-muted">
                           <span>Balance: <strong className="text-text font-semibold">{fmtUSD(balance)}</strong></span>
                           <span>
@@ -662,7 +662,7 @@ function WsBadge() {
   const connected = usePrices((s) => s.connected)
   return (
     <div className={cn(
-      'flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-md border',
+      'flex items-center gap-1.5 text-[10px] font-sans font-medium px-2 py-0.5 rounded-md border',
       connected
         ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
         : 'text-warn bg-warn-muted border-warn/30',

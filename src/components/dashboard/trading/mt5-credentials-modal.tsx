@@ -58,7 +58,7 @@ export function LiveBrokerPingBadge({
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
       </span>
-      <span className="font-mono font-bold text-emerald-400 group-hover:text-emerald-300 tabular transition-colors">
+      <span className="font-bold text-emerald-400 group-hover:text-emerald-300 tabular transition-colors">
         18ms
       </span>
       <span className="text-text-muted/50 hidden sm:inline">·</span>
@@ -125,7 +125,7 @@ export function MT5CredentialsModal({
               <div className="min-w-0">
                 <DialogTitle className="text-sm sm:text-base font-bold text-text flex items-center gap-2 flex-wrap">
                   <span>MetaTrader 5 Credentials</span>
-                  <span className="px-1.5 py-0.5 rounded text-3xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
+                  <span className="px-1.5 py-0.5 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
                     MT5 Pro
                   </span>
                 </DialogTitle>
@@ -146,12 +146,12 @@ export function MT5CredentialsModal({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span className="text-xs font-mono font-bold text-emerald-400 tracking-tight truncate">
+              <span className="text-xs font-bold tabular text-emerald-400 tracking-tight truncate">
                 Bridge Synced · 0.00% Drift
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 font-mono text-3xs text-text-muted shrink-0">
+            <div className="flex items-center gap-1.5 font-sans tabular text-3xs text-text-muted shrink-0">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-border text-emerald-300">
                 <Zap className="w-3 h-3 text-emerald-400" />
                 18ms Latency
@@ -171,11 +171,11 @@ export function MT5CredentialsModal({
                 <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block">
                   Broker
                 </span>
-                <span className="text-xs sm:text-sm font-mono font-bold text-text truncate block mt-0.5">
+                <span className="text-xs sm:text-sm font-semibold text-text truncate block mt-0.5">
                   {broker}
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded text-3xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+              <span className="px-2 py-0.5 rounded text-3xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shrink-0">
                 Tier-1 LP
               </span>
             </div>
@@ -186,7 +186,7 @@ export function MT5CredentialsModal({
                 <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block">
                   Server
                 </span>
-                <span className="text-xs sm:text-sm font-mono font-bold text-cyan-400 truncate block mt-0.5">
+                <span className="text-xs sm:text-sm font-semibold text-cyan-400 truncate block mt-0.5">
                   {server}
                 </span>
               </div>
@@ -194,7 +194,7 @@ export function MT5CredentialsModal({
                 type="button"
                 onClick={() => copyToClipboard(server, 'server', 'Server')}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-mono font-medium transition-all focus-ring cursor-pointer shrink-0',
+                  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all focus-ring cursor-pointer shrink-0',
                   copiedKey === 'server'
                     ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                     : 'bg-surface-muted hover:bg-surface-muted/80 border border-border/70 text-text hover:text-cyan-300'
@@ -220,7 +220,7 @@ export function MT5CredentialsModal({
                 <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block">
                   Login ID
                 </span>
-                <span className="text-xs sm:text-sm font-mono font-bold text-text truncate block mt-0.5">
+                <span className="text-xs sm:text-sm font-bold tabular text-text truncate block mt-0.5">
                   {login}
                 </span>
               </div>
@@ -228,7 +228,7 @@ export function MT5CredentialsModal({
                 type="button"
                 onClick={() => copyToClipboard(String(login), 'login', 'MT5 Login')}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-mono font-medium transition-all focus-ring cursor-pointer shrink-0',
+                  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all focus-ring cursor-pointer shrink-0',
                   copiedKey === 'login'
                     ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                     : 'bg-surface-muted hover:bg-surface-muted/80 border border-border/70 text-text hover:text-cyan-300'
@@ -255,11 +255,11 @@ export function MT5CredentialsModal({
                   <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block truncate">
                     Trader Password
                   </span>
-                  <span className="px-1.5 py-0.2 rounded text-3xs font-mono font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0">
+                  <span className="px-1.5 py-0.2 rounded text-3xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 shrink-0">
                     Trade
                   </span>
                 </div>
-                <span className="text-xs sm:text-sm font-mono font-bold text-text truncate block tracking-wider mt-0.5">
+                <span className="text-xs sm:text-sm font-bold tabular text-text truncate block tracking-wider mt-0.5">
                   {showTraderPass ? traderPassword : '••••••••••••'}
                 </span>
               </div>
@@ -276,7 +276,7 @@ export function MT5CredentialsModal({
                   type="button"
                   onClick={() => copyToClipboard(traderPassword, 'traderPass', 'Trader Password')}
                   className={cn(
-                    'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-mono font-medium transition-all focus-ring cursor-pointer',
+                    'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all focus-ring cursor-pointer',
                     copiedKey === 'traderPass'
                       ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                       : 'bg-surface-muted hover:bg-surface-muted/80 border border-border/70 text-text hover:text-cyan-300'
@@ -304,11 +304,11 @@ export function MT5CredentialsModal({
                   <span className="text-3xs font-sans font-semibold uppercase tracking-wider text-text-muted block truncate">
                     Investor Password
                   </span>
-                  <span className="px-1.5 py-0.2 rounded text-3xs font-mono font-semibold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 shrink-0">
+                  <span className="px-1.5 py-0.2 rounded text-3xs font-semibold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 shrink-0">
                     Read-Only
                   </span>
                 </div>
-                <span className="text-xs sm:text-sm font-mono font-bold text-text truncate block tracking-wider mt-0.5">
+                <span className="text-xs sm:text-sm font-bold tabular text-text truncate block tracking-wider mt-0.5">
                   {showInvestorPass ? investorPassword : '••••••••••••'}
                 </span>
               </div>
@@ -325,7 +325,7 @@ export function MT5CredentialsModal({
                   type="button"
                   onClick={() => copyToClipboard(investorPassword, 'investorPass', 'Investor Password')}
                   className={cn(
-                    'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-mono font-medium transition-all focus-ring cursor-pointer',
+                    'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all focus-ring cursor-pointer',
                     copiedKey === 'investorPass'
                       ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
                       : 'bg-surface-muted hover:bg-surface-muted/80 border border-border/70 text-text hover:text-cyan-300'

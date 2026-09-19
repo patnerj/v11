@@ -331,9 +331,9 @@ export default function AffiliatePage() {
             <div className="rounded-lg border border-border-subtle p-3 flex flex-col gap-3">
               <div className="aspect-video bg-surface-muted rounded border border-border flex items-center justify-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-bg flex flex-col items-center justify-center p-4 text-center">
-                  <span className="font-mono text-xs uppercase tracking-widest text-accent mb-1 font-bold">16:9 Promo Banner</span>
+                  <span className="font-sans text-xs uppercase tracking-wider text-accent mb-1 font-bold">16:9 Promo Banner</span>
                   <span className="font-black text-lg tracking-tight text-text">TRADE UP TO $200K</span>
-                  <span className="text-2xs text-text-muted font-mono mt-1">Code: {me?.code}</span>
+                  <span className="text-2xs text-text-muted font-sans font-medium mt-1">Code: {me?.code}</span>
                 </div>
                 <div className="absolute inset-0 bg-bg/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Button variant="outline" size="sm" onClick={() => downloadBanner('16:9', me?.code || '', link || '')}>Download PNG</Button>
@@ -348,9 +348,9 @@ export default function AffiliatePage() {
             <div className="rounded-lg border border-border-subtle p-3 flex flex-col gap-3">
               <div className="aspect-square bg-surface-muted rounded border border-border flex items-center justify-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-tr from-info/20 to-bg flex flex-col items-center justify-center p-4 text-center">
-                  <span className="font-mono text-xs uppercase tracking-widest text-info mb-1 font-bold">1:1 Square Post</span>
+                  <span className="font-sans text-xs uppercase tracking-wider text-info mb-1 font-bold">1:1 Square Post</span>
                   <span className="font-black text-base tracking-tight text-text">KEEP 90% PROFITS</span>
-                  <span className="text-2xs text-text-muted font-mono mt-1">Code: {me?.code}</span>
+                  <span className="text-2xs text-text-muted font-sans font-medium mt-1">Code: {me?.code}</span>
                 </div>
                 <div className="absolute inset-0 bg-bg/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Button variant="outline" size="sm" onClick={() => downloadBanner('1:1', me?.code || '', link || '')}>Download PNG</Button>
