@@ -41,8 +41,13 @@ export default function PvpArenaLobbyPage() {
   // State
   const [filterTab, setFilterTab] = useState<'all' | 'waiting' | 'active' | 'completed'>('all')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const isWeekend = useMemo(() => {
+    const d = new Date().getUTCDay()
+    const h = new Date().getUTCHours()
+    return d === 6 || (d === 0 && h < 22) || (d === 5 && h >= 22)
+  }, [])
   const [createForm, setCreateForm] = useState({
-    symbol: 'EURUSD',
+    symbol: 'BTCUSD',
     stake_amount: 50,
     duration_minutes: 15,
     title: '',
@@ -580,23 +585,46 @@ export default function PvpArenaLobbyPage() {
           
           {/* Symbol Selector */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-text">Choose Battle Instrument</Label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {SYMBOLS.map((sym) => (
-                <button
-                  key={sym}
-                  type="button"
-                  onClick={() => setCreateForm({ ...createForm, symbol: sym })}
-                  className={`p-2.5 rounded-xl text-xs font-bold border transition-all ${
-                    createForm.symbol === sym
-                      ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/30'
-                      : 'bg-surface-muted text-text-muted border-border hover:text-text'
-                  }`}
-                >
-                  {sym}
-                </button>
-              ))}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-text">Choose Battle Instrument</Label>
+              {isWeekend && (
+                <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Weekend: 24/7 Crypto Feed Active
+                </span>
+              )}
             </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {SYMBOLS.map((sym) => {
+                const isCrypto = sym.includes('BTC') || sym.includes('ETH')
+                const isClosed = isWeekend && !isCrypto
+                return (
+                  <button
+                    key={sym}
+                    type="button"
+                    disabled={isClosed}
+                    onClick={() => !isClosed && setCreateForm({ ...createForm, symbol: sym })}
+                    className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
+                      isClosed
+                        ? 'opacity-40 cursor-not-allowed bg-surface-muted/40 border-border text-text-muted'
+                        : createForm.symbol === sym
+                        ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/30'
+                        : 'bg-surface-muted text-text-muted border-border hover:text-text'
+                    }`}
+                  >
+                    <span>{sym}</span>
+                    <span className={`text-[9px] font-semibold ${isClosed ? 'text-red-500' : isCrypto ? 'text-emerald-500' : 'text-text-muted'}`}>
+                      {isClosed ? 'Closed Weekend' : isCrypto ? '24/7 Live' : 'Open'}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            {isWeekend && (
+              <p className="text-[11px] text-text-muted">
+                Forex and index markets are closed for weekend hours. Weekend duels are strictly hosted on 24/7 Crypto liquidity.
+              </p>
+            )}
           </div>
 
           {/* Stake Selector */}
@@ -664,6 +692,17 @@ export default function PvpArenaLobbyPage() {
             />
           </div>
 
+          {/* Admin Gating Notice */}
+          {user?.is_admin && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex items-center gap-2.5">
+              <ShieldAlert className="h-5 w-5 shrink-0 text-amber-500" />
+              <div>
+                <strong className="block font-bold">Administrator / Referee Mode Active</strong>
+                <span>Platform staff cannot enter PvP duels as fighters. Admins may oversee and spectate active battles from the referee suite.</span>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <Button
@@ -674,6 +713,7 @@ export default function PvpArenaLobbyPage() {
               Cancel
             </Button>
             <Button
+              disabled={user?.is_admin || createMatchMutation.isPending}
               onClick={() => createMatchMutation.mutate(createForm)}
               loading={createMatchMutation.isPending}
               className="bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white font-extrabold px-6"

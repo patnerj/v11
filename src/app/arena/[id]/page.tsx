@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { TradingScreenLoader } from '@/components/ui/trading-loader'
+import { ArenaChart } from '@/components/arena/arena-chart'
 
 function formatMoney(val: number | string | undefined | null) {
   const num = typeof val === 'string' ? parseFloat(val) : (val ?? 0)
@@ -130,6 +131,16 @@ export default function PvpLiveBattleArenaPage() {
   const challenger = liveState?.challenger || { name: 'Waiting for Challenger...', equity: 10000, pnl: 0, trades_count: 0, user_id: 0 }
   const secondsLeft = liveState?.seconds_remaining ?? 0
   const leadDelta = liveState?.lead_delta ?? 0
+
+  const isWeekendClosed = useMemo(() => {
+    const sym = (match?.symbol || '').toUpperCase()
+    const isCrypto = sym.includes('BTC') || sym.includes('ETH') || sym.includes('SOL')
+    if (isCrypto) return false
+    const now = new Date()
+    const d = now.getUTCDay()
+    const h = now.getUTCHours()
+    return d === 6 || (d === 0 && h < 22) || (d === 5 && h >= 22)
+  }, [match?.symbol])
 
   const [sendingChat, setSendingChat] = useState(false)
 
@@ -366,9 +377,16 @@ export default function PvpLiveBattleArenaPage() {
       {/* ── BATTLE ARENA DECK & LIVE ACTION STREAM ──────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left 2 Cols: In-Arena Execution Deck & Simulated Price Ticker */}
+        {/* Left 2 Cols: In-Arena Execution Deck, Real-Time Chart & Simulated Price Ticker */}
         <div className="lg:col-span-2 space-y-6">
           
+          {/* Institutional Real-Time Candlestick Chart */}
+          <ArenaChart 
+            symbol={match?.symbol || 'BTCUSD'} 
+            currentPrice={liveState?.prices?.ask} 
+            height={420} 
+          />
+
           {/* Order Execution Deck */}
           <Card className="bg-surface border border-border overflow-hidden">
             <CardHeader className="border-b border-border pb-4 bg-surface-muted">
@@ -379,14 +397,14 @@ export default function PvpLiveBattleArenaPage() {
                     Gladiator Order Execution Deck
                   </CardTitle>
                   <CardDescription className="text-xs text-text-muted">
-                    Execute high-frequency market orders on {match?.symbol || 'EURUSD'} with sub-millisecond fill latency.
+                    Execute high-frequency market orders on {match?.symbol || 'BTCUSD'} with sub-millisecond fill latency.
                   </CardDescription>
                 </div>
 
                 <div className="text-right tabular font-sans">
                   <div className="text-[10px] uppercase text-text-muted">Market Price</div>
                   <div className="text-sm font-extrabold text-text">
-                    {liveState?.prices?.ask?.toFixed(4) || '1.0845'}
+                    {liveState?.prices?.ask?.toFixed(match?.symbol?.includes('BTC') ? 2 : 4) || '64,250.00'}
                   </div>
                 </div>
               </div>
@@ -418,21 +436,34 @@ export default function PvpLiveBattleArenaPage() {
               {/* Participant Controls vs Spectator View */}
               {!isParticipant ? (
                 <div className="rounded-xl border border-border bg-surface-muted p-5 text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-sm font-bold text-amber-500">
+                  <div className="flex items-center justify-center gap-2 text-sm font-bold text-cyan-500">
                     <Radio className="h-4 w-4 animate-pulse" />
-                    <span>Spectator Mode Active</span>
+                    <span>Official Arena Referee & Spectator Suite</span>
                   </div>
                   <p className="text-xs text-text-muted max-w-md mx-auto">
-                    You are viewing this battle live in the spectator arena. Live order execution and settlement calls are restricted to the matched gladiators.
+                    You are observing this battle live from the referee stadium suite. Live order execution and stake settlements are reserved exclusively for the matched gladiators ({creator.name} vs {challenger.name}).
                   </p>
                 </div>
               ) : (
                 <>
+                  {/* Weekend Market Hours Warning Banner */}
+                  {isWeekendClosed && (
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center gap-2.5">
+                      <AlertTriangle className="h-5 w-5 shrink-0" />
+                      <div>
+                        <div className="font-bold">Market Closed for Weekend Hours</div>
+                        <div className="text-[11px] text-text-muted mt-0.5">
+                          {match?.symbol} does not trade on weekends. Live orders cannot be executed until Sunday 22:00 UTC. Live weekend battles require 24/7 Crypto markets (BTCUSD, ETHUSD).
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Instant Execution Buttons */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <Button
                       size="lg"
-                      disabled={!isActive || executeOrderMutation.isPending}
+                      disabled={!isActive || isWeekendClosed || executeOrderMutation.isPending}
                       loading={executeOrderMutation.isPending}
                       onClick={() => executeOrderMutation.mutate('BUY')}
                       className="h-16 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-extrabold text-base gap-2 shadow-lg shadow-emerald-500/20 border border-emerald-400/40"
@@ -443,7 +474,7 @@ export default function PvpLiveBattleArenaPage() {
 
                     <Button
                       size="lg"
-                      disabled={!isActive || executeOrderMutation.isPending}
+                      disabled={!isActive || isWeekendClosed || executeOrderMutation.isPending}
                       loading={executeOrderMutation.isPending}
                       onClick={() => executeOrderMutation.mutate('SELL')}
                       className="h-16 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-extrabold text-base gap-2 shadow-lg shadow-red-500/20 border border-red-400/40"
