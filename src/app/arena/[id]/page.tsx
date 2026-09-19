@@ -330,7 +330,7 @@ export default function PvpLiveBattleArenaPage() {
             <div className="tabular font-medium flex items-center gap-4">
               <span>Duration: <strong className="text-text">{match?.duration_minutes} Minutes</strong></span>
               <span>Symbol: <strong className="text-text">{match?.symbol}</strong></span>
-              {isActive && (
+              {isActive && (isParticipant || user?.is_admin || (user as any)?.role === 'administrator') && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -689,22 +689,41 @@ export default function PvpLiveBattleArenaPage() {
 
       </main>
 
-      {/* ── 3. VICTORY OVERLAY WHEN COMPLETED ─────────────────────────────── */}
+      {/* ── 3. VICTORY / CONCLUSION OVERLAY WHEN COMPLETED ─────────────────── */}
       {isCompleted && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="bg-surface border border-amber-500/50 p-6 sm:p-8 max-w-md w-full text-center space-y-4 shadow-2xl animate-in zoom-in-95">
-            <Trophy className="h-16 w-16 text-amber-500 mx-auto animate-bounce" />
-            <div className="space-y-1.5">
-              <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 uppercase">
-                Duel Concluded • 85% Prize Awarded
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-text mt-2">
-                Winner: {match?.winner_name || 'Champion'} 🏆
-              </h2>
-              <p className="text-xs text-text-muted">
-                Payout of <strong className="text-amber-500 font-extrabold">{formatMoney(match?.prize_pool)} USDC</strong> credited to gladiator wallet.
-              </p>
-            </div>
+            {match?.winner_name ? (
+              <>
+                <Trophy className="h-16 w-16 text-amber-500 mx-auto animate-bounce" />
+                <div className="space-y-1.5">
+                  <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 uppercase">
+                    Duel Concluded • 85% Prize Awarded
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-text mt-2">
+                    Winner: {match.winner_name} 🏆
+                  </h2>
+                  <p className="text-xs text-text-muted">
+                    Payout of <strong className="text-amber-500 font-extrabold">{formatMoney(match?.prize_pool)} USDC</strong> credited to gladiator wallet.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <Scale className="h-16 w-16 text-amber-500 mx-auto" />
+                <div className="space-y-1.5">
+                  <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 uppercase">
+                    Duel Concluded • Match Tied
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-text mt-2">
+                    Honorable Draw 🤝
+                  </h2>
+                  <p className="text-xs text-text-muted">
+                    Both gladiators fought to a dead heat. Stakes of <strong className="text-text font-extrabold">{formatMoney(match?.stake_amount)} USDC</strong> refunded in full with 0% rake.
+                  </p>
+                </div>
+              </>
+            )}
 
             <div className="pt-2 flex items-center justify-center gap-3">
               <Link href="/arena" className="w-full">
