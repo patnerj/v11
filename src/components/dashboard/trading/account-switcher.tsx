@@ -425,11 +425,10 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
       <MT5CredentialsModal
         isOpen={isCredentialsOpen}
         onClose={() => setIsCredentialsOpen(false)}
+        accountId={activeEntry?.accountId}
         broker="MetaQuotes-Demo"
         server="MetaQuotes-Demo"
-        login={activeEntry?.mt5Login || '5056177670'}
-        traderPassword="-0DxOxMu"
-        investorPassword="RwYd*t3t"
+        login={activeEntry?.mt5Login}
         accountLabel={activeEntry?.planName || activeEntry?.label}
       />
     </div>

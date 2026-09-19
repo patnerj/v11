@@ -1126,6 +1126,8 @@ export interface PvpMatch {
   match_code: string;
   title: string;
   symbol: string;
+  arena_mode?: 'league' | 'cash' | 'perk';
+  perk_reward?: 'FREE_RETRY' | 'DRAWDOWN_BUFFER_1PCT' | 'CHALLENGE_50PCT_OFF' | string | null;
   stake_amount: number | string;
   prize_pool: number | string;
   platform_rake: number | string;
@@ -1189,8 +1191,64 @@ export interface PvpLeaderboardEntry {
   streak: number;
 }
 
+export interface PvpArenaWallet {
+  success: boolean;
+  user_id: number;
+  balance: number;
+  currency: string;
+  total_won: number;
+  total_lost: number;
+  transactions: PvpWalletTxn[];
+}
+
+export interface PvpWalletTxn {
+  id: number;
+  user_id: number;
+  type: 'deposit' | 'withdrawal' | 'pvp_stake' | 'pvp_prize' | 'pvp_refund';
+  amount: number;
+  balance_after: number;
+  reference_id: string;
+  notes: string;
+  created_at: string;
+}
+
+export interface TraderPerk {
+  id: number;
+  user_id: number;
+  perk_type: 'FREE_RETRY' | 'DRAWDOWN_BUFFER_1PCT' | 'CHALLENGE_50PCT_OFF' | string;
+  perk_name: string;
+  source_match_id?: number | null;
+  status: 'available' | 'applied' | 'expired';
+  applied_account_id?: number | null;
+  created_at: string;
+  applied_at?: string | null;
+}
+
+export interface PvpPodiumRank {
+  rank: number;
+  user_id: number;
+  name: string;
+  wins: number;
+  earnings: number;
+  prize: string;
+}
+
+export interface PvpLeaguePodiumResponse {
+  success: boolean;
+  week_number: number;
+  year: number;
+  prizes: Record<number, { title: string; reward: string; coupon_val: number }>;
+  podium: PvpPodiumRank[];
+  past_awards: any[];
+}
+
 export interface PvpLobbyResponse {
   success: boolean;
+  mode?: 'league' | 'cash' | 'perk' | string;
+  practice_balance?: number;
+  cash_balance?: number;
+  perks_count?: number;
+  weekly_podium?: PvpLeaguePodiumResponse;
   stats: {
     total_staked: number;
     total_rake: number;

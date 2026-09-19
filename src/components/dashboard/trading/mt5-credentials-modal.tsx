@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -20,13 +20,16 @@ import {
   Smartphone,
   Zap,
   Layers,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
+import { api } from '@/lib/api'
 
 export interface MT5CredentialsModalProps {
   isOpen: boolean
   onClose: () => void
+  accountId?: number
   broker?: string
   server?: string
   login?: string | number
@@ -72,16 +75,83 @@ export function LiveBrokerPingBadge({
 export function MT5CredentialsModal({
   isOpen,
   onClose,
+  accountId,
   broker = 'MetaQuotes-Demo',
-  server = 'MetaQuotes-Demo',
-  login = '5056177670',
-  traderPassword = '-0DxOxMu',
-  investorPassword = 'RwYd*t3t',
-  accountLabel,
+  server: initialServer = 'MetaQuotes-Demo',
+  login: initialLogin,
+  traderPassword: initialTraderPassword,
+  investorPassword: initialInvestorPassword,
+  accountLabel: initialAccountLabel,
 }: MT5CredentialsModalProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [showTraderPass, setShowTraderPass] = useState(false)
   const [showInvestorPass, setShowInvestorPass] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [liveData, setLiveData] = useState<{
+    login?: string
+    server?: string
+    traderPassword?: string
+    investorPassword?: string
+    accountLabel?: string
+    notAssigned?: boolean
+  }>({})
+
+  useEffect(() => {
+    if (!isOpen) return
+    let active = true
+
+    const fetchCredentials = async () => {
+      setLoading(true)
+      try {
+        let targetId = accountId
+        if (!targetId) {
+          const myChallenges = await api.challengeMy()
+          if (active && myChallenges.ok && Array.isArray(myChallenges.data) && myChallenges.data.length > 0) {
+            const chWithMt5 = myChallenges.data.find((c: any) => c.mt5_login) || myChallenges.data[0]
+            targetId = chWithMt5.fxsim_account_id || chWithMt5.id
+            if (chWithMt5.plan_name && !initialAccountLabel) {
+              setLiveData((prev) => ({ ...prev, accountLabel: chWithMt5.plan_name }))
+            }
+          }
+        }
+
+        if (targetId) {
+          const res = await api.challengeMt5(targetId)
+          if (!active) return
+          if (res.ok && res.data) {
+            if (res.data.ready && res.data.mt5_login) {
+              setLiveData({
+                login: res.data.mt5_login,
+                server: res.data.mt5_server || initialServer,
+                traderPassword: res.data.mt5_password || '',
+                investorPassword: (res.data as any).investor_password || 'RwYd*t3t',
+                notAssigned: false,
+              })
+            } else {
+              setLiveData({
+                notAssigned: true,
+              })
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching MT5 credentials:', err)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    fetchCredentials()
+    return () => {
+      active = false
+    }
+  }, [isOpen, accountId, initialServer, initialAccountLabel])
+
+  const server = liveData.server || initialServer || 'MetaQuotes-Demo'
+  const login = liveData.login || initialLogin || (liveData.notAssigned ? 'Pending Assignment' : (initialLogin || '5056177670'))
+  const traderPassword = liveData.traderPassword || initialTraderPassword || (liveData.notAssigned ? 'Pending' : (initialTraderPassword || '-0DxOxMu'))
+  const investorPassword = liveData.investorPassword || initialInvestorPassword || (liveData.notAssigned ? 'Pending' : (initialInvestorPassword || 'RwYd*t3t'))
+  const accountLabel = liveData.accountLabel || initialAccountLabel
 
   const copyToClipboard = (text: string, key: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -128,6 +198,7 @@ export function MT5CredentialsModal({
                   <span className="px-1.5 py-0.5 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
                     MT5 Pro
                   </span>
+                  {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400 shrink-0" />}
                 </DialogTitle>
                 <DialogDescription className="text-3xs sm:text-xs text-text-muted mt-0.5 truncate">
                   {accountLabel ? `${accountLabel} · ` : ''}Direct institutional connection &amp; live bridge

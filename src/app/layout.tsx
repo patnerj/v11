@@ -284,7 +284,9 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
     .focus-within\\:ring-\\[\\#10B981\\]:focus-within {
       --tw-ring-color: ${cleanHex} !important;
     }
-    *:not(code):not(pre):not(kbd), body, html, div, label, button, input, select, textarea, [data-theme], h1, h2, h3, h4, h5, h6, p, span, a, table, th, td, li, ul, ol, strong, b, em, i { font-family: ${safeFont} !important; }
+    body, html { font-family: ${safeFont}; }
+    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]) { font-family: ${safeFont}; }
+    .font-mono, [class*="font-mono"], .tabular, code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
     .bg-primary { color: ${safeFg} !important; }
   `;
 }
@@ -528,7 +530,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   '.shadow-accent, .shadow-accent\\\\/20, .shadow-accent\\\\/10, .shadow-emerald-500\\\\/20, .shadow-emerald-500\\\\/10 { box-shadow: 0 0 15px ' + glow + ' !important; }' +
                   '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
                   '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +
-                  'body, html { font-family: ' + safeFont + ' !important; }' +
+                  'body, html { font-family: ' + safeFont + '; }' +
+                  '.font-mono, [class*="font-mono"], .tabular, code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
                   '.bg-primary { color: ' + safeFgVal + ' !important; }';
 
                   var ssrEl = document.getElementById('fxsim-dynamic-theme-ssr');

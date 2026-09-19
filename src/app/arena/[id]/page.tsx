@@ -228,6 +228,21 @@ export default function PvpLiveBattleArenaPage() {
           <Badge tone="accent" size="sm" className="tabular font-semibold text-[10px] px-2 py-0.5">
             {match?.symbol || 'BTCUSD'}
           </Badge>
+          {match?.arena_mode === 'league' && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+              🛡️ Gladiator League (Free)
+            </span>
+          )}
+          {match?.arena_mode === 'cash' && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              ⚔️ Real Cash Duel (USDC)
+            </span>
+          )}
+          {match?.arena_mode === 'perk' && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+              🏆 Challenge Perk: {match?.perk_reward || 'Perk'}
+            </span>
+          )}
           <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
             <Radio className="h-2.5 w-2.5 animate-pulse" />
             24/7 Live Feed
@@ -704,13 +719,29 @@ export default function PvpLiveBattleArenaPage() {
                 <Trophy className="h-16 w-16 text-amber-500 mx-auto animate-bounce" />
                 <div className="space-y-1.5">
                   <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 uppercase">
-                    Duel Concluded • 85% Prize Awarded
+                    {match?.arena_mode === 'perk' 
+                      ? 'Challenge Perk Unlocked' 
+                      : match?.arena_mode === 'league' 
+                      ? 'League Duel Concluded' 
+                      : 'Duel Concluded • 85% Cash Prize'}
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-black text-text mt-2">
                     Winner: {match.winner_name} 🏆
                   </h2>
                   <p className="text-xs text-text-muted">
-                    Payout of <strong className="text-amber-500 font-extrabold">{formatMoney(match?.prize_pool)} USDC</strong> credited to gladiator wallet.
+                    {match?.arena_mode === 'perk' ? (
+                      <>
+                        Reward: <strong className="text-purple-500 font-extrabold">{match.perk_reward === 'FREE_RETRY' ? 'Free Evaluation Retry Voucher' : match.perk_reward === 'DRAWDOWN_BUFFER_1PCT' ? '+1% Max Drawdown Buffer' : '50% Off Challenge Coupon'}</strong> minted into your Trader Perks Inventory!
+                      </>
+                    ) : match?.arena_mode === 'league' ? (
+                      <>
+                        Payout of <strong className="text-blue-500 font-extrabold">{match.prize_pool} Practice Chips</strong> added to Practice Wallet and credited to your Weekly Leaderboard Rank!
+                      </>
+                    ) : (
+                      <>
+                        Payout of <strong className="text-amber-500 font-extrabold">{formatMoney(match?.prize_pool)} USDC</strong> credited directly to your Arena Cash Wallet.
+                      </>
+                    )}
                   </p>
                 </div>
               </>
@@ -725,7 +756,7 @@ export default function PvpLiveBattleArenaPage() {
                     Honorable Draw 🤝
                   </h2>
                   <p className="text-xs text-text-muted">
-                    Both gladiators fought to a dead heat. Stakes of <strong className="text-text font-extrabold">{formatMoney(match?.stake_amount)} USDC</strong> refunded in full with 0% rake.
+                    Both gladiators fought to a dead heat. {match?.arena_mode === 'perk' ? 'Perk stakes returned.' : `Stakes of ${match?.arena_mode === 'league' ? `${match?.stake_amount} Chips` : `${formatMoney(match?.stake_amount)} USDC`} refunded in full with 0% rake.`}
                   </p>
                 </div>
               </>

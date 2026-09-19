@@ -96,6 +96,18 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
   const [showPartial, setShowPartial] = useState(false)
   const [partialLots, setPartialLots] = useState(() => (toNum(pos.lot_size) / 2).toFixed(2))
 
+  // Bug E Fix: Synchronize partialLots whenever pos.lot_size changes (e.g. after partial close)
+  useEffect(() => {
+    setPartialLots((toNum(pos.lot_size) / 2).toFixed(2))
+  }, [pos.lot_size])
+
+  useEffect(() => {
+    if (!editSltp) {
+      setSlDraft(pos.sl ? String(toNum(pos.sl)) : '')
+      setTpDraft(pos.tp ? String(toNum(pos.tp)) : '')
+    }
+  }, [pos.sl, pos.tp, editSltp])
+
   // Ref-managed 3s countdown hook for 2-tap close with visual countdown (3s... 2s... 1s)
   // and timeout cleanup on unmount/re-click.
   const [countdown, setCountdown] = useState<number | null>(null)

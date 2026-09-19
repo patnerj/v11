@@ -317,9 +317,12 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
     document.head.appendChild(fontStyleEl)
   }
   fontStyleEl.innerHTML = `
-    *:not(code):not(pre):not(kbd),
-    html, body, div, label, button, input, select, textarea, [data-theme], h1, h2, h3, h4, h5, h6, p, span, a, table, th, td, li, ul, ol, strong, b, em, i, header, nav, section, main, article, aside, footer {
-      font-family: ${found.cssVar} !important;
+    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]),
+    html, body {
+      font-family: ${found.cssVar};
+    }
+    .font-mono, [class*="font-mono"], .tabular, code, pre, kbd {
+      font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
     }
   `
 

@@ -19,6 +19,7 @@ import type {
   ScalingRules, ScalingQueueItem, ScalingEvent,
   SyndicateRadarSettings, SyndicateCluster,
   PvpMatch, PvpLobbyResponse, PvpLiveStateResponse, PvpAnalyticsResponse,
+  PvpArenaWallet, TraderPerk, PvpLeaguePodiumResponse,
   TournamentMine,
   AiCopilotChatResponse, AiSafeLotResponse, AiHeadroomResponse, AiNewsWarning,
   AiSettings, AiSentinelReport, SystemDoctorStatus,
@@ -593,12 +594,12 @@ export const api = {
 
   // ── 1v1 PvP E-Sports Arena ────────────────────────────────────────────────
   pvp: {
-    lobby: () =>
-      fxsim<PvpLobbyResponse>('/pvp/matches', { cache: 3_000 }),
-    create: (data: { symbol: string; stake_amount: number; duration_minutes: number; title?: string }) =>
-      fxsim<{ success: boolean; match_id: number; match_code: string; message: string }>('/pvp/match/create', { body: data }),
+    lobby: (mode?: string) =>
+      fxsim<PvpLobbyResponse>(mode ? `/pvp/matches?mode=${encodeURIComponent(mode)}` : '/pvp/matches', { cache: 3_000 }),
+    create: (data: { symbol: string; stake_amount?: number; duration_minutes: number; title?: string; arena_mode?: 'league' | 'cash' | 'perk'; perk_reward?: string }) =>
+      fxsim<{ success: boolean; match_id: number; match_code: string; message: string; arena_mode?: string }>('/pvp/match/create', { body: data }),
     join: (id: number) =>
-      fxsim<{ success: boolean; match_id: number; status: string; message: string }>(`/pvp/match/${id}/join`, { body: {} }),
+      fxsim<{ success: boolean; match_id: number; status: string; message: string; arena_mode?: string }>(`/pvp/match/${id}/join`, { body: {} }),
     live: (id: number) =>
       fxsim<PvpLiveStateResponse>(`/pvp/match/${id}/live`, { cache: 0 }),
     order: (id: number, data: { action: 'BUY' | 'SELL' | 'CLOSE' | 'REVERSE'; lot_size?: number }) =>
@@ -609,6 +610,20 @@ export const api = {
       fxsim<{ success: boolean; message?: string; error?: string }>(`/pvp/match/${id}/cancel`, { body: {} }),
     chat: (id: number, message: string) =>
       fxsim<{ success: boolean; message: string }>(`/pvp/match/${id}/chat`, { body: { message } }),
+    wallet: () =>
+      fxsim<PvpArenaWallet>('/pvp/wallet', { cache: 0 }),
+    deposit: (amount: number, method?: string) =>
+      fxsim<{ success: boolean; balance: number; message: string }>('/pvp/wallet/deposit', { body: { amount, method } }),
+    withdraw: (amount: number, destination: string) =>
+      fxsim<{ success: boolean; balance: number; message: string }>('/pvp/wallet/withdraw', { body: { amount, destination } }),
+    perks: () =>
+      fxsim<{ success: boolean; perks: TraderPerk[] }>('/pvp/perks', { cache: 0 }),
+    applyPerk: (id: number, account_id?: number) =>
+      fxsim<{ success: boolean; message: string }>(`/pvp/perks/${id}/apply`, { body: { account_id } }),
+    podium: () =>
+      fxsim<PvpLeaguePodiumResponse>('/pvp/league/podium', { cache: 10_000 }),
+    settleWeeklyLeague: () =>
+      fxsim<{ success: boolean; message: string; awards?: any[] }>('/admin/pvp/league/settle-week', { body: {} }),
   },
 
 

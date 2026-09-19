@@ -268,9 +268,6 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
         onClose={() => setMt5ModalOpen(false)}
         broker="MetaQuotes-Demo"
         server="MetaQuotes-Demo"
-        login="5056177670"
-        traderPassword="-0DxOxMu"
-        investorPassword="RwYd*t3t"
       />
     </header>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState, memo } from 'react'
+import React, { useEffect, useRef, useState, useId, memo } from 'react'
 import { Activity, ShieldCheck, AlertCircle, Clock, Maximize2, Radio } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
@@ -36,22 +36,29 @@ export const ArenaChart = memo(function ArenaChart({
   const { theme, resolvedTheme } = useTheme()
   const isDark = (resolvedTheme || theme) !== 'light'
   const containerRef = useRef<HTMLDivElement>(null)
-  const containerId = useRef(`tv_arena_chart_${Math.random().toString(36).substring(2, 9)}`)
+  const reactId = useId()
+  const cleanId = reactId.replace(/[^a-zA-Z0-9_-]/g, '')
+  const containerId = useRef(`tv_arena_chart_${cleanId}`)
+  const [mounted, setMounted] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Market hours status (UTC based)
-  const now = new Date()
-  const utcDay = now.getUTCDay() // 0=Sun, 6=Sat
-  const utcHours = now.getUTCHours()
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Market hours status (UTC based) - guarded for client mount to eliminate SSR divergence
   const isCrypto = isCryptoSymbol(symbol)
-  
-  // Forex is closed from Friday 22:00 UTC to Sunday 22:00 UTC
-  const isForexClosed = !isCrypto && (
-    utcDay === 6 || // Saturday
-    (utcDay === 0 && utcHours < 22) || // Sunday before 22:00 UTC
-    (utcDay === 5 && utcHours >= 22) // Friday after 22:00 UTC
-  )
+  const isForexClosed = mounted && !isCrypto && (() => {
+    const now = new Date()
+    const utcDay = now.getUTCDay() // 0=Sun, 6=Sat
+    const utcHours = now.getUTCHours()
+    return (
+      utcDay === 6 || // Saturday
+      (utcDay === 0 && utcHours < 22) || // Sunday before 22:00 UTC
+      (utcDay === 5 && utcHours >= 22) // Friday after 22:00 UTC
+    )
+  })()
 
   const resolved = resolveTvSymbol(symbol)
 
