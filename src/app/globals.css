@@ -264,9 +264,9 @@
     background-attachment: fixed;
   }
 
-  /* Numeric column alignment and monospace font precision everywhere */
+  /* Monospace font precision */
   .font-mono {
-    font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum';
   }

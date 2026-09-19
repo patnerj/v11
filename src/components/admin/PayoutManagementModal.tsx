@@ -259,15 +259,15 @@ export function PayoutManagementModal({
         {/* 1. Header Section */}
         <div className="bg-[#0B0F19] rounded-xl border border-[#1F2937] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono font-bold text-sm shrink-0">
+            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center tabular font-bold text-sm shrink-0">
               {payoutId}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-gray-100 text-sm">{traderName}</span>
-                <span className="text-xs text-gray-500 font-mono">({traderEmail})</span>
+                <span className="text-xs text-gray-500">({traderEmail})</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 font-mono mt-0.5">
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
                 <Clock className="h-3 w-3 text-gray-500" />
                 <span>Requested {dateFormatted}</span>
               </div>
@@ -295,28 +295,28 @@ export function PayoutManagementModal({
           {/* Trader Amount */}
           <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 space-y-1">
             <span className="text-[11px] font-semibold text-gray-400 block">Trader Net Amount</span>
-            <div className="text-lg sm:text-xl font-mono font-bold text-emerald-400">
+            <div className="text-lg sm:text-xl tabular font-bold text-emerald-400">
               {formatMoney(traderShare)}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Disbursed to Trader</span>
+            <span className="text-[10px] text-gray-500">Disbursed to Trader</span>
           </div>
 
           {/* Firm Amount */}
           <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 space-y-1">
             <span className="text-[11px] font-semibold text-gray-400 block">Firm Profit Share</span>
-            <div className="text-lg sm:text-xl font-mono font-bold text-gray-100">
+            <div className="text-lg sm:text-xl tabular font-bold text-gray-100">
               {formatMoney(firmShare)}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Retained by Firm</span>
+            <span className="text-[10px] text-gray-500">Retained by Firm</span>
           </div>
 
           {/* Split Percentage */}
           <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 space-y-1">
             <span className="text-[11px] font-semibold text-gray-400 block">Split Ratio</span>
-            <div className="text-lg sm:text-xl font-mono font-bold text-blue-400">
+            <div className="text-lg sm:text-xl tabular font-bold text-blue-400">
               {splitPct} / {100 - splitPct}
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">Trader / Firm</span>
+            <span className="text-[10px] text-gray-500">Trader / Firm</span>
           </div>
 
         </div>
@@ -348,9 +348,9 @@ export function PayoutManagementModal({
             <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Consistency Rule</span>
-                <span className="text-[11px] font-mono text-gray-200">Profit Distribution</span>
+                <span className="text-[11px] font-medium text-gray-200">Profit Distribution</span>
               </div>
-              <Badge tone={isConsistencyOk ? 'success' : 'warning'} size="sm" className="font-mono text-[10px]">
+              <Badge tone={isConsistencyOk ? 'success' : 'warning'} size="sm" className="tabular font-semibold text-[10px]">
                 {isConsistencyOk ? 'Verified' : 'Warning'}
               </Badge>
             </div>
@@ -359,9 +359,9 @@ export function PayoutManagementModal({
             <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Min Hold Time</span>
-                <span className="text-[11px] font-mono text-gray-200">Anti-Scalp Filter</span>
+                <span className="text-[11px] font-medium text-gray-200">Anti-Scalp Filter</span>
               </div>
-              <Badge tone={isHoldTimeClean ? 'success' : 'danger'} size="sm" className="font-mono text-[10px]">
+              <Badge tone={isHoldTimeClean ? 'success' : 'danger'} size="sm" className="tabular font-semibold text-[10px]">
                 {isHoldTimeClean ? 'Clean' : 'Toxic Flagged'}
               </Badge>
             </div>
@@ -370,9 +370,9 @@ export function PayoutManagementModal({
             <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Drawdown Room</span>
-                <span className="text-[11px] font-mono text-gray-200">Safety Buffer</span>
+                <span className="text-[11px] font-medium text-gray-200">Safety Buffer</span>
               </div>
-              <Badge tone={isDrawdownSafe ? 'success' : 'warning'} size="sm" className="font-mono text-[10px]">
+              <Badge tone={isDrawdownSafe ? 'success' : 'warning'} size="sm" className="tabular font-semibold text-[10px]">
                 {isDrawdownSafe ? 'Safe' : 'Near Floor'}
               </Badge>
             </div>
@@ -381,9 +381,9 @@ export function PayoutManagementModal({
             <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Rule Violations</span>
-                <span className="text-[11px] font-mono text-gray-200">Breach History</span>
+                <span className="text-[11px] font-medium text-gray-200">Breach History</span>
               </div>
-              <Badge tone={isBreachesClean ? 'success' : 'danger'} size="sm" className="font-mono text-[10px]">
+              <Badge tone={isBreachesClean ? 'success' : 'danger'} size="sm" className="tabular font-semibold text-[10px]">
                 {isBreachesClean ? '0 Breaches' : `${breachesCount} Breached`}
               </Badge>
             </div>
@@ -395,13 +395,13 @@ export function PayoutManagementModal({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
               <Wallet className="h-3.5 w-3.5 text-emerald-400" />
-              Destination Gateway: <span className="font-mono text-emerald-400 font-bold">{method}</span>
+              Destination Gateway: <span className="text-emerald-400 font-bold">{method}</span>
             </span>
             {destinationAddress && (
               <button
                 type="button"
                 onClick={handleCopy}
-                className="text-xs text-gray-400 hover:text-emerald-400 font-mono flex items-center gap-1 transition-colors"
+                className="text-xs text-gray-400 hover:text-emerald-400 font-medium flex items-center gap-1 transition-colors"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? 'Copied' : 'Copy Address'}
@@ -423,14 +423,14 @@ export function PayoutManagementModal({
               <Label htmlFor="tx-hash" className="mb-0">
                 Transaction ID / Reference Hash <span className="text-emerald-400 font-normal">(Required to Mark Paid)</span>
               </Label>
-              <span className="text-[10px] text-gray-500 font-mono">TX Hash / Bank Ref</span>
+              <span className="text-[10px] text-gray-500">TX Hash / Bank Ref</span>
             </div>
             <Input
               id="tx-hash"
               value={txHash}
               onChange={(e) => setTxHash(e.target.value)}
               placeholder="e.g. 0x89f2a71d4c8b08a54a94bc80521e6490fdbce2b1 or TX-889124"
-              className="font-mono text-xs"
+              className="text-xs"
             />
           </div>
 
@@ -444,7 +444,7 @@ export function PayoutManagementModal({
               value={proofUrl}
               onChange={(e) => setProofUrl(e.target.value)}
               placeholder="e.g. https://tronscan.org/#/transaction/..."
-              className="font-mono text-xs"
+              className="text-xs"
             />
           </div>
 

@@ -111,7 +111,7 @@ export function AiSentinelPanel() {
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Global Threat Score</span>
             <div className="flex items-baseline justify-between">
-              <span className={`text-2xl font-black font-mono ${threatScore > 50 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+              <span className={`text-2xl font-black tabular ${threatScore > 50 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                 {threatScore} / 100
               </span>
               <Activity className="w-4 h-4 text-slate-400 dark:text-gray-500" />
@@ -129,7 +129,7 @@ export function AiSentinelPanel() {
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Syndicate Copy Clusters</span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-black font-mono text-amber-500 dark:text-amber-400">
+              <span className="text-2xl font-black tabular text-amber-500 dark:text-amber-400">
                 {report?.syndicate_clusters?.length ?? 0}
               </span>
               <Users className="w-4 h-4 text-amber-500/80 dark:text-amber-400/80" />
@@ -142,7 +142,7 @@ export function AiSentinelPanel() {
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Toxic Latency Scalpers</span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
+              <span className="text-2xl font-black tabular text-rose-600 dark:text-rose-400">
                 {report?.toxic_scalpers?.length ?? 0}
               </span>
               <Flame className="w-4 h-4 text-rose-500/80 dark:text-rose-400/80" />
@@ -155,7 +155,7 @@ export function AiSentinelPanel() {
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Imminent Breach Risk</span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-black font-mono text-cyan-600 dark:text-cyan-400">
+              <span className="text-2xl font-black tabular text-cyan-600 dark:text-cyan-400">
                 {report?.at_risk_breaches?.length ?? 0}
               </span>
               <TrendingDown className="w-4 h-4 text-cyan-600/80 dark:text-cyan-400/80" />
@@ -208,7 +208,7 @@ export function AiSentinelPanel() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-100/90 dark:bg-[#0B0F19] text-slate-600 dark:text-gray-400 uppercase text-[10px] font-mono border-b border-slate-200 dark:border-[#1F2937]">
+                  <thead className="bg-slate-100/90 dark:bg-[#0B0F19] text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-[#1F2937]">
                     <tr>
                       <th className="p-3">Trader / Email</th>
                       <th className="p-3 text-center">Fast Trades</th>
@@ -221,12 +221,12 @@ export function AiSentinelPanel() {
                       <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-gray-800/40">
                         <td className="p-3 font-medium text-slate-900 dark:text-white">
                           <div>{row.display_name || `Account #${row.account_id}`}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{row.user_email}</div>
+                          <div className="text-[10px] text-slate-500 dark:text-gray-400">{row.user_email}</div>
                         </td>
-                        <td className="p-3 text-center font-mono font-bold text-rose-600 dark:text-rose-400">
+                        <td className="p-3 text-center tabular font-bold text-rose-600 dark:text-rose-400">
                           {row.fast_trades_count}
                         </td>
-                        <td className="p-3 text-center font-mono text-slate-700 dark:text-gray-300">
+                        <td className="p-3 text-center tabular text-slate-700 dark:text-gray-300">
                           {parseFloat(String(row.avg_duration_sec)).toFixed(1)}s
                         </td>
                         <td className="p-3 text-right">
@@ -270,7 +270,7 @@ export function AiSentinelPanel() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-100/90 dark:bg-[#0B0F19] text-slate-600 dark:text-gray-400 uppercase text-[10px] font-mono border-b border-slate-200 dark:border-[#1F2937]">
+                  <thead className="bg-slate-100/90 dark:bg-[#0B0F19] text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-[#1F2937]">
                     <tr>
                       <th className="p-3">Trader</th>
                       <th className="p-3 text-center">Current DD</th>
@@ -283,12 +283,12 @@ export function AiSentinelPanel() {
                       <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-gray-800/40">
                         <td className="p-3 font-medium text-slate-900 dark:text-white">
                           <div>{row.display_name || `Account #${row.account_id}`}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{row.user_email}</div>
+                          <div className="text-[10px] text-slate-500 dark:text-gray-400">{row.user_email}</div>
                         </td>
-                        <td className="p-3 text-center font-mono font-bold text-amber-600 dark:text-amber-400">
+                        <td className="p-3 text-center tabular font-bold text-amber-600 dark:text-amber-400">
                           {parseFloat(String(row.drawdown_pct)).toFixed(2)}%
                         </td>
-                        <td className="p-3 text-right font-mono text-[11px]">
+                        <td className="p-3 text-right tabular text-[11px]">
                           <div className="text-slate-900 dark:text-white">${parseFloat(String(row.balance)).toFixed(0)}</div>
                           <div className="text-slate-500 dark:text-gray-400">${parseFloat(String(row.equity)).toFixed(0)}</div>
                         </td>

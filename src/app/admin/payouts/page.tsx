@@ -253,7 +253,7 @@ export default function PayoutsHubPage() {
       key: 'payout_code',
       header: 'Payout ID',
       render: (row) => (
-        <span className="font-mono text-xs font-bold text-gray-200 bg-[#0B0F19] px-2.5 py-1 rounded-md border border-[#1F2937]">
+        <span className="tabular text-xs font-bold text-gray-200 bg-[#0B0F19] px-2.5 py-1 rounded-md border border-[#1F2937]">
           {row.payout_code}
         </span>
       )
@@ -275,7 +275,7 @@ export default function PayoutsHubPage() {
               >
                 {row.trader_name}
               </Link>
-              <p className="text-xs text-gray-500 truncate font-mono">{row.email}</p>
+              <p className="text-xs text-gray-500 truncate">{row.email}</p>
             </div>
           </div>
         )
@@ -286,7 +286,7 @@ export default function PayoutsHubPage() {
       header: 'Amount Details',
       align: 'right',
       render: (row) => (
-        <div className="text-right font-mono space-y-0.5">
+        <div className="text-right tabular space-y-0.5">
           <div className="text-sm font-bold text-accent">
             {formatMoney(row.amount_requested)}
           </div>
@@ -306,11 +306,11 @@ export default function PayoutsHubPage() {
 
         return (
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-gray-200 flex items-center gap-1.5 font-mono">
+            <span className="text-xs font-semibold text-gray-200 flex items-center gap-1.5">
               <Wallet className="h-3.5 w-3.5 text-accent shrink-0" />
               {row.payment_method}
             </span>
-            <p className="text-[11px] text-gray-500 font-mono truncate max-w-[200px]" title={row.payment_address}>
+            <p className="text-[11px] text-gray-500 tabular truncate max-w-[200px]" title={row.payment_address}>
               {previewAddr}
             </p>
           </div>
@@ -339,7 +339,7 @@ export default function PayoutsHubPage() {
       header: 'Requested Date',
       align: 'right',
       render: (row) => (
-        <span className="text-xs text-gray-400 font-mono">
+        <span className="text-xs text-gray-400 tabular">
           {new Date(row.requested_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -387,7 +387,7 @@ export default function PayoutsHubPage() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
               Payouts & Billing Engine
             </h1>
-            <Badge tone="accent" size="sm" pulsing className="font-mono">
+            <Badge tone="accent" size="sm" pulsing className="tabular font-semibold">
               Live Billing {APP_DISPLAY_VERSION}
             </Badge>
           </div>
@@ -439,7 +439,7 @@ export default function PayoutsHubPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
                   {formatMoney(metrics.pendingTotal)}
                 </h3>
               </div>
@@ -447,7 +447,7 @@ export default function PayoutsHubPage() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Awaiting audit approval
                 </span>
-                <Badge tone={metrics.pendingCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone={metrics.pendingCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   {metrics.pendingCount} Requests
                 </Badge>
               </div>
@@ -467,7 +467,7 @@ export default function PayoutsHubPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-accent tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-accent tracking-tight">
                   {formatMoney(metrics.approvedTotal)}
                 </h3>
               </div>
@@ -475,7 +475,7 @@ export default function PayoutsHubPage() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Disbursed on-chain
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   {metrics.approvedCount} Completed
                 </Badge>
               </div>
@@ -495,7 +495,7 @@ export default function PayoutsHubPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
                   {metrics.rejectedCount}
                 </h3>
               </div>
@@ -503,7 +503,7 @@ export default function PayoutsHubPage() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Failed compliance check
                 </span>
-                <Badge tone={metrics.rejectedCount > 0 ? "danger" : "neutral"} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone={metrics.rejectedCount > 0 ? "danger" : "neutral"} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   {metrics.rejectedCount > 0 ? "Breach Logged" : "0 Breaches"}
                 </Badge>
               </div>
@@ -523,7 +523,7 @@ export default function PayoutsHubPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-accent tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-accent tracking-tight">
                   {metrics.pendingCount > 0 || metrics.approvedCount > 0 ? metrics.avgTimeHours : '--'}
                 </h3>
               </div>
@@ -531,7 +531,7 @@ export default function PayoutsHubPage() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Target SLA &lt; {toNum(SLA_TARGET_HOURS).toFixed(1)} hrs {metrics.slaSampleSize > 0 && `(${metrics.slaSampleSize} resolved)`}
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   {metrics.slaPct !== null ? `${toNum(metrics.slaPct).toFixed(1)}% SLA` : 'No data yet'}
                 </Badge>
               </div>
@@ -559,7 +559,7 @@ export default function PayoutsHubPage() {
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
+                <span className={`text-[10px] tabular px-1.5 py-0.2 rounded-full font-bold ${
                   isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-surface-muted text-text-muted'
                 }`}>
                   {tab.count}
@@ -593,7 +593,7 @@ export default function PayoutsHubPage() {
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end text-xs text-text-muted">
-                <span>Showing <strong className="text-text font-mono">{filteredPayouts.length}</strong> of {allPayouts.length} requests</span>
+                <span>Showing <strong className="text-text tabular font-bold">{filteredPayouts.length}</strong> of {allPayouts.length} requests</span>
               </div>
 
             </div>

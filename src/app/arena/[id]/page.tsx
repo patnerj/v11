@@ -181,18 +181,18 @@ export default function PvpLiveBattleArenaPage() {
             Arena Lobby
           </Link>
           <div className="h-4 w-[1px] bg-border" />
-          <span className="font-mono text-xs font-bold text-text">
+          <span className="tabular text-xs font-bold text-text">
             {match?.match_code || 'PVP-MATCH'}
           </span>
-          <Badge tone="accent" size="sm" className="font-mono text-[10px]">
+          <Badge tone="accent" size="sm" className="tabular font-semibold text-[10px]">
             {match?.symbol || 'EURUSD'}
           </Badge>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-text bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-md">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-text bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-md">
             <Radio className="h-3 w-3 text-red-500 animate-pulse" />
-            <span className="font-semibold tracking-wider text-red-500 dark:text-red-300">LIVE BROADCAST</span>
+            <span className="tracking-wider text-red-500 dark:text-red-300">LIVE BROADCAST</span>
           </div>
 
           <Button
@@ -218,29 +218,29 @@ export default function PvpLiveBattleArenaPage() {
             
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
                   Gladiator A (Blue Corner)
                 </span>
                 <h2 className="text-lg font-bold text-text flex items-center gap-1.5">
                   {creator.name}
                 </h2>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-500 dark:text-blue-400 font-bold font-mono">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-500 dark:text-blue-400 font-bold tabular">
                 P1
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
               <div>
-                <div className="text-[10px] font-mono text-text-muted uppercase">Live Equity</div>
-                <div className="text-xl font-bold font-mono text-text mt-0.5">
+                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Live Equity</div>
+                <div className="text-xl font-bold tabular text-text mt-0.5">
                   {formatMoney(creator.equity)}
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] font-mono text-text-muted uppercase">Floating PnL</div>
-                <div className={`text-xl font-extrabold font-mono mt-0.5 ${
+                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Floating PnL</div>
+                <div className={`text-xl font-extrabold tabular mt-0.5 ${
                   (creator?.pnl ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                 }`}>
                   {(creator?.pnl ?? 0) >= 0 ? '+' : ''}{formatMoney(creator?.pnl ?? 0)}
@@ -248,7 +248,7 @@ export default function PvpLiveBattleArenaPage() {
               </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-text-muted">
+            <div className="mt-2 flex items-center justify-between text-[11px] tabular text-text-muted">
               <span>{creator?.trades_count ?? 0} Orders Executed</span>
               <span className="text-blue-500 dark:text-blue-400 font-semibold">{(((creator?.pnl ?? 0) / 10000) * 100).toFixed(2)}% ROI</span>
             </div>
@@ -260,21 +260,21 @@ export default function PvpLiveBattleArenaPage() {
             {/* Status Badge */}
             <div>
               {isActive && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tabular uppercase bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse">
                   <Flame className="h-3.5 w-3.5 text-red-500" />
                   1v1 Battle In Progress
                 </span>
               )}
 
               {isWaiting && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tabular uppercase bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40">
                   <Clock className="h-3.5 w-3.5 text-amber-500" />
                   Waiting For Challenger
                 </span>
               )}
 
               {isCompleted && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tabular uppercase bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
                   <Trophy className="h-3.5 w-3.5 text-emerald-500" />
                   Match Concluded
                 </span>
@@ -283,10 +283,10 @@ export default function PvpLiveBattleArenaPage() {
 
             {/* Countdown Clock */}
             <div className="bg-surface border border-border p-4 rounded-2xl inline-block shadow-xl">
-              <div className="text-[10px] uppercase font-mono text-text-muted tracking-wider">
+              <div className="text-[10px] uppercase font-semibold text-text-muted tracking-wider">
                 Time Remaining
               </div>
-              <div className={`text-4xl sm:text-5xl font-black font-mono tracking-tight mt-1 ${
+              <div className={`text-4xl sm:text-5xl font-black tabular tracking-tight mt-1 ${
                 secondsLeft <= 60 && isActive ? 'text-red-500 animate-ping' : 'text-cyan-600 dark:text-cyan-400'
               }`}>
                 {isActive ? formatTimer(secondsLeft) : isWaiting ? `${match?.duration_minutes}:00` : '00:00'}
@@ -295,7 +295,7 @@ export default function PvpLiveBattleArenaPage() {
 
             {/* Lead Delta Bar */}
             <div className="bg-surface-muted p-2.5 rounded-xl border border-border max-w-sm mx-auto">
-              <div className="text-xs font-mono font-bold">
+              <div className="text-xs tabular font-bold">
                 {leadDelta > 0 ? (
                   <span className="text-blue-500 dark:text-blue-400 flex items-center justify-center gap-1">
                     <TrendingUp className="h-3.5 w-3.5" />
@@ -311,7 +311,7 @@ export default function PvpLiveBattleArenaPage() {
                 )}
               </div>
 
-              <div className="text-[10px] text-text-muted font-mono mt-1">
+              <div className="text-[10px] text-text-muted tabular font-medium mt-1">
                 Prize Pool: <strong className="text-amber-600 dark:text-amber-400">{formatMoney(match?.prize_pool)} USDC</strong> (15% Rake)
               </div>
             </div>
@@ -324,29 +324,29 @@ export default function PvpLiveBattleArenaPage() {
             
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
                   Gladiator B (Red Corner)
                 </span>
                 <h2 className="text-lg font-bold text-text flex items-center gap-1.5">
                   {challenger.name}
                 </h2>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold font-mono">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold tabular">
                 P2
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
               <div>
-                <div className="text-[10px] font-mono text-text-muted uppercase">Live Equity</div>
-                <div className="text-xl font-bold font-mono text-text mt-0.5">
+                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Live Equity</div>
+                <div className="text-xl font-bold tabular text-text mt-0.5">
                   {formatMoney(challenger.equity)}
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] font-mono text-text-muted uppercase">Floating PnL</div>
-                <div className={`text-xl font-extrabold font-mono mt-0.5 ${
+                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Floating PnL</div>
+                <div className={`text-xl font-extrabold tabular mt-0.5 ${
                   (challenger?.pnl ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
                 }`}>
                   {(challenger?.pnl ?? 0) >= 0 ? '+' : ''}{formatMoney(challenger?.pnl ?? 0)}
@@ -354,7 +354,7 @@ export default function PvpLiveBattleArenaPage() {
               </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-text-muted">
+            <div className="mt-2 flex items-center justify-between text-[11px] tabular text-text-muted">
               <span>{challenger?.trades_count ?? 0} Orders Executed</span>
               <span className="text-amber-600 dark:text-amber-400 font-semibold">{(((challenger?.pnl ?? 0) / 10000) * 100).toFixed(2)}% ROI</span>
             </div>
@@ -383,7 +383,7 @@ export default function PvpLiveBattleArenaPage() {
                   </CardDescription>
                 </div>
 
-                <div className="text-right font-mono">
+                <div className="text-right tabular font-sans">
                   <div className="text-[10px] uppercase text-text-muted">Market Price</div>
                   <div className="text-sm font-extrabold text-text">
                     {liveState?.prices?.ask?.toFixed(4) || '1.0845'}
@@ -403,7 +403,7 @@ export default function PvpLiveBattleArenaPage() {
                       key={lot}
                       type="button"
                       onClick={() => setSelectedLot(lot)}
-                      className={`py-3 rounded-xl font-mono text-sm font-bold border transition-all ${
+                      className={`py-3 rounded-xl tabular text-sm font-bold border transition-all ${
                         selectedLot === lot
                           ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
                           : 'bg-surface-muted text-text-muted border-border hover:text-text'
@@ -456,7 +456,7 @@ export default function PvpLiveBattleArenaPage() {
                   {/* Match Controller for Admin / Manual Finish */}
                   {isActive && (
                     <div className="pt-4 border-t border-border flex items-center justify-between">
-                      <div className="text-xs text-text-muted font-mono">
+                      <div className="text-xs text-text-muted tabular">
                         Duel auto-settles when clock strikes 00:00
                       </div>
                       <Button
@@ -498,7 +498,7 @@ export default function PvpLiveBattleArenaPage() {
             <Card className="bg-surface border border-amber-500/40 p-6 text-center space-y-4 shadow-xl">
               <Trophy className="h-14 w-14 text-amber-500 mx-auto animate-bounce" />
               <div className="space-y-1">
-                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40">
                   DUEL COMPLETED & PRIZE AWARDED
                 </span>
                 <h2 className="text-2xl font-black text-text mt-2">
@@ -535,7 +535,7 @@ export default function PvpLiveBattleArenaPage() {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="p-4 flex-1 overflow-y-auto space-y-3 text-xs font-mono">
+            <CardContent className="p-4 flex-1 overflow-y-auto space-y-3 text-xs">
               {/* Local & Server Events */}
               {localEvents.map((msg, i) => (
                 <div key={`local-${i}`} className="p-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-300">
@@ -582,7 +582,7 @@ export default function PvpLiveBattleArenaPage() {
                   placeholder="Send cheer in stadium..."
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
-                  className="bg-surface border-border text-text text-xs h-9 font-mono"
+                  className="bg-surface border-border text-text text-xs h-9 font-sans"
                 />
                 <Button type="submit" size="sm" loading={sendingChat} className="bg-red-600 hover:bg-red-700 h-9 px-3">
                   <Send className="h-3.5 w-3.5" />

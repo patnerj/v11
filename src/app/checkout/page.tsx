@@ -666,7 +666,7 @@ function ManualStep({
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Manual Crypto Payment</h2>
         <p className="text-text-muted mt-1">
-          Order <code className="text-text font-mono bg-bg-subtle px-1.5 py-0.5 rounded">#{orderId}</code> ·{' '}
+          Order <code className="text-text font-semibold tabular bg-bg-subtle px-1.5 py-0.5 rounded">#{orderId}</code> ·{' '}
           <span className="text-text font-semibold">{fmtUSD(amountDue)}</span> due
         </p>
       </div>

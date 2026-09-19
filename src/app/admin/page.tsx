@@ -385,7 +385,7 @@ export default function AdminCommandCenter() {
             </div>
             <div>
               <p className="font-semibold text-gray-100 text-sm leading-tight">{name}</p>
-              <p className="text-xs text-gray-500 font-mono">ACC-{(row.challenge_id || row.id)}</p>
+              <p className="text-xs text-gray-500 tabular">ACC-{(row.challenge_id || row.id)}</p>
             </div>
           </div>
         )
@@ -396,7 +396,7 @@ export default function AdminCommandCenter() {
       header: 'Payout ID',
       className: 'whitespace-nowrap',
       render: (row) => (
-        <span className="font-mono text-xs text-slate-700 dark:text-gray-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
+        <span className="tabular font-medium text-xs text-slate-700 dark:text-gray-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
           #PAY-{row.id}
         </span>
       )
@@ -409,7 +409,7 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const amt = row.amount_requested || row.amount || 0
         return (
-          <div className="text-right font-mono font-bold text-sm text-emerald-400">
+          <div className="text-right tabular font-bold text-sm text-emerald-400">
             {formatCurrency(amt)}
           </div>
         )
@@ -422,7 +422,7 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const method = (row.payment_method || row.gateway || row.method || 'USDT TRC20').toUpperCase()
         return (
-          <span className="text-xs font-mono text-gray-300 flex items-center gap-1.5">
+          <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
             <Wallet className="h-3.5 w-3.5 text-gray-400" />
             {method}
           </span>
@@ -481,12 +481,12 @@ export default function AdminCommandCenter() {
       className: 'whitespace-nowrap',
       render: (row) => (
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-mono text-xs">
+          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center tabular font-bold text-xs">
             #{row.id}
           </div>
           <div>
             <p className="font-semibold text-gray-200 text-sm">ACC-{row.id}</p>
-            <p className="text-[11px] text-gray-500 font-mono">User ID: {row.user_id ? `#${row.user_id}` : '—'}</p>
+            <p className="text-[11px] text-gray-500">User ID: {row.user_id ? `#${row.user_id}` : '—'}</p>
           </div>
         </div>
       )
@@ -509,7 +509,7 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const cap = row.starting_balance || row.balance || row.current_balance
         return (
-          <span className="font-mono text-xs font-bold text-gray-100">
+          <span className="tabular text-xs font-bold text-gray-100">
             {cap ? formatCurrency(cap) : '—'}
           </span>
         )
@@ -540,7 +540,7 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const dt = row.created_at ? new Date(row.created_at).toLocaleDateString() : 'Just now'
         return (
-          <span className="text-xs text-gray-400 font-mono flex items-center justify-end gap-1">
+          <span className="text-xs text-gray-400 tabular flex items-center justify-end gap-1">
             <Clock className="h-3 w-3 text-gray-500" />
             {dt}
           </span>
@@ -686,7 +686,7 @@ export default function AdminCommandCenter() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
               Command Center
             </h1>
-            <Badge tone="accent" size="sm" pulsing className="font-mono">
+            <Badge tone="accent" size="sm" pulsing className="tabular font-semibold">
               Live System {APP_DISPLAY_VERSION}
             </Badge>
             {isEmergencyPaused && (
@@ -760,7 +760,7 @@ export default function AdminCommandCenter() {
             <DollarSign className="h-4 w-4 text-accent" />
             Executive Financial Health & Liability
           </h2>
-          <Badge tone="accent" size="sm" className="font-mono text-[10px]">Real-Time Treasury</Badge>
+          <Badge tone="accent" size="sm" className="font-semibold text-[10px]">Real-Time Treasury</Badge>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -779,7 +779,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
                   {formatCurrency(totalRev)}
                 </h3>
               </div>
@@ -788,7 +788,7 @@ export default function AdminCommandCenter() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Challenge purchases & add-ons
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   {revenueTrend}
                 </Badge>
               </div>
@@ -809,7 +809,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-amber-400 tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-amber-400 tracking-tight">
                   {formatCurrency(pendingPayoutVal)}
                 </h3>
               </div>
@@ -818,7 +818,7 @@ export default function AdminCommandCenter() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Pending & open profitable trades
                 </span>
-                <Badge tone={pendingPayoutsCount > 0 ? 'warning' : 'neutral'} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone={pendingPayoutsCount > 0 ? 'warning' : 'neutral'} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   {pendingPayoutsCount} Pending
                 </Badge>
               </div>
@@ -839,7 +839,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-emerald-400 tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-emerald-400 tracking-tight">
                   {retainedMarginPct}
                 </h3>
               </div>
@@ -848,7 +848,7 @@ export default function AdminCommandCenter() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Retained after all payouts
                 </span>
-                <Badge tone="success" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone="success" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   Target &gt;85%
                 </Badge>
               </div>
@@ -869,7 +869,7 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
+                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
                   {coverageRatio}
                 </h3>
               </div>
@@ -878,7 +878,7 @@ export default function AdminCommandCenter() {
                 <span className="text-[11px] text-text-muted leading-tight block flex-1">
                   Total exposure vs bridge
                 </span>
-                <Badge tone="neutral" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                <Badge tone="neutral" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                   0 Flags
                 </Badge>
               </div>
@@ -895,7 +895,7 @@ export default function AdminCommandCenter() {
             <TrendingUp className="h-4 w-4 text-accent" />
             Firm Performance KPIs
           </h2>
-          <span className="text-xs text-gray-500 font-mono">Updated real-time</span>
+          <span className="text-xs text-gray-500">Updated real-time</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -918,7 +918,7 @@ export default function AdminCommandCenter() {
                   </div>
 
                   <div className="mt-3 flex items-baseline justify-between">
-                    <h3 className="text-2xl font-bold font-mono text-text tracking-tight">
+                    <h3 className="text-2xl font-bold tabular text-text tracking-tight">
                       {metric.value}
                     </h3>
                   </div>
@@ -927,7 +927,7 @@ export default function AdminCommandCenter() {
                     <span className="text-[11px] text-gray-400 leading-tight block flex-1">
                       {metric.subtitle}
                     </span>
-                    <Badge tone={metric.tone} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                    <Badge tone={metric.tone} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
                       {metric.trend}
                     </Badge>
                   </div>
@@ -982,7 +982,7 @@ export default function AdminCommandCenter() {
                     <h4 className="text-sm font-semibold text-text group-hover:text-blue-400 transition-colors">
                       Review KYC Queue
                     </h4>
-                    <span className="bg-blue-500/20 text-blue-400 text-[10px] font-mono px-1.5 py-0.2 rounded font-bold">
+                    <span className="bg-blue-500/20 text-blue-400 text-[10px] tabular font-bold px-1.5 py-0.2 rounded">
                       {kycList?.length ?? 0}
                     </span>
                   </div>
@@ -1004,7 +1004,7 @@ export default function AdminCommandCenter() {
                     <h4 className="text-sm font-semibold text-text group-hover:text-amber-400 transition-colors">
                       Process Payouts
                     </h4>
-                    <span className="bg-amber-500/20 text-amber-400 text-[10px] font-mono px-1.5 py-0.2 rounded font-bold">
+                    <span className="bg-amber-500/20 text-amber-400 text-[10px] tabular font-bold px-1.5 py-0.2 rounded">
                       {payoutsList?.length ?? 0}
                     </span>
                   </div>
@@ -1153,18 +1153,18 @@ export default function AdminCommandCenter() {
                       const net = rev - pay
                       return (
                         <div className="bg-[#111827] border border-[#1F2937] p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-                          <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1 font-mono">
+                          <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1">
                             Month: {label}
                           </p>
-                          <div className="flex justify-between items-center text-accent font-mono">
+                          <div className="flex justify-between items-center text-accent tabular">
                             <span>Revenue:</span>
                             <span className="font-bold">{formatCurrency(rev)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-indigo-400 font-mono">
+                          <div className="flex justify-between items-center text-indigo-400 tabular">
                             <span>Payouts:</span>
                             <span className="font-bold">{formatCurrency(pay)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-gray-300 font-mono pt-1 border-t border-[#1F2937]/60">
+                          <div className="flex justify-between items-center text-gray-300 tabular pt-1 border-t border-[#1F2937]/60">
                             <span>Net Retained:</span>
                             <span className="font-bold text-white">{formatCurrency(net)}</span>
                           </div>
@@ -1226,7 +1226,7 @@ export default function AdminCommandCenter() {
                 New challenge account signups vs successful trader evaluations
               </CardDescription>
             </div>
-            <Badge tone="neutral" size="sm" className="font-mono text-[10px]">
+            <Badge tone="neutral" size="sm" className="tabular font-semibold text-[10px]">
               {avgPassRate !== null ? `Avg Pass: ${toNum(avgPassRate).toFixed(1)}%` : 'Avg Pass: —'}
             </Badge>
           </CardHeader>
@@ -1279,18 +1279,18 @@ export default function AdminCommandCenter() {
                       const rate = reg > 0 ? toNum((pass / reg) * 100).toFixed(1) + '%' : '0%'
                       return (
                         <div className="bg-[#111827] border border-[#1F2937] p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-                          <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1 font-mono">
+                          <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1">
                             Month: {label}
                           </p>
-                          <div className="flex justify-between items-center text-accent font-mono">
+                          <div className="flex justify-between items-center text-accent tabular">
                             <span>Registrations:</span>
                             <span className="font-bold">{formatInt(reg)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-blue-400 font-mono">
+                          <div className="flex justify-between items-center text-blue-400 tabular">
                             <span>Passed / Funded:</span>
                             <span className="font-bold">{formatInt(pass)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-amber-400 font-mono pt-1 border-t border-[#1F2937]/60">
+                          <div className="flex justify-between items-center text-amber-400 tabular pt-1 border-t border-[#1F2937]/60">
                             <span>Pass Conversion:</span>
                             <span className="font-bold">{rate}</span>
                           </div>
@@ -1606,15 +1606,15 @@ export default function AdminCommandCenter() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Account ID:</span>
-                <span className="font-mono text-gray-200">ACC-{selectedPayout.challenge_id || selectedPayout.id}</span>
+                <span className="tabular text-gray-200">ACC-{selectedPayout.challenge_id || selectedPayout.id}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Total Profit Requested:</span>
-                <span className="font-mono font-bold text-emerald-400 text-sm">{formatCurrency(selectedPayout.amount_requested || selectedPayout.amount)}</span>
+                <span className="tabular font-bold text-emerald-400 text-sm">{formatCurrency(selectedPayout.amount_requested || selectedPayout.amount)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Gateway / Destination:</span>
-                <span className="font-mono text-gray-200">{selectedPayout.payment_method || selectedPayout.gateway || 'USDT TRC20'}</span>
+                <span className="text-gray-200">{selectedPayout.payment_method || selectedPayout.gateway || 'USDT TRC20'}</span>
               </div>
             </div>
 

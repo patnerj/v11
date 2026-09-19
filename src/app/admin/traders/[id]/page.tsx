@@ -361,7 +361,7 @@ export default function Trader360ProfilePage() {
       key: 'id',
       header: 'Reference',
       render: (row) => (
-        <span className="font-mono text-xs text-gray-300 bg-[#0B0F19] px-2 py-0.5 rounded border border-[#1F2937]">
+        <span className="tabular font-medium text-xs text-gray-300 bg-[#0B0F19] px-2 py-0.5 rounded border border-[#1F2937]">
           {row.id}
         </span>
       )
@@ -382,7 +382,7 @@ export default function Trader360ProfilePage() {
       render: (row) => {
         const isPayout = row.type.includes('Payout') || row.type.includes('Withdrawal')
         return (
-          <span className={`font-mono text-xs font-bold ${
+          <span className={`tabular text-xs font-bold ${
             isPayout ? 'text-emerald-400' : 'text-gray-100'
           }`}>
             {formatExactCurrency(row.amount)}
@@ -394,7 +394,7 @@ export default function Trader360ProfilePage() {
       key: 'gateway',
       header: 'Gateway',
       render: (row) => (
-        <span className="text-xs text-gray-400 font-mono">
+        <span className="text-xs text-gray-400">
           {row.gateway}
         </span>
       )
@@ -414,7 +414,7 @@ export default function Trader360ProfilePage() {
       header: 'Date',
       align: 'right',
       render: (row) => (
-        <span className="text-xs text-gray-400 font-mono">
+        <span className="text-xs text-gray-400 tabular">
           {row.date}
         </span>
       )
@@ -478,7 +478,7 @@ export default function Trader360ProfilePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="h-10 w-10 text-emerald-400 animate-spin" />
-        <p className="text-gray-400 font-mono text-sm animate-pulse">
+        <p className="text-gray-400 font-medium text-sm animate-pulse">
           Loading Trader Profile for #{userId}...
         </p>
       </div>
@@ -538,7 +538,7 @@ export default function Trader360ProfilePage() {
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
                   {trader.name}
                 </h1>
-                <Badge tone="accent" size="sm" className="font-mono">
+                <Badge tone="accent" size="sm" className="tabular font-semibold">
                   #TRD-{trader.account_id}
                 </Badge>
                 {isBanned ? (
@@ -551,14 +551,14 @@ export default function Trader360ProfilePage() {
                   </Badge>
                 )}
                 {trader.mt5_login && (
-                  <Badge tone="accent" size="sm" className="font-mono gap-1">
+                  <Badge tone="accent" size="sm" className="tabular font-semibold gap-1">
                     <Server className="h-3 w-3 text-cyan-400" />
                     MT5: {trader.mt5_login}
                   </Badge>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 font-mono">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
                 <span className="flex items-center gap-1.5 text-gray-300">
                   <Mail className="h-3.5 w-3.5 text-gray-500" />
                   {trader.email || 'No email registered'}

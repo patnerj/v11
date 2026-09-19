@@ -204,7 +204,7 @@ function PayoutCard({ p }: { p: PayoutItem }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {p.tx_reference && (
               <span className="text-text-muted">
-                <span className="text-text-faint">Transaction ref:</span> <span className="font-mono text-text">{p.tx_reference}</span>
+                <span className="text-text-faint">Transaction ref:</span> <span className="font-medium text-text">{p.tx_reference}</span>
               </span>
             )}
             {p.proof_url && (

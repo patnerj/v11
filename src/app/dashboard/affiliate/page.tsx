@@ -307,10 +307,10 @@ export default function AffiliatePage() {
         <CardHeader><CardTitle>Your referral link</CardTitle></CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            <input readOnly value={link} className="flex-1 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm font-mono" />
+            <input readOnly value={link} className="flex-1 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text" />
             <Button variant="outline" onClick={copy}>{copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied' : 'Copy'}</Button>
           </div>
-          <p className="text-2xs text-text-muted mt-1.5">Code: <span className="font-mono">{me.code}</span></p>
+          <p className="text-2xs text-text-muted mt-1.5">Code: <span className="font-semibold text-text">{me.code}</span></p>
         </CardContent>
       </Card>
 
@@ -390,7 +390,7 @@ export default function AffiliatePage() {
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder={method === 'wise' ? 'you@example.com' : method === 'usdt_trc20' ? 'T…' : '0x…'}
-                className="w-full h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm font-mono text-text"
+                className="w-full h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text"
               />
             </div>
           </div>
@@ -418,7 +418,7 @@ export default function AffiliatePage() {
                     </div>
                     <div className="text-2xs text-text-muted mt-0.5">
                       {METHOD_LABEL[p.method] || p.method} · {timeAgo(p.created_at_iso || p.created_at)}
-                      {p.tx_reference ? <> · ref <span className="font-mono">{p.tx_reference}</span></> : null}
+                      {p.tx_reference ? <> · ref <span className="font-medium text-text">{p.tx_reference}</span></> : null}
                       {p.admin_note ? <> · {p.admin_note}</> : null}
                     </div>
                   </div>

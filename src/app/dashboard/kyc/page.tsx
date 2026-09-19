@@ -94,7 +94,7 @@ function ModernStepper({ status }: { status: KycStatus }) {
             >
               <div className="flex items-start gap-3">
                 <div
-                  className={`h-9 w-9 rounded-lg flex items-center justify-center font-mono font-bold text-sm shrink-0 border transition-all ${
+                  className={`h-9 w-9 rounded-lg flex items-center justify-center tabular font-bold text-sm shrink-0 border transition-all ${
                     isDone
                       ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
                       : isCurrent
@@ -192,7 +192,7 @@ function ModernUploadTile({
             <div className="text-sm font-bold text-white flex items-center gap-2">
               {spec.title}
               {file && (
-                <Badge tone="success" size="sm" className="font-mono text-[10px]">
+                <Badge tone="success" size="sm" className="tabular font-semibold text-[10px]">
                   Uploaded
                 </Badge>
               )}
@@ -232,7 +232,7 @@ function ModernUploadTile({
             </p>
             <p className="text-[11px] text-gray-500 mt-0.5">{spec.hint}</p>
           </div>
-          <span className="text-[10px] font-mono text-gray-500 bg-[#0B0F19] px-2.5 py-0.5 rounded border border-[#1F2937]">
+          <span className="text-[10px] tabular font-medium text-gray-500 bg-[#0B0F19] px-2.5 py-0.5 rounded border border-[#1F2937]">
             JPG, PNG, WebP, PDF · Max 5MB
           </span>
         </button>
@@ -254,7 +254,7 @@ function ModernUploadTile({
 
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold text-white truncate">{file.name}</div>
-            <div className="text-[11px] font-mono text-gray-400 mt-0.5">
+            <div className="text-[11px] tabular text-gray-400 mt-0.5">
               {(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.split('/')[1]?.toUpperCase()}
             </div>
             {uploading ? (
@@ -407,7 +407,7 @@ export default function KycPage() {
                       </p>
                     </div>
                     {kyc?.reviewed_at && (
-                      <div className="inline-block font-mono text-xs text-emerald-400/90 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                      <div className="inline-block font-medium tabular text-xs text-emerald-400/90 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                         Verified on {fmtDate(kyc.reviewed_at, true)}
                       </div>
                     )}
@@ -448,7 +448,7 @@ export default function KycPage() {
                       </div>
 
                       {kyc?.submitted_at && (
-                        <div className="text-right font-mono text-xs text-gray-400 bg-[#0B0F19] px-3 py-1.5 rounded-lg border border-[#1F2937] shrink-0">
+                        <div className="text-right font-medium tabular text-xs text-gray-400 bg-[#0B0F19] px-3 py-1.5 rounded-lg border border-[#1F2937] shrink-0">
                           Submitted: <span className="text-gray-200">{fmtDate(kyc.submitted_at, true)}</span>
                         </div>
                       )}
@@ -464,7 +464,7 @@ export default function KycPage() {
 
                         return (
                           <>
-                            <span className="text-xs uppercase tracking-wider text-gray-400 font-mono block mb-3 font-semibold">
+                            <span className="text-xs uppercase tracking-wider text-gray-400 block mb-3 font-semibold">
                               Received & Audited Files ({uploadedCount} of {DOCS.length})
                             </span>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -486,7 +486,7 @@ export default function KycPage() {
                                     </div>
                                     <div className="min-w-0">
                                       <p className="text-xs font-bold text-gray-200 truncate">{d.title}</p>
-                                      <p className={`text-[11px] font-mono ${uploaded ? 'text-emerald-400' : 'text-text-muted'}`}>
+                                      <p className={`text-[11px] font-medium ${uploaded ? 'text-emerald-400' : 'text-text-muted'}`}>
                                         {uploaded ? 'Securely Encrypted' : 'Pending Upload'}
                                       </p>
                                     </div>
@@ -511,7 +511,7 @@ export default function KycPage() {
                     <ShieldAlert className="h-5 w-5 shrink-0" />
                     <h3 className="font-bold text-sm text-white">Previous KYC Submission Needs Attention</h3>
                   </div>
-                  <div className="bg-[#0B0F19] p-3.5 rounded-xl border border-red-500/30 text-xs font-mono text-gray-200 leading-relaxed">
+                  <div className="bg-[#0B0F19] p-3.5 rounded-xl border border-red-500/30 text-xs text-gray-200 leading-relaxed">
                     <strong className="text-red-400">Compliance Reason: </strong>
                     {kyc?.admin_note || 'One or more documents were blurry, cropped, or expired. Please upload fresh copies below.'}
                   </div>
@@ -559,10 +559,10 @@ export default function KycPage() {
                   </div>
 
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400 font-mono">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
                       Required Identity Documents (4)
                     </span>
-                    <span className="text-xs font-mono text-cyan-400">
+                    <span className="text-xs tabular font-medium text-cyan-400">
                       {uploadedCount} of 4 Files Selected
                     </span>
                   </div>
@@ -671,7 +671,7 @@ export default function KycPage() {
 
                       {/* Checklist Box */}
                       <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-2 mt-4">
-                        <span className="text-[10px] uppercase font-mono tracking-wider text-gray-400 font-bold block">
+                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block">
                           Checklist Before Upload
                         </span>
                         <ul className="space-y-1.5 text-[11px] text-gray-300">

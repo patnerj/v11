@@ -273,22 +273,22 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
         {/* Step Progress Tracker */}
         <div className="grid grid-cols-4 gap-2 border-b border-[#1F2937]/80 pb-4 text-xs font-semibold">
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 1 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 1 ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-mono">1</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">1</span>
             <span className="hidden sm:inline">Firm Info</span>
           </div>
 
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 2 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 2 ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-mono">2</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">2</span>
             <span className="hidden sm:inline">Brand Theme</span>
           </div>
 
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 3 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 3 ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-mono">3</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">3</span>
             <span className="hidden sm:inline">Plan Catalog</span>
           </div>
 
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 4 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-mono">4</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">4</span>
             <span className="hidden sm:inline">Launch!</span>
           </div>
         </div>
@@ -389,7 +389,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                       <div className="h-5 w-5 rounded-full bg-[#111827] border border-slate-700" />
                       <div className="h-5 w-5 rounded-full bg-[#0B0F19] border border-slate-700" />
                     </div>
-                    <span className="text-[10px] font-mono block font-semibold" style={{ color: preset.primary }}>
+                    <span className="text-[10px] block font-semibold" style={{ color: preset.primary }}>
                       {preset.label}
                     </span>
                   </div>
@@ -420,11 +420,11 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 >
                   <div className="space-y-0.5">
                     <span className="text-xs font-bold text-white block">{plan.name}</span>
-                    <span className="text-[11px] text-emerald-400 font-mono">
+                    <span className="text-[11px] text-emerald-400 tabular font-medium">
                       Target: 8% / 5% • Max DD: 10%
                     </span>
                   </div>
-                  <Badge tone="accent" size="sm" className="font-mono">
+                  <Badge tone="accent" size="sm" className="tabular font-bold">
                     ${plan.price}
                   </Badge>
                 </div>
@@ -473,7 +473,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="text-xs text-gray-400 hover:text-emerald-400 font-mono flex items-center gap-1 transition-colors"
+                  className="text-xs text-gray-400 hover:text-emerald-400 font-medium flex items-center gap-1 transition-colors"
                 >
                   {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                   {copiedLink ? 'Copied' : 'Copy Link'}
@@ -487,15 +487,15 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
 
             <div className="grid grid-cols-3 gap-3 max-w-md mx-auto pt-2">
               <div className="bg-[#0B0F19] border border-[#1F2937] p-2.5 rounded-lg">
-                <span className="text-[10px] text-gray-500 font-mono block">Status</span>
+                <span className="text-[10px] text-gray-500 font-medium block">Status</span>
                 <span className="text-xs font-bold text-emerald-400">Live & Open</span>
               </div>
               <div className="bg-[#0B0F19] border border-[#1F2937] p-2.5 rounded-lg">
-                <span className="text-[10px] text-gray-500 font-mono block">Checkout</span>
+                <span className="text-[10px] text-gray-500 font-medium block">Checkout</span>
                 <span className="text-xs font-bold text-blue-400">Integrated</span>
               </div>
               <div className="bg-[#0B0F19] border border-[#1F2937] p-2.5 rounded-lg">
-                <span className="text-[10px] text-gray-500 font-mono block">Risk Engine</span>
+                <span className="text-[10px] text-gray-500 font-medium block">Risk Engine</span>
                 <span className="text-xs font-bold text-amber-400">Active</span>
               </div>
             </div>

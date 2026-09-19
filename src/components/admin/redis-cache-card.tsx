@@ -212,15 +212,15 @@ export function RedisCacheCard() {
 
           <div className="flex items-center gap-2">
             {isConnected ? (
-              <Badge tone="success" className="font-mono text-xs gap-1.5 py-1 px-2.5 font-bold">
+              <Badge tone="success" className="text-xs gap-1.5 py-1 px-2.5 font-bold">
                 <CheckCircle2 className="h-3.5 w-3.5" /> Active (In-Memory RAM)
               </Badge>
             ) : isFallback ? (
-              <Badge tone="warn" className="font-mono text-xs gap-1.5 py-1 px-2.5 font-bold">
+              <Badge tone="warn" className="text-xs gap-1.5 py-1 px-2.5 font-bold">
                 <AlertTriangle className="h-3.5 w-3.5" /> Fail-Soft (MySQL Fallback)
               </Badge>
             ) : (
-              <Badge tone="neutral" className="font-mono text-xs py-1 px-2.5">
+              <Badge tone="neutral" className="text-xs py-1 px-2.5">
                 Disabled
               </Badge>
             )}
@@ -260,11 +260,11 @@ export function RedisCacheCard() {
               Round-Trip Latency
             </span>
             <div className="flex items-baseline gap-1.5 mt-1.5">
-              <span className={`text-xl font-black font-mono ${isConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+              <span className={`text-xl font-black tabular ${isConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
                 {isConnected && status?.latency_ms !== null ? `${status.latency_ms} ms` : '—'}
               </span>
               {isConnected && status?.latency_ms !== null && status.latency_ms < 1 && (
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase font-mono">Sub-ms</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Sub-ms</span>
               )}
             </div>
           </div>
@@ -274,7 +274,7 @@ export function RedisCacheCard() {
               Active Cache Tier
             </span>
             <div className="mt-1.5">
-              <span className="text-sm font-black font-mono text-slate-900 dark:text-white">
+              <span className="text-sm font-black text-slate-900 dark:text-white">
                 {status?.cache_backend === 'redis' ? 'In-Memory Redis' : status?.cache_backend === 'object_cache' ? 'WP Object Cache' : 'MySQL Transients'}
               </span>
             </div>
@@ -285,7 +285,7 @@ export function RedisCacheCard() {
               Keys in Memory
             </span>
             <div className="mt-1.5">
-              <span className="text-xl font-black font-mono text-slate-900 dark:text-white">
+              <span className="text-xl font-black tabular text-slate-900 dark:text-white">
                 {isConnected && status?.dbsize !== null ? status.dbsize : '0'}
               </span>
             </div>
@@ -296,7 +296,7 @@ export function RedisCacheCard() {
               Server Memory / Uptime
             </span>
             <div className="mt-1.5">
-              <span className="text-xs font-black font-mono text-slate-900 dark:text-white">
+              <span className="text-xs font-black tabular text-slate-900 dark:text-white">
                 {isConnected && status?.used_memory_human ? status.used_memory_human : '—'}
                 {isConnected && status?.uptime_days !== null ? ` • ${status.uptime_days}d` : ''}
               </span>
@@ -327,7 +327,7 @@ export function RedisCacheCard() {
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
                 placeholder="127.0.0.1 or tls://your-cloud-redis.upstash.io"
-                className="font-mono text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
               />
               <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Supports standard TCP (127.0.0.1) or encrypted TLS (tls://...).</span>
             </div>
@@ -338,7 +338,7 @@ export function RedisCacheCard() {
                 value={port}
                 onChange={(e) => setPort(e.target.value)}
                 placeholder="6379"
-                className="font-mono text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="tabular text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
               />
               <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Default: 6379 (or 6380 for TLS).</span>
             </div>
@@ -349,7 +349,7 @@ export function RedisCacheCard() {
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-slate-900 dark:text-white">Auth Password (Optional)</Label>
                 {status?.has_password && !password && (
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                     ✓ Password currently saved
                   </span>
                 )}
@@ -362,7 +362,7 @@ export function RedisCacheCard() {
                   if (clearPassword) setClearPassword(false)
                 }}
                 placeholder={status?.has_password ? '•••••••••••••••• (Leave blank to keep)' : 'No auth required on local LAN'}
-                className="font-mono text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
               />
               {status?.has_password && (
                 <div className="flex items-center gap-1.5 mt-1">
@@ -386,7 +386,7 @@ export function RedisCacheCard() {
                 value={db}
                 onChange={(e) => setDb(e.target.value)}
                 placeholder="0"
-                className="font-mono text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="tabular text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
               />
               <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Default: 0 (range 0–15).</span>
             </div>

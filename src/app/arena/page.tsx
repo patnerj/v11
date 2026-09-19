@@ -157,11 +157,11 @@ export default function PvpArenaLobbyPage() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tabular uppercase tracking-wider bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse">
                   <Flame className="h-3.5 w-3.5 text-red-500" />
                   E-Sports Trading Stadium
                 </span>
-                <span className="text-xs text-text-muted font-mono">
+                <span className="text-xs text-text-muted font-medium">
                   • 1v1 Head-to-Head Duels
                 </span>
               </div>
@@ -205,44 +205,44 @@ export default function PvpArenaLobbyPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between text-xs text-text-muted font-mono uppercase">
+              <div className="flex items-center justify-between text-xs text-text-muted font-semibold uppercase tracking-wider">
                 <span>Active Duels</span>
                 <Radio className="h-3.5 w-3.5 text-red-500 animate-ping" />
               </div>
-              <div className="text-2xl font-black font-mono text-text mt-1">
+              <div className="text-2xl font-black tabular text-text mt-1">
                 {stats.active_count} LIVE
               </div>
               <div className="text-[11px] text-text-muted mt-1">Real-time spectator rooms</div>
             </div>
 
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between text-xs text-text-muted font-mono uppercase">
+              <div className="flex items-center justify-between text-xs text-text-muted font-semibold uppercase tracking-wider">
                 <span>Total Staked</span>
                 <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
               </div>
-              <div className="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
+              <div className="text-2xl font-black tabular text-emerald-600 dark:text-emerald-400 mt-1">
                 {formatMoney(stats.total_staked)}
               </div>
               <div className="text-[11px] text-text-muted mt-1">Cumulative duel volume</div>
             </div>
 
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between text-xs text-text-muted font-mono uppercase">
+              <div className="flex items-center justify-between text-xs text-text-muted font-semibold uppercase tracking-wider">
                 <span>Prize Payout Ratio</span>
                 <Trophy className="h-3.5 w-3.5 text-amber-500" />
               </div>
-              <div className="text-2xl font-black font-mono text-amber-600 dark:text-amber-400 mt-1">
+              <div className="text-2xl font-black tabular text-amber-600 dark:text-amber-400 mt-1">
                 85% Winner
               </div>
               <div className="text-[11px] text-text-muted mt-1">15% platform escrow rake</div>
             </div>
 
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between text-xs text-text-muted font-mono uppercase">
+              <div className="flex items-center justify-between text-xs text-text-muted font-semibold uppercase tracking-wider">
                 <span>Matches Settled</span>
                 <CheckCircle2 className="h-3.5 w-3.5 text-purple-500" />
               </div>
-              <div className="text-2xl font-black font-mono text-purple-600 dark:text-purple-400 mt-1">
+              <div className="text-2xl font-black tabular text-purple-600 dark:text-purple-400 mt-1">
                 {stats.total_matches} Duels
               </div>
               <div className="text-[11px] text-text-muted mt-1">100% automated payouts</div>
@@ -303,7 +303,7 @@ export default function PvpArenaLobbyPage() {
             </button>
           </div>
 
-          <div className="text-xs text-text-muted font-mono flex items-center gap-2">
+          <div className="text-xs text-text-muted font-medium flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
             <span>Provably Fair Live Pricing Engine</span>
           </div>
@@ -316,7 +316,7 @@ export default function PvpArenaLobbyPage() {
               <Swords className="h-5 w-5 text-red-500" />
               Gladiator Arena Roster
             </h2>
-            <span className="text-xs text-text-muted font-mono">
+            <span className="text-xs text-text-muted tabular font-medium">
               Showing {filteredMatches.length} arenas
             </span>
           </div>
@@ -362,30 +362,30 @@ export default function PvpArenaLobbyPage() {
                     {/* Top Status Bar */}
                     <div className="p-4 border-b border-border flex items-center justify-between bg-surface-muted">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-text">
+                        <span className="tabular text-xs font-bold text-text">
                           {match.match_code}
                         </span>
-                        <Badge tone="info" size="sm" className="font-mono text-[10px]">
+                        <Badge tone="info" size="sm" className="tabular font-semibold text-[10px]">
                           {match.symbol}
                         </Badge>
                       </div>
 
                       {isActive && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse flex items-center gap-1">
                           <Radio className="h-2.5 w-2.5" />
                           LIVE BATTLE
                         </span>
                       )}
 
                       {isWaiting && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
                           <Clock className="h-2.5 w-2.5" />
                           WAITING
                         </span>
                       )}
 
                       {isCompleted && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                           <Trophy className="h-2.5 w-2.5" />
                           COMPLETED
                         </span>
@@ -399,7 +399,7 @@ export default function PvpArenaLobbyPage() {
                         <h3 className="text-base font-bold text-text group-hover:text-red-500 transition-colors">
                           {match.title}
                         </h3>
-                        <div className="text-xs text-text-muted font-mono mt-0.5 flex items-center gap-2">
+                        <div className="text-xs text-text-muted tabular font-medium mt-0.5 flex items-center gap-2">
                           <Clock className="h-3 w-3 text-blue-500" />
                           <span>{match.duration_minutes} Mins Duration</span>
                           <span>•</span>
@@ -410,15 +410,15 @@ export default function PvpArenaLobbyPage() {
                       {/* Financial Stakes Showcase */}
                       <div className="bg-surface-muted p-3.5 rounded-xl border border-border grid grid-cols-2 gap-3 text-center">
                         <div>
-                          <div className="text-[10px] uppercase font-mono text-text-muted">Entry Stake</div>
-                          <div className="text-base font-bold font-mono text-text mt-0.5">
+                          <div className="text-[10px] uppercase font-semibold text-text-muted tracking-wider">Entry Stake</div>
+                          <div className="text-base font-bold tabular text-text mt-0.5">
                             {formatMoney(match.stake_amount)}
                           </div>
                         </div>
 
                         <div className="border-l border-border">
-                          <div className="text-[10px] uppercase font-mono text-amber-600 dark:text-amber-400 font-bold">Winner Takes (85%)</div>
-                          <div className="text-base font-extrabold font-mono text-amber-600 dark:text-amber-400 mt-0.5">
+                          <div className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">Winner Takes (85%)</div>
+                          <div className="text-base font-extrabold tabular text-amber-600 dark:text-amber-400 mt-0.5">
                             {formatMoney(match.prize_pool)}
                           </div>
                         </div>
@@ -428,26 +428,26 @@ export default function PvpArenaLobbyPage() {
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/60 border border-border">
                           <div className="flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-full bg-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center font-mono font-bold text-[10px]">
+                            <span className="h-6 w-6 rounded-full bg-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center tabular font-bold text-[10px]">
                               P1
                             </span>
                             <span className="font-semibold text-text">{match.creator_name || 'Creator'}</span>
                           </div>
-                          <span className="font-mono text-text-muted">
+                          <span className="tabular font-medium text-text-muted">
                             {isActive || isCompleted ? `${Number(match.creator_pnl) >= 0 ? '+' : ''}${formatMoney(match.creator_pnl)}` : 'Ready'}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/60 border border-border">
                           <div className="flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-mono font-bold text-[10px]">
+                            <span className="h-6 w-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center tabular font-bold text-[10px]">
                               P2
                             </span>
                             <span className="font-semibold text-text">
                               {match.challenger_name || (isWaiting ? 'Open for Challenger...' : 'Opponent')}
                             </span>
                           </div>
-                          <span className="font-mono text-text-muted">
+                          <span className="tabular font-medium text-text-muted">
                             {isActive || isCompleted ? `${Number(match.challenger_pnl) >= 0 ? '+' : ''}${formatMoney(match.challenger_pnl)}` : (isWaiting ? 'Waiting' : 'Ready')}
                           </span>
                         </div>
@@ -517,7 +517,7 @@ export default function PvpArenaLobbyPage() {
               </p>
             </div>
 
-            <Badge tone="accent" size="sm" className="font-mono">
+            <Badge tone="accent" size="sm" className="font-semibold">
               Updated Real-Time
             </Badge>
           </div>
@@ -525,7 +525,7 @@ export default function PvpArenaLobbyPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border text-text-muted font-mono uppercase text-[11px]">
+                <tr className="border-b border-border text-text-muted font-semibold uppercase text-[11px] tracking-wider">
                   <th className="py-3 px-4">Rank</th>
                   <th className="py-3 px-4">Gladiator</th>
                   <th className="py-3 px-4 text-center">Duels Won</th>
@@ -537,7 +537,7 @@ export default function PvpArenaLobbyPage() {
               <tbody className="divide-y divide-border">
                 {(lobbyData?.leaderboard || []).map((row) => (
                   <tr key={row.rank} className="hover:bg-surface-muted/50 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-text">
+                    <td className="py-3.5 px-4 tabular font-bold text-text">
                       {row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`}
                     </td>
                     <td className="py-3.5 px-4">
@@ -546,19 +546,19 @@ export default function PvpArenaLobbyPage() {
                         <span>{row.name}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-center font-mono font-bold text-text">
+                    <td className="py-3.5 px-4 text-center tabular font-bold text-text">
                       {row.wins} Wins
                     </td>
-                    <td className="py-3.5 px-4 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    <td className="py-3.5 px-4 text-center tabular font-bold text-emerald-600 dark:text-emerald-400">
                       {row.win_rate}%
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tabular font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
                         <Flame className="h-3 w-3 text-amber-500" />
                         {row.streak} Streak
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right font-mono font-extrabold text-amber-600 dark:text-amber-400">
+                    <td className="py-3.5 px-4 text-right tabular font-extrabold text-amber-600 dark:text-amber-400">
                       {formatMoney(row.earnings)}
                     </td>
                   </tr>
@@ -587,7 +587,7 @@ export default function PvpArenaLobbyPage() {
                   key={sym}
                   type="button"
                   onClick={() => setCreateForm({ ...createForm, symbol: sym })}
-                  className={`p-2.5 rounded-xl text-xs font-mono font-bold border transition-all ${
+                  className={`p-2.5 rounded-xl text-xs font-bold border transition-all ${
                     createForm.symbol === sym
                       ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/30'
                       : 'bg-surface-muted text-text-muted border-border hover:text-text'
@@ -603,7 +603,7 @@ export default function PvpArenaLobbyPage() {
           <div className="space-y-2">
             <div className="flex justify-between items-baseline">
               <Label className="text-xs font-semibold text-text">Entry Stake Amount ($ USDC)</Label>
-              <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-bold">
+              <span className="text-xs tabular text-amber-600 dark:text-amber-400 font-bold">
                 Winner Takes: {formatMoney(createForm.stake_amount * 2 * 0.85)}
               </span>
             </div>
@@ -614,7 +614,7 @@ export default function PvpArenaLobbyPage() {
                   key={stake}
                   type="button"
                   onClick={() => setCreateForm({ ...createForm, stake_amount: stake })}
-                  className={`p-2.5 rounded-xl text-xs font-mono font-bold border transition-all ${
+                  className={`p-2.5 rounded-xl text-xs font-bold tabular border transition-all ${
                     createForm.stake_amount === stake
                       ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30'
                       : 'bg-surface-muted text-text-muted border-border hover:text-text'
@@ -625,7 +625,7 @@ export default function PvpArenaLobbyPage() {
               ))}
             </div>
 
-            <div className="bg-surface-muted p-3 rounded-xl border border-border text-xs text-text-muted font-mono flex items-center justify-between">
+            <div className="bg-surface-muted p-3 rounded-xl border border-border text-xs text-text-muted tabular flex items-center justify-between">
               <span>Prize Pool (85%): <strong className="text-amber-600 dark:text-amber-400">{formatMoney(createForm.stake_amount * 2 * 0.85)}</strong></span>
               <span>Platform Rake (15%): <strong className="text-text">{formatMoney(createForm.stake_amount * 2 * 0.15)}</strong></span>
             </div>
@@ -646,7 +646,7 @@ export default function PvpArenaLobbyPage() {
                       : 'bg-surface-muted text-text-muted border-border hover:text-text'
                   }`}
                 >
-                  <div className="font-mono font-bold">{dur.label}</div>
+                  <div className="font-bold tabular">{dur.label}</div>
                   <div className="text-[10px] opacity-80">{dur.desc}</div>
                 </button>
               ))}

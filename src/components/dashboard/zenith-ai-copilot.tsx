@@ -121,7 +121,7 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
           return (
             <div
               key={idx}
-              className="p-2.5 rounded-xl bg-slate-950 text-emerald-300 dark:bg-[#080C16] dark:text-emerald-400 font-mono text-[11px] border border-emerald-500/30 flex items-center gap-2 shadow-xs overflow-x-auto"
+              className="p-2.5 rounded-xl bg-slate-950 text-emerald-300 dark:bg-[#080C16] dark:text-emerald-400 font-medium tabular text-[11px] border border-emerald-500/30 flex items-center gap-2 shadow-xs overflow-x-auto"
             >
               <span className="text-xs shrink-0">📐</span>
               <span className="font-semibold tracking-wide">{formulaCode}</span>
