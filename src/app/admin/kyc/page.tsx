@@ -130,7 +130,7 @@ function KycDocViewer({
         <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">
           {tabName === 'back' ? 'Optional Back ID: Not Uploaded' : `No Document Uploaded: ${tabName.toUpperCase()}`}
         </p>
-        <p className="text-[11px] font-mono text-gray-500 max-w-sm mx-auto">
+        <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
           {tabName === 'back' 
             ? 'Single-sided ID / Passport submitted. Back ID was not required or provided.' 
             : 'The trader has not submitted a file for this document category yet.'}
@@ -143,7 +143,7 @@ function KycDocViewer({
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 text-emerald-400">
         <RefreshCw className="h-8 w-8 animate-spin" />
-        <span className="text-xs font-mono text-gray-400">Loading verified document...</span>
+        <span className="text-xs text-gray-400">Loading verified document...</span>
       </div>
     )
   }
@@ -169,7 +169,7 @@ function KycDocViewer({
       <div className="text-center space-y-2 py-8 text-red-400">
         <AlertTriangle className="h-8 w-8 mx-auto" />
         <p className="text-xs font-bold uppercase">Failed to load document preview</p>
-        <p className="text-[11px] font-mono text-gray-400 max-w-sm mx-auto">{error || 'Unknown error'}</p>
+        <p className="text-[11px] text-gray-400 max-w-sm mx-auto">{error || 'Unknown error'}</p>
         <Button
           size="sm"
           variant="outline"
@@ -191,7 +191,7 @@ function KycDocViewer({
         </div>
         <div>
           <p className="text-sm font-bold text-white">PDF Document Attached</p>
-          <p className="text-xs text-gray-400 font-mono mt-1">Official Proof of Address / Identity PDF</p>
+          <p className="text-xs text-gray-400 mt-1">Official Proof of Address / Identity PDF</p>
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -231,7 +231,7 @@ function KycDocViewer({
         >
           -
         </button>
-        <span className="font-mono text-[10px] text-emerald-400 px-1">{Math.round(zoom * 100)}%</span>
+        <span className="tabular font-semibold text-[10px] text-emerald-400 px-1">{Math.round(zoom * 100)}%</span>
         <button 
           onClick={() => setZoom(z => Math.min(3, z + 0.25))}
           className="p-1 text-gray-300 hover:text-white rounded hover:bg-white/10"
@@ -451,7 +451,7 @@ export default function KycHubPage() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
               KYC & Identity Verification Hub
             </h1>
-            <Badge tone="accent" size="sm" pulsing className="font-mono">
+            <Badge tone="accent" size="sm" pulsing className="font-medium">
               Compliance Desk
             </Badge>
           </div>
@@ -486,7 +486,7 @@ export default function KycHubPage() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight font-mono">{counts.pending}</span>
+            <span className="text-3xl font-extrabold text-white tracking-tight tabular">{counts.pending}</span>
             <span className="text-xs text-amber-400 font-medium">Awaiting Audit</span>
           </div>
         </Card>
@@ -499,7 +499,7 @@ export default function KycHubPage() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight font-mono">{counts.approved}</span>
+            <span className="text-3xl font-extrabold text-white tracking-tight tabular">{counts.approved}</span>
             <span className="text-xs text-emerald-400 font-medium">Payout Eligible</span>
           </div>
         </Card>
@@ -512,7 +512,7 @@ export default function KycHubPage() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight font-mono">{counts.rejected}</span>
+            <span className="text-3xl font-extrabold text-white tracking-tight tabular">{counts.rejected}</span>
             <span className="text-xs text-red-400 font-medium">Requires Re-upload</span>
           </div>
         </Card>
@@ -564,11 +564,11 @@ export default function KycHubPage() {
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-white text-xs">{k.name || k.username || 'Unnamed Trader'}</span>
-                    <span className="font-mono text-[10px] text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    <span className="tabular font-semibold text-[10px] text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                       ID #{k.user_id}
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-400 font-mono truncate">{k.email}</p>
+                  <p className="text-[11px] text-gray-400 truncate">{k.email}</p>
                 </div>
               ),
             },
@@ -589,14 +589,14 @@ export default function KycHubPage() {
                 const count = getDocCount(k)
                 if (count > 0) {
                   return (
-                    <Badge tone="success" size="sm" className="font-mono gap-1">
+                    <Badge tone="success" size="sm" className="tabular font-medium gap-1">
                       <FileText className="h-3 w-3" />
                       {count} Attached
                     </Badge>
                   )
                 }
                 return (
-                  <Badge tone="danger" size="sm" className="font-mono gap-1">
+                  <Badge tone="danger" size="sm" className="tabular font-medium gap-1">
                     <FileX className="h-3 w-3" />
                     0 Uploaded
                   </Badge>
@@ -620,7 +620,7 @@ export default function KycHubPage() {
               key: 'submitted',
               header: 'Submitted Date',
               render: (k: KycSubmission) => (
-                <span className="text-xs text-gray-400 font-mono">
+                <span className="text-xs text-gray-400 tabular font-medium">
                   {k.submitted_at ? new Date(k.submitted_at).toLocaleDateString() : 'Recent'}
                 </span>
               ),
@@ -677,7 +677,7 @@ export default function KycHubPage() {
             )}
 
             {/* Trader Overview Banner */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-xs font-mono">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-xs tabular font-medium">
               <div>
                 <span className="text-gray-500 block text-[10px] uppercase">Trader Name</span>
                 <span className="font-bold text-white truncate block">{selectedKyc.name || selectedKyc.username}</span>
@@ -792,7 +792,7 @@ export default function KycHubPage() {
                   <button
                     type="button"
                     onClick={handlePreFillMissingDocNotice}
-                    className="text-[11px] text-amber-400 hover:underline font-mono"
+                    className="text-[11px] text-amber-400 hover:underline font-medium"
                   >
                     Auto-Fill Missing Doc Notice
                   </button>

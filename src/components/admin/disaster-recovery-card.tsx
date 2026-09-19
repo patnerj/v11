@@ -90,7 +90,7 @@ export function DisasterRecoveryCard() {
             <h2 className="text-xl font-bold text-gray-100 tracking-tight">
               Institutional Disaster Recovery & Encrypted Vault
             </h2>
-            <Badge tone="success" size="sm" className="font-mono">
+            <Badge tone="success" size="sm" className="font-semibold">
               AES-256 PBKDF2
             </Badge>
           </div>
@@ -139,12 +139,12 @@ export function DisasterRecoveryCard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">DR Readiness Score</span>
-              <Badge tone="success" size="sm" className="font-mono">
+              <Badge tone="success" size="sm" className="tabular font-semibold">
                 {status?.status || 'OPERATIONAL'}
               </Badge>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold font-mono text-emerald-400">
+              <span className="text-3xl font-bold tabular text-emerald-400">
                 {status?.dr_readiness_score ?? 100}%
               </span>
               <span className="text-xs text-gray-500">Readiness</span>
@@ -161,12 +161,12 @@ export function DisasterRecoveryCard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Encryption Cipher</span>
-              <Badge tone="info" size="sm" className="font-mono">
+              <Badge tone="info" size="sm" className="font-semibold">
                 Military Grade
               </Badge>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-xl font-bold font-mono text-gray-100">
+              <span className="text-xl font-bold tabular text-gray-100">
                 AES-256-CBC
               </span>
             </div>
@@ -182,16 +182,16 @@ export function DisasterRecoveryCard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Latest Snapshot</span>
-              <Badge tone="neutral" size="sm" className="font-mono">
+              <Badge tone="neutral" size="sm" className="tabular font-semibold">
                 {status?.total_snapshots ?? 0} Snapshots
               </Badge>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-2xl font-bold font-mono text-white">
+              <span className="text-2xl font-bold tabular text-white">
                 {latest ? formatBytes(latest.encrypted_size_bytes) : '—'}
               </span>
               {latest?.raw_size_bytes && latest.compressed_size_bytes && (
-                <span className="text-xs text-emerald-400 font-mono">
+                <span className="text-xs text-emerald-400 tabular">
                   (-{Math.round((1 - latest.compressed_size_bytes / latest.raw_size_bytes) * 100)}%)
                 </span>
               )}
@@ -208,12 +208,12 @@ export function DisasterRecoveryCard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Retention Policy</span>
-              <Badge tone="success" size="sm" className="font-mono">
+              <Badge tone="success" size="sm" className="font-semibold">
                 7 Days Rolling
               </Badge>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-base font-bold font-mono text-gray-200">
+              <span className="text-base font-bold tabular text-gray-200">
                 {status?.retention_policy || '7 Daily / 4 Weekly / 3 Monthly'}
               </span>
             </div>
@@ -238,7 +238,7 @@ export function DisasterRecoveryCard() {
                 Redundant automated scheduling ensures database integrity across application runtime and Hostinger VPS operating system.
               </CardDescription>
             </div>
-            <Badge tone="success" size="sm" className="font-mono self-start sm:self-auto">
+            <Badge tone="success" size="sm" className="font-semibold self-start sm:self-auto">
               Schedule: 100% Active
             </Badge>
           </div>
@@ -254,14 +254,14 @@ export function DisasterRecoveryCard() {
                     Tier 1: Application WP-Cron
                   </span>
                 </div>
-                <Badge tone="success" size="sm" className="text-[10px] font-mono">
+                <Badge tone="success" size="sm" className="text-[10px] tabular font-semibold">
                   Daily 00:00 UTC
                 </Badge>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 Hooks into <code className="text-emerald-400 font-mono">fxsim_daily_tasks</code> under an atomic MySQL lock (<code className="text-gray-300 font-mono">GET_LOCK</code>). Creates AES-256 snapshots, prunes snapshots older than 7 days, and dispatches webhook alerts.
               </p>
-              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
                 <span>Next Scheduled Run:</span>
                 <span className="text-emerald-400 font-semibold">
                   {status?.next_scheduled_utc ? new Date(status.next_scheduled_utc).toUTCString() : '00:00:00 UTC'}
@@ -278,14 +278,14 @@ export function DisasterRecoveryCard() {
                     Tier 2: Hostinger VPS Crontab
                   </span>
                 </div>
-                <Badge tone="info" size="sm" className="text-[10px] font-mono">
+                <Badge tone="info" size="sm" className="text-[10px] tabular font-semibold">
                   Daily 02:00 UTC
                 </Badge>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 Autonomous Linux crontab executing <code className="text-blue-400 font-mono">backup_database.sh</code>. Operates completely independently of PHP web traffic, dumping MySQL via native client, gzip level 9, and OpenSSL AES-256-CBC.
               </p>
-              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
                 <span>Cron Specification:</span>
                 <span className="text-blue-400 font-semibold">
                   {status?.vps_cron_schedule || '0 2 * * * (Daily 02:00 UTC)'}
@@ -303,10 +303,10 @@ export function DisasterRecoveryCard() {
               </span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge tone="neutral" size="sm" className="font-mono text-[10px] text-emerald-400 border-emerald-500/30">
+              <Badge tone="neutral" size="sm" className="text-[10px] tabular font-semibold text-emerald-400 border-emerald-500/30">
                 Discord Active
               </Badge>
-              <Badge tone="neutral" size="sm" className="font-mono text-[10px] text-blue-400 border-blue-500/30">
+              <Badge tone="neutral" size="sm" className="text-[10px] tabular font-semibold text-blue-400 border-blue-500/30">
                 Telegram Active
               </Badge>
             </div>
@@ -323,7 +323,7 @@ export function DisasterRecoveryCard() {
                 <Database className="h-4 w-4 text-emerald-400" />
                 Active Production Snapshot Manifest
               </CardTitle>
-              <Badge tone="success" size="sm" className="font-mono flex items-center gap-1">
+              <Badge tone="success" size="sm" className="tabular font-semibold flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" />
                 SHA-256 Tamper-Proof
               </Badge>
@@ -333,19 +333,19 @@ export function DisasterRecoveryCard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <span className="text-gray-500 block">Snapshot ID</span>
-                <span className="font-mono font-semibold text-gray-200">{latest.id}</span>
+                <span className="tabular font-semibold text-gray-200">{latest.id}</span>
               </div>
               <div>
                 <span className="text-gray-500 block">Archive Filename</span>
-                <span className="font-mono font-semibold text-gray-200">{latest.filename}</span>
+                <span className="tabular font-semibold text-gray-200">{latest.filename}</span>
               </div>
               <div>
                 <span className="text-gray-500 block">Creation Timestamp (UTC)</span>
-                <span className="font-mono font-semibold text-gray-200">{latest.timestamp_utc}</span>
+                <span className="tabular font-semibold text-gray-200">{latest.timestamp_utc}</span>
               </div>
               <div>
                 <span className="text-gray-500 block">Target Database</span>
-                <span className="font-mono font-semibold text-gray-200">{latest.database}</span>
+                <span className="tabular font-semibold text-gray-200">{latest.database}</span>
               </div>
             </div>
 

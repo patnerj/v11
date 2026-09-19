@@ -15,6 +15,8 @@ import { StatCard, StatGrid } from '@/components/ui/stat-card'
 import { AffiliateLeaderboard } from '@/components/affiliate-leaderboard'
 import { useQuery } from '@tanstack/react-query'
 
+import { FONT_PRESETS, hexToRgb } from '@/lib/theme-accent'
+
 const tone = (s: Commission['status']) =>
   s === 'paid' ? 'success' : s === 'reversed' ? 'danger' : s === 'approved' ? 'info' : 'warn'
 const payoutTone = (s: AffiliatePayout['status']) =>
@@ -31,6 +33,15 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
+  // Dynamic Whitelabel Font Resolution
+  const activeFontId = localStorage.getItem('fxsim:theme-font') || 'poppins'
+  const activePreset = FONT_PRESETS.find((f) => f.id === activeFontId) || FONT_PRESETS[0]
+  const brandFont = `"${activePreset.name}", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
+
+  // Dynamic Whitelabel Accent Resolution
+  const activeAccent = localStorage.getItem('fxsim:theme-accent') || '#10B981'
+  const { r, g, b } = hexToRgb(activeAccent)
+
   // Dark background gradient
   const bgGrad = ctx.createLinearGradient(0, 0, width, height)
   bgGrad.addColorStop(0, '#06080F')
@@ -41,7 +52,7 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
 
   // Glow
   const glowGrad = ctx.createRadialGradient(width / 2, height / 3, 50, width / 2, height / 3, 500)
-  glowGrad.addColorStop(0, 'rgba(59, 130, 246, 0.25)')
+  glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.25)`)
   glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
   ctx.fillStyle = glowGrad
   ctx.fillRect(0, 0, width, height)
@@ -53,18 +64,18 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
 
   // Brand Name
   ctx.textAlign = 'center'
-  ctx.fillStyle = '#3B82F6'
-  ctx.font = 'bold 36px monospace'
+  ctx.fillStyle = activeAccent
+  ctx.font = `bold 36px ${brandFont}`
   ctx.fillText('NEXT-GEN PROPFIRM', width / 2, type === '16:9' ? 240 : 280)
 
   // Heading
   ctx.fillStyle = '#FFFFFF'
-  ctx.font = '900 64px system-ui, -apple-system, sans-serif'
+  ctx.font = `900 64px ${brandFont}`
   ctx.fillText('TRADE CAPITAL UP TO $200,000', width / 2, type === '16:9' ? 360 : 420)
 
   // Subtitle
   ctx.fillStyle = '#94A3B8'
-  ctx.font = '500 32px system-ui, -apple-system, sans-serif'
+  ctx.font = `500 32px ${brandFont}`
   ctx.fillText('Keep up to 90% profit split • Instant Payouts • Low Spreads', width / 2, type === '16:9' ? 450 : 520)
 
   // Pill
@@ -73,8 +84,8 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
   const pillX = (width - pillW) / 2
   const pillY = type === '16:9' ? 560 : 660
 
-  ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'
-  ctx.strokeStyle = '#3B82F6'
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.15)`
+  ctx.strokeStyle = activeAccent
   ctx.lineWidth = 3
   if (typeof ctx.roundRect === 'function') {
     ctx.beginPath()
@@ -86,17 +97,17 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
     ctx.strokeRect(pillX, pillY, pillW, pillH)
   }
 
-  ctx.fillStyle = '#93C5FD'
-  ctx.font = 'bold 22px monospace'
+  ctx.fillStyle = activeAccent
+  ctx.font = `bold 22px ${brandFont}`
   ctx.fillText('USE REFERRAL CODE', width / 2, pillY + 45)
 
   ctx.fillStyle = '#FFFFFF'
-  ctx.font = '900 40px monospace'
+  ctx.font = `900 40px ${brandFont}`
   ctx.fillText((code || 'PROPFIRM').toUpperCase(), width / 2, pillY + 95)
 
   // Footer Link
   ctx.fillStyle = '#64748B'
-  ctx.font = '500 24px system-ui, -apple-system, sans-serif'
+  ctx.font = `500 24px ${brandFont}`
   ctx.fillText(refLink || 'yourbrand.com', width / 2, type === '16:9' ? 950 : 980)
 
   // Trigger download

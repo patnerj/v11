@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fmtPrice, fmtUSD, fmtPct, toNum } from '@/lib/format'
+import { FONT_PRESETS } from '@/lib/theme-accent'
 import { useAuth } from '@/store/auth'
 import { usePrices } from '@/store/prices'
 
@@ -155,6 +156,11 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.lineTo(width - 30, 30)
     ctx.stroke()
 
+    // Resolve dynamic admin branding typography
+    const activeFontId = typeof window !== 'undefined' ? (localStorage.getItem('fxsim:theme-font') || 'poppins') : 'poppins'
+    const activePreset = FONT_PRESETS.find((f) => f.id === activeFontId) || FONT_PRESETS[0]
+    const primaryFontFamily = `"${activePreset.name}", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
+
     // 5. Header: Logo & Title
     ctx.fillStyle = isProfit ? '#10B981' : '#EF4444'
     ctx.beginPath()
@@ -162,12 +168,12 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
 
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = '900 24px "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = `900 24px ${primaryFontFamily}`
     ctx.textAlign = 'left'
     ctx.fillText('ALPHACAPITAL', 115, 84)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 12px "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = `600 12px ${primaryFontFamily}`
     ctx.fillText('INSTITUTIONAL PROPRIETARY TRADING', 115, 102)
 
     // Header Right: Verified Telemetry Badge
@@ -185,7 +191,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
 
     ctx.fillStyle = '#E5E7EB'
-    ctx.font = '700 13px "JetBrains Mono", monospace'
+    ctx.font = `700 13px ${primaryFontFamily}`
     ctx.fillText('VERIFIED TELEMETRY', width - 275, 92)
 
     // 6. Hero Badge: Symbol & Side
@@ -202,13 +208,13 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isBuy ? '#34D399' : '#F87171'
-    ctx.font = '800 16px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+    ctx.font = `800 16px ${primaryFontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText(sideText, width / 2, 183)
 
-    // 7. Hero PnL Typography (clean institutional sans font)
+    // 7. Hero PnL Typography (clean institutional font)
     ctx.fillStyle = isProfit ? '#10B981' : '#EF4444'
-    ctx.font = '900 84px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+    ctx.font = `900 84px ${primaryFontFamily}`
     const pnlFormatted = fmtUSD(trade.pnl, { sign: true })
     ctx.fillText(pnlFormatted, width / 2, 290)
 
@@ -223,7 +229,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = isProfit ? '#34D399' : '#F87171'
-    ctx.font = '800 15px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+    ctx.font = `800 15px ${primaryFontFamily}`
     ctx.fillText(pctText, width / 2, 339)
 
     // 8. Stats Quad Grid (Entry, Current/Exit, Volume, Execution)
@@ -251,11 +257,11 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ctx.stroke()
 
       ctx.fillStyle = '#9CA3AF'
-      ctx.font = '600 11px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+      ctx.font = `600 11px ${primaryFontFamily}`
       ctx.fillText(s.label, colX + 16, statsBoxY + 30)
 
       ctx.fillStyle = idx === 0 ? (isBuy ? '#34D399' : '#F87171') : '#F3F4F6'
-      ctx.font = '700 16px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+      ctx.font = `700 16px ${primaryFontFamily}`
       ctx.fillText(s.val, colX + 16, statsBoxY + 58)
     })
 
@@ -272,15 +278,15 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.stroke()
 
     ctx.fillStyle = '#10B981'
-    ctx.font = '900 18px "Plus Jakarta Sans", -apple-system, sans-serif'
+    ctx.font = `900 18px ${primaryFontFamily}`
     ctx.fillText(traderHandle.charAt(1)?.toUpperCase() || 'A', 98, footerY + 32)
 
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = '700 18px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+    ctx.font = `700 18px ${primaryFontFamily}`
     ctx.fillText(traderHandle, 145, footerY + 22)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 13px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+    ctx.font = `600 13px ${primaryFontFamily}`
     ctx.fillText(`Account ID: ${accountId} · Zero-Drift Verified`, 145, footerY + 42)
 
     // Verification QR Code Matrix Box
@@ -300,10 +306,10 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillRect(qrX + 38, qrY + 38, 10, 10)
 
     ctx.fillStyle = '#9CA3AF'
-    ctx.font = '600 11px "JetBrains Mono", monospace'
+    ctx.font = `600 11px ${primaryFontFamily}`
     ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
     ctx.fillStyle = '#6B7280'
-    ctx.font = '500 10px "Plus Jakarta Sans", -apple-system, sans-serif'
+    ctx.font = `500 10px ${primaryFontFamily}`
     ctx.fillText('launchapropfirm.com', qrX - 110, footerY + 42)
 
   }, [trade, traderHandle, accountId, isProfit, pnlPercent])

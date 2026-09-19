@@ -172,7 +172,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
                 <CardTitle className="text-base sm:text-lg font-bold text-text">
                   Live MT5 Bridge Gateway Monitor
                 </CardTitle>
-                <Badge tone={isOnline ? 'success' : 'danger'} size="sm" className="font-mono gap-1.5 py-0.5">
+                <Badge tone={isOnline ? 'success' : 'danger'} size="sm" className="font-semibold tabular gap-1.5 py-0.5">
                   <span className="relative flex h-2 w-2">
                     {isOnline && (
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
@@ -181,7 +181,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
                   </span>
                   {isOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴'}
                 </Badge>
-                <span className="font-mono text-2xs text-text-muted bg-surface-muted px-2 py-0.5 rounded border border-border-subtle">
+                <span className="tabular font-medium text-2xs text-text-muted bg-surface-muted px-2 py-0.5 rounded border border-border-subtle">
                   Latency: {lastPingResult?.latency_ms ? `${lastPingResult.latency_ms}ms` : '14ms'}
                 </span>
               </div>
@@ -231,10 +231,10 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <Activity className="h-3.5 w-3.5 text-accent" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold font-mono text-accent">
+              <span className="text-xl font-extrabold text-accent">
                 ONLINE
               </span>
-              <span className="text-xs font-mono text-text-muted">
+              <span className="text-xs tabular font-medium text-text-muted">
                 (99.98% SLA)
               </span>
             </div>
@@ -252,7 +252,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <Server className="h-3.5 w-3.5 text-info" />
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-sm font-bold font-mono text-text truncate">
+              <span className="text-sm font-bold text-text truncate">
                 {activeTerminalName}
               </span>
             </div>
@@ -271,7 +271,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <Clock className="h-3.5 w-3.5 text-accent" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold font-mono text-text">
+              <span className="text-xl font-extrabold tabular text-text">
                 {heartbeatSec}s ago
               </span>
               <span className="inline-block h-2 w-2 rounded-full bg-accent animate-ping" />
@@ -290,10 +290,10 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <ShieldCheck className="h-3.5 w-3.5 text-accent" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold font-mono text-accent">
+              <span className="text-xl font-extrabold tabular text-accent">
                 {parityDrift}
               </span>
-              <Badge tone="success" size="sm" className="font-mono text-[9px] px-1.5 py-0">
+              <Badge tone="success" size="sm" className="font-bold tabular text-[9px] px-1.5 py-0">
                 100% PARITY
               </Badge>
             </div>
@@ -312,7 +312,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <span className="text-xs font-bold text-text">
                 Active Telemetry Ingestion Endpoint:
               </span>
-              <Badge tone="success" size="sm" className="font-mono text-[10px]">
+              <Badge tone="success" size="sm" className="font-semibold text-[10px]">
                 HTTP 200 OK Active
               </Badge>
             </div>
@@ -330,14 +330,14 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-2xs font-mono text-text-muted shrink-0">
+          <div className="flex items-center gap-4 text-2xs tabular text-text-muted shrink-0">
             <div className="flex flex-col items-end">
-              <span className="text-text font-bold">{packetCount.toLocaleString()}</span>
+              <span className="text-text font-bold tabular">{packetCount.toLocaleString()}</span>
               <span className="text-text-muted">Packets Synced</span>
             </div>
             <div className="h-6 w-px bg-border-subtle" />
             <div className="flex flex-col items-end">
-              <span className="text-accent font-bold">0 Drop</span>
+              <span className="text-accent font-bold tabular">0 Drop</span>
               <span className="text-text-muted">Packet Loss</span>
             </div>
             {onConfigureClick && (
@@ -369,7 +369,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               )}
               <span className="font-medium text-text">{lastPingResult.message}</span>
             </div>
-            <span className="font-mono text-2xs font-bold px-2 py-0.5 rounded bg-surface border border-border-subtle text-text">
+            <span className="tabular text-2xs font-bold px-2 py-0.5 rounded bg-surface border border-border-subtle text-text">
               Roundtrip: {lastPingResult.latency_ms}ms
             </span>
           </div>

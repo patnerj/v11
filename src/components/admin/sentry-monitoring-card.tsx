@@ -238,7 +238,7 @@ export function SentryMonitoringCard() {
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           @sentry/nextjs v10.74.0 Active
         </span>
-        <span className="font-mono text-[11px]">
+        <span className="text-[11px] font-medium text-text-muted">
           Target: Next.js 16 Turbopack
         </span>
       </CardFooter>

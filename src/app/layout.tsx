@@ -284,7 +284,7 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
     .focus-within\\:ring-\\[\\#10B981\\]:focus-within {
       --tw-ring-color: ${cleanHex} !important;
     }
-    body, html { font-family: ${safeFont} !important; }
+    *:not(code):not(pre):not(kbd), body, html, div, label, button, input, select, textarea, [data-theme], h1, h2, h3, h4, h5, h6, p, span, a, table, th, td, li, ul, ol, strong, b, em, i { font-family: ${safeFont} !important; }
     .bg-primary { color: ${safeFg} !important; }
   `;
 }
@@ -328,11 +328,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let themeCss = '';
   try {
     const cookieStore = await cookies();
+    const fontCookie = cookieStore.get('fxsim-theme-font')?.value;
+    const fontMap: Record<string, string> = {
+      'poppins': 'var(--font-poppins), Poppins, system-ui, sans-serif',
+      'plus-jakarta': 'var(--font-plus-jakarta), Plus Jakarta Sans, system-ui, sans-serif',
+      'outfit': 'var(--font-outfit), Outfit, system-ui, sans-serif',
+      'inter': 'var(--font-inter), Inter, system-ui, sans-serif',
+      'manrope': 'var(--font-manrope), Manrope, system-ui, sans-serif',
+      'space-grotesk': 'var(--font-space-grotesk), Space Grotesk, system-ui, sans-serif',
+      'urbanist': 'var(--font-urbanist), Urbanist, system-ui, sans-serif'
+    };
+    const ssrFont = (fontCookie && fontMap[fontCookie]) ? fontMap[fontCookie] : undefined;
+
     const accentCookie = cookieStore.get('fxsim-theme-accent')?.value;
     if (accentCookie) {
       const decoded = decodeURIComponent(accentCookie).trim();
       if (/^#?[0-9a-fA-F]{3,8}$/.test(decoded)) {
-        themeCss = buildThemeCss(decoded);
+        themeCss = buildThemeCss(decoded, ssrFont);
       }
     }
 
@@ -396,6 +408,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               };
               var chosenFont = fontMap[savedFont] || fontMap['poppins'];
               document.documentElement.style.setProperty('--font-sans', chosenFont);
+              document.documentElement.style.setProperty('font-family', chosenFont);
+              var fontTag = document.getElementById('fxsim-live-theme-font');
+              if (!fontTag) {
+                fontTag = document.createElement('style');
+                fontTag.id = 'fxsim-live-theme-font';
+                document.head.appendChild(fontTag);
+              }
+              fontTag.innerHTML = '*:not(code):not(pre):not(kbd), html, body, div, label, button, input, select, textarea, [data-theme], h1, h2, h3, h4, h5, h6, p, span, a, table, th, td, li, ul, ol, strong, b, em, i { font-family: ' + chosenFont + ' !important; }';
 
               var accent = null;
               try {
@@ -528,7 +548,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           })();
         ` }} suppressHydrationWarning />
       </head>
-      <body className={`min-h-screen antialiased font-sans ${poppins.className}`} style={{ fontFamily: 'var(--font-sans, var(--font-poppins))' }} suppressHydrationWarning>
+      <body className="min-h-screen antialiased font-sans" style={{ fontFamily: 'var(--font-sans, var(--font-poppins))' }} suppressHydrationWarning>
         <Providers>{children}</Providers>
         <LiveChat />
         <CommandPalette />

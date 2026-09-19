@@ -317,7 +317,8 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
     document.head.appendChild(fontStyleEl)
   }
   fontStyleEl.innerHTML = `
-    html, body, button, input, select, textarea, [data-theme], h1, h2, h3, h4, h5, h6, p, span, a, table, th, td {
+    *:not(code):not(pre):not(kbd),
+    html, body, div, label, button, input, select, textarea, [data-theme], h1, h2, h3, h4, h5, h6, p, span, a, table, th, td, li, ul, ol, strong, b, em, i, header, nav, section, main, article, aside, footer {
       font-family: ${found.cssVar} !important;
     }
   `
@@ -325,6 +326,7 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
   if (persist) {
     try {
       localStorage.setItem('fxsim:theme-font', found.id)
+      document.cookie = 'fxsim-theme-font=' + encodeURIComponent(found.id) + '; path=/; max-age=31536000; SameSite=Lax'
     } catch {
       /* private mode */
     }

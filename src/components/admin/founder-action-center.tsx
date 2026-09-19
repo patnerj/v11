@@ -90,7 +90,7 @@ export function FounderActionCenter({
                 <Wallet className="w-3.5 h-3.5" />
               </div>
             </div>
-            <p className="text-xl font-extrabold text-text mt-1.5 font-mono">
+            <p className="text-xl font-extrabold text-text mt-1.5 tabular">
               ${pendingPayoutsAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-text-muted mt-0.5">
@@ -115,7 +115,7 @@ export function FounderActionCenter({
                 <ShieldAlert className="w-3.5 h-3.5" />
               </div>
             </div>
-            <p className="text-xl font-extrabold text-text mt-1.5 font-mono">
+            <p className="text-xl font-extrabold text-text mt-1.5 tabular">
               {riskBreachesCount} Flagged Account{riskBreachesCount === 1 ? '' : 's'}
             </p>
             <p className="text-xs text-text-muted mt-0.5">
@@ -140,7 +140,7 @@ export function FounderActionCenter({
                 <MessageSquare className="w-3.5 h-3.5" />
               </div>
             </div>
-            <p className="text-xl font-extrabold text-text mt-1.5 font-mono">
+            <p className="text-xl font-extrabold text-text mt-1.5 tabular">
               {urgentTicketsCount} Active Ticket{urgentTicketsCount === 1 ? '' : 's'}
             </p>
             <p className="text-xs text-text-muted mt-0.5">

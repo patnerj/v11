@@ -46,7 +46,17 @@ export async function downloadCertificatePdf(cert: Cert): Promise<void> {
   // A4 portrait at ~150 px/inch in the SVG coordinate space; rasterized at 2×.
   const W = 1240, H = 1754
   const serif = "Georgia, 'Times New Roman', serif"
-  const sans = "Arial, Helvetica, sans-serif"
+  const activeFontId = typeof window !== 'undefined' ? (localStorage.getItem('fxsim:theme-font') || 'poppins') : 'poppins'
+  const fontMap: Record<string, string> = {
+    'poppins': 'Poppins, sans-serif',
+    'plus-jakarta': "'Plus Jakarta Sans', sans-serif",
+    'outfit': 'Outfit, sans-serif',
+    'inter': 'Inter, sans-serif',
+    'manrope': 'Manrope, sans-serif',
+    'space-grotesk': "'Space Grotesk', sans-serif",
+    'urbanist': 'Urbanist, sans-serif',
+  }
+  const sans = fontMap[activeFontId] || 'Poppins, Arial, sans-serif'
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>

@@ -2034,7 +2034,7 @@ export default function ConfigurationHubPage() {
                     <Label className="text-sm font-semibold text-white">Platform Typography & Font Family</Label>
                     <p className="text-xs text-gray-400">Select the primary font family rendered across the entire trading portal, admin panel, and sidebar</p>
                   </div>
-                  <Badge tone="accent" size="sm" className="font-mono">{brandingForm.font_family?.toUpperCase() || 'POPPINS'}</Badge>
+                  <Badge tone="accent" size="sm" className="font-bold tracking-wide">{brandingForm.font_family?.toUpperCase() || 'POPPINS'}</Badge>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -2057,7 +2057,7 @@ export default function ConfigurationHubPage() {
                         <div className="text-sm font-medium text-gray-300 truncate" style={{ fontFamily: font.cssVar }}>
                           Aa Bb Gg 123
                         </div>
-                        <span className="text-[10px] font-mono block text-gray-400 truncate">
+                        <span className="text-[10px] font-medium block text-gray-400 truncate">
                           {font.tag}
                         </span>
                       </div>
@@ -2074,7 +2074,7 @@ export default function ConfigurationHubPage() {
                     <Label className="text-sm font-semibold text-white">Theme Accent Palette & Custom Brand Glow</Label>
                     <p className="text-xs text-gray-400">Choose from institutional color presets or enter an exact custom Hex code</p>
                   </div>
-                  <Badge tone="accent" size="sm" className="font-mono">{brandingForm.primary_color}</Badge>
+                  <Badge tone="accent" size="sm" className="tabular font-bold">{brandingForm.primary_color}</Badge>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -2103,7 +2103,7 @@ export default function ConfigurationHubPage() {
                           <div className="h-4 w-4 rounded-full bg-[#111827] border border-slate-700" />
                           <div className="h-4 w-4 rounded-full bg-[#0B0F19] border border-slate-700" />
                         </div>
-                        <span className="text-[10px] font-mono block" style={{ color: preset.primary }}>
+                        <span className="text-[10px] font-medium block" style={{ color: preset.primary }}>
                           {preset.label}
                         </span>
                       </div>
@@ -2125,7 +2125,7 @@ export default function ConfigurationHubPage() {
                       placeholder="#10B981"
                       value={brandingForm.primary_color}
                       onChange={(e) => handleSelectAccent(e.target.value)}
-                      className="h-8 font-mono text-xs max-w-xs"
+                      className="h-8 tabular font-medium text-xs max-w-xs"
                     />
                   </div>
                 </div>
@@ -2138,7 +2138,7 @@ export default function ConfigurationHubPage() {
                     <Label className="text-sm font-semibold text-white">Component Border Radius</Label>
                     <p className="text-xs text-gray-400">Controls the corner roundness of buttons, cards, modals, and input fields</p>
                   </div>
-                  <Badge tone="accent" size="sm" className="font-mono capitalize">{brandingForm.radius || 'md'}</Badge>
+                  <Badge tone="accent" size="sm" className="font-bold capitalize">{brandingForm.radius || 'md'}</Badge>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -2155,7 +2155,7 @@ export default function ConfigurationHubPage() {
                         key={r.id}
                         type="button"
                         onClick={() => handleSelectRadius(r.id)}
-                        className={`p-2.5 text-xs font-mono border-2 transition-all flex flex-col items-center gap-1.5 ${r.class} ${
+                        className={`p-2.5 text-xs font-medium border-2 transition-all flex flex-col items-center gap-1.5 ${r.class} ${
                           isSel
                             ? 'border-emerald-500 bg-emerald-500/10 text-white font-bold'
                             : 'border-[#1F2937] bg-[#0B0F19] text-gray-400 hover:text-white hover:border-slate-700'

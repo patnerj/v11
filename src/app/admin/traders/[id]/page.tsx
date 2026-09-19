@@ -637,7 +637,7 @@ export default function Trader360ProfilePage() {
             <Activity className="h-4 w-4 text-emerald-400" />
             Live Financial & Risk Metrics
           </h2>
-          <span className="text-xs text-gray-500 font-mono">Real-time Account State</span>
+          <span className="text-xs text-gray-500 font-medium">Real-time Account State</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -646,10 +646,10 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Current Balance</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-white">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-white">
                 {formatExactCurrency(trader.balance)}
               </div>
-              <p className="text-[11px] text-gray-500 mt-1 font-mono">
+              <p className="text-[11px] text-gray-500 mt-1 tabular font-medium">
                 Start: {formatCurrency(trader.starting_balance)}
               </p>
             </CardContent>
@@ -659,7 +659,7 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Live Equity</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-emerald-400 flex items-center gap-1.5">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-emerald-400 flex items-center gap-1.5">
                 {formatExactCurrency(trader.equity)}
               </div>
               <p className="text-[11px] text-emerald-500/80 mt-1 flex items-center gap-1">
@@ -673,10 +673,10 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Realised PnL ($)</span>
-              <div className={`mt-2 text-xl sm:text-2xl font-bold font-mono ${trader.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <div className={`mt-2 text-xl sm:text-2xl font-bold tabular ${trader.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {trader.pnl >= 0 ? '+' : ''}{formatExactCurrency(trader.pnl)}
               </div>
-              <Badge tone={trader.pnl >= 0 ? 'success' : 'danger'} size="sm" className="mt-1 font-mono text-[10px]">
+              <Badge tone={trader.pnl >= 0 ? 'success' : 'danger'} size="sm" className="mt-1 tabular font-semibold text-[10px]">
                 {trader.pnl_pct >= 0 ? '+' : ''}{toNum(trader.pnl_pct).toFixed(2)}% Net Yield
               </Badge>
             </CardContent>
@@ -686,10 +686,10 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Daily Drawdown</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-gray-100">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-gray-100">
                 {toNum(trader.daily_dd).toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.daily_dd_limit}% Max</span>
               </div>
-              <Badge tone={trader.daily_dd > trader.daily_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 font-mono text-[10px]">
+              <Badge tone={trader.daily_dd > trader.daily_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 tabular font-semibold text-[10px]">
                 {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(1)}% Headroom
               </Badge>
             </CardContent>
@@ -699,10 +699,10 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Total Trailing DD</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-gray-100">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-gray-100">
                 {toNum(trader.max_dd).toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.max_dd_limit}% Max</span>
               </div>
-              <Badge tone={trader.max_dd > trader.max_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 font-mono text-[10px]">
+              <Badge tone={trader.max_dd > trader.max_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 tabular font-semibold text-[10px]">
                 {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(1)}% Headroom
               </Badge>
             </CardContent>
@@ -712,10 +712,10 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Win Rate</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-emerald-400">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-emerald-400">
                 {trader.win_rate}%
               </div>
-              <p className="text-[11px] text-gray-500 mt-1 font-mono">
+              <p className="text-[11px] text-gray-500 mt-1 tabular font-medium">
                 {trader.wins} Wins • {trader.losses} Losses
               </p>
             </CardContent>
@@ -725,10 +725,10 @@ export default function Trader360ProfilePage() {
           <Card className="bg-[#111827] border-[#1F2937]">
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Total Executions</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-gray-100">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-gray-100">
                 {trader.total_trades} Trades
               </div>
-              <p className="text-[11px] text-gray-500 mt-1 font-mono">
+              <p className="text-[11px] text-gray-500 mt-1">
                 Closed positions history
               </p>
             </CardContent>
@@ -739,11 +739,11 @@ export default function Trader360ProfilePage() {
             <CardContent className="p-4">
               <span className="text-xs text-gray-400 font-medium">Calculated Risk Level</span>
               <div className="mt-2 flex items-center gap-2">
-                <Badge tone={trader.risk_level === 'High Risk' ? 'danger' : 'success'} size="md" pulsing className="font-mono text-xs px-2.5 py-1">
+                <Badge tone={trader.risk_level === 'High Risk' ? 'danger' : 'success'} size="md" pulsing className="font-bold text-xs px-2.5 py-1">
                   {trader.risk_level}
                 </Badge>
               </div>
-              <p className="text-[11px] text-gray-500 mt-1 font-mono">
+              <p className="text-[11px] text-gray-500 mt-1">
                 {traderApiData?.breaches?.length ? 'Infractions logged' : 'Compliant profile'}
               </p>
             </CardContent>
@@ -772,12 +772,12 @@ export default function Trader360ProfilePage() {
                   </CardDescription>
                 </div>
                 {trader.mt5_login ? (
-                  <Badge tone="success" size="sm" className="font-mono gap-1.5 self-start sm:self-center">
+                  <Badge tone="success" size="sm" className="font-semibold tabular gap-1.5 self-start sm:self-center">
                     <Radio className="h-3 w-3 animate-ping text-emerald-400" />
                     Bridge Bound: #{trader.mt5_login}
                   </Badge>
                 ) : (
-                  <Badge tone="neutral" size="sm" className="font-mono self-start sm:self-center">
+                  <Badge tone="neutral" size="sm" className="font-medium self-start sm:self-center">
                     Unlinked / Standalone
                   </Badge>
                 )}
@@ -797,7 +797,7 @@ export default function Trader360ProfilePage() {
                     placeholder="e.g. 10048291"
                     value={mt5Form.login}
                     onChange={(e) => setMt5Form({ ...mt5Form, login: e.target.value })}
-                    className="bg-[#0B0F19] border-[#1F2937] font-mono text-sm text-cyan-300"
+                    className="bg-[#0B0F19] border-[#1F2937] tabular font-medium text-sm text-cyan-300"
                   />
                   <span className="text-[10px] text-gray-500">Your broker demo or live login ID</span>
                 </div>
@@ -812,7 +812,7 @@ export default function Trader360ProfilePage() {
                     placeholder="e.g. MetaQuotes-Demo or Exness-Trial"
                     value={mt5Form.server}
                     onChange={(e) => setMt5Form({ ...mt5Form, server: e.target.value })}
-                    className="bg-[#0B0F19] border-[#1F2937] font-mono text-sm text-slate-200"
+                    className="bg-[#0B0F19] border-[#1F2937] font-medium text-sm text-slate-200"
                   />
                   <span className="text-[10px] text-gray-500">Exact MT5 broker server name</span>
                 </div>
@@ -829,7 +829,7 @@ export default function Trader360ProfilePage() {
                       placeholder={trader.mt5_login ? '•••••••• (Leave blank to keep unchanged)' : 'Enter broker trader password'}
                       value={mt5Form.password}
                       onChange={(e) => setMt5Form({ ...mt5Form, password: e.target.value })}
-                      className="bg-[#0B0F19] border-[#1F2937] font-mono text-sm text-slate-200 pr-10"
+                      className="bg-[#0B0F19] border-[#1F2937] font-medium text-sm text-slate-200 pr-10"
                     />
                     <button
                       type="button"
@@ -851,7 +851,7 @@ export default function Trader360ProfilePage() {
                   <select
                     value={mt5Form.account_type}
                     onChange={(e) => setMt5Form({ ...mt5Form, account_type: e.target.value })}
-                    className="w-full h-10 rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                    className="w-full h-10 rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-xs font-medium text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer"
                   >
                     <option value="demo">Demo / Evaluation Simulation</option>
                     <option value="real">Real / Funded Live Broker</option>
@@ -866,7 +866,7 @@ export default function Trader360ProfilePage() {
                 <div className="flex items-start gap-2.5">
                   <Terminal className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-semibold text-cyan-300 font-mono">
+                    <p className="text-xs font-semibold text-cyan-300">
                       Telemetry Ingestion Endpoint: POST /wp-json/fxsim/v1/mt5/sync
                     </p>
                     <p className="text-[11px] text-slate-400">
@@ -911,7 +911,7 @@ export default function Trader360ProfilePage() {
                     Live target attainment, drawdown limits, and trading days tracking
                   </CardDescription>
                 </div>
-                <Badge tone="accent" size="sm" className="font-mono self-start sm:self-center">
+                <Badge tone="accent" size="sm" className="tabular font-semibold self-start sm:self-center">
                   Profit Split: {trader.profit_split}%
                 </Badge>
               </div>
@@ -923,7 +923,7 @@ export default function Trader360ProfilePage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-200">Profit Target Progress</span>
-                  <span className="font-mono font-bold text-emerald-400">
+                  <span className="tabular font-bold text-emerald-400">
                     {formatExactCurrency(trader.pnl)} ({toNum(trader.pnl_pct).toFixed(2)}%)
                   </span>
                 </div>
@@ -938,7 +938,7 @@ export default function Trader360ProfilePage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-200">Daily Drawdown Ceiling (Max {trader.daily_dd_limit}%)</span>
-                  <span className="font-mono font-semibold text-gray-300">
+                  <span className="tabular font-semibold text-gray-300">
                     {toNum(trader.daily_dd).toFixed(1)}% used • {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(1)}% remaining
                   </span>
                 </div>
@@ -949,7 +949,7 @@ export default function Trader360ProfilePage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-200">Max Trailing Drawdown (Max {trader.max_dd_limit}%)</span>
-                  <span className="font-mono font-semibold text-gray-300">
+                  <span className="tabular font-semibold text-gray-300">
                     {toNum(trader.max_dd).toFixed(1)}% used • {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(1)}% remaining
                   </span>
                 </div>
@@ -1066,12 +1066,12 @@ export default function Trader360ProfilePage() {
                     <div key={idx} className="p-3 bg-[#0B0F19] rounded-xl border border-red-500/20 flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-red-400 uppercase tracking-wide font-mono">{b.rule_type || b.reason}</span>
-                          <span className="text-[10px] text-gray-500 font-mono">Challenge #{b.challenge_id}</span>
+                          <span className="text-xs font-bold text-red-400 uppercase tracking-wide">{b.rule_type || b.reason}</span>
+                          <span className="text-[10px] text-gray-500 tabular font-medium">Challenge #{b.challenge_id}</span>
                         </div>
                         <p className="text-xs text-gray-300 mt-0.5">{b.description || 'Threshold breached'}</p>
                       </div>
-                      <span className="text-[10px] text-gray-500 font-mono">{b.created_at ? new Date(b.created_at).toLocaleString() : 'Recent'}</span>
+                      <span className="text-[10px] text-gray-500 tabular font-medium">{b.created_at ? new Date(b.created_at).toLocaleString() : 'Recent'}</span>
                     </div>
                   ))}
                 </div>
@@ -1138,7 +1138,7 @@ export default function Trader360ProfilePage() {
                       >
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-semibold text-emerald-400">{note.author}</span>
-                          <span className="text-[10px] text-gray-500 font-mono">{note.date}</span>
+                          <span className="text-[10px] text-gray-500 tabular font-medium">{note.date}</span>
                         </div>
                         <p className="text-xs text-gray-300 leading-relaxed">{note.content}</p>
                       </div>
@@ -1188,7 +1188,7 @@ export default function Trader360ProfilePage() {
                         <div>
                           <p className="text-xs font-semibold text-gray-100">{event.title}</p>
                           <p className="text-[11px] text-gray-400 mt-0.5">{event.description}</p>
-                          <span className="text-[10px] text-gray-500 font-mono mt-1 block">
+                          <span className="text-[10px] text-gray-500 tabular font-medium mt-1 block">
                             {event.date}
                           </span>
                         </div>

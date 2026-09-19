@@ -148,17 +148,17 @@ export function EnterpriseOverrideModal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-gray-100 text-sm">{traderName}</span>
-                <Badge tone="accent" size="sm" className="font-mono text-[10px]">
+                <Badge tone="accent" size="sm" className="tabular font-medium text-[10px]">
                   #TRD-{accountId}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-400 font-mono mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5">
                 Base Plan: <span className="text-gray-300 font-medium">{basePlan}</span>
               </p>
             </div>
           </div>
 
-          <Badge tone="neutral" size="sm" className="self-start sm:self-center font-mono">
+          <Badge tone="neutral" size="sm" className="self-start sm:self-center font-medium">
             Custom Override Mode
           </Badge>
         </div>
@@ -170,7 +170,7 @@ export function EnterpriseOverrideModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="profit-split" className="mb-0">Profit Split (%)</Label>
-              <span className="text-[11px] text-emerald-400 font-mono font-semibold">{profitSplit}% Trader</span>
+              <span className="text-[11px] text-emerald-400 tabular font-semibold">{profitSplit}% Trader</span>
             </div>
             <div className="relative">
               <Input
@@ -182,7 +182,7 @@ export function EnterpriseOverrideModal({
                 onChange={(e) => setProfitSplit(Number(e.target.value))}
                 className="pr-8"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-mono">%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">%</span>
             </div>
             <p className="text-[11px] text-gray-500">Default 80%, configurable up to 95%.</p>
           </div>
@@ -191,7 +191,7 @@ export function EnterpriseOverrideModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="min-days" className="mb-0">Min Trading Days</Label>
-              <span className="text-[11px] text-gray-400 font-mono">{minTradingDays} Days</span>
+              <span className="text-[11px] text-gray-400 tabular font-medium">{minTradingDays} Days</span>
             </div>
             <div className="relative">
               <Input
@@ -203,7 +203,7 @@ export function EnterpriseOverrideModal({
                 onChange={(e) => setMinTradingDays(Number(e.target.value))}
                 className="pr-12"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-mono">Days</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">Days</span>
             </div>
             <p className="text-[11px] text-gray-500">Set 0 to remove minimum requirement.</p>
           </div>
@@ -212,7 +212,7 @@ export function EnterpriseOverrideModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="max-daily-loss" className="mb-0">Max Daily Loss (%)</Label>
-              <span className="text-[11px] text-amber-400 font-mono">{maxDailyLoss}%</span>
+              <span className="text-[11px] text-amber-400 tabular font-semibold">{maxDailyLoss}%</span>
             </div>
             <div className="relative">
               <Input
@@ -225,7 +225,7 @@ export function EnterpriseOverrideModal({
                 onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
                 className="pr-8"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-mono">%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">%</span>
             </div>
             <p className="text-[11px] text-gray-500">Daily drawdown threshold relative to start balance.</p>
           </div>
@@ -234,7 +234,7 @@ export function EnterpriseOverrideModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="max-total-loss" className="mb-0">Max Total Loss (%)</Label>
-              <span className="text-[11px] text-red-400 font-mono">{maxTotalLoss}%</span>
+              <span className="text-[11px] text-red-400 tabular font-semibold">{maxTotalLoss}%</span>
             </div>
             <div className="relative">
               <Input
@@ -247,7 +247,7 @@ export function EnterpriseOverrideModal({
                 onChange={(e) => setMaxTotalLoss(Number(e.target.value))}
                 className="pr-8"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-mono">%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">%</span>
             </div>
             <p className="text-[11px] text-gray-500">Overall account breach ceiling.</p>
           </div>
