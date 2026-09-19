@@ -601,7 +601,7 @@ export const api = {
       fxsim<{ success: boolean; match_id: number; status: string; message: string }>(`/pvp/match/${id}/join`, { body: {} }),
     live: (id: number) =>
       fxsim<PvpLiveStateResponse>(`/pvp/match/${id}/live`, { cache: 0 }),
-    order: (id: number, data: { action: 'BUY' | 'SELL'; lot_size: number }) =>
+    order: (id: number, data: { action: 'BUY' | 'SELL' | 'CLOSE' | 'REVERSE'; lot_size?: number }) =>
       fxsim<{ success: boolean; action: string; lot_size: number; exec_price: number; tick_pnl: number; new_pnl: number; message: string }>(`/pvp/match/${id}/order`, { body: data }),
     settle: (id: number) =>
       fxsim<{ success: boolean; winner_id: number; prize_pool: number; rake: number; message: string }>(`/pvp/match/${id}/settle`, { body: {} }),

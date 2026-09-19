@@ -1153,12 +1153,20 @@ export interface PvpMatch {
   created_at: string;
 }
 
+export interface PvpPosition {
+  direction: 'buy' | 'sell' | 'flat' | null;
+  open_price: number;
+  lot_size: number;
+  floating_pnl: number;
+}
+
 export interface PvpGladiator {
   user_id: number;
   name: string;
   equity: number;
   pnl: number;
   trades_count: number;
+  position?: PvpPosition | null;
 }
 
 export interface PvpEvent {
