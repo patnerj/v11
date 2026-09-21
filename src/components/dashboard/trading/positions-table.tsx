@@ -15,6 +15,7 @@ import { cn } from '@/lib/cn'
 import type { Position } from '@/types/api'
 import { playOrderCloseSound } from '@/lib/sound'
 import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Props {
   positions: Position[] | null
@@ -26,6 +27,56 @@ interface Props {
 
 export const PositionsTable = memo(function PositionsTable({ positions, onChanged, compact }: Props) {
   const [shareTrade, setShareTrade] = useState<ShareTradeData | null>(null)
+  const [isCloseAllConfirmOpen, setIsCloseAllConfirmOpen] = useState(false)
+  const [isClosingAll, setIsClosingAll] = useState(false)
+
+  const totalPnL = useMemo(() => {
+    if (!positions) return 0
+    return positions.reduce((acc, p) => acc + toNum(p.pnl) + toNum(p.swap) - toNum(p.commission), 0)
+  }, [positions])
+
+  const handleCloseAll = useCallback(async () => {
+    if (!positions || positions.length === 0 || isClosingAll) return
+    setIsClosingAll(true)
+    const toastId = toast.loading(`Closing ${positions.length} position(s)...`)
+    try {
+      const accId = positions[0]?.account_id
+      const batchRes = await api.closeAll(accId ? { account_id: accId } : undefined)
+      if (batchRes.ok && batchRes.data.success) {
+        playOrderCloseSound()
+        toast.success(`Closed all ${batchRes.data.closed_count || positions.length} position(s)!`, { id: toastId })
+        invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
+        onChanged?.()
+      } else {
+        const closable = positions.filter((p) => p.id > 0)
+        let succeeded = 0
+        const failed: { symbol: string; error: string }[] = []
+        for (const p of closable) {
+          const r = await api.close(p.id)
+          if (r.ok && (r.data as any)?.success) {
+            succeeded++
+          } else {
+            failed.push({ symbol: p.symbol, error: !r.ok ? r.error : ((r.data as any)?.message || 'Close failed') })
+          }
+        }
+        invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
+        onChanged?.()
+        if (succeeded > 0) playOrderCloseSound()
+        if (failed.length === 0) {
+          toast.success(`Closed all ${positions.length} position(s)!`, { id: toastId })
+        } else if (succeeded === 0) {
+          toast.error(`Failed to close positions: ${failed[0]?.symbol || 'Order'} — ${failed[0]?.error || 'Unknown error'}`, { id: toastId })
+        } else {
+          toast.warning(`Closed ${succeeded} position(s), ${failed.length} failed.`, { id: toastId })
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Emergency close failed', { id: toastId })
+    } finally {
+      setIsClosingAll(false)
+      setIsCloseAllConfirmOpen(false)
+    }
+  }, [positions, isClosingAll, onChanged])
 
   if (positions === null) {
     return <SkeletonRows />
@@ -42,6 +93,30 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   }
   return (
     <>
+      {/* Panic Bar / Summary Header */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-text text-2xs uppercase tracking-wider">Open Positions</span>
+          <span className="px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-surface-muted text-text-muted border border-border-subtle">
+            {positions.length}
+          </span>
+          <span className="text-text-faint">·</span>
+          <span className="text-2xs text-text-muted">Net P&L:</span>
+          <span className={cn("text-2xs font-semibold tabular", pnlClass(totalPnL))}>
+            {fmtUSD(totalPnL, { sign: true })}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsCloseAllConfirmOpen(true)}
+          disabled={isClosingAll}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-2xs font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
+          title="Emergency Close All open positions at live market price"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+          <span>{isClosingAll ? 'Closing All...' : `Close All (${positions.length})`}</span>
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -77,6 +152,17 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
         onClose={() => setShareTrade(null)}
         trade={shareTrade}
       />
+
+      <ConfirmDialog
+        isOpen={isCloseAllConfirmOpen}
+        onCancel={() => setIsCloseAllConfirmOpen(false)}
+        onConfirm={handleCloseAll}
+        title="Emergency Close All Positions"
+        description={`Are you sure you want to market-close all ${positions.length} active position(s) with net P&L of ${fmtUSD(totalPnL, { sign: true })}? This action executes immediately at current live bid/ask prices and cannot be undone.`}
+        confirmText={`Close All (${positions.length}) Positions`}
+        isDestructive={true}
+        loading={isClosingAll}
+      />
     </>
   )
 })
@@ -95,6 +181,8 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
 
   const [showPartial, setShowPartial] = useState(false)
   const [partialLots, setPartialLots] = useState(() => (toNum(pos.lot_size) / 2).toFixed(2))
+
+  const canPartial = toNum(pos.lot_size) > 0.01
 
   // Bug E Fix: Synchronize partialLots whenever pos.lot_size changes (e.g. after partial close)
   useEffect(() => {
@@ -141,17 +229,22 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
 
   const saveSltp = useCallback(async () => {
     setBusy(true)
-    const sl = slDraft.trim() ? toNum(slDraft) : null
-    const tp = tpDraft.trim() ? toNum(tpDraft) : null
-    const res = await api.sltp(pos.id, sl, tp)
-    setBusy(false)
-    if (res.ok && res.data.success) {
-      toast.success('SL/TP updated')
-      setEditSltp(false)
-      invalidateFxsim('/positions')
-      onChanged?.()
-    } else {
-      toast.error(res.ok ? (res.data.message || 'Update failed') : res.error)
+    try {
+      const sl = slDraft.trim() ? toNum(slDraft) : null
+      const tp = tpDraft.trim() ? toNum(tpDraft) : null
+      const res = await api.sltp(pos.id, sl, tp)
+      if (res.ok && res.data.success) {
+        toast.success('SL/TP updated')
+        setEditSltp(false)
+        invalidateFxsim('/positions')
+        onChanged?.()
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Update failed') : res.error)
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Update failed')
+    } finally {
+      setBusy(false)
     }
   }, [pos.id, slDraft, tpDraft, onChanged])
 
@@ -172,50 +265,64 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
     }
     setBusy(true)
     setCountdown(null)
-    const res = await api.close(pos.id)
-    setBusy(false)
-    if (res.ok && res.data.success) {
-      playOrderCloseSound()
-      const closePnl = toNum(res.data.pnl)
-      toast.success(`Closed ${pos.symbol} · ${fmtUSD(closePnl, { sign: true })}`, {
-        action: closePnl > 0 ? {
-          label: 'Flex Win 🚀',
-          onClick: () => onShare?.({
-            symbol: pos.symbol,
-            type: pos.type,
-            lotSize: pos.lot_size,
-            openPrice: fmtPrice(pos.open_price, digits),
-            currentPrice: fmtPrice(currentPx, digits),
-            pnl: closePnl,
-            isClosed: true,
-            accountId: pos.account_id ? `ACC-${pos.account_id}` : undefined,
-            margin: pos.margin,
-          })
-        } : undefined
-      })
-      invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
-      onChanged?.()
-    } else {
-      toast.error(res.ok ? (res.data.message || 'Close failed') : res.error)
+    try {
+      const res = await api.close(pos.id)
+      if (res.ok && res.data.success) {
+        playOrderCloseSound()
+        const closePnl = toNum(res.data.pnl)
+        toast.success(`Closed ${pos.symbol} · ${fmtUSD(closePnl, { sign: true })}`, {
+          action: closePnl > 0 ? {
+            label: 'Flex Win 🚀',
+            onClick: () => onShare?.({
+              symbol: pos.symbol,
+              type: pos.type,
+              lotSize: pos.lot_size,
+              openPrice: fmtPrice(pos.open_price, digits),
+              currentPrice: fmtPrice(currentPx, digits),
+              pnl: closePnl,
+              isClosed: true,
+              accountId: pos.account_id ? `ACC-${pos.account_id}` : undefined,
+              margin: pos.margin,
+            })
+          } : undefined
+        })
+        invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
+        onChanged?.()
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Close failed') : res.error)
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Close failed')
+    } finally {
+      setBusy(false)
     }
   }, [pos.id, pos.symbol, pos.type, pos.lot_size, pos.open_price, pos.account_id, pos.margin, currentPx, digits, onChanged, onShare])
 
   const submitPartial = useCallback(async () => {
     const n = toNum(partialLots)
-    if (!n || n >= toNum(pos.lot_size)) {
+    const totalLots = toNum(pos.lot_size)
+    if (!n || n >= totalLots) {
       toast.error('Enter a smaller lot size'); return
     }
+    if (n < 0.01) {
+      toast.error('Minimum partial close size is 0.01 lots'); return
+    }
     setBusy(true)
-    const res = await api.partialClose(pos.id, n)
-    setBusy(false)
-    if (res.ok && res.data.success) {
-      playOrderCloseSound()
-      toast.success(`Closed ${n} of ${pos.symbol}`)
-      setShowPartial(false)
-      invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
-      onChanged?.()
-    } else {
-      toast.error(res.ok ? (res.data.message || 'Partial close failed') : res.error)
+    try {
+      const res = await api.partialClose(pos.id, n)
+      if (res.ok && res.data.success) {
+        playOrderCloseSound()
+        toast.success(`Closed ${n} of ${pos.symbol}`)
+        setShowPartial(false)
+        invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
+        onChanged?.()
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Partial close failed') : res.error)
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Partial close failed')
+    } finally {
+      setBusy(false)
     }
   }, [pos.id, pos.lot_size, pos.symbol, partialLots, onChanged])
 
@@ -328,8 +435,14 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
             </button>
             <button
               onClick={() => setShowPartial((v) => !v)}
-              disabled={busy}
-              className="h-7 px-2 rounded text-2xs font-medium text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
+              disabled={busy || !canPartial}
+              title={!canPartial ? 'Micro-lot minimum (0.01) cannot be split' : 'Partial close (½)'}
+              className={cn(
+                "h-7 px-2 rounded text-2xs font-medium focus-ring",
+                !canPartial
+                  ? "text-text-muted/40 cursor-not-allowed opacity-50"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted"
+              )}
             >
               ½
             </button>

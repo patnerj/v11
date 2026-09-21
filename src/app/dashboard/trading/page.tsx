@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowUpRight, BarChart3, Clock, ListOrdered, PanelLeftClose, PanelLeftOpen, ShoppingCart, CheckCircle2, XCircle } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Clock, ListOrdered, PanelLeftClose, PanelLeftOpen, ShoppingCart, CheckCircle2, XCircle, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
@@ -22,6 +22,7 @@ import { OrderTicket }        from '@/components/dashboard/trading/order-ticket'
 import { PositionsTable }     from '@/components/dashboard/trading/positions-table'
 import { PendingOrdersTable } from '@/components/dashboard/trading/pending-orders-table'
 import { AccountSwitcher, buildSwitchEntries, type SwitchEntry } from '@/components/dashboard/trading/account-switcher'
+import { TournamentWarningBanner } from '@/components/dashboard/trading/tournament-banner'
 import { MobileBottomSheet }  from '@/components/dashboard/trading/mobile-bottom-sheet'
 import { ConfirmDialog }     from '@/components/ui/ConfirmDialog'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
@@ -74,6 +75,36 @@ export default function TradingTerminalPage() {
 
   // Switcher entries: every ACTIVE/FUNDED challenge + every joined tournament.
   const switchEntries = buildSwitchEntries(chs ?? [], myTournaments ?? [], true)  // terminal: tradeable accounts only
+
+  // Active trading context: detect tournament mode
+  const tradingCtx = usePrices((s) => s.tradingContext)
+  const isTournamentMode = tradingCtx?.kind === 'tournament'
+  const tournamentId = isTournamentMode ? tradingCtx.tournamentId : undefined
+  const tournamentTitle = isTournamentMode ? tradingCtx.title : undefined
+
+  // URL query parameter sync: e.g. /dashboard/trading?tournament=123
+  const urlSyncedRef = useRef(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (urlSyncedRef.current) return
+    const params = new URLSearchParams(window.location.search)
+    const tIdStr = params.get('tournament')
+    if (!tIdStr) return
+    const tid = Number(tIdStr)
+    if (!tid || isNaN(tid)) return
+
+    const currentCtx = usePrices.getState().tradingContext
+    if (currentCtx?.kind === 'tournament' && currentCtx.tournamentId === tid) {
+      urlSyncedRef.current = true
+      return
+    }
+
+    const safeTourneys = Array.isArray(myTournaments) ? myTournaments : []
+    const found = safeTourneys.find((t) => Number(t.tournament_id) === tid)
+    const title = found?.title || `Tournament #${tid}`
+    urlSyncedRef.current = true
+    usePrices.getState().setTradingContext({ kind: 'tournament', tournamentId: tid, title })
+  }, [myTournaments])
 
   // Bootstrap symbols once
   useEffect(() => { bootstrapTerm() }, [bootstrapTerm])
@@ -192,6 +223,15 @@ export default function TradingTerminalPage() {
   if ((switching || !freshCheck || (!symbolsLoaded && positions === null)) && !loadTimedOut) {
     return (
       <div className="space-y-4">
+        {isTournamentMode && tournamentId && (
+          <TournamentWarningBanner
+            tournamentId={tournamentId}
+            tournamentTitle={tournamentTitle}
+            account={acc}
+            myTournaments={myTournaments}
+            switchEntries={switchEntries}
+          />
+        )}
         <AccountSwitcher entries={switchEntries} />
         <div className="flex items-center justify-center h-[60vh]">
           <div className="flex flex-col items-center gap-3 text-sm text-text-muted">
@@ -213,6 +253,15 @@ export default function TradingTerminalPage() {
     // block access to the trader's OTHER accounts.
     return (
       <div className="space-y-4">
+        {isTournamentMode && tournamentId && (
+          <TournamentWarningBanner
+            tournamentId={tournamentId}
+            tournamentTitle={tournamentTitle}
+            account={acc}
+            myTournaments={myTournaments}
+            switchEntries={switchEntries}
+          />
+        )}
         <AccountSwitcher entries={switchEntries} />
         <TradingLockState accounts={chs} account={acc} challengeStatus={acc?.challenge_status ?? null} />
       </div>
@@ -223,14 +272,15 @@ export default function TradingTerminalPage() {
 
   // ── Render layout ────────────────────────────────────────────────────
   return isDesktop
-    ? <DesktopLayout account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} />
-    : <MobileLayout  account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} />
+    ? <DesktopLayout account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} isTournamentMode={isTournamentMode} tournamentId={tournamentId} tournamentTitle={tournamentTitle} />
+    : <MobileLayout  account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} isTournamentMode={isTournamentMode} tournamentId={tournamentId} tournamentTitle={tournamentTitle} />
 }
 
 // ── Desktop ─────────────────────────────────────────────────────────────
 
 function DesktopLayout({
   account, openPnL, positions, pending, plan, metrics, onChanged, myTournaments, switchEntries,
+  isTournamentMode, tournamentId, tournamentTitle,
 }: {
   account: Account | null
   openPnL: number
@@ -241,6 +291,9 @@ function DesktopLayout({
   onChanged: () => void
   myTournaments?: TournamentMine[] | null
   switchEntries: SwitchEntry[]
+  isTournamentMode?: boolean
+  tournamentId?: number
+  tournamentTitle?: string
 }) {
   const [tab, setTab] = useState<Tab>('positions')
   const mwPanelRef = useRef<PanelImperativeHandle>(null)
@@ -353,6 +406,18 @@ function DesktopLayout({
     setIsClosingAll(true)
     const toastId = toast.loading(`Closing ${closable.length} position(s)...`)
     try {
+      const batchRes = await api.closeAll(account?.id ? { account_id: account.id } : undefined)
+      if (batchRes.ok && batchRes.data.success) {
+        invalidateFxsim('/positions')
+        invalidateFxsim('/account')
+        invalidateFxsim('/history')
+        await usePrices.getState().refresh()
+        onChanged?.()
+        playOrderCloseSound()
+        toast.success(`Closed all ${batchRes.data.closed_count || positions.length} position(s)!`, { id: toastId })
+        return
+      }
+
       const failed: { id: number; symbol: string; error: string }[] = []
       let succeeded = 0
       for (const p of closable) {
@@ -395,9 +460,20 @@ function DesktopLayout({
   const level   = used > 0 ? (equity / used) * 100 : null
   const lev     = toNum(account?.leverage) || 100
   const pnl     = openPnL ?? (equity - balance)
+  const totalPositionsPnL = (positions || []).reduce((acc, p) => acc + (toNum(p.pnl) || 0), 0)
 
   return (
     <div className="flex flex-col gap-2 h-[calc(100dvh-4.5rem)] min-h-[600px]">
+      {/* Tournament Warning Banner */}
+      {isTournamentMode && tournamentId && (
+        <TournamentWarningBanner
+          tournamentId={tournamentId}
+          tournamentTitle={tournamentTitle}
+          account={account}
+          myTournaments={myTournaments}
+          switchEntries={switchEntries}
+        />
+      )}
       {/* Account switcher — Challenge ↔ Tournament trading context */}
       <AccountSwitcher entries={switchEntries} />
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
@@ -542,9 +618,18 @@ function DesktopLayout({
 
                     {/* MT5 Bottom Telemetry Summary Row with Dynamic Glow */}
                     {account && (
-                      <div className="shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-sans tabular select-none overflow-x-auto no-scrollbar">
+                      <div className={cn(
+                        "shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-sans tabular select-none overflow-x-auto no-scrollbar transition-all",
+                        isTournamentMode && "border-amber-500/40 bg-gradient-to-r from-amber-950/25 via-bg-subtle/95 to-bg-subtle/95 ring-1 ring-amber-500/30"
+                      )}>
                         <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-text-muted">
-                          <span>Balance: <strong className="text-text font-semibold">{fmtUSD(balance)}</strong></span>
+                          {isTournamentMode && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-2xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs animate-pulse">
+                              <Trophy className="w-3 h-3 text-amber-400" />
+                              Tournament Mode · PnL Isolated
+                            </span>
+                          )}
+                          <span>Balance: <strong className={isTournamentMode ? "text-amber-300 font-semibold" : "text-text font-semibold"}>{fmtUSD(balance)}</strong></span>
                           <span>
                             Equity: <strong className={equity >= balance ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{fmtUSD(equity)}</strong>
                           </span>
@@ -614,7 +699,7 @@ function DesktopLayout({
                 </button>
               </div>
               <SectionErrorBoundary>
-                <OrderTicket account={account} plan={plan} onChanged={onChanged} />
+                <OrderTicket account={account} plan={plan} isTournament={isTournamentMode} tournamentTitle={tournamentTitle} onChanged={onChanged} />
               </SectionErrorBoundary>
             </aside>
           )}
@@ -627,7 +712,7 @@ function DesktopLayout({
         onCancel={() => setIsCloseAllConfirmOpen(false)}
         onConfirm={handleExecuteCloseAll}
         title="Emergency Close All Positions"
-        description={`Are you sure you want to market-close all ${positions?.length || 0} active position(s)? This action executes immediately at current live bid/ask prices and cannot be undone.`}
+        description={`Are you sure you want to market-close all ${positions?.length || 0} active position(s) with net P&L of ${fmtUSD(totalPositionsPnL, { sign: true })}? This action executes immediately at current live bid/ask prices and cannot be undone.`}
         confirmText={`Close All (${positions?.length || 0}) Positions`}
         isDestructive={true}
         loading={isClosingAll}
@@ -677,6 +762,7 @@ function WsBadge() {
 
 function MobileLayout({
   account, openPnL, positions, pending, plan, metrics, onChanged, myTournaments, switchEntries,
+  isTournamentMode, tournamentId, tournamentTitle,
 }: {
   account: Account | null
   openPnL: number
@@ -687,6 +773,9 @@ function MobileLayout({
   onChanged: () => void
   myTournaments?: TournamentMine[] | null
   switchEntries: SwitchEntry[]
+  isTournamentMode?: boolean
+  tournamentId?: number
+  tournamentTitle?: string
 }) {
   type Sheet = null | 'watchlist' | 'order' | 'positions' | 'pending'
   const [sheet, setSheet] = useState<Sheet>(null)
@@ -700,6 +789,19 @@ function MobileLayout({
 
   return (
     <div className="flex flex-col gap-2 h-[calc(100dvh-5rem)] -mx-3 -my-3 md:-mx-4 md:-my-4">
+      {/* Tournament Warning Banner */}
+      {isTournamentMode && tournamentId && (
+        <div className="px-3 pt-2 shrink-0">
+          <TournamentWarningBanner
+            tournamentId={tournamentId}
+            tournamentTitle={tournamentTitle}
+            account={account}
+            myTournaments={myTournaments}
+            switchEntries={switchEntries}
+          />
+        </div>
+      )}
+
       {/* Account switcher — Challenge ↔ Tournament trading context */}
       {account && (
         <div className="px-3 pt-2 shrink-0">
@@ -744,15 +846,16 @@ function MobileLayout({
         whileTap={{ scale: 0.94 }}
         onClick={() => setSheet('order')}
         className={cn(
-          'fixed right-4 bottom-20 z-30 flex items-center gap-2 h-12 px-4 rounded-full font-semibold text-xs shadow-xl transition-shadow',
-          'bg-accent text-accent-contrast hover:bg-accent-hover active:bg-accent-active',
-          'border border-accent-contrast/20',
+          'fixed right-4 bottom-20 z-30 flex items-center gap-2 h-12 px-4 rounded-full font-semibold text-xs shadow-xl transition-all',
+          isTournamentMode
+            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500 border border-amber-300/50 ring-2 ring-amber-500/40 shadow-amber-500/20 font-bold'
+            : 'bg-accent text-accent-contrast hover:bg-accent-hover active:bg-accent-active border border-accent-contrast/20',
         )}
         aria-label="Open order ticket"
       >
-        <ShoppingCart className="h-4 w-4" />
-        <span>Trade</span>
-        <span className="text-3xs opacity-80 tabular">
+        {isTournamentMode ? <Trophy className="h-4 w-4 text-black shrink-0 animate-pulse" /> : <ShoppingCart className="h-4 w-4 shrink-0" />}
+        <span>{isTournamentMode ? 'Tournament Trade' : 'Trade'}</span>
+        <span className={cn('text-3xs opacity-80 tabular', isTournamentMode && 'font-bold text-black')}>
           {bid > 0 ? `${fmtPrice(bid, digits)} / ${fmtPrice(ask, digits)}` : active}
         </span>
       </motion.button>
@@ -776,7 +879,7 @@ function MobileLayout({
         height={0.92}
       >
         <SectionErrorBoundary>
-          <OrderTicket compact account={account} plan={plan} onChanged={onChanged} onSubmitted={() => setSheet(null)} />
+          <OrderTicket compact account={account} plan={plan} isTournament={isTournamentMode} tournamentTitle={tournamentTitle} onChanged={onChanged} onSubmitted={() => setSheet(null)} />
         </SectionErrorBoundary>
       </MobileBottomSheet>
 

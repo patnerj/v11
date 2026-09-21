@@ -189,7 +189,10 @@ export const usePrices = create<PriceState>((set, get) => {
       }
 
       const tryStream = () => {
-        if (reconnectTimeout) clearTimeout(reconnectTimeout)
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout)
+          reconnectTimeout = null
+        }
 
         const s = fxsimStream()
         if (!s) { set({ source: 'poll' }); return }
@@ -205,21 +208,28 @@ export const usePrices = create<PriceState>((set, get) => {
           } catch { /* malformed */ }
         })
 
+        let disconnected = false
         const handleDisconnect = () => {
+          if (disconnected) return
+          disconnected = true
+
           set({ connected: false })
           closeStream()
+
+          if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout)
+            reconnectTimeout = null
+          }
 
           reconnectAttempts++
           if (reconnectAttempts > 5) {
             set({ source: 'poll' })
             // Periodic background probe to recover WebSocket connection instead of abandoning permanently
-            if (!reconnectTimeout) {
-              reconnectTimeout = setTimeout(() => {
-                reconnectTimeout = null
-                reconnectAttempts = 0
-                tryStream()
-              }, 25000)
-            }
+            reconnectTimeout = setTimeout(() => {
+              reconnectTimeout = null
+              reconnectAttempts = 0
+              tryStream()
+            }, 25000)
           } else {
             const backoff = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000)
             const jitter = Math.floor(Math.random() * 500)
@@ -227,7 +237,14 @@ export const usePrices = create<PriceState>((set, get) => {
           }
         }
 
-        s.onopen  = () => { reconnectAttempts = 0; set({ connected: true }) }
+        s.onopen  = () => {
+          if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout)
+            reconnectTimeout = null
+          }
+          reconnectAttempts = 0
+          set({ connected: true })
+        }
         s.onerror = handleDisconnect
         s.onclose = handleDisconnect
       }

@@ -242,3 +242,18 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 }))
+
+// ── Proactive Tab-Focus Keep-Alive ─────────────────────────────────────────
+// When a trader switches back to an active tab or wakes their device, if their
+// session was checked more than 10 minutes ago, silently refresh credentials
+// so active trading operations never encounter stale/expired tokens.
+if (typeof window !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const state = useAuth.getState()
+      if (state.user && Date.now() - state.lastChecked > 10 * 60_000) {
+        useAuth.getState().refresh(true).catch(() => null)
+      }
+    }
+  })
+}

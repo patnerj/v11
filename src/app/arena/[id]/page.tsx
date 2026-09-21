@@ -51,6 +51,12 @@ export default function PvpLiveBattleArenaPage() {
   const [chatMessage, setChatMessage] = useState('')
   const [sendingChat, setSendingChat] = useState(false)
 
+  // Mounted guard for SSR hydration determinism (Rule 29.4)
+  const [mounted, setMounted] = useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Live query polling every 1.5 seconds for instant e-sports reaction
   const { data: liveState, isLoading, refetch } = useQuery<PvpLiveStateResponse>({
     queryKey: ['pvp-live-match', matchId],
@@ -148,8 +154,9 @@ export default function PvpLiveBattleArenaPage() {
     return null
   }, [isParticipant, currentUserId, creator.user_id, creator.position, challenger.user_id, challenger.position])
 
-  // Weekend Market Status
+  // Weekend Market Status (Guarded behind mounted state to eliminate SSR hydration mismatch per Rule 29.4)
   const isWeekendClosed = useMemo(() => {
+    if (!mounted) return false
     const sym = (match?.symbol || '').toUpperCase()
     const isCrypto = sym.includes('BTC') || sym.includes('ETH') || sym.includes('SOL')
     if (isCrypto) return false
@@ -157,7 +164,7 @@ export default function PvpLiveBattleArenaPage() {
     const d = now.getUTCDay()
     const h = now.getUTCHours()
     return d === 6 || (d === 0 && h < 22) || (d === 5 && h >= 22)
-  }, [match?.symbol])
+  }, [mounted, match?.symbol])
 
   // Dynamic Tug-of-War Momentum Calculation
   const { creatorPct, challengerPct } = useMemo(() => {

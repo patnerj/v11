@@ -7,6 +7,7 @@
  */
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -162,16 +163,27 @@ export default function DashboardTournamentsPage() {
           )}
 
           {joined ? (
-            <Button asChild variant="outline" className="w-full">
-              <a href="/dashboard/trading">
+            <Button asChild variant="outline" className="w-full border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-semibold">
+              <Link
+                href={`/dashboard/trading?tournament=${tid}`}
+                onClick={async () => {
+                  try {
+                    await usePrices.getState().setTradingContext({
+                      kind: 'tournament',
+                      tournamentId: tid,
+                      title: t.title || `Tournament #${t.id}`,
+                    })
+                  } catch {}
+                }}
+              >
                 Trade in terminal <ArrowRight className="h-4 w-4 ml-1" />
-              </a>
+              </Link>
             </Button>
           ) : pendingOrder ? (
             <Button asChild variant="outline" className="w-full border-warn/40 hover:bg-warn/10 text-warn font-semibold">
-              <a href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}>
+              <Link href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}>
                 Payment Pending — Complete / View <ArrowRight className="h-4 w-4 ml-1" />
-              </a>
+              </Link>
             </Button>
           ) : (
             <Button

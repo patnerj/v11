@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { UploadCloud, RotateCcw, ImageIcon, Info } from 'lucide-react'
+import { UploadCloud, RotateCcw, ImageIcon, Info, Palette } from 'lucide-react'
+import { DeviceFrameMockup } from '@/components/admin/device-frame-mockup'
 
 type AssetField = 'logo' | 'login_logo' | 'sidebar_icon' | 'favicon'
 const ASSETS: { field: AssetField; key: string; title: string; size: string; helper: string }[] = [
@@ -21,6 +22,7 @@ const ASSETS: { field: AssetField; key: string; title: string; size: string; hel
 
 const DEFAULTS: Record<string, string> = {
   brand_name: 'Alpha Capital', brand_tagline: 'The Funded Trader Platform',
+  accent_color: '#10B981',
   logo_url: '', login_logo_url: '', sidebar_icon_url: '', favicon_url: '',
 }
 
@@ -52,6 +54,7 @@ export function BrandingCenter() {
     const payload: Record<string, string> = {
       brand_name: vals.brand_name ?? '', brand_tagline: vals.brand_tagline ?? '',
       support_email: vals.support_email ?? '',
+      accent_color: vals.accent_color ?? '#10B981',
       logo_url: vals.logo_url ?? '', login_logo_url: vals.login_logo_url ?? '',
       sidebar_icon_url: vals.sidebar_icon_url ?? '', favicon_url: vals.favicon_url ?? '',
     }
@@ -89,11 +92,39 @@ export function BrandingCenter() {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Identity */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="bc-name">Company name</Label>
             <Input id="bc-name" value={vals.brand_name ?? ''} onChange={(e) => set('brand_name', e.target.value)} placeholder="Your Prop Firm" />
             <p className="text-2xs text-text-faint">Short names display better in the sidebar.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="bc-tagline">Tagline / Slogan</Label>
+            <Input id="bc-tagline" value={vals.brand_tagline ?? ''} onChange={(e) => set('brand_tagline', e.target.value)} placeholder="The Funded Trader Platform" />
+            <p className="text-2xs text-text-faint">Displayed on portals, emails and headers.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="bc-accent" className="flex items-center gap-1.5">
+              <Palette className="h-3 w-3 text-accent" />
+              Primary Brand Color
+            </Label>
+            <div className="flex items-center gap-2">
+              <input
+                id="bc-accent-picker"
+                type="color"
+                value={vals.accent_color || '#10B981'}
+                onChange={(e) => set('accent_color', e.target.value)}
+                className="h-9 w-10 p-0.5 rounded-lg border border-border bg-surface cursor-pointer shrink-0"
+              />
+              <Input
+                id="bc-accent"
+                value={vals.accent_color ?? '#10B981'}
+                onChange={(e) => set('accent_color', e.target.value)}
+                placeholder="#10B981"
+                className="font-mono text-xs uppercase"
+              />
+            </div>
+            <p className="text-2xs text-text-faint">Buttons, badges, and equity chart highlights.</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="bc-support">Support email</Label>
@@ -120,9 +151,18 @@ export function BrandingCenter() {
           ))}
         </div>
 
+        {/* Live Interactive Device Frame Mockup (Point #4) */}
+        <DeviceFrameMockup
+          brandName={vals.brand_name || 'Alpha Capital'}
+          brandTagline={vals.brand_tagline || 'The Funded Trader Platform'}
+          logoUrl={vals.logo_url || vals.login_logo_url}
+          sidebarIconUrl={vals.sidebar_icon_url}
+          accentColor={vals.accent_color || '#10B981'}
+        />
+
         {/* Live previews */}
         <div>
-          <div className="text-2xs uppercase tracking-wider text-text-faint mb-2.5">Live preview</div>
+          <div className="text-2xs uppercase tracking-wider text-text-faint mb-2.5">Asset Component Previews</div>
           <div className="grid md:grid-cols-3 gap-3">
             {/* Sidebar */}
             <div className="rounded-lg border border-border-subtle overflow-hidden">

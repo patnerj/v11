@@ -202,11 +202,11 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
               </div>
               <div>
                 <span className="text-text-muted text-[10px] block">Trader Password</span>
-                <span className="font-medium tabular text-text">{c.mt5_password || '-0DxOxMu'}</span>
+                <span className="font-medium tabular text-text">{c.mt5_password || '••••••••'}</span>
               </div>
               <div>
                 <span className="text-text-muted text-[10px] block">Investor (Myfxbook)</span>
-                <span className="font-medium tabular text-text">RwYd*t3t</span>
+                <span className="font-medium tabular text-text">{(c as any).mt5_investor_password || '••••••••'}</span>
               </div>
             </div>
           </div>

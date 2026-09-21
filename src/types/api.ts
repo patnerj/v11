@@ -361,6 +361,26 @@ export interface ChallengeAccount {
   p2_max_dd?:         number | string
   p2_min_days?:       number
   p2_max_days?:       number
+  payout_eligibility?: PayoutEligibility
+}
+
+export interface PayoutEligibility {
+  eligible:               boolean
+  withdrawable_profit:    number
+  withdrawable_share:     number
+  unsettled_profit:       number
+  ledger_profit:          number
+  balance_profit:         number
+  open_positions_count:   number
+  pending_orders_count:   number
+  has_pending_payout:     boolean
+  pending_payout_status:  string | null
+  min_days_required:      number
+  trading_days_completed: number
+  min_payout_amount:      number
+  profit_split_pct:       number
+  reason_code:            'ok' | 'not_funded' | 'no_profit' | 'open_positions' | 'pending_orders' | 'payout_in_progress' | 'unsettled_ledger' | 'min_days' | 'min_amount' | string
+  reason_message:         string
 }
 
 export interface ChallengeMetrics {

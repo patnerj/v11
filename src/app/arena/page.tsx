@@ -60,12 +60,19 @@ export default function PvpArenaLobbyPage() {
   const [withdrawAddress, setWithdrawAddress] = useState('')
   const [selectedPerkAccount, setSelectedPerkAccount] = useState<number>(0)
 
+  // Mounted guard for SSR hydration determinism (Rule 29.4)
+  const [mounted, setMounted] = useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Weekend Market Gate
   const isWeekend = useMemo(() => {
+    if (!mounted) return false
     const d = new Date().getUTCDay()
     const h = new Date().getUTCHours()
     return d === 6 || (d === 0 && h < 22) || (d === 5 && h >= 22)
-  }, [])
+  }, [mounted])
 
   // Create Battle Form State
   const [createForm, setCreateForm] = useState<{

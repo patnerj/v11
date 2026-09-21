@@ -110,7 +110,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
         setHeartbeatSec(0)
         setIsOnline(true)
         toast.success('MT5 Broker Ping OK (14ms)', {
-          description: 'Socket telemetry handshake verified on MetaQuotes-Demo #5056177670.',
+          description: `Socket telemetry handshake verified on MetaQuotes-Demo #${bridgeConfig?.manager_login || 'Primary'}.`,
         })
       }
     } catch (err: any) {
@@ -151,7 +151,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
 
   // Active Terminal Spec
   const activeTerminalName = useMemo(() => {
-    const login = bridgeConfig?.manager_login || '5056177670'
+    const login = bridgeConfig?.manager_login || 'Primary-Bridge'
     const srv = bridgeConfig?.server_ip ? 'MetaQuotes-Demo' : 'MetaQuotes-Demo'
     return `${srv} #${login}`
   }, [bridgeConfig])

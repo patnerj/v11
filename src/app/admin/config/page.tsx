@@ -29,6 +29,7 @@ import { PaymentsCenter } from '@/components/admin/payments-center'
 import { ChartSymbolMap } from '@/components/admin/chart-symbol-map'
 import { PriceFeedCard } from '@/components/admin/price-feed-card'
 import { APP_DISPLAY_VERSION } from '@/lib/version'
+import { DeviceFrameMockup } from '@/components/admin/device-frame-mockup'
 
 // Slugify helper to auto-generate URL-friendly slugs from Plan Title
 const slugify = (text: string) => {
@@ -2484,6 +2485,15 @@ export default function ConfigurationHubPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          {/* Live Interactive Device Frame Mockup (Point #4) */}
+          <DeviceFrameMockup
+            brandName={brandingForm.brand_name || 'Alpha Capital'}
+            brandTagline={brandingForm.brand_tagline || 'The Funded Trader Platform'}
+            logoUrl={brandingForm.logo_url}
+            sidebarIconUrl={brandingForm.sidebar_icon_url}
+            accentColor={brandingForm.primary_color || '#10B981'}
+          />
         </div>
       )}
 

@@ -194,13 +194,19 @@ function CheckoutInner() {
   const applyCoupon = async () => {
     if (!coupon.trim() || !plan) return
     setCouponBusy(true); setCouponErr(null)
-    const res = await api.couponValidate(coupon.trim(), plan.id)
-    setCouponBusy(false)
-    if (res.ok && res.data.valid) {
-      setCouponInfo({ code: res.data.code || coupon.trim().toUpperCase(), original: res.data.original ?? price, discount: res.data.discount ?? 0, final: res.data.final ?? price })
-    } else {
+    try {
+      const res = await api.couponValidate(coupon.trim(), plan.id)
+      if (res.ok && res.data.valid) {
+        setCouponInfo({ code: res.data.code || coupon.trim().toUpperCase(), original: res.data.original ?? price, discount: res.data.discount ?? 0, final: res.data.final ?? price })
+      } else {
+        setCouponInfo(null)
+        setCouponErr(res.ok ? res.data.message : (res.error || 'Could not validate coupon'))
+      }
+    } catch (err: any) {
       setCouponInfo(null)
-      setCouponErr(res.ok ? res.data.message : (res.error || 'Could not validate coupon'))
+      setCouponErr(err?.message || 'Could not validate coupon')
+    } finally {
+      setCouponBusy(false)
     }
   }
   const clearCoupon = () => { setCoupon(''); setCouponInfo(null); setCouponErr(null) }
@@ -210,17 +216,22 @@ function CheckoutInner() {
     if (!plan) return
     setLoading(true)
     setError(null)
-    const couponToSend = couponInfo ? couponInfo.code : undefined
-    const res = await api.challengeStart(plan.id, couponToSend)
-    setLoading(false)
-    if (res.ok && !res.data.requires_payment) {
-      toast.success('Challenge started!')
-      // FIX: full reload instead of router.push — kills SPA/RSC staleness so the
-      // new challenge shows up INSTANTLY on the dashboard (was lagging ~30s).
-      clearFxsimCache()
-      window.location.href = '/dashboard?started=' + plan.id
-    } else {
-      setError(res.ok ? (res.data.message || 'Unable to start challenge') : res.error)
+    try {
+      const couponToSend = couponInfo ? couponInfo.code : undefined
+      const res = await api.challengeStart(plan.id, couponToSend)
+      if (res.ok && !res.data.requires_payment) {
+        toast.success('Challenge started!')
+        // FIX: full reload instead of router.push — kills SPA/RSC staleness so the
+        // new challenge shows up INSTANTLY on the dashboard (was lagging ~30s).
+        clearFxsimCache()
+        window.location.href = '/dashboard?started=' + plan.id
+      } else {
+        setError(res.ok ? (res.data.message || 'Unable to start challenge') : res.error)
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Unable to start challenge')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -236,13 +247,18 @@ function CheckoutInner() {
     if (g === 'stripe') {
       orderInflight.current = true
       setLoading(true)
-      const res = await api.stripeCheckout(plan.id, couponToSend, tournamentId || undefined)
-      setLoading(false)
-      orderInflight.current = false
-      if (res.ok && res.data.checkout_url) {
-        window.location.href = res.data.checkout_url
-      } else {
-        setError(res.ok ? (res.data.message || 'Stripe checkout unavailable') : res.error)
+      try {
+        const res = await api.stripeCheckout(plan.id, couponToSend, tournamentId || undefined)
+        if (res.ok && res.data.checkout_url) {
+          window.location.href = res.data.checkout_url
+        } else {
+          setError(res.ok ? (res.data.message || 'Stripe checkout unavailable') : res.error)
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Stripe checkout unavailable')
+      } finally {
+        setLoading(false)
+        orderInflight.current = false
       }
       return
     }
@@ -250,13 +266,18 @@ function CheckoutInner() {
     if (g === 'confirmo') {
       orderInflight.current = true
       setLoading(true)
-      const res = await api.paymentCreate(plan.id, 'confirmo', couponToSend, tournamentId || undefined)
-      setLoading(false)
-      orderInflight.current = false
-      if (res.ok && res.data.payment_url) {
-        window.location.href = res.data.payment_url
-      } else {
-        setError(res.ok ? 'Confirmo checkout unavailable' : res.error)
+      try {
+        const res = await api.paymentCreate(plan.id, 'confirmo', couponToSend, tournamentId || undefined)
+        if (res.ok && res.data.payment_url) {
+          window.location.href = res.data.payment_url
+        } else {
+          setError(res.ok ? 'Confirmo checkout unavailable' : res.error)
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Confirmo checkout unavailable')
+      } finally {
+        setLoading(false)
+        orderInflight.current = false
       }
       return
     }
@@ -264,13 +285,18 @@ function CheckoutInner() {
     if (g === 'coinpayments') {
       orderInflight.current = true
       setLoading(true)
-      const res = await api.paymentCreate(plan.id, 'coinpayments', couponToSend, tournamentId || undefined)
-      setLoading(false)
-      orderInflight.current = false
-      if (res.ok && res.data.payment_url) {
-        window.location.href = res.data.payment_url
-      } else {
-        setError(res.ok ? 'Coinpayments checkout unavailable' : res.error)
+      try {
+        const res = await api.paymentCreate(plan.id, 'coinpayments', couponToSend, tournamentId || undefined)
+        if (res.ok && res.data.payment_url) {
+          window.location.href = res.data.payment_url
+        } else {
+          setError(res.ok ? 'Coinpayments checkout unavailable' : res.error)
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Coinpayments checkout unavailable')
+      } finally {
+        setLoading(false)
+        orderInflight.current = false
       }
       return
     }
@@ -285,15 +311,20 @@ function CheckoutInner() {
     }
     orderInflight.current = true
     setLoading(true)
-    const res = await api.paymentCreate(plan.id, g === 'manual_crypto' ? 'crypto' : g, couponToSend, tournamentId || undefined)
-    setLoading(false)
-    orderInflight.current = false
-    if (res.ok && res.data.order_id) {
-      setOrderId(res.data.order_id)
-      invalidateFxsim('/payment/my-orders')
-      setStep('manual')
-    } else {
-      setError(res.ok ? 'Order creation failed' : res.error)
+    try {
+      const res = await api.paymentCreate(plan.id, g === 'manual_crypto' ? 'crypto' : g, couponToSend, tournamentId || undefined)
+      if (res.ok && res.data.order_id) {
+        setOrderId(res.data.order_id)
+        invalidateFxsim('/payment/my-orders')
+        setStep('manual')
+      } else {
+        setError(res.ok ? 'Order creation failed' : res.error)
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Order creation failed')
+    } finally {
+      setLoading(false)
+      orderInflight.current = false
     }
   }
 
@@ -301,18 +332,23 @@ function CheckoutInner() {
     if (!orderId || !proofFile) return
     setLoading(true)
     setError(null)
-    const form = new FormData()
-    form.append('order_id', String(orderId))
-    form.append('txn_reference', txnRef)
-    form.append('proof', proofFile)
-    const res = await api.paymentSubmitProof(form)
-    setLoading(false)
-    if (res.ok) {
-      invalidateFxsim('/payment/my-orders')
-      invalidateFxsim('/tournaments/mine')
-      setStep('success')
-    } else {
-      setError(res.error)
+    try {
+      const form = new FormData()
+      form.append('order_id', String(orderId))
+      form.append('txn_reference', txnRef)
+      form.append('proof', proofFile)
+      const res = await api.paymentSubmitProof(form)
+      if (res.ok) {
+        invalidateFxsim('/payment/my-orders')
+        invalidateFxsim('/tournaments/mine')
+        setStep('success')
+      } else {
+        setError(res.error)
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Proof submission failed')
+    } finally {
+      setLoading(false)
     }
   }
 

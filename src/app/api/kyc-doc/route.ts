@@ -32,7 +32,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Backend API URL is not configured' }, { status: 500 })
   }
 
-  const upstream = `${apiBase.replace(/\/$/, '')}/admin/kyc/${encodeURIComponent(id)}/doc/${encodeURIComponent(type)}`
+  const trimmed = apiBase.trim().replace(/\/$/, '')
+  const normalizedBase = trimmed.endsWith('/wp-json/fxsim/v1') ? trimmed : `${trimmed}/wp-json/fxsim/v1`
+
+  const upstream = `${normalizedBase}/admin/kyc/${encodeURIComponent(id)}/doc/${encodeURIComponent(type)}`
 
   let upstreamRes: Response
   try {

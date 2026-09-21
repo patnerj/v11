@@ -124,7 +124,7 @@ export function MT5CredentialsModal({
                 login: res.data.mt5_login,
                 server: res.data.mt5_server || initialServer,
                 traderPassword: res.data.mt5_password || '',
-                investorPassword: (res.data as any).investor_password || 'RwYd*t3t',
+                investorPassword: (res.data as any).investor_password || '',
                 notAssigned: false,
               })
             } else {
@@ -148,9 +148,9 @@ export function MT5CredentialsModal({
   }, [isOpen, accountId, initialServer, initialAccountLabel])
 
   const server = liveData.server || initialServer || 'MetaQuotes-Demo'
-  const login = liveData.login || initialLogin || (liveData.notAssigned ? 'Pending Assignment' : (initialLogin || '5056177670'))
-  const traderPassword = liveData.traderPassword || initialTraderPassword || (liveData.notAssigned ? 'Pending' : (initialTraderPassword || '-0DxOxMu'))
-  const investorPassword = liveData.investorPassword || initialInvestorPassword || (liveData.notAssigned ? 'Pending' : (initialInvestorPassword || 'RwYd*t3t'))
+  const login = liveData.login || (initialLogin ? String(initialLogin) : (liveData.notAssigned ? 'Pending Assignment' : (loading ? 'Loading...' : 'Pending Assignment')))
+  const traderPassword = liveData.traderPassword || initialTraderPassword || (liveData.notAssigned ? 'Pending' : (loading ? '••••••••' : 'Pending'))
+  const investorPassword = liveData.investorPassword || initialInvestorPassword || (liveData.notAssigned ? 'Pending' : (loading ? '••••••••' : 'Pending'))
   const accountLabel = liveData.accountLabel || initialAccountLabel
 
   const copyToClipboard = (text: string, key: string, label: string) => {

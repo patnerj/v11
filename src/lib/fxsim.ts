@@ -122,6 +122,8 @@ export interface RequestOptions {
   retries?: number
   /** Per-request timeout in ms. Default 10_000; uploads need more (e.g. KYC 60_000). */
   timeout?: number
+  /** Internal guard against infinite silent token refresh loops (Rule 18). */
+  _isRetry?: boolean
 }
 
 function buildQuery(query?: RequestOptions['query']): string {
@@ -160,6 +162,81 @@ export function invalidateFxsim(prefix: string) {
   const inflight = getInflight()
   for (const k of [...cache.keys()])    if (k.startsWith(fullPrefix)) cache.delete(k)
   for (const k of [...inflight.keys()]) if (k.startsWith(fullPrefix)) inflight.delete(k)
+}
+
+// ── Silent Token Refresh Queue & Mutex ───────────────────────────────────────
+let silentRefreshPromise: Promise<boolean> | null = null
+
+/**
+ * Execute a single-flight background token refresh.
+ * If multiple requests 401 concurrently, they all await this same Promise.
+ */
+export async function silentTokenRefresh(): Promise<boolean> {
+  if (isServer) return false
+  if (silentRefreshPromise) {
+    return silentRefreshPromise
+  }
+
+  silentRefreshPromise = (async (): Promise<boolean> => {
+    try {
+      const base = getApiBaseUrl()
+      if (!base) return false
+
+      const session = getSessionState()
+      if (!session.bearer && !session.nonce) {
+        return false
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (session.bearer) {
+        headers['Authorization'] = `Bearer ${session.bearer}`
+        headers['X-FXSIM-Token'] = session.bearer
+      }
+      if (session.nonce) {
+        headers['X-WP-Nonce'] = session.nonce
+      }
+
+      const res = await fetch(`${base}/auth/refresh`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        mode: 'cors',
+        cache: 'no-store',
+      })
+
+      if (!res.ok) {
+        return false
+      }
+
+      const data = await res.json()
+      const newToken = data?.token || res.headers.get('x-fxsim-token')
+      const newNonce = data?.nonce || res.headers.get('x-wp-nonce')
+
+      if (newToken || newNonce) {
+        setSession({
+          ...(newToken ? { bearer: newToken } : {}),
+          ...(newNonce ? { nonce: newNonce } : {}),
+        })
+
+        if (newToken) {
+          try {
+            const { sessionEstablish } = await import('./session')
+            await sessionEstablish(newToken, true)
+          } catch { /* best-effort cookie refresh */ }
+        }
+        return true
+      }
+      return false
+    } catch {
+      return false
+    } finally {
+      silentRefreshPromise = null
+    }
+  })()
+
+  return silentRefreshPromise
 }
 
 // ── Sleep with jitter for backoff ──────────────────────────────────────────
@@ -317,10 +394,10 @@ async function rawFetch<T>(
   }
   const currentSession = getSessionState()
   if (currentSession.bearer) {
-    if (!headers['Authorization']) headers['Authorization'] = `Bearer ${currentSession.bearer}`
-    if (!headers['X-FXSIM-Token'])  headers['X-FXSIM-Token'] = currentSession.bearer
+    if (!headers['Authorization'] || opts._isRetry) headers['Authorization'] = `Bearer ${currentSession.bearer}`
+    if (!headers['X-FXSIM-Token'] || opts._isRetry)  headers['X-FXSIM-Token'] = currentSession.bearer
   }
-  if (currentSession.nonce && !headers['X-WP-Nonce']) {
+  if (currentSession.nonce && (!headers['X-WP-Nonce'] || opts._isRetry)) {
     headers['X-WP-Nonce'] = currentSession.nonce
   }
 
@@ -371,6 +448,23 @@ async function rawFetch<T>(
   } catch { /* empty body */ }
 
   if (!res.ok) {
+    // ── 401 Interceptor: Silent Background Token Refresh with Single-Flight Queue ──
+    if (res.status === 401 && !opts._isRetry && !isServer) {
+      const isAuthRoute = /\/auth\/(login|register|refresh|token\/refresh|logout|do-reset)/i.test(url)
+      const hasSession = !!(currentSession.bearer || currentSession.nonce)
+      if (!isAuthRoute && hasSession) {
+        const refreshed = await silentTokenRefresh()
+        if (refreshed) {
+          // Retry the original request with renewed credentials and Rule 18 zero-loop guard
+          return rawFetch<T>(url, method, {
+            ...opts,
+            _isRetry: true,
+            force: true,
+          })
+        }
+      }
+    }
+
     let message = `Request failed (${res.status})`
 
     if (parsed && typeof parsed === 'object' && parsed !== null) {

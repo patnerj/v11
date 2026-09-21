@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import {
   ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle2,
-  Plus, Minus, Calculator,
+  Plus, Minus, Calculator, Trophy,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
@@ -30,13 +30,17 @@ interface Props {
   plan?: ChallengePlan | null
   /** Optional active challenge */
   challenge?: any
+  /** Whether the current trading context is a tournament account */
+  isTournament?: boolean
+  /** Tournament name or title */
+  tournamentTitle?: string
   /** Called after position / order changes to trigger unified refresh. */
   onChanged?: () => void
   /** Called after a successful order so the parent can close a sheet. */
   onSubmitted?: () => void
 }
 
-export const OrderTicket = memo(function OrderTicket({ compact, account, plan, challenge, onChanged, onSubmitted }: Props) {
+export const OrderTicket = memo(function OrderTicket({ compact, account, plan, challenge, isTournament, tournamentTitle, onChanged, onSubmitted }: Props) {
   const active = useTerminal((s) => s.active)
   const meta   = useTerminal((s) => s.getMeta(active))
   const tick   = usePrices((s) => s.prices[active])
@@ -416,6 +420,17 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
+        {/* Tournament Mode visual notice banner */}
+        {isTournament && (
+          <div className="rounded-md bg-amber-500/15 border border-amber-500/40 p-2 text-2xs text-amber-200 flex items-center gap-2 shadow-xs">
+            <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+            <div className="leading-tight min-w-0">
+              <strong className="text-amber-300 font-bold uppercase tracking-wider">Tournament Mode:</strong>{' '}
+              Orders execute on <span className="font-semibold text-white">{tournamentTitle || 'Tournament'}</span> only.
+            </div>
+          </div>
+        )}
+
         {/* Pending type selector */}
         {mode === 'pending' && (
           <div className="grid grid-cols-2 gap-1 text-2xs">
@@ -604,6 +619,14 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
       {/* Buy/Sell action bar — pinned at bottom of ticket */}
       <div className="shrink-0 px-3 pb-3 pt-2 bg-surface border-t border-border-subtle flex flex-col gap-2">
+        {isTournament && (
+          <div className="flex items-center gap-1.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/35 px-2.5 py-1.5 text-2xs shadow-xs">
+            <Trophy className="h-3.5 w-3.5 text-amber-400 shrink-0 animate-pulse" />
+            <span className="truncate">
+              <strong className="text-amber-200 uppercase tracking-wide">Tournament Order:</strong> Isolated from evaluation/funded accounts.
+            </span>
+          </div>
+        )}
         {isNewsRestricted && (
           <div className="flex items-center gap-2 rounded-md bg-warning-muted text-warning-strong p-2.5 text-2xs shadow-sm border border-warning/20">
             <AlertCircle className="h-4 w-4 shrink-0" />

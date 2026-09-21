@@ -69,6 +69,15 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
     setPendingKey(entry.key)
     setIsOpen(false)
     try {
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        if (entry.kind === 'tournament' && entry.tournamentId) {
+          url.searchParams.set('tournament', String(entry.tournamentId))
+        } else {
+          url.searchParams.delete('tournament')
+        }
+        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''))
+      }
       await usePrices.getState().setTradingContext(entry.ctx)
     } finally {
       setPendingKey(null)
@@ -247,7 +256,12 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
   return (
     <div ref={dropdownRef} className="relative z-40 w-full">
       {/* Sleek institutional trigger bar with zero overflow on any viewport */}
-      <div className="flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg bg-surface/90 border border-border/80 shadow-xs backdrop-blur-md w-full">
+      <div className={cn(
+        "flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg border shadow-xs backdrop-blur-md w-full transition-all",
+        activeEntry?.kind === 'tournament'
+          ? "bg-gradient-to-r from-amber-950/30 via-surface/90 to-surface/90 border-amber-500/50 ring-2 ring-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.12)]"
+          : "bg-surface/90 border-border/80"
+      )}>
         {/* Left: Account trigger button */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="text-3xs text-text-muted font-semibold uppercase tracking-wider shrink-0 hidden md:inline">
@@ -262,7 +276,9 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
               "group flex-1 sm:flex-initial min-w-0 inline-flex items-center justify-between sm:justify-start gap-2 px-2 sm:px-2.5 py-1.5 rounded-md border text-xs font-semibold transition-all focus-ring select-none cursor-pointer",
               isOpen
                 ? "bg-accent/15 border-accent/60 text-accent shadow-xs"
-                : "bg-surface-muted/80 border-border hover:border-border-strong hover:bg-surface-muted text-text"
+                : activeEntry?.kind === 'tournament'
+                  ? "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/60"
+                  : "bg-surface-muted/80 border-border hover:border-border-strong hover:bg-surface-muted text-text"
             )}
             title={activeEntry?.sub}
           >
@@ -301,7 +317,10 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
             {/* Live Balance */}
             {activeEntry?.balance !== undefined && (
-              <span className="text-xs font-bold tabular text-emerald-400 shrink-0 ml-auto sm:ml-0">
+              <span className={cn(
+                "text-xs font-bold tabular shrink-0 ml-auto sm:ml-0",
+                activeEntry?.kind === 'tournament' ? "text-amber-400" : "text-emerald-400"
+              )}>
                 {fmtUSD(activeEntry.balance, { decimals: 0 })}
               </span>
             )}
@@ -314,6 +333,15 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
               )}
             />
           </button>
+
+          {/* Tournament Mode visual pill badge */}
+          {activeEntry?.kind === 'tournament' && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs animate-pulse shrink-0">
+              <Trophy className="w-2.5 h-2.5 text-amber-400" />
+              <span className="hidden xs:inline">Tournament</span>
+              <span className="hidden sm:inline">Trades Only</span>
+            </span>
+          )}
 
           {/* Accounts Count Badge */}
           {entries.length > 1 && (

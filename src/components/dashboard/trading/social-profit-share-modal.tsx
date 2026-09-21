@@ -54,7 +54,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
         ? `@${authUser.email.split('@')[0]}` 
         : '@AlphaTrader'
   )
-  const accountId = trade?.accountId || (account?.id ? `ACC-${account.id}` : '#5056177670')
+  const accountId = trade?.accountId || (account?.id ? `ACC-${account.id}` : '#Demo-Account')
   const isProfit = (trade?.pnl ?? 0) >= 0
 
   // Calculate percentage gain mathematically soundly (leveraged ROI or price delta)

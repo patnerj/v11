@@ -208,6 +208,28 @@ export function TraderSupport() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Point #6: Auto-focus Subject input when Create Ticket modal opens
+  useEffect(() => {
+    if (isCreatingModal) {
+      const timer = setTimeout(() => {
+        subjectInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isCreatingModal]);
+
+  // Point #6: Auto-focus Reply textarea when a ticket conversation is selected
+  useEffect(() => {
+    if (selectedTicketId) {
+      const timer = setTimeout(() => {
+        replyInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTicketId]);
 
   // Fetch Tickets List
   const { data: ticketsData, refetch: refetchTickets, isFetching: isFetchingTickets } = useQuery({
@@ -662,6 +684,7 @@ export function TraderSupport() {
 
                 <form onSubmit={handleSendReply} className="space-y-2">
                   <textarea
+                    ref={replyInputRef}
                     rows={3}
                     placeholder="Type your reply or follow-up question here... (Press Ctrl + Enter to send)"
                     value={replyText}
@@ -794,6 +817,8 @@ export function TraderSupport() {
                     Subject
                   </label>
                   <input
+                    ref={subjectInputRef}
+                    autoFocus
                     type="text"
                     required
                     value={newSubject}

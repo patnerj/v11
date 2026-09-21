@@ -10,8 +10,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { 
   Wallet, DollarSign, ArrowUpRight, Copy, Check, 
   Clock, ShieldCheck, AlertTriangle, ExternalLink, 
-  CheckCircle2, XCircle, FileText, Send, Eye
+  CheckCircle2, XCircle, FileText, Send, Eye, QrCode
 } from 'lucide-react'
+import QRCode from 'qrcode'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
 
@@ -69,6 +70,9 @@ export function PayoutManagementModal({
   const [proofUrl, setProofUrl] = useState('')
   const [adminNote, setAdminNote] = useState('')
   const [copied, setCopied] = useState(false)
+  const [copiedAddress, setCopiedAddress] = useState(false)
+  const [copiedAmount, setCopiedAmount] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [submittingAction, setSubmittingAction] = useState<string | null>(null)
 
   // Initialize modal state on payout selection
@@ -78,8 +82,33 @@ export function PayoutManagementModal({
       setProofUrl(payout.proof_url || '')
       setAdminNote(payout.admin_note || '')
       setCopied(false)
+      setCopiedAddress(false)
+      setCopiedAmount(false)
     }
   }, [payout])
+
+  const destinationAddress = payout?.payment_address || null
+  const method = (payout?.payment_method || payout?.gateway || 'Crypto TRC20').toUpperCase()
+  const isCrypto = /crypto|usdt|btc|eth|trc|erc|sol|tron|bitcoin|ethereum/i.test(method) || !/bank|wire|paypal|deel|wise/i.test(method)
+
+  // Generate QR code for crypto destination address - UNCONDITIONAL HOOK BEFORE EARLY RETURN
+  useEffect(() => {
+    if (payout && isCrypto && destinationAddress && destinationAddress.trim().length > 6) {
+      QRCode.toDataURL(destinationAddress.trim(), {
+        width: 220,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+        errorCorrectionLevel: 'M',
+      })
+        .then((url) => setQrDataUrl(url))
+        .catch(() => setQrDataUrl(null))
+    } else {
+      setQrDataUrl(null)
+    }
+  }, [payout, destinationAddress, isCrypto])
 
   if (!payout) return null
 
@@ -97,12 +126,6 @@ export function PayoutManagementModal({
   const splitPct = Number(payout.profit_split_pct || 80)
   const traderShare = payout.trader_amount ? Number(payout.trader_amount) : (requestedAmt * (splitPct / 100))
   const firmShare = payout.firm_amount ? Number(payout.firm_amount) : (requestedAmt - traderShare)
-
-  const method = (payout.payment_method || payout.gateway || 'Crypto TRC20').toUpperCase()
-  // Never invent a destination address — a fabricated one displayed with a
-  // working Copy button risks an admin sending real funds to a wallet that
-  // belongs to nobody involved. Show the real address on file, or nothing.
-  const destinationAddress = payout.payment_address || null
 
   const dateFormatted = payout.requested_at || payout.created_at 
     ? new Date(payout.requested_at || payout.created_at || Date.now()).toLocaleString('en-US', {
@@ -128,8 +151,21 @@ export function PayoutManagementModal({
     if (destinationAddress) {
       navigator.clipboard.writeText(destinationAddress)
       setCopied(true)
-      toast.success('Payout destination copied to clipboard!')
-      setTimeout(() => setCopied(false), 2000)
+      setCopiedAddress(true)
+      toast.success('Payout destination wallet copied to clipboard!')
+      setTimeout(() => {
+        setCopied(false)
+        setCopiedAddress(false)
+      }, 2000)
+    }
+  }
+
+  const handleCopyAmount = () => {
+    if (traderShare > 0) {
+      navigator.clipboard.writeText(traderShare.toFixed(2))
+      setCopiedAmount(true)
+      toast.success(`Exact amount (${traderShare.toFixed(2)} USD) copied to clipboard!`)
+      setTimeout(() => setCopiedAmount(false), 2000)
     }
   }
 
@@ -390,27 +426,79 @@ export function PayoutManagementModal({
           </div>
         </div>
 
-        {/* 3. Payout Destination Box */}
-        <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-              <Wallet className="h-3.5 w-3.5 text-emerald-400" />
-              Destination Gateway: <span className="text-emerald-400 font-bold">{method}</span>
+        {/* 3. Payout Destination Box with Scan-to-Pay QR Code (Point #5) */}
+        <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#1F2937]/70 pb-2.5">
+            <span className="text-xs font-bold text-gray-200 flex items-center gap-1.5 uppercase tracking-wider">
+              <Wallet className="h-4 w-4 text-emerald-400" />
+              {isCrypto ? 'Crypto Disbursal Gateway' : 'Fiat / Banking Disbursal Gateway'}
             </span>
-            {destinationAddress && (
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="text-xs text-gray-400 hover:text-emerald-400 font-medium flex items-center gap-1 transition-colors"
-              >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? 'Copied' : 'Copy Address'}
-              </button>
-            )}
+            <Badge tone="success" size="sm" className="font-mono font-bold text-xs uppercase px-2 py-0.5">
+              {method}
+            </Badge>
           </div>
 
-          <div className={`bg-[#111827] border p-2.5 rounded-lg font-mono text-xs break-all select-all ${destinationAddress ? 'border-[#1F2937] text-gray-200' : 'border-red-500/40 text-red-400'}`}>
-            {destinationAddress || 'No destination address on file — confirm with the trader before marking this payout paid.'}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-1">
+            {/* Scannable QR Code */}
+            {qrDataUrl && destinationAddress ? (
+              <div className="flex flex-col items-center gap-1.5 shrink-0 mx-auto sm:mx-0">
+                <div className="p-2 rounded-xl bg-white shadow-lg border border-gray-200 flex items-center justify-center">
+                  <img
+                    src={qrDataUrl}
+                    alt={`Scan-to-Pay QR Code for ${destinationAddress}`}
+                    className="h-24 w-24 object-contain rounded-md"
+                  />
+                </div>
+                <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                  <QrCode className="h-3 w-3" /> Scan to Pay
+                </span>
+              </div>
+            ) : null}
+
+            {/* Destination Address & Copy Actions */}
+            <div className="flex-1 space-y-2.5 w-full">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-gray-400 font-semibold">{isCrypto ? 'Trader Payout Wallet Address' : 'Trader Payout Destination / Account'}</span>
+                  {destinationAddress && (
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 transition-colors active:scale-95"
+                    >
+                      {copiedAddress || copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedAddress || copied ? 'Address Copied!' : 'Copy Address'}
+                    </button>
+                  )}
+                </div>
+                <div className={`p-2.5 rounded-lg font-mono text-xs break-all select-all border ${destinationAddress ? 'bg-[#111827] border-[#1F2937] text-gray-100' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                  {destinationAddress || 'No destination address on file — confirm with the trader before marking this payout paid.'}
+                </div>
+              </div>
+
+              {/* Exact Disbursal Amount 1-Click Copy */}
+              {traderShare > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-[#111827] border border-[#1F2937] text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-gray-400">Exact Disbursal:</span>
+                    <strong className="text-emerald-400 font-bold tabular">{formatMoney(traderShare)}</strong>
+                    <span className="text-[10px] text-gray-500 font-mono">({traderShare.toFixed(2)})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyAmount}
+                    className="text-xs text-gray-300 hover:text-white font-medium flex items-center gap-1 transition-colors px-2 py-1 rounded bg-[#1F2937] hover:bg-gray-700 active:scale-95"
+                  >
+                    {copiedAmount ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                    {copiedAmount ? 'Amount Copied!' : 'Copy Amount'}
+                  </button>
+                </div>
+              )}
+
+              <p className="text-[10px] text-gray-500 leading-tight">
+                Scan QR or copy address & exact amount directly into your hardware wallet, Binance, or TronLink terminal to eliminate copy-paste errors.
+              </p>
+            </div>
           </div>
         </div>
 

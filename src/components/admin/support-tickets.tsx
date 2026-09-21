@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,17 @@ export function AdminSupportTickets() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(false);
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus reply textarea when opening a ticket
+  useEffect(() => {
+    if (selectedTicket) {
+      const timer = setTimeout(() => {
+        replyTextareaRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTicket]);
 
   const { data: ticketsData, refetch: refetchTickets } = useQuery({
     queryKey: ['admin.tickets.list'],
@@ -152,6 +163,8 @@ export function AdminSupportTickets() {
           <div className="p-4 border-t border-border-subtle bg-surface shrink-0">
             <div className="relative">
               <textarea
+                ref={replyTextareaRef}
+                autoFocus
                 className="w-full rounded-xl border border-border-strong bg-surface-muted p-4 pr-14 text-sm focus-ring min-h-[100px] resize-none"
                 placeholder="Type your reply here..."
                 value={replyText}

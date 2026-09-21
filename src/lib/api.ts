@@ -66,6 +66,8 @@ export const api = {
     twoFactorToggle:    (enable: boolean) => fxsim<{ success: true; enabled: boolean }>('/auth/2fa/toggle', { body: { enable } }),
     changePassword:     (body: { current_password: string; new_password: string }) =>
       fxsim<{ success: boolean; message: string }>('/auth/change-password', { method: 'POST', body }),
+    silentRefresh:      () =>
+      fxsim<{ user: AuthUser; token: string; nonce: string; success: boolean }>('/auth/refresh', { method: 'POST', timeout: 15_000, _isRetry: true }),
   },
   preferences: {
     get:  () => fxsim<{ success: boolean; preferences: Record<string, boolean> }>('/user/preferences', { cache: 0 }),
@@ -95,6 +97,7 @@ export const api = {
   newsEvents:    ()              => fxsim<any[]>('/news-events',                      { cache: 60_000 }),
   open:          (b: OpenOrderBody) => fxsim<{ success: boolean; message?: string; position_id?: number }>('/open', { body: b, retries: 0 }),
   close:         (id: number)    => fxsim<{ success: boolean; message?: string; pnl?: number }>(`/close/${id}`, { method: 'POST', retries: 0 }),
+  closeAll:      (params?: { account_id?: number }) => fxsim<{ success: boolean; closed_count: number; failed_count?: number; total?: number; message?: string }>('/close-all', { method: 'POST', body: params || {}, retries: 0 }),
   partialClose:  (id: number, lots: number) => fxsim<{ success: boolean; message?: string }>(`/partial-close/${id}`, { body: { lots }, retries: 0 }),
   sltp:          (id: number, sl: number | null, tp: number | null) =>
     fxsim<{ success: boolean; message?: string }>(`/sltp/${id}`, { body: { sl, tp } }),
@@ -116,8 +119,8 @@ export const api = {
   challengeStart:   (planId: number, couponCode?: string) => fxsim<{ success: boolean; message?: string; requires_payment?: boolean; plan_id?: number; amount?: number }>('/challenge/start', { body: { plan_id: planId, coupon_code: couponCode } }),
   challengeMetrics: (id: number) => fxsim<ChallengeMetrics>(`/challenge/${id}/metrics`, { cache: 6_000 }),
   challengeMt5:     (id: number) => fxsim<{ ready: boolean; message?: string; mt5_login?: string; mt5_password?: string; mt5_server?: string; mt5_account_type?: string }>(`/challenge/${id}/mt5-details`, { cache: 30_000 }),
-  challengePayout:  (id: number, method: string, address: string) =>
-    fxsim<{ success: boolean; message?: string; trader_amount?: number; firm_amount?: number }>(`/challenge/${id}/payout`, { body: { method, address } }),
+  challengePayout:  (id: number, method: string, address: string, amount?: number) =>
+    fxsim<{ success: boolean; message?: string; trader_amount?: number; firm_amount?: number }>(`/challenge/${id}/payout`, { body: { method, address, amount } }),
   certificate:      (id: number) => fxsim<Certificate>(`/certificate/${id}`, { cache: 5 * 60_000 }),
   certificatePublic: (code: string) => fxsim<Certificate>(`/certificate/public/${encodeURIComponent(code)}`, { public: true, cache: 5 * 60_000 }),
 

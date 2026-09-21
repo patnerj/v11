@@ -17,7 +17,7 @@ import { PayoutSummary, PayoutHistory } from '@/components/dashboard/payout-hist
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { Banknote, ArrowUpRight, AlertCircle, Wallet, CheckCircle2, ShieldAlert } from 'lucide-react'
+import { Banknote, ArrowUpRight, AlertCircle, Wallet, CheckCircle2, ShieldAlert, Clock } from 'lucide-react'
 import Link from 'next/link'
 
 type PayoutMethod = 'crypto' | 'wise'
@@ -103,9 +103,18 @@ export default function PayoutsPage() {
                   You need to pass an evaluation before you can request a payout.
                 </div>
               ) : funded.map((c) => {
+                const elig = c.payout_eligibility
                 const profit = toNum(c.current_balance) - toNum(c.starting_balance)
                 const splitPct = c.custom_profit_split !== null && c.custom_profit_split !== undefined ? toNum(c.custom_profit_split) : toNum(c.funded_profit_split ?? 80)
-                const traderShare = profit > 0 ? (profit * splitPct) / 100 : 0
+                const withdrawableProfit = elig ? elig.withdrawable_profit : Math.max(0, profit)
+                const traderShare = elig ? elig.withdrawable_share : (profit > 0 ? (profit * splitPct) / 100 : 0)
+                const hasOpenTrades = Boolean(elig && elig.open_positions_count > 0)
+                const hasPendingOrders = Boolean(elig && elig.pending_orders_count > 0)
+                const hasPendingPayout = Boolean(elig && elig.has_pending_payout)
+                const isDaysIncomplete = Boolean(elig && elig.trading_days_completed < elig.min_days_required)
+                const isUnderMinAmount = Boolean(elig && withdrawableProfit < elig.min_payout_amount)
+                const isUnsettledGap = Boolean(elig && elig.unsettled_profit > 5.0 && withdrawableProfit < elig.min_payout_amount)
+
                 return (
                   <div key={c.id} className="rounded-lg border border-border-subtle p-4 hover:border-accent transition-colors">
                     <div className="flex items-start justify-between gap-3 mb-3">
@@ -113,29 +122,115 @@ export default function PayoutsPage() {
                         <div className="font-medium">{c.plan_name ?? `Challenge #${c.id}`}</div>
                         <div className="text-2xs text-text-muted tabular">{fmtUSD(c.account_size ?? 0, { decimals: 0 })} · Funded {c.funded_at && fmtDate(c.funded_at)}</div>
                       </div>
-                      <Badge tone="success">FUNDED</Badge>
+                      <div className="flex items-center gap-1.5">
+                        {hasPendingPayout && (
+                          <Badge tone="warn">REVIEW</Badge>
+                        )}
+                        <Badge tone="success">FUNDED</Badge>
+                      </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-4">
-                      <Stat label="Profit"      value={fmtUSD(profit, { sign: true })} tone={profit >= 0 ? 'success' : 'danger'} />
-                      <Stat label={`Your share (${splitPct}%)`} value={fmtUSD(traderShare)} tone="success" />
+                      <Stat label="Total Profit"      value={fmtUSD(profit, { sign: true })} tone={profit >= 0 ? 'success' : 'danger'} />
+                      <Stat label={`Withdrawable Share (${splitPct}%)`} value={fmtUSD(traderShare)} tone="success" />
                       <Stat label="Equity"      value={fmtUSD(c.current_balance)} />
                     </div>
+
+                    {/* Dynamic Real-Time Warnings */}
+                    {hasOpenTrades && (
+                      <div className="flex items-center justify-between gap-2 p-2.5 rounded-md bg-warn/10 border border-warn/25 text-xs text-warn mb-3">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <span>
+                            You have <strong>{elig!.open_positions_count} open position{elig!.open_positions_count > 1 ? 's' : ''}</strong>. Close all market trades before requesting a payout.
+                          </span>
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="shrink-0 h-7 text-2xs">
+                          <Link href="/dashboard/trading">WebTrader <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+                        </Button>
+                      </div>
+                    )}
+
+                    {!hasOpenTrades && hasPendingOrders && (
+                      <div className="flex items-center justify-between gap-2 p-2.5 rounded-md bg-warn/10 border border-warn/25 text-xs text-warn mb-3">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <span>
+                            You have <strong>{elig!.pending_orders_count} pending order{elig!.pending_orders_count > 1 ? 's' : ''}</strong>. Cancel all pending orders before requesting a payout.
+                          </span>
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="shrink-0 h-7 text-2xs">
+                          <Link href="/dashboard/trading">WebTrader <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+                        </Button>
+                      </div>
+                    )}
+
+                    {hasPendingPayout && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-md bg-accent/10 border border-accent/25 text-xs text-accent mb-3">
+                        <Clock className="h-4 w-4 shrink-0" />
+                        <span>A payout request for this account is currently being processed by finance.</span>
+                      </div>
+                    )}
+
+                    {isUnsettledGap && (
+                      <div className="p-2.5 rounded-md bg-surface-muted/60 border border-border-subtle text-xs text-text-muted mb-3 space-y-1">
+                        <div className="font-semibold text-text flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5 text-warn" />
+                          <span>Trades Pending Settlement</span>
+                        </div>
+                        <div className="text-2xs">
+                          Account profit includes floating or unsettled trades. Withdrawable settled profit: <strong>{fmtUSD(withdrawableProfit)}</strong> (Minimum payout: <strong>{fmtUSD(elig?.min_payout_amount ?? 50)}</strong>).
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Button & Contextual State */}
                     {kycApproved === false ? (
                       <Button asChild size="sm" variant="outline">
                         <Link href="/dashboard/kyc">Complete KYC to request <ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link>
+                      </Button>
+                    ) : hasOpenTrades ? (
+                      <Button size="sm" variant="outline" disabled className="opacity-80 cursor-not-allowed">
+                        <AlertCircle className="h-3.5 w-3.5 mr-1 text-warn" /> Close Trades to Withdraw
+                      </Button>
+                    ) : hasPendingOrders ? (
+                      <Button size="sm" variant="outline" disabled className="opacity-80 cursor-not-allowed">
+                        <AlertCircle className="h-3.5 w-3.5 mr-1 text-warn" /> Cancel Orders to Withdraw
+                      </Button>
+                    ) : hasPendingPayout ? (
+                      <Button size="sm" variant="outline" disabled className="opacity-80 cursor-not-allowed">
+                        <Clock className="h-3.5 w-3.5 mr-1 text-accent" /> Payout Under Review
+                      </Button>
+                    ) : isDaysIncomplete ? (
+                      <Button size="sm" variant="outline" disabled className="opacity-80 cursor-not-allowed">
+                        {elig!.trading_days_completed}/{elig!.min_days_required} Days Traded
+                      </Button>
+                    ) : isUnderMinAmount || profit <= 0 ? (
+                      <Button size="sm" variant="outline" disabled className="opacity-80 cursor-not-allowed">
+                        Min Payout {fmtUSD(elig?.min_payout_amount ?? 50)}
                       </Button>
                     ) : (
                       <Button
                         size="sm"
                         variant="success"
                         onClick={() => setRequestFor(c)}
-                        disabled={profit <= 0}
                       >
-                        Request payout <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                        {elig && elig.unsettled_profit > 5.0
+                          ? `Request Settled Payout (${fmtUSD(traderShare)})`
+                          : 'Request payout'} <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
                       </Button>
                     )}
-                    {profit <= 0 && (
-                      <div className="mt-2 text-2xs text-text-muted">Your account needs to be in profit before you can request a payout.</div>
+
+                    {isDaysIncomplete && (
+                      <div className="mt-2 text-2xs text-text-muted">
+                        Minimum {elig!.min_days_required} trading days required before payout eligibility.
+                      </div>
+                    )}
+                    {!isDaysIncomplete && (profit <= 0 || isUnderMinAmount) && !hasOpenTrades && !hasPendingOrders && (
+                      <div className="mt-2 text-2xs text-text-muted">
+                        {profit <= 0 
+                          ? 'Your account needs to be in profit before you can request a payout.'
+                          : `Available withdrawable profit (${fmtUSD(withdrawableProfit)}) is below the minimum payout amount of ${fmtUSD(elig?.min_payout_amount ?? 50)}.`}
+                      </div>
                     )}
                   </div>
                 )
@@ -254,23 +349,52 @@ function RequestPayoutDialog({
   onClose: () => void
   onSuccess: () => void
 }) {
+  const elig = challenge.payout_eligibility
   const [method,  setMethod]  = useState(savedMethod?.method || 'crypto')
   const [address, setAddress] = useState(savedMethod?.address ?? '')
   const [busy,    setBusy]    = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const profit = toNum(challenge.current_balance) - toNum(challenge.starting_balance)
+  const balanceProfit = toNum(challenge.current_balance) - toNum(challenge.starting_balance)
+  const maxWithdrawable = elig ? elig.withdrawable_profit : Math.max(0, balanceProfit)
+  const minPayout = elig?.min_payout_amount ?? 50.0
+
+  const [amountStr, setAmountStr] = useState<string>(maxWithdrawable > 0 ? maxWithdrawable.toFixed(2) : '0.00')
+
   const splitPct = challenge.custom_profit_split !== null && challenge.custom_profit_split !== undefined ? toNum(challenge.custom_profit_split) : toNum(challenge.funded_profit_split ?? 80)
-  const traderShare = (profit * splitPct) / 100
-  const firmShare   = profit - traderShare
+  
+  const currentNumAmt = Math.max(0, toNum(amountStr))
+  const requestedProfit = Math.min(maxWithdrawable, currentNumAmt || maxWithdrawable)
+  const traderShare = (requestedProfit * splitPct) / 100
+  const firmShare   = requestedProfit - traderShare
 
   const submit = async () => {
     if (!address.trim()) { toast.error('Enter your payout address'); return }
+    const numAmt = toNum(amountStr)
+    if (numAmt <= 0) { toast.error('Enter a valid payout amount'); return }
+    if (numAmt > maxWithdrawable + 0.05) {
+      toast.error(`Requested amount exceeds verified withdrawable profit (${fmtUSD(maxWithdrawable)})`)
+      return
+    }
+    if (numAmt < minPayout) {
+      toast.error(`Minimum payout amount is ${fmtUSD(minPayout)}`)
+      return
+    }
+
     setBusy(true)
-    const res = await api.challengePayout(challenge.id, method, address.trim())
-    setBusy(false)
-    if (res.ok && res.data.success) { setSuccess(true); setTimeout(onSuccess, 1500) }
-    else                            toast.error(res.ok ? (res.data.message ?? 'Request failed') : res.error)
+    try {
+      const res = await api.challengePayout(challenge.id, method, address.trim(), numAmt)
+      if (res.ok && res.data.success) {
+        setSuccess(true)
+        setTimeout(onSuccess, 1500)
+      } else {
+        toast.error(res.ok ? (res.data.message ?? 'Request failed') : res.error)
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Network error while requesting payout')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -295,10 +419,20 @@ function RequestPayoutDialog({
           <>
             <div className="rounded-lg bg-bg-subtle border border-border-subtle p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-text-muted">Profit on account</span>
-                <span className="tabular font-medium text-text">{fmtUSD(profit)}</span>
+                <span className="text-text-muted">Total profit on account</span>
+                <span className="tabular font-medium text-text">{fmtUSD(balanceProfit)}</span>
               </div>
               <div className="flex justify-between text-sm">
+                <span className="text-text-muted">Verified settled withdrawable</span>
+                <span className="tabular font-semibold text-success">{fmtUSD(maxWithdrawable)}</span>
+              </div>
+              {elig && elig.unsettled_profit > 0 && (
+                <div className="flex justify-between text-2xs text-warn">
+                  <span>Unsettled / floating trades</span>
+                  <span className="tabular font-medium">{fmtUSD(elig.unsettled_profit)}</span>
+                </div>
+              )}
+              <div className="pt-2 border-t border-border-subtle/60 flex justify-between text-sm">
                 <span className="text-text-muted">Your share ({splitPct}%)</span>
                 <span className="tabular font-semibold text-success">{fmtUSD(traderShare)}</span>
               </div>
@@ -306,6 +440,27 @@ function RequestPayoutDialog({
                 <span>Firm share ({fmtPct(100 - splitPct, 0)})</span>
                 <span className="tabular">{fmtUSD(firmShare)}</span>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="reqamount">Withdrawal amount (USD)</Label>
+                <button
+                  type="button"
+                  onClick={() => setAmountStr(maxWithdrawable.toFixed(2))}
+                  className="text-2xs font-semibold text-accent hover:underline"
+                >
+                  Max: {fmtUSD(maxWithdrawable)}
+                </button>
+              </div>
+              <Input
+                id="reqamount"
+                type="number"
+                step="any"
+                max={maxWithdrawable}
+                value={amountStr}
+                onChange={(e) => setAmountStr(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -340,7 +495,7 @@ function RequestPayoutDialog({
 
             <DialogFooter className="gap-2">
               <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button variant="success" onClick={submit} loading={busy} disabled={!address.trim()}>
+              <Button variant="success" onClick={submit} loading={busy} disabled={!address.trim() || currentNumAmt <= 0}>
                 Request {fmtUSD(traderShare)}
               </Button>
             </DialogFooter>
