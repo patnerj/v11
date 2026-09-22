@@ -1,0 +1,25 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leftGrad" x1="20" y1="110" x2="60" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+    <linearGradient id="rightGrad" x1="68" y1="18" x2="108" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Left Facet -->
+  <path d="M60 18L24 104C22.8 106.8 25.4 110 28.5 109.5L58 104V18Z" fill="url(#leftGrad)" filter="url(#glow)"/>
+
+  <!-- Right Facet -->
+  <path d="M68 18V104L99.5 109.5C102.6 110 105.2 106.8 104 104L68 18Z" fill="url(#rightGrad)" filter="url(#glow)"/>
+
+  <!-- Core Ascending Beam -->
+  <path d="M64 16L59 28H69L64 16Z" fill="#FFFFFF" opacity="0.9"/>
+</svg>
