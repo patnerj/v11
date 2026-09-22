@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/store/auth'
-import { AlertCircle, ArrowRight, Check } from 'lucide-react'
+import { AlertCircle, ArrowRight, Check, Sparkles } from 'lucide-react'
 import { Suspense } from 'react'
 
 export default function RegisterPage() {
@@ -95,6 +95,13 @@ function RegisterForm() {
           <div className="mb-4 flex items-start gap-2.5 p-3 rounded-md bg-danger-muted border border-danger/30 text-sm">
             <AlertCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
             <span className="text-danger">{error}</span>
+          </div>
+        )}
+
+        {ref && (
+          <div className="mb-5 flex items-center justify-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 shadow-sm shadow-emerald-500/5">
+            <Sparkles className="h-4 w-4 shrink-0 text-emerald-400 animate-pulse" />
+            <span>Referred by partner: <strong className="font-mono font-bold text-white bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">{ref}</strong> • Welcome Benefit Attached</span>
           </div>
         )}
 

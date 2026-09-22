@@ -8,8 +8,10 @@ import {
   Sparkles, Layers, Sliders, ShieldCheck, CheckCircle2,
   Calendar, ExternalLink, RefreshCw, Send, ArrowRight, UserCheck,
   Palette, Award, QrCode, Save, RotateCcw,
-  Monitor, Smartphone, Sun, Moon, Wifi, Battery, ChevronLeft
+  Monitor, Smartphone, Sun, Moon, Wifi, Battery, ChevronLeft,
+  Download, Search, Filter, Copy, FileSpreadsheet
 } from 'lucide-react'
+import QRCode from 'qrcode'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Banner, Coupon, AdminAffiliate, Commission, AffiliatePayout, CertificateTemplates } from '@/types/api'
@@ -624,22 +626,140 @@ export default function MarketingHubPage() {
     }
   })
 
-  // Manual Payout Modal
+  // Manual Payout Modal with Scan-to-Pay QR Code
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false)
   const [selectedAffiliate, setSelectedAffiliate] = useState<AdminAffiliate | null>(null)
   const [payoutAmount, setPayoutAmount] = useState<number>(0)
   const [payoutMethod, setPayoutMethod] = useState<string>('crypto')
   const [payoutDest, setPayoutDest] = useState<string>('')
   const [payoutNote, setPayoutNote] = useState<string>('')
+  const [payoutTxId, setPayoutTxId] = useState<string>('')
+  const [payoutQrDataUrl, setPayoutQrDataUrl] = useState<string>('')
 
-  const openPayoutModal = (aff: AdminAffiliate) => {
+  // Affiliate Detail Drawer
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false)
+  const [selectedAffiliateDetail, setSelectedAffiliateDetail] = useState<AdminAffiliate | null>(null)
+
+  const openDetailDrawer = (aff: AdminAffiliate) => {
+    setSelectedAffiliateDetail(aff)
+    setIsDetailDrawerOpen(true)
+  }
+
+  // Affiliate Directory Search & Filter
+  const [affiliateSearch, setAffiliateSearch] = useState('')
+  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'suspended'>('all')
+
+  const openPayoutModal = async (aff: AdminAffiliate) => {
     setSelectedAffiliate(aff)
     setPayoutAmount(Number(aff.unpaid || 0))
-    setPayoutDest(aff.payout_destination || aff.payment_destination || '')
+    const dest = aff.payout_destination || aff.payment_destination || ''
+    setPayoutDest(dest)
     setPayoutMethod('crypto')
+    setPayoutTxId('')
     setPayoutNote(`Monthly commission release for affiliate #${aff.id}`)
+    if (dest) {
+      try {
+        const url = await QRCode.toDataURL(dest, { width: 160, margin: 1 })
+        setPayoutQrDataUrl(url)
+      } catch {
+        setPayoutQrDataUrl('')
+      }
+    } else {
+      setPayoutQrDataUrl('')
+    }
     setIsPayoutModalOpen(true)
   }
+
+  // Generate QR dynamically if destination is edited
+  const handleDestChange = async (val: string) => {
+    setPayoutDest(val)
+    if (val.trim()) {
+      try {
+        const url = await QRCode.toDataURL(val.trim(), { width: 160, margin: 1 })
+        setPayoutQrDataUrl(url)
+      } catch {
+        setPayoutQrDataUrl('')
+      }
+    } else {
+      setPayoutQrDataUrl('')
+    }
+  }
+
+  // Export to CSV Helpers
+  const exportAffiliatesCSV = () => {
+    if (!affiliates.length) {
+      toast.error('No affiliates to export.')
+      return
+    }
+    const headers = ['ID', 'Username', 'Display Name', 'Email', 'Ref Code', 'Status', 'Rate %', 'Conversions', 'Clicks', 'Unpaid USD', 'Paid USD', 'Payout Method', 'Payout Destination']
+    const rows = affiliates.map(a => [
+      a.id,
+      `"${a.user_login || ''}"`,
+      `"${a.display_name || ''}"`,
+      `"${a.user_email || ''}"`,
+      `"${a.code || ''}"`,
+      a.status || 'active',
+      a.rate_percent ?? 15,
+      a.conversions || 0,
+      a.referrals || 0,
+      a.unpaid || 0,
+      a.paid || 0,
+      `"${a.payout_method || ''}"`,
+      `"${a.payout_destination || a.payment_destination || ''}"`
+    ])
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `alphacapital_affiliates_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Affiliates directory exported to CSV!')
+  }
+
+  const exportCommissionsCSV = () => {
+    if (!commissions.length) {
+      toast.error('No commissions to export.')
+      return
+    }
+    const headers = ['ID', 'Order ID', 'Affiliate Code', 'Buyer User', 'Rate %', 'Base Amount USD', 'Commission USD', 'Status', 'Created At']
+    const rows = commissions.map(c => [
+      c.id,
+      c.order_id || '',
+      `"${c.affiliate_code || ''}"`,
+      `"${c.buyer_user || ''}"`,
+      c.rate_percent || 0,
+      c.base_amount || 0,
+      c.amount || 0,
+      c.status || 'pending',
+      `"${c.created_at || ''}"`
+    ])
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `alphacapital_commissions_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Commissions ledger exported to CSV!')
+  }
+
+  // Filtered Affiliates
+  const filteredAffiliates = useMemo(() => {
+    return affiliates.filter(a => {
+      const matchStatus = affiliateStatusFilter === 'all' || a.status === affiliateStatusFilter
+      const q = affiliateSearch.toLowerCase().trim()
+      if (!q) return matchStatus
+      const matchQuery = 
+        (a.user_login && a.user_login.toLowerCase().includes(q)) ||
+        (a.display_name && a.display_name.toLowerCase().includes(q)) ||
+        (a.user_email && a.user_email.toLowerCase().includes(q)) ||
+        (a.code && a.code.toLowerCase().includes(q))
+      return matchStatus && matchQuery
+    })
+  }, [affiliates, affiliateSearch, affiliateStatusFilter])
 
   const executePayoutMutation = useMutation({
     mutationFn: async (payload: any) => {
@@ -1135,15 +1255,48 @@ export default function MarketingHubPage() {
             </CardFooter>
           </Card>
 
-          {/* Top Affiliates Data Table */}
+          {/* Top Affiliates Data Table with Search, Filter & CSV Export */}
           <div className="space-y-3">
-            <h3 className="text-base font-bold text-gray-100 flex items-center gap-2">
-              <Users2 className="h-4 w-4 text-emerald-400" />
-              Affiliate Partners Directory ({affiliates.length})
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 className="text-base font-bold text-gray-100 flex items-center gap-2">
+                <Users2 className="h-4 w-4 text-emerald-400" />
+                Affiliate Partners Directory ({filteredAffiliates.length})
+              </h3>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Search partner or code..."
+                    value={affiliateSearch}
+                    onChange={(e) => setAffiliateSearch(e.target.value)}
+                    className="h-8 pl-8 text-xs w-44 bg-[#0B0F19] border-[#1F2937]"
+                  />
+                </div>
+
+                <select
+                  value={affiliateStatusFilter}
+                  onChange={(e) => setAffiliateStatusFilter(e.target.value as any)}
+                  className="h-8 px-2.5 rounded-md bg-[#0B0F19] border border-[#1F2937] text-xs text-gray-200 focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active Only</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportAffiliatesCSV}
+                  className="h-8 text-xs gap-1.5 border-[#1F2937] hover:bg-[#1F2937] text-gray-300"
+                >
+                  <Download className="h-3.5 w-3.5" /> Export CSV
+                </Button>
+              </div>
+            </div>
 
             <DataTable
-              data={affiliates}
+              data={filteredAffiliates}
               columns={[
                 {
                   key: 'partner',
@@ -1151,9 +1304,14 @@ export default function MarketingHubPage() {
                   render: (a: AdminAffiliate) => (
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-100 text-sm">
+                        <button
+                          type="button"
+                          onClick={() => openDetailDrawer(a)}
+                          className="font-semibold text-gray-100 text-sm hover:text-emerald-400 text-left transition-colors flex items-center gap-1.5"
+                        >
                           {a.display_name || a.user_login}
-                        </span>
+                          <Eye className="h-3 w-3 text-gray-500 hover:text-emerald-400 inline" />
+                        </button>
                         <Badge tone={a.status === 'active' ? 'success' : 'neutral'} size="sm">
                           {a.status}
                         </Badge>
@@ -1223,6 +1381,16 @@ export default function MarketingHubPage() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => openDetailDrawer(a)}
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-400"
+                        title="View Affiliate Details"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => handleToggleAffiliateStatus(a)}
                         className={`h-8 w-8 p-0 ${a.status === 'active' ? 'text-amber-400 hover:text-amber-300' : 'text-emerald-400 hover:text-emerald-300'}`}
                         title={a.status === 'active' ? 'Suspend Affiliate' : 'Activate Affiliate'}
@@ -1235,7 +1403,6 @@ export default function MarketingHubPage() {
                         variant="primary"
                         onClick={() => openPayoutModal(a)}
                         className="h-8 text-xs gap-1.5 shadow-emerald-500/10"
-                        disabled={Number(a.unpaid || 0) <= 0}
                       >
                         <Send className="h-3 w-3" />
                         Pay
@@ -1423,20 +1590,31 @@ export default function MarketingHubPage() {
                 </CardDescription>
               </div>
 
-              <div className="flex flex-wrap gap-1">
-                {(['all', 'pending', 'approved', 'paid', 'reversed'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setCommissionFilter(f)}
-                    className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
-                      commissionFilter === f
-                        ? 'bg-emerald-500 text-slate-950 font-bold'
-                        : 'text-gray-400 hover:text-white bg-[#0B0F19] border border-[#1F2937]'
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportCommissionsCSV}
+                  className="h-7 text-xs gap-1.5 border-[#1F2937] hover:bg-[#1F2937] text-gray-300"
+                >
+                  <Download className="h-3 w-3" /> Export Ledger (CSV)
+                </Button>
+
+                <div className="flex flex-wrap gap-1">
+                  {(['all', 'pending', 'approved', 'paid', 'reversed'] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setCommissionFilter(f)}
+                      className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
+                        commissionFilter === f
+                          ? 'bg-emerald-500 text-slate-950 font-bold'
+                          : 'text-gray-400 hover:text-white bg-[#0B0F19] border border-[#1F2937]'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
               </div>
             </CardHeader>
 
@@ -2655,7 +2833,7 @@ export default function MarketingHubPage() {
         </div>
       </Modal>
 
-      {/* ── EXECUTE AFFILIATE PAYOUT MODAL ─────────────────────────────────── */}
+      {/* ── EXECUTE AFFILIATE PAYOUT MODAL WITH SCAN-TO-PAY QR ─────────────── */}
       <Modal
         open={isPayoutModalOpen}
         onOpenChange={setIsPayoutModalOpen}
@@ -2667,13 +2845,27 @@ export default function MarketingHubPage() {
           
           <div className="space-y-1.5">
             <Label htmlFor="payout-amt">Payout Amount ($ USD)</Label>
-            <Input
-              id="payout-amt"
-              type="number"
-              value={payoutAmount}
-              onChange={(e) => setPayoutAmount(Number(e.target.value))}
-              className="font-mono text-sm font-bold text-emerald-400"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="payout-amt"
+                type="number"
+                value={payoutAmount}
+                onChange={(e) => setPayoutAmount(Number(e.target.value))}
+                className="font-mono text-sm font-bold text-emerald-400 flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-10 text-xs px-2.5 gap-1 border-[#1F2937] hover:bg-[#1F2937]"
+                onClick={() => {
+                  navigator.clipboard.writeText(String(payoutAmount))
+                  toast.success('Payout amount copied!')
+                }}
+              >
+                <Copy className="h-3 w-3" /> Copy
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -2691,12 +2883,53 @@ export default function MarketingHubPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="payout-dest">Wallet Address / Account Info</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="payout-dest">Wallet Address / Account Info</Label>
+              {payoutDest && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(payoutDest)
+                    toast.success('Wallet address copied!')
+                  }}
+                  className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-mono"
+                >
+                  <Copy className="h-2.5 w-2.5" /> Copy Address
+                </button>
+              )}
+            </div>
             <Input
               id="payout-dest"
               placeholder="e.g. TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
               value={payoutDest}
-              onChange={(e) => setPayoutDest(e.target.value)}
+              onChange={(e) => handleDestChange(e.target.value)}
+              className="font-mono text-xs"
+            />
+          </div>
+
+          {/* ── Scan-to-Pay QR Code Box ── */}
+          {payoutDest && payoutQrDataUrl && payoutMethod === 'crypto' && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-[#0B0F19] border border-emerald-500/20">
+              <div className="bg-white p-1 rounded-md shrink-0">
+                <img src={payoutQrDataUrl} alt="TRC-20 QR Code" className="w-20 h-20" />
+              </div>
+              <div className="space-y-1 min-w-0">
+                <span className="text-2xs uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
+                  <QrCode className="h-3 w-3" /> Scan-to-Pay QR
+                </span>
+                <p className="text-[11px] text-gray-400 leading-tight">Scan with TrustWallet or Binance App for 1-click mobile transfer.</p>
+                <div className="text-[10px] text-gray-500 font-mono truncate">{payoutDest}</div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="payout-txid">Transaction Hash / TxID (Proof of Disbursal)</Label>
+            <Input
+              id="payout-txid"
+              placeholder="e.g. 7f9a1b2c3d4e5f6... (optional blockchain hash)"
+              value={payoutTxId}
+              onChange={(e) => setPayoutTxId(e.target.value)}
               className="font-mono text-xs"
             />
           </div>
@@ -2728,7 +2961,7 @@ export default function MarketingHubPage() {
                   amount: payoutAmount,
                   method: payoutMethod,
                   destination: payoutDest,
-                  note: payoutNote,
+                  note: payoutNote + (payoutTxId ? ` (TxID: ${payoutTxId})` : ''),
                 })
               }}
               loading={executePayoutMutation.isPending}
@@ -2739,6 +2972,109 @@ export default function MarketingHubPage() {
           </div>
 
         </div>
+      </Modal>
+
+      {/* ── AFFILIATE DETAIL DRILL-DOWN DRAWER / MODAL ───────────────────────── */}
+      <Modal
+        open={isDetailDrawerOpen}
+        onOpenChange={setIsDetailDrawerOpen}
+        title={`Affiliate Profile & Activity: ${selectedAffiliateDetail?.display_name || selectedAffiliateDetail?.user_login || ''}`}
+        description="Comprehensive drill-down of referral traffic, commission splits, and customer transactions."
+        maxWidth="2xl"
+      >
+        {selectedAffiliateDetail && (
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Ref Code</div>
+                <div className="text-sm font-mono font-bold text-emerald-400 mt-0.5">{selectedAffiliateDetail.code}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Commission Split</div>
+                <div className="text-sm font-mono font-bold text-white mt-0.5">{selectedAffiliateDetail.rate_percent ?? 15}%</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Unpaid Balance</div>
+                <div className="text-sm font-mono font-bold text-amber-400 mt-0.5">${Number(selectedAffiliateDetail.unpaid || 0).toLocaleString()}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Lifetime Paid</div>
+                <div className="text-sm font-mono font-bold text-emerald-400 mt-0.5">${Number(selectedAffiliateDetail.paid || 0).toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-lg bg-[#0B0F19] border border-[#1F2937] space-y-2">
+              <div className="text-xs font-bold text-gray-200">Registered Payout Destination</div>
+              <div className="flex items-center justify-between gap-2 p-2 rounded bg-[#111827] border border-[#1F2937] text-xs font-mono">
+                <span className="truncate text-gray-300">
+                  {selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination || 'No payout destination configured by user yet.'}
+                </span>
+                {(selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-[10px] px-2 text-emerald-400 hover:text-emerald-300"
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination || '')
+                      toast.success('Wallet address copied!')
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-200">Affiliate Orders & Commission Ledger</span>
+                <span className="text-[11px] font-mono text-gray-400">
+                  {commissions.filter(c => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id).length} transactions
+                </span>
+              </div>
+
+              {commissions.filter(c => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id).length === 0 ? (
+                <div className="p-6 text-center text-xs text-gray-500 font-mono rounded-lg border border-[#1F2937] bg-[#0B0F19]">
+                  No challenge purchase orders attributed to code {selectedAffiliateDetail.code} yet.
+                </div>
+              ) : (
+                <div className="rounded-lg border border-[#1F2937] overflow-hidden divide-y divide-[#1F2937] max-h-48 overflow-y-auto">
+                  {commissions
+                    .filter(c => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id)
+                    .map((c) => (
+                      <div key={c.id} className="p-2.5 flex items-center justify-between text-xs bg-[#0B0F19] hover:bg-[#111827]">
+                        <div>
+                          <div className="font-semibold text-gray-200">Order #{c.order_id || c.id} • {c.buyer_user || 'Trader'}</div>
+                          <div className="text-[10px] text-gray-500">{c.created_at || 'Recent'}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono font-bold text-emerald-400">+${Number(c.amount || 0).toLocaleString()}</div>
+                          <Badge tone={c.status === 'paid' ? 'success' : 'warn'} size="sm">{c.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1F2937]">
+              <Button variant="outline" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setIsDetailDrawerOpen(false)
+                  openPayoutModal(selectedAffiliateDetail)
+                }}
+                className="gap-1.5 shadow-emerald-500/10"
+              >
+                <Send className="h-3 w-3" /> Disburse Payout
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Banner Confirm Dialog */}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink } from 'lucide-react'
+import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Commission, AffiliatePayout } from '@/types/api'
 import { fmtUSD, timeAgo } from '@/lib/format'
@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatCard, StatGrid } from '@/components/ui/stat-card'
 import { AffiliateLeaderboard } from '@/components/affiliate-leaderboard'
+import { Modal } from '@/components/ui/Modal'
 import { useQuery } from '@tanstack/react-query'
 
 import { FONT_PRESETS, hexToRgb } from '@/lib/theme-accent'
@@ -151,6 +152,7 @@ export default function AffiliatePage() {
   const [destination, setDestination] = useState('')
   const [savingMethod, setSavingMethod] = useState(false)
   const [requesting, setRequesting] = useState(false)
+  const [isTiersModalOpen, setIsTiersModalOpen] = useState(false)
 
   useEffect(() => {
     if (me) {
@@ -283,11 +285,16 @@ export default function AffiliatePage() {
                         {currentTier}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xs text-text-muted">Next Tier</div>
-                      <div className="text-sm font-medium text-text">
-                        {nextTier}
-                      </div>
+                    <div className="text-right flex flex-col items-end">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setIsTiersModalOpen(true)}
+                        className="h-6 px-1.5 text-2xs text-accent hover:text-accent-hover hover:bg-accent/10 mb-1 gap-1"
+                      >
+                        <Sparkles className="h-3 w-3" /> View All Tiers & Perks
+                      </Button>
+                      <div className="text-2xs text-text-muted">Next Tier: <span className="font-semibold text-text">{nextTier}</span></div>
                     </div>
                   </div>
                   
@@ -318,10 +325,36 @@ export default function AffiliatePage() {
         <CardHeader><CardTitle>Your referral link</CardTitle></CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            <input readOnly value={link} className="flex-1 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text" />
+            <input readOnly value={link} className="flex-1 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text font-mono" />
             <Button variant="outline" onClick={copy}>{copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied' : 'Copy'}</Button>
           </div>
-          <p className="text-2xs text-text-muted mt-1.5">Code: <span className="font-semibold text-text">{me.code}</span></p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs gap-1.5 border-[#0088cc]/40 text-[#0088cc] hover:bg-[#0088cc]/10 hover:border-[#0088cc]"
+              onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Trade up to $200K capital and keep up to 90% profits with AlphaCapital! Use code ' + (me?.code || ''))}`, '_blank')}
+            >
+              <Send className="h-3.5 w-3.5" /> Share on Telegram
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs gap-1.5 border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]"
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Trade up to $200K capital and keep up to 90% profits with AlphaCapital! Use code ' + (me?.code || '') + ' 👉 ' + link)}`, '_blank')}
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Share on WhatsApp
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs gap-1.5 border-slate-500/40 text-slate-300 hover:bg-slate-700/20"
+              onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Get funded up to $200,000 with @AlphaCapital Prop Firm! Use code ' + (me?.code || '') + ' for maximum discounts: ' + link)}`, '_blank')}
+            >
+              <Share2 className="h-3.5 w-3.5" /> Post on X / Twitter
+            </Button>
+          </div>
+          <p className="text-2xs text-text-muted mt-2">Code: <span className="font-semibold text-text font-mono bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">{me.code}</span></p>
         </CardContent>
       </Card>
 
@@ -407,8 +440,27 @@ export default function AffiliatePage() {
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
-              <span className="text-text-muted">Available to withdraw: </span>
-              <span className="font-bold tabular text-success">{fmtUSD(me.available_balance ?? 0)}</span>
+              <div>
+                <span className="text-text-muted">Available to withdraw: </span>
+                <span className="font-bold tabular text-success">{fmtUSD(me.available_balance ?? 0)}</span>
+              </div>
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between text-2xs text-text-muted font-mono">
+                  <span>Minimum Payout Floor ($100.00)</span>
+                  <span className={((me.available_balance ?? 0) >= 100) ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                    {fmtUSD(me.available_balance ?? 0)} / $100.00
+                  </span>
+                </div>
+                <div className="h-2 w-52 bg-surface-muted rounded-full overflow-hidden border border-border-subtle">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${((me.available_balance ?? 0) >= 100) ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                    style={{ width: `${Math.min(((me.available_balance ?? 0) / 100) * 100, 100)}%` }}
+                  />
+                </div>
+                {((me.available_balance ?? 0) < 100) && (
+                  <p className="text-[11px] text-text-muted">Requires minimum $100.00 accumulated earnings to request disbursal.</p>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={saveMethod} disabled={savingMethod}>Save method</Button>
@@ -475,6 +527,71 @@ export default function AffiliatePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── TIER ROADMAP & PERKS MODAL ── */}
+      <Modal
+        open={isTiersModalOpen}
+        onOpenChange={setIsTiersModalOpen}
+        title="Affiliate Commission Tiers & Perks"
+        description="Accelerate your earnings as you refer more funded traders to AlphaCapital."
+        maxWidth="2xl"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-sm text-[#cd7f32]">🥉 Bronze Partner</span>
+                <Badge tone="neutral" size="sm">0 – 9 Sales</Badge>
+              </div>
+              <div className="text-xl font-mono font-bold text-white mb-2">10% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <ul className="text-xs text-text-muted space-y-1">
+                <li>• 60-Day Cookie Tracking Window</li>
+                <li>• Real-Time Dashboard Analytics</li>
+                <li>• Standard Monthly Disbursals</li>
+              </ul>
+            </div>
+
+            <div className="p-3.5 rounded-lg border border-slate-400/20 bg-slate-400/5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-sm text-slate-300">🥈 Silver Partner</span>
+                <Badge tone="info" size="sm">10 – 49 Sales</Badge>
+              </div>
+              <div className="text-xl font-mono font-bold text-white mb-2">12% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <ul className="text-xs text-text-muted space-y-1">
+                <li>• 60-Day Cookie Tracking Window</li>
+                <li>• Custom Marketing Asset Watermarks</li>
+                <li>• Bi-Weekly Crypto Payout Option</li>
+              </ul>
+            </div>
+
+            <div className="p-3.5 rounded-lg border border-yellow-500/20 bg-yellow-500/5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-sm text-yellow-400">🥇 Gold Partner</span>
+                <Badge tone="warn" size="sm">50 – 99 Sales</Badge>
+              </div>
+              <div className="text-xl font-mono font-bold text-white mb-2">15% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <ul className="text-xs text-text-muted space-y-1">
+                <li>• 90-Day Extended Cookie Window</li>
+                <li>• Priority 24-Hour Payout Approvals</li>
+                <li>• Custom Promo Landing Pages</li>
+              </ul>
+            </div>
+
+            <div className="p-3.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-sm text-emerald-400">💎 Platinum VIP</span>
+                <Badge tone="success" size="sm">100+ Sales</Badge>
+              </div>
+              <div className="text-xl font-mono font-bold text-white mb-2">20% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <ul className="text-xs text-text-muted space-y-1">
+                <li>• Lifetime Cookie Attribution</li>
+                <li>• Dedicated VIP Affiliate Manager</li>
+                <li>• Custom Revenue Share Contracts</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
