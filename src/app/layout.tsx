@@ -75,8 +75,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  let brandName = 'Alpha Capital'
-  let brandTagline = 'The Funded Trader Platform'
+  let brandName = 'LaunchAPropFirm'
+  let brandTagline = 'Institutional High-Frequency Prop Trading'
 
   // P3: never fetch from a half-built URL. Old code ran
   const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
@@ -102,7 +102,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (res.ok) {
       const data = await res.json()
-      if (data.brand_name && data.brand_name.toLowerCase() !== 'launchapropfirm' && data.brand_name.toLowerCase() !== 'propfirm system') {
+      if (data.brand_name && data.brand_name.toLowerCase() !== 'propfirm system') {
         brandName = data.brand_name
       }
       if (data.brand_tagline) brandTagline = data.brand_tagline

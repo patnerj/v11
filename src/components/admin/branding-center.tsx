@@ -21,9 +21,9 @@ const ASSETS: { field: AssetField; key: string; title: string; size: string; hel
 ]
 
 const DEFAULTS: Record<string, string> = {
-  brand_name: 'Alpha Capital', brand_tagline: 'The Funded Trader Platform',
+  brand_name: 'LaunchAPropFirm', brand_tagline: 'Institutional High-Frequency Prop Trading',
   accent_color: '#10B981',
-  logo_url: '', login_logo_url: '', sidebar_icon_url: '', favicon_url: '',
+  logo_url: '/branding/brand_logo_600x150.png', login_logo_url: '/branding/login_logo_400x100.png', sidebar_icon_url: '/branding/sidebar_icon_128x128.png', favicon_url: '/branding/favicon_48x48.png',
 }
 
 export function BrandingCenter() {

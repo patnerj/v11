@@ -497,6 +497,9 @@ export interface Commission {
   created_at_iso?: string | null
   affiliate_login?: string
   referred_login?:  string | null
+  affiliate_code?: string
+  affiliate_id?:   number
+  buyer_user?:     string
 }
 export interface AdminAffiliate {
   id:           number
@@ -515,6 +518,7 @@ export interface AdminAffiliate {
   payment_destination?: string
   payout_destination?:  string
   payment_method?: string
+  payout_method?:  string
 }
 
 export interface Coupon {
