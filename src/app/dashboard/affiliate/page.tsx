@@ -15,6 +15,7 @@ import { StatCard, StatGrid } from '@/components/ui/stat-card'
 import { AffiliateLeaderboard } from '@/components/affiliate-leaderboard'
 import { Modal } from '@/components/ui/Modal'
 import { useQuery } from '@tanstack/react-query'
+import { useBranding } from '@/store/branding'
 
 import { FONT_PRESETS, hexToRgb } from '@/lib/theme-accent'
 
@@ -153,6 +154,7 @@ export default function AffiliatePage() {
   const [savingMethod, setSavingMethod] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [isTiersModalOpen, setIsTiersModalOpen] = useState(false)
+  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
 
   useEffect(() => {
     if (me) {
@@ -333,7 +335,7 @@ export default function AffiliatePage() {
               variant="outline" 
               size="sm" 
               className="h-8 text-xs gap-1.5 border-[#0088cc]/40 text-[#0088cc] hover:bg-[#0088cc]/10 hover:border-[#0088cc]"
-              onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Trade up to $200K capital and keep up to 90% profits with AlphaCapital! Use code ' + (me?.code || ''))}`, '_blank')}
+              onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Trade up to $200K capital and keep up to 90% profits with ${brandName}! Use code ` + (me?.code || ''))}`, '_blank')}
             >
               <Send className="h-3.5 w-3.5" /> Share on Telegram
             </Button>
@@ -341,7 +343,7 @@ export default function AffiliatePage() {
               variant="outline" 
               size="sm" 
               className="h-8 text-xs gap-1.5 border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]"
-              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Trade up to $200K capital and keep up to 90% profits with AlphaCapital! Use code ' + (me?.code || '') + ' 👉 ' + link)}`, '_blank')}
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Trade up to $200K capital and keep up to 90% profits with ${brandName}! Use code ` + (me?.code || '') + ' 👉 ' + link)}`, '_blank')}
             >
               <MessageCircle className="h-3.5 w-3.5" /> Share on WhatsApp
             </Button>
@@ -349,7 +351,7 @@ export default function AffiliatePage() {
               variant="outline" 
               size="sm" 
               className="h-8 text-xs gap-1.5 border-slate-500/40 text-slate-300 hover:bg-slate-700/20"
-              onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Get funded up to $200,000 with @AlphaCapital Prop Firm! Use code ' + (me?.code || '') + ' for maximum discounts: ' + link)}`, '_blank')}
+              onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Get funded up to $200,000 with ${brandName}! Use code ` + (me?.code || '') + ' for maximum discounts: ' + link)}`, '_blank')}
             >
               <Share2 className="h-3.5 w-3.5" /> Post on X / Twitter
             </Button>
@@ -533,7 +535,7 @@ export default function AffiliatePage() {
         open={isTiersModalOpen}
         onOpenChange={setIsTiersModalOpen}
         title="Affiliate Commission Tiers & Perks"
-        description="Accelerate your earnings as you refer more funded traders to AlphaCapital."
+        description={`Accelerate your earnings as you refer more funded traders to ${brandName}.`}
         maxWidth="2xl"
       >
         <div className="space-y-4 pt-2">
