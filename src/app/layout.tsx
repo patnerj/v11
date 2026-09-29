@@ -120,6 +120,16 @@ export async function generateMetadata(): Promise<Metadata> {
     title:       { default: brandName, template: `%s | ${brandName}` },
     description: ogDescription,
     applicationName: brandName,
+    robots: {
+      index: false,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: false,
+        follow: true,
+        noimageindex: true,
+      },
+    },
     openGraph: {
       title:       ogTitle,
       description: ogDescription,

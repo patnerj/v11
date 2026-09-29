@@ -68,6 +68,7 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy',        value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',     value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'X-Robots-Tag',           value: 'noindex, follow' },
           // P1: HSTS (prod TLS) + COOP. No COEP require-corp — it would break
           // the TradingView iframe. CSP is set per-route in middleware-safe
           // form via `Content-Security-Policy-Report-Only` until buyer tunes it.
