@@ -8,6 +8,7 @@ import { CircularProgress } from '@/components/ui/circular-progress'
 import { fmtUSD, fmtPct, statusLabel, statusTone, toNum } from '@/lib/format'
 import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { DailyDdTimer, DrawdownAlertBadge } from '@/components/dashboard/trading/daily-dd-timer'
 
 interface Props { metrics: ChallengeMetrics }
 
@@ -49,6 +50,9 @@ export function ChallengeProgressCard({ metrics: m }: Props) {
       </CardHeader>
 
       <CardContent className="space-y-5 relative z-10">
+        {/* Drawdown Danger Zone Alert Banner */}
+        <DrawdownAlertBadge metrics={m} className="w-full justify-center" />
+
         {m.breach_reason && (
           <div className="flex items-start gap-2 p-2.5 rounded-md bg-danger-muted border border-danger/30 text-2xs">
             <AlertCircle className="h-3.5 w-3.5 text-danger shrink-0 mt-0.5" />
@@ -76,6 +80,35 @@ export function ChallengeProgressCard({ metrics: m }: Props) {
             </div>
           </div>
 
+          
+        {m.challenge.drawdown_type === 'trailing' && (
+          <div className="mt-4 p-3 rounded-xl bg-surface-muted/30 border border-border-subtle col-span-2">
+            <div className="text-2xs text-text-muted mb-2 flex justify-between uppercase tracking-wider">
+               <span>Trailing Drawdown Ruler</span>
+               <span className="text-3xs text-text-faint">Floor / Current / Peak</span>
+            </div>
+            <div className="relative h-2 bg-border rounded-full w-full mt-2 mb-6">
+               {/* Trailing Floor marker (0%) */}
+               <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-danger rounded-full shadow z-10" style={{ left: '0%' }} title="Trailing Floor" />
+               <div className="absolute top-4 text-[10px] text-danger font-medium -translate-x-0" style={{ left: '0%' }}>{fmtUSD(toNum((m.challenge as any).trailing_dd_floor))}</div>
+               
+               {/* Current Equity marker */}
+               <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-warn rounded-full shadow z-20" style={{ left: `${Math.min(100, m.max_dd_progress)}%` }} title="Current Equity" />
+               <div className="absolute top-4 text-[10px] text-warn font-medium -translate-x-1/2" style={{ left: `${Math.min(100, m.max_dd_progress)}%` }}>{fmtUSD(toNum((m.challenge as any).equity ?? m.challenge.current_balance))}</div>
+               
+               {/* Peak HWM marker (100%) */}
+               <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-success rounded-full shadow z-10" style={{ right: '0%' }} title="Peak HWM" />
+               <div className="absolute top-4 text-[10px] text-success font-medium -translate-x-full" style={{ right: '0%' }}>{fmtUSD(toNum((m.challenge as any).equity_hwm))}</div>
+               
+               <div className="absolute top-0 left-0 h-full bg-warn/30 rounded-full" style={{ width: `${Math.min(100, m.max_dd_progress)}%` }} />
+            </div>
+            <div className="mt-4 text-xs text-text-muted border-t border-border-subtle pt-2 flex items-start gap-2">
+               <AlertCircle className="w-4 h-4 text-accent shrink-0" />
+               <p>Your trailing floor rises with your peak equity (HWM) and locks in when you hit the max threshold.</p>
+            </div>
+          </div>
+        )}
+
           {/* Daily DD */}
           <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-muted/30 border border-border-subtle">
             <div className="text-2xs text-text-muted mb-2 uppercase tracking-wider">Daily Drawdown</div>
@@ -90,6 +123,7 @@ export function ChallengeProgressCard({ metrics: m }: Props) {
             <div className="text-2xs text-text-muted mt-2 tabular">
               limit {fmtPct(m.daily_dd_pct)}
             </div>
+            <DailyDdTimer compact className="mt-2 text-[10px] py-0.5 px-2" />
           </div>
 
           {/* Max DD */}

@@ -25,9 +25,9 @@ const TONE = { pending: 'warn', approved: 'success', rejected: 'danger' } as con
 const LABEL = { pending: 'Pending review', approved: 'Approved', rejected: 'Rejected' } as const
 
 const DOC_META = [
-  { key: 'id_doc' as const, label: 'Government ID', icon: IdCard },
-  { key: 'selfie' as const, label: 'Selfie', icon: ScanFace },
-  { key: 'address_doc' as const, label: 'Proof of address', icon: FileText },
+  { key: 'id_doc' as const, label: 'Government ID (Front)', icon: IdCard },
+  { key: 'id_doc_back' as const, label: 'Government ID (Back)', icon: IdCard },
+  { key: 'selfie' as const, label: 'Biometric Selfie', icon: ScanFace },
 ]
 type DocKey = (typeof DOC_META)[number]['key']
 

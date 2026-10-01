@@ -151,7 +151,7 @@ function AiMessageContent({ content, isUser }: { content: string; isUser: boolea
           return (
             <div
               key={idx}
-              className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-[#141A2E] border border-slate-200 dark:border-[#1F2937]/70 shadow-2xs"
+              className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-[#141A2E] border border-slate-200 dark:border-surface-muted/70 shadow-2xs"
             >
               <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-500/30">
                 {num}
@@ -683,7 +683,7 @@ export function ZenithAiCopilot() {
                     </div>
 
                     {/* Quick Suggestion Chips */}
-                    <div className="px-3 py-1.5 bg-slate-100/90 dark:bg-[#141A2E]/50 border-t border-slate-200 dark:border-[#1F2937]/50 flex items-center gap-1.5 overflow-x-auto text-[11px] whitespace-nowrap custom-scrollbar">
+                    <div className="px-3 py-1.5 bg-slate-100/90 dark:bg-[#141A2E]/50 border-t border-slate-200 dark:border-surface-muted/50 flex items-center gap-1.5 overflow-x-auto text-[11px] whitespace-nowrap custom-scrollbar">
                       <button
                         onClick={() => handleSendMessage('What is my safe lot size on Gold with 1% risk?')}
                         className="px-2.5 py-1 rounded-full bg-white dark:bg-[#1E293B] hover:bg-emerald-50 dark:hover:bg-emerald-600/30 text-slate-700 dark:text-gray-300 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-gray-700 transition-colors shadow-xs"
@@ -705,7 +705,7 @@ export function ZenithAiCopilot() {
                     </div>
 
                     {/* Input Field */}
-                    <div className="p-3 bg-white dark:bg-[#141A2E] border-t border-slate-200 dark:border-[#1F2937] flex items-center gap-2">
+                    <div className="p-3 bg-white dark:bg-[#141A2E] border-t border-slate-200 dark:border-surface-muted flex items-center gap-2">
                       <input
                         ref={inputRef}
                         type="text"
@@ -735,7 +735,7 @@ export function ZenithAiCopilot() {
                 {/* Tab 2: Safe Lot Calculator */}
                 {activeTab === 'calculator' && (
                   <div className="flex-1 p-4 overflow-y-auto bg-slate-50/50 dark:bg-[#0E1322] space-y-4 text-xs">
-                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#141A2E] border border-slate-200 dark:border-[#1F2937]">
+                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#141A2E] border border-slate-200 dark:border-surface-muted">
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                         Mathematical Lot Size Safety Engine
@@ -745,7 +745,7 @@ export function ZenithAiCopilot() {
                       </p>
                     </div>
 
-                    <div className="space-y-3 bg-white dark:bg-[#11172A] p-4 rounded-xl border border-slate-200 dark:border-[#1F2937] shadow-xs">
+                    <div className="space-y-3 bg-white dark:bg-[#11172A] p-4 rounded-xl border border-slate-200 dark:border-surface-muted shadow-xs">
                       <div>
                         <label className="text-slate-600 dark:text-gray-400 text-[10px] uppercase font-bold block mb-1">
                           Account Balance ($)
@@ -841,7 +841,7 @@ export function ZenithAiCopilot() {
                 {/* Tab 3: Red-Folder News Warnings */}
                 {activeTab === 'news' && (
                   <div className="flex-1 p-4 overflow-y-auto bg-slate-50/50 dark:bg-[#0E1322] space-y-3 text-xs">
-                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#141A2E] border border-slate-200 dark:border-[#1F2937]">
+                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#141A2E] border border-slate-200 dark:border-surface-muted">
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
                         <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                         Economic News Risk Radar

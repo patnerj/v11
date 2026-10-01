@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useId, memo } from 'react'
 import { Activity, ShieldCheck, AlertCircle, Clock, Maximize2, Radio } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 
 interface ArenaChartProps {
   symbol: string
@@ -33,8 +33,7 @@ export const ArenaChart = memo(function ArenaChart({
   height = 420,
   currentPrice,
 }: ArenaChartProps) {
-  const { theme, resolvedTheme } = useTheme()
-  const isDark = (resolvedTheme || theme) !== 'light'
+  const isDark = useIsDarkTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const reactId = useId()
   const cleanId = reactId.replace(/[^a-zA-Z0-9_-]/g, '')
@@ -111,7 +110,7 @@ export const ArenaChart = memo(function ArenaChart({
             theme: isDark ? 'dark' : 'light',
             style: '1', // Candlestick
             locale: 'en',
-            toolbar_bg: isDark ? '#0B0F19' : '#F8FAFC',
+            toolbar_bg: isDark ? 'var(--background)' : '#F8FAFC',
             enable_publishing: false,
             allow_symbol_change: false,
             save_image: false,
@@ -133,7 +132,7 @@ export const ArenaChart = memo(function ArenaChart({
               'side_toolbar_in_fullscreen_mode',
             ],
             overrides: {
-              'paneProperties.background': isDark ? '#0B0F19' : '#FFFFFF',
+              'paneProperties.background': isDark ? 'var(--background)' : '#FFFFFF',
               'paneProperties.vertGridProperties.color': isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
               'paneProperties.horzGridProperties.color': isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
               'mainSeriesProperties.candleStyle.upColor': '#10B981',

@@ -20,16 +20,16 @@ export interface Branding {
 }
 
 const DEFAULTS: Branding = {
-  brand_name: 'LaunchAPropFirm',
-  brand_tagline: 'Institutional High-Frequency Prop Trading',
-  logo_url: '/branding/brand_logo_600x150.png',
-  sidebar_icon_url: '/branding/sidebar_icon_128x128.png',
-  login_logo_url: '/branding/login_logo_400x100.png',
-  favicon_url: '/branding/favicon_48x48.png',
-  support_email: 'support@launchapropfirm.com',
+  brand_name: 'MassFunded',
+  brand_tagline: 'Trade Our Capital',
+  logo_url: '/branding/brand_logo.svg',
+  sidebar_icon_url: '/branding/sidebar_icon.svg',
+  login_logo_url: '/branding/login_logo.svg',
+  favicon_url: '/favicon.svg',
+  support_email: 'support@massfunded.org',
   primary_color: '#10B981',
   secondary_color: '#00e5a0',
-  footer_text: '© 2026 LaunchAPropFirm. Simulation platform only.',
+  footer_text: '© 2026 MassFunded. All rights reserved.',
   tv_symbol_map: '',
 }
 
@@ -92,7 +92,7 @@ export const useBranding = create<BrandingState>((set, get) => ({
 /** Apply title + favicon at runtime (true white-label without rebuild). */
 function applyDocumentBranding(b: Branding) {
   if (typeof document === 'undefined') return
-  const title = b.brand_name || 'Alpha Capital'
+  const title = b.brand_name || 'MassFunded'
   if (document.title !== title) {
     document.title = title
   }
@@ -103,6 +103,8 @@ function applyDocumentBranding(b: Branding) {
       link.rel = 'icon'
       document.head.appendChild(link)
     }
-    link.href = b.favicon_url
+    if (link.getAttribute('href') !== b.favicon_url) {
+      link.href = b.favicon_url
+    }
   }
 }

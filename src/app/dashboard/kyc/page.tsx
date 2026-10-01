@@ -18,7 +18,7 @@ import {
   Sparkles, Check, ArrowRight, ShieldAlert, FileX, Info, ExternalLink
 } from 'lucide-react'
 
-type DocKey = 'id_doc' | 'id_doc_back' | 'selfie' | 'address_doc'
+type DocKey = 'id_doc' | 'id_doc_back' | 'selfie'
 interface DocSpec { 
   key: DocKey
   title: string
@@ -48,13 +48,6 @@ const DOCS: DocSpec[] = [
     subtitle: 'Live photo of your face holding ID',
     hint: 'Good lighting, facing camera directly, no sunglasses or headwear.',       
     icon: ScanFace 
-  },
-  { 
-    key: 'address_doc', 
-    title: 'Proof of Residence',  
-    subtitle: 'Utility Bill or Bank Statement (< 3 months)',
-    hint: 'Must show your full legal name and current residential address.',             
-    icon: FileText 
   },
 ]
 
@@ -89,7 +82,7 @@ function ModernStepper({ status }: { status: KycStatus }) {
                   ? isRejectStep
                     ? 'border-red-500/40 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
                     : 'border-cyan-500/40 bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
-                  : 'border-[#1F2937] bg-[#0B0F19]/60 opacity-60'
+                  : 'border-border bg-surface-muted/60 opacity-80'
               }`}
             >
               <div className="flex items-start gap-3">
@@ -101,7 +94,7 @@ function ModernStepper({ status }: { status: KycStatus }) {
                       ? isRejectStep
                         ? 'bg-red-500/20 text-red-400 border-red-500/40'
                         : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                      : 'bg-[#111827] text-gray-400 border-[#1F2937]'
+                      : 'bg-surface text-text-muted border-border'
                   }`}
                 >
                   {isDone ? (
@@ -113,14 +106,14 @@ function ModernStepper({ status }: { status: KycStatus }) {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+                  <div className="text-xs font-bold text-text flex items-center gap-1.5">
                     <span>{s.label}</span>
                     {isDone && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 inline" />}
                     {isCurrent && !isRejectStep && (
                       <span className="inline-block h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
                     )}
                   </div>
-                  <div className="text-[11px] text-gray-400 mt-0.5">{s.desc}</div>
+                  <div className="text-[11px] text-text-muted mt-0.5">{s.desc}</div>
                 </div>
               </div>
             </div>
@@ -136,6 +129,8 @@ function ModernUploadTile({
   file,
   preview,
   uploading,
+  capture,
+  accept,
   onPick,
   onClear,
 }: {
@@ -143,6 +138,8 @@ function ModernUploadTile({
   file: File | null
   preview: string | null
   uploading: boolean
+  capture?: 'user' | 'environment' | boolean
+  accept?: string
   onPick: (f: File) => void
   onClear: () => void
 }) {
@@ -170,10 +167,10 @@ function ModernUploadTile({
     <div
       className={`group rounded-2xl border transition-all duration-300 p-5 ${
         file
-          ? 'border-emerald-500/40 bg-[#0B0F19] shadow-[0_0_20px_rgba(16,185,129,0.06)]'
+          ? 'border-emerald-500/40 bg-surface shadow-[0_0_20px_rgba(16,185,129,0.06)]'
           : drag
           ? 'border-cyan-500 bg-cyan-500/5 shadow-[0_0_25px_rgba(6,182,212,0.15)]'
-          : 'border-[#1F2937] bg-[#0B0F19]/80 hover:border-gray-700'
+          : 'border-border bg-surface hover:border-cyan-500/40'
       }`}
     >
       {/* Tile Header */}
@@ -183,13 +180,13 @@ function ModernUploadTile({
             className={`h-10 w-10 rounded-xl flex items-center justify-center border shrink-0 transition-colors ${
               file
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-slate-800/80 text-cyan-400 border-[#1F2937]'
+                : 'bg-surface-muted text-cyan-400 border-border'
             }`}
           >
             {file ? <FileCheck2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
           </div>
           <div>
-            <div className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="text-sm font-bold text-text flex items-center gap-2">
               {spec.title}
               {file && (
                 <Badge tone="success" size="sm" className="tabular font-semibold text-[10px]">
@@ -197,7 +194,7 @@ function ModernUploadTile({
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-gray-400">{spec.subtitle}</div>
+            <div className="text-xs text-text-muted">{spec.subtitle}</div>
           </div>
         </div>
       </div>
@@ -220,29 +217,29 @@ function ModernUploadTile({
           className={`w-full rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2.5 text-center transition-all ${
             drag
               ? 'border-cyan-400 bg-cyan-500/10 text-cyan-300'
-              : 'border-[#1F2937] bg-[#111827]/40 hover:border-cyan-500/50 hover:bg-[#111827]/80 text-gray-400 hover:text-gray-200'
+              : 'border-border bg-surface-muted/50 hover:border-cyan-500/50 hover:bg-surface-muted text-text-muted hover:text-text'
           }`}
         >
-          <div className="h-10 w-10 rounded-full bg-slate-800/60 border border-[#1F2937] flex items-center justify-center text-gray-300 group-hover:scale-110 transition-transform">
+          <div className="h-10 w-10 rounded-full bg-surface border border-border flex items-center justify-center text-text-muted group-hover:scale-110 transition-transform">
             <UploadCloud className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-200">
-              Click to upload <span className="text-gray-500 font-normal">or drag & drop</span>
+            <p className="text-xs font-semibold text-text">
+              Click to upload <span className="text-text-muted font-normal">or drag & drop</span>
             </p>
-            <p className="text-[11px] text-gray-500 mt-0.5">{spec.hint}</p>
+            <p className="text-[11px] text-text-muted mt-0.5">{spec.hint}</p>
           </div>
-          <span className="text-[10px] tabular font-medium text-gray-500 bg-[#0B0F19] px-2.5 py-0.5 rounded border border-[#1F2937]">
+          <span className="text-[10px] tabular font-medium text-text-muted bg-surface px-2.5 py-0.5 rounded border border-border">
             JPG, PNG, WebP, PDF · Max 5MB
           </span>
         </button>
       ) : (
-        <div className="rounded-xl border border-[#1F2937] bg-[#111827]/70 p-3 flex items-center gap-3.5">
-          <div className="h-16 w-16 rounded-lg overflow-hidden bg-[#0B0F19] shrink-0 border border-[#1F2937] flex items-center justify-center relative">
+        <div className="rounded-xl border border-border bg-surface-muted/70 p-3 flex items-center gap-3.5">
+          <div className="h-16 w-16 rounded-lg overflow-hidden bg-surface shrink-0 border border-border flex items-center justify-center relative">
             {isPdf ? (
               <div className="text-center p-1">
                 <FileText className="h-6 w-6 text-emerald-400 mx-auto" />
-                <span className="text-[9px] font-bold text-gray-400 uppercase">PDF</span>
+                <span className="text-[9px] font-bold text-text-muted uppercase">PDF</span>
               </div>
             ) : preview ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -253,12 +250,12 @@ function ModernUploadTile({
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-white truncate">{file.name}</div>
-            <div className="text-[11px] tabular text-gray-400 mt-0.5">
+            <div className="text-xs font-bold text-text truncate">{file.name}</div>
+            <div className="text-[11px] tabular text-text-muted mt-0.5">
               {(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.split('/')[1]?.toUpperCase()}
             </div>
             {uploading ? (
-              <div className="mt-2 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+              <div className="mt-2 h-1.5 w-full rounded-full bg-surface overflow-hidden">
                 <div className="h-full w-2/3 rounded-full bg-cyan-400 animate-pulse" />
               </div>
             ) : (
@@ -271,7 +268,7 @@ function ModernUploadTile({
           {!uploading && (
             <button
               onClick={onClear}
-              className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-[#1F2937] bg-[#0B0F19] text-gray-400 hover:text-red-400 hover:border-red-500/30 transition-colors shrink-0"
+              className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border bg-surface text-text-muted hover:text-red-400 hover:border-red-500/30 transition-colors shrink-0"
               aria-label="Remove file"
               title="Remove and replace file"
             >
@@ -284,7 +281,8 @@ function ModernUploadTile({
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPTED_TYPES}
+        accept={accept || ACCEPTED_TYPES}
+        capture={capture as any}
         className="hidden"
         onChange={(e) => handle(e.target.files?.[0])}
       />
@@ -303,13 +301,11 @@ export default function KycPage() {
     id_doc: null,
     id_doc_back: null,
     selfie: null,
-    address_doc: null,
   })
   const [previews, setPreviews] = useState<Record<DocKey, string | null>>({
     id_doc: null,
     id_doc_back: null,
     selfie: null,
-    address_doc: null,
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -333,8 +329,18 @@ export default function KycPage() {
     setFiles((p) => ({ ...p, [key]: null }))
   }
 
-  const uploadedCount = Object.values(files).filter(Boolean).length
-  const allReady = !!(files.id_doc && files.id_doc_back && files.selfie && files.address_doc) && country.trim().length > 0
+  const isBackDocRequired = docType !== 'passport'
+  const visibleDocs = DOCS.filter(d => isBackDocRequired || d.key !== 'id_doc_back')
+  const uploadedCount = visibleDocs.filter(d => !!files[d.key]).length
+  const totalRequired = visibleDocs.length
+  const allReady = !!(files.id_doc && (isBackDocRequired ? files.id_doc_back : true) && files.selfie) && country.trim().length > 0
+
+  const handleDocTypeChange = (newType: 'national_id' | 'passport' | 'drivers_license') => {
+    setDocType(newType)
+    if (newType === 'passport') {
+      clear('id_doc_back')
+    }
+  }
 
   const submit = async () => {
     if (!country.trim()) {
@@ -342,7 +348,7 @@ export default function KycPage() {
       return
     }
     if (!allReady) {
-      toast.error('Please select all 4 required identity documents.')
+      toast.error(isBackDocRequired ? 'Please select all 3 required identity documents.' : 'Please select your passport photo page and biometric selfie.')
       return
     }
     setSubmitting(true)
@@ -350,15 +356,16 @@ export default function KycPage() {
     form.append('doc_type', docType)
     form.append('country', country.trim())
     form.append('id_doc', files.id_doc!)
-    form.append('id_doc_back', files.id_doc_back!)
+    if (isBackDocRequired && files.id_doc_back) {
+      form.append('id_doc_back', files.id_doc_back)
+    }
     form.append('selfie', files.selfie!)
-    form.append('address_doc', files.address_doc!)
     const res = await api.kycSubmit(form)
     setSubmitting(false)
     if (res.ok && res.data.success) {
       toast.success('KYC documents submitted successfully for compliance review!')
-      setFiles({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
-      setPreviews({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
+      setFiles({ id_doc: null, id_doc_back: null, selfie: null })
+      setPreviews({ id_doc: null, id_doc_back: null, selfie: null })
       refetch()
     } else {
       toast.error(res.ok ? res.data.message || 'Submission failed' : res.error)
@@ -380,7 +387,7 @@ export default function KycPage() {
 
       <div className="max-w-6xl mx-auto w-full space-y-6">
         {loading ? (
-          <Card className="border-[#1F2937] bg-[#111827]">
+          <Card className="border-border bg-surface">
             <CardContent className="p-8">
               <Skeleton className="h-48 w-full" />
             </CardContent>
@@ -400,8 +407,8 @@ export default function KycPage() {
                       <ShieldCheck className="h-8 w-8 stroke-[2.5]" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Identity Fully Verified</h2>
-                      <p className="text-sm text-gray-300 mt-1 leading-relaxed">
+                      <h2 className="text-xl font-bold text-text">Identity Fully Verified</h2>
+                      <p className="text-sm text-text-muted mt-1 leading-relaxed">
                         Your compliance audit has been approved by the risk desk. You have full access to
                         instant profit splits and bank/crypto payouts.
                       </p>
@@ -436,20 +443,20 @@ export default function KycPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2.5">
-                            <h2 className="text-lg font-bold text-white">Under Compliance Review</h2>
+                            <h2 className="text-lg font-bold text-text">Under Compliance Review</h2>
                             <Badge tone="warning" size="sm" pulsing>
                               In Queue
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-300 mt-1">
-                            Your 4 verified documents (Front ID, Back ID, Selfie, Proof of Address) are currently with our compliance officer. Expected turnaround: 1–2 business days.
+                          <p className="text-xs text-text-muted mt-1">
+                            Your verified identity documents are currently with our compliance officer. Expected turnaround: 1–2 business days.
                           </p>
                         </div>
                       </div>
 
                       {kyc?.submitted_at && (
-                        <div className="text-right font-medium tabular text-xs text-gray-400 bg-[#0B0F19] px-3 py-1.5 rounded-lg border border-[#1F2937] shrink-0">
-                          Submitted: <span className="text-gray-200">{fmtDate(kyc.submitted_at, true)}</span>
+                        <div className="text-right font-medium tabular text-xs text-text-muted bg-surface-muted px-3 py-1.5 rounded-lg border border-border shrink-0">
+                          Submitted: <span className="text-text">{fmtDate(kyc.submitted_at, true)}</span>
                         </div>
                       )}
                     </div>
@@ -467,7 +474,7 @@ export default function KycPage() {
                             <span className="text-xs uppercase tracking-wider text-gray-400 block mb-3 font-semibold">
                               Received & Audited Files ({uploadedCount} of {DOCS.length})
                             </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               {DOCS.map((d) => {
                                 const uploaded = isDocUploaded(d.key);
                                 return (
@@ -475,7 +482,7 @@ export default function KycPage() {
                                     key={d.key}
                                     className={`rounded-xl border p-3.5 flex items-center gap-3 ${
                                       uploaded 
-                                        ? 'border-emerald-500/30 bg-[#0B0F19]' 
+                                        ? 'border-emerald-500/30 bg-surface' 
                                         : 'border-border/40 bg-surface-muted/30 opacity-70'
                                     }`}
                                   >
@@ -485,7 +492,7 @@ export default function KycPage() {
                                       {uploaded ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                                     </div>
                                     <div className="min-w-0">
-                                      <p className="text-xs font-bold text-gray-200 truncate">{d.title}</p>
+                                      <p className="text-xs font-bold text-text truncate">{d.title}</p>
                                       <p className={`text-[11px] font-medium ${uploaded ? 'text-emerald-400' : 'text-text-muted'}`}>
                                         {uploaded ? 'Securely Encrypted' : 'Pending Upload'}
                                       </p>
@@ -509,13 +516,13 @@ export default function KycPage() {
                 <div className="rounded-2xl border border-red-500/40 bg-red-950/20 p-5 backdrop-blur-sm space-y-2.5">
                   <div className="flex items-center gap-2.5 text-red-400">
                     <ShieldAlert className="h-5 w-5 shrink-0" />
-                    <h3 className="font-bold text-sm text-white">Previous KYC Submission Needs Attention</h3>
+                    <h3 className="font-bold text-sm text-text">Previous KYC Submission Needs Attention</h3>
                   </div>
-                  <div className="bg-[#0B0F19] p-3.5 rounded-xl border border-red-500/30 text-xs text-gray-200 leading-relaxed">
+                  <div className="bg-surface-muted p-3.5 rounded-xl border border-red-500/30 text-xs text-text leading-relaxed">
                     <strong className="text-red-400">Compliance Reason: </strong>
                     {kyc?.admin_note || 'One or more documents were blurry, cropped, or expired. Please upload fresh copies below.'}
                   </div>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-text-muted">
                     Please review the guidance in each upload section below and submit high-resolution documents to clear verification.
                   </p>
                 </div>
@@ -526,17 +533,17 @@ export default function KycPage() {
             {showForm && (
               <div className="grid lg:grid-cols-12 gap-6 items-start">
                 
-                {/* Left Side: 4 Document Upload Slots in 2x2 Grid */}
+                {/* Left Side: 3 Document Upload Slots */}
                 <div className="lg:col-span-7 space-y-4">
                   
                   {/* Doc Type & Country Selectors */}
-                  <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-xl border border-[#1F2937] bg-[#111827]">
+                  <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-xl border border-border bg-surface">
                     <div>
-                      <label className="text-xs font-semibold text-gray-300 block mb-1.5">Document Type</label>
+                      <label className="text-xs font-semibold text-text-muted block mb-1.5">Document Type</label>
                       <select 
                         value={docType} 
-                        onChange={(e) => setDocType(e.target.value as any)}
-                        className="w-full h-9 rounded-lg bg-[#0B0F19] border border-[#1F2937] px-3 text-xs text-white focus:outline-none focus:border-cyan-500"
+                        onChange={(e) => handleDocTypeChange(e.target.value as any)}
+                        className="w-full h-9 rounded-lg bg-surface-muted border border-border px-3 text-xs text-text focus:outline-none focus:border-cyan-500"
                       >
                         <option value="national_id">National ID Card</option>
                         <option value="passport">Passport</option>
@@ -544,7 +551,7 @@ export default function KycPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-gray-300 block mb-1.5">
+                      <label className="text-xs font-semibold text-text-muted block mb-1.5">
                         Country of Issuance <span className="text-rose-400">*</span>
                       </label>
                       <input 
@@ -553,28 +560,30 @@ export default function KycPage() {
                         onChange={(e) => setCountry(e.target.value)}
                         placeholder="e.g. United States, United Kingdom"
                         required
-                        className="w-full h-9 rounded-lg bg-[#0B0F19] border border-[#1F2937] px-3 text-xs text-white focus:outline-none focus:border-cyan-500"
+                        className="w-full h-9 rounded-lg bg-surface-muted border border-border px-3 text-xs text-text focus:outline-none focus:border-cyan-500"
                       />
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                      Required Identity Documents (4)
+                    <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                      Required Identity Documents ({totalRequired})
                     </span>
-                    <span className="text-xs tabular font-medium text-cyan-400">
-                      {uploadedCount} of 4 Files Selected
+                    <span className="text-xs tabular font-medium text-cyan-500 dark:text-cyan-400">
+                      {uploadedCount} of {totalRequired} Files Selected
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {DOCS.map((d) => (
+                    {visibleDocs.map((d) => (
                       <ModernUploadTile
                         key={d.key}
                         spec={d}
                         file={files[d.key]}
                         preview={previews[d.key]}
                         uploading={submitting}
+                        capture={d.key === 'selfie' ? 'user' : undefined}
+                        accept={d.key === 'selfie' ? 'image/*' : undefined}
                         onPick={(f) => pick(d.key, f)}
                         onClear={() => clear(d.key)}
                       />
@@ -582,9 +591,9 @@ export default function KycPage() {
                   </div>
 
                   {/* Submit Action Card */}
-                  <Card className="border-[#1F2937] bg-[#111827]">
+                  <Card className="border-border bg-surface">
                     <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <div className="flex items-center gap-2 text-xs text-text-muted">
                         <Lock className="h-4 w-4 text-emerald-400 shrink-0" />
                         <span>AES-256 encrypted, visible only to certified compliance officers.</span>
                       </div>
@@ -615,22 +624,22 @@ export default function KycPage() {
 
                 {/* Right Side: Trust & Guidelines Card */}
                 <div className="lg:col-span-5 space-y-4">
-                  <Card className="border-[#1F2937] bg-[#111827]">
-                    <CardHeader className="border-b border-[#1F2937] pb-4">
+                  <Card className="border-border bg-surface">
+                    <CardHeader className="border-b border-border pb-4">
                       <div className="flex items-center gap-2.5">
                         <div className="h-9 w-9 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0">
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                          <CardTitle className="text-base text-white">Why Identity Verification?</CardTitle>
-                          <CardDescription className="text-xs text-gray-400">
+                          <CardTitle className="text-base text-text">Why Identity Verification?</CardTitle>
+                          <CardDescription className="text-xs text-text-muted">
                             Regulatory and payout security compliance
                           </CardDescription>
                         </div>
                       </div>
                     </CardHeader>
 
-                    <CardContent className="p-5 space-y-4 text-xs leading-relaxed text-gray-300">
+                    <CardContent className="p-5 space-y-4 text-xs leading-relaxed text-text-muted">
                       <p>
                         As an institutional prop firm, we verify every funded trader&apos;s identity prior to releasing
                         profit withdrawals. This guarantees that capital rewards reach legitimate traders and fulfills
@@ -638,31 +647,31 @@ export default function KycPage() {
                       </p>
 
                       <div className="space-y-2.5 pt-2">
-                        <div className="flex items-start gap-3 p-3 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                        <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-surface-muted">
                           <Wallet className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
                           <div>
-                            <p className="font-bold text-white">Unlocks Payouts</p>
-                            <p className="text-gray-400 text-[11px] mt-0.5">
+                            <p className="font-bold text-text">Unlocks Payouts</p>
+                            <p className="text-text-muted text-[11px] mt-0.5">
                               Required only once before your first funded payout request.
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-3 p-3 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                        <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-surface-muted">
                           <Lock className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
                           <div>
-                            <p className="font-bold text-white">Bank-Grade Privacy</p>
-                            <p className="text-gray-400 text-[11px] mt-0.5">
+                            <p className="font-bold text-text">Bank-Grade Privacy</p>
+                            <p className="text-text-muted text-[11px] mt-0.5">
                               Documents are never shared or sold; stored behind private access controls.
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-3 p-3 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                        <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-surface-muted">
                           <Clock className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                           <div>
-                            <p className="font-bold text-white">Fast 24–48h Turnaround</p>
-                            <p className="text-gray-400 text-[11px] mt-0.5">
+                            <p className="font-bold text-text">Fast 24–48h Turnaround</p>
+                            <p className="text-text-muted text-[11px] mt-0.5">
                               Audited within 1–2 business days by our dedicated risk team.
                             </p>
                           </div>
@@ -670,11 +679,11 @@ export default function KycPage() {
                       </div>
 
                       {/* Checklist Box */}
-                      <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-2 mt-4">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block">
+                      <div className="p-4 rounded-xl border border-border bg-surface-muted space-y-2 mt-4">
+                        <span className="text-[10px] uppercase tracking-wider text-text-muted font-bold block">
                           Checklist Before Upload
                         </span>
-                        <ul className="space-y-1.5 text-[11px] text-gray-300">
+                        <ul className="space-y-1.5 text-[11px] text-text-muted">
                           <li className="flex items-center gap-2">
                             <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                             All 4 corners of Government ID visible
@@ -682,10 +691,6 @@ export default function KycPage() {
                           <li className="flex items-center gap-2">
                             <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                             Document is not expired and has high resolution
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                            Proof of address is dated within last 90 days
                           </li>
                           <li className="flex items-center gap-2">
                             <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />

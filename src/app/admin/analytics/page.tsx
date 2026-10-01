@@ -203,7 +203,7 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-8 w-full pb-16">
       
       {/* ── Header & Timeframe Filter ────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1F2937]/80 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-surface-muted/80 pb-6">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
@@ -221,7 +221,7 @@ export default function AdminAnalyticsPage() {
         <div className="flex items-center gap-3 self-start md:self-center">
           
           {/* Period Selector Tabs */}
-          <div className="flex items-center gap-1 bg-[#111827] border border-[#1F2937] p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-surface border border-surface-muted p-1 rounded-xl">
             {(['daily', 'weekly', 'monthly'] as const).map((p) => (
               <button
                 key={p}
@@ -243,7 +243,7 @@ export default function AdminAnalyticsPage() {
             variant="outline"
             size="sm"
             onClick={handleRefreshAll}
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-1.5 h-9"
+            className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800/80 gap-1.5 h-9"
           >
             <RefreshCw className="h-3.5 w-3.5 text-accent" />
             <span className="hidden sm:inline">Refresh</span>
@@ -277,7 +277,7 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Card 1: Total Revenue */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -307,7 +307,7 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Card 2: Total Registered Traders */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -337,7 +337,7 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Card 3: Challenges Sold */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -367,7 +367,7 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Card 4: Funded Accounts */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -399,8 +399,8 @@ export default function AdminAnalyticsPage() {
           </div>
 
           {/* ── 2. Glowing "Revenue Over Time" Area Chart ──────────────────────── */}
-          <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4 relative">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1F2937]/70 pb-4">
+          <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4 relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-muted/70 pb-4">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-accent" />
@@ -417,7 +417,7 @@ export default function AdminAnalyticsPage() {
 
             <div className="h-[320px] w-full pt-2 relative">
               {!hasRevenueData && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#111827]/80 backdrop-blur-[2px] rounded-xl z-10 space-y-2.5 pointer-events-none">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface/80 backdrop-blur-[2px] rounded-xl z-10 space-y-2.5 pointer-events-none">
                   <div className="p-3 rounded-2xl bg-accent/10 border border-accent/20 text-accent shadow-lg shadow-accent/10">
                     <TrendingUp className="h-6 w-6 animate-pulse" />
                   </div>
@@ -436,7 +436,7 @@ export default function AdminAnalyticsPage() {
                       <stop offset="95%" stopColor="var(--accent-hex, #10B981)" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-muted)" vertical={false} />
                   <XAxis 
                     dataKey="label" 
                     stroke="#6B7280" 
@@ -453,7 +453,7 @@ export default function AdminAnalyticsPage() {
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#111827', 
+                      backgroundColor: 'var(--surface)', 
                       borderColor: '#374151', 
                       borderRadius: '12px',
                       boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
@@ -468,7 +468,7 @@ export default function AdminAnalyticsPage() {
                     stroke="var(--accent-hex, #10B981)" 
                     strokeWidth={2.5} 
                     fill="url(#revGradMidnight)" 
-                    dot={{ fill: 'var(--accent-hex, #10B981)', r: 4, strokeWidth: 2, stroke: '#0B0F19' }}
+                    dot={{ fill: 'var(--accent-hex, #10B981)', r: 4, strokeWidth: 2, stroke: 'var(--background)' }}
                     activeDot={{ r: 6, fill: 'var(--accent-hex, #10B981)', stroke: '#FFFFFF', strokeWidth: 2 }}
                   />
                 </AreaChart>
@@ -480,9 +480,9 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Chart: Platform Growth */}
-            <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between relative">
+            <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between relative">
               <div>
-                <div className="flex items-center justify-between border-b border-[#1F2937]/70 pb-3">
+                <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
                   <div>
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
                       <BarChart3 className="h-4 w-4 text-blue-400" />
@@ -496,7 +496,7 @@ export default function AdminAnalyticsPage() {
 
                 <div className="h-[280px] w-full pt-4 relative">
                   {!hasGrowthData && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#111827]/80 backdrop-blur-[2px] rounded-xl z-10 space-y-2.5 pointer-events-none">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface/80 backdrop-blur-[2px] rounded-xl z-10 space-y-2.5 pointer-events-none">
                       <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/10">
                         <UsersIcon className="h-6 w-6 animate-pulse" />
                       </div>
@@ -509,12 +509,12 @@ export default function AdminAnalyticsPage() {
 
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={growthChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-muted)" vertical={false} />
                       <XAxis dataKey="label" stroke="#6B7280" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis stroke="#6B7280" fontSize={11} tickLine={false} axisLine={false} />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#111827', 
+                          backgroundColor: 'var(--surface)', 
                           borderColor: '#374151', 
                           borderRadius: '12px',
                           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
@@ -537,8 +537,8 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* List: Revenue by Challenge Plan */}
-            <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-[#1F2937]/70 pb-3">
+            <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <PieChart className="h-4 w-4 text-accent" />
@@ -595,8 +595,8 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Pass Rates by Plan */}
-            <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-[#1F2937]/70 pb-3">
+            <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-accent" />
                   Pass Rates & Milestone Performance
@@ -609,7 +609,7 @@ export default function AdminAnalyticsPage() {
                   challenges.pass_rates.map((pr: any, i: number) => {
                     const passRate = pr.total > 0 ? Math.round(((pr.passed || 0) / pr.total) * 100) : 0
                     return (
-                      <div key={i} className="p-3 bg-[#0B0F19] rounded-xl border border-[#1F2937] flex items-center justify-between">
+                      <div key={i} className="p-3 bg-background rounded-xl border border-surface-muted flex items-center justify-between">
                         <div className="space-y-0.5">
                           <span className="text-xs font-bold text-white block">{pr.plan_name || pr.name}</span>
                           <span className="text-[11px] text-gray-400 font-mono">
@@ -634,8 +634,8 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Challenge Lifecycle Overview */}
-            <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-[#1F2937]/70 pb-3">
+            <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <Activity className="h-4 w-4 text-accent" />
                   Challenge Lifecycle Status
@@ -644,7 +644,7 @@ export default function AdminAnalyticsPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3.5 pt-1">
-                <div className="p-4 bg-[#0B0F19] rounded-xl border border-[#1F2937] text-left space-y-1">
+                <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
                   <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Active Evaluations</span>
                   <span className="text-2xl font-extrabold text-blue-400 font-mono block">
                     {activeCount}
@@ -652,7 +652,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-[10px] text-gray-500 font-mono">Phase 1 & Phase 2</span>
                 </div>
 
-                <div className="p-4 bg-[#0B0F19] rounded-xl border border-[#1F2937] text-left space-y-1">
+                <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
                   <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Funded Live Pro</span>
                   <span className="text-2xl font-extrabold text-accent font-mono block">
                     {fundedCount}
@@ -660,7 +660,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-[10px] text-gray-500 font-mono">Generating PnL</span>
                 </div>
 
-                <div className="p-4 bg-[#0B0F19] rounded-xl border border-[#1F2937] text-left space-y-1">
+                <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
                   <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Completed / Passed</span>
                   <span className="text-2xl font-extrabold text-purple-400 font-mono block">
                     {passedCount}
@@ -668,7 +668,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-[10px] text-gray-500 font-mono">Ready for KYC/Funded</span>
                 </div>
 
-                <div className="p-4 bg-[#0B0F19] rounded-xl border border-[#1F2937] text-left space-y-1">
+                <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
                   <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Breached / Reset</span>
                   <span className="text-2xl font-extrabold text-red-400 font-mono block">
                     {failedCount}

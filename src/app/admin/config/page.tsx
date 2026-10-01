@@ -1012,7 +1012,7 @@ export default function ConfigurationHubPage() {
     challenge_label: 'Challenge Evaluation',
     funded_label: 'Funded Pro Live',
     primary_color: '#10B981',
-    secondary_color: '#111827',
+    secondary_color: 'var(--surface)',
     font_family: 'poppins',
     radius: 'md',
     manual_payment_instructions: '',
@@ -1035,7 +1035,7 @@ export default function ConfigurationHubPage() {
   // before the real config has loaded. Without this, previewing a color
   // here (even without saving) would flash on every trader-facing page
   // load in this browser until the real saved value corrected it.
-  const handleSelectAccent = (primary: string, secondary = '#111827') => {
+  const handleSelectAccent = (primary: string, secondary = 'var(--surface)') => {
     setBrandingForm((prev) => ({ ...prev, primary_color: primary, secondary_color: secondary }))
     applyThemeAccent(primary, { persist: false })
   }
@@ -1061,7 +1061,9 @@ export default function ConfigurationHubPage() {
         link.rel = 'shortcut icon'
         document.getElementsByTagName('head')[0]?.appendChild(link)
       }
-      link.href = brandingForm.favicon_url
+      if (link.getAttribute('href') !== brandingForm.favicon_url) {
+        link.href = brandingForm.favicon_url
+      }
     }
   }, [brandingForm.favicon_url])
 
@@ -1468,7 +1470,7 @@ export default function ConfigurationHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Bar Header ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -1484,7 +1486,7 @@ export default function ConfigurationHubPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-[#111827] p-1.5 rounded-xl border border-[#1F2937]">
+        <div className="flex flex-wrap items-center gap-1.5 bg-surface p-1.5 rounded-xl border border-surface-muted">
           <button
             onClick={() => setActiveTab('plans')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -1624,8 +1626,8 @@ export default function ConfigurationHubPage() {
         <div className="space-y-8 w-full">
 
           {/* 1-Click Industry Blueprints Carousel */}
-          <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1F2937]/70 pb-3.5">
+          <div className="bg-surface border border-surface-muted rounded-2xl p-5 shadow-2xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-muted/70 pb-3.5">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">⚡</span>
@@ -1642,7 +1644,7 @@ export default function ConfigurationHubPage() {
               {CHALLENGE_BLUEPRINTS.map((bp) => (
                 <div
                   key={bp.id}
-                  className="bg-[#0B0F19] border border-[#1F2937] hover:border-emerald-500/50 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-xl group"
+                  className="bg-background border border-surface-muted hover:border-emerald-500/50 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-xl group"
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
@@ -1659,7 +1661,7 @@ export default function ConfigurationHubPage() {
                       </p>
                     </div>
 
-                    <div className="space-y-1.5 pt-2 border-t border-[#1F2937]/60">
+                    <div className="space-y-1.5 pt-2 border-t border-surface-muted/60">
                       {bp.bullets.map((bullet, i) => (
                         <div key={i} className="flex items-center gap-1.5 text-[11px] text-gray-300 font-mono">
                           <Check className="w-3 h-3 text-emerald-400 shrink-0" />
@@ -1673,7 +1675,7 @@ export default function ConfigurationHubPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleApplyBlueprint(bp)}
-                    className="mt-4 w-full text-xs font-semibold border-[#1F2937] text-gray-200 hover:text-white hover:border-emerald-500/60 hover:bg-emerald-500/10 gap-1.5"
+                    className="mt-4 w-full text-xs font-semibold border-surface-muted text-gray-200 hover:text-white hover:border-emerald-500/60 hover:bg-emerald-500/10 gap-1.5"
                   >
                     <span>Apply Blueprint</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1684,7 +1686,7 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* Plan Builder Header & Global Actions */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] border border-[#1F2937] rounded-xl p-4.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface border border-surface-muted rounded-xl p-4.5">
             <div>
               <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-emerald-400" />
@@ -1807,18 +1809,18 @@ export default function ConfigurationHubPage() {
               return (
                 <Card 
                   key={plan.id}
-                  className={`bg-[#111827] border transition-all flex flex-col justify-between ${
-                    isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-[#0e1726]' : 'border-[#1F2937] hover:border-emerald-500/40'
+                  className={`bg-surface border transition-all flex flex-col justify-between ${
+                    isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-[#0e1726]' : 'border-surface-muted hover:border-emerald-500/40'
                   }`}
                 >
-                  <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+                  <CardHeader className="pb-3 border-b border-surface-muted/60">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectPlan(planId)}
-                          className="h-4 w-4 rounded border-gray-700 bg-[#0B0F19] text-emerald-500 focus:ring-emerald-500/40 cursor-pointer"
+                          className="h-4 w-4 rounded border-gray-700 bg-background text-emerald-500 focus:ring-emerald-500/40 cursor-pointer"
                         />
                         <CardTitle className="text-base text-gray-100 font-bold font-sans">
                           {plan.name}
@@ -1839,24 +1841,24 @@ export default function ConfigurationHubPage() {
                   </CardHeader>
 
                   <CardContent className="p-5 space-y-3 text-xs font-mono">
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">Phase 1 Target:</span>
                       <span className="text-emerald-400 font-bold">+{p1Target}% (${((accountSize * p1Target) / 100).toLocaleString()})</span>
                     </div>
 
                     {!plan.is_instant_funding && (plan.phases ?? 2) >= 2 && (
-                      <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                      <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                         <span className="text-gray-400">Phase 2 Target:</span>
                         <span className="text-emerald-400 font-bold">+{p2Target}% (${((accountSize * p2Target) / 100).toLocaleString()})</span>
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">Daily Loss Limit:</span>
                       <span className="text-amber-400 font-bold">{dailyDD}% (${((accountSize * dailyDD) / 100).toLocaleString()})</span>
                     </div>
 
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">Max Total Drawdown:</span>
                       <div className="flex items-center gap-1.5">
                         <span className="text-red-400 font-bold">{maxDD}% (${((accountSize * maxDD) / 100).toLocaleString()})</span>
@@ -1866,7 +1868,7 @@ export default function ConfigurationHubPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">Profit Split / Leverage:</span>
                       <span className="text-gray-200 font-bold">{split}% • 1:{plan.max_leverage || 100}</span>
                     </div>
@@ -1894,7 +1896,7 @@ export default function ConfigurationHubPage() {
                     </div>
                   </CardContent>
 
-                  <CardFooter className="border-t border-[#1F2937]/60 pt-3 flex items-center justify-between">
+                  <CardFooter className="border-t border-surface-muted/60 pt-3 flex items-center justify-between">
                     <Badge tone={plan.is_active ? 'success' : 'neutral'} size="sm">
                       {plan.is_active ? 'Active' : 'Archived'}
                     </Badge>
@@ -1903,7 +1905,7 @@ export default function ConfigurationHubPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => openEditPlan(plan)}
-                        className="h-8 text-xs border-[#1F2937] hover:border-emerald-500 text-gray-300 hover:text-white gap-1.5"
+                        className="h-8 text-xs border-surface-muted hover:border-emerald-500 text-gray-300 hover:text-white gap-1.5"
                       >
                         <Edit2 className="h-3 w-3 text-emerald-400" />
                         Configure
@@ -1929,8 +1931,8 @@ export default function ConfigurationHubPage() {
       {/* ── TAB 2: THEME & BRANDING ───────────────────────────────────────── */}
       {activeTab === 'branding' && (
         <div className="space-y-6 max-w-4xl">
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                 <Paintbrush className="h-4 w-4 text-emerald-400" />
                 Whitelabel Identity & Media Assets
@@ -2029,7 +2031,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Platform Typography & Font Family */}
-              <div className="space-y-3 pt-2 border-t border-[#1F2937]/60">
+              <div className="space-y-3 pt-2 border-t border-surface-muted/60">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-sm font-semibold text-white">Platform Typography & Font Family</Label>
@@ -2045,8 +2047,8 @@ export default function ConfigurationHubPage() {
                       <div
                         key={font.id}
                         onClick={() => handleSelectFont(font.id)}
-                        className={`p-3.5 rounded-xl border-2 bg-[#0B0F19] space-y-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                          isSelected ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-[#1F2937] hover:border-slate-700'
+                        className={`p-3.5 rounded-xl border-2 bg-background space-y-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                          isSelected ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-surface-muted hover:border-slate-700'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -2069,7 +2071,7 @@ export default function ConfigurationHubPage() {
 
               {/* Theme Accent Palette */}
               {/* Theme Accent Palette & Custom Hex */}
-              <div className="space-y-3 pt-3 border-t border-[#1F2937]/60">
+              <div className="space-y-3 pt-3 border-t border-surface-muted/60">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-sm font-semibold text-white">Theme Accent Palette & Custom Brand Glow</Label>
@@ -2085,8 +2087,8 @@ export default function ConfigurationHubPage() {
                       <div
                         key={preset.id}
                         onClick={() => handleSelectAccent(preset.primary, preset.secondary)}
-                        className={`p-3.5 rounded-xl border-2 bg-[#0B0F19] space-y-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                          isSelected ? 'shadow-lg' : 'border-[#1F2937] hover:border-slate-700'
+                        className={`p-3.5 rounded-xl border-2 bg-background space-y-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                          isSelected ? 'shadow-lg' : 'border-surface-muted hover:border-slate-700'
                         }`}
                         style={{
                           borderColor: isSelected ? preset.primary : undefined,
@@ -2101,8 +2103,8 @@ export default function ConfigurationHubPage() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className="h-4 w-4 rounded-full shadow-sm" style={{ backgroundColor: preset.primary }} />
-                          <div className="h-4 w-4 rounded-full bg-[#111827] border border-slate-700" />
-                          <div className="h-4 w-4 rounded-full bg-[#0B0F19] border border-slate-700" />
+                          <div className="h-4 w-4 rounded-full bg-surface border border-slate-700" />
+                          <div className="h-4 w-4 rounded-full bg-background border border-slate-700" />
                         </div>
                         <span className="text-[10px] font-medium block" style={{ color: preset.primary }}>
                           {preset.label}
@@ -2113,7 +2115,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* Custom HEX Input Row */}
-                <div className="flex items-center gap-3 p-3 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-surface-muted bg-background">
                   <input
                     type="color"
                     value={brandingForm.primary_color.startsWith('#') ? brandingForm.primary_color : '#10B981'}
@@ -2133,7 +2135,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Interface Border Radius Customizer */}
-              <div className="space-y-3 pt-3 border-t border-[#1F2937]/60">
+              <div className="space-y-3 pt-3 border-t border-surface-muted/60">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-sm font-semibold text-white">Component Border Radius</Label>
@@ -2159,7 +2161,7 @@ export default function ConfigurationHubPage() {
                         className={`p-2.5 text-xs font-medium border-2 transition-all flex flex-col items-center gap-1.5 ${r.class} ${
                           isSel
                             ? 'border-emerald-500 bg-emerald-500/10 text-white font-bold'
-                            : 'border-[#1F2937] bg-[#0B0F19] text-gray-400 hover:text-white hover:border-slate-700'
+                            : 'border-surface-muted bg-background text-gray-400 hover:text-white hover:border-slate-700'
                         }`}
                       >
                         <div className={`h-3 w-8 border border-current ${r.class}`} />
@@ -2171,7 +2173,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* ── 4 MEDIA UPLOADERS WITH INSTANT LIVE PREVIEWS ── */}
-              <div className="space-y-6 pt-4 border-t border-[#1F2937]/60">
+              <div className="space-y-6 pt-4 border-t border-surface-muted/60">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-bold text-white">Platform Media Assets & Branding</h4>
@@ -2181,7 +2183,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* 1. Primary Platform Logo */}
-                <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-4">
+                <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <Label className="text-xs font-semibold text-gray-200">1. Primary Brand Logo (Web & Email)</Label>
@@ -2210,8 +2212,8 @@ export default function ConfigurationHubPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div className={`p-4 rounded-xl border border-[#1F2937] flex flex-col items-center justify-center min-h-[90px] transition-colors ${
-                      logoPreviewTheme === 'dark' ? 'bg-[#0B0F19]' : 'bg-[#F9FAFB]'
+                    <div className={`p-4 rounded-xl border border-surface-muted flex flex-col items-center justify-center min-h-[90px] transition-colors ${
+                      logoPreviewTheme === 'dark' ? 'bg-background' : 'bg-[#F9FAFB]'
                     }`}>
                       {brandingForm.logo_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
@@ -2276,14 +2278,14 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* 2. Login Screen Logo */}
-                <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-4">
+                <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-gray-200">2. Login Screen Logo</Label>
                     <p className="text-[11px] text-gray-400">Horizontal logo on authentication / login portal (Recommended: ≥320×80px transparent PNG/WebP)</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] flex flex-col items-center justify-center min-h-[90px]">
+                    <div className="p-4 rounded-xl border border-surface-muted bg-background flex flex-col items-center justify-center min-h-[90px]">
                       {brandingForm.login_logo_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={brandingForm.login_logo_url} alt="Login Logo" className="max-h-12 max-w-full object-contain" />
@@ -2338,14 +2340,14 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* 3. Sidebar App Icon */}
-                <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-4">
+                <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-gray-200">3. Sidebar Square Icon / App Mark</Label>
                     <p className="text-[11px] text-gray-400">Square mark rendered in collapsed sidebar &amp; mobile headers (Recommended: 128×128px square PNG/WebP)</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] flex flex-col items-center justify-center min-h-[90px]">
+                    <div className="p-4 rounded-xl border border-surface-muted bg-background flex flex-col items-center justify-center min-h-[90px]">
                       {brandingForm.sidebar_icon_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={brandingForm.sidebar_icon_url} alt="Sidebar Icon" className="h-10 w-10 object-contain rounded-lg" />
@@ -2402,15 +2404,15 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* 4. Platform Favicon (.ico / .png) */}
-                <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-4">
+                <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-gray-200">4. Browser Tab Favicon (.ico / .png / .webp)</Label>
                     <p className="text-[11px] text-gray-400">Updates the browser tab icon in real-time and appears in trader bookmarks (48×48px).</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div className="p-3 rounded-xl border border-[#1F2937] bg-[#111827] flex items-center gap-2 shadow-inner">
-                      <div className="h-5 w-5 rounded bg-[#1F2937] flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="p-3 rounded-xl border border-surface-muted bg-surface flex items-center gap-2 shadow-inner">
+                      <div className="h-5 w-5 rounded bg-surface-muted flex items-center justify-center shrink-0 overflow-hidden">
                         {brandingForm.favicon_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img src={brandingForm.favicon_url} alt="Favicon" className="h-4 w-4 object-contain" />
@@ -2473,7 +2475,7 @@ export default function ConfigurationHubPage() {
 
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveBrandingMutation.mutate(brandingForm)}
@@ -2503,8 +2505,8 @@ export default function ConfigurationHubPage() {
           <PaymentsCenter />
 
           {/* Manual Payment & Bank Wire Instructions */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-emerald-400" />
                 Manual Payment &amp; Wire Transfer Instructions
@@ -2524,14 +2526,14 @@ export default function ConfigurationHubPage() {
                   placeholder="e.g. Please send wire transfer to Bank: XYZ, Account: 12345678, SWIFT: ABCDEF. Include your order ID in the reference."
                   value={brandingForm.manual_payment_instructions || ''}
                   onChange={(e) => setBrandingForm({ ...brandingForm, manual_payment_instructions: e.target.value })}
-                  className="w-full rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white p-3 font-sans focus:outline-none focus:border-accent"
+                  className="w-full rounded-xl bg-background border border-surface-muted text-xs text-white p-3 font-sans focus:outline-none focus:border-accent"
                 />
                 <p className="text-[11px] text-gray-500">
                   Traders will see this text formatted on the checkout modal upon selecting Manual / Bank Transfer.
                 </p>
               </div>
             </CardContent>
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveBrandingMutation.mutate(brandingForm)}
@@ -2549,8 +2551,8 @@ export default function ConfigurationHubPage() {
       {/* ── TAB 4: SYSTEM RULES ───────────────────────────────────────────── */}
       {activeTab === 'rules' && (
         <div className="space-y-6 max-w-4xl">
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 Global Trading Rules & Compliance Parameters
@@ -2601,7 +2603,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Financial Guardrails */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#1F2937]/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
                 
                 <div className="space-y-1.5">
                   <Label htmlFor="min-payout">Minimum Payout Amount ($)</Label>
@@ -2639,10 +2641,10 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Toggle Switches */}
-              <div className="space-y-4 pt-2 border-t border-[#1F2937]/60">
+              <div className="space-y-4 pt-2 border-t border-surface-muted/60">
                 <Label>System-Wide Compliance Enforcement</Label>
 
-                <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                   <div>
                     <p className="text-xs font-semibold text-gray-200">Mandatory KYC Before First Payout</p>
                     <p className="text-[11px] text-gray-500">Require photo ID and address verification before withdrawal approvals</p>
@@ -2653,7 +2655,7 @@ export default function ConfigurationHubPage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                   <div>
                     <p className="text-xs font-semibold text-gray-200">Weekend Position Holding Default</p>
                     <p className="text-[11px] text-gray-500">Allow traders to maintain open swing positions through market close</p>
@@ -2664,7 +2666,7 @@ export default function ConfigurationHubPage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                   <div>
                     <p className="text-xs font-semibold text-gray-200">Mandatory Stop Loss on Every Trade</p>
                     <p className="text-[11px] text-gray-500">Require SL parameter on all opened market and pending orders</p>
@@ -2679,7 +2681,7 @@ export default function ConfigurationHubPage() {
 
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveRulesMutation.mutate(systemRulesForm)}
@@ -2704,8 +2706,8 @@ export default function ConfigurationHubPage() {
       {/* ── TAB 6: SMTP MAIL SERVER ───────────────────────────────────────── */}
       {activeTab === 'smtp' && (
         <div className="space-y-6 max-w-4xl">
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <Mail className="h-4 w-4 text-emerald-400" />
@@ -2754,7 +2756,7 @@ export default function ConfigurationHubPage() {
                     id="smtp-secure"
                     value={smtpForm.secure}
                     onChange={(e) => setSmtpForm({ ...smtpForm, secure: e.target.value as any })}
-                    className="w-full h-10 px-3 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-gray-200 text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full h-10 px-3 rounded-xl border border-surface-muted bg-background text-gray-200 text-xs focus:outline-none focus:border-emerald-500"
                   >
                     <option value="tls">TLS (STARTTLS — Recommended)</option>
                     <option value="ssl">SSL (Implicit Port 465)</option>
@@ -2787,7 +2789,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Sender Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#1F2937]/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
                 <div className="space-y-1.5">
                   <Label htmlFor="smtp-from-name">From Display Name</Label>
                   <Input
@@ -2838,7 +2840,7 @@ export default function ConfigurationHubPage() {
                     placeholder="Enter destination email (e.g. founder@yourpropfirm.com)"
                     value={testEmailTo}
                     onChange={(e) => setTestEmailTo(e.target.value)}
-                    className="font-mono text-xs bg-[#0B0F19]"
+                    className="font-mono text-xs bg-background"
                   />
                   <Button
                     type="button"
@@ -2856,7 +2858,7 @@ export default function ConfigurationHubPage() {
 
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveSmtpMutation.mutate(smtpForm)}
@@ -2874,8 +2876,8 @@ export default function ConfigurationHubPage() {
       {/* ── TAB 5: DEVELOPER & DEMO DATA SANDBOX ──────────────────────────── */}
       {activeTab === 'sandbox' && (
         <div className="space-y-6 max-w-4xl">
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <Database className="h-4 w-4 text-emerald-400" />
@@ -2891,7 +2893,7 @@ export default function ConfigurationHubPage() {
             <CardContent className="p-6 space-y-6">
               
               {/* Seed Demo Data Card */}
-              <div className="p-5 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-4">
+              <div className="p-5 rounded-xl border border-surface-muted bg-background space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -2905,7 +2907,7 @@ export default function ConfigurationHubPage() {
                   <Badge tone="accent" size="sm" className="shrink-0">1-Click Generator</Badge>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-[#1F2937]/60">
+                <div className="flex items-center justify-between pt-2 border-t border-surface-muted/60">
                   <span className="text-[11px] text-gray-500 font-mono">
                     Tagged with DEMO metadata for clean isolated removal
                   </span>
@@ -2967,8 +2969,8 @@ export default function ConfigurationHubPage() {
           {/* Live Price Feed Engine (MT5 Ingest Secret & Health Diagnostics) */}
           <PriceFeedCard />
 
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <Server className="h-4 w-4 text-emerald-400" />
@@ -3036,7 +3038,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Group Mappings */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#1F2937]/60">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-muted/60">
                 <div className="space-y-1.5">
                   <Label htmlFor="mt5-demo-group">Demo / Evaluation Group Mapping</Label>
                   <Input
@@ -3063,7 +3065,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Ping Gateway Diagnostic Card */}
-              <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-3">
+              <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-emerald-400" />
@@ -3107,7 +3109,7 @@ export default function ConfigurationHubPage() {
 
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveMt5Mutation.mutate(mt5Form)}
@@ -3150,7 +3152,7 @@ export default function ConfigurationHubPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* AI Engine & Gemini Banner Card */}
-            <Card className="col-span-1 md:col-span-2 bg-gradient-to-r from-emerald-50 via-slate-50 to-white dark:from-emerald-950/40 dark:via-[#111827] dark:to-[#0B0F19] border border-emerald-200 dark:border-emerald-500/30 p-4 shadow-sm">
+            <Card className="col-span-1 md:col-span-2 bg-gradient-to-r from-emerald-50 via-slate-50 to-white dark:from-emerald-950/40 dark:via-surface dark:to-background border border-emerald-200 dark:border-emerald-500/30 p-4 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -3188,8 +3190,8 @@ export default function ConfigurationHubPage() {
 
             
             {/* 1. Discord Webhook Channel */}
-            <Card className="bg-[#111827] border-[#1F2937]">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 text-[#5865F2] flex items-center justify-center font-bold text-sm">
@@ -3232,7 +3234,7 @@ export default function ConfigurationHubPage() {
                     onClick={handleTestDiscordPing}
                     loading={isTestingDiscord}
                     disabled={!webhookForm.discord_webhook_url}
-                    className="text-xs gap-1.5 border-[#1F2937] hover:bg-[#5865F2]/10 text-[#5865F2]"
+                    className="text-xs gap-1.5 border-surface-muted hover:bg-[#5865F2]/10 text-[#5865F2]"
                   >
                     <Send className="h-3.5 w-3.5" />
                     Send Test Discord Ping
@@ -3242,8 +3244,8 @@ export default function ConfigurationHubPage() {
             </Card>
 
             {/* 2. Telegram Bot Channel */}
-            <Card className="bg-[#111827] border-[#1F2937]">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-[#0088CC]/10 border border-[#0088CC]/20 text-[#0088CC] flex items-center justify-center font-bold text-sm">
@@ -3300,7 +3302,7 @@ export default function ConfigurationHubPage() {
                     onClick={handleTestTelegramPing}
                     loading={isTestingTelegram}
                     disabled={!webhookForm.telegram_bot_token || !webhookForm.telegram_chat_id}
-                    className="text-xs gap-1.5 border-[#1F2937] hover:bg-[#0088CC]/10 text-[#0088CC]"
+                    className="text-xs gap-1.5 border-surface-muted hover:bg-[#0088CC]/10 text-[#0088CC]"
                   >
                     <Send className="h-3.5 w-3.5" />
                     Send Test Telegram Ping
@@ -3312,8 +3314,8 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* 3. Real-Time Event Subscription Toggles */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-amber-400" />
                 Real-Time Event Subscriptions
@@ -3327,7 +3329,7 @@ export default function ConfigurationHubPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
                 {/* Event 1: New Challenge Purchase */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">💰 Challenge Purchases</span>
@@ -3344,7 +3346,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* Event 2: Payout Requests */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">💳 Payout Requests</span>
@@ -3361,7 +3363,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* Event 3: Account Breaches */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">⚠️ Hard Drawdown Breaches</span>
@@ -3378,7 +3380,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* Event 4: KYC Submissions */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19]">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">🪪 KYC & AML Submissions</span>
@@ -3397,7 +3399,7 @@ export default function ConfigurationHubPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 onClick={() => saveWebhooksMutation.mutate(webhookForm)}
@@ -3434,7 +3436,7 @@ export default function ConfigurationHubPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => refetchScaling()}
-                className="text-xs gap-1.5 border-[#1F2937]"
+                className="text-xs gap-1.5 border-surface-muted"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Refresh Queue
@@ -3457,8 +3459,8 @@ export default function ConfigurationHubPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Card 1: Scaling Rules & Multipliers */}
-            <Card className="bg-[#111827] border-[#1F2937] lg:col-span-2">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted lg:col-span-2">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
@@ -3490,7 +3492,7 @@ export default function ConfigurationHubPage() {
                       className={`p-4 rounded-xl border text-left transition-all ${
                         !scalingRulesForm.auto_scale
                           ? 'border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                          : 'border-[#1F2937] bg-[#0B0F19] hover:border-gray-700'
+                          : 'border-surface-muted bg-background hover:border-gray-700'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -3512,7 +3514,7 @@ export default function ConfigurationHubPage() {
                       className={`p-4 rounded-xl border text-left transition-all ${
                         scalingRulesForm.auto_scale
                           ? 'border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                          : 'border-[#1F2937] bg-[#0B0F19] hover:border-gray-700'
+                          : 'border-surface-muted bg-background hover:border-gray-700'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -3531,7 +3533,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* Input Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#1F2937]/60">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
                   
                   <div className="space-y-1.5">
                     <Label htmlFor="scaling-target" className="text-xs font-semibold text-gray-300">
@@ -3592,7 +3594,7 @@ export default function ConfigurationHubPage() {
 
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#1F2937]/60">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
                   
                   <div className="space-y-1.5">
                     <Label htmlFor="scaling-mult" className="text-xs font-semibold text-gray-300">
@@ -3658,8 +3660,8 @@ export default function ConfigurationHubPage() {
             </Card>
 
             {/* Card 2: Scaling Overview Telemetry */}
-            <Card className="bg-[#111827] border-[#1F2937] flex flex-col justify-between">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted flex flex-col justify-between">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <Award className="h-4 w-4 text-emerald-400" />
                   Milestone Rewards Summary
@@ -3670,7 +3672,7 @@ export default function ConfigurationHubPage() {
               </CardHeader>
 
               <CardContent className="p-6 space-y-4">
-                <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-1">
+                <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
                   <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Scaling Multiplier</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-emerald-400 font-mono">+{scalingRulesForm.balance_multiplier_pct}% Capital</span>
@@ -3678,7 +3680,7 @@ export default function ConfigurationHubPage() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-1">
+                <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
                   <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Profit Split Bump</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-white font-mono">80% ➔ {scalingRulesForm.new_profit_split}%</span>
@@ -3686,7 +3688,7 @@ export default function ConfigurationHubPage() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-1">
+                <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
                   <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Capital Ceiling Limit</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-white font-mono">
@@ -3709,7 +3711,7 @@ export default function ConfigurationHubPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="border-t border-[#1F2937]/60 p-4 text-[11px] text-gray-500">
+              <CardFooter className="border-t border-surface-muted/60 p-4 text-[11px] text-gray-500">
                 <span>Calculated dynamically from settled payouts & starting balance PnL.</span>
               </CardFooter>
             </Card>
@@ -3717,8 +3719,8 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* 2. Traders Scaling Queue Table */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -3741,7 +3743,7 @@ export default function ConfigurationHubPage() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-lg border border-[#1F2937] text-xs">
+                  <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-surface-muted text-xs">
                     {(['all', 'eligible', 'applied'] as const).map((filter) => (
                       <button
                         key={filter}
@@ -3763,7 +3765,7 @@ export default function ConfigurationHubPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-[#0B0F19]/80 border-b border-[#1F2937] text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-background/80 border-b border-surface-muted text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="px-5 py-3">Trader & Account</th>
                       <th className="px-4 py-3">Current Capital</th>
@@ -3774,7 +3776,7 @@ export default function ConfigurationHubPage() {
                       <th className="px-5 py-3 text-right">Action / Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1F2937]/50 text-gray-200">
+                  <tbody className="divide-y divide-surface-muted/50 text-gray-200">
                     {isLoadingScaling ? (
                       <tr>
                         <td colSpan={7} className="px-5 py-8 text-center text-gray-500">
@@ -3888,7 +3890,7 @@ export default function ConfigurationHubPage() {
               size="sm"
               onClick={() => recheckLicenseMutation.mutate()}
               loading={recheckLicenseMutation.isPending}
-              className="text-xs gap-1.5 border-[#1F2937] shrink-0"
+              className="text-xs gap-1.5 border-surface-muted shrink-0"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Check Now
@@ -3914,7 +3916,7 @@ export default function ConfigurationHubPage() {
                   )}
                   <div className="text-xs">
                     {licenseData.status === 'active' && (
-                      <p className="text-emerald-300 font-semibold mb-0.5">License active{licenseData.period_end ? ` — renews ${new Date(licenseData.period_end).toLocaleDateString()}` : ''}</p>
+                      <p className="text-emerald-300 font-semibold mb-0.5">License active{licenseData.period_end ? (isNaN(Date.parse(licenseData.period_end)) ? ` — ${licenseData.period_end}` : ` — renews ${new Date(licenseData.period_end).toLocaleDateString()}`) : ''}</p>
                     )}
                     {licenseData.status === 'invalid' && (
                       <>
@@ -3941,8 +3943,8 @@ export default function ConfigurationHubPage() {
                 </div>
               )}
 
-              <Card className="bg-[#111827] border-[#1F2937]">
-                <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+              <Card className="bg-surface border-surface-muted">
+                <CardHeader className="border-b border-surface-muted/60 pb-4">
                   <CardTitle className="text-sm">License Key</CardTitle>
                   <CardDescription className="text-xs">Enter the key and license-server URL you were given at purchase.</CardDescription>
                 </CardHeader>
@@ -3953,7 +3955,7 @@ export default function ConfigurationHubPage() {
                       value={licenseKeyInput}
                       onChange={(e) => setLicenseKeyInput(e.target.value)}
                       placeholder="PFXL-XXXX-XXXX-XXXX-XXXX"
-                      className="bg-[#0B0F19] border-[#1F2937] font-mono text-xs"
+                      className="bg-background border-surface-muted font-mono text-xs"
                     />
                   </div>
                   <div>
@@ -3962,7 +3964,7 @@ export default function ConfigurationHubPage() {
                       value={licenseServerInput}
                       onChange={(e) => setLicenseServerInput(e.target.value)}
                       placeholder="https://license.yourbrand.com"
-                      className="bg-[#0B0F19] border-[#1F2937] text-xs"
+                      className="bg-background border-surface-muted text-xs"
                     />
                   </div>
                   <Button
@@ -4011,8 +4013,8 @@ export default function ConfigurationHubPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 1. Google Gemini Cloud Engine */}
-            <Card className="bg-[#111827] border-[#1F2937]">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
@@ -4080,7 +4082,7 @@ export default function ConfigurationHubPage() {
                     id="gemini-model"
                     value={aiForm.gemini_model}
                     onChange={(e) => setAiForm({ ...aiForm, gemini_model: e.target.value })}
-                    className="w-full bg-[#0B0F19] border border-[#1F2937] rounded-xl text-xs px-3 py-2 text-gray-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-background border border-surface-muted rounded-xl text-xs px-3 py-2 text-gray-200 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="gemini-3.6-flash">gemini-3.6-flash (Recommended: Free Tier, Ultra Fast, 2026 Active)</option>
                     <option value="gemini-flash-latest">gemini-flash-latest (Auto-Updating Latest Flash)</option>
@@ -4154,8 +4156,8 @@ export default function ConfigurationHubPage() {
             </Card>
 
             {/* 2. DeepSeek-R1 Engine (Cloud API or Local VPS Ollama) */}
-            <Card className="bg-[#111827] border-[#1F2937]">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
@@ -4217,7 +4219,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 {/* Local/VPS Ollama Section */}
-                <div className="space-y-3 pt-3 border-t border-[#1F2937]/70">
+                <div className="space-y-3 pt-3 border-t border-surface-muted/70">
                   <div className="space-y-1.5">
                     <Label htmlFor="ollama-endpoint">Local / VPS Ollama Endpoint URL</Label>
                     <Input
@@ -4248,8 +4250,8 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* 3. Routing Provider & Autonomous Toggles */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100">Routing Mode &amp; Autonomous Autopilot</CardTitle>
               <CardDescription className="text-xs text-gray-400">
                 Choose how queries are dispatched between Gemini, DeepSeek, and deterministic failover.
@@ -4271,7 +4273,7 @@ export default function ConfigurationHubPage() {
                     className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1 ${
                       aiForm.provider === m.id
                         ? 'bg-emerald-500/15 border-emerald-500 text-white'
-                        : 'bg-[#0B0F19] border-[#1F2937] text-gray-300 hover:border-gray-700'
+                        : 'bg-background border-surface-muted text-gray-300 hover:border-gray-700'
                     }`}
                   >
                     <span className="text-xs font-bold">{m.title}</span>
@@ -4280,7 +4282,7 @@ export default function ConfigurationHubPage() {
                 ))}
               </div>
 
-              <div className="pt-4 border-t border-[#1F2937] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="pt-4 border-t border-surface-muted flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-gray-200">24/7 AI Support Desk Autopilot</div>
                   <div className="text-[11px] text-gray-400">Automatically answers incoming trader support tickets in real-time.</div>
@@ -4291,7 +4293,7 @@ export default function ConfigurationHubPage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#1F2937] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="pt-4 border-t border-surface-muted flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-gray-200">AI Sentinel Toxic Scalper &amp; Syndicate Autoban</div>
                   <div className="text-[11px] text-gray-400">Automatically freezes accounts identified in severe microsecond copy-trading clusters.</div>
@@ -4319,7 +4321,7 @@ export default function ConfigurationHubPage() {
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             
             {/* ── Left Sidebar (Step Navigator & Live Preview) ──────────────── */}
-            <div className="w-full lg:w-64 shrink-0 flex flex-col justify-between space-y-4 border-b lg:border-b-0 lg:border-r border-[#1F2937]/80 pb-4 lg:pb-0 lg:pr-5">
+            <div className="w-full lg:w-64 shrink-0 flex flex-col justify-between space-y-4 border-b lg:border-b-0 lg:border-r border-surface-muted/80 pb-4 lg:pb-0 lg:pr-5">
               
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block px-1">
@@ -4334,7 +4336,7 @@ export default function ConfigurationHubPage() {
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'basics'
                       ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-[#0B0F19] border-[#1F2937] hover:border-gray-700 hover:bg-slate-900/60"
+                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
                   )}
                 >
                   <div className={cn(
@@ -4364,7 +4366,7 @@ export default function ConfigurationHubPage() {
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'drawdown'
                       ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-[#0B0F19] border-[#1F2937] hover:border-gray-700 hover:bg-slate-900/60"
+                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
                   )}
                 >
                   <div className={cn(
@@ -4394,7 +4396,7 @@ export default function ConfigurationHubPage() {
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'rules'
                       ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-[#0B0F19] border-[#1F2937] hover:border-gray-700 hover:bg-slate-900/60"
+                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
                   )}
                 >
                   <div className={cn(
@@ -4423,7 +4425,7 @@ export default function ConfigurationHubPage() {
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'scaling'
                       ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-[#0B0F19] border-[#1F2937] hover:border-gray-700 hover:bg-slate-900/60"
+                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
                   )}
                 >
                   <div className={cn(
@@ -4446,7 +4448,7 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Live Summary Card */}
-              <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono uppercase text-gray-400 tracking-wider">Plan Summary</span>
                   <Badge tone={planForm.is_active ? 'accent' : 'neutral'} size="sm" className="text-[9px] px-1.5 py-0">
@@ -4481,7 +4483,7 @@ export default function ConfigurationHubPage() {
               {/* ── SECTION 1: BASICS ────────────────────────────────────────── */}
               {modalSection === 'basics' && (
                 <div className="space-y-4">
-                  <div className="border-b border-[#1F2937]/70 pb-3">
+                  <div className="border-b border-surface-muted/70 pb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <Layers className="h-4 w-4 text-accent" />
                       Plan Sizing, Pricing & Account Structure
@@ -4506,7 +4508,7 @@ export default function ConfigurationHubPage() {
                             slug: slugify(newName),
                           }))
                         }}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -4519,7 +4521,7 @@ export default function ConfigurationHubPage() {
                         placeholder="e.g. 100k-elite-challenge"
                         value={planForm.slug || ''}
                         onChange={(e) => setPlanForm({ ...planForm, slug: slugify(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-gray-300 focus:outline-none focus:border-accent font-mono transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-gray-300 focus:outline-none focus:border-accent font-mono transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -4528,7 +4530,7 @@ export default function ConfigurationHubPage() {
                         id="plan-type"
                         value={planForm.plan_type || '2-step'}
                         onChange={(e) => setPlanForm({ ...planForm, plan_type: e.target.value as any })}
-                        className="w-full h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value="1-step">1-Step Fast Track (1 Phase)</option>
                         <option value="2-step">2-Step Standard (2 Phases)</option>
@@ -4543,7 +4545,7 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.account_size || 50000}
                         onChange={(e) => setPlanForm({ ...planForm, account_size: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -4553,7 +4555,7 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.price || 299}
                         onChange={(e) => setPlanForm({ ...planForm, price: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -4562,7 +4564,7 @@ export default function ConfigurationHubPage() {
                         id="max-leverage"
                         value={planForm.max_leverage || 100}
                         onChange={(e) => setPlanForm({ ...planForm, max_leverage: Number(e.target.value) })}
-                        className="w-full h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value={30}>1:30 (Conservative FX)</option>
                         <option value={50}>1:50 (Moderate FX)</option>
@@ -4581,10 +4583,10 @@ export default function ConfigurationHubPage() {
                         placeholder="0"
                         value={planForm.sort_order ?? 0}
                         onChange={(e) => setPlanForm({ ...planForm, sort_order: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-mono transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-mono transition-all"
                       />
                     </div>
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Active / Live Product</p>
                         <p className="text-[10px] text-gray-500">Visible in client checkout catalog</p>
@@ -4594,7 +4596,7 @@ export default function ConfigurationHubPage() {
                         onCheckedChange={(checked) => setPlanForm({ ...planForm, is_active: checked ? 1 : 0 })}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Refundable Fee</p>
                         <p className="text-[10px] text-gray-500">100% refund on 1st payout</p>
@@ -4611,7 +4613,7 @@ export default function ConfigurationHubPage() {
               {/* ── SECTION 2: OBJECTIVES & DRAWDOWN ────────────────────────── */}
               {modalSection === 'drawdown' && (
                 <div className="space-y-5">
-                  <div className="border-b border-[#1F2937]/70 pb-3">
+                  <div className="border-b border-surface-muted/70 pb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <Scale className="h-4 w-4 text-accent" />
                       Profit Objectives & Risk Drawdown Engine
@@ -4629,7 +4631,7 @@ export default function ConfigurationHubPage() {
                         id="dd-type"
                         value={planForm.drawdown_type || 'static'}
                         onChange={(e) => setPlanForm({ ...planForm, drawdown_type: e.target.value as any })}
-                        className="w-full h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value="static">Static Balance (Fixed Starting Floor)</option>
                         <option value="trailing">Trailing Equity (High Water Mark)</option>
@@ -4647,14 +4649,14 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.funded_profit_split ?? 80}
                         onChange={(e) => setPlanForm({ ...planForm, funded_profit_split: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                   </div>
 
                   {/* Phase 1 Evaluation Box */}
-                  <div className="p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-3">
-                    <div className="flex items-center justify-between border-b border-[#1F2937]/60 pb-2">
+                  <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                    <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
                       <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Phase 1 Evaluation Parameters
                       </span>
@@ -4717,8 +4719,8 @@ export default function ConfigurationHubPage() {
 
                   {/* Phase 2 Verification Box (when applicable) */}
                   {planForm.plan_type !== '1-step' && planForm.plan_type !== 'instant' && (
-                    <div className="p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-3">
-                      <div className="flex items-center justify-between border-b border-[#1F2937]/60 pb-2">
+                    <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                      <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
                         <span className="text-xs font-bold text-blue-400 font-mono flex items-center gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Phase 2 Verification Parameters
                         </span>
@@ -4782,8 +4784,8 @@ export default function ConfigurationHubPage() {
 
                   {/* Phase 3 Verification Box (when 3-step) */}
                   {planForm.plan_type === '3-step' && (
-                    <div className="p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-3">
-                      <div className="flex items-center justify-between border-b border-[#1F2937]/60 pb-2">
+                    <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                      <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
                         <span className="text-xs font-bold text-amber-400 font-mono flex items-center gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Phase 3 Verification Parameters
                         </span>
@@ -4846,8 +4848,8 @@ export default function ConfigurationHubPage() {
                   )}
 
                   {/* Institutional Risk Guardrails & Safety Parameters */}
-                  <div className="p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-3">
-                    <div className="flex items-center justify-between border-b border-[#1F2937]/60 pb-2">
+                  <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                    <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
                       <span className="text-xs font-bold text-gray-200 font-mono flex items-center gap-1.5">
                         <ShieldAlert className="h-3.5 w-3.5 text-accent" /> Institutional Risk Floors & Limits
                       </span>
@@ -4917,7 +4919,7 @@ export default function ConfigurationHubPage() {
               {/* ── SECTION 3: RULES & EXECUTION ────────────────────────────── */}
               {modalSection === 'rules' && (
                 <div className="space-y-4">
-                  <div className="border-b border-[#1F2937]/70 pb-3">
+                  <div className="border-b border-surface-muted/70 pb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <ShieldCheck className="h-4 w-4 text-accent" />
                       Trade Execution, Bots & Risk Rules
@@ -4928,7 +4930,7 @@ export default function ConfigurationHubPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">EA & Bot Trading</p>
                         <p className="text-[10px] text-gray-500">Allow automated Expert Advisors</p>
@@ -4939,7 +4941,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Copy Trading</p>
                         <p className="text-[10px] text-gray-500">Allow account-to-account trade copiers</p>
@@ -4950,7 +4952,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Hedging Allowed</p>
                         <p className="text-[10px] text-gray-500">Allow simultaneous buy/sell on same pair</p>
@@ -4961,7 +4963,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Martingale / Grid</p>
                         <p className="text-[10px] text-gray-500">Allow doubling lot sizes on losing streaks</p>
@@ -4972,7 +4974,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Weekend Holding</p>
                         <p className="text-[10px] text-gray-500">Allow open swing trades over weekend</p>
@@ -4983,7 +4985,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">News Event Trading</p>
                         <p className="text-[10px] text-gray-500">Allow orders during high impact news</p>
@@ -4994,7 +4996,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Stop Loss Required</p>
                         <p className="text-[10px] text-gray-500">Enforce mandatory SL on position open</p>
@@ -5005,7 +5007,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Consistency Rule</p>
                         <p className="text-[10px] text-gray-500">Cap max profit from any single trading day</p>
@@ -5016,7 +5018,7 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Strict IP Matching</p>
                         <p className="text-[10px] text-gray-500">Enforce verified IP addresses on trades</p>
@@ -5037,7 +5039,7 @@ export default function ConfigurationHubPage() {
                           type="number"
                           value={planForm.consistency_pct || 50}
                           onChange={(e) => setPlanForm({ ...planForm, consistency_pct: Number(e.target.value) })}
-                          className="h-10 px-3 rounded-xl bg-[#0B0F19] border-amber-500/30 text-amber-200 text-xs focus:outline-none focus:border-amber-400 font-sans transition-all"
+                          className="h-10 px-3 rounded-xl bg-background border-amber-500/30 text-amber-200 text-xs focus:outline-none focus:border-amber-400 font-sans transition-all"
                         />
                       </div>
                       <div className="flex items-start gap-2.5 pt-1 text-[11px] text-amber-200/90 leading-relaxed border-t border-amber-500/20">
@@ -5049,7 +5051,7 @@ export default function ConfigurationHubPage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#1F2937]/60">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-muted/60">
                     <div className="space-y-1.5">
                       <Label htmlFor="min-trade-sec" className="text-xs font-semibold text-gray-300">Anti-Scalping Min Duration (Seconds)</Label>
                       <Input
@@ -5057,7 +5059,7 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.min_trade_seconds || 30}
                         onChange={(e) => setPlanForm({ ...planForm, min_trade_seconds: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                       <span className="text-[10px] text-gray-500">Minimum time a position must remain open</span>
                     </div>
@@ -5068,7 +5070,7 @@ export default function ConfigurationHubPage() {
                         id="min-hold-action"
                         value={planForm.min_hold_action || 'flag'}
                         onChange={(e) => setPlanForm({ ...planForm, min_hold_action: e.target.value as any })}
-                        className="w-full h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value="flag">Flag in Risk Alert Hub (Investigation)</option>
                         <option value="void_pnl">Void Trade PnL (Zero Profit/Loss)</option>
@@ -5094,7 +5096,7 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.news_window_minutes || 5}
                         onChange={(e) => setPlanForm({ ...planForm, news_window_minutes: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
 
@@ -5105,7 +5107,7 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.max_inactivity_days || 30}
                         onChange={(e) => setPlanForm({ ...planForm, max_inactivity_days: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                   </div>
@@ -5115,7 +5117,7 @@ export default function ConfigurationHubPage() {
               {/* ── SECTION 4: SCALING & PERKS ──────────────────────────────── */}
               {modalSection === 'scaling' && (
                 <div className="space-y-4">
-                  <div className="border-b border-[#1F2937]/70 pb-3">
+                  <div className="border-b border-surface-muted/70 pb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-accent" />
                       Trader Scaling Plan & Financial Perks
@@ -5126,7 +5128,7 @@ export default function ConfigurationHubPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Account Scaling Program</p>
                         <p className="text-[10px] text-gray-500">Auto-bump capital on milestone</p>
@@ -5145,7 +5147,7 @@ export default function ConfigurationHubPage() {
                         value={planForm.scaling_growth_pct || 25}
                         onChange={(e) => setPlanForm({ ...planForm, scaling_growth_pct: Number(e.target.value) })}
                         disabled={!planForm.scaling_enabled}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
                       />
                     </div>
 
@@ -5157,7 +5159,7 @@ export default function ConfigurationHubPage() {
                         value={planForm.scaling_required_profit_pct || 10}
                         onChange={(e) => setPlanForm({ ...planForm, scaling_required_profit_pct: Number(e.target.value) })}
                         disabled={!planForm.scaling_enabled}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
                       />
                     </div>
 
@@ -5169,7 +5171,7 @@ export default function ConfigurationHubPage() {
                         value={planForm.scaling_max_balance || 2000000}
                         onChange={(e) => setPlanForm({ ...planForm, scaling_max_balance: Number(e.target.value) })}
                         disabled={!planForm.scaling_enabled}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
                       />
                     </div>
 
@@ -5180,12 +5182,12 @@ export default function ConfigurationHubPage() {
                         type="number"
                         value={planForm.reset_discount_pct || 10}
                         onChange={(e) => setPlanForm({ ...planForm, reset_discount_pct: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                       <span className="text-[10px] text-gray-500">Discount coupon generated upon breach</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Refundable Evaluation Fee</p>
                         <p className="text-[10px] text-gray-500">100% fee refunded on 1st payout</p>
@@ -5204,7 +5206,7 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* Modal Footer Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-[#1F2937]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-surface-muted">
             <Button
               variant="outline"
               size="sm"
@@ -5308,7 +5310,7 @@ export default function ConfigurationHubPage() {
         maxWidth="max-w-2xl"
       >
         <div className="space-y-4 pt-2">
-          <div className="bg-[#0B0F19] rounded-xl border border-[#1F2937] p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[300px] overflow-y-auto">
+          <div className="bg-background rounded-xl border border-surface-muted p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[300px] overflow-y-auto">
             {smtpHandshakeLogs.map((log, idx) => (
               <div key={idx} className={`leading-relaxed ${log.includes('ERROR') || log.includes('EXCEPTION') ? 'text-red-400 font-bold' : log.includes('VERIFIED') ? 'text-emerald-300 font-bold' : 'text-gray-300'}`}>
                 {log}
@@ -5350,7 +5352,7 @@ export default function ConfigurationHubPage() {
               placeholder="PURGE"
               value={purgeConfirmationText}
               onChange={(e) => setPurgeConfirmationText(e.target.value)}
-              className="border-red-500/40 text-red-200 font-mono font-bold tracking-widest uppercase bg-[#0B0F19]"
+              className="border-red-500/40 text-red-200 font-mono font-bold tracking-widest uppercase bg-background"
             />
           </div>
 

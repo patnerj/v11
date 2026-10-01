@@ -191,7 +191,7 @@ function KycDocViewer({
         </div>
         <div>
           <p className="text-sm font-bold text-white">PDF Document Attached</p>
-          <p className="text-xs text-gray-400 mt-1">Official Proof of Address / Identity PDF</p>
+          <p className="text-xs text-gray-400 mt-1">Official Identity Document PDF</p>
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -288,7 +288,7 @@ export default function KycHubPage() {
   // Review Modal State
   const [selectedKyc, setSelectedKyc] = useState<KycSubmission | null>(null)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
-  const [activeDocTab, setActiveDocTab] = useState<'front' | 'back' | 'selfie' | 'address'>('front')
+  const [activeDocTab, setActiveDocTab] = useState<'front' | 'back' | 'selfie'>('front')
   const [rejectionNote, setRejectionNote] = useState('')
   const [allowForceOverride, setAllowForceOverride] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
@@ -340,13 +340,12 @@ export default function KycHubPage() {
     },
   })
 
-  // Helper functions for document extraction (4 synchronized KYC files: Front ID, Back ID, Selfie, Address)
-  const getDocUrl = (kyc: KycSubmission | null, tab: 'front' | 'back' | 'selfie' | 'address'): string | null => {
+  // Helper functions for document extraction (3 synchronized KYC files: Front ID, Back ID, Selfie)
+  const getDocUrl = (kyc: KycSubmission | null, tab: 'front' | 'back' | 'selfie'): string | null => {
     if (!kyc) return null
     if (tab === 'front') return kyc.id_doc || kyc.docs?.id_doc || null
     if (tab === 'back') return kyc.id_doc_back || kyc.docs?.id_doc_back || null
     if (tab === 'selfie') return kyc.selfie || kyc.docs?.selfie || null
-    if (tab === 'address') return kyc.address_doc || kyc.docs?.address_doc || null
     return null
   }
 
@@ -355,7 +354,6 @@ export default function KycHubPage() {
     if (kyc.id_doc || kyc.docs?.id_doc) count++
     if (kyc.id_doc_back || kyc.docs?.id_doc_back) count++
     if (kyc.selfie || kyc.docs?.selfie) count++
-    if (kyc.address_doc || kyc.docs?.address_doc) count++
     return count
   }
 
@@ -445,7 +443,7 @@ export default function KycHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header Banner ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -455,7 +453,7 @@ export default function KycHubPage() {
               Compliance Desk
             </Badge>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             Institutional Anti-Money Laundering (AML) and trader identity verification queue.
           </p>
         </div>
@@ -468,7 +466,7 @@ export default function KycHubPage() {
               refetch()
               toast.success('KYC queue refreshed')
             }}
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-9"
           >
             <RefreshCw className="h-4 w-4 text-emerald-400" />
             Refresh Queue
@@ -478,62 +476,62 @@ export default function KycHubPage() {
 
       {/* ── Metric Cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-[#111827] border-[#1F2937] p-5 shadow-lg">
+        <Card className="bg-surface border-border p-5 shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Review</span>
+            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Pending Review</span>
             <div className="h-8 w-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
               <Clock className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight tabular">{counts.pending}</span>
+            <span className="text-3xl font-extrabold text-text tracking-tight tabular">{counts.pending}</span>
             <span className="text-xs text-amber-400 font-medium">Awaiting Audit</span>
           </div>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937] p-5 shadow-lg">
+        <Card className="bg-surface border-border p-5 shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Verified Traders</span>
+            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Verified Traders</span>
             <div className="h-8 w-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
               <ShieldCheck className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight tabular">{counts.approved}</span>
+            <span className="text-3xl font-extrabold text-text tracking-tight tabular">{counts.approved}</span>
             <span className="text-xs text-emerald-400 font-medium">Payout Eligible</span>
           </div>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937] p-5 shadow-lg">
+        <Card className="bg-surface border-border p-5 shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Rejected Documents</span>
+            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Rejected Documents</span>
             <div className="h-8 w-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center">
               <ShieldAlert className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight tabular">{counts.rejected}</span>
+            <span className="text-3xl font-extrabold text-text tracking-tight tabular">{counts.rejected}</span>
             <span className="text-xs text-red-400 font-medium">Requires Re-upload</span>
           </div>
         </Card>
       </div>
 
       {/* ── Filters & Search Bar ───────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-[#111827] p-3 rounded-2xl border border-[#1F2937]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-surface p-3 rounded-2xl border border-border">
         {/* Search */}
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
           <input
             type="text"
             placeholder="Search by trader name, email, or user ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#0B0F19] border border-[#1F2937] text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 font-medium"
+            className="w-full h-10 pl-10 pr-4 rounded-xl bg-surface-muted border border-border text-xs text-text placeholder-text-muted focus:outline-none focus:border-emerald-500 font-medium"
           />
         </div>
 
         {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 bg-[#0B0F19] p-1 rounded-xl border border-[#1F2937] shrink-0">
+        <div className="flex items-center gap-1.5 bg-surface-muted p-1 rounded-xl border border-border shrink-0">
           {(['all', 'pending', 'approved', 'rejected'] as const).map((tab) => (
             <button
               key={tab}
@@ -541,7 +539,7 @@ export default function KycHubPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
                 statusFilter === tab
                   ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                  : 'text-gray-400 hover:text-white'
+                  : 'text-text-muted hover:text-text'
               }`}
             >
               {tab === 'all' ? 'All Queue' : tab}
@@ -551,7 +549,7 @@ export default function KycHubPage() {
       </div>
 
       {/* ── KYC Table ──────────────────────────────────────────────────────── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-xl">
         <DataTable
           data={filteredData}
           loading={isLoading}
@@ -563,12 +561,12 @@ export default function KycHubPage() {
               render: (k: KycSubmission) => (
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-white text-xs">{k.name || k.username || 'Unnamed Trader'}</span>
+                    <span className="font-bold text-text text-xs">{k.name || k.username || 'Unnamed Trader'}</span>
                     <span className="tabular font-semibold text-[10px] text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                       ID #{k.user_id}
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-400 truncate">{k.email}</p>
+                  <p className="text-[11px] text-text-muted truncate">{k.email}</p>
                 </div>
               ),
             },
@@ -576,8 +574,8 @@ export default function KycHubPage() {
               key: 'country',
               header: 'Country',
               render: (k: KycSubmission) => (
-                <div className="flex items-center gap-1.5 text-xs text-gray-300 font-medium">
-                  <MapPin className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                <div className="flex items-center gap-1.5 text-xs text-text font-medium">
+                  <MapPin className="h-3.5 w-3.5 text-text-muted shrink-0" />
                   <span>{k.country || 'Global'}</span>
                 </div>
               ),
@@ -587,11 +585,20 @@ export default function KycHubPage() {
               header: 'Documents',
               render: (k: KycSubmission) => {
                 const count = getDocCount(k)
-                if (count > 0) {
+                const req = k.doc_type === 'passport' ? 2 : 3
+                if (count >= req) {
                   return (
                     <Badge tone="success" size="sm" className="tabular font-medium gap-1">
                       <FileText className="h-3 w-3" />
-                      {count} Attached
+                      {count} Attached (Complete)
+                    </Badge>
+                  )
+                }
+                if (count > 0) {
+                  return (
+                    <Badge tone="warning" size="sm" className="tabular font-medium gap-1">
+                      <FileText className="h-3 w-3" />
+                      {count} / {req} Attached
                     </Badge>
                   )
                 }
@@ -620,7 +627,7 @@ export default function KycHubPage() {
               key: 'submitted',
               header: 'Submitted Date',
               render: (k: KycSubmission) => (
-                <span className="text-xs text-gray-400 tabular font-medium">
+                <span className="text-xs text-text-muted tabular font-medium">
                   {k.submitted_at ? new Date(k.submitted_at).toLocaleDateString() : 'Recent'}
                 </span>
               ),
@@ -635,7 +642,7 @@ export default function KycHubPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => openReviewModal(k)}
-                    className="h-8 text-xs gap-1.5 border-[#1F2937] hover:bg-slate-800"
+                    className="h-8 text-xs gap-1.5 border-border hover:bg-surface-muted"
                   >
                     <Eye className="h-3.5 w-3.5 text-emerald-400" />
                     Review Documents
@@ -657,7 +664,7 @@ export default function KycHubPage() {
             <span>KYC Compliance Audit: {selectedKyc?.name || selectedKyc?.username}</span>
           </div>
         }
-        description="Verify government-issued identity documents, biometric selfie, and proof of address."
+        description="Verify government-issued identity documents (front & back) and biometric selfie."
         maxWidth="max-w-3xl"
       >
         {selectedKyc && (
@@ -677,104 +684,99 @@ export default function KycHubPage() {
             )}
 
             {/* Trader Overview Banner */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-xs tabular font-medium">
-              <div>
-                <span className="text-gray-500 block text-[10px] uppercase">Trader Name</span>
-                <span className="font-bold text-white truncate block">{selectedKyc.name || selectedKyc.username}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 block text-[10px] uppercase">User ID</span>
-                <span className="font-bold text-emerald-400">#{selectedKyc.user_id}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 block text-[10px] uppercase">Country</span>
-                <span className="font-bold text-gray-200">{selectedKyc.country || 'Global'}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 block text-[10px] uppercase">Attached Files</span>
-                <span className={`font-bold ${getDocCount(selectedKyc) === 4 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {getDocCount(selectedKyc)} / 4 Uploaded {getDocCount(selectedKyc) === 4 ? '(Complete)' : ''}
-                </span>
-              </div>
-            </div>
+            {(() => {
+              const isPassport = selectedKyc.doc_type === 'passport'
+              const reqCount = isPassport ? 2 : 3
+              const currentCount = getDocCount(selectedKyc)
+              const isDone = currentCount >= reqCount
 
-            {/* Document Navigation Tabs (4 Synchronized Files) */}
-            <div className="flex items-center gap-2 border-b border-[#1F2937] pb-2 overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setActiveDocTab('front')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
-                  activeDocTab === 'front'
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <FileText className="h-3.5 w-3.5" /> 
-                1. ID Front
-                {getDocUrl(selectedKyc, 'front') ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                )}
-              </button>
+              return (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-border bg-surface-muted text-xs tabular font-medium">
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase">Trader Name</span>
+                      <span className="font-bold text-text truncate block">{selectedKyc.name || selectedKyc.username}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase">User ID</span>
+                      <span className="font-bold text-emerald-400">#{selectedKyc.user_id}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase">Country</span>
+                      <span className="font-bold text-text">{selectedKyc.country || 'Global'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase">Attached Files</span>
+                      <span className={`font-bold ${isDone ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {currentCount} / {reqCount} Uploaded {isDone ? '(Complete)' : ''}
+                      </span>
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveDocTab('back')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
-                  activeDocTab === 'back'
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <FileText className="h-3.5 w-3.5" /> 
-                2. ID Back
-                {getDocUrl(selectedKyc, 'back') ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                )}
-              </button>
+                  {/* Document Navigation Tabs (Synchronized Files) */}
+                  <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setActiveDocTab('front')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                        activeDocTab === 'front'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
+                          : 'text-text-muted hover:text-text'
+                      }`}
+                    >
+                      <FileText className="h-3.5 w-3.5" /> 
+                      1. ID Front
+                      {getDocUrl(selectedKyc, 'front') ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      ) : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                      )}
+                    </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveDocTab('selfie')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
-                  activeDocTab === 'selfie'
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <Camera className="h-3.5 w-3.5" /> 
-                3. Biometric Selfie
-                {getDocUrl(selectedKyc, 'selfie') ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                )}
-              </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDocTab('back')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                        activeDocTab === 'back'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
+                          : 'text-text-muted hover:text-text'
+                      }`}
+                    >
+                      <FileText className="h-3.5 w-3.5" /> 
+                      2. ID Back {isPassport ? '(Optional)' : ''}
+                      {getDocUrl(selectedKyc, 'back') ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      ) : isPassport ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400" title="Optional for Passport" />
+                      ) : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                      )}
+                    </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveDocTab('address')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
-                  activeDocTab === 'address'
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <MapPin className="h-3.5 w-3.5" /> 
-                4. Proof of Address
-                {getDocUrl(selectedKyc, 'address') ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                )}
-              </button>
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDocTab('selfie')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                        activeDocTab === 'selfie'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
+                          : 'text-text-muted hover:text-text'
+                      }`}
+                    >
+                      <Camera className="h-3.5 w-3.5" /> 
+                      3. Biometric Selfie
+                      {getDocUrl(selectedKyc, 'selfie') ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      ) : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                      )}
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
 
             {/* Document Visualizer Canvas */}
-            <div className="relative aspect-[16/9] w-full rounded-2xl border-2 border-[#1F2937] bg-[#0B0F19] overflow-hidden flex flex-col items-center justify-center p-4">
+            <div className="relative aspect-[16/9] w-full rounded-2xl border-2 border-border bg-surface-muted overflow-hidden flex flex-col items-center justify-center p-4">
               <KycDocViewer 
                 kycId={selectedKyc.id} 
                 docPath={currentDocUrl} 
@@ -785,7 +787,7 @@ export default function KycHubPage() {
             {/* Rejection Note Textarea */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="kyc-reject-note" className="text-xs text-gray-300">
+                <Label htmlFor="kyc-reject-note" className="text-xs text-text-muted">
                   Compliance Audit Notes / Rejection Reason (Emailed to Trader if Rejected)
                 </Label>
                 {!selectedHasDocs && (
@@ -804,13 +806,13 @@ export default function KycHubPage() {
                 placeholder="e.g. Document image is blurry or expired. Please upload a clear photo of your valid Passport."
                 value={rejectionNote}
                 onChange={(e) => setRejectionNote(e.target.value)}
-                className="text-xs bg-[#0B0F19] border-[#1F2937]"
+                className="text-xs bg-surface-muted border-border"
               />
             </div>
 
             {/* Administrative Force Override Checkbox (When no docs uploaded) */}
             {!selectedHasDocs && (
-              <div className="p-3 rounded-xl border border-dashed border-[#1F2937] bg-[#0B0F19]">
+              <div className="p-3 rounded-xl border border-dashed border-border bg-surface-muted">
                 <label className="flex items-center gap-2 text-xs text-amber-300/90 cursor-pointer">
                   <input
                     type="checkbox"
@@ -826,7 +828,7 @@ export default function KycHubPage() {
             )}
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-[#1F2937]">
+            <div className="flex items-center justify-between pt-4 border-t border-border">
               <Button
                 variant="outline"
                 size="sm"

@@ -52,13 +52,13 @@ export default async function HomePage() {
   const data = await getPageSchema();
 
   return (
-    <>
+    <div className="min-h-screen bg-bg text-text selection:bg-emerald-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
       <MarketingHeader />
       <PayoutTicker />
-      <main className="relative">
+      <main className="relative pb-20 lg:pb-0">
         <PuckRenderer data={data} />
       </main>
       <MarketingFooter />
-    </>
+    </div>
   );
 }

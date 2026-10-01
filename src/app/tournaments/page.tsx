@@ -44,86 +44,115 @@ export default function PublicTournamentsPage() {
   const upcomingTournaments = tournaments.filter(t => t.status === 'upcoming')
   const completedTournaments = tournaments.filter(t => t.status === 'completed')
 
+  const formatPrizePool = (val: unknown) => {
+    const raw = String(val ?? '').trim()
+    if (!raw) return '$1,000'
+    const cleaned = raw.replace(/[$€£,\s]/g, '')
+    if (/^\d+(\.\d+)?$/.test(cleaned)) {
+      return `$${Number(cleaned).toLocaleString()}`
+    }
+    return raw
+  }
+
+  const cleanTitle = (val?: string | null) => {
+    const raw = String(val || 'Tournament').trim()
+    return raw.replace(/^[\s🏆]+/u, '').trim() || raw
+  }
+
   const renderCard = (t: Competition, isActive: boolean) => {
     const tid = Number(t.id)
     const pendingOrder = pendingOrders.get(tid)
     return (
     <div key={t.id} className={`relative group rounded-2xl border ${pendingOrder ? 'border-amber-500/40 bg-surface shadow-amber-500/5' : 'border-border bg-surface'} p-6 overflow-hidden hover:shadow-lg transition-all duration-300`}>
-      {pendingOrder ? (
-        <div className="absolute top-0 right-0 p-4 z-10">
-          <span className="inline-flex items-center rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-semibold text-amber-400">
+      {isActive && (
+        <div className="absolute -top-16 -right-16 h-32 w-32 bg-accent/20 rounded-full blur-2xl group-hover:bg-accent/30 transition-all duration-500 pointer-events-none" />
+      )}
+
+      {/* Top Header Bar with Icon & Status Badge (Clean flex, zero overlap) */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className={`p-2.5 rounded-xl ${isActive ? 'bg-accent/10 text-accent' : 'bg-surface-muted text-text-muted'}`}>
+          <Trophy className="h-5 w-5" />
+        </div>
+        {pendingOrder ? (
+          <span className="inline-flex items-center rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <Clock className="h-3 w-3 mr-1" />
             Payment Pending
           </span>
-        </div>
-      ) : isActive ? (
-        <>
-          <div className="absolute -top-16 -right-16 h-32 w-32 bg-accent/20 rounded-full blur-2xl group-hover:bg-accent/30 transition-all duration-500 animate-pulse" />
-          <div className="absolute top-0 right-0 p-4">
-            <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent animate-pulse">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent mr-2"></span>
-              LIVE NOW
-            </span>
-          </div>
-        </>
-      ) : !isActive && t.status === 'upcoming' ? (
-        <div className="absolute top-0 right-0 p-4">
-          <span className="inline-flex items-center rounded-full bg-info/10 px-2.5 py-0.5 text-xs font-semibold text-info">
+        ) : isActive ? (
+          <span className="inline-flex items-center rounded-full bg-accent/10 border border-accent/20 px-2.5 py-0.5 text-xs font-semibold text-accent animate-pulse">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent mr-1.5"></span>
+            LIVE NOW
+          </span>
+        ) : t.status === 'upcoming' ? (
+          <span className="inline-flex items-center rounded-full bg-info/10 border border-info/20 px-2.5 py-0.5 text-xs font-semibold text-info">
             <Clock className="h-3 w-3 mr-1" />
             Upcoming
           </span>
-        </div>
-      ) : null}
-
-      <div className="flex items-start gap-4 mb-4">
-        <div className={`p-3 rounded-xl ${isActive ? 'bg-accent/10 text-accent' : 'bg-surface-muted text-text-muted'}`}>
-          <Trophy className="h-6 w-6" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-text group-hover:text-accent transition-colors">
-            {t.name}
-          </h3>
-          <p className="text-sm text-text-muted mt-1">{t.description}</p>
-        </div>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-surface-muted border border-border px-2.5 py-0.5 text-xs font-semibold text-text-muted">
+            Completed
+          </span>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 my-6">
-        <div className="bg-surface-muted/50 p-3 rounded-lg border border-border/50">
-          <div className="text-xs text-text-muted mb-1">Prize Pool</div>
-          <div className="text-base font-bold text-accent">{t.prize_pool}</div>
+      <div className="mb-4">
+        <h3 className="text-lg font-bold text-text group-hover:text-accent transition-colors line-clamp-1">
+          {cleanTitle(t.name || t.title)}
+        </h3>
+        <p className="text-sm text-text-muted mt-1 line-clamp-2">{t.description || 'Global trading tournament.'}</p>
+      </div>
+
+      {/* Stats Grid: 2x2 layout so Enrolled/Cap and Starting Equity never wrap awkwardly */}
+      <div className="grid grid-cols-2 gap-2.5 my-5">
+        <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
+          <div className="text-[11px] text-text-muted mb-0.5">Prize Pool</div>
+          <div className="text-sm font-bold text-accent truncate">{formatPrizePool(t.prize_pool)}</div>
         </div>
-        <div className="bg-surface-muted/50 p-3 rounded-lg border border-border/50">
-          <div className="text-xs text-text-muted mb-1">Participants</div>
-          <div className="text-base font-bold text-text flex items-center gap-2">
-            <Users className="h-4 w-4 text-info" />
-            {t.participants_count || 0}
+        <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
+          <div className="text-[11px] text-text-muted mb-0.5">Entry Fee</div>
+          <div className="text-sm font-bold text-text">
+            {Number(t.entry_fee) > 0 ? `$${Number(t.entry_fee).toFixed(0)}` : 'FREE'}
+          </div>
+        </div>
+        <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
+          <div className="text-[11px] text-text-muted mb-0.5">Enrolled / Cap</div>
+          <div className="text-sm font-bold text-text flex items-center gap-1.5 font-mono whitespace-nowrap">
+            <Users className="h-3.5 w-3.5 text-info shrink-0" />
+            <span>{t.participants_count ?? t.current_participants ?? 0} / {t.max_participants || 1000}</span>
+          </div>
+        </div>
+        <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
+          <div className="text-[11px] text-text-muted mb-0.5">Starting Equity</div>
+          <div className="text-sm font-bold text-text font-mono whitespace-nowrap">
+            ${Number(t.starting_balance || 10000).toLocaleString()}
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-border/50">
-        <div className="text-sm text-text-muted">
+        <div className="text-xs text-text-muted">
           Ends: {new Date(t.end_date).toLocaleDateString()}
         </div>
         {pendingOrder ? (
           <Link 
             href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}
-            className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold transition-colors shadow-sm gap-2 bg-amber-500/15 border border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+            className="inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-sm gap-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
           >
-            Payment Pending — Complete / View
-            <ArrowRight className="h-4 w-4" />
+            Payment Pending — View <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         ) : (
           <Link 
-            href={`/tournaments/${t.id}`}
-            className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors shadow-sm gap-2 ${
+            href={`/dashboard/tournaments`}
+            className={`inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors shadow-sm gap-1.5 ${
               isActive 
-                ? 'bg-accent text-accent-foreground hover:bg-accent/90' 
+                ? 'bg-accent text-accent-foreground hover:bg-accent/90 font-semibold' 
+                : t.status === 'upcoming'
+                ? 'bg-info/15 border border-info/30 text-info hover:bg-info/25 font-semibold'
                 : 'bg-surface border border-border text-text hover:bg-surface-muted'
             }`}
           >
-            {isActive ? 'View Arena' : t.status === 'upcoming' ? 'Pre-Register' : 'View Results'}
-            <ArrowRight className="h-4 w-4" />
+            {isActive ? 'Enter Arena' : t.status === 'upcoming' ? 'Pre-Register Now' : 'View Results'}
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         )}
       </div>

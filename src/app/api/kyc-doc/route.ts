@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getApiBaseUrl } from '@/lib/fxsim'
 
 /**
  * Server-side proxy for KYC document fetches.
@@ -22,18 +23,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing params or auth token' }, { status: 400 })
   }
 
-  // P3: no placeholder-backend fallback. Old code silently proxied KYC
-  // documents (passports!) to api.yourbrand.com when env was missing.
-  const apiBase =
-    process.env.FXSIM_API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_FXSIM_API
-  if (!apiBase || !apiBase.startsWith('http')) {
-    return NextResponse.json({ error: 'Backend API URL is not configured' }, { status: 500 })
-  }
-
-  const trimmed = apiBase.trim().replace(/\/$/, '')
-  const normalizedBase = trimmed.endsWith('/wp-json/fxsim/v1') ? trimmed : `${trimmed}/wp-json/fxsim/v1`
+  // P3: no placeholder-backend fallback. Guarantees /wp-json/fxsim/v1 namespace suffix is present
+  const normalizedBase = getApiBaseUrl(req)
 
   const upstream = `${normalizedBase}/admin/kyc/${encodeURIComponent(id)}/doc/${encodeURIComponent(type)}`
 

@@ -17,6 +17,27 @@ export default function GlobalError({
     Sentry.captureException(error)
   }, [error])
 
+  const handleHardReload = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => caches.delete(name))
+          })
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((r) => r.unregister())
+          })
+        }
+        const cleanUrl = window.location.origin + window.location.pathname + '?_v=' + Date.now()
+        window.location.replace(cleanUrl)
+        return
+      }
+    } catch (e) {}
+    window.location.reload()
+  }
+
   return (
     <html lang="en">
       <body>
@@ -26,17 +47,20 @@ export default function GlobalError({
               <AlertTriangle className="w-8 h-8" />
             </div>
             <h2 className="text-2xl font-bold mb-3 text-text">Fatal Application Error</h2>
-            <p className="text-text-muted mb-8 text-sm">
+            <p className="text-text-muted mb-6 text-sm">
               We encountered a critical error. Please reload the page to recover.
             </p>
-            <div className="flex gap-4 justify-center">
-              <Button onClick={() => window.location.reload()} variant="outline">
+            <div className="flex gap-4 justify-center mb-4">
+              <Button onClick={handleHardReload} variant="outline">
                 Reload Page
               </Button>
-              <Button onClick={() => reset()} className="bg-accent text-white hover:bg-accent-hover">
+              <Button onClick={handleHardReload} className="bg-accent text-white hover:bg-accent-hover">
                 Try Again
               </Button>
             </div>
+            <p className="text-xs text-text-muted/70">
+              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-surface-muted border text-[11px]">Ctrl+F5</kbd> or open in Incognito to clear browser cache.
+            </p>
           </div>
         </div>
       </body>

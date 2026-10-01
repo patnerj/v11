@@ -38,7 +38,7 @@ export const DialogContent = React.forwardRef<
       className={cn(
         'fixed left-[50%] top-[50%] z-50 grid w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
         'max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden',
-        'bg-[#111827] border border-[#1F2937] text-gray-100 rounded-2xl p-5 sm:p-6 shadow-2xl duration-200',
+        'bg-surface border border-border text-text dark:bg-[#0A0E17] dark:border-slate-800 dark:text-slate-100 rounded-2xl p-5 sm:p-6 shadow-2xl duration-200',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
         'data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
@@ -57,11 +57,11 @@ export const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 export const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col gap-1.5 pb-2 border-b border-[#1F2937]/50', className)} {...props} />
+  <div className={cn('flex flex-col gap-1.5 pb-2 border-b border-surface-muted/50', className)} {...props} />
 )
 
 export const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-2 pt-3 border-t border-[#1F2937]/50', className)} {...props} />
+  <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-2 pt-3 border-t border-surface-muted/50', className)} {...props} />
 )
 
 export const DialogTitle = React.forwardRef<

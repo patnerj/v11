@@ -57,27 +57,27 @@ export function pipSize(sym: string, digits?: number): number {
  * Germany 40 contract is DE40EUR there now.)
  */
 const TV_SYMBOLS: Record<string, string> = {
-  // Forex — TradingView native FX feed
-  EURUSD: 'FX:EURUSD', GBPUSD: 'FX:GBPUSD', USDJPY: 'FX:USDJPY', USDCHF: 'FX:USDCHF',
-  AUDUSD: 'FX:AUDUSD', USDCAD: 'FX:USDCAD', NZDUSD: 'FX:NZDUSD', EURGBP: 'FX:EURGBP',
-  EURJPY: 'FX:EURJPY', GBPJPY: 'FX:GBPJPY',
-  // Metals
-  XAUUSD: 'OANDA:XAUUSD', XAGUSD: 'OANDA:XAGUSD',
+  // Forex — Pepperstone institutional feeds
+  EURUSD: 'PEPPERSTONE:EURUSD', GBPUSD: 'PEPPERSTONE:GBPUSD', USDJPY: 'PEPPERSTONE:USDJPY', USDCHF: 'PEPPERSTONE:USDCHF',
+  AUDUSD: 'PEPPERSTONE:AUDUSD', USDCAD: 'PEPPERSTONE:USDCAD', NZDUSD: 'PEPPERSTONE:NZDUSD', EURGBP: 'PEPPERSTONE:EURGBP',
+  EURJPY: 'PEPPERSTONE:EURJPY', GBPJPY: 'PEPPERSTONE:GBPJPY',
+  // Metals — Pepperstone institutional feeds
+  XAUUSD: 'PEPPERSTONE:XAUUSD', XAGUSD: 'PEPPERSTONE:XAGUSD',
   // Energy
-  USOIL: 'TVC:USOIL', XBRUSD: 'TVC:UKOIL',
-  // Forex cross pairs
-  EURAUD: 'FX:EURAUD', EURNZD: 'FX:EURNZD', EURCAD: 'FX:EURCAD',
-  GBPAUD: 'FX:GBPAUD', GBPCAD: 'FX:GBPCAD', GBPCHF: 'FX:GBPCHF',
-  AUDJPY: 'FX:AUDJPY', AUDCAD: 'FX:AUDCAD', AUDCHF: 'FX:AUDCHF',
-  NZDJPY: 'FX:NZDJPY', CADJPY: 'FX:CADJPY', CHFJPY: 'FX:CHFJPY',
-  // Crypto — deep-liquidity books
-  BTCUSD: 'BINANCE:BTCUSDT', ETHUSD: 'BINANCE:ETHUSDT',
-  // Indices — Pepperstone first (prop-industry naming), Capital.com/OANDA alternates noted
-  US30:   'PEPPERSTONE:US30',    // alt: CAPITALCOM:US30, OANDA:US30USD
-  NAS100: 'PEPPERSTONE:NAS100',  // alt: CAPITALCOM:US100, OANDA:NAS100USD
-  SPX500: 'PEPPERSTONE:US500',   // alt: CAPITALCOM:US500, OANDA:SPX500USD
-  GER40:  'PEPPERSTONE:GER40',   // alt: CAPITALCOM:DE40,  OANDA:DE40EUR
-  UK100:  'PEPPERSTONE:UK100',   // alt: CAPITALCOM:UK100, OANDA:UK100GBP
+  USOIL: 'PEPPERSTONE:USOIL', XBRUSD: 'PEPPERSTONE:UKOIL',
+  // Forex cross pairs — Pepperstone institutional feeds
+  EURAUD: 'PEPPERSTONE:EURAUD', EURNZD: 'PEPPERSTONE:EURNZD', EURCAD: 'PEPPERSTONE:EURCAD',
+  GBPAUD: 'PEPPERSTONE:GBPAUD', GBPCAD: 'PEPPERSTONE:GBPCAD', GBPCHF: 'PEPPERSTONE:GBPCHF',
+  AUDJPY: 'PEPPERSTONE:AUDJPY', AUDCAD: 'PEPPERSTONE:AUDCAD', AUDCHF: 'PEPPERSTONE:AUDCHF',
+  NZDJPY: 'PEPPERSTONE:NZDJPY', CADJPY: 'PEPPERSTONE:CADJPY', CHFJPY: 'PEPPERSTONE:CHFJPY',
+  // Crypto — Pepperstone institutional feeds
+  BTCUSD: 'PEPPERSTONE:BTCUSD', ETHUSD: 'PEPPERSTONE:ETHUSD',
+  // Indices — Pepperstone institutional feeds
+  US30:   'PEPPERSTONE:US30',
+  NAS100: 'PEPPERSTONE:NAS100',
+  SPX500: 'PEPPERSTONE:US500',
+  GER40:  'PEPPERSTONE:GER40',
+  UK100:  'PEPPERSTONE:UK100',
 }
 
 export type SymbolCategory = 'forex' | 'metal' | 'crypto' | 'index' | 'energy' | string
@@ -91,12 +91,12 @@ function tvHeuristic(sym: string, category?: SymbolCategory): string {
       : /^[A-Z]{6}$/.test(s) ? 'forex'
       : 'index')
   switch (cat) {
-    case 'forex':  return `FX:${s}`
-    case 'metal':  return `OANDA:${s}`
-    case 'crypto': return `BINANCE:${s.endsWith('USD') ? s + 'T' : s}`
+    case 'forex':  return `PEPPERSTONE:${s}`
+    case 'metal':  return `PEPPERSTONE:${s}`
+    case 'crypto': return `PEPPERSTONE:${s}`
     case 'index':
     case 'energy': return `PEPPERSTONE:${s}`
-    default:       return s // last resort — TradingView search resolution
+    default:       return `PEPPERSTONE:${s}`
   }
 }
 

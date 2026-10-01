@@ -23,6 +23,8 @@ import {
   KeyRound,
 } from 'lucide-react'
 import { MT5CredentialsModal } from './mt5-credentials-modal'
+import { DailyDdTimer, DrawdownAlertBadge } from './daily-dd-timer'
+import type { ChallengeMetrics } from '@/types/api'
 
 export interface SwitchEntry {
   key: string
@@ -40,7 +42,17 @@ export interface SwitchEntry {
   tournamentId?: number
 }
 
-export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
+export function AccountSwitcher({
+  entries,
+  metrics,
+  showTimer = true,
+  bannerSlot,
+}: {
+  entries: SwitchEntry[]
+  metrics?: ChallengeMetrics | null
+  showTimer?: boolean
+  bannerSlot?: React.ReactNode
+}) {
   const ctx = usePrices((s) => s.tradingContext)
   const switching = usePrices((s) => s.contextSwitching)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
@@ -257,14 +269,14 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
     <div ref={dropdownRef} className="relative z-40 w-full">
       {/* Sleek institutional trigger bar with zero overflow on any viewport */}
       <div className={cn(
-        "flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg border shadow-xs backdrop-blur-md w-full transition-all",
+        "flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg border shadow-xs backdrop-blur-md w-full transition-all flex-wrap lg:flex-nowrap",
         activeEntry?.kind === 'tournament'
-          ? "bg-gradient-to-r from-amber-950/30 via-surface/90 to-surface/90 border-amber-500/50 ring-2 ring-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.12)]"
+          ? "bg-gradient-to-r from-amber-500/10 dark:from-amber-950/30 via-surface/95 to-surface/95 border-amber-500/50 ring-2 ring-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.12)]"
           : "bg-surface/90 border-border/80"
       )}>
         {/* Left: Account trigger button */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="text-3xs text-text-muted font-semibold uppercase tracking-wider shrink-0 hidden md:inline">
+        <div className={cn("flex items-center gap-2 min-w-0", bannerSlot ? "shrink-0" : "flex-1")}>
+          <span className="text-3xs text-text-muted font-semibold uppercase tracking-wider shrink-0 hidden xl:inline">
             Active Account
           </span>
 
@@ -273,11 +285,11 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             disabled={pendingKey !== null || switching}
             onClick={() => setIsOpen((prev) => !prev)}
             className={cn(
-              "group flex-1 sm:flex-initial min-w-0 inline-flex items-center justify-between sm:justify-start gap-2 px-2 sm:px-2.5 py-1.5 rounded-md border text-xs font-semibold transition-all focus-ring select-none cursor-pointer",
+              "group flex-1 sm:flex-initial min-w-0 inline-flex items-center justify-between sm:justify-start gap-2 px-2 sm:px-2.5 py-1 rounded-md border text-xs font-semibold transition-all focus-ring select-none cursor-pointer",
               isOpen
                 ? "bg-accent/15 border-accent/60 text-accent shadow-xs"
                 : activeEntry?.kind === 'tournament'
-                  ? "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/60"
+                  ? "bg-amber-500/15 border-amber-500/45 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/60"
                   : "bg-surface-muted/80 border-border hover:border-border-strong hover:bg-surface-muted text-text"
             )}
             title={activeEntry?.sub}
@@ -287,7 +299,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
               {activeEntry?.status === 'funded' ? (
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
               ) : activeEntry?.kind === 'tournament' ? (
-                <Trophy className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                <Trophy className="w-3 h-3 text-amber-500 dark:text-amber-400 shrink-0" />
               ) : (
                 <>
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -297,7 +309,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             </span>
 
             {/* Account Title */}
-            <span className="font-semibold text-text truncate min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[260px]">
+            <span className="font-semibold text-text truncate min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[240px]">
               {activeEntry?.planName || activeEntry?.label || 'Select Account'}
             </span>
 
@@ -310,7 +322,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
 
             {/* MT5 Badge if connected */}
             {activeEntry?.mt5Login && (
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 shrink-0">
                 MT5: #{activeEntry.mt5Login}
               </span>
             )}
@@ -319,7 +331,7 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             {activeEntry?.balance !== undefined && (
               <span className={cn(
                 "text-xs font-bold tabular shrink-0 ml-auto sm:ml-0",
-                activeEntry?.kind === 'tournament' ? "text-amber-400" : "text-emerald-400"
+                activeEntry?.kind === 'tournament' ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
               )}>
                 {fmtUSD(activeEntry.balance, { decimals: 0 })}
               </span>
@@ -334,53 +346,67 @@ export function AccountSwitcher({ entries }: { entries: SwitchEntry[] }) {
             />
           </button>
 
-          {/* Tournament Mode visual pill badge */}
-          {activeEntry?.kind === 'tournament' && (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs animate-pulse shrink-0">
-              <Trophy className="w-2.5 h-2.5 text-amber-400" />
+          {/* Tournament Mode visual pill badge (only when standalone without bannerSlot) */}
+          {activeEntry?.kind === 'tournament' && !bannerSlot && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-xs shrink-0">
+              <Trophy className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400" />
               <span className="hidden xs:inline">Tournament</span>
               <span className="hidden sm:inline">Trades Only</span>
             </span>
           )}
 
           {/* Accounts Count Badge */}
-          {entries.length > 1 && (
+          {entries.length > 1 && !bannerSlot && (
             <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-medium tabular text-text-muted bg-surface-muted border border-border/50 shrink-0">
               {entries.length} Accounts
             </span>
           )}
         </div>
 
-        {/* Right side: 1-Click MT5 Credentials or Switching State */}
+        {/* Inline Unified Tournament Banner Slot */}
+        {bannerSlot && (
+          <>
+            <div className="hidden md:block h-4 w-px bg-amber-500/30 shrink-0" />
+            {bannerSlot}
+          </>
+        )}
+
+        {/* Right side: Drawdown Danger Alert, Midnight DD Timer, & 1-Click MT5 Credentials */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Danger zone pulsating alert */}
+          {metrics && <DrawdownAlertBadge metrics={metrics} className="hidden md:inline-flex" />}
+
+          {/* Live Midnight Countdown Timer */}
+          {showTimer && <DailyDdTimer compact className="hidden md:inline-flex" />}
+
           {(switching || pendingKey !== null) ? (
             <div className="flex items-center gap-1.5 text-xs text-accent font-medium animate-pulse">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span className="hidden sm:inline">Switching…</span>
             </div>
           ) : (
-            <>
-              {/* 1-Click MT5 Credentials button (compact icon on mobile, full on desktop) */}
+            activeEntry?.kind !== 'tournament' && (
+              /* 1-Click MT5 Credentials button (shown on <xl viewports where Topbar hides its button) */
               <button
                 type="button"
                 onClick={() => {
                   setIsOpen(false)
                   setIsCredentialsOpen(true)
                 }}
-                className="inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
+                className="xl:hidden inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
                 title="Open MetaTrader 5 Credentials"
               >
-                <KeyRound className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <KeyRound className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
                 <span className="hidden sm:inline">MT5 Credentials</span>
               </button>
-            </>
+            )
           )}
         </div>
       </div>
 
       {/* Dropdown Menu Popover */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-[calc(100vw-1.5rem)] sm:w-[460px] max-w-[460px] rounded-xl bg-[#0b0f19]/98 border border-border/80 shadow-2xl backdrop-blur-2xl p-2.5 flex flex-col gap-2 animate-in fade-in-0 zoom-in-95 duration-150 z-50">
+        <div className="absolute left-0 top-full mt-1.5 w-[calc(100vw-1.5rem)] sm:w-[460px] max-w-[460px] rounded-xl bg-surface/98 border border-border/80 shadow-2xl backdrop-blur-2xl p-2.5 flex flex-col gap-2 animate-in fade-in-0 zoom-in-95 duration-150 z-50">
           {/* Search box */}
           {entries.length > 3 && (
             <div className="relative flex items-center">
@@ -521,11 +547,13 @@ export function buildSwitchEntries(
 
   for (const t of safeTournaments) {
     if (!t) continue
+    const cleanTitle = (t.title || '').replace(/^[\s🏆]+/u, '').trim() || `Tournament #${t.tournament_id}`
     entries.push({
       key: `t-${t.tournament_id}`,
-      label: `🏆 ${t.title}`,
+      label: cleanTitle,
+      planName: cleanTitle,
       sub: `Tournament · Start ${fmtUSD(toNum(t.starting_balance), { decimals: 0 })}`,
-      ctx: { kind: 'tournament', tournamentId: t.tournament_id, title: t.title },
+      ctx: { kind: 'tournament', tournamentId: t.tournament_id, title: cleanTitle },
       kind: 'tournament',
       status: t.tournament_status ?? 'active',
       balance: toNum(t.starting_balance),
@@ -535,4 +563,5 @@ export function buildSwitchEntries(
 
   return entries
 }
+
 

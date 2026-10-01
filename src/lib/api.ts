@@ -258,6 +258,12 @@ export const api = {
         fxsim<{ tournament: import('../types/api').Tournament; leaderboard: import('../types/api').TournamentParticipant[] }>(`/admin/tournaments/${id}/leaderboard`, { cache: 0 }),
       updateStatus: (id: number, status: string) =>
         fxsim<{ success: boolean; status?: string }>(`/admin/tournaments/${id}/status`, { method: 'POST', body: { status } }),
+      saveSynthetic: (id: number, data: any) =>
+        fxsim<{ success: boolean; message?: string; count?: number; entry?: any }>(`/admin/tournaments/${id}/synthetic-leaderboard`, { method: 'POST', body: data }),
+      generateSynthetic: (id: number) =>
+        fxsim<{ success: boolean; message: string; count: number; entries: any[] }>(`/admin/tournaments/${id}/generate-synthetic-leaderboard`, { method: 'POST' }),
+      clearSynthetic: (id: number, entryId?: string) =>
+        fxsim<{ success: boolean; message?: string; remaining?: number }>(`/admin/tournaments/${id}/synthetic-leaderboard`, { method: 'DELETE', query: entryId ? { entry_id: entryId } : undefined }),
     },
     theme: {
     get: () => fxsim<import('../types/api').ThemeSettings>('/theme', { cache: 0 }),
@@ -419,7 +425,7 @@ export const api = {
       fxsim<{ success: true }>(`/admin/challenge/${challengeId}/approve-payout`, { body: { action, note, reference } }),
     saveMt5:       (challengeId: number, body: Record<string, string>) =>
       fxsim<{ success: boolean }>(`/admin/challenge/${challengeId}/mt5-details`, { body }),
-    saveUserMt5:   (userId: number, body: { mt5_login: string; mt5_password?: string; mt5_server?: string; mt5_account_type?: string }) =>
+    saveUserMt5:   (userId: number, body: { mt5_login: string; mt5_password?: string; mt5_server?: string; mt5_account_type?: string; challenge_id?: number }) =>
       fxsim<{ success: boolean; challenge_id?: number; message?: string }>(`/admin/user/${userId}/mt5`, { body }),
     mt5Unassigned: () => fxsim<{ success: boolean; count: number; traders: {
       challenge_id: number; user_id: number; name: string; email: string; funded_at: string | null; days_waiting: number | null

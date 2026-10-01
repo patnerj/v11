@@ -112,3 +112,53 @@ export function playSltpUpdatedSound() {
   }
 }
 
+export function playCelebrationVictorySound() {
+  const ctx = getAudioContext()
+  if (!ctx) return
+
+  try {
+    const now = ctx.currentTime
+    const osc1 = ctx.createOscillator()
+    const osc2 = ctx.createOscillator()
+    const osc3 = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc1.type = 'triangle'
+    osc2.type = 'triangle'
+    osc3.type = 'sine'
+
+    // C major chord progression
+    osc1.frequency.setValueAtTime(523.25, now) // C5
+    osc1.frequency.setValueAtTime(659.25, now + 0.2) // E5
+    osc1.frequency.setValueAtTime(783.99, now + 0.4) // G5
+    osc1.frequency.setValueAtTime(1046.50, now + 0.6) // C6
+    
+    osc2.frequency.setValueAtTime(659.25, now) // E5
+    osc2.frequency.setValueAtTime(783.99, now + 0.2) // G5
+    osc2.frequency.setValueAtTime(1046.50, now + 0.4) // C6
+    osc2.frequency.setValueAtTime(1318.51, now + 0.6) // E6
+
+    osc3.frequency.setValueAtTime(261.63, now) // C4
+    osc3.frequency.setValueAtTime(329.63, now + 0.2) // E4
+    osc3.frequency.setValueAtTime(392.00, now + 0.4) // G4
+    osc3.frequency.setValueAtTime(523.25, now + 0.6) // C5
+
+    gain.gain.setValueAtTime(0.08, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2)
+
+    osc1.connect(gain)
+    osc2.connect(gain)
+    osc3.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc1.start(now)
+    osc2.start(now)
+    osc3.start(now)
+    osc1.stop(now + 1.2)
+    osc2.stop(now + 1.2)
+    osc3.stop(now + 1.2)
+  } catch {
+    /* Audio disabled or blocked by browser policy */
+  }
+}
+

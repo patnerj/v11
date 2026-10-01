@@ -908,10 +908,14 @@ export interface ThemeSettings {
 
 // ── Competitions / Tournaments ──────────────────────────────────────────────
 export interface TournamentRules {
+  drawdown_type?: 'trailing' | 'static';
+  trailing_dd?: number;
   daily_dd?: number;
   max_dd?: number;
   leverage?: number;
   min_days?: number;
+  news_trading?: boolean | number;
+  weekend_holding?: boolean | number;
 }
 
 export interface Tournament {
@@ -925,6 +929,8 @@ export interface Tournament {
   entry_fee: number | string;
   max_participants: number;
   current_participants: number;
+  real_participants?: number;
+  fake_participants?: number;
   prize_pool: string;
   prizes_breakdown?: string | Record<string, string> | null;
   rules_json?: string | TournamentRules | null;

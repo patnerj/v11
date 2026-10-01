@@ -17,13 +17,14 @@ import { PayoutSummary, PayoutHistory } from '@/components/dashboard/payout-hist
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { Banknote, ArrowUpRight, AlertCircle, Wallet, CheckCircle2, ShieldAlert, Clock } from 'lucide-react'
+import { Banknote, ArrowUpRight, AlertCircle, Wallet, CheckCircle2, ShieldAlert, Clock, Share2, Printer, ShieldCheck, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 type PayoutMethod = 'crypto' | 'wise'
 
 export default function PayoutsPage() {
   const [requestFor, setRequestFor]   = useState<ChallengeAccount | null>(null)
+  const [showCertificate, setShowCertificate] = useState(false)
 
   const { data, refetch: refresh, isPending } = useQuery({
     queryKey: ['payoutsData'],
@@ -93,7 +94,9 @@ export default function PayoutsPage() {
           )}
 
           <Card>
-            <CardHeader><CardTitle>Funded accounts</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Funded accounts</CardTitle><Button size="sm" variant="outline" className="ml-2 gap-1.5" onClick={() => setShowCertificate(true)}>
+           ✨ Payout Certificate
+        </Button></CardHeader>
             <CardContent className="space-y-4">
               {loading ? (
                 <Skeleton className="h-32 w-full" />
@@ -256,6 +259,15 @@ export default function PayoutsPage() {
           onSuccess={() => { setRequestFor(null); refresh() }}
         />
       )}
+
+      {showCertificate && (
+        <PayoutCertificateModal 
+          onClose={() => setShowCertificate(false)}
+          amount={totalPaid > 0 ? totalPaid : (funded[0] ? Math.max(500, toNum(funded[0].current_balance) - toNum(funded[0].starting_balance)) : 1450)}
+          date={funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : 'Active Season'}
+          method={savedMethod?.method ?? 'USDT - TRC20'}
+        />
+      )}
     </div>
   )
 }
@@ -270,23 +282,44 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'su
 }
 
 function PayoutMethodCard({ savedMethod, onSaved }: { savedMethod: { method: string; address: string; details: string } | null; onSaved: () => void }) {
-  const [method,  setMethod]  = useState<PayoutMethod>((savedMethod?.method as PayoutMethod) || 'crypto')
+  const [method,  setMethod]  = useState<PayoutMethod>((savedMethod?.method?.toLowerCase().includes('wise') ? 'wise' : 'crypto'))
+  const [cryptoNetwork, setCryptoNetwork] = useState<'trc20' | 'bep20'>(
+    savedMethod?.method?.toLowerCase().includes('bep') ? 'bep20' : 'trc20'
+  )
   const [address, setAddress] = useState(savedMethod?.address ?? '')
   const [details, setDetails] = useState(savedMethod?.details ?? '')
   const [saving,  setSaving]  = useState(false)
 
   useEffect(() => {
     if (savedMethod) {
-      setMethod((savedMethod.method as PayoutMethod) || 'crypto')
+      setMethod(savedMethod.method?.toLowerCase().includes('wise') ? 'wise' : 'crypto')
+      setCryptoNetwork(savedMethod.method?.toLowerCase().includes('bep') ? 'bep20' : 'trc20')
       setAddress(savedMethod.address || '')
       setDetails(savedMethod.details || '')
     }
   }, [savedMethod])
 
+  const isTrcValid = /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address.trim())
+  const isBepValid = /^0x[a-fA-F0-9]{40}$/.test(address.trim())
+  const isWiseValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.trim())
+
+  const isAddressValid = method === 'crypto'
+    ? (cryptoNetwork === 'trc20' ? isTrcValid : isBepValid)
+    : isWiseValid
+
   const save = async () => {
     if (!address.trim()) { toast.error('Enter your payout address or account number'); return }
+    if (!isAddressValid) {
+      toast.error(method === 'crypto' 
+        ? `Please enter a valid ${cryptoNetwork === 'trc20' ? 'Tron (TRC20)' : 'BNB Smart Chain (BEP20)'} wallet address` 
+        : 'Please enter a valid email address')
+      return
+    }
     setSaving(true)
-    const res = await api.payoutMethodSave(method, address.trim(), details.trim())
+    const effectiveMethod = method === 'crypto'
+      ? (cryptoNetwork === 'trc20' ? 'USDT (TRC20)' : 'USDT (BEP20)')
+      : 'Wise'
+    const res = await api.payoutMethodSave(effectiveMethod, address.trim(), details.trim())
     setSaving(false)
     if (res.ok) { toast.success('Payout method saved'); onSaved() }
     else        toast.error(res.error)
@@ -294,7 +327,9 @@ function PayoutMethodCard({ savedMethod, onSaved }: { savedMethod: { method: str
 
   return (
     <Card>
-      <CardHeader><CardTitle>Payout method</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle>Payout method</CardTitle>
+      </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-2">
           {([
@@ -319,19 +354,62 @@ function PayoutMethodCard({ savedMethod, onSaved }: { savedMethod: { method: str
           })}
         </div>
 
+        {method === 'crypto' && (
+          <div className="space-y-1.5">
+            <Label>Crypto Network</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCryptoNetwork('trc20')}
+                className={`h-9 px-2 rounded-md border text-xs font-medium transition-colors focus-ring flex items-center justify-center gap-1.5 ${
+                  cryptoNetwork === 'trc20'
+                    ? 'border-accent bg-accent/10 text-accent font-semibold'
+                    : 'border-border bg-surface text-text-muted hover:text-text'
+                }`}
+              >
+                <span>USDT - TRC20</span>
+                <span className="text-[10px] opacity-75 font-mono">(Tron)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCryptoNetwork('bep20')}
+                className={`h-9 px-2 rounded-md border text-xs font-medium transition-colors focus-ring flex items-center justify-center gap-1.5 ${
+                  cryptoNetwork === 'bep20'
+                    ? 'border-accent bg-accent/10 text-accent font-semibold'
+                    : 'border-border bg-surface text-text-muted hover:text-text'
+                }`}
+              >
+                <span>USDT - BEP20</span>
+                <span className="text-[10px] opacity-75 font-mono">(BSC)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <Label htmlFor="addr">
-            {method === 'crypto' ? 'USDT wallet address (TRC20 / BEP20)' : 'Wise email'}
+            {method === 'crypto' 
+              ? (cryptoNetwork === 'trc20' ? 'USDT (TRC20) wallet address' : 'USDT (BEP20) wallet address')
+              : 'Wise email'}
           </Label>
           <Input id="addr" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={
-            method === 'crypto' ? 'T... (TRC20) or 0x... (BEP20)' : 'you@example.com'
+            method === 'crypto' 
+              ? (cryptoNetwork === 'trc20' ? 'T... (Tron TRC20 address)' : '0x... (BNB Chain BEP20 address)')
+              : 'you@example.com'
           } />
+          {address.trim() && !isAddressValid && (
+            <p className="text-[11px] text-danger">
+              {method === 'crypto'
+                ? `Invalid format: ${cryptoNetwork === 'trc20' ? 'TRC20 addresses start with "T" and are 34 characters long.' : 'BEP20 addresses start with "0x" and are 42 characters long.'}`
+                : 'Invalid email address format.'}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="dets">Additional details (optional)</Label>
           <Textarea id="dets" rows={2} value={details} onChange={(e) => setDetails(e.target.value)} placeholder={
-            method === 'crypto' ? 'Network: TRC20 or BEP20 (and memo/tag if required)' : 'Account holder name'
+            method === 'crypto' ? 'Memo / Tag (if required by your exchange)' : 'Account holder name'
           } />
         </div>
 
@@ -351,9 +429,20 @@ function RequestPayoutDialog({
 }) {
   const elig = challenge.payout_eligibility
   const [method,  setMethod]  = useState(savedMethod?.method || 'crypto')
+  const [cryptoNetwork, setCryptoNetwork] = useState<'trc20' | 'bep20'>(
+    savedMethod?.method?.toLowerCase().includes('bep') ? 'bep20' : 'trc20'
+  )
   const [address, setAddress] = useState(savedMethod?.address ?? '')
   const [busy,    setBusy]    = useState(false)
   const [success, setSuccess] = useState(false)
+
+  const isTrcValid = /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address.trim())
+  const isBepValid = /^0x[a-fA-F0-9]{40}$/.test(address.trim())
+  const isWiseValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.trim())
+
+  const isAddressValid = method === 'crypto'
+    ? (cryptoNetwork === 'trc20' ? isTrcValid : isBepValid)
+    : isWiseValid
 
   const balanceProfit = toNum(challenge.current_balance) - toNum(challenge.starting_balance)
   const maxWithdrawable = elig ? elig.withdrawable_profit : Math.max(0, balanceProfit)
@@ -370,6 +459,12 @@ function RequestPayoutDialog({
 
   const submit = async () => {
     if (!address.trim()) { toast.error('Enter your payout address'); return }
+    if (!isAddressValid) {
+      toast.error(method === 'crypto' 
+        ? `Please enter a valid ${cryptoNetwork === 'trc20' ? 'Tron (TRC20)' : 'BNB Smart Chain (BEP20)'} wallet address` 
+        : 'Please enter a valid email address')
+      return
+    }
     const numAmt = toNum(amountStr)
     if (numAmt <= 0) { toast.error('Enter a valid payout amount'); return }
     if (numAmt > maxWithdrawable + 0.05) {
@@ -382,8 +477,12 @@ function RequestPayoutDialog({
     }
 
     setBusy(true)
+    const effectiveMethod = method === 'crypto'
+      ? (cryptoNetwork === 'trc20' ? 'USDT (TRC20)' : 'USDT (BEP20)')
+      : 'Wise'
+
     try {
-      const res = await api.challengePayout(challenge.id, method, address.trim(), numAmt)
+      const res = await api.challengePayout(challenge.id, effectiveMethod, address.trim(), numAmt)
       if (res.ok && res.data.success) {
         setSuccess(true)
         setTimeout(onSuccess, 1500)
@@ -472,20 +571,80 @@ function RequestPayoutDialog({
                     type="button"
                     onClick={() => setMethod(m)}
                     className={`h-9 rounded-md border text-xs font-medium transition-colors focus-ring ${
-                      method === m ? 'border-accent bg-accent/10 text-accent font-semibold' : 'border-border bg-surface text-text-muted'
+                      method === m ? 'border-accent bg-accent/10 text-accent font-semibold' : 'border-border bg-surface text-text-muted hover:text-text'
                     }`}
                   >
-                    {m.toUpperCase()}
+                    {m === 'crypto' ? 'USDT (CRYPTO)' : 'WISE TRANSFER'}
                   </button>
                 ))}
               </div>
             </div>
 
+            {method === 'crypto' && (
+              <div className="space-y-1.5">
+                <Label>Crypto Network</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCryptoNetwork('trc20')}
+                    className={`h-9 px-2 rounded-md border text-xs font-medium transition-colors focus-ring flex items-center justify-center gap-1.5 ${
+                      cryptoNetwork === 'trc20'
+                        ? 'border-accent bg-accent/10 text-accent font-semibold'
+                        : 'border-border bg-surface text-text-muted hover:text-text'
+                    }`}
+                  >
+                    <span>USDT - TRC20</span>
+                    <span className="text-[10px] opacity-75 font-mono">(Tron)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCryptoNetwork('bep20')}
+                    className={`h-9 px-2 rounded-md border text-xs font-medium transition-colors focus-ring flex items-center justify-center gap-1.5 ${
+                      cryptoNetwork === 'bep20'
+                        ? 'border-accent bg-accent/10 text-accent font-semibold'
+                        : 'border-border bg-surface text-text-muted hover:text-text'
+                    }`}
+                  >
+                    <span>USDT - BEP20</span>
+                    <span className="text-[10px] opacity-75 font-mono">(BNB Chain)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
-              <Label htmlFor="payaddr">Payout address</Label>
-              <Input id="payaddr" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={
-                method === 'crypto' ? 'USDT wallet address' : 'Wise email'
-              } />
+              <div className="flex justify-between items-center">
+                <Label htmlFor="payaddr">
+                  {method === 'crypto' 
+                    ? (cryptoNetwork === 'trc20' ? 'TRC20 Wallet Address (Tron)' : 'BEP20 Wallet Address (BNB Smart Chain)') 
+                    : 'Wise Account Email'}
+                </Label>
+                {address.trim().length > 0 && (
+                  <span className={`text-[11px] font-medium flex items-center gap-1 ${isAddressValid ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {isAddressValid ? '✓ Valid format' : '✗ Invalid format'}
+                  </span>
+                )}
+              </div>
+              <Input
+                id="payaddr"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={
+                  method === 'crypto'
+                    ? (cryptoNetwork === 'trc20' ? 'Starts with T (34 characters)...' : 'Starts with 0x (42 characters)...')
+                    : 'account@example.com'
+                }
+              />
+              {address.trim().length > 0 && !isAddressValid && (
+                <p className="text-[11px] text-rose-500 mt-0.5">
+                  {method === 'crypto'
+                    ? (cryptoNetwork === 'trc20'
+                        ? 'Invalid Tron address. Must start with "T" and contain exactly 34 alphanumeric characters.'
+                        : 'Invalid BSC address. Must start with "0x" followed by 40 hex characters.')
+                    : 'Please enter a valid email address.'}
+                </p>
+              )}
             </div>
 
             <div className="flex items-start gap-2 text-2xs text-text-muted">
@@ -495,7 +654,7 @@ function RequestPayoutDialog({
 
             <DialogFooter className="gap-2">
               <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button variant="success" onClick={submit} loading={busy} disabled={!address.trim() || currentNumAmt <= 0}>
+              <Button variant="success" onClick={submit} loading={busy} disabled={!address.trim() || !isAddressValid || currentNumAmt <= 0}>
                 Request {fmtUSD(traderShare)}
               </Button>
             </DialogFooter>
@@ -522,7 +681,9 @@ function PayoutOrdersList() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Purchase order history</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle>Purchase order history</CardTitle>
+      </CardHeader>
       <CardContent className="p-0">
         {loading ? (
           <div className="p-5 space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
@@ -556,5 +717,98 @@ function PayoutOrdersList() {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+export function PayoutCertificateModal({
+  onClose,
+  traderName = 'Prop Firm Trader',
+  amount = 1450,
+  date = 'Current Season',
+  method = 'USDT - TRC20',
+}: {
+  onClose: () => void
+  traderName?: string
+  amount?: number
+  date?: string
+  method?: string
+}) {
+  const shareText = `Just secured ${fmtUSD(amount)} payout with @MassFunded! Seamless ${method} withdrawal. 🚀 Prop firm trading made real. #MassFunded #Payout #Forex`
+
+  const handleCopyShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(shareText)
+    }
+    toast.success('Social share text copied to clipboard!')
+  }
+
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') window.print()
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-xl bg-surface border-border p-6">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-accent" />
+            <DialogTitle className="text-lg font-bold">Proof of Payout Certificate</DialogTitle>
+          </div>
+          <DialogDescription className="text-xs text-text-muted">
+            Official verified social certificate for community proof of payout.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-surface via-surface-muted to-emerald-950/20 p-8 text-center shadow-xl">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-emerald-400 to-accent" />
+          
+          <div className="flex justify-between items-center mb-6">
+            <span className="text-2xs font-mono uppercase tracking-widest text-amber-500 font-bold">MassFunded Enterprise</span>
+            <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
+              <ShieldCheck className="h-3.5 w-3.5" /> Verified Disbursal
+            </div>
+          </div>
+
+          <div className="text-xs uppercase tracking-widest text-text-muted font-semibold">Official Certificate of Payout</div>
+          
+          <div className="my-6">
+            <div className="text-3xl sm:text-5xl font-black tabular tracking-tight text-emerald-400">
+              {fmtUSD(amount)}
+            </div>
+            <div className="text-xs text-text-muted mt-1 font-mono">Disbursed via {method}</div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto text-left bg-surface/70 border border-border p-3.5 rounded-xl mb-4 text-xs">
+            <div>
+              <div className="text-2xs text-text-muted uppercase">Trader Handle</div>
+              <div className="font-semibold text-text truncate">{traderName}</div>
+            </div>
+            <div>
+              <div className="text-2xs text-text-muted uppercase">Disbursed On</div>
+              <div className="font-semibold text-text tabular">{date}</div>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-text-faint flex items-center justify-center gap-1.5">
+            <ShieldCheck className="h-3 w-3 text-emerald-400" />
+            Prop Firm Authenticity Verified · Anti-Arbitrage Cleared
+          </div>
+        </div>
+
+        <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-2">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 flex-1 sm:flex-initial text-xs">
+              <Printer className="h-3.5 w-3.5" /> Print / PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleCopyShare} className="gap-1.5 flex-1 sm:flex-initial text-xs">
+              <Share2 className="h-3.5 w-3.5" /> Copy Share Text
+            </Button>
+          </div>
+          <Button variant="primary" size="sm" onClick={onClose} className="w-full sm:w-auto text-xs">
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -383,7 +383,7 @@ export default function RiskManagementHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header ────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -400,7 +400,7 @@ export default function RiskManagementHubPage() {
 
         {/* Navigation Tabs */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center bg-slate-100 dark:bg-[#111827] p-1 rounded-xl border border-slate-200 dark:border-[#1F2937]">
+          <div className="flex items-center bg-slate-100 dark:bg-surface p-1 rounded-xl border border-slate-200 dark:border-surface-muted">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -467,7 +467,7 @@ export default function RiskManagementHubPage() {
                 toast.success('Syndicate radar refreshed')
               }
             }}
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
           >
             <RefreshCw className="h-4 w-4 text-accent" />
             Refresh
@@ -484,7 +484,7 @@ export default function RiskManagementHubPage() {
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             
             {/* Card 1: Funded Capital Liability */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -514,7 +514,7 @@ export default function RiskManagementHubPage() {
             </Card>
 
             {/* Card 2: Net Unhedged Exposure */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -544,7 +544,7 @@ export default function RiskManagementHubPage() {
             </Card>
 
             {/* Card 3: High-Risk Accounts */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -574,7 +574,7 @@ export default function RiskManagementHubPage() {
             </Card>
 
             {/* Card 4: Active Algorithmic Threat Alerts */}
-            <Card className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -628,7 +628,7 @@ export default function RiskManagementHubPage() {
                 const shortPct = total > 0 ? (100 - Number(longPct)).toFixed(0) : '50'
 
                 return (
-                  <Card key={item.symbol} className="bg-[#111827] border-[#1F2937] hover:border-accent/40 transition-all">
+                  <Card key={item.symbol} className="bg-surface border-surface-muted hover:border-accent/40 transition-all">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                       <div>
                         <CardTitle className="text-base font-mono text-gray-100">{item.symbol}</CardTitle>
@@ -669,7 +669,7 @@ export default function RiskManagementHubPage() {
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-[#1F2937]/50 flex justify-between items-center text-xs font-mono text-gray-500">
+                      <div className="pt-2 border-t border-surface-muted/50 flex justify-between items-center text-xs font-mono text-gray-500">
                         <span>Net Delta: <strong className={item.netLots > 0 ? 'text-accent' : item.netLots < 0 ? 'text-red-400' : 'text-gray-400'}>
                           {item.netLots > 0 ? `+${item.netLots}` : item.netLots} Lots
                         </strong></span>
@@ -683,7 +683,7 @@ export default function RiskManagementHubPage() {
           </section>
 
           {/* 3. Algorithmic Rule Violations & Alerts Table */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-surface-muted">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -756,8 +756,8 @@ export default function RiskManagementHubPage() {
           </div>
 
           {/* 1. Cluster Detection Settings Card */}
-          <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] overflow-hidden shadow-xs">
-            <CardHeader className="border-b border-slate-100 dark:border-[#1F2937]/70 pb-4">
+          <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted overflow-hidden shadow-xs">
+            <CardHeader className="border-b border-slate-100 dark:border-surface-muted/70 pb-4">
               <CardTitle className="text-base text-slate-900 dark:text-gray-100 flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                 Cluster Detection & Cross-Account Sensitivity Settings
@@ -784,7 +784,7 @@ export default function RiskManagementHubPage() {
                       step={100}
                       value={syndicateSettingsForm.time_delta_ms}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, time_delta_ms: Number(e.target.value) })}
-                      className="bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10 shadow-xs"
+                      className="bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-900 dark:text-white font-mono h-10 shadow-xs"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">ms</span>
                   </div>
@@ -807,7 +807,7 @@ export default function RiskManagementHubPage() {
                       step={1}
                       value={syndicateSettingsForm.lot_match_pct}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, lot_match_pct: Number(e.target.value) })}
-                      className="bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white font-mono h-10 shadow-xs"
+                      className="bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-900 dark:text-white font-mono h-10 shadow-xs"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">%</span>
                   </div>
@@ -829,7 +829,7 @@ export default function RiskManagementHubPage() {
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'subnet_24'
                           ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
-                          : 'bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
+                          : 'bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Subnet /24
@@ -842,7 +842,7 @@ export default function RiskManagementHubPage() {
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'exact'
                           ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
-                          : 'bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
+                          : 'bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Exact Match
@@ -857,7 +857,7 @@ export default function RiskManagementHubPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="bg-slate-50 dark:bg-[#0B0F19]/60 border-t border-slate-200 dark:border-[#1F2937]/70 p-4 flex items-center justify-between">
+            <CardFooter className="bg-slate-50 dark:bg-background/60 border-t border-slate-200 dark:border-surface-muted/70 p-4 flex items-center justify-between">
               <div className="text-xs text-slate-600 dark:text-gray-400 flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                 <span>Real-time cross-account matcher updates immediately upon saving</span>
@@ -876,8 +876,8 @@ export default function RiskManagementHubPage() {
           </Card>
 
           {/* 2. Live Syndicate Detection Table */}
-          <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] overflow-hidden shadow-xs">
-            <CardHeader className="border-b border-slate-100 dark:border-[#1F2937]/70 pb-4">
+          <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted overflow-hidden shadow-xs">
+            <CardHeader className="border-b border-slate-100 dark:border-surface-muted/70 pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-base text-slate-900 dark:text-gray-100 flex items-center gap-2">
@@ -897,11 +897,11 @@ export default function RiskManagementHubPage() {
                       placeholder="Search cluster, trader, IP..."
                       value={syndicateSearch}
                       onChange={(e) => setSyndicateSearch(e.target.value)}
-                      className="pl-8 h-8 text-xs bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1F2937] text-slate-900 dark:text-white w-48 font-mono"
+                      className="pl-8 h-8 text-xs bg-slate-50 dark:bg-background border-slate-200 dark:border-surface-muted text-slate-900 dark:text-white w-48 font-mono"
                     />
                   </div>
 
-                  <div className="flex items-center bg-slate-100 dark:bg-[#0B0F19] p-0.5 rounded-lg border border-slate-200 dark:border-[#1F2937]">
+                  <div className="flex items-center bg-slate-100 dark:bg-background p-0.5 rounded-lg border border-slate-200 dark:border-surface-muted">
                     <button
                       onClick={() => setSyndicateStatusFilter('all')}
                       className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
@@ -941,7 +941,7 @@ export default function RiskManagementHubPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-[#1F2937] bg-slate-100/90 dark:bg-[#0B0F19]/80 text-slate-700 dark:text-gray-400 font-mono uppercase text-[11px]">
+                    <tr className="border-b border-slate-200 dark:border-surface-muted bg-slate-100/90 dark:bg-background/80 text-slate-700 dark:text-gray-400 font-mono uppercase text-[11px]">
                       <th className="py-3.5 px-4">Cluster ID & Symbol</th>
                       <th className="py-3.5 px-4">Flagged Accounts</th>
                       <th className="py-3.5 px-4">Opposing Positions</th>
@@ -951,7 +951,7 @@ export default function RiskManagementHubPage() {
                       <th className="py-3.5 px-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#1F2937]/50">
+                  <tbody className="divide-y divide-slate-100 dark:divide-surface-muted/50">
                     {isLoadingSyndicates ? (
                       <tr>
                         <td colSpan={7} className="py-12 text-center text-gray-500">

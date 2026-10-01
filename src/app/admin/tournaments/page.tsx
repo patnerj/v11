@@ -45,17 +45,52 @@ export default function AdminTournamentsPage() {
     starting_balance: '10000',
     entry_fee: '0',
     max_participants: '500',
+    fake_participants: '0',
     prize_pool: '$25,000',
     first_prize: '$10,000 + $100K Account',
     second_prize: '$5,000 + $50K Account',
     third_prize: '$2,500 + $25K Account',
+    prize_4th_10th: '$25K Evaluation Challenge',
+    prize_11th_50th: '$10K Evaluation Challenge',
+    prize_51st_100th: '50% Challenge Discount Voucher',
     start_date: new Date().toISOString().slice(0, 16),
     end_date: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 16),
+    drawdown_type: 'trailing' as 'trailing' | 'static',
+    trailing_dd: '5',
     daily_dd: '5',
     max_dd: '10',
     leverage: '100',
     status: 'upcoming' as 'upcoming' | 'active' | 'completed' | 'cancelled'
   })
+
+  // Quick Preset Helper for Prizes
+  const applyPrizePreset = (type: 'standard' | 'micro') => {
+    if (type === 'standard') {
+      setFormData(prev => ({
+        ...prev,
+        prize_pool: '$25,000',
+        first_prize: '$10,000 Cash + $100K Funded Account',
+        second_prize: '$5,000 Cash + $50K Funded Account',
+        third_prize: '$2,500 Cash + $25K Funded Account',
+        prize_4th_10th: '$25K Evaluation Challenge',
+        prize_11th_50th: '$10K Evaluation Challenge',
+        prize_51st_100th: '50% Challenge Discount Voucher',
+      }))
+      toast.success('Applied Standard PropFirm Prize Tiers!')
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        prize_pool: '$5,000',
+        first_prize: '$2,000 Cash + $50K Account',
+        second_prize: '$1,000 Cash + $25K Account',
+        third_prize: '$500 Cash + $10K Account',
+        prize_4th_10th: '$10K Evaluation Challenge',
+        prize_11th_50th: '35% Challenge Discount Voucher',
+        prize_51st_100th: '20% Challenge Discount Voucher',
+      }))
+      toast.success('Applied Micro Cup Prize Tiers!')
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // 1. FETCH TOURNAMENTS LIST
@@ -89,6 +124,81 @@ export default function AdminTournamentsPage() {
     enabled: !!selectedTournamentForLeaderboard && isLeaderboardModalOpen,
     refetchInterval: 10_000,
   })
+
+  // ─────────────────────────────────────────────────────────────
+  // 2.2 SYNTHETIC LEADERBOARD MANAGEMENT (Client Requirement)
+  // ─────────────────────────────────────────────────────────────
+  const [isManualEntryModalOpen, setIsManualEntryModalOpen] = useState(false)
+  const [isGeneratingSynthetic, setIsGeneratingSynthetic] = useState(false)
+  const [manualEntryData, setManualEntryData] = useState({
+    display_name: '',
+    country: 'GB',
+    starting_equity: '10000',
+    current_equity: '12500',
+    roi_pct: '25.00',
+    max_dd_reached: '2.0',
+  })
+
+  const handleAutoGenerateSynthetic = async () => {
+    if (!selectedTournamentForLeaderboard?.id) return
+    setIsGeneratingSynthetic(true)
+    try {
+      const res = await api.admin.tournaments.generateSynthetic(selectedTournamentForLeaderboard.id)
+      if (res.ok && res.data.success) {
+        toast.success(`Generated ${res.data.count || 12} realistic synthetic leaderboard entries!`)
+        refetchLeaderboard()
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Generation failed') : res.error)
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Generation error')
+    } finally {
+      setIsGeneratingSynthetic(false)
+    }
+  }
+
+  const handleClearSynthetic = async (entryId?: string) => {
+    if (!selectedTournamentForLeaderboard?.id) return
+    try {
+      const res = await api.admin.tournaments.clearSynthetic(selectedTournamentForLeaderboard.id, entryId)
+      if (res.ok && res.data.success) {
+        toast.success(entryId ? 'Removed synthetic entry.' : 'Cleared all synthetic entries.')
+        refetchLeaderboard()
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Failed') : res.error)
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Clear error')
+    }
+  }
+
+  const handleSaveManualSynthetic = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedTournamentForLeaderboard?.id) return
+    if (!manualEntryData.display_name.trim()) {
+      toast.error('Please enter a trader name.')
+      return
+    }
+    try {
+      const res = await api.admin.tournaments.saveSynthetic(selectedTournamentForLeaderboard.id, {
+        display_name: manualEntryData.display_name.trim(),
+        country: manualEntryData.country.trim().toUpperCase() || 'GB',
+        starting_equity: parseFloat(manualEntryData.starting_equity) || 10000,
+        current_equity: parseFloat(manualEntryData.current_equity) || 10000,
+        roi_pct: parseFloat(manualEntryData.roi_pct) || 0,
+        max_dd_reached: parseFloat(manualEntryData.max_dd_reached) || 0,
+      })
+      if (res.ok && res.data.success) {
+        toast.success(`Added ${manualEntryData.display_name} to leaderboard!`)
+        setIsManualEntryModalOpen(false)
+        refetchLeaderboard()
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Failed to save entry') : res.error)
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Save error')
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // 2.5 FETCH PVP ARENA ANALYTICS & REVENUE
@@ -179,13 +289,19 @@ export default function AdminTournamentsPage() {
       description: '',
       starting_balance: '10000',
       entry_fee: '0',
-      max_participants: '500',
+      max_participants: '5000',
+      fake_participants: '0',
       prize_pool: '$25,000',
       first_prize: '$10,000 + $100K Account',
       second_prize: '$5,000 + $50K Account',
       third_prize: '$2,500 + $25K Account',
+      prize_4th_10th: '$25K Evaluation Challenge',
+      prize_11th_50th: '$10K Evaluation Challenge',
+      prize_51st_100th: '50% Challenge Discount Voucher',
       start_date: new Date().toISOString().slice(0, 16),
       end_date: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 16),
+      drawdown_type: 'trailing',
+      trailing_dd: '5',
       daily_dd: '5',
       max_dd: '10',
       leverage: '100',
@@ -217,15 +333,21 @@ export default function AdminTournamentsPage() {
       description: t.description || '',
       starting_balance: String(t.starting_balance || 10000),
       entry_fee: String(t.entry_fee || 0),
-      max_participants: String(t.max_participants || 500),
+      max_participants: String(t.max_participants || 5000),
+      fake_participants: String((t as any).fake_participants || 0),
       prize_pool: t.prize_pool || '$25,000',
-      first_prize: prizes['1st'] || '$10,000 + $100K Account',
-      second_prize: prizes['2nd'] || '$5,000 + $50K Account',
-      third_prize: prizes['3rd'] || '$2,500 + $25K Account',
+      first_prize: prizes['1st'] || prizes['first'] || '$10,000 + $100K Account',
+      second_prize: prizes['2nd'] || prizes['second'] || '$5,000 + $50K Account',
+      third_prize: prizes['3rd'] || prizes['third'] || '$2,500 + $25K Account',
+      prize_4th_10th: prizes['4th_10th'] || prizes['4 to 10'] || '$25K Evaluation Challenge',
+      prize_11th_50th: prizes['11th_50th'] || prizes['10 to 50'] || '$10K Evaluation Challenge',
+      prize_51st_100th: prizes['51st_100th'] || prizes['50 to 100'] || '50% Challenge Discount Voucher',
       start_date: t.start_date ? new Date(t.start_date).toISOString().slice(0, 16) : '',
       end_date: t.end_date ? new Date(t.end_date).toISOString().slice(0, 16) : '',
+      drawdown_type: (rules.drawdown_type || 'trailing') as 'trailing' | 'static',
+      trailing_dd: String(rules.trailing_dd || rules.max_dd || 5),
       daily_dd: String(rules.daily_dd || 5),
-      max_dd: String(rules.max_dd || 10),
+      max_dd: String(rules.max_dd || rules.trailing_dd || 10),
       leverage: String(rules.leverage || 100),
       status: t.status || 'upcoming'
     })
@@ -246,14 +368,20 @@ export default function AdminTournamentsPage() {
       description: formData.description.trim(),
       starting_balance: parseFloat(formData.starting_balance) || 10000,
       entry_fee: parseFloat(formData.entry_fee) || 0,
-      max_participants: parseInt(formData.max_participants) || 500,
+      max_participants: parseInt(formData.max_participants) || 5000,
+      fake_participants: parseInt(formData.fake_participants) || 0,
       prize_pool: formData.prize_pool.trim() || '$10,000',
       prizes_breakdown: {
         '1st': formData.first_prize,
         '2nd': formData.second_prize,
         '3rd': formData.third_prize,
+        '4th_10th': formData.prize_4th_10th,
+        '11th_50th': formData.prize_11th_50th,
+        '51st_100th': formData.prize_51st_100th,
       },
       rules_json: {
+        drawdown_type: formData.drawdown_type,
+        trailing_dd: parseFloat(formData.trailing_dd) || 5,
         daily_dd: parseFloat(formData.daily_dd) || 5,
         max_dd: parseFloat(formData.max_dd) || 10,
         leverage: parseInt(formData.leverage) || 100,
@@ -287,7 +415,7 @@ export default function AdminTournamentsPage() {
     <div className="w-full space-y-6 pb-16">
       
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -315,7 +443,7 @@ export default function AdminTournamentsPage() {
                 toast.info('Tournament directory refreshed.')
               }
             }}
-            className="gap-1.5 border-[#1F2937] hover:border-emerald-500"
+            className="gap-1.5 border-surface-muted hover:border-emerald-500"
           >
             <RefreshCw className="h-4 w-4 text-emerald-400" />
             Refresh
@@ -336,7 +464,7 @@ export default function AdminTournamentsPage() {
       </div>
 
       {/* ── Sub Navigation Tabs ───────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 border-b border-[#1F2937] pb-3">
+      <div className="flex items-center gap-3 border-b border-surface-muted pb-3">
         <button
           onClick={() => setActiveNavTab('tournaments')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -873,15 +1001,59 @@ export default function AdminTournamentsPage() {
               <span className="text-xs text-text-muted">Rankings update on every MT5 trade tick</span>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetchLeaderboard()}
-              className="gap-1 text-xs border-border h-7"
-            >
-              <RefreshCw className="h-3 w-3 text-emerald-500" />
-              Refresh Rankings
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const startBal = Number(selectedTournamentForLeaderboard?.starting_balance || 10000)
+                  setManualEntryData({
+                    display_name: '',
+                    country: 'US',
+                    starting_equity: String(startBal),
+                    current_equity: String(Math.round(startBal * 1.18)),
+                    roi_pct: '18.00',
+                    max_dd_reached: '1.8',
+                  })
+                  setIsManualEntryModalOpen(true)
+                }}
+                className="gap-1 text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 h-7"
+              >
+                <Plus className="h-3 w-3" />
+                Add Manual Entry
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                loading={isGeneratingSynthetic}
+                onClick={handleAutoGenerateSynthetic}
+                className="gap-1 text-xs border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 h-7"
+              >
+                <Sparkles className="h-3 w-3" />
+                Auto-Generate Top 10
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleClearSynthetic()}
+                className="gap-1 text-xs border-red-500/30 text-red-500 hover:bg-red-500/10 h-7"
+              >
+                <Trash2 className="h-3 w-3" />
+                Clear Synthetic
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchLeaderboard()}
+                className="gap-1 text-xs border-border h-7"
+              >
+                <RefreshCw className="h-3 w-3 text-emerald-500" />
+                Refresh
+              </Button>
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-border max-h-[480px]">
@@ -895,18 +1067,19 @@ export default function AdminTournamentsPage() {
                   <th className="py-3 px-4 text-right">ROI %</th>
                   <th className="py-3 px-4 text-right">Max DD</th>
                   <th className="py-3 px-4">Prize Tier</th>
+                  <th className="py-3 px-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-surface">
                 {isLoadingLeaderboard ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-text-muted">
+                    <td colSpan={8} className="py-12 text-center text-text-muted">
                       Loading live leaderboard ranks...
                     </td>
                   </tr>
                 ) : !leaderboardData?.leaderboard || leaderboardData.leaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-text-muted">
+                    <td colSpan={8} className="py-12 text-center text-text-muted">
                       No participants registered yet for this tournament.
                     </td>
                   </tr>
@@ -941,7 +1114,19 @@ export default function AdminTournamentsPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <span className="font-semibold text-text block">{p.display_name || p.user_login || 'Trader'}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-text block">{p.display_name || p.user_login || 'Trader'}</span>
+                              {(p as any).country && (
+                                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-surface-muted border border-border text-text-muted">
+                                  {(p as any).country}
+                                </span>
+                              )}
+                              {(p as any).is_synthetic && (
+                                <Badge tone="warn" size="sm" className="text-[9px] py-0 px-1 border-amber-500/30 text-amber-500 bg-amber-500/10 font-mono">
+                                  Synthetic
+                                </Badge>
+                              )}
+                            </div>
                             <span className="text-[10px] text-text-muted font-mono">{p.user_email || '—'}</span>
                           </div>
                         </td>
@@ -962,6 +1147,21 @@ export default function AdminTournamentsPage() {
                             {prizeLabel}
                           </span>
                         </td>
+                        <td className="py-3 px-4 text-center">
+                          {(p as any).is_synthetic ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-red-500/70 hover:text-red-500 hover:bg-red-500/10"
+                              title="Delete synthetic entry"
+                              onClick={() => handleClearSynthetic((p as any).synthetic_id || (p as any).id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : (
+                            <span className="text-text-faint text-[10px]">—</span>
+                          )}
+                        </td>
                       </tr>
                     )
                   })
@@ -980,6 +1180,114 @@ export default function AdminTournamentsPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* ── Modal 1.5: Add Manual Synthetic Leaderboard Entry ──────────────── */}
+      <Modal
+        isOpen={isManualEntryModalOpen}
+        onClose={() => setIsManualEntryModalOpen(false)}
+        title="Add Manual Leaderboard Entry"
+        description={`Add custom trader with customized PnL & ROI to ${selectedTournamentForLeaderboard?.title || 'Tournament'}`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSaveManualSynthetic} className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Trader Display Name *</Label>
+            <Input
+              value={manualEntryData.display_name}
+              onChange={e => setManualEntryData(prev => ({ ...prev, display_name: e.target.value }))}
+              placeholder="e.g. Liam Vance"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Country (ISO-2 Code)</Label>
+              <Input
+                value={manualEntryData.country}
+                onChange={e => setManualEntryData(prev => ({ ...prev, country: e.target.value.toUpperCase().slice(0, 2) }))}
+                placeholder="US, GB, AE, etc."
+                maxLength={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Max Drawdown %</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={manualEntryData.max_dd_reached}
+                onChange={e => setManualEntryData(prev => ({ ...prev, max_dd_reached: e.target.value }))}
+                placeholder="2.0"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Start Equity ($)</Label>
+              <Input
+                type="number"
+                value={manualEntryData.starting_equity}
+                onChange={e => {
+                  const starting = parseFloat(e.target.value) || 0
+                  const current = parseFloat(manualEntryData.current_equity) || 0
+                  const roi = starting > 0 ? (((current - starting) / starting) * 100).toFixed(2) : '0.00'
+                  setManualEntryData(prev => ({ ...prev, starting_equity: e.target.value, roi_pct: roi }))
+                }}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Current Equity ($)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={manualEntryData.current_equity}
+                onChange={e => {
+                  const current = parseFloat(e.target.value) || 0
+                  const starting = parseFloat(manualEntryData.starting_equity) || 0
+                  const roi = starting > 0 ? (((current - starting) / starting) * 100).toFixed(2) : '0.00'
+                  setManualEntryData(prev => ({ ...prev, current_equity: e.target.value, roi_pct: roi }))
+                }}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">ROI %</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={manualEntryData.roi_pct}
+                onChange={e => {
+                  const roi = parseFloat(e.target.value) || 0
+                  const starting = parseFloat(manualEntryData.starting_equity) || 0
+                  const current = (starting * (1 + roi / 100)).toFixed(2)
+                  setManualEntryData(prev => ({ ...prev, roi_pct: e.target.value, current_equity: current }))
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsManualEntryModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              Add to Leaderboard
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       {/* ── Modal 2: Create / Edit Tournament Modal ───────────────────────── */}
@@ -1028,7 +1336,7 @@ export default function AdminTournamentsPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Starting Equity ($)</Label>
               <Input
@@ -1053,12 +1361,37 @@ export default function AdminTournamentsPage() {
               <Label className="text-xs">Max Capacity</Label>
               <Input
                 type="number"
+                placeholder="5000"
                 value={formData.max_participants}
                 onChange={(e) => setFormData({ ...formData, max_participants: e.target.value })}
                 className="text-xs font-mono"
                 required
               />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-accent flex items-center justify-between">
+                <span>Social Proof Offset</span>
+                <span className="text-[10px] text-text-muted">+Fake</span>
+              </Label>
+              <Input
+                type="number"
+                placeholder="e.g. 1950"
+                value={formData.fake_participants}
+                onChange={(e) => setFormData({ ...formData, fake_participants: e.target.value })}
+                className="text-xs font-mono border-accent/40 focus:border-accent text-accent font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* Social Proof Live Preview */}
+          <div className="px-3 py-1.5 rounded-lg bg-surface-muted border border-border flex items-center justify-between text-xs font-mono">
+            <span className="text-text-muted">Trader Card Live Display:</span>
+            <span className="text-accent font-semibold">
+              👥 {(Math.max(0, parseInt(String((editingTournament as any)?.real_participants ?? (editingTournament as any)?.current_participants ?? 0)) || 0) + (parseInt(formData.fake_participants) || 0)).toLocaleString()} / {(parseInt(formData.max_participants) || 5000).toLocaleString()} Traders
+              <span className="text-[10px] text-text-muted font-normal ml-1.5">
+                (Real: {String((editingTournament as any)?.real_participants ?? (editingTournament as any)?.current_participants ?? 0)} + Offset: {(parseInt(formData.fake_participants) || 0).toLocaleString()})
+              </span>
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1087,36 +1420,88 @@ export default function AdminTournamentsPage() {
             </div>
           </div>
 
-          {/* Prize Breakdown */}
+          {/* Prize Breakdown (6 Tiers with Bulk Quick Presets) */}
           <div className="p-3 bg-surface-muted rounded-xl border border-border space-y-3">
-            <span className="text-[11px] font-semibold text-text block font-mono">
-              🏆 Prize Distribution Breakdown
-            </span>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[11px] font-semibold text-text block font-mono">
+                🏆 Prize Distribution Breakdown (6 Tiers)
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-text-muted">Quick Fill:</span>
+                <button
+                  type="button"
+                  onClick={() => applyPrizePreset('standard')}
+                  className="px-2 py-0.5 rounded bg-accent/10 border border-accent/30 text-accent text-[10px] font-medium hover:bg-accent/20 transition-colors"
+                >
+                  ⚡ PropFirm Standard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPrizePreset('micro')}
+                  className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-medium hover:bg-amber-500/20 transition-colors"
+                >
+                  ⚡ Micro Cup
+                </button>
+              </div>
+            </div>
+
+            {/* Podium (1st, 2nd, 3rd) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-[10px] text-amber-600 dark:text-amber-400">🥇 1st Place Prize</Label>
+                <Label className="text-[10px] text-amber-500 font-semibold flex items-center gap-1">🥇 1st Place Prize</Label>
                 <Input
                   placeholder="$10,000 + $100K Account"
                   value={formData.first_prize}
                   onChange={(e) => setFormData({ ...formData, first_prize: e.target.value })}
-                  className="text-xs font-mono"
+                  className="text-xs font-mono border-amber-500/30"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-text-muted">🥈 2nd Place Prize</Label>
+                <Label className="text-[10px] text-slate-300 font-semibold flex items-center gap-1">🥈 2nd Place Prize</Label>
                 <Input
                   placeholder="$5,000 + $50K Account"
                   value={formData.second_prize}
                   onChange={(e) => setFormData({ ...formData, second_prize: e.target.value })}
-                  className="text-xs font-mono"
+                  className="text-xs font-mono border-slate-500/30"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-amber-700 dark:text-amber-600">🥉 3rd Place Prize</Label>
+                <Label className="text-[10px] text-amber-700 font-semibold flex items-center gap-1">🥉 3rd Place Prize</Label>
                 <Input
                   placeholder="$2,500 + $25K Account"
                   value={formData.third_prize}
                   onChange={(e) => setFormData({ ...formData, third_prize: e.target.value })}
+                  className="text-xs font-mono border-amber-700/30"
+                />
+              </div>
+            </div>
+
+            {/* Extended Tiers (4-10, 11-50, 51-100) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-border/50">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-text-muted">🎖️ 4th – 10th Place</Label>
+                <Input
+                  placeholder="$25K Evaluation Challenge"
+                  value={formData.prize_4th_10th}
+                  onChange={(e) => setFormData({ ...formData, prize_4th_10th: e.target.value })}
+                  className="text-xs font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-text-muted">🏅 11th – 50th Place</Label>
+                <Input
+                  placeholder="$10K Evaluation Challenge"
+                  value={formData.prize_11th_50th}
+                  onChange={(e) => setFormData({ ...formData, prize_11th_50th: e.target.value })}
+                  className="text-xs font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-text-muted">🎗️ 51st – 100th Place</Label>
+                <Input
+                  placeholder="50% Challenge Discount Voucher"
+                  value={formData.prize_51st_100th}
+                  onChange={(e) => setFormData({ ...formData, prize_51st_100th: e.target.value })}
                   className="text-xs font-mono"
                 />
               </div>
@@ -1147,27 +1532,48 @@ export default function AdminTournamentsPage() {
             </div>
           </div>
 
-          {/* Risk Rules */}
+          {/* Risk & Trailing Drawdown Rules */}
           <div className="p-3 bg-surface-muted rounded-xl border border-border space-y-3">
-            <span className="text-[11px] font-semibold text-text block font-mono">
-              ⚡ Tournament Risk Rules
-            </span>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[11px] font-semibold text-text block font-mono">
+                ⚡ Tournament Risk & Drawdown Rules
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-text-muted font-mono">Drawdown Model:</span>
+                <select
+                  value={formData.drawdown_type}
+                  onChange={(e) => setFormData({ ...formData, drawdown_type: e.target.value as any })}
+                  className="h-7 px-2 rounded-md bg-surface border border-accent/40 text-[11px] text-accent font-semibold focus:outline-none"
+                >
+                  <option value="trailing">Trailing Drawdown (Recommended)</option>
+                  <option value="static">Static Balance Drawdown</option>
+                </select>
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-[10px] text-text-muted">Daily DD (%)</Label>
+                <Label className="text-[10px] text-text-muted">
+                  {formData.drawdown_type === 'trailing' ? 'Trailing DD (%) [from Peak]' : 'Max DD (%) [Static]'}
+                </Label>
                 <Input
                   type="number"
-                  value={formData.daily_dd}
-                  onChange={(e) => setFormData({ ...formData, daily_dd: e.target.value })}
-                  className="text-xs font-mono h-8"
+                  step="0.5"
+                  value={formData.drawdown_type === 'trailing' ? formData.trailing_dd : formData.max_dd}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    trailing_dd: e.target.value,
+                    max_dd: e.target.value 
+                  })}
+                  className="text-xs font-mono h-8 border-accent/30 text-accent font-semibold"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-text-muted">Max DD (%)</Label>
+                <Label className="text-[10px] text-text-muted">Daily DD (%) [Reset 00:00 UTC]</Label>
                 <Input
                   type="number"
-                  value={formData.max_dd}
-                  onChange={(e) => setFormData({ ...formData, max_dd: e.target.value })}
+                  step="0.5"
+                  value={formData.daily_dd}
+                  onChange={(e) => setFormData({ ...formData, daily_dd: e.target.value })}
                   className="text-xs font-mono h-8"
                 />
               </div>

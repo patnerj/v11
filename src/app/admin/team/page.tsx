@@ -170,7 +170,7 @@ export default function TeamHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header Banner ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -193,7 +193,7 @@ export default function TeamHubPage() {
               refetch()
               toast.success('Team roster refreshed')
             }}
-            className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
           >
             <RefreshCw className="h-4 w-4 text-emerald-400" />
             Refresh
@@ -216,7 +216,7 @@ export default function TeamHubPage() {
 
       {/* ── Role KPI Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="bg-[#111827] border-[#1F2937] p-4">
+        <Card className="bg-surface border-surface-muted p-4">
           <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Super Admins</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.super_admin}</span>
@@ -224,7 +224,7 @@ export default function TeamHubPage() {
           </div>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937] p-4">
+        <Card className="bg-surface border-surface-muted p-4">
           <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Risk Officers</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.risk_officer}</span>
@@ -232,7 +232,7 @@ export default function TeamHubPage() {
           </div>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937] p-4">
+        <Card className="bg-surface border-surface-muted p-4">
           <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Support Agents</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.support_agent}</span>
@@ -240,7 +240,7 @@ export default function TeamHubPage() {
           </div>
         </Card>
 
-        <Card className="bg-[#111827] border-[#1F2937] p-4">
+        <Card className="bg-surface border-surface-muted p-4">
           <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Treasury Desk</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.accountant}</span>
@@ -256,7 +256,7 @@ export default function TeamHubPage() {
           Active Administrative Team ({team.length})
         </h3>
 
-        <div className="bg-[#111827] border border-[#1F2937] rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-surface border border-surface-muted rounded-2xl overflow-hidden shadow-xl">
           <DataTable
             data={team}
             loading={isLoading}
@@ -311,7 +311,7 @@ export default function TeamHubPage() {
                         setEditingMember(t)
                         setNewRole(t.role)
                       }}
-                      className="h-8 text-xs gap-1 border-[#1F2937] hover:bg-slate-800"
+                      className="h-8 text-xs gap-1 border-surface-muted hover:bg-slate-800"
                     >
                       <Edit className="h-3.5 w-3.5 text-blue-400" />
                       Role
@@ -320,7 +320,7 @@ export default function TeamHubPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => setMemberToDeactivate(t)}
-                      className="h-8 text-xs gap-1 border-[#1F2937] hover:bg-red-500/20 text-red-400"
+                      className="h-8 text-xs gap-1 border-surface-muted hover:bg-red-500/20 text-red-400"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -333,8 +333,8 @@ export default function TeamHubPage() {
       </div>
 
       {/* ── Permission Matrix Preview ──────────────────────────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
-        <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+      <Card className="bg-surface border-surface-muted">
+        <CardHeader className="border-b border-surface-muted/60 pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base text-gray-100 flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
@@ -350,7 +350,7 @@ export default function TeamHubPage() {
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-[#1F2937] bg-[#0B0F19] text-gray-400 uppercase text-[10px]">
+              <tr className="border-b border-surface-muted bg-background text-gray-400 uppercase text-[10px]">
                 <th className="py-3 px-4 font-bold">Platform Feature & Route</th>
                 <th className="py-3 px-4 text-center text-red-400">Super Admin</th>
                 <th className="py-3 px-4 text-center text-emerald-400">Risk Officer</th>
@@ -358,7 +358,7 @@ export default function TeamHubPage() {
                 <th className="py-3 px-4 text-center text-amber-400">Treasury Desk</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1F2937]">
+            <tbody className="divide-y divide-surface-muted">
               {PERMISSIONS_MATRIX.map((perm, idx) => (
                 <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
                   <td className="py-3 px-4 text-gray-200 font-medium font-sans">{perm.feature}</td>
@@ -423,7 +423,7 @@ export default function TeamHubPage() {
               id="staff-role"
               value={inviteForm.role}
               onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
-              className="w-full h-10 px-3 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-xs text-gray-200 focus:outline-none focus:border-emerald-500 font-medium"
+              className="w-full h-10 px-3 rounded-xl border border-surface-muted bg-background text-xs text-gray-200 focus:outline-none focus:border-emerald-500 font-medium"
             >
               <option value="support_agent">Support Agent (Helpdesk, KYC, Traders Read-Only)</option>
               <option value="risk_officer">Risk Officer (Risk Engine, Breaches, News-Lock)</option>
@@ -451,7 +451,7 @@ export default function TeamHubPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-surface-muted">
             <Button
               variant="outline"
               size="sm"
@@ -488,7 +488,7 @@ export default function TeamHubPage() {
               id="edit-role-select"
               value={newRole}
               onChange={(e) => setNewRole(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-xs text-gray-200 focus:outline-none focus:border-emerald-500 font-medium"
+              className="w-full h-10 px-3 rounded-xl border border-surface-muted bg-background text-xs text-gray-200 focus:outline-none focus:border-emerald-500 font-medium"
             >
               <option value="support_agent">Support Agent</option>
               <option value="risk_officer">Risk Officer</option>
@@ -497,7 +497,7 @@ export default function TeamHubPage() {
             </select>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-surface-muted">
             <Button
               variant="outline"
               size="sm"

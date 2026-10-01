@@ -13,13 +13,16 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
 import { ChallengeProgressCard } from '@/components/dashboard/challenge-progress-card'
-import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
-import { ChevronDown, Plus, Trophy } from 'lucide-react'
+import { ChevronDown, Plus, Trophy, Sparkles, Copy, Check } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
+import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 
 export default function DashboardChallenges() {
   const [metrics, setMetrics] = useState<Record<number, ChallengeMetrics | undefined>>({})
   const [expanded, setExpanded] = useState<number | null>(null)
+  const [celebratingChallenge, setCelebratingChallenge] = useState<ChallengeAccount | null>(null)
 
   const { data: rawList, isPending } = useQuery({
     queryKey: ['challengeMy'],
@@ -35,14 +38,17 @@ export default function DashboardChallenges() {
   const loading = isPending && !list
 
   useEffect(() => {
-    if (!list) return
-    const active = list.find((c) => c.status === 'active')
+    if (!list || list.length === 0) return
+    const active = list.find((c) => c.status === 'active') || list[0]
+    if (active && expanded === null) {
+      setExpanded(active.id)
+    }
     if (active && !metrics[active.id]) {
       api.challengeMetrics(active.id).then((m) => {
         if (m.ok) setMetrics((prev) => ({ ...prev, [active.id]: m.data }))
       })
     }
-  }, [list, metrics])
+  }, [list, expanded, metrics])
 
   const toggleExpand = async (id: number) => {
     if (expanded === id) { setExpanded(null); return }
@@ -96,9 +102,12 @@ export default function DashboardChallenges() {
             const profitPct = (profit / Math.max(1, toNum(c.starting_balance))) * 100
             return (
               <Card key={c.id} className="overflow-hidden border-border/60">
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => toggleExpand(c.id)}
-                  className="w-full p-4 sm:p-5 flex items-center gap-4 hover:bg-surface-muted/30 transition-colors text-left focus-ring"
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleExpand(c.id) }}
+                  className="w-full p-4 sm:p-5 flex items-center gap-4 hover:bg-surface-muted/30 transition-colors text-left focus-ring cursor-pointer"
                   aria-expanded={exp}
                 >
                   <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-4">
@@ -117,11 +126,25 @@ export default function DashboardChallenges() {
                       </div>
                     </div>
                     <div className="flex items-center sm:justify-end gap-2">
+                      {(c.status === 'passed' || c.status === 'funded' || (m && (m.profit_progress >= 100 || m.status === 'passed' || m.status === 'funded'))) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setCelebratingChallenge(c)
+                          }}
+                          className="px-2 py-0.5 rounded text-3xs font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all flex items-center gap-1 shrink-0 active:scale-95 cursor-pointer"
+                          title="View Phase Pass Celebration"
+                        >
+                          <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" />
+                          <span>Passed! 🎉</span>
+                        </button>
+                      )}
                       <Badge tone={statusTone(c.status)}>{statusLabel(c.status)}</Badge>
                     </div>
                   </div>
                   <ChevronDown className={cn('h-4 w-4 text-text-muted shrink-0 transition-transform duration-200', exp && 'rotate-180')} />
-                </button>
+                </div>
 
                 <AnimatePresence initial={false}>
                   {exp && (
@@ -152,6 +175,129 @@ export default function DashboardChallenges() {
           })}
         </div>
       )}
+
+      {/* Phase Pass Celebration Confetti & Congratulations Modal */}
+      <PhasePassCelebrationModal
+        challenge={celebratingChallenge || list?.find((c) => c.status === 'passed' || (metrics[c.id] && (metrics[c.id]?.profit_progress ?? 0) >= 100)) || null}
+        metrics={celebratingChallenge ? metrics[celebratingChallenge.id] : (list?.find((c) => c.status === 'passed' || (metrics[c.id] && (metrics[c.id]?.profit_progress ?? 0) >= 100)) ? metrics[list.find((c) => c.status === 'passed' || (metrics[c.id] && (metrics[c.id]?.profit_progress ?? 0) >= 100))!.id] : null)}
+        isOpen={celebratingChallenge !== null ? true : undefined}
+        onClose={() => setCelebratingChallenge(null)}
+      />
+    </div>
+  )
+}
+
+function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
+  const handleCopy = (text: string, key: string, label: string) => {
+    if (!text) return
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {})
+      }
+    } catch {}
+    setCopiedKey(key)
+    toast.success(`${label} copied to clipboard!`)
+    setTimeout(() => setCopiedKey(null), 2000)
+  }
+
+  const handleCopyAll = () => {
+    const creds = [
+      `MT5 Server: ${c.mt5_server || 'MetaQuotes-Demo'}`,
+      `MT5 Login: ${c.mt5_login}`,
+      `Trader Password: ${c.mt5_password || ''}`,
+      `Investor Password: ${(c as any).mt5_investor_password || ''}`,
+    ].join('\n')
+    handleCopy(creds, 'all', 'All MT5 Credentials')
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border-subtle space-y-2">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+          MetaTrader 5 Credentials
+        </span>
+        <button
+          type="button"
+          onClick={handleCopyAll}
+          className="text-3xs font-semibold text-accent hover:text-accent-hover flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-accent/10 transition-colors cursor-pointer select-none"
+        >
+          {copiedKey === 'all' ? (
+            <>
+              <Check className="w-3 h-3 text-emerald-400" />
+              <span className="text-emerald-400 font-bold">✓ Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3 h-3" />
+              <span>Copy All</span>
+            </>
+          )}
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
+        <div className="flex items-center justify-between group">
+          <div>
+            <span className="text-text-muted text-[10px] block">Broker Server</span>
+            <span className="font-medium text-text">{c.mt5_server || 'MetaQuotes-Demo'}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleCopy(c.mt5_server || 'MetaQuotes-Demo', 'server', 'Server')}
+            className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
+            title="Copy Server"
+          >
+            {copiedKey === 'server' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+          </button>
+        </div>
+        <div className="flex items-center justify-between group">
+          <div>
+            <span className="text-text-muted text-[10px] block">MT5 Login ID</span>
+            <span className="font-bold tabular text-emerald-400">{c.mt5_login}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleCopy(String(c.mt5_login), 'login', 'Login ID')}
+            className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
+            title="Copy Login"
+          >
+            {copiedKey === 'login' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+          </button>
+        </div>
+        <div className="flex items-center justify-between group">
+          <div>
+            <span className="text-text-muted text-[10px] block">Trader Password</span>
+            <span className="font-medium tabular text-text">{c.mt5_password || '••••••••'}</span>
+          </div>
+          {c.mt5_password && (
+            <button
+              type="button"
+              onClick={() => handleCopy(c.mt5_password!, 'pass', 'Trader Password')}
+              className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
+              title="Copy Password"
+            >
+              {copiedKey === 'pass' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-between group">
+          <div>
+            <span className="text-text-muted text-[10px] block">Investor (Myfxbook)</span>
+            <span className="font-medium tabular text-text">{(c as any).mt5_investor_password || '••••••••'}</span>
+          </div>
+          {(c as any).mt5_investor_password && (
+            <button
+              type="button"
+              onClick={() => handleCopy((c as any).mt5_investor_password, 'inv', 'Investor Password')}
+              className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
+              title="Copy Investor Password"
+            >
+              {copiedKey === 'inv' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -184,32 +330,7 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
         <KV label="Total trades"  value={String(m.total_trades)} />
 
         {c.mt5_login && (
-          <div className="mt-3 pt-3 border-t border-border-subtle space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
-                MetaTrader 5 Credentials
-              </span>
-              <span className="text-3xs text-text-muted">Live Sync Active</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
-              <div>
-                <span className="text-text-muted text-[10px] block">Broker Server</span>
-                <span className="font-medium text-text">{c.mt5_server || 'MetaQuotes-Demo'}</span>
-              </div>
-              <div>
-                <span className="text-text-muted text-[10px] block">MT5 Login ID</span>
-                <span className="font-bold tabular text-emerald-400">{c.mt5_login}</span>
-              </div>
-              <div>
-                <span className="text-text-muted text-[10px] block">Trader Password</span>
-                <span className="font-medium tabular text-text">{c.mt5_password || '••••••••'}</span>
-              </div>
-              <div>
-                <span className="text-text-muted text-[10px] block">Investor (Myfxbook)</span>
-                <span className="font-medium tabular text-text">{(c as any).mt5_investor_password || '••••••••'}</span>
-              </div>
-            </div>
-          </div>
+          <CredentialsBox challenge={c} />
         )}
       </CardContent>
     </Card>

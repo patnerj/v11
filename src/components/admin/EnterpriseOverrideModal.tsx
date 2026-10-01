@@ -140,7 +140,7 @@ export function EnterpriseOverrideModal({
     >
       <form onSubmit={handleSubmit} className="space-y-5 py-2">
         {/* Trader Target Summary Header */}
-        <div className="bg-[#0B0F19] rounded-xl border border-[#1F2937] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-background rounded-xl border border-surface-muted p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
               {traderName.charAt(0).toUpperCase()}
@@ -258,7 +258,7 @@ export function EnterpriseOverrideModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           
           {/* News Trading Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#1F2937] bg-[#0B0F19]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-surface-muted bg-background">
             <div className="space-y-0.5">
               <span className="text-xs font-semibold text-gray-200">News Trading Allowed</span>
               <p className="text-[11px] text-gray-500">Permit execution during high-impact news</p>
@@ -270,7 +270,7 @@ export function EnterpriseOverrideModal({
           </div>
 
           {/* Weekend Holding Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#1F2937] bg-[#0B0F19]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-surface-muted bg-background">
             <div className="space-y-0.5">
               <span className="text-xs font-semibold text-gray-200">Weekend Holding Allowed</span>
               <p className="text-[11px] text-gray-500">Allow holding positions over market close</p>

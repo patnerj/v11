@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/store/auth'
+import { useBranding } from '@/store/branding'
 import { AlertCircle, ArrowRight, Fingerprint } from 'lucide-react'
 import { authenticateWithBiometrics, hasSavedBiometricProfile, getSavedBiometricUser } from '@/lib/biometrics'
 import { Suspense } from 'react'
@@ -45,6 +46,8 @@ function LoginForm() {
   const verifyTwoFactor = useAuth((s) => s.verifyTwoFactor)
   const user   = useAuth((s) => s.user)
   const ready  = useAuth((s) => s.ready)
+  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
+  const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'M'
   const [username, setU] = useState('')
   const [password, setP] = useState('')
   const [remember, setR] = useState(true)
@@ -143,7 +146,7 @@ function LoginForm() {
       <Card className="p-8 glass-strong border-border-strong card-glow">
         <div className="text-center mb-6">
           <div className="brand-emblem">
-            <span className="text-lg font-black text-slate-950">P</span>
+            <span className="text-lg font-black text-slate-950">{brandInitial}</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{twoFA ? 'Enter your code' : 'Welcome back'}</h1>
           <p className="text-sm text-text-muted mt-1">

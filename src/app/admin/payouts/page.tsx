@@ -3,11 +3,12 @@
 import * as React from 'react'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { 
   Wallet, DollarSign, ArrowUpRight, ArrowDownRight, Clock, 
   CheckCircle2, XCircle, Search, Filter, Download, RefreshCw,
   ExternalLink, Eye, Sliders, AlertTriangle, ShieldCheck,
-  Building, CreditCard
+  Building, CreditCard, Check, Copy
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -61,12 +62,98 @@ export interface PayoutTableRow {
   processed_at?: string | null
 }
 
-export default function PayoutsHubPage() {
+function AddressCopyCell({ address, method }: { address: string; method: string }) {
+  const [copied, setCopied] = useState(false)
+  const previewAddr = address.length > 18 
+    ? `${address.slice(0, 8)}...${address.slice(-6)}` 
+    : address
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!address) return
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(address).catch(() => {})
+      }
+    } catch {}
+    setCopied(true)
+    toast.success('Payout destination address copied!')
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const isTrc = /trc/i.test(method) || address.startsWith('T')
+  const isBep = /bep/i.test(method) || /bsc/i.test(method) || address.startsWith('0x')
+  const isWise = /wise/i.test(method)
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-1.5 max-w-[240px]">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs font-semibold text-text flex items-center gap-1.5">
+            <Wallet className="h-3.5 w-3.5 text-accent shrink-0" />
+            {method}
+          </span>
+          {isTrc && (
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+              TRC20
+            </span>
+          )}
+          {isBep && (
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              BEP20
+            </span>
+          )}
+          {isWise && (
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              WISE
+            </span>
+          )}
+        </div>
+        {address && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="text-[10px] text-text-muted hover:text-emerald-400 flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer select-none"
+            title="Copy Destination Wallet"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3 w-3 text-emerald-400" />
+                <span className="text-emerald-400 font-bold">✓ Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" />
+                <span>Copy</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+      <p className="text-[11px] text-text-muted tabular truncate max-w-[220px] font-mono" title={address}>
+        {previewAddr}
+      </p>
+    </div>
+  )
+}
+
+function PayoutsHubContent() {
   const queryClient = useQueryClient()
+  const searchParams = useSearchParams()
+  const urlSearch = searchParams?.get('search')
 
   // Filter States
   const [activeTab, setActiveTab] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const [selectedPayoutIds, setSelectedPayoutIds] = useState<(string | number)[]>([])
+  const [isBulkApproving, setIsBulkApproving] = useState(false)
+
+  // Sync search query from URL parameter if present
+  React.useEffect(() => {
+    if (urlSearch) {
+      setSearchTerm(urlSearch)
+    }
+  }, [urlSearch])
 
   // Modal State
   const [selectedPayout, setSelectedPayout] = useState<PayoutItemTarget | null>(null)
@@ -199,8 +286,8 @@ export default function PayoutsHubPage() {
   }, [allPayouts, activeTab, searchTerm])
 
   // CSV Export Handler
-  const handleExportCSV = () => {
-    if (filteredPayouts.length === 0) {
+  const handleExportCSV = (recordsToExport: PayoutTableRow[] = filteredPayouts) => {
+    if (recordsToExport.length === 0) {
       toast.error('No payout records found to export.')
       return
     }
@@ -220,7 +307,7 @@ export default function PayoutsHubPage() {
       'Requested Date'
     ]
 
-    const rows = filteredPayouts.map((p) => [
+    const rows = recordsToExport.map((p) => [
       `"${p.payout_code}"`,
       `"${p.trader_name.replace(/"/g, '""')}"`,
       `"${p.email}"`,
@@ -244,7 +331,49 @@ export default function PayoutsHubPage() {
     link.click()
     document.body.removeChild(link)
 
-    toast.success(`Exported ${filteredPayouts.length} payout records to CSV`)
+    toast.success(`Exported ${recordsToExport.length} payout records to CSV`)
+  }
+
+  // Bulk Approve Handler
+  const handleBulkApprove = async () => {
+    const targetPayouts = allPayouts.filter(
+      p => selectedPayoutIds.includes(p.id) && (p.status === 'requested' || p.status === 'under_review')
+    )
+    if (targetPayouts.length === 0) {
+      toast.info('None of the selected payouts are pending approval.')
+      return
+    }
+    setIsBulkApproving(true)
+    const targetIds = targetPayouts.map(p => p.raw_id)
+    try {
+      const res = await api.admin.bulkPayouts(targetIds, 'approved', 'Bulk approved via admin toolbar')
+      if (res.ok && res.data?.success) {
+        toast.success(`Successfully approved ${res.data.processed} of ${targetPayouts.length} payout(s)!`)
+      } else {
+        let successCount = 0
+        for (const p of targetPayouts) {
+          try {
+            const singleRes = await api.admin.payoutStatus(p.raw_id, 'approved', 'Bulk approved via admin toolbar')
+            if (singleRes.ok) successCount++
+          } catch {}
+        }
+        toast.success(`Successfully approved ${successCount} of ${targetPayouts.length} payout(s)!`)
+      }
+    } catch {
+      let successCount = 0
+      for (const p of targetPayouts) {
+        try {
+          const singleRes = await api.admin.payoutStatus(p.raw_id, 'approved', 'Bulk approved via admin toolbar')
+          if (singleRes.ok) successCount++
+        } catch {}
+      }
+      toast.success(`Successfully approved ${successCount} of ${targetPayouts.length} payout(s)!`)
+    } finally {
+      setIsBulkApproving(false)
+      setSelectedPayoutIds([])
+      refetch()
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+    }
   }
 
   // DataTable Column Definitions
@@ -253,7 +382,7 @@ export default function PayoutsHubPage() {
       key: 'payout_code',
       header: 'Payout ID',
       render: (row) => (
-        <span className="tabular text-xs font-bold text-gray-200 bg-[#0B0F19] px-2.5 py-1 rounded-md border border-[#1F2937]">
+        <span className="tabular text-xs font-bold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
           {row.payout_code}
         </span>
       )
@@ -299,23 +428,7 @@ export default function PayoutsHubPage() {
     {
       key: 'destination',
       header: 'Destination Gateway',
-      render: (row) => {
-        const previewAddr = row.payment_address.length > 18 
-          ? `${row.payment_address.slice(0, 8)}...${row.payment_address.slice(-6)}` 
-          : row.payment_address
-
-        return (
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-gray-200 flex items-center gap-1.5">
-              <Wallet className="h-3.5 w-3.5 text-accent shrink-0" />
-              {row.payment_method}
-            </span>
-            <p className="text-[11px] text-gray-500 tabular truncate max-w-[200px]" title={row.payment_address}>
-              {previewAddr}
-            </p>
-          </div>
-        )
-      }
+      render: (row) => <AddressCopyCell address={row.payment_address} method={row.payment_method} />
     },
     {
       key: 'status',
@@ -400,7 +513,7 @@ export default function PayoutsHubPage() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleExportCSV}
+            onClick={() => handleExportCSV()}
             className="border-border text-text hover:bg-surface-muted gap-2 h-9"
           >
             <Download className="h-4 w-4 text-accent" />
@@ -621,6 +734,9 @@ export default function PayoutsHubPage() {
             columns={columns}
             data={filteredPayouts}
             loading={payoutsLoading}
+            selectable={true}
+            selectedIds={selectedPayoutIds}
+            onSelectionChange={setSelectedPayoutIds}
             emptyMessage={searchTerm || activeTab !== 'all' ? 'No payout requests match the selected filters.' : 'No payout requests found in queue.'}
             className="border-0 rounded-none bg-transparent"
           />
@@ -641,6 +757,63 @@ export default function PayoutsHubPage() {
         }}
       />
 
+      {/* ── 5. Floating Bulk Action Toolbar ──────────────────────────────── */}
+      {selectedPayoutIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+            <span className="text-xs font-bold text-text">
+              {selectedPayoutIds.length} payout{selectedPayoutIds.length > 1 ? 's' : ''} selected
+            </span>
+          </div>
+
+          <div className="h-4 w-[1px] bg-border" />
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="primary"
+              loading={isBulkApproving}
+              onClick={handleBulkApprove}
+              className="h-8 text-xs font-semibold gap-1.5 shadow-accent/20"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Approve Selected ({allPayouts.filter(p => selectedPayoutIds.includes(p.id) && (p.status === 'requested' || p.status === 'under_review')).length})
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const selectedRows = allPayouts.filter(p => selectedPayoutIds.includes(p.id))
+                handleExportCSV(selectedRows)
+              }}
+              className="h-8 text-xs font-semibold gap-1.5 border-border hover:bg-surface-muted"
+            >
+              <Download className="h-3.5 w-3.5 text-accent" />
+              Export Selected CSV
+            </Button>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelectedPayoutIds([])}
+              className="h-8 text-xs text-text-muted hover:text-text"
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
     </div>
+  )
+}
+
+export default function PayoutsHubPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-xs text-text-muted">Loading payouts...</div>}>
+      <PayoutsHubContent />
+    </React.Suspense>
   )
 }

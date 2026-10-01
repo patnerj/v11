@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { 
   LayoutDashboard, Users, Gauge, Shield, Wallet, 
   Settings, Megaphone, Trophy, BarChart3, LifeBuoy, 
@@ -52,8 +52,17 @@ export function Sidebar({
   onMobileClose,
   className 
 }: SidebarProps) {
+  const router = useRouter()
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const [optimisticPath, setOptimisticPath] = React.useState<string | null>(null)
+
+  // Re-sync optimistic state whenever route navigation resolves
+  React.useEffect(() => {
+    setOptimisticPath(null)
+  }, [pathname])
+
+  const effectivePath = optimisticPath || pathname
 
   return (
     <aside
@@ -86,15 +95,25 @@ export function Sidebar({
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {ADMIN_NAV_ITEMS.map((item) => {
           const isActive = item.href === '/admin' 
-            ? pathname === '/admin' 
-            : pathname?.startsWith(item.href)
+            ? effectivePath === '/admin' 
+            : effectivePath?.startsWith(item.href)
           const Icon = item.icon
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              onClick={onMobileClose}
+              prefetch={true}
+              onClick={() => {
+                setOptimisticPath(item.href)
+                onMobileClose?.()
+              }}
+              onMouseEnter={() => {
+                try { router.prefetch(item.href) } catch {}
+              }}
+              onFocus={() => {
+                try { router.prefetch(item.href) } catch {}
+              }}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group relative",
                 isActive

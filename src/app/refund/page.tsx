@@ -1,27 +1,51 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Refund Policy' }
+export const metadata: Metadata = { title: 'Refund Policy | MassFunded' }
 
 export default function Page() {
   return (
     <LegalPage
       title="Refund Policy"
-      intro="When refunds apply to challenge fees and platform purchases."
-      updated="June 2026"
+      intro="Our straightforward commitment to transparency, cooling-off rules, and 100% evaluation fee refunds."
+      updated="September 2026"
       sections={[
-        { title: '1. Challenge / evaluation fees',
-          body: <p>Evaluation fees grant immediate access to a digital service and are generally non-refundable once an account has been activated and trading has begun, except where required by law or stated below.</p> },
-        { title: '2. Cooling-off / unused purchases',
-          body: <p>If you purchased a challenge but have not yet started trading on it, you may request a refund within the operator’s stated cooling-off window. Contact support with your order reference.</p> },
-        { title: '3. Duplicate or failed payments',
-          body: <p>Duplicate charges, or charges where access was never delivered, are refunded in full. Crypto payments are refunded to the originating wallet net of network fees.</p> },
-        { title: '4. Chargebacks',
-          body: <p>If you have a billing concern, please contact support first — most issues are resolved quickly. Initiating a chargeback without contacting support may result in account suspension pending review.</p> },
-        { title: '5. Funded-account payouts',
-          body: <p>Payouts under a funded-account agreement are governed by that agreement, not this Refund Policy.</p> },
-        { title: '6. How to request a refund',
-          body: <p>Open a request through the <a className="text-accent hover:underline" href="/support">Support Center</a> or the <a className="text-accent hover:underline" href="/contact">Contact</a> page with your order reference. We aim to respond within the operator’s stated support window.</p> },
+        { 
+          title: '1. 100% Evaluation Fee Refund Guarantee',
+          body: <p>All challenge fees paid for evaluation accounts are eligible for a 100% refund. When you successfully meet the trading targets for Phase 1 and Phase 2 without breaching risk limits, your entire initial evaluation fee is refunded directly to your payout wallet alongside your very first bi-weekly profit split on the funded account.</p> 
+        },
+        { 
+          title: '2. Cooling-Off Window for Unused Accounts',
+          body: <p>If you purchase an evaluation account and choose not to trade, you are entitled to a full refund within 14 days of purchase, provided that zero trades (0 market orders, 0 pending orders) have been opened on the account.</p> 
+        },
+        { 
+          title: '3. Active Trading Disqualification',
+          body: <p>Once trading has commenced on an evaluation account (one or more orders executed), digital service delivery has been fully realized, and the evaluation fee becomes non-refundable until successfully qualified for the 100% refund reward on the funded stage.</p> 
+        },
+        { 
+          title: '4. Duplicate Transactions & Technical Glitches',
+          body: <p>In the event of accidental duplicate billing or technical network anomalies during crypto or card checkout, our finance team will promptly refund the duplicate transaction in full upon verification.</p> 
+        },
+        { 
+          title: '5. Chargeback Notice & Direct Resolution',
+          body: <p>If you experience any billing discrepancy, please contact our support team immediately. Initiating an unauthorized banking chargeback without contacting our desk violates terms and leads to permanent blacklist across all prop firm evaluation infrastructure.</p> 
+        },
+        { 
+          title: '6. Refund Processing Channels',
+          body: (
+            <p>
+              To request an unused account refund or clarify billing inquiries, email our 24/7 Operations Desk at{' '}
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
+                support@massfunded.org
+              </a>{' '}
+              with your order reference. For executive escalations, reach our Managing Director directly at{' '}
+              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
+                bahadur@massfunded.org
+              </a>
+              .
+            </p>
+          ) 
+        },
       ]}
     />
   )

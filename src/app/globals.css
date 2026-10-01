@@ -29,7 +29,7 @@
     --text: 210 40% 98%;
     --text-muted: 215 20% 65%;
     --text-subtle: 215 16% 47%;
-    --text-faint: 217 33% 17%;
+    --text-faint: 215 16% 52%;
     --success: 160 84% 39%;
     --success-hover: 158 64% 52%;
     --danger: 0 84% 60%;
@@ -123,72 +123,157 @@
     --border-strong: 215 16% 47%;
     --border-subtle: 210 40% 96%;
     --text: 222 47% 11%;
-    --text-muted: 215 16% 47%;
+    --text-muted: 215 19% 40%;
     --text-subtle: 215 25% 27%;
-    --text-faint: 215 20% 65%;
-    --success: 160 84% 39%;
-    --success-hover: 158 64% 52%;
-    --danger: 0 84% 60%;
-    --danger-hover: 0 84% 50%;
-    --warn: 38 92% 50%;
-    --info: 199 89% 48%;
-    --accent: 247 84% 62%;
+    --text-faint: 215 16% 47%;
+    --success: 160 84% 35%;
+    --success-hover: 158 64% 45%;
+    --danger: 0 84% 55%;
+    --danger-hover: 0 84% 48%;
+    --warn: 35 92% 42%;
+    --info: 199 89% 40%;
+    --accent: 160 84% 35%;
   }
 
   /* ── Universal Daylight / Clean-Light Contrast & Visibility Protections ── */
-  html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
-  [data-theme="clean-light"] h1, [data-theme="clean-light"] h2, [data-theme="clean-light"] h3, [data-theme="clean-light"] h4, [data-theme="clean-light"] h5, [data-theme="clean-light"] h6,
-  [data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3, [data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6,
-  html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3, html:not(.dark) h4, html:not(.dark) h5, html:not(.dark) h6 {
+  html.light h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light h6:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] h6:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] h6:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) h6:not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #0F172A !important;
   }
 
   /* Any text-white outside of colored buttons or badges converts to deep readable dark text */
-  html.light .text-white:not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
-  [data-theme="clean-light"] .text-white:not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
-  [data-theme="light"] .text-white:not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
-  html:not(.dark) .text-white:not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]) {
+  html.light .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
+  [data-theme="clean-light"] .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
+  [data-theme="light"] .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
+  html:not(.dark) .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]) {
     color: #0F172A !important;
+  }
+
+  /* Daylight high-contrast guarantees for amber/cyan/emerald/rose text on light surfaces */
+  html.light .text-amber-200, html.light .text-amber-300, html.light .text-amber-400, html.light .text-amber-500,
+  [data-theme="clean-light"] .text-amber-200, [data-theme="clean-light"] .text-amber-300, [data-theme="clean-light"] .text-amber-400, [data-theme="clean-light"] .text-amber-500,
+  html:not(.dark) .text-amber-200, html:not(.dark) .text-amber-300, html:not(.dark) .text-amber-400, html:not(.dark) .text-amber-500 {
+    color: #B45309 !important;
+  }
+
+  html.light .text-cyan-200, html.light .text-cyan-300, html.light .text-cyan-400,
+  [data-theme="clean-light"] .text-cyan-200, [data-theme="clean-light"] .text-cyan-300, [data-theme="clean-light"] .text-cyan-400,
+  html:not(.dark) .text-cyan-200, html:not(.dark) .text-cyan-300, html:not(.dark) .text-cyan-400 {
+    color: #0369A1 !important;
+  }
+
+  html.light .text-emerald-300, html.light .text-emerald-400,
+  [data-theme="clean-light"] .text-emerald-300, [data-theme="clean-light"] .text-emerald-400,
+  html:not(.dark) .text-emerald-300, html:not(.dark) .text-emerald-400 {
+    color: #047857 !important;
+  }
+
+  html.light .text-rose-300, html.light .text-rose-400,
+  [data-theme="clean-light"] .text-rose-300, [data-theme="clean-light"] .text-rose-400,
+  html:not(.dark) .text-rose-300, html:not(.dark) .text-rose-400 {
+    color: #DC2626 !important;
   }
 
   /* Subtitles and muted text must be crisp, legible slate in daylight mode (never faint or washed out) */
-  html.light .text-gray-400, html.light .text-slate-400, html.light .text-zinc-400,
-  [data-theme="clean-light"] .text-gray-400, [data-theme="clean-light"] .text-slate-400, [data-theme="clean-light"] .text-zinc-400,
-  [data-theme="light"] .text-gray-400, [data-theme="light"] .text-slate-400, [data-theme="light"] .text-zinc-400,
-  html:not(.dark) .text-gray-400, html:not(.dark) .text-slate-400, html:not(.dark) .text-zinc-400 {
+  html.light .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #475569 !important;
   }
 
-  html.light .text-gray-500, html.light .text-slate-500,
-  [data-theme="clean-light"] .text-gray-500, [data-theme="clean-light"] .text-slate-500,
-  [data-theme="light"] .text-gray-500, [data-theme="light"] .text-slate-500,
-  html:not(.dark) .text-gray-500, html:not(.dark) .text-slate-500 {
+  html.light .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #334155 !important;
   }
 
-  html.light .text-slate-950, html.light .text-slate-900, html.light .text-gray-950, html.light .text-gray-900,
-  [data-theme="clean-light"] .text-slate-950, [data-theme="clean-light"] .text-slate-900, [data-theme="clean-light"] .text-gray-950, [data-theme="clean-light"] .text-gray-900,
-  [data-theme="light"] .text-slate-950, [data-theme="light"] .text-slate-900, [data-theme="light"] .text-gray-950, [data-theme="light"] .text-gray-900,
-  html:not(.dark) .text-slate-950, html:not(.dark) .text-slate-900, html:not(.dark) .text-gray-950, html:not(.dark) .text-gray-900 {
+  html.light .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #0F172A !important;
   }
 
-  html.light .text-gray-100, html.light .text-gray-200, html.light .text-gray-300,
-  html.light .text-slate-100, html.light .text-slate-200, html.light .text-slate-300,
-  [data-theme="clean-light"] .text-gray-100, [data-theme="clean-light"] .text-gray-200, [data-theme="clean-light"] .text-gray-300,
-  [data-theme="clean-light"] .text-slate-100, [data-theme="clean-light"] .text-slate-200, [data-theme="clean-light"] .text-slate-300,
-  [data-theme="light"] .text-gray-100, [data-theme="light"] .text-gray-200, [data-theme="light"] .text-gray-300,
-  [data-theme="light"] .text-slate-100, [data-theme="light"] .text-slate-200, [data-theme="light"] .text-slate-300,
-  html:not(.dark) .text-gray-100, html:not(.dark) .text-gray-200, html:not(.dark) .text-gray-300,
-  html:not(.dark) .text-slate-100, html:not(.dark) .text-slate-200, html:not(.dark) .text-slate-300 {
+  html.light .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html.light .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="clean-light"] .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  [data-theme="light"] .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
+  html:not(.dark) .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #0F172A !important;
   }
 
   /* Hardcoded pitch-black cards adapt to clean white surfaces */
-  html.light .bg-\[\#111827\], html.light .bg-\[\#0B0F19\], html.light .bg-\[\#0E131F\], html.light .bg-\[\#080C14\], html.light .bg-\[\#0A0D17\], html.light .bg-\[\#161F30\], html.light .bg-\[\#1E293B\], html.light .bg-\[\#0E1322\], html.light .bg-\[\#192238\], html.light .bg-\[\#141A2E\], html.light .bg-\[\#101726\], html.light .bg-\[\#0F172A\], html.light .bg-\[\#11172A\], html.light .bg-\[\#070C18\], html.light .bg-\[\#070C18\]\/95, html.light .bg-\[\#070C18\]\/98,
-  [data-theme="clean-light"] .bg-\[\#111827\], [data-theme="clean-light"] .bg-\[\#0B0F19\], [data-theme="clean-light"] .bg-\[\#0E131F\], [data-theme="clean-light"] .bg-\[\#080C14\], [data-theme="clean-light"] .bg-\[\#0A0D17\], [data-theme="clean-light"] .bg-\[\#161F30\], [data-theme="clean-light"] .bg-\[\#1E293B\], [data-theme="clean-light"] .bg-\[\#0E1322\], [data-theme="clean-light"] .bg-\[\#192238\], [data-theme="clean-light"] .bg-\[\#141A2E\], [data-theme="clean-light"] .bg-\[\#101726\], [data-theme="clean-light"] .bg-\[\#0F172A\], [data-theme="clean-light"] .bg-\[\#11172A\], [data-theme="clean-light"] .bg-\[\#070C18\], [data-theme="clean-light"] .bg-\[\#070C18\]\/95, [data-theme="clean-light"] .bg-\[\#070C18\]\/98,
-  [data-theme="light"] .bg-\[\#111827\], [data-theme="light"] .bg-\[\#0B0F19\], [data-theme="light"] .bg-\[\#0E131F\], [data-theme="light"] .bg-\[\#080C14\], [data-theme="light"] .bg-\[\#0A0D17\], [data-theme="light"] .bg-\[\#161F30\], [data-theme="light"] .bg-\[\#1E293B\], [data-theme="light"] .bg-\[\#0E1322\], [data-theme="light"] .bg-\[\#192238\], [data-theme="light"] .bg-\[\#141A2E\], [data-theme="light"] .bg-\[\#101726\], [data-theme="light"] .bg-\[\#0F172A\], [data-theme="light"] .bg-\[\#11172A\], [data-theme="light"] .bg-\[\#070C18\], [data-theme="light"] .bg-\[\#070C18\]\/95, [data-theme="light"] .bg-\[\#070C18\]\/98,
-  html:not(.dark) .bg-\[\#111827\], html:not(.dark) .bg-\[\#0B0F19\], html:not(.dark) .bg-\[\#0E131F\], html:not(.dark) .bg-\[\#080C14\], html:not(.dark) .bg-\[\#0A0D17\], html:not(.dark) .bg-\[\#161F30\], html:not(.dark) .bg-\[\#1E293B\], html:not(.dark) .bg-\[\#0E1322\], html:not(.dark) .bg-\[\#192238\], html:not(.dark) .bg-\[\#141A2E\], html:not(.dark) .bg-\[\#101726\], html:not(.dark) .bg-\[\#0F172A\], html:not(.dark) .bg-\[\#11172A\], html:not(.dark) .bg-\[\#070C18\], html:not(.dark) .bg-\[\#070C18\]\/95, html:not(.dark) .bg-\[\#070C18\]\/98 {
+  html.light .bg-\[\#111827\], html.light .bg-\[\#0B0F19\], html.light .bg-\[\#0b0f19\], html.light .bg-\[\#0b0f19\]\/98, html.light .bg-\[\#0E131F\], html.light .bg-\[\#080C14\], html.light .bg-\[\#0A0D17\], html.light .bg-\[\#161F30\], html.light .bg-\[\#1E293B\], html.light .bg-\[\#0E1322\], html.light .bg-\[\#192238\], html.light .bg-\[\#141A2E\], html.light .bg-\[\#101726\], html.light .bg-\[\#0F172A\], html.light .bg-\[\#11172A\], html.light .bg-\[\#070C18\], html.light .bg-\[\#070C18\]\/95, html.light .bg-\[\#070C18\]\/98,
+  [data-theme="clean-light"] .bg-\[\#111827\], [data-theme="clean-light"] .bg-\[\#0B0F19\], [data-theme="clean-light"] .bg-\[\#0b0f19\], [data-theme="clean-light"] .bg-\[\#0b0f19\]\/98, [data-theme="clean-light"] .bg-\[\#0E131F\], [data-theme="clean-light"] .bg-\[\#080C14\], [data-theme="clean-light"] .bg-\[\#0A0D17\], [data-theme="clean-light"] .bg-\[\#161F30\], [data-theme="clean-light"] .bg-\[\#1E293B\], [data-theme="clean-light"] .bg-\[\#0E1322\], [data-theme="clean-light"] .bg-\[\#192238\], [data-theme="clean-light"] .bg-\[\#141A2E\], [data-theme="clean-light"] .bg-\[\#101726\], [data-theme="clean-light"] .bg-\[\#0F172A\], [data-theme="clean-light"] .bg-\[\#11172A\], [data-theme="clean-light"] .bg-\[\#070C18\], [data-theme="clean-light"] .bg-\[\#070C18\]\/95, [data-theme="clean-light"] .bg-\[\#070C18\]\/98,
+  [data-theme="light"] .bg-\[\#111827\], [data-theme="light"] .bg-\[\#0B0F19\], [data-theme="light"] .bg-\[\#0b0f19\], [data-theme="light"] .bg-\[\#0b0f19\]\/98, [data-theme="light"] .bg-\[\#0E131F\], [data-theme="light"] .bg-\[\#080C14\], [data-theme="light"] .bg-\[\#0A0D17\], [data-theme="light"] .bg-\[\#161F30\], [data-theme="light"] .bg-\[\#1E293B\], [data-theme="light"] .bg-\[\#0E1322\], [data-theme="light"] .bg-\[\#192238\], [data-theme="light"] .bg-\[\#141A2E\], [data-theme="light"] .bg-\[\#101726\], [data-theme="light"] .bg-\[\#0F172A\], [data-theme="light"] .bg-\[\#11172A\], [data-theme="light"] .bg-\[\#070C18\], [data-theme="light"] .bg-\[\#070C18\]\/95, [data-theme="light"] .bg-\[\#070C18\]\/98,
+  html:not(.dark) .bg-\[\#111827\], html:not(.dark) .bg-\[\#0B0F19\], html:not(.dark) .bg-\[\#0b0f19\], html:not(.dark) .bg-\[\#0b0f19\]\/98, html:not(.dark) .bg-\[\#0E131F\], html:not(.dark) .bg-\[\#080C14\], html:not(.dark) .bg-\[\#0A0D17\], html:not(.dark) .bg-\[\#161F30\], html:not(.dark) .bg-\[\#1E293B\], html:not(.dark) .bg-\[\#0E1322\], html:not(.dark) .bg-\[\#192238\], html:not(.dark) .bg-\[\#141A2E\], html:not(.dark) .bg-\[\#101726\], html:not(.dark) .bg-\[\#0F172A\], html:not(.dark) .bg-\[\#11172A\], html:not(.dark) .bg-\[\#070C18\], html:not(.dark) .bg-\[\#070C18\]\/95, html:not(.dark) .bg-\[\#070C18\]\/98 {
     background-color: hsl(var(--surface)) !important;
   }
 
@@ -243,6 +328,118 @@
   html.light .hover\:bg-slate-800\/40:hover, [data-theme="clean-light"] .hover\:bg-slate-800\/40:hover, html:not(.dark) .hover\:bg-slate-800\/40:hover,
   html.light .hover\:bg-slate-800\/30:hover, [data-theme="clean-light"] .hover\:bg-slate-800\/30:hover, html:not(.dark) .hover\:bg-slate-800\/30:hover {
     background-color: #f1f5f9 !important;
+  }
+
+  /* ── Scoped Dark Mode & Obsidian Isolations: Never allow clean-light overrides to bleed into dark containers ── */
+  html.dark,
+  html[data-theme="midnight-obsidian"],
+  .dark,
+  [data-theme="midnight-obsidian"] {
+    --bg: 220 39% 7% !important;
+    --bg-subtle: 221 39% 11% !important;
+    --bg-raised: 220 39% 7% !important;
+    --surface: 220 39% 7% !important;
+    --surface-muted: 221 39% 11% !important;
+    --surface-strong: 217 28% 17% !important;
+    --border: 217 28% 17% !important;
+    --border-strong: 215 20% 65% !important;
+    --border-subtle: 221 39% 11% !important;
+    --text: 210 40% 98% !important;
+    --text-muted: 215 20% 65% !important;
+    --text-subtle: 215 16% 47% !important;
+    --text-faint: 215 16% 52% !important;
+  }
+
+  html.dark .bg-\[\#111827\], html[data-theme="midnight-obsidian"] .bg-\[\#111827\], .dark .bg-\[\#111827\], [data-theme="midnight-obsidian"] .bg-\[\#111827\],
+  html.dark .bg-\[\#0B0F19\], html[data-theme="midnight-obsidian"] .bg-\[\#0B0F19\], .dark .bg-\[\#0B0F19\], [data-theme="midnight-obsidian"] .bg-\[\#0B0F19\],
+  html.dark .bg-\[\#0E131F\], html[data-theme="midnight-obsidian"] .bg-\[\#0E131F\], .dark .bg-\[\#0E131F\], [data-theme="midnight-obsidian"] .bg-\[\#0E131F\],
+  html.dark .bg-\[\#080C14\], html[data-theme="midnight-obsidian"] .bg-\[\#080C14\], .dark .bg-\[\#080C14\], [data-theme="midnight-obsidian"] .bg-\[\#080C14\],
+  html.dark .bg-\[\#0A0D17\], html[data-theme="midnight-obsidian"] .bg-\[\#0A0D17\], .dark .bg-\[\#0A0D17\], [data-theme="midnight-obsidian"] .bg-\[\#0A0D17\],
+  html.dark .bg-\[\#161F30\], html[data-theme="midnight-obsidian"] .bg-\[\#161F30\], .dark .bg-\[\#161F30\], [data-theme="midnight-obsidian"] .bg-\[\#161F30\],
+  html.dark .bg-\[\#1E293B\], html[data-theme="midnight-obsidian"] .bg-\[\#1E293B\], .dark .bg-\[\#1E293B\], [data-theme="midnight-obsidian"] .bg-\[\#1E293B\],
+  html.dark .bg-\[\#0E1322\], html[data-theme="midnight-obsidian"] .bg-\[\#0E1322\], .dark .bg-\[\#0E1322\], [data-theme="midnight-obsidian"] .bg-\[\#0E1322\],
+  html.dark .bg-\[\#192238\], html[data-theme="midnight-obsidian"] .bg-\[\#192238\], .dark .bg-\[\#192238\], [data-theme="midnight-obsidian"] .bg-\[\#192238\],
+  html.dark .bg-\[\#141A2E\], html[data-theme="midnight-obsidian"] .bg-\[\#141A2E\], .dark .bg-\[\#141A2E\], [data-theme="midnight-obsidian"] .bg-\[\#141A2E\],
+  html.dark .bg-\[\#101726\], html[data-theme="midnight-obsidian"] .bg-\[\#101726\], .dark .bg-\[\#101726\], [data-theme="midnight-obsidian"] .bg-\[\#101726\],
+  html.dark .bg-\[\#0F172A\], html[data-theme="midnight-obsidian"] .bg-\[\#0F172A\], .dark .bg-\[\#0F172A\], [data-theme="midnight-obsidian"] .bg-\[\#0F172A\],
+  html.dark .bg-\[\#11172A\], html[data-theme="midnight-obsidian"] .bg-\[\#11172A\], .dark .bg-\[\#11172A\], [data-theme="midnight-obsidian"] .bg-\[\#11172A\],
+  html.dark .bg-\[\#070C18\], html[data-theme="midnight-obsidian"] .bg-\[\#070C18\], .dark .bg-\[\#070C18\], [data-theme="midnight-obsidian"] .bg-\[\#070C18\],
+  .dark.bg-\[\#070C18\], [data-theme="midnight-obsidian"].bg-\[\#070C18\],
+  html.dark .bg-\[\#070C18\]\/95, html[data-theme="midnight-obsidian"] .bg-\[\#070C18\]\/95, .dark .bg-\[\#070C18\]\/95, [data-theme="midnight-obsidian"] .bg-\[\#070C18\]\/95,
+  html.dark .bg-\[\#070C18\]\/98, html[data-theme="midnight-obsidian"] .bg-\[\#070C18\]\/98, .dark .bg-\[\#070C18\]\/98, [data-theme="midnight-obsidian"] .bg-\[\#070C18\]\/98 {
+    background-color: #070C18 !important;
+  }
+
+  html.dark .bg-slate-900, html[data-theme="midnight-obsidian"] .bg-slate-900, .dark .bg-slate-900, [data-theme="midnight-obsidian"] .bg-slate-900 {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+  }
+
+  html.dark .bg-slate-800, html[data-theme="midnight-obsidian"] .bg-slate-800, .dark .bg-slate-800, [data-theme="midnight-obsidian"] .bg-slate-800 {
+    background-color: #1e293b !important;
+  }
+
+  html.dark .border-slate-800, html[data-theme="midnight-obsidian"] .border-slate-800, .dark .border-slate-800, [data-theme="midnight-obsidian"] .border-slate-800 {
+    border-color: #1e293b !important;
+  }
+
+  html.dark .border-slate-700, html[data-theme="midnight-obsidian"] .border-slate-700, .dark .border-slate-700, [data-theme="midnight-obsidian"] .border-slate-700 {
+    border-color: #334155 !important;
+  }
+
+  html.dark .text-white, html[data-theme="midnight-obsidian"] .text-white, .dark .text-white, [data-theme="midnight-obsidian"] .text-white {
+    color: #ffffff !important;
+  }
+
+  html.dark .text-slate-100, html[data-theme="midnight-obsidian"] .text-slate-100, .dark .text-slate-100, [data-theme="midnight-obsidian"] .text-slate-100,
+  html.dark .text-gray-100, html[data-theme="midnight-obsidian"] .text-gray-100, .dark .text-gray-100, [data-theme="midnight-obsidian"] .text-gray-100 {
+    color: #f1f5f9 !important;
+  }
+
+  html.dark .text-slate-400, html[data-theme="midnight-obsidian"] .text-slate-400, .dark .text-slate-400, [data-theme="midnight-obsidian"] .text-slate-400,
+  html.dark .text-gray-400, html[data-theme="midnight-obsidian"] .text-gray-400, .dark .text-gray-400, [data-theme="midnight-obsidian"] .text-gray-400 {
+    color: #94a3b8 !important;
+  }
+
+  html.dark .bg-\[\#0b0f19\], html[data-theme="midnight-obsidian"] .bg-\[\#0b0f19\], .dark .bg-\[\#0b0f19\], [data-theme="midnight-obsidian"] .bg-\[\#0b0f19\],
+  html.dark .bg-\[\#0b0f19\]\/98, html[data-theme="midnight-obsidian"] .bg-\[\#0b0f19\]\/98, .dark .bg-\[\#0b0f19\]\/98, [data-theme="midnight-obsidian"] .bg-\[\#0b0f19\]\/98 {
+    background-color: #0b0f19 !important;
+  }
+
+  html.dark .text-amber-200, html[data-theme="midnight-obsidian"] .text-amber-200, .dark .text-amber-200, [data-theme="midnight-obsidian"] .text-amber-200 {
+    color: #FDE68A !important;
+  }
+  html.dark .text-amber-300, html[data-theme="midnight-obsidian"] .text-amber-300, .dark .text-amber-300, [data-theme="midnight-obsidian"] .text-amber-300 {
+    color: #FCD34D !important;
+  }
+  html.dark .text-amber-400, html[data-theme="midnight-obsidian"] .text-amber-400, .dark .text-amber-400, [data-theme="midnight-obsidian"] .text-amber-400,
+  html.dark .text-amber-500, html[data-theme="midnight-obsidian"] .text-amber-500, .dark .text-amber-500, [data-theme="midnight-obsidian"] .text-amber-500 {
+    color: #FBBF24 !important;
+  }
+
+  html.dark .text-cyan-200, html[data-theme="midnight-obsidian"] .text-cyan-200, .dark .text-cyan-200, [data-theme="midnight-obsidian"] .text-cyan-200,
+  html.dark .text-cyan-300, html[data-theme="midnight-obsidian"] .text-cyan-300, .dark .text-cyan-300, [data-theme="midnight-obsidian"] .text-cyan-300,
+  html.dark .text-cyan-400, html[data-theme="midnight-obsidian"] .text-cyan-400, .dark .text-cyan-400, [data-theme="midnight-obsidian"] .text-cyan-400 {
+    color: #38BDF8 !important;
+  }
+
+  html.dark .text-emerald-300, html[data-theme="midnight-obsidian"] .text-emerald-300, .dark .text-emerald-300, [data-theme="midnight-obsidian"] .text-emerald-300,
+  html.dark .text-emerald-400, html[data-theme="midnight-obsidian"] .text-emerald-400, .dark .text-emerald-400, [data-theme="midnight-obsidian"] .text-emerald-400 {
+    color: var(--primary, #10B981) !important;
+  }
+
+  html.dark .text-rose-300, html[data-theme="midnight-obsidian"] .text-rose-300, .dark .text-rose-300, [data-theme="midnight-obsidian"] .text-rose-300,
+  html.dark .text-rose-400, html[data-theme="midnight-obsidian"] .text-rose-400, .dark .text-rose-400, [data-theme="midnight-obsidian"] .text-rose-400 {
+    color: #FB7185 !important;
+  }
+
+  html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6,
+  html[data-theme="midnight-obsidian"] h1, html[data-theme="midnight-obsidian"] h2, html[data-theme="midnight-obsidian"] h3,
+  html[data-theme="midnight-obsidian"] h4, html[data-theme="midnight-obsidian"] h5, html[data-theme="midnight-obsidian"] h6,
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+  [data-theme="midnight-obsidian"] h1, [data-theme="midnight-obsidian"] h2, [data-theme="midnight-obsidian"] h3,
+  [data-theme="midnight-obsidian"] h4, [data-theme="midnight-obsidian"] h5, [data-theme="midnight-obsidian"] h6 {
+    color: #f8fafc !important;
   }
 
 
@@ -497,6 +694,13 @@
   color: var(--primary, #10B981) !important;
 }
 
+html.light .text-emerald-300,
+html.light .text-emerald-400,
+[data-theme="clean-light"] .text-emerald-300,
+[data-theme="clean-light"] .text-emerald-400 {
+  color: #047857 !important;
+}
+
 .shadow-emerald-500\/20 {
   box-shadow: 0 4px 14px 0 var(--accent-glow, rgba(16, 185, 129, 0.25)) !important;
 }
@@ -595,9 +799,11 @@
   content: "" !important;
 }
 
-/* Global Font Family Rule */
+/* Global Font Family Rule & Anti-Overflow Guard */
 html, body {
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 button, input, select, textarea {

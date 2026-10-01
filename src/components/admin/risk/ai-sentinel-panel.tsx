@@ -67,7 +67,7 @@ export function AiSentinelPanel() {
   return (
     <div className="space-y-6">
       {/* ── Sentinel Status Header ─────────────────────────────────────────── */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50/60 via-white to-slate-50/60 dark:from-[#141A2E] dark:via-[#101726] dark:to-[#0A0D17] border border-slate-200 dark:border-[#1F2937] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50/60 via-white to-slate-50/60 dark:from-[#141A2E] dark:via-[#101726] dark:to-[#0A0D17] border border-slate-200 dark:border-surface-muted flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
             <ShieldAlert className="w-7 h-7" />
@@ -107,7 +107,7 @@ export function AiSentinelPanel() {
 
       {/* ── Threat Summary Metrics ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-xs">
+        <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Global Threat Score</span>
             <div className="flex items-baseline justify-between">
@@ -125,7 +125,7 @@ export function AiSentinelPanel() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-xs">
+        <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Syndicate Copy Clusters</span>
             <div className="flex items-baseline justify-between">
@@ -138,7 +138,7 @@ export function AiSentinelPanel() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-xs">
+        <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Toxic Latency Scalpers</span>
             <div className="flex items-baseline justify-between">
@@ -151,7 +151,7 @@ export function AiSentinelPanel() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-xs">
+        <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Imminent Breach Risk</span>
             <div className="flex items-baseline justify-between">
@@ -187,8 +187,8 @@ export function AiSentinelPanel() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Table 1: Toxic Latency Scalpers */}
-        <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-xs">
-          <CardHeader className="pb-3 border-b border-slate-100 dark:border-[#1F2937]">
+        <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
+          <CardHeader className="pb-3 border-b border-slate-100 dark:border-surface-muted">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Flame className="w-4 h-4 text-rose-500 dark:text-rose-400" />
@@ -208,7 +208,7 @@ export function AiSentinelPanel() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-100/90 dark:bg-[#0B0F19] text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-[#1F2937]">
+                  <thead className="bg-slate-100/90 dark:bg-background text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-surface-muted">
                     <tr>
                       <th className="p-3">Trader / Email</th>
                       <th className="p-3 text-center">Fast Trades</th>
@@ -216,7 +216,7 @@ export function AiSentinelPanel() {
                       <th className="p-3 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#1F2937]">
+                  <tbody className="divide-y divide-slate-100 dark:divide-surface-muted">
                     {report.toxic_scalpers.map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-gray-800/40">
                         <td className="p-3 font-medium text-slate-900 dark:text-white">
@@ -249,8 +249,8 @@ export function AiSentinelPanel() {
         </Card>
 
         {/* Table 2: Imminent Breach Forecasting */}
-        <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-xs">
-          <CardHeader className="pb-3 border-b border-slate-100 dark:border-[#1F2937]">
+        <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
+          <CardHeader className="pb-3 border-b border-slate-100 dark:border-surface-muted">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <TrendingDown className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
@@ -270,7 +270,7 @@ export function AiSentinelPanel() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-100/90 dark:bg-[#0B0F19] text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-[#1F2937]">
+                  <thead className="bg-slate-100/90 dark:bg-background text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-surface-muted">
                     <tr>
                       <th className="p-3">Trader</th>
                       <th className="p-3 text-center">Current DD</th>
@@ -278,7 +278,7 @@ export function AiSentinelPanel() {
                       <th className="p-3 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#1F2937]">
+                  <tbody className="divide-y divide-slate-100 dark:divide-surface-muted">
                     {report.at_risk_breaches.map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-gray-800/40">
                         <td className="p-3 font-medium text-slate-900 dark:text-white">

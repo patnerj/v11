@@ -10,7 +10,7 @@ import {
   Activity, Target, Award, CheckCircle2, Clock, FileText,
   CreditCard, Wallet, AlertTriangle, Loader2, ExternalLink,
   Lock, RefreshCw, Send, Check, X, Shield, Sparkles, Server,
-  Radio, Terminal, Eye, EyeOff, Save
+  Radio, Terminal, Eye, EyeOff, Save, Layers
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -18,6 +18,7 @@ import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { setSession, clearFxsimCache } from '@/lib/fxsim'
 import { toNum } from '@/lib/format'
+import { cn } from '@/lib/cn'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
 } from '@/components/ui/card'
@@ -89,6 +90,9 @@ export default function Trader360ProfilePage() {
   const [isSavingMt5, setIsSavingMt5] = useState(false)
   const [showMt5Password, setShowMt5Password] = useState(false)
 
+  // Active Challenge Selection State for Multi-Account Switching
+  const [selectedChallengeId, setSelectedChallengeId] = useState<number | null>(null)
+
   // Fetch trader 360 data
   const { data: traderApiData, isLoading, refetch } = useQuery({
     queryKey: ['admin-trader-360', userId],
@@ -115,22 +119,83 @@ export default function Trader360ProfilePage() {
     enabled: userId > 0,
   })
 
+  // Normalize all challenge accounts for this trader
+  const challengesList = useMemo(() => {
+    const list = Array.isArray(traderApiData?.challenges) ? traderApiData.challenges : []
+    if (list.length === 0 && traderApiData?.challenge) {
+      return [traderApiData.challenge]
+    }
+    return list
+  }, [traderApiData])
+
+  // Auto-select primary challenge on initial load
+  useEffect(() => {
+    if (challengesList.length > 0 && selectedChallengeId === null) {
+      const active = challengesList.find((c: any) => c.status === 'active' || c.status === 'funded') || challengesList[0]
+      setSelectedChallengeId(active.id)
+    }
+  }, [challengesList, selectedChallengeId])
+
+  // Fetch real-time challenge metrics for the selected challenge account
+  const { data: selectedChallengeMetrics } = useQuery({
+    queryKey: ['admin-challenge-metrics', selectedChallengeId],
+    queryFn: async () => {
+      if (!selectedChallengeId) return null
+      const res = await api.challengeMetrics(selectedChallengeId)
+      return res.ok ? res.data : null
+    },
+    enabled: !!selectedChallengeId,
+    staleTime: 6000,
+  })
+
   const notFound = userId === 0 || (!isLoading && !traderApiData)
 
   // Normalized Profile Data Model with strict real calculations
   const trader = useMemo(() => {
     const apiUser = traderApiData?.user || traderApiData
-    const challenge = traderApiData?.challenge || traderApiData?.challenges?.[0]
-    const startingBal = Number(challenge?.starting_balance || traderApiData?.account?.starting_balance || 0)
-    const currentBal = Number(challenge?.current_balance || traderApiData?.account?.balance || startingBal || 0)
-    const currentEq = Number(traderApiData?.account?.equity || currentBal || startingBal || 0)
-    const pnl = currentEq - startingBal
-    const pnlPct = startingBal > 0 ? (pnl / startingBal) * 100 : 0
+    const activeChallengeFromList = challengesList.find((c: any) => c.id === selectedChallengeId)
+    const challenge = activeChallengeFromList || traderApiData?.challenge || challengesList[0]
+    const metrics = (selectedChallengeId && selectedChallengeMetrics)
+      ? selectedChallengeMetrics
+      : (selectedChallengeId && selectedChallengeId === traderApiData?.challenge?.id ? traderApiData?.metrics : null)
+
+    const startingBal = Number(metrics?.starting_balance || challenge?.starting_balance || traderApiData?.account?.starting_balance || 0)
+    const currentBal = Number(metrics?.balance || challenge?.current_balance || traderApiData?.account?.balance || startingBal || 0)
+    const currentEq = Number(metrics?.equity || traderApiData?.account?.equity || currentBal || startingBal || 0)
+    const pnl = metrics?.current_profit !== undefined ? Number(metrics.current_profit) : (currentEq - startingBal)
+    const pnlPct = metrics?.current_profit_pct !== undefined ? Number(metrics.current_profit_pct) : (startingBal > 0 ? (pnl / startingBal) * 100 : 0)
 
     const profitSplit = Number(challenge?.custom_profit_split || challenge?.plan_profit_split || 80)
-    const dailyDD = Number(challenge?.custom_daily_dd || 5.0)
-    const maxDD = Number(challenge?.custom_max_dd || 10.0)
-    const minDays = Number(challenge?.custom_min_days || challenge?.min_trading_days || 5)
+    const dailyDDLimit = Number(metrics?.daily_dd_pct || challenge?.custom_daily_dd || 5.0)
+    const maxDDLimit = Number(metrics?.max_dd_pct || challenge?.custom_max_dd || 10.0)
+    const minDays = Number(metrics?.min_trading_days || challenge?.custom_min_days || challenge?.min_trading_days || 5)
+
+    // Accurate Daily Drawdown (from metrics or authoritative fallback formula)
+    const dailyStartBal = Number(challenge?.daily_start_balance || startingBal)
+    const fallbackDailyLoss = Math.max(0, dailyStartBal - Math.min(currentBal, currentEq))
+    const fallbackDailyDdUsed = dailyStartBal > 0 ? (fallbackDailyLoss / dailyStartBal) * 100 : 0
+    const dailyDD = metrics?.daily_dd_used_pct !== undefined ? Number(metrics.daily_dd_used_pct) : fallbackDailyDdUsed
+    const dailyDDProgress = metrics?.daily_dd_progress !== undefined ? Number(metrics.daily_dd_progress) : (dailyDD / (dailyDDLimit || 1)) * 100
+
+    // Accurate Max Drawdown (from metrics or authoritative fallback formula)
+    let fallbackMaxLoss = Math.max(0, startingBal - Math.min(currentBal, currentEq))
+    const isTrailing = ['trailing', 'trailing_equity', 'eod_trailing', 'trailing_balance'].includes(challenge?.drawdown_type || '')
+    if (isTrailing && challenge?.trailing_dd_floor && Number(challenge.trailing_dd_floor) > 0) {
+      const hwm = Math.max(Number(challenge.equity_hwm || startingBal), Math.min(currentBal, currentEq))
+      fallbackMaxLoss = Math.max(0, hwm - Math.min(currentBal, currentEq))
+    }
+    const fallbackMaxDdUsed = startingBal > 0 ? (fallbackMaxLoss / startingBal) * 100 : 0
+    const maxDD = metrics?.max_dd_used_pct !== undefined ? Number(metrics.max_dd_used_pct) : fallbackMaxDdUsed
+    const maxDDProgress = metrics?.max_dd_progress !== undefined ? Number(metrics.max_dd_progress) : (maxDD / (maxDDLimit || 1)) * 100
+
+    // Profit Target & Trading Days
+    const profitTargetPct = Number(metrics?.profit_target_pct || challenge?.p1_profit_target || 8.0)
+    const profitTargetVal = Number(metrics?.profit_target_val || (startingBal * profitTargetPct / 100))
+    const profitProgress = metrics?.profit_progress !== undefined ? Number(metrics.profit_progress) : (profitTargetPct > 0 ? Math.min(100, Math.max(0, (pnlPct / profitTargetPct) * 100)) : 0)
+
+    const tradingDays = Number(metrics?.trading_days_done || challenge?.trading_days || 0)
+    const tradingDaysProgress = minDays > 0 ? Math.min(100, (tradingDays / minDays) * 100) : 100
+
     const newsTrading = challenge?.custom_news_trading !== undefined && challenge?.custom_news_trading !== null
       ? Boolean(Number(challenge.custom_news_trading))
       : Boolean(challenge?.news_trading ?? true)
@@ -138,7 +203,12 @@ export default function Trader360ProfilePage() {
       ? Boolean(Number(challenge.custom_weekend_holding))
       : Boolean(challenge?.weekend_holding ?? false)
 
-    const tradesList = traderApiData?.trades || []
+    const tradesList = (traderApiData?.trades || []).filter((t: any) => {
+      if (challenge?.fxsim_account_id) {
+        return Number(t.account_id) === Number(challenge.fxsim_account_id)
+      }
+      return true
+    })
     const wins = tradesList.filter((t: any) => Number(t.pnl || t.profit || 0) > 0).length
     const losses = tradesList.filter((t: any) => Number(t.pnl || t.profit || 0) < 0).length
     const totalTrades = tradesList.length
@@ -154,7 +224,7 @@ export default function Trader360ProfilePage() {
       name: apiUser?.display_name || apiUser?.name || apiUser?.username || `Trader #${userId}`,
       email: apiUser?.email || apiUser?.user_email || '',
       username: apiUser?.username || apiUser?.user_login || `user_${userId}`,
-      account_id: traderApiData?.account?.account_id || challenge?.id || `${userId}`,
+      account_id: challenge?.fxsim_account_id || challenge?.id || traderApiData?.account?.account_id || `${userId}`,
       plan_name: challenge?.plan_name || 'Standard Evaluation',
       phase: Number(challenge?.phase || 1),
       phase_label: challenge?.status === 'funded' ? 'Funded Live' : (challenge?.phase ? `Phase ${challenge.phase}` : (challenge?.status || 'Active')),
@@ -165,10 +235,18 @@ export default function Trader360ProfilePage() {
       starting_balance: startingBal,
       pnl: pnl,
       pnl_pct: pnlPct,
-      daily_dd: challenge?.daily_drawdown_pct ? Number(challenge.daily_drawdown_pct) : 0,
-      daily_dd_limit: dailyDD,
-      max_dd: challenge?.max_drawdown_pct ? Number(challenge.max_drawdown_pct) : 0,
-      max_dd_limit: maxDD,
+      daily_dd: dailyDD,
+      daily_dd_limit: dailyDDLimit,
+      daily_dd_progress: dailyDDProgress,
+      max_dd: maxDD,
+      max_dd_limit: maxDDLimit,
+      max_dd_progress: maxDDProgress,
+      profit_target_pct: profitTargetPct,
+      profit_target_val: profitTargetVal,
+      profit_progress: profitProgress,
+      trading_days: tradingDays,
+      min_trading_days: minDays,
+      trading_days_progress: tradingDaysProgress,
       min_days: minDays,
       news_trading: newsTrading,
       weekend_holding: weekendHolding,
@@ -185,9 +263,9 @@ export default function Trader360ProfilePage() {
       mt5_server: mt5Server,
       mt5_account_type: mt5AccountType,
     }
-  }, [traderApiData, userId, isBanned])
+  }, [traderApiData, userId, isBanned, challengesList, selectedChallengeId, selectedChallengeMetrics])
 
-  // Sync initial note and MT5 credentials from API
+  // Sync initial note from API
   useEffect(() => {
     if (traderApiData?.note && typeof traderApiData.note === 'string') {
       setNoteInput(traderApiData.note)
@@ -201,7 +279,11 @@ export default function Trader360ProfilePage() {
         }
       ])
     }
-    const ch = traderApiData?.challenge || traderApiData?.challenges?.[0]
+  }, [traderApiData?.note])
+
+  // Sync MT5 form credentials when selected challenge changes
+  useEffect(() => {
+    const ch = challengesList.find((c: any) => c.id === selectedChallengeId) || traderApiData?.challenge || challengesList[0]
     const u = traderApiData?.user || traderApiData
     if (ch || u) {
       setMt5Form({
@@ -211,7 +293,7 @@ export default function Trader360ProfilePage() {
         account_type: String(ch?.mt5_account_type || u?.mt5_account_type || 'demo'),
       })
     }
-  }, [traderApiData])
+  }, [selectedChallengeId, challengesList, traderApiData])
 
   // Handlers
   const handleSaveNote = async () => {
@@ -257,6 +339,7 @@ export default function Trader360ProfilePage() {
         mt5_password: mt5Form.password.trim() || undefined,
         mt5_server: mt5Form.server.trim(),
         mt5_account_type: mt5Form.account_type,
+        challenge_id: selectedChallengeId || undefined,
       })
       if (res.ok) {
         toast.success(`MT5 Account #${mt5Form.login.trim()} linked & credentials saved!`)
@@ -361,7 +444,7 @@ export default function Trader360ProfilePage() {
       key: 'id',
       header: 'Reference',
       render: (row) => (
-        <span className="tabular font-medium text-xs text-gray-300 bg-[#0B0F19] px-2 py-0.5 rounded border border-[#1F2937]">
+        <span className="tabular font-medium text-xs text-text bg-surface-muted px-2 py-0.5 rounded border border-border">
           {row.id}
         </span>
       )
@@ -513,7 +596,7 @@ export default function Trader360ProfilePage() {
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
       
       {/* ── 1. Trader Hero Header ─────────────────────────────────────────── */}
-      <div className="space-y-4 border-b border-[#1F2937]/70 pb-6">
+      <div className="space-y-4 border-b border-border/70 pb-6">
         
         {/* Navigation Link */}
         <Link 
@@ -630,6 +713,56 @@ export default function Trader360ProfilePage() {
         </div>
       </div>
 
+      {/* ── Multi-Challenge Account Switcher (Task 2.4) ────────────────────── */}
+      {challengesList.length > 0 && (
+        <div className="flex flex-col gap-2 p-3 bg-surface-muted/60 border border-border rounded-xl">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-text-muted flex items-center gap-1.5 uppercase tracking-wider">
+              <Layers className="h-3.5 w-3.5 text-cyan-400" />
+              Challenge Accounts ({challengesList.length})
+            </span>
+            <span className="text-[11px] text-text-subtle">
+              Select an account to inspect specific metrics, risk state & MT5 credentials
+            </span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+            {challengesList.map((ch: any) => {
+              const isSelected = selectedChallengeId === ch.id
+              const balanceStr = ch.starting_balance ? `$${Number(ch.starting_balance).toLocaleString()}` : ''
+              const planTitle = ch.plan_name || 'Standard'
+              const status = ch.status || 'active'
+              const isFunded = status === 'funded'
+              const isPassed = status === 'passed'
+              const isFailed = status === 'failed' || status === 'breached'
+
+              return (
+                <button
+                  key={ch.id}
+                  type="button"
+                  onClick={() => setSelectedChallengeId(ch.id)}
+                  className={cn(
+                    'px-3.5 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 border whitespace-nowrap cursor-pointer',
+                    isSelected
+                      ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-400 dark:text-cyan-200 shadow-sm shadow-cyan-500/10'
+                      : 'bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted'
+                  )}
+                >
+                  <span className="font-semibold text-text">#{ch.id}</span>
+                  <span className="text-text-muted">· {planTitle} {balanceStr ? `(${balanceStr})` : ''}</span>
+                  <Badge
+                    tone={isFunded ? 'success' : isPassed ? 'info' : isFailed ? 'danger' : 'accent'}
+                    size="sm"
+                    className="text-[10px] px-1.5 py-0 h-4 border uppercase tracking-wider font-semibold"
+                  >
+                    {isFunded ? 'Funded' : isPassed ? 'Passed' : isFailed ? 'Failed' : `Phase ${ch.phase || 1}`}
+                  </Badge>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── 2. Performance & Financial Metrics Grid (8 KPI Cards) ─────────── */}
       <section>
         <div className="flex items-center justify-between mb-4">
@@ -643,22 +776,22 @@ export default function Trader360ProfilePage() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Balance */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Current Balance</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-white">
+              <span className="text-xs text-text-muted font-medium">Current Balance</span>
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-text">
                 {formatExactCurrency(trader.balance)}
               </div>
-              <p className="text-[11px] text-gray-500 mt-1 tabular font-medium">
+              <p className="text-[11px] text-text-muted mt-1 tabular font-medium">
                 Start: {formatCurrency(trader.starting_balance)}
               </p>
             </CardContent>
           </Card>
 
           {/* Card 2: Equity */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Live Equity</span>
+              <span className="text-xs text-text-muted font-medium">Live Equity</span>
               <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-emerald-400 flex items-center gap-1.5">
                 {formatExactCurrency(trader.equity)}
               </div>
@@ -670,9 +803,9 @@ export default function Trader360ProfilePage() {
           </Card>
 
           {/* Card 3: Realised PnL */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Realised PnL ($)</span>
+              <span className="text-xs text-text-muted font-medium">Realised PnL ($)</span>
               <div className={`mt-2 text-xl sm:text-2xl font-bold tabular ${trader.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {trader.pnl >= 0 ? '+' : ''}{formatExactCurrency(trader.pnl)}
               </div>
@@ -683,67 +816,67 @@ export default function Trader360ProfilePage() {
           </Card>
 
           {/* Card 4: Daily Drawdown */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Daily Drawdown</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-gray-100">
-                {toNum(trader.daily_dd).toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.daily_dd_limit}% Max</span>
+              <span className="text-xs text-text-muted font-medium">Daily Drawdown</span>
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-text">
+                {toNum(trader.daily_dd).toFixed(2)}% <span className="text-xs text-text-muted">/ {trader.daily_dd_limit}% Max</span>
               </div>
               <Badge tone={trader.daily_dd > trader.daily_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 tabular font-semibold text-[10px]">
-                {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(1)}% Headroom
+                {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(2)}% Headroom
               </Badge>
             </CardContent>
           </Card>
 
           {/* Card 5: Max Drawdown */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Total Trailing DD</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-gray-100">
-                {toNum(trader.max_dd).toFixed(1)}% <span className="text-xs text-gray-500">/ {trader.max_dd_limit}% Max</span>
+              <span className="text-xs text-text-muted font-medium">Total Trailing DD</span>
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-text">
+                {toNum(trader.max_dd).toFixed(2)}% <span className="text-xs text-text-muted">/ {trader.max_dd_limit}% Max</span>
               </div>
               <Badge tone={trader.max_dd > trader.max_dd_limit * 0.8 ? 'danger' : 'accent'} size="sm" className="mt-1 tabular font-semibold text-[10px]">
-                {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(1)}% Headroom
+                {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(2)}% Headroom
               </Badge>
             </CardContent>
           </Card>
 
           {/* Card 6: Win Rate */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Win Rate</span>
+              <span className="text-xs text-text-muted font-medium">Win Rate</span>
               <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-emerald-400">
                 {trader.win_rate}%
               </div>
-              <p className="text-[11px] text-gray-500 mt-1 tabular font-medium">
+              <p className="text-[11px] text-text-muted mt-1 tabular font-medium">
                 {trader.wins} Wins • {trader.losses} Losses
               </p>
             </CardContent>
           </Card>
 
           {/* Card 7: Total Trades */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Total Executions</span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-gray-100">
+              <span className="text-xs text-text-muted font-medium">Total Executions</span>
+              <div className="mt-2 text-xl sm:text-2xl font-bold tabular text-text">
                 {trader.total_trades} Trades
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">
+              <p className="text-[11px] text-text-muted mt-1">
                 Closed positions history
               </p>
             </CardContent>
           </Card>
 
           {/* Card 8: Risk Rating */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-border">
             <CardContent className="p-4">
-              <span className="text-xs text-gray-400 font-medium">Calculated Risk Level</span>
+              <span className="text-xs text-text-muted font-medium">Calculated Risk Level</span>
               <div className="mt-2 flex items-center gap-2">
                 <Badge tone={trader.risk_level === 'High Risk' ? 'danger' : 'success'} size="md" pulsing className="font-bold text-xs px-2.5 py-1">
                   {trader.risk_level}
                 </Badge>
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">
+              <p className="text-[11px] text-text-muted mt-1">
                 {traderApiData?.breaches?.length ? 'Infractions logged' : 'Compliant profile'}
               </p>
             </CardContent>
@@ -759,15 +892,15 @@ export default function Trader360ProfilePage() {
         <div className="lg:col-span-2 space-y-6">
 
           {/* ── MT5 BROKER TELEMETRY & ACCOUNT BRIDGE CARD ────────────────────── */}
-          <Card className="bg-[#111827] border-cyan-500/30 shadow-lg shadow-cyan-950/20">
+          <Card className="bg-surface border-cyan-500/30 shadow-lg shadow-cyan-950/20">
             <CardHeader className="border-b border-cyan-500/20 pb-4 bg-gradient-to-r from-cyan-950/30 via-transparent to-transparent">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-1">
-                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                  <CardTitle className="text-base text-text flex items-center gap-2">
                     <Server className="h-5 w-5 text-cyan-400" />
                     <span>MetaTrader 5 Account & Telemetry Bridge</span>
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-text-muted">
                     Assign and bind MT5 broker credentials so the local Python Sync Daemon streams live equity and closed deals to this trader.
                   </CardDescription>
                 </div>
@@ -789,7 +922,7 @@ export default function Trader360ProfilePage() {
                 
                 {/* MT5 Login */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-text flex items-center gap-1.5">
                     <Hash className="h-3.5 w-3.5 text-cyan-400" />
                     MT5 Account Number / Login ID
                   </Label>
@@ -797,14 +930,14 @@ export default function Trader360ProfilePage() {
                     placeholder="e.g. 10048291"
                     value={mt5Form.login}
                     onChange={(e) => setMt5Form({ ...mt5Form, login: e.target.value })}
-                    className="bg-[#0B0F19] border-[#1F2937] tabular font-medium text-sm text-cyan-300"
+                    className="bg-surface-muted border-border tabular font-medium text-sm text-cyan-500 dark:text-cyan-300"
                   />
-                  <span className="text-[10px] text-gray-500">Your broker demo or live login ID</span>
+                  <span className="text-[10px] text-text-subtle">Your broker demo or live login ID</span>
                 </div>
 
                 {/* MT5 Server */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-text flex items-center gap-1.5">
                     <Server className="h-3.5 w-3.5 text-cyan-400" />
                     Broker Server Name
                   </Label>
@@ -812,14 +945,14 @@ export default function Trader360ProfilePage() {
                     placeholder="e.g. MetaQuotes-Demo or Exness-Trial"
                     value={mt5Form.server}
                     onChange={(e) => setMt5Form({ ...mt5Form, server: e.target.value })}
-                    className="bg-[#0B0F19] border-[#1F2937] font-medium text-sm text-slate-200"
+                    className="bg-surface-muted border-border font-medium text-sm text-text"
                   />
-                  <span className="text-[10px] text-gray-500">Exact MT5 broker server name</span>
+                  <span className="text-[10px] text-text-subtle">Exact MT5 broker server name</span>
                 </div>
 
                 {/* MT5 Password */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-text flex items-center gap-1.5">
                     <KeyRound className="h-3.5 w-3.5 text-cyan-400" />
                     MT5 Master Password
                   </Label>
@@ -829,34 +962,34 @@ export default function Trader360ProfilePage() {
                       placeholder={trader.mt5_login ? '•••••••• (Leave blank to keep unchanged)' : 'Enter broker trader password'}
                       value={mt5Form.password}
                       onChange={(e) => setMt5Form({ ...mt5Form, password: e.target.value })}
-                      className="bg-[#0B0F19] border-[#1F2937] font-medium text-sm text-slate-200 pr-10"
+                      className="bg-surface-muted border-border font-medium text-sm text-text pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowMt5Password(!showMt5Password)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
                     >
                       {showMt5Password ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <span className="text-[10px] text-gray-500">Used by Python sync daemon to authenticate</span>
+                  <span className="text-[10px] text-text-subtle">Used by Python sync daemon to authenticate</span>
                 </div>
 
                 {/* Account Environment */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-text flex items-center gap-1.5">
                     <Shield className="h-3.5 w-3.5 text-cyan-400" />
                     Account Type / Environment
                   </Label>
                   <select
                     value={mt5Form.account_type}
                     onChange={(e) => setMt5Form({ ...mt5Form, account_type: e.target.value })}
-                    className="w-full h-10 rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-xs font-medium text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                    className="w-full h-10 rounded-lg border border-border bg-surface-muted px-3 py-2 text-xs font-medium text-text focus:outline-none focus:border-cyan-500 cursor-pointer"
                   >
                     <option value="demo">Demo / Evaluation Simulation</option>
                     <option value="real">Real / Funded Live Broker</option>
                   </select>
-                  <span className="text-[10px] text-gray-500">Demo accounts run through simulated risk rules</span>
+                  <span className="text-[10px] text-text-subtle">Demo accounts run through simulated risk rules</span>
                 </div>
 
               </div>
@@ -899,15 +1032,15 @@ export default function Trader360ProfilePage() {
           </Card>
           
           {/* Active Challenge Parameters & Progress Bars */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                  <CardTitle className="text-base text-text flex items-center gap-2">
                     <Target className="h-4 w-4 text-emerald-400" />
                     Account Progression & Rule Guardrails
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-text-muted">
                     Live target attainment, drawdown limits, and trading days tracking
                   </CardDescription>
                 </div>
@@ -922,52 +1055,87 @@ export default function Trader360ProfilePage() {
               {/* Progress 1: Profit Target */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-gray-200">Profit Target Progress</span>
-                  <span className="tabular font-bold text-emerald-400">
+                  <span className="font-semibold text-text">Profit Target Progress</span>
+                  <span className={cn("tabular font-bold", trader.pnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
                     {formatExactCurrency(trader.pnl)} ({toNum(trader.pnl_pct).toFixed(2)}%)
                   </span>
                 </div>
-                <Progress value={Math.min(100, Math.max(0, toNum(trader.pnl_pct) * 10))} tone="success" className="h-2.5" />
-                <p className="text-[11px] text-gray-500 flex justify-between">
+                <Progress value={trader.profit_progress} tone={trader.profit_progress >= 100 ? "success" : "accent"} className="h-2.5" />
+                <div className="text-[11px] text-text-subtle flex justify-between items-center">
                   <span>Starting Balance: {formatCurrency(trader.starting_balance)}</span>
-                  <span className="text-emerald-400 font-medium">Target: +8.0% ($8,000.00)</span>
-                </p>
+                  <span className="text-emerald-400 font-medium">
+                    Target: +{trader.profit_target_pct}% ({formatCurrency(trader.profit_target_val)})
+                  </span>
+                </div>
               </div>
 
               {/* Progress 2: Daily Drawdown Limit */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-gray-200">Daily Drawdown Ceiling (Max {trader.daily_dd_limit}%)</span>
-                  <span className="tabular font-semibold text-gray-300">
-                    {toNum(trader.daily_dd).toFixed(1)}% used • {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(1)}% remaining
+                  <span className="font-semibold text-text">Daily Drawdown Ceiling (Max {trader.daily_dd_limit}%)</span>
+                  <span className="tabular font-semibold text-text-muted">
+                    {toNum(trader.daily_dd).toFixed(2)}% used • {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(2)}% remaining
                   </span>
                 </div>
-                <Progress value={(toNum(trader.daily_dd) / (toNum(trader.daily_dd_limit) || 1)) * 100} tone="accent" className="h-2.5" />
+                <Progress 
+                  value={trader.daily_dd_progress} 
+                  tone={trader.daily_dd >= trader.daily_dd_limit * 0.8 ? "danger" : trader.daily_dd >= trader.daily_dd_limit * 0.5 ? "warn" : "accent"} 
+                  className="h-2.5" 
+                />
+                <div className="text-[11px] text-text-subtle flex justify-between items-center">
+                  <span>Daily Loss: {formatCurrency(Math.max(0, (toNum(trader.starting_balance) * toNum(trader.daily_dd) / 100)))}</span>
+                  <span className="text-text-muted">Headroom: {Math.max(0, toNum(trader.daily_dd_limit) - toNum(trader.daily_dd)).toFixed(2)}%</span>
+                </div>
               </div>
 
               {/* Progress 3: Total Trailing Drawdown */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-gray-200">Max Trailing Drawdown (Max {trader.max_dd_limit}%)</span>
-                  <span className="tabular font-semibold text-gray-300">
-                    {toNum(trader.max_dd).toFixed(1)}% used • {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(1)}% remaining
+                  <span className="font-semibold text-text">Max Trailing Drawdown (Max {trader.max_dd_limit}%)</span>
+                  <span className="tabular font-semibold text-text-muted">
+                    {toNum(trader.max_dd).toFixed(2)}% used • {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(2)}% remaining
                   </span>
                 </div>
-                <Progress value={(toNum(trader.max_dd) / (toNum(trader.max_dd_limit) || 1)) * 100} tone="accent" className="h-2.5" />
+                <Progress 
+                  value={trader.max_dd_progress} 
+                  tone={trader.max_dd >= trader.max_dd_limit * 0.8 ? "danger" : trader.max_dd >= trader.max_dd_limit * 0.5 ? "warn" : "accent"} 
+                  className="h-2.5" 
+                />
+                <div className="text-[11px] text-text-subtle flex justify-between items-center">
+                  <span>Max Loss: {formatCurrency(Math.max(0, (toNum(trader.starting_balance) * toNum(trader.max_dd) / 100)))}</span>
+                  <span className="text-text-muted">Headroom: {Math.max(0, toNum(trader.max_dd_limit) - toNum(trader.max_dd)).toFixed(2)}%</span>
+                </div>
+              </div>
+
+              {/* Progress 4: Minimum Trading Days */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-semibold text-text">Minimum Trading Days</span>
+                  <span className="tabular font-semibold text-text-muted">
+                    {trader.trading_days} / {trader.min_trading_days} Days ({trader.trading_days_progress.toFixed(0)}%)
+                  </span>
+                </div>
+                <Progress value={trader.trading_days_progress} tone={trader.trading_days >= trader.min_trading_days ? "success" : "info"} className="h-2.5" />
+                <div className="text-[11px] text-text-subtle flex justify-between items-center">
+                  <span>Phase: {trader.phase_label}</span>
+                  <span className={trader.trading_days >= trader.min_trading_days ? "text-emerald-400 font-medium" : "text-text-muted"}>
+                    {trader.trading_days >= trader.min_trading_days ? "✓ Requirement Met" : `${Math.max(0, trader.min_trading_days - trader.trading_days)} days needed`}
+                  </span>
+                </div>
               </div>
 
             </CardContent>
           </Card>
 
           {/* KYC Document Verification Status */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-3 flex flex-row items-center justify-between">
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-3 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                <CardTitle className="text-base text-text flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                   KYC & Identity Verification
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-400">
+                <CardDescription className="text-xs text-text-muted">
                   Status of identity documentation
                 </CardDescription>
               </div>
@@ -975,7 +1143,7 @@ export default function Trader360ProfilePage() {
                 <Badge tone={trader.kyc_status === 'verified' ? 'success' : trader.kyc_status === 'pending' ? 'warning' : 'neutral'} size="sm">
                   {trader.kyc_status === 'verified' ? 'Verified' : trader.kyc_status === 'pending' ? 'Pending Review' : 'Unverified'}
                 </Badge>
-                <Button size="sm" asChild variant="outline" className="border-[#1F2937] text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 gap-1.5 h-7 text-xs">
+                <Button size="sm" asChild variant="outline" className="border-border text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 gap-1.5 h-7 text-xs">
                   <Link href="/admin/kyc">
                     <ExternalLink className="h-3 w-3" />
                     Review in KYC Hub
@@ -986,33 +1154,33 @@ export default function Trader360ProfilePage() {
 
             <CardContent className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-lg border border-[#1F2937] bg-[#0B0F19] flex items-center gap-3">
+                <div className="p-3 rounded-lg border border-border bg-surface-muted flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                     <Check className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-200">Government ID</p>
-                    <p className="text-[11px] text-gray-500">{trader.kyc_status === 'verified' ? 'Approved' : 'Pending'}</p>
+                    <p className="text-xs font-semibold text-text">Government ID</p>
+                    <p className="text-[11px] text-text-muted">{trader.kyc_status === 'verified' ? 'Approved' : 'Pending'}</p>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg border border-[#1F2937] bg-[#0B0F19] flex items-center gap-3">
+                <div className="p-3 rounded-lg border border-border bg-surface-muted flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                     <Check className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-200">Proof of Address</p>
-                    <p className="text-[11px] text-gray-500">{trader.kyc_status === 'verified' ? 'Approved' : 'Pending'}</p>
+                    <p className="text-xs font-semibold text-text">Biometric Selfie</p>
+                    <p className="text-[11px] text-text-muted">{trader.kyc_status === 'verified' ? 'Approved' : 'Pending'}</p>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg border border-[#1F2937] bg-[#0B0F19] flex items-center gap-3">
+                <div className="p-3 rounded-lg border border-border bg-surface-muted flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                     <Check className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-200">Review Status</p>
-                    <p className="text-[11px] text-gray-500">{trader.kyc_reviewer}</p>
+                    <p className="text-xs font-semibold text-text">Review Status</p>
+                    <p className="text-[11px] text-text-muted">{trader.kyc_reviewer}</p>
                   </div>
                 </div>
               </div>
@@ -1020,14 +1188,14 @@ export default function Trader360ProfilePage() {
           </Card>
 
           {/* Payment & Payout History Table */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-3 flex flex-row items-center justify-between">
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-3 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                <CardTitle className="text-base text-text flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-emerald-400" />
                   Financial History ({txData.length})
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-400">
+                <CardDescription className="text-xs text-text-muted">
                   Challenge purchases, fee settlements, and profit split payouts
                 </CardDescription>
               </div>
@@ -1045,14 +1213,14 @@ export default function Trader360ProfilePage() {
 
           {/* Hard Breach Violations (if any) */}
           {traderApiData?.breaches && traderApiData.breaches.length > 0 && (
-            <Card className="bg-[#111827] border-red-500/30">
+            <Card className="bg-surface border-red-500/30">
               <CardHeader className="border-b border-red-500/20 pb-3 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-base text-red-400 flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-red-400" />
                     Breach Audit Trail ({traderApiData.breaches.length})
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-text-muted">
                     Hard risk violations and auto-liquidation records
                   </CardDescription>
                 </div>
@@ -1063,15 +1231,15 @@ export default function Trader360ProfilePage() {
               <CardContent className="p-4">
                 <div className="space-y-2">
                   {traderApiData.breaches.map((b: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-[#0B0F19] rounded-xl border border-red-500/20 flex items-center justify-between">
+                    <div key={idx} className="p-3 bg-surface-muted rounded-xl border border-red-500/20 flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-red-400 uppercase tracking-wide">{b.rule_type || b.reason}</span>
-                          <span className="text-[10px] text-gray-500 tabular font-medium">Challenge #{b.challenge_id}</span>
+                          <span className="text-[10px] text-text-muted tabular font-medium">Challenge #{b.challenge_id}</span>
                         </div>
-                        <p className="text-xs text-gray-300 mt-0.5">{b.description || 'Threshold breached'}</p>
+                        <p className="text-xs text-text mt-0.5">{b.description || 'Threshold breached'}</p>
                       </div>
-                      <span className="text-[10px] text-gray-500 tabular font-medium">{b.created_at ? new Date(b.created_at).toLocaleString() : 'Recent'}</span>
+                      <span className="text-[10px] text-text-muted tabular font-medium">{b.created_at ? new Date(b.created_at).toLocaleString() : 'Recent'}</span>
                     </div>
                   ))}
                 </div>
@@ -1085,13 +1253,13 @@ export default function Trader360ProfilePage() {
         <div className="space-y-6">
           
           {/* Private Administrative Notes */}
-          <Card className="bg-[#111827] border-[#1F2937] flex flex-col">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-3">
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+          <Card className="bg-surface border-border flex flex-col">
+            <CardHeader className="border-b border-border/60 pb-3">
+              <CardTitle className="text-base text-text flex items-center gap-2">
                 <FileText className="h-4 w-4 text-emerald-400" />
                 Private Admin Notes
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 Internal compliance logs (hidden from trader)
               </CardDescription>
             </CardHeader>
@@ -1122,25 +1290,25 @@ export default function Trader360ProfilePage() {
               </div>
 
               {/* Note History */}
-              <div className="space-y-3 pt-2 border-t border-[#1F2937]/60">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">
+              <div className="space-y-3 pt-2 border-t border-border/60">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted block">
                   Audit History ({adminNotesList.length})
                 </span>
                 
                 {adminNotesList.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic py-2">No administrative notes recorded yet.</p>
+                  <p className="text-xs text-text-muted italic py-2">No administrative notes recorded yet.</p>
                 ) : (
                   <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
                     {adminNotesList.map((note) => (
                       <div 
                         key={note.id}
-                        className="p-3 rounded-lg border border-[#1F2937] bg-[#0B0F19] space-y-1.5"
+                        className="p-3 rounded-lg border border-border bg-surface-muted space-y-1.5"
                       >
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-semibold text-emerald-400">{note.author}</span>
-                          <span className="text-[10px] text-gray-500 tabular font-medium">{note.date}</span>
+                          <span className="text-[10px] text-text-muted tabular font-medium">{note.date}</span>
                         </div>
-                        <p className="text-xs text-gray-300 leading-relaxed">{note.content}</p>
+                        <p className="text-xs text-text leading-relaxed">{note.content}</p>
                       </div>
                     ))}
                   </div>
@@ -1151,22 +1319,22 @@ export default function Trader360ProfilePage() {
           </Card>
 
           {/* Activity Audit Timeline */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-3">
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+          <Card className="bg-surface border-border">
+            <CardHeader className="border-b border-border/60 pb-3">
+              <CardTitle className="text-base text-text flex items-center gap-2">
                 <Clock className="h-4 w-4 text-emerald-400" />
                 Account Audit Timeline
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 Chronological system & trading milestones
               </CardDescription>
             </CardHeader>
 
             <CardContent className="p-5">
               {timelineEvents.length === 0 ? (
-                <p className="text-xs text-gray-500 italic">No milestone events recorded yet.</p>
+                <p className="text-xs text-text-muted italic">No milestone events recorded yet.</p>
               ) : (
-                <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#1F2937]">
+                <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-border">
                   {timelineEvents.map((event: any, idx: number) => {
                     const Icon = event.icon
                     return (
@@ -1179,7 +1347,7 @@ export default function Trader360ProfilePage() {
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                             : event.tone === 'info'
                             ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
-                            : 'bg-[#111827] border-slate-700 text-gray-400'
+                            : 'bg-surface border-border text-text-muted'
                         }`}>
                           <Icon className="h-3 w-3" />
                         </div>

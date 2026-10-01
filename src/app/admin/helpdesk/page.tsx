@@ -23,19 +23,27 @@ import { toast } from 'sonner'
 import { useBranding } from '@/store/branding'
 import { useAuth } from '@/store/auth'
 
-// Canned Response Templates
+// Canned Response Templates (1-Click Quick Replies)
 const CANNED_RESPONSES = [
   {
-    title: 'KYC Instructions',
-    text: 'Hello, please submit a clear government-issued Photo ID (Passport or Driver License) along with a recent Utility Bill or Bank Statement (dated within the last 90 days) via the KYC tab in your dashboard for immediate compliance review.'
+    title: 'Password Reset Info',
+    text: 'Hello, to reset your account password, please click "Forgot Password" on the login screen or navigate to Settings > Security in your trader dashboard. A secure one-time password reset token has been dispatched to your registered email address. If you do not receive it within 5 minutes, please check your spam/junk folder.'
   },
   {
-    title: 'Rule Breach Explained',
-    text: 'Hello, our automated risk engine detected a drawdown breach exceeding the maximum daily or total equity threshold. As per our Trading Rules, the account has been transitioned to breached status. You can view the exact trade logs in your Account Analytics.'
+    title: 'Daily DD Explanation',
+    text: 'Hello, our risk engine tracks Daily Drawdown relative to your starting balance or equity baseline captured at 00:00 UTC server midnight. Any floating losses and closed positions that exceed your plan\'s daily threshold trigger a protective stop. You can track your exact daily floor and reset countdown timer in your WebTrader terminal and dashboard.'
   },
   {
-    title: 'Payout Processing Note',
-    text: 'Hello, your payout request is currently undergoing final risk audit and dual-admin compliance review. Payouts are normally disbursed within 24 business hours to your designated crypto wallet or bank destination.'
+    title: 'KYC Verified',
+    text: 'Hello, congratulations! Your identity verification documents have been fully audited and approved by our compliance department. Your account status is now officially updated to KYC Verified. You have full clearance to request profit split payouts upon reaching qualifying milestones.'
+  },
+  {
+    title: 'Weekend Rule Notice',
+    text: 'Hello, as per our Trading Rules, position holding over the weekend depends on your challenge plan tier. Standard evaluation accounts require all open positions to be closed before Friday 21:00 UTC market close. Swing plans permit weekend holding without restriction. Please review your plan specifications in your dashboard.'
+  },
+  {
+    title: 'Payout Schedule Note',
+    text: 'Hello, your payout request is currently undergoing final risk audit and dual-admin compliance review. Profit split disbursements are processed every Tuesday & Friday via USDT TRC-20 directly to your verified destination address.'
   },
   {
     title: 'MT5 EA Latency Checked',
@@ -514,7 +522,7 @@ export default function AdminHelpdeskPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start">
         
         {/* ── Left Column: Ticket Queue (4 Cols) ─────────────────────────── */}
-        <div className="lg:col-span-4 space-y-2.5">
+        <div className={`lg:col-span-4 space-y-2.5 ${selectedTicketId ? 'hidden lg:block' : ''}`}>
           {/* Search & Category Filter */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -735,7 +743,7 @@ export default function AdminHelpdeskPage() {
         </div>
 
         {/* ── Right Column: Conversation & Response Panel (8 Cols - Highly Spacious) ── */}
-        <div className="lg:col-span-8">
+        <div className={`lg:col-span-8 ${!selectedTicketId ? 'hidden lg:block' : ''}`}>
           {activeTicket ? (
             <Card className="bg-surface border-border flex flex-col h-[calc(100vh-210px)] min-h-[580px] justify-between overflow-hidden shadow-sm">
               
@@ -743,6 +751,16 @@ export default function AdminHelpdeskPage() {
               <CardHeader className="border-b border-border py-3 px-5 shrink-0 bg-surface-muted/50">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
+                    <div className="flex items-center gap-2 mb-2 lg:hidden">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTicketId(null)}
+                        className="h-8 -ml-2 text-xs text-text-muted hover:text-text gap-1.5"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Inquiries
+                      </Button>
+                    </div>
                     <div className="flex items-center gap-2.5">
                       <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">
                         {activeTicket.ticket_number}
@@ -909,8 +927,12 @@ export default function AdminHelpdeskPage() {
                       <button
                         key={cr.title}
                         type="button"
-                        onClick={() => setReplyMessage(cr.text)}
+                        onClick={() => {
+                          setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${cr.text}` : cr.text))
+                          toast.info(`Inserted "${cr.title}" template into reply!`)
+                        }}
                         className="px-2.5 py-1 rounded-md bg-surface hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-[11px] text-text hover:text-emerald-600 dark:hover:text-emerald-300 transition-all shrink-0 cursor-pointer"
+                        title={cr.text}
                       >
                         {cr.title}
                       </button>

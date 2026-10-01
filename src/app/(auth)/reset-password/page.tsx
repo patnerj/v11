@@ -7,9 +7,12 @@ import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
+import { useBranding } from '@/store/branding'
 import { ArrowLeft, CheckCircle2, KeyRound } from 'lucide-react'
 
 export default function ResetPasswordPage() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
+  const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'M'
   // Request mode (enter email) vs. complete mode (key+login from the email link).
   const [resetKey, setResetKey] = useState('')
   const [keyLogin, setKeyLogin] = useState('')
@@ -122,7 +125,7 @@ export default function ResetPasswordPage() {
           <>
             <div className="text-center mb-6">
               <div className="brand-emblem">
-                <span className="text-lg font-black text-slate-950">P</span>
+                <span className="text-lg font-black text-slate-950">{brandInitial}</span>
               </div>
               <h1 className="text-xl font-bold tracking-tight">Reset your password</h1>
               <p className="text-sm text-text-muted mt-1">We&apos;ll email you a reset link</p>

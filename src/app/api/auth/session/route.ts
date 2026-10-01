@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify the token against the backend (server-to-server — never trust the client).
-  const base = getApiBaseUrl()
+  const base = getApiBaseUrl(req)
   let verified: { id?: number; is_admin?: boolean } | null = null
   try {
     const res = await fetch(`${base}/auth/me`, {

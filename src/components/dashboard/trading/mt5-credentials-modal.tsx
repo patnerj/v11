@@ -154,7 +154,11 @@ export function MT5CredentialsModal({
   const accountLabel = liveData.accountLabel || initialAccountLabel
 
   const copyToClipboard = (text: string, key: string, label: string) => {
-    navigator.clipboard.writeText(text)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {})
+      }
+    } catch {}
     setCopiedKey(key)
     toast.success(`${label} copied to clipboard!`)
     setTimeout(() => {
@@ -171,7 +175,11 @@ export function MT5CredentialsModal({
       `Investor Password: ${investorPassword}`,
       `Live Status: Bridge Synced · 0.00% Drift`,
     ].join('\n')
-    navigator.clipboard.writeText(fullText)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(fullText).catch(() => {})
+      }
+    } catch {}
     setCopiedKey('all')
     toast.success('All MT5 credentials copied to clipboard!')
     setTimeout(() => {
@@ -274,7 +282,7 @@ export function MT5CredentialsModal({
                 {copiedKey === 'server' ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Copied</span>
+                    <span>✓ Copied!</span>
                   </>
                 ) : (
                   <>
@@ -308,7 +316,7 @@ export function MT5CredentialsModal({
                 {copiedKey === 'login' ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Copied</span>
+                    <span>✓ Copied!</span>
                   </>
                 ) : (
                   <>
@@ -356,7 +364,7 @@ export function MT5CredentialsModal({
                   {copiedKey === 'traderPass' ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Copied</span>
+                      <span>✓ Copied!</span>
                     </>
                   ) : (
                     <>
@@ -405,7 +413,7 @@ export function MT5CredentialsModal({
                   {copiedKey === 'investorPass' ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Copied</span>
+                      <span>✓ Copied!</span>
                     </>
                   ) : (
                     <>
@@ -433,7 +441,7 @@ export function MT5CredentialsModal({
               {copiedKey === 'all' ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>All Credentials Copied!</span>
+                  <span>✓ All Credentials Copied!</span>
                 </>
               ) : (
                 <>

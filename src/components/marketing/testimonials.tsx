@@ -20,7 +20,7 @@ export function Testimonials({ puckProps }: { puckProps?: any }) {
   if (!stories.length) return null;
 
   return (
-    <section className="py-20 lg:py-28 bg-bg-subtle/40">
+    <section className="py-20 lg:py-28 bg-transparent">
       <div className="container">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <Badge tone="accent" className="mb-4">{badge}</Badge>

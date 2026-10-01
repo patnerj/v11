@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { CheckCircle2, AlertCircle, ArrowRight, RotateCcw, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { setSession } from '@/lib/fxsim'
+import { sessionEstablish } from '@/lib/session'
 import { useAuth } from '@/store/auth'
 
 type State = 'loading' | 'success' | 'expired' | 'invalid'
@@ -38,13 +40,30 @@ function VerifyResult() {
   useEffect(() => {
     if (state !== 'loading' || !token) return
     let cancel = false
-    api.auth.verifyEmail(token).then((res) => {
+    api.auth.verifyEmail(token).then(async (res) => {
       if (cancel) return
       if (res.ok) {
-        setState(res.data.status); setMsg(res.data.message)
-        // Refresh the logged-in user so email_verified flips and the dashboard
-        // verify banner disappears with no manual reload.
-        if (res.data.status === 'success') { void useAuth.getState().refresh(true) }
+        setState(res.data.status)
+        setMsg(res.data.message)
+        // Hydrate tab-scoped session & signed middleware cookie so "Go to Dashboard"
+        // works seamlessly in new tabs/devices, and notify other open tabs in 0ms.
+        if (res.data.status === 'success') {
+          const d = res.data as any
+          if (d.token || d.nonce) {
+            setSession({ bearer: d.token || null, nonce: d.nonce || null })
+            if (d.token) {
+              await sessionEstablish(d.token, true).catch(() => null)
+            }
+          }
+          if (d.user) {
+            useAuth.setState({ user: d.user, ready: true, loading: false, error: null, lastChecked: Date.now() })
+          } else {
+            await useAuth.getState().refresh(true)
+          }
+          try {
+            localStorage.setItem('fxsim:email_verified_at', String(Date.now()))
+          } catch { /* ignore */ }
+        }
       }
       else { setState('invalid'); setMsg('We could not verify this link. Please try again.') }
     })

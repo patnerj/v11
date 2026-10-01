@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/ui/DataTable'
 import { Switch } from '@/components/ui/switch'
 import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Input, Label } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/Textarea'
 import { toast } from 'sonner'
@@ -104,6 +105,10 @@ export default function PaymentsHubPage() {
   const [proofBlobUrl, setProofBlobUrl] = useState<string | null>(null)
   const [isProofPdf, setIsProofPdf] = useState(false)
   const [isProofLoading, setIsProofLoading] = useState(false)
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([])
+  const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false)
+  const [isBulkApproving, setIsBulkApproving] = useState(false)
+  const [quickApprovingId, setQuickApprovingId] = useState<number | null>(null)
 
   const { data: orders = [], isLoading: isOrdersLoading, refetch: refetchOrders } = useQuery({
     queryKey: ['admin-payments-list'],
@@ -119,10 +124,11 @@ export default function PaymentsHubPage() {
     try {
       const res = await api.admin.paymentApprove(orderId, adminActionNote)
       if (res.ok) {
-        toast.success(`Order #${orderId} approved! Evaluation account provisioned and emailed to trader.`)
+        toast.success(`Order #${orderId} approved! Account provisioned and emailed to trader.`)
         setIsProofModalOpen(false)
         setSelectedOrder(null)
         setAdminActionNote('')
+        setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId))
         queryClient.invalidateQueries({ queryKey: ['admin-payments-list'] })
       } else {
         toast.error(res.error || 'Failed to approve payment.')
@@ -131,6 +137,24 @@ export default function PaymentsHubPage() {
       toast.error('Approve Error: ' + err.message)
     } finally {
       setIsOrderActionLoading(false)
+    }
+  }
+
+  const handleQuickApprove = async (order: PaymentOrder) => {
+    setQuickApprovingId(order.id)
+    try {
+      const res = await api.admin.paymentApprove(order.id, order.admin_note || '')
+      if (res.ok) {
+        toast.success(`Order #${order.id} approved! Account provisioned and emailed to trader.`)
+        setSelectedOrderIds((prev) => prev.filter((id) => id !== order.id))
+        queryClient.invalidateQueries({ queryKey: ['admin-payments-list'] })
+      } else {
+        toast.error(res.error || `Failed to approve Order #${order.id}.`)
+      }
+    } catch (err: any) {
+      toast.error('Quick Approve Error: ' + err.message)
+    } finally {
+      setQuickApprovingId(null)
     }
   }
 
@@ -147,6 +171,7 @@ export default function PaymentsHubPage() {
         setIsProofModalOpen(false)
         setSelectedOrder(null)
         setAdminActionNote('')
+        setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId))
         queryClient.invalidateQueries({ queryKey: ['admin-payments-list'] })
       } else {
         toast.error(res.error || 'Failed to reject payment.')
@@ -155,6 +180,50 @@ export default function PaymentsHubPage() {
       toast.error('Reject Error: ' + err.message)
     } finally {
       setIsOrderActionLoading(false)
+    }
+  }
+
+  const handleBulkApprove = async () => {
+    if (activeSelectedIds.length === 0) return
+    setIsBulkApproving(true)
+    let approvedCount = 0
+    let failedCount = 0
+    try {
+      for (const orderId of activeSelectedIds) {
+        const ord = safeOrders.find((o: PaymentOrder) => o.id === orderId)
+        const res = await api.admin.paymentApprove(orderId, ord?.admin_note || '')
+        if (res.ok) {
+          approvedCount++
+        } else {
+          failedCount++
+        }
+      }
+      if (approvedCount > 0) {
+        toast.success(`Bulk approved ${approvedCount} order(s) successfully!${failedCount > 0 ? ` (${failedCount} failed)` : ''}`)
+      } else if (failedCount > 0) {
+        toast.error(`Failed to approve ${failedCount} selected order(s).`)
+      }
+      setSelectedOrderIds([])
+      setIsBulkConfirmOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['admin-payments-list'] })
+    } catch (err: any) {
+      toast.error('Bulk Approve Error: ' + err.message)
+    } finally {
+      setIsBulkApproving(false)
+    }
+  }
+
+  const toggleSelectOrder = (orderId: number) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    )
+  }
+
+  const toggleSelectAllPending = () => {
+    if (allPendingSelected) {
+      setSelectedOrderIds([])
+    } else {
+      setSelectedOrderIds(pendingOrderIds)
     }
   }
 
@@ -246,7 +315,11 @@ export default function PaymentsHubPage() {
     }
   }
 
-  const pendingManualOrders = orders.filter((o: PaymentOrder) => o.status === 'pending' || o.status === 'submitted')
+  const safeOrders = Array.isArray(orders) ? orders : []
+  const pendingManualOrders = safeOrders.filter((o: PaymentOrder) => o.status === 'pending' || o.status === 'submitted')
+  const pendingOrderIds = pendingManualOrders.map((o: PaymentOrder) => o.id)
+  const activeSelectedIds = selectedOrderIds.filter((id) => pendingOrderIds.includes(id))
+  const allPendingSelected = pendingOrderIds.length > 0 && activeSelectedIds.length === pendingOrderIds.length
 
   return (
     <div className="w-full space-y-8 pb-16">
@@ -389,7 +462,7 @@ export default function PaymentsHubPage() {
                     }
                   }}
                   loading={isCheckingStripe}
-                  className="text-xs gap-1.5 border-[#1F2937]"
+                  className="text-xs gap-1.5 border-surface-muted"
                 >
                   <Zap className="h-3.5 w-3.5 text-blue-400" />
                   Test Stripe Connection
@@ -525,13 +598,68 @@ export default function PaymentsHubPage() {
 
       {/* ── TAB 2: MANUAL PAYMENT PROOFS QUEUE ────────────────────────────── */}
       {activeTab === 'queue' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* Bulk Action & Queue Controls Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-4 rounded-xl border border-border">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-medium text-text">
+                <input
+                  type="checkbox"
+                  checked={allPendingSelected}
+                  onChange={toggleSelectAllPending}
+                  disabled={pendingOrderIds.length === 0}
+                  className="rounded border-border text-emerald-500 focus:ring-emerald-500 h-4 w-4 bg-surface cursor-pointer"
+                />
+                <span>Select All Pending ({pendingManualOrders.length})</span>
+              </label>
+
+              {activeSelectedIds.length > 0 && (
+                <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {activeSelectedIds.length} selected
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsBulkConfirmOpen(true)}
+                disabled={activeSelectedIds.length === 0 || isBulkApproving}
+                loading={isBulkApproving}
+                className="gap-1.5 text-xs shadow-emerald-500/20 font-bold"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Bulk Approve Selected ({activeSelectedIds.length})
+              </Button>
+            </div>
+          </div>
+
           <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-xl">
             <DataTable
-              data={orders}
+              data={safeOrders}
               loading={isOrdersLoading}
               emptyMessage="No pending manual payment receipts in the queue."
               columns={[
+                {
+                  key: 'select',
+                  header: '',
+                  className: 'w-10',
+                  render: (o: PaymentOrder) => {
+                    const isPending = o.status === 'pending' || o.status === 'submitted'
+                    if (!isPending) return null
+                    const isChecked = selectedOrderIds.includes(o.id)
+                    return (
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSelectOrder(o.id)}
+                        aria-label={`Select order #${o.id}`}
+                        className="rounded border-border text-emerald-500 focus:ring-emerald-500 h-4 w-4 bg-surface cursor-pointer"
+                      />
+                    )
+                  },
+                },
                 {
                   key: 'id',
                   header: 'Order #',
@@ -545,7 +673,7 @@ export default function PaymentsHubPage() {
                   render: (o: PaymentOrder) => {
                     const isTourn = (o as any).order_type === 'tournament' || o.admin_note?.startsWith('tournament_entry:') || (o as any).plan_name?.startsWith('Tournament:')
                     return (
-                      <div>
+                      <div className="space-y-0.5">
                         <span className="font-bold text-text text-xs block">{o.user_email || `User #${o.user_id}`}</span>
                         {isTourn ? (
                           <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 font-mono">
@@ -555,6 +683,11 @@ export default function PaymentsHubPage() {
                           <span className="text-[10px] text-gray-500 font-mono">
                             {(o as any).plan_name || `Plan ID: #${o.plan_id}`}
                           </span>
+                        )}
+                        {o.txn_id && (
+                          <div className="text-[10px] text-amber-500/90 font-mono truncate max-w-[220px]" title={o.txn_id}>
+                            TXN: {o.txn_id.length > 20 ? `${o.txn_id.slice(0, 10)}...${o.txn_id.slice(-8)}` : o.txn_id}
+                          </div>
                         )}
                       </div>
                     )
@@ -573,9 +706,16 @@ export default function PaymentsHubPage() {
                   key: 'gateway',
                   header: 'Payment Method',
                   render: (o: PaymentOrder) => (
-                    <Badge tone="neutral" size="sm" className="capitalize font-mono">
-                      {o.gateway || 'Manual Crypto'}
-                    </Badge>
+                    <div className="space-y-0.5">
+                      <Badge tone="neutral" size="sm" className="capitalize font-mono">
+                        {o.gateway || 'Manual Crypto'}
+                      </Badge>
+                      {o.txn_id && (
+                        <div className="text-[10px] text-gray-400 font-mono truncate max-w-[150px]" title={o.txn_id}>
+                          {o.txn_id.length > 16 ? `${o.txn_id.slice(0, 8)}...${o.txn_id.slice(-6)}` : o.txn_id}
+                        </div>
+                      )}
+                    </div>
                   ),
                 },
                 {
@@ -604,19 +744,35 @@ export default function PaymentsHubPage() {
                   key: 'actions',
                   header: 'Actions',
                   align: 'right',
-                  render: (o: PaymentOrder) => (
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openProofReviewModal(o)}
-                        className="h-8 text-xs gap-1.5 border-[#1F2937] hover:bg-slate-800"
-                      >
-                        <Eye className="h-3.5 w-3.5 text-emerald-400" />
-                        Audit Proof
-                      </Button>
-                    </div>
-                  ),
+                  render: (o: PaymentOrder) => {
+                    const isPending = o.status === 'pending' || o.status === 'submitted'
+                    return (
+                      <div className="flex items-center justify-end gap-2">
+                        {isPending && (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => handleQuickApprove(o)}
+                            loading={quickApprovingId === o.id}
+                            disabled={quickApprovingId !== null || isBulkApproving}
+                            className="h-8 text-xs gap-1 shadow-emerald-500/20 font-bold"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Approve
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openProofReviewModal(o)}
+                          className="h-8 text-xs gap-1.5 border-surface-muted hover:bg-slate-800"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                          Audit Proof
+                        </Button>
+                      </div>
+                    )
+                  },
                 },
               ]}
             />
@@ -640,7 +796,7 @@ export default function PaymentsHubPage() {
         {selectedOrder && (
           <div className="space-y-6 pt-2">
             
-            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-xs font-mono">
+            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl border border-surface-muted bg-background text-xs font-mono">
               <div>
                 <span className="text-gray-500 block text-[10px] uppercase">Amount Due</span>
                 <span className="font-bold text-emerald-400 text-sm">
@@ -668,7 +824,7 @@ export default function PaymentsHubPage() {
             {/* Proof Container */}
             <div className="space-y-2">
               <Label className="text-xs text-gray-300">Transaction Hash / Receipt Proof</Label>
-              <div className="p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] space-y-2">
+              <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-2">
                 {selectedOrder.txn_id ? (
                   <span className="text-xs text-gray-400 font-mono block break-all">
                     Tx Reference: <strong>{selectedOrder.txn_id}</strong>
@@ -684,7 +840,7 @@ export default function PaymentsHubPage() {
                   </div>
                 )}
                 {!isProofLoading && proofBlobUrl && !isProofPdf && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-[#1F2937] bg-black/40 flex items-center justify-center max-h-72">
+                  <div className="mt-2 rounded-lg overflow-hidden border border-surface-muted bg-black/40 flex items-center justify-center max-h-72">
                     <img 
                       src={proofBlobUrl} 
                       alt="Payment receipt proof" 
@@ -695,7 +851,7 @@ export default function PaymentsHubPage() {
                   </div>
                 )}
                 {!isProofLoading && proofBlobUrl && isProofPdf && (
-                  <div className="mt-2 p-3 rounded-lg border border-[#1F2937] bg-black/20 flex items-center justify-between">
+                  <div className="mt-2 p-3 rounded-lg border border-surface-muted bg-black/20 flex items-center justify-between">
                     <span className="text-xs font-mono text-emerald-300">PDF document attached</span>
                     <button
                       type="button"
@@ -732,11 +888,11 @@ export default function PaymentsHubPage() {
                 placeholder="e.g. 100 USDT verified on blockchain block #892831. Challenge account provisioned."
                 value={adminActionNote}
                 onChange={(e) => setAdminActionNote(e.target.value)}
-                className="text-xs bg-[#0B0F19] border-[#1F2937]"
+                className="text-xs bg-background border-surface-muted"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-[#1F2937]">
+            <div className="flex items-center justify-between pt-4 border-t border-surface-muted">
               <Button
                 variant="outline"
                 size="sm"
@@ -773,6 +929,18 @@ export default function PaymentsHubPage() {
           </div>
         )}
       </Modal>
+
+      {/* Bulk Approve Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isBulkConfirmOpen}
+        title={`Approve ${activeSelectedIds.length} Payment Order(s)?`}
+        description={`Are you sure you want to bulk approve ${activeSelectedIds.length} selected payment order(s)? This will provision challenge or tournament accounts and email credentials to all verified traders.`}
+        confirmText={`Yes, Approve ${activeSelectedIds.length} Order(s)`}
+        cancelText="Cancel"
+        loading={isBulkApproving}
+        onConfirm={handleBulkApprove}
+        onCancel={() => setIsBulkConfirmOpen(false)}
+      />
 
     </div>
   )

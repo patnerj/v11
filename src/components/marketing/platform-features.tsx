@@ -1,57 +1,210 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Activity, BarChart3, Bell, Cpu, Globe2, Lock, Smartphone, Zap } from 'lucide-react'
-
-const FEATURES = [
-  { icon: Activity,   title: 'Real-time execution',  body: 'Live TradingView charts and tick-by-tick price feeds across 19 instruments.' },
-  { icon: BarChart3,  title: 'Deep analytics',       body: 'R:R tracker, hourly heatmap, drawdown curve, win streaks, and 30+ KPIs.' },
-  { icon: Cpu,        title: 'Auto-managed risk',    body: 'SL/TP, partial closes, daily DD enforcement, news-event lockouts.' },
-  { icon: Smartphone, title: 'Trade anywhere',       body: 'PWA-installable. Trade and monitor from desktop, tablet, or phone.' },
-  { icon: Bell,       title: 'Real-time alerts',     body: 'Notifications for fills, breaches, payout approvals — instant.' },
-  { icon: Zap,        title: 'API access',           body: 'Generate scoped API keys. Run your own algos against our infrastructure.' },
-  { icon: Globe2,     title: 'Global markets',       body: 'Forex majors, indices, metals, crypto. Trade what you know.' },
-  { icon: Lock,       title: 'Institutional-grade',  body: '2FA, scoped API keys, full audit logs & end-to-end encryption.' },
-]
+import { 
+  ShieldCheck, 
+  Terminal, 
+  Coins, 
+  Swords, 
+  Bot, 
+  Sparkles, 
+  TrendingUp, 
+  Lock, 
+  Zap,
+  CheckCircle2,
+  AlertTriangle
+} from 'lucide-react'
 
 export function PlatformFeatures({ puckProps }: { puckProps?: any }) {
-  const titleText1 = puckProps?.titleText1 || "Everything in";
-  const titleAccent = puckProps?.titleAccent || "one platform";
-  const description = puckProps?.description || "A trading terminal, evaluation engine, and payout system — all built for serious capital.";
-  const features = puckProps?.features || FEATURES;
+  const rawTitle1 = puckProps?.titleText1
+  const isDefault = !rawTitle1 || rawTitle1 === "Everything in"
+
+  const titleText1 = isDefault ? "Engineered for" : rawTitle1
+  const titleAccent = isDefault ? "Serious Trading" : (puckProps?.titleAccent || "Serious Trading")
+  const description = (!puckProps?.description || puckProps.description.includes("A trading terminal, evaluation engine"))
+    ? "A professional-grade prop trading ecosystem built with zero gimmicks, institutional execution, and complete trader protection."
+    : puckProps.description
 
   return (
-    <section className="py-20 lg:py-28">
-      <div className="container">
+    <section className="py-20 lg:py-28 relative overflow-hidden" id="features">
+      {/* Background glow */}
+      <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] rounded-full bg-emerald-500/5 blur-[160px] pointer-events-none" />
+
+      <div className="container max-w-7xl mx-auto px-4 relative">
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-            {titleText1} <span className="text-gradient">{titleAccent}</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 mb-4">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Institutional Advantage</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text">
+            {titleText1}{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+              {titleAccent}
+            </span>
           </h2>
-          <p className="mt-4 text-text-muted text-lg">
+          <p className="mt-4 text-base sm:text-lg text-text-muted leading-relaxed">
             {description}
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border-subtle rounded-xl overflow-hidden">
-          {features.map((f: any, i: number) => {
-            const Icon = f.icon || Activity;
-            return (
-              <motion.div
-                key={f.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.4, delay: i * 0.03, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-surface p-6 hover:bg-surface-muted transition-colors group"
-              >
-                <div className="h-11 w-11 rounded-lg bg-accent/15 ring-1 ring-accent/25 text-accent flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-accent/25 transition-all">
-                  <Icon className="h-5 w-5" />
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+          
+          {/* Bento Card 1: Static Drawdown Protection (Hero Bento Card - Span 8) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-8 p-7 sm:p-8 rounded-3xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 shadow-card flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
-                <h3 className="font-semibold tracking-tight">{f.title}</h3>
-                <p className="mt-1.5 text-sm text-text-muted">{f.body}</p>
-              </motion.div>
-            )
-          })}
+                <span className="text-[11px] font-bold font-mono px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                  CRITICAL ADVANTAGE
+                </span>
+              </div>
+
+              <h3 className="text-2xl font-black text-text tracking-tight mb-2">
+                Static Drawdown (Zero Trailing Floor Traps)
+              </h3>
+              <p className="text-sm sm:text-base text-text-muted leading-relaxed max-w-xl">
+                Unlike predatory prop firms that drag your loss limit upwards during open floating profits—locking you into instant breach on natural market pullbacks—our evaluation relies strictly on a static balance floor. Your floating profits are always protected.
+              </p>
+            </div>
+
+            {/* Visual Contrast Graphic */}
+            <div className="mt-6 pt-6 border-t border-border-subtle grid sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>MassFunded Static Rules</span>
+                </div>
+                <div className="text-xs text-text-muted">
+                  Account $100,000 → Max DD Floor is fixed at $90,000. When your balance reaches $108,000, your floor stays at $90,000. You have an $18,000 safety cushion.
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
+                <div className="flex items-center gap-2 text-xs font-bold text-red-400 mb-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Traditional Trailing Traps</span>
+                </div>
+                <div className="text-xs text-text-muted">
+                  Floor trails high-water mark. When equity reaches $108,000, the floor moves to $98,000. A standard 1.5% pullback breaches the account unfairly.
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bento Card 2: MetaTrader 5 & WebTrader Parity (Span 4) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 p-7 sm:p-8 rounded-3xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 shadow-card flex flex-col justify-between group"
+          >
+            <div>
+              <div className="h-12 w-12 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform mb-6">
+                <Terminal className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text tracking-tight mb-2">
+                MT5 & WebTrader Parity
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                Execute directly on our browser WebTrader with TradingView charting or connect your institutional MetaTrader 5 terminal with 14ms latency.
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border-subtle text-xs text-text-muted flex items-center justify-between font-mono">
+              <span>Equinix LD4 Feed</span>
+              <span className="text-emerald-400 font-bold">14ms SLA</span>
+            </div>
+          </motion.div>
+
+          {/* Bento Card 3: Bi-Weekly Instant USDT Payouts (Span 4) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 p-7 sm:p-8 rounded-3xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 shadow-card flex flex-col justify-between group"
+          >
+            <div>
+              <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform mb-6">
+                <Coins className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text tracking-tight mb-2">
+                Bi-Weekly Crypto Disbursals
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                Direct to your USDT TRC-20, ERC-20, BTC wallet or Bank Wire. First payout after 14 days, then every two weeks like clockwork.
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border-subtle text-xs text-text-muted flex items-center justify-between font-mono">
+              <span>Payout SLA</span>
+              <span className="text-emerald-400 font-bold">&lt; 24 Hours</span>
+            </div>
+          </motion.div>
+
+          {/* Bento Card 4: PvP Trading Arena & Tournaments (Span 4) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 p-7 sm:p-8 rounded-3xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 shadow-card flex flex-col justify-between group"
+          >
+            <div>
+              <div className="h-12 w-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform mb-6">
+                <Swords className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text tracking-tight mb-2">
+                PvP Arena & Tournaments
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                Compete 1v1 against other traders or participate in monthly firm-wide tournaments to win free $100K evaluation accounts and prizes.
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border-subtle text-xs text-text-muted flex items-center justify-between font-mono">
+              <span>Entry Fee</span>
+              <span className="text-amber-400 font-bold">Free & Sponsored</span>
+            </div>
+          </motion.div>
+
+          {/* Bento Card 5: AI Risk Copilot & Analytics (Span 4) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 p-7 sm:p-8 rounded-3xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 shadow-card flex flex-col justify-between group"
+          >
+            <div>
+              <div className="h-12 w-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform mb-6">
+                <Bot className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text tracking-tight mb-2">
+                AI Discipline & Risk Copilot
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                Real-time drawdown danger alerts, lot size risk calculators, and automated discipline guidance directly inside your WebTrader terminal.
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border-subtle text-xs text-text-muted flex items-center justify-between font-mono">
+              <span>Risk Management</span>
+              <span className="text-cyan-400 font-bold">Automated Guardrails</span>
+            </div>
+          </motion.div>
+
         </div>
       </div>
     </section>

@@ -270,6 +270,10 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
       if (res.ok && res.data.success) {
         playOrderCloseSound()
         const closePnl = toNum(res.data.pnl)
+        // Optimistic removal from store for instant UI feedback
+        usePrices.setState((state) => ({
+          positions: (state.positions || []).filter((p) => p.id !== pos.id)
+        }))
         toast.success(`Closed ${pos.symbol} · ${fmtUSD(closePnl, { sign: true })}`, {
           action: closePnl > 0 ? {
             label: 'Flex Win 🚀',
@@ -314,6 +318,19 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
         playOrderCloseSound()
         toast.success(`Closed ${n} of ${pos.symbol}`)
         setShowPartial(false)
+        // Optimistically update positions in usePrices store so lot size reflects immediately
+        usePrices.setState((state) => {
+          const curPositions = state.positions || []
+          const remaining = Math.max(0, Math.round((totalLots - n) * 100) / 100)
+          if (remaining <= 0.001) {
+            return { positions: curPositions.filter((p) => p.id !== pos.id) }
+          }
+          return {
+            positions: curPositions.map((p) =>
+              p.id === pos.id ? { ...p, lot_size: remaining } : p
+            )
+          }
+        })
         invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
         onChanged?.()
       } else {

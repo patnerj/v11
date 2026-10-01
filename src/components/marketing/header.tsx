@@ -9,13 +9,16 @@ import { useBranding } from '@/store/branding'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/store/auth'
 import { cn } from '@/lib/cn'
-import { Menu, X } from 'lucide-react'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { Menu, X, ArrowRight, ShieldCheck } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const NAV = [
-  { href: '/challenges',  label: 'Challenges' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/faq',         label: 'FAQ' },
+  { href: '/challenges',     label: 'Challenges' },
+  { href: '/how-it-works',   label: 'How It Works' },
+  { href: '/payouts',        label: 'Payouts' },
+  { href: '/about',          label: 'About' },
+  { href: '/faq',            label: 'FAQ' },
+  { href: '/contact',        label: 'Contact' },
 ]
 
 export function MarketingHeader() {
@@ -42,8 +45,7 @@ export function MarketingHeader() {
     return () => { document.body.style.overflow = prev }
   }, [open])
 
-  // Close mobile menu on route change is handled by Next link navigation — but
-  // make absolutely sure by closing on Escape too.
+  // Close mobile menu on Escape
   useEffect(() => {
     if (!open) return
     const on = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -58,58 +60,65 @@ export function MarketingHeader() {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         'fixed top-0 inset-x-0 z-40 transition-all duration-300',
-        'pt-[max(0.25rem,env(safe-area-inset-top,0px))] bg-surface/85 backdrop-blur-xl border-b border-border/60 shadow-sm',
+        'pt-[max(0.25rem,env(safe-area-inset-top,0px))] bg-surface/85 backdrop-blur-2xl border-b border-border/60',
+        scrolled && 'shadow-[0_4px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.5)] border-emerald-500/20'
       )}
     >
       <BannerBar placement="top" />
-      <div className="container flex h-14 md:h-16 items-center justify-between px-4">
-        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'Alpha Capital'} home`}>
+      <div className="container max-w-7xl mx-auto flex h-14 md:h-16 items-center justify-between px-4">
+        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'MassFunded'} home`}>
           <Logo />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {NAV.map((it) => (
             <Link
               key={it.href}
               href={it.href}
-              className="px-3.5 py-2 text-sm font-medium text-text-muted hover:text-text hover:bg-surface-muted/60 transition-colors focus-ring rounded-lg"
+              className="px-3 py-1.5 text-xs font-semibold text-text-muted hover:text-emerald-400 hover:bg-surface-muted/60 transition-colors focus-ring rounded-lg"
             >
               {it.label}
             </Link>
           ))}
         </nav>
 
-        {/* Auth-aware CTAs — reserve space silently while not ready, so the
-            "Sign in / Get funded" doesn't flash for signed-in users. */}
-        <div className="hidden md:flex items-center gap-2 min-w-[180px] justify-end">
+        {/* Auth-aware CTAs */}
+        <div className="hidden lg:flex items-center gap-3 min-w-[200px] justify-end">
           {!ready ? (
             <div className="h-8 w-32 rounded-md skel" aria-hidden />
           ) : user ? (
-            <Button asChild size="sm" variant="primary">
-              <Link href="/dashboard">Dashboard →</Link>
+            <Button asChild size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold shadow-glow-sm btn-shine">
+              <Link href="/dashboard" className="flex items-center gap-1.5">
+                <span>Dashboard</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </Button>
           ) : (
             <>
-              <Button asChild size="sm" variant="ghost">
-                <Link href="/login">Sign in</Link>
+              <Button asChild size="sm" variant="ghost" className="text-xs font-medium text-text-muted hover:text-text">
+                <Link href="/login">Sign In</Link>
               </Button>
-              <Button asChild size="sm" variant="primary">
-                <Link href="/register">Get funded →</Link>
+              <Button asChild size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-glow-sm btn-shine">
+                <Link href="/register" className="flex items-center gap-1">
+                  <span>Start Trading</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
               </Button>
             </>
           )}
-          <ThemeSwitcher />
+          <ThemeToggle />
         </div>
 
         {/* Mobile Fast Action Buttons */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle className="h-8 w-8" />
           {user ? (
-            <Button asChild size="sm" variant="primary" className="h-8 px-3 text-xs shadow-glow-sm">
-              <Link href="/dashboard">Dashboard →</Link>
+            <Button asChild size="sm" className="h-8 px-3 text-xs bg-emerald-500 text-white font-bold shadow-glow-sm">
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
           ) : (
-            <Button asChild size="sm" variant="primary" className="h-8 px-3 text-xs shadow-glow-sm">
-              <Link href="/login">Sign in</Link>
+            <Button asChild size="sm" className="h-8 px-3 text-xs bg-emerald-500 text-white font-bold shadow-glow-sm">
+              <Link href="/login">Sign In</Link>
             </Button>
           )}
           <button
@@ -132,7 +141,7 @@ export function MarketingHeader() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-border-subtle bg-surface/95 backdrop-blur-2xl shadow-2xl pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
+            className="lg:hidden border-t border-border-subtle bg-surface/95 backdrop-blur-2xl shadow-2xl pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
           >
             <div className="container py-4 flex flex-col gap-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
               {NAV.map((it) => (
@@ -140,28 +149,34 @@ export function MarketingHeader() {
                   key={it.href}
                   href={it.href}
                   onClick={() => setOpen(false)}
-                  className="px-3 py-2.5 text-sm font-medium text-text-muted hover:text-text hover:bg-surface-muted rounded-md transition-colors"
+                  className="px-4 py-2.5 text-sm font-medium text-text-muted hover:text-emerald-400 hover:bg-surface-muted rounded-lg transition-colors"
                 >
                   {it.label}
                 </Link>
               ))}
-              <div className="h-px bg-border-subtle my-2" />
-              {!ready ? (
-                <div className="h-10 w-full skel rounded-md" />
-              ) : user ? (
-                <Button asChild variant="primary" className="w-full" onClick={() => setOpen(false)}>
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
-              ) : (
-                <>
-                  <Button asChild variant="ghost" className="w-full" onClick={() => setOpen(false)}>
-                    <Link href="/login">Sign in</Link>
+
+              <div className="pt-3 mt-2 border-t border-border-subtle flex flex-col gap-2">
+                {user ? (
+                  <Button asChild size="md" className="bg-emerald-500 text-white font-bold w-full">
+                    <Link href="/dashboard" onClick={() => setOpen(false)}>
+                      Dashboard →
+                    </Link>
                   </Button>
-                  <Button asChild variant="primary" className="w-full" onClick={() => setOpen(false)}>
-                    <Link href="/register">Get funded</Link>
-                  </Button>
-                </>
-              )}
+                ) : (
+                  <>
+                    <Button asChild size="md" variant="outline" className="w-full">
+                      <Link href="/login" onClick={() => setOpen(false)}>
+                        Sign In
+                      </Link>
+                    </Button>
+                    <Button asChild size="md" className="bg-emerald-500 text-white font-bold w-full">
+                      <Link href="/register" onClick={() => setOpen(false)}>
+                        Start Trading →
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </motion.div>
         )}

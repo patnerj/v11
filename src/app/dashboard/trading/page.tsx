@@ -24,6 +24,7 @@ import { PendingOrdersTable } from '@/components/dashboard/trading/pending-order
 import { AccountSwitcher, buildSwitchEntries, type SwitchEntry } from '@/components/dashboard/trading/account-switcher'
 import { TournamentWarningBanner } from '@/components/dashboard/trading/tournament-banner'
 import { MobileBottomSheet }  from '@/components/dashboard/trading/mobile-bottom-sheet'
+import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
 import { ConfirmDialog }     from '@/components/ui/ConfirmDialog'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { cn }                 from '@/lib/cn'
@@ -217,6 +218,8 @@ export default function TradingTerminalPage() {
     refetchInterval: 15_000,
   })
 
+  const currentChallenge = chs?.find(c => c.fxsim_account_id === accountId) || null
+
   // ── Loading state (including account switching) ──────────────────────
   // Keep the switcher visible so the user can see which account is loading,
   // but show the spinner instead of falsely flashing the "frozen" screen.
@@ -232,7 +235,7 @@ export default function TradingTerminalPage() {
             switchEntries={switchEntries}
           />
         )}
-        <AccountSwitcher entries={switchEntries} />
+        <AccountSwitcher entries={switchEntries} metrics={metrics} />
         <div className="flex items-center justify-center h-[60vh]">
           <div className="flex flex-col items-center gap-3 text-sm text-text-muted">
             <div className="h-7 w-7 rounded-full border-2 border-accent border-t-transparent animate-spin" />
@@ -262,7 +265,7 @@ export default function TradingTerminalPage() {
             switchEntries={switchEntries}
           />
         )}
-        <AccountSwitcher entries={switchEntries} />
+        <AccountSwitcher entries={switchEntries} metrics={metrics} />
         <TradingLockState accounts={chs} account={acc} challengeStatus={acc?.challenge_status ?? null} />
       </div>
     )
@@ -271,9 +274,16 @@ export default function TradingTerminalPage() {
   const plan = metrics?.plan ?? null
 
   // ── Render layout ────────────────────────────────────────────────────
-  return isDesktop
-    ? <DesktopLayout account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} isTournamentMode={isTournamentMode} tournamentId={tournamentId} tournamentTitle={tournamentTitle} />
-    : <MobileLayout  account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} isTournamentMode={isTournamentMode} tournamentId={tournamentId} tournamentTitle={tournamentTitle} />
+  return (
+    <>
+      {isDesktop
+        ? <DesktopLayout account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} isTournamentMode={isTournamentMode} tournamentId={tournamentId} tournamentTitle={tournamentTitle} />
+        : <MobileLayout  account={acc} openPnL={openPnL} positions={positions} pending={pending} plan={plan} metrics={metrics} onChanged={refreshAll} myTournaments={myTournaments} switchEntries={switchEntries} isTournamentMode={isTournamentMode} tournamentId={tournamentId} tournamentTitle={tournamentTitle} />
+      }
+      {/* Phase Pass Celebration Confetti & Congratulations Modal */}
+      <PhasePassCelebrationModal challenge={metrics?.challenge ?? currentChallenge} metrics={metrics} />
+    </>
+  )
 }
 
 // ── Desktop ─────────────────────────────────────────────────────────────
@@ -475,7 +485,7 @@ function DesktopLayout({
         />
       )}
       {/* Account switcher — Challenge ↔ Tournament trading context */}
-      <AccountSwitcher entries={switchEntries} />
+      <AccountSwitcher entries={switchEntries} metrics={metrics} />
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
         {/* Left: market watch */}
         <Panel
@@ -535,7 +545,7 @@ function DesktopLayout({
             <Panel defaultSize="70%" minSize="30%">
               <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
                 <SectionErrorBoundary>
-                  <ChartPanel positions={positions} plan={plan || metrics?.plan} />
+                  <ChartPanel positions={positions} plan={plan || metrics?.plan} onChanged={onChanged} />
                 </SectionErrorBoundary>
               </section>
             </Panel>
@@ -788,7 +798,7 @@ function MobileLayout({
   const ask = toNum(tick?.ask)
 
   return (
-    <div className="flex flex-col gap-2 h-[calc(100dvh-5rem)] -mx-3 -my-3 md:-mx-4 md:-my-4">
+    <div className="flex flex-col gap-2 h-[calc(100dvh-3.75rem)] md:h-[calc(100dvh-5rem)] -mx-3 -mt-3 md:-mx-4 md:-my-4">
       {/* Tournament Warning Banner */}
       {isTournamentMode && tournamentId && (
         <div className="px-3 pt-2 shrink-0">
@@ -805,20 +815,20 @@ function MobileLayout({
       {/* Account switcher — Challenge ↔ Tournament trading context */}
       {account && (
         <div className="px-3 pt-2 shrink-0">
-          <AccountSwitcher entries={switchEntries} />
+          <AccountSwitcher entries={switchEntries} metrics={metrics} />
         </div>
       )}
 
       {/* Chart — fills remaining space; ChartPanel header has symbol + tap-to-change */}
       <div className="flex-1 mx-4 rounded-lg border border-border overflow-hidden min-h-0">
         <SectionErrorBoundary>
-          <ChartPanel compact positions={positions} plan={plan || metrics?.plan} onOpenWatchlist={() => setSheet('watchlist')} />
+          <ChartPanel compact positions={positions} plan={plan || metrics?.plan} onOpenWatchlist={() => setSheet('watchlist')} onChanged={onChanged} />
         </SectionErrorBoundary>
       </div>
 
       {/* Bottom dock — tab strip + floating buy/sell */}
-      <div className="shrink-0 relative">
-        <div className="grid grid-cols-3 gap-1 mx-4 mb-3 p-1 rounded-md bg-surface border border-border text-2xs">
+      <div className="shrink-0 relative pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+        <div className="grid grid-cols-3 gap-1 mx-4 mb-1 p-1 rounded-md bg-surface border border-border text-2xs">
           <DockButton
             icon={BarChart3}
             label="Markets"
@@ -839,14 +849,14 @@ function MobileLayout({
         </div>
       </div>
 
-      {/* Floating order FAB — anchored bottom-right above safe area */}
+      {/* Floating order FAB — anchored bottom-right above dock & safe area */}
       <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         whileTap={{ scale: 0.94 }}
         onClick={() => setSheet('order')}
         className={cn(
-          'fixed right-4 bottom-20 z-30 flex items-center gap-2 h-12 px-4 rounded-full font-semibold text-xs shadow-xl transition-all',
+          'fixed right-4 bottom-[calc(max(0.5rem,env(safe-area-inset-bottom,0px))+3.5rem)] z-30 flex items-center gap-2 h-12 px-4 rounded-full font-semibold text-xs shadow-xl transition-all',
           isTournamentMode
             ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500 border border-amber-300/50 ring-2 ring-amber-500/40 shadow-amber-500/20 font-bold'
             : 'bg-accent text-accent-contrast hover:bg-accent-hover active:bg-accent-active border border-accent-contrast/20',

@@ -4,15 +4,14 @@ import React, { useMemo } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Trade } from '@/types/api'
 import { fmtUSD } from '@/lib/format'
-import { useTheme } from 'next-themes'
+import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 
 interface CalendarHeatmapProps {
   trades: Trade[]
 }
 
 export function CalendarHeatmap({ trades }: CalendarHeatmapProps) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  const isDark = useIsDarkTheme()
 
   // Generate last 90 days
   const data = useMemo(() => {

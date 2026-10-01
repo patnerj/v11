@@ -3,6 +3,7 @@
 import { memo, useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { playCelebrationVictorySound } from '@/lib/sound'
 import {
   ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle2,
   Plus, Minus, Calculator, Trophy,
@@ -136,6 +137,43 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const rec = riskAmt / perLotRisk
     return Math.min(maxLot, Math.max(minLot, Math.round(rec * 100) / 100))
   }, [account, slN, ask, risk, mode, targetN, contractSize, minLot, maxLot])
+
+  // 1-Click Direct Risk % Calculator Pills: sets required lot size automatically based on current equity, SL distance, and tick value
+  const calculateLotForRisk = useCallback((riskPercent: number) => {
+    const eq = toNum(account?.equity) || toNum(account?.balance) || 10000
+    if (!slN || (!ask && !bid)) {
+      setRisk(String(riskPercent))
+      setShowCalc(true)
+      toast.info(`Please enter a Stop Loss price first to calculate exact ${riskPercent}% risk lot size.`)
+      return
+    }
+
+    // Directional entry price: if SL is below market it's BUY (ask), if SL is above market it's SELL (bid)
+    const defaultEntry = slN < (ask || bid) ? (ask || bid) : (bid || ask)
+    const entry = mode === 'market' ? defaultEntry : (targetN || defaultEntry)
+    const priceDiff = Math.abs(entry - slN)
+    if (priceDiff <= 0) {
+      toast.error('Stop Loss price cannot equal entry price')
+      return
+    }
+
+    const riskAmt = eq * (riskPercent / 100)
+    const pSize = pipSize(active, digits)
+    const pips = pSize > 0 ? priceDiff / pSize : priceDiff
+    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
+    const perLotRisk = pipValPer1Lot > 0 ? (pips * pipValPer1Lot) : (priceDiff * contractSize)
+
+    if (perLotRisk <= 0) {
+      toast.error('Cannot calculate risk for this Stop Loss distance.')
+      return
+    }
+
+    const rawLot = riskAmt / perLotRisk
+    const clamped = Math.min(maxLot, Math.max(minLot, Math.round(rawLot * 100) / 100))
+    setLot(clamped.toFixed(2))
+    setRisk(String(riskPercent))
+    toast.success(`Lot sized to ${clamped.toFixed(2)} lots (${riskPercent}% risk of ${fmtUSD(eq, { decimals: 0 })})`)
+  }, [account, slN, ask, bid, mode, targetN, active, contractSize, digits, minLot, maxLot])
 
   const allPrices = usePrices((s) => s.prices)
 
@@ -276,7 +314,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         ...ctxParams,
       })
       if (res.ok && res.data.success) {
-        playOrderSuccessSound()
+        playCelebrationVictorySound()
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([200, 100, 200])
+        }
         toast.success(`${side.toUpperCase()} ${lotN} ${active} opened`)
         removeOptimisticPosition(optId)
         if (onChanged) {
@@ -419,18 +460,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {/* Tournament Mode visual notice banner */}
-        {isTournament && (
-          <div className="rounded-md bg-amber-500/15 border border-amber-500/40 p-2 text-2xs text-amber-200 flex items-center gap-2 shadow-xs">
-            <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
-            <div className="leading-tight min-w-0">
-              <strong className="text-amber-300 font-bold uppercase tracking-wider">Tournament Mode:</strong>{' '}
-              Orders execute on <span className="font-semibold text-white">{tournamentTitle || 'Tournament'}</span> only.
-            </div>
-          </div>
-        )}
-
+      <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-2.5 min-h-0">
         {/* Pending type selector */}
         {mode === 'pending' && (
           <div className="grid grid-cols-2 gap-1 text-2xs">
@@ -507,6 +537,29 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               </button>
             ))}
           </div>
+
+          {/* Quick-Risk Preset Pills (1-Click Auto Lot Sizing) */}
+          <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-border-subtle/60">
+            <span className="text-3xs font-bold text-text-muted uppercase tracking-wider shrink-0">
+              Risk:
+            </span>
+            {[0.5, 1.0, 2.0].map((rPct) => (
+              <button
+                key={rPct}
+                type="button"
+                onClick={() => calculateLotForRisk(rPct)}
+                className={cn(
+                  'flex-1 h-6 rounded text-2xs font-semibold transition-all tabular border select-none cursor-pointer flex items-center justify-center',
+                  Number(risk) === rPct && slN
+                    ? 'bg-accent/20 border-accent/60 text-accent font-bold shadow-xs'
+                    : 'bg-surface-muted/60 hover:bg-surface-muted border-border/70 text-text-muted hover:text-text hover:border-border-strong',
+                )}
+                title={`Auto-size position to risk exactly ${rPct}% of equity based on Stop Loss`}
+              >
+                Risk {rPct.toFixed(1)}%
+              </button>
+            ))}
+          </div>
         </Field>
 
         {/* Pending target price */}
@@ -537,7 +590,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             value={sl}
             onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
             placeholder="Optional"
-            className="w-full h-10 px-3 rounded-md bg-bg-subtle border border-border-subtle shadow-inner text-sm tabular focus-ring focus:bg-surface focus:border-accent transition-colors"
+            className="w-full h-9 px-3 rounded-md bg-bg-subtle border border-border-subtle shadow-inner text-sm tabular focus-ring focus:bg-surface focus:border-accent transition-colors"
           />
         </Field>
 
@@ -555,7 +608,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             value={tp}
             onChange={(e) => setTp(e.target.value.replace(/[^\d.]/g, ''))}
             placeholder="Optional"
-            className="w-full h-10 px-3 rounded-md bg-bg-subtle border border-border-subtle shadow-inner text-sm tabular focus-ring focus:bg-surface focus:border-accent transition-colors"
+            className="w-full h-9 px-3 rounded-md bg-bg-subtle border border-border-subtle shadow-inner text-sm tabular focus-ring focus:bg-surface focus:border-accent transition-colors"
           />
         </Field>
 
@@ -596,6 +649,25 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                     </button>
                   )}
                 </div>
+                {/* Preset Chips */}
+                <div className="flex items-center gap-1.5 pt-1">
+                  <span className="text-3xs text-text-muted">Presets:</span>
+                  {[0.5, 1.0, 2.0].map((rPct) => (
+                    <button
+                      key={rPct}
+                      type="button"
+                      onClick={() => calculateLotForRisk(rPct)}
+                      className={cn(
+                        'px-2 py-0.5 rounded text-3xs font-semibold border transition-all select-none cursor-pointer',
+                        Number(risk) === rPct
+                          ? 'bg-accent/20 border-accent/50 text-accent font-bold'
+                          : 'bg-surface border-border text-text-muted hover:text-text'
+                      )}
+                    >
+                      {rPct}%
+                    </button>
+                  ))}
+                </div>
                 <div className="text-text-faint">
                   {recommendedLot === null
                     ? 'Enter a stop loss to calculate position size.'
@@ -607,7 +679,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         </AnimatePresence>
 
         {/* Cost preview */}
-        <div className="rounded-md bg-bg-subtle/40 border border-border-subtle p-3.5 space-y-2 text-2xs shadow-sm">
+        <div className="rounded-md bg-bg-subtle/40 border border-border-subtle p-2.5 space-y-1.5 text-2xs shadow-sm">
           <KV label="Position size"  value={`${fmtLots(lotN)} lots`} />
           <KV label="Pip value"      value={fmtUSD(estimatedPipValue(active, contractSize, lotN))} />
           <KV label="Required margin" value={fmtUSD(margin)} mono />
@@ -618,12 +690,15 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       </div>
 
       {/* Buy/Sell action bar — pinned at bottom of ticket */}
-      <div className="shrink-0 px-3 pb-3 pt-2 bg-surface border-t border-border-subtle flex flex-col gap-2">
+      <div className="shrink-0 px-3 pb-2.5 pt-2 bg-surface border-t border-border-subtle flex flex-col gap-1.5">
         {isTournament && (
-          <div className="flex items-center gap-1.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/35 px-2.5 py-1.5 text-2xs shadow-xs">
-            <Trophy className="h-3.5 w-3.5 text-amber-400 shrink-0 animate-pulse" />
+          <div
+            title={`Tournament Mode: Orders execute on ${tournamentTitle || 'Tournament'} only and are isolated from evaluation/funded accounts.`}
+            className="flex items-center gap-1.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/35 px-2 py-1 text-3xs"
+          >
+            <Trophy className="h-3 w-3 text-amber-500 dark:text-amber-400 shrink-0" />
             <span className="truncate">
-              <strong className="text-amber-200 uppercase tracking-wide">Tournament Order:</strong> Isolated from evaluation/funded accounts.
+              <strong className="text-amber-800 dark:text-amber-200 uppercase">Tournament Order:</strong> Isolated PnL
             </span>
           </div>
         )}

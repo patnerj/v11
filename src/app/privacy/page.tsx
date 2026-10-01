@@ -1,27 +1,51 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Privacy Policy' }
+export const metadata: Metadata = { title: 'Privacy Policy | MassFunded' }
 
 export default function Page() {
   return (
     <LegalPage
       title="Privacy Policy"
-      intro="How Alpha Capital collects, uses, and protects your personal data."
-      updated="May 2026"
+      intro="How MassFunded (massfunded.org) collects, utilizes, and protects your personal information and trading data."
+      updated="September 2026"
       sections={[
-        { title: '1. Data we collect',
-          body: <p>Account details (username, email, hashed password), authentication metadata (session timestamps, IP for security), trading activity on your account, payment information collected via our processor (we never see your card details), and analytics data about how you use the platform.</p> },
-        { title: '2. How we use your data',
-          body: <p>To provide and operate the service, to process payments, to verify identity where required by law, to communicate operational and security notices, and to improve the product. We do not sell your data.</p> },
-        { title: '3. Cookies and similar technologies',
-          body: <p>We use strictly necessary cookies for authentication and session management. We do not use third-party advertising trackers. See our <a className="text-accent hover:underline" href="/cookies">Cookie Policy</a> for details.</p> },
-        { title: '4. Data retention',
-          body: <p>Account data is retained while your account is active and for a period afterwards as required by financial-services record-keeping rules. You may request deletion at any time, subject to those legal retention requirements.</p> },
-        { title: '5. Your rights',
-          body: <p>Depending on your jurisdiction you may have rights to access, correct, port, or delete your data, and to object to or restrict processing. Email <a className="text-accent hover:underline" href="mailto:privacy@launchapropfirm.com">privacy@launchapropfirm.com</a> to exercise these rights.</p> },
-        { title: '6. Security',
-          body: <p>We use industry-standard encryption in transit and at rest, two-factor authentication, scoped API keys, rate limiting, and full audit logging. No system is perfectly secure, so we encourage you to use a strong unique password and enable 2FA.</p> },
+        { 
+          title: '1. Data We Collect',
+          body: <p>We collect essential account details (username, verified email, encrypted password hash), authentication telemetry (IP address, session timestamps, browser fingerprint for fraud prevention), trading history on evaluation and funded accounts, and identity verification documents submitted during KYC procedures.</p> 
+        },
+        { 
+          title: '2. How We Use Your Data',
+          body: <p>Your data is processed strictly to maintain and operate trading terminals, execute automated evaluation rules, process payout disbursals, comply with AML/CTF obligations, and provide security notifications. We never sell, rent, or monetize personal data with third-party advertising brokers.</p> 
+        },
+        { 
+          title: '3. Payment & Banking Data Protection',
+          body: <p>Payment transactions are processed through encrypted, PCI-DSS compliant gateways. Credit/debit card numbers are never stored on MassFunded servers. Cryptocurrency payout wallet addresses are stored in encrypted vaults and used strictly for disbursing your profit splits.</p> 
+        },
+        { 
+          title: '4. Data Retention & Privacy Rights',
+          body: <p>We retain transaction and trading records in accordance with institutional financial compliance standards. Depending on your jurisdiction (e.g. GDPR), you possess the right to access, rectify, port, or request erasure of your personal data, subject to regulatory record-keeping laws.</p> 
+        },
+        { 
+          title: '5. Security Protocols & Encryption',
+          body: <p>MassFunded enforces 256-bit TLS/SSL encryption for data in transit and AES-256 for data at rest, alongside mandatory rate limiting, automated intrusion detection, and isolated database clusters.</p> 
+        },
+        { 
+          title: '6. Privacy Inquiries & Data Protection Desk',
+          body: (
+            <p>
+              To exercise your data protection rights or report security concerns, contact our operations desk at{' '}
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
+                support@massfunded.org
+              </a>
+              . For compliance escalations or institutional data agreements, reach our Managing Director at{' '}
+              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
+                bahadur@massfunded.org
+              </a>
+              .
+            </p>
+          ) 
+        },
       ]}
     />
   )

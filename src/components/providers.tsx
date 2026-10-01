@@ -12,6 +12,7 @@ import { onSessionCleared } from '@/lib/session'
 import { usePrices } from '@/store/prices'
 import { OfflineBanner } from '@/components/ui/offline-banner'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
+import { TopProgressBar } from '@/components/ui/top-progress-bar'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const bootstrap = useAuth((s) => s.bootstrap)
@@ -44,9 +45,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeContextProvider>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <ThemeLoader />
           <OfflineBanner />
+          <TopProgressBar />
           {children}
           <MobileBottomNav />
           <Toaster

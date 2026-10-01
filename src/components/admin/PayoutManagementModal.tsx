@@ -15,6 +15,7 @@ import {
 import QRCode from 'qrcode'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import { cn } from '@/lib/cn'
 
 export interface PayoutItemTarget {
   id: number | string
@@ -149,7 +150,11 @@ export function PayoutManagementModal({
 
   const handleCopy = () => {
     if (destinationAddress) {
-      navigator.clipboard.writeText(destinationAddress)
+      try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(destinationAddress).catch(() => {})
+        }
+      } catch {}
       setCopied(true)
       setCopiedAddress(true)
       toast.success('Payout destination wallet copied to clipboard!')
@@ -162,7 +167,11 @@ export function PayoutManagementModal({
 
   const handleCopyAmount = () => {
     if (traderShare > 0) {
-      navigator.clipboard.writeText(traderShare.toFixed(2))
+      try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(traderShare.toFixed(2)).catch(() => {})
+        }
+      } catch {}
       setCopiedAmount(true)
       toast.success(`Exact amount (${traderShare.toFixed(2)} USD) copied to clipboard!`)
       setTimeout(() => setCopiedAmount(false), 2000)
@@ -293,7 +302,7 @@ export function PayoutManagementModal({
       <div className="space-y-5 py-2">
         
         {/* 1. Header Section */}
-        <div className="bg-[#0B0F19] rounded-xl border border-[#1F2937] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-background rounded-xl border border-surface-muted p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center tabular font-bold text-sm shrink-0">
               {payoutId}
@@ -329,7 +338,7 @@ export function PayoutManagementModal({
         <div className="grid grid-cols-3 gap-3">
           
           {/* Trader Amount */}
-          <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 space-y-1">
+          <div className="bg-background border border-surface-muted rounded-xl p-3.5 space-y-1">
             <span className="text-[11px] font-semibold text-gray-400 block">Trader Net Amount</span>
             <div className="text-lg sm:text-xl tabular font-bold text-emerald-400">
               {formatMoney(traderShare)}
@@ -338,7 +347,7 @@ export function PayoutManagementModal({
           </div>
 
           {/* Firm Amount */}
-          <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 space-y-1">
+          <div className="bg-background border border-surface-muted rounded-xl p-3.5 space-y-1">
             <span className="text-[11px] font-semibold text-gray-400 block">Firm Profit Share</span>
             <div className="text-lg sm:text-xl tabular font-bold text-gray-100">
               {formatMoney(firmShare)}
@@ -347,7 +356,7 @@ export function PayoutManagementModal({
           </div>
 
           {/* Split Percentage */}
-          <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 space-y-1">
+          <div className="bg-background border border-surface-muted rounded-xl p-3.5 space-y-1">
             <span className="text-[11px] font-semibold text-gray-400 block">Split Ratio</span>
             <div className="text-lg sm:text-xl tabular font-bold text-blue-400">
               {splitPct} / {100 - splitPct}
@@ -358,8 +367,8 @@ export function PayoutManagementModal({
         </div>
 
         {/* 2.5 Founder Safety Audit & AI Compliance Verdict */}
-        <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-4 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1F2937]/70 pb-3">
+        <div className="bg-background border border-surface-muted rounded-xl p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-muted/70 pb-3">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
               <span className="text-xs font-bold text-white uppercase tracking-wider">
@@ -381,7 +390,7 @@ export function PayoutManagementModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
             {/* Consistency Status */}
-            <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
+            <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Consistency Rule</span>
                 <span className="text-[11px] font-medium text-gray-200">Profit Distribution</span>
@@ -392,7 +401,7 @@ export function PayoutManagementModal({
             </div>
 
             {/* Min Trade Duration */}
-            <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
+            <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Min Hold Time</span>
                 <span className="text-[11px] font-medium text-gray-200">Anti-Scalp Filter</span>
@@ -403,7 +412,7 @@ export function PayoutManagementModal({
             </div>
 
             {/* Drawdown Proximity */}
-            <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
+            <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Drawdown Room</span>
                 <span className="text-[11px] font-medium text-gray-200">Safety Buffer</span>
@@ -414,7 +423,7 @@ export function PayoutManagementModal({
             </div>
 
             {/* Open Breaches */}
-            <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg flex items-center justify-between">
+            <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-gray-400 font-semibold block">Rule Violations</span>
                 <span className="text-[11px] font-medium text-gray-200">Breach History</span>
@@ -427,8 +436,8 @@ export function PayoutManagementModal({
         </div>
 
         {/* 3. Payout Destination Box with Scan-to-Pay QR Code (Point #5) */}
-        <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#1F2937]/70 pb-2.5">
+        <div className="bg-background border border-surface-muted rounded-xl p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-muted/70 pb-2.5">
             <span className="text-xs font-bold text-gray-200 flex items-center gap-1.5 uppercase tracking-wider">
               <Wallet className="h-4 w-4 text-emerald-400" />
               {isCrypto ? 'Crypto Disbursal Gateway' : 'Fiat / Banking Disbursal Gateway'}
@@ -464,21 +473,26 @@ export function PayoutManagementModal({
                     <button
                       type="button"
                       onClick={handleCopy}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 transition-colors active:scale-95"
+                      className={cn(
+                        "text-xs font-semibold flex items-center gap-1.5 transition-all px-2.5 py-1 rounded-md active:scale-95 cursor-pointer select-none",
+                        copiedAddress || copied
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs"
+                          : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+                      )}
                     >
-                      {copiedAddress || copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                      {copiedAddress || copied ? 'Address Copied!' : 'Copy Address'}
+                      {copiedAddress || copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedAddress || copied ? '✓ Copied!' : 'Copy Address'}
                     </button>
                   )}
                 </div>
-                <div className={`p-2.5 rounded-lg font-mono text-xs break-all select-all border ${destinationAddress ? 'bg-[#111827] border-[#1F2937] text-gray-100' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                <div className={`p-2.5 rounded-lg font-mono text-xs break-all select-all border ${destinationAddress ? 'bg-surface border-surface-muted text-gray-100' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
                   {destinationAddress || 'No destination address on file — confirm with the trader before marking this payout paid.'}
                 </div>
               </div>
 
               {/* Exact Disbursal Amount 1-Click Copy */}
               {traderShare > 0 && (
-                <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-[#111827] border border-[#1F2937] text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-surface border border-surface-muted text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-gray-400">Exact Disbursal:</span>
                     <strong className="text-emerald-400 font-bold tabular">{formatMoney(traderShare)}</strong>
@@ -487,10 +501,15 @@ export function PayoutManagementModal({
                   <button
                     type="button"
                     onClick={handleCopyAmount}
-                    className="text-xs text-gray-300 hover:text-white font-medium flex items-center gap-1 transition-colors px-2 py-1 rounded bg-[#1F2937] hover:bg-gray-700 active:scale-95"
+                    className={cn(
+                      "text-xs font-semibold flex items-center gap-1.5 transition-all px-2.5 py-1 rounded active:scale-95 cursor-pointer select-none",
+                      copiedAmount
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs"
+                        : "text-gray-300 hover:text-white bg-surface-muted hover:bg-gray-700"
+                    )}
                   >
-                    {copiedAmount ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                    {copiedAmount ? 'Amount Copied!' : 'Copy Amount'}
+                    {copiedAmount ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copiedAmount ? '✓ Copied!' : 'Copy Amount'}
                   </button>
                 </div>
               )}

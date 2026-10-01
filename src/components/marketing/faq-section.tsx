@@ -81,7 +81,7 @@ export function FAQSection({ puckProps }: FAQSectionProps) {
                 key={idx}
                 className={cn(
                   'rounded-xl border transition-colors overflow-hidden',
-                  isOpen ? 'border-border bg-surface shadow-sm' : 'border-border-subtle bg-surface/50 hover:bg-surface'
+                  isOpen ? 'border-emerald-500/40 bg-surface/80 shadow-glow-sm' : 'border-border-subtle/80 bg-surface/40 hover:bg-surface/60 hover:border-emerald-500/20'
                 )}
               >
                 <button

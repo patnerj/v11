@@ -29,6 +29,9 @@ export interface DataTableProps<T> {
   emptyIcon?: React.ReactNode
   onRowClick?: (row: T) => void
   className?: string
+  selectable?: boolean
+  selectedIds?: (string | number)[]
+  onSelectionChange?: (ids: (string | number)[]) => void
 }
 
 export function DataTable<T extends { id?: string | number } | Record<string, any>>({
@@ -39,11 +42,50 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
   emptyIcon,
   onRowClick,
   className,
+  selectable = false,
+  selectedIds = [],
+  onSelectionChange,
 }: DataTableProps<T>) {
+  const allIds = React.useMemo(() => data.map((r, i) => r.id ?? i), [data])
+  const allSelected = data.length > 0 && allIds.every((id) => selectedIds.includes(id))
+  const someSelected = selectedIds.length > 0 && !allSelected
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      onSelectionChange?.([])
+    } else {
+      onSelectionChange?.(allIds)
+    }
+  }
+
+  const toggleSelectRow = (id: string | number) => {
+    if (selectedIds.includes(id)) {
+      onSelectionChange?.(selectedIds.filter((item) => item !== id))
+    } else {
+      onSelectionChange?.([...selectedIds, id])
+    }
+  }
+
+  const totalCols = columns.length + (selectable ? 1 : 0)
+
   return (
     <Table className={className}>
       <TableHeader>
         <TableRow>
+          {selectable && (
+            <TableHead className="w-12 px-3 text-center">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                ref={(el) => {
+                  if (el) el.indeterminate = someSelected
+                }}
+                onChange={toggleSelectAll}
+                aria-label="Select all rows"
+                className="h-4 w-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+              />
+            </TableHead>
+          )}
           {columns.map((col) => (
             <TableHead 
               key={col.key} 
@@ -59,43 +101,62 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
       <TableBody>
         {loading ? (
           <TableRow>
-            <TableCell colSpan={columns.length} className="h-44 text-center">
+            <TableCell colSpan={totalCols} className="h-44 text-center">
               <div className="flex flex-col items-center justify-center gap-2">
                 <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                <span className="text-xs text-gray-400 font-sans font-medium">Loading data...</span>
+                <span className="text-xs text-text-muted font-sans font-medium">Loading data...</span>
               </div>
             </TableCell>
           </TableRow>
         ) : data.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={columns.length} className="h-44 text-center">
-              <div className="flex flex-col items-center justify-center gap-2 text-gray-500">
-                {emptyIcon || <Inbox className="h-8 w-8 text-gray-600" />}
-                <span className="text-sm font-medium text-gray-400">{emptyMessage}</span>
+            <TableCell colSpan={totalCols} className="h-44 text-center">
+              <div className="flex flex-col items-center justify-center gap-2 text-text-muted">
+                {emptyIcon || <Inbox className="h-8 w-8 text-text-muted" />}
+                <span className="text-sm font-medium text-text-muted">{emptyMessage}</span>
               </div>
             </TableCell>
           </TableRow>
         ) : (
-          data.map((row, idx) => (
-            <TableRow
-              key={row.id ?? idx}
-              onClick={() => onRowClick?.(row)}
-              className={cn(
-                onRowClick && 'cursor-pointer hover:bg-slate-800/60 transition-colors'
-              )}
-            >
-              {columns.map((col) => (
-                <TableCell 
-                  key={col.key} 
-                  align={col.align} 
-                  hideOn={col.hideOn}
-                  className={col.className}
-                >
-                  {col.render ? col.render(row, idx) : (row as any)[col.key]}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
+          data.map((row, idx) => {
+            const rowId = row.id ?? idx
+            const isSelected = selectedIds.includes(rowId)
+
+            return (
+              <TableRow
+                key={rowId}
+                onClick={() => onRowClick?.(row)}
+                className={cn(
+                  'transition-colors',
+                  isSelected && 'bg-surface-muted/50 dark:bg-surface-muted/30',
+                  onRowClick && 'cursor-pointer hover:bg-surface-muted/60'
+                )}
+              >
+                {selectable && (
+                  <TableCell className="w-12 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => toggleSelectRow(rowId)}
+                      aria-label={`Select row ${rowId}`}
+                      className="h-4 w-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+                    />
+                  </TableCell>
+                )}
+                {columns.map((col) => (
+                  <TableCell 
+                    key={col.key} 
+                    align={col.align} 
+                    hideOn={col.hideOn}
+                    className={col.className}
+                  >
+                    {col.render ? col.render(row, idx) : (row as any)[col.key]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            )
+          })
         )}
       </TableBody>
     </Table>

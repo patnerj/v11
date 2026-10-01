@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SidebarBrand } from '@/components/logo'
 import { api } from '@/lib/api'
@@ -151,6 +151,7 @@ function SidebarBody({
   isMobileDrawer?: boolean;
   onCloseMobile?: () => void;
 }) {
+  const router = useRouter()
   const activePathname = usePathname()
   const pathname = currentPath || activePathname
   const queryClient = useQueryClient()
@@ -159,6 +160,14 @@ function SidebarBody({
   
   const adminMode = role === 'admin' || (role === undefined && isAdmin && !impersonating)
   const [setupDone, setSetupDone] = useState(false)
+  const [optimisticPath, setOptimisticPath] = useState<string | null>(null)
+
+  // Re-sync optimistic state whenever route navigation resolves
+  useEffect(() => {
+    setOptimisticPath(null)
+  }, [pathname])
+
+  const effectivePath = optimisticPath || pathname
   
   useEffect(() => {
     if (!adminMode) return
@@ -175,6 +184,12 @@ function SidebarBody({
   const homeHref = adminMode ? '/admin' : '/dashboard'
 
   const handleMouseEnter = (item: NavItem) => {
+    // 1. Next.js App Router route chunk prefetch
+    try {
+      router.prefetch(item.href)
+    } catch {}
+
+    // 2. TanStack Query cache data prefetch
     if (item.href === '/dashboard/history') {
       queryClient.prefetchQuery({
         queryKey: ['history', 'latest'],
@@ -260,18 +275,25 @@ function SidebarBody({
         {items.map((it) => {
           const isRoot = it.href === '/dashboard' || it.href === '/admin'
           const active = isRoot
-            ? pathname === it.href
-            : pathname?.startsWith(it.href)
+            ? effectivePath === it.href
+            : effectivePath?.startsWith(it.href)
           const Icon = it.icon
           return (
             <Link
               key={it.href}
               href={it.href}
-              onClick={onCloseMobile}
+              prefetch={true}
+              onClick={() => {
+                setOptimisticPath(it.href)
+                onCloseMobile?.()
+              }}
               onMouseEnter={() => handleMouseEnter(it)}
+              onFocus={() => {
+                try { router.prefetch(it.href) } catch {}
+              }}
               title={collapsed ? it.label : undefined}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200',
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-150',
                 'focus-ring relative group overflow-hidden',
                 collapsed && 'justify-center px-0',
                 active
@@ -279,7 +301,7 @@ function SidebarBody({
                   : 'text-text-muted hover:text-text hover:bg-surface-muted/60',
               )}
             >
-              <Icon className={cn("h-4 w-4 shrink-0 transition-transform duration-200", active ? "scale-110" : "group-hover:scale-110")} />
+              <Icon className={cn("h-4 w-4 shrink-0 transition-transform duration-150", active ? "scale-110" : "group-hover:scale-110")} />
               {!collapsed && <span className="flex-1">{it.label}</span>}
               {it.badge && !collapsed && (
                 <span className="text-[0.6rem] tracking-wider font-semibold px-1.5 py-0.5 rounded bg-success/15 text-success inline-flex items-center gap-1">
@@ -294,13 +316,14 @@ function SidebarBody({
 
       <div className={cn('border-t border-border-subtle space-y-2', collapsed ? 'px-2 py-4' : 'px-3 py-4 pb-4')}>
         {collapsed ? (
-          <Link href="/faq" title="Help & docs" onClick={onCloseMobile}
+          <Link href="/faq" prefetch={true} title="Help & docs" onClick={onCloseMobile}
             className="flex items-center justify-center p-2 rounded-md text-text-muted hover:text-text hover:bg-surface-muted transition-colors">
             <LifeBuoy className="h-4 w-4" />
           </Link>
         ) : adminMode ? (
           <Link
             href="/faq"
+            prefetch={true}
             onClick={onCloseMobile}
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
           >
@@ -311,6 +334,7 @@ function SidebarBody({
           <>
             <Link
               href="/faq"
+              prefetch={true}
               onClick={onCloseMobile}
               className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
             >
@@ -318,7 +342,7 @@ function SidebarBody({
               Help &amp; FAQ
             </Link>
             <Button asChild size="sm" variant="outline" className="w-full" onClick={onCloseMobile}>
-              <Link href="/challenges">+ Start new challenge</Link>
+              <Link href="/challenges" prefetch={true}>+ Start new challenge</Link>
             </Button>
           </>
         )}

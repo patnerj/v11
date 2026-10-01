@@ -30,9 +30,9 @@ import { cn } from '@/lib/cn'
 
 // Theme Color Presets mapped from Whitelabel Design System
 const THEME_COLOR_PRESETS = [
-  { name: 'Emerald', bg: '#10B981', text: '#0B0F19', label: 'Midnight Emerald' },
+  { name: 'Emerald', bg: '#10B981', text: 'var(--background)', label: 'Midnight Emerald' },
   { name: 'Electric Blue', bg: '#3B82F6', text: '#FFFFFF', label: 'Cyber Blue' },
-  { name: 'Amber Gold', bg: '#F59E0B', text: '#0B0F19', label: 'Sunset Amber' },
+  { name: 'Amber Gold', bg: '#F59E0B', text: 'var(--background)', label: 'Sunset Amber' },
   { name: 'Crimson', bg: '#EF4444', text: '#FFFFFF', label: 'Risk Crimson' },
   { name: 'Amethyst', bg: '#8B5CF6', text: '#FFFFFF', label: 'Royal Violet' },
 ]
@@ -228,7 +228,7 @@ export default function MarketingHubPage() {
     cta_label: 'Claim Discount',
     cta_url: '/checkout',
     bg_color: '#10B981',
-    text_color: '#0B0F19',
+    text_color: 'var(--background)',
     active: 1,
     priority: 1,
   })
@@ -249,7 +249,7 @@ export default function MarketingHubPage() {
       cta_label: 'Get Funded Now',
       cta_url: '/checkout',
       bg_color: systemAccentColor,
-      text_color: systemAccentColor === '#10B981' || systemAccentColor === '#F59E0B' ? '#0B0F19' : '#FFFFFF',
+      text_color: systemAccentColor === '#10B981' || systemAccentColor === '#F59E0B' ? 'var(--background)' : '#FFFFFF',
       active: 1,
       priority: 1,
     })
@@ -272,7 +272,7 @@ export default function MarketingHubPage() {
       cta_label: b.cta_label || 'Claim Discount',
       cta_url: b.cta_url || '/checkout',
       bg_color: b.bg_color || systemAccentColor,
-      text_color: b.text_color || '#0B0F19',
+      text_color: b.text_color || 'var(--background)',
       active: b.active ?? 1,
       priority: b.priority ?? 0,
     })
@@ -711,7 +711,7 @@ export default function MarketingHubPage() {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `alphacapital_affiliates_${new Date().toISOString().slice(0, 10)}.csv`)
+    link.setAttribute('download', `massfunded_affiliates_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -739,7 +739,7 @@ export default function MarketingHubPage() {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `alphacapital_commissions_${new Date().toISOString().slice(0, 10)}.csv`)
+    link.setAttribute('download', `massfunded_commissions_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -792,7 +792,7 @@ export default function MarketingHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Bar Header ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -808,7 +808,7 @@ export default function MarketingHubPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-[#111827] p-1.5 rounded-xl border border-[#1F2937]">
+        <div className="flex flex-wrap items-center gap-1.5 bg-surface p-1.5 rounded-xl border border-surface-muted">
           <button
             onClick={() => setActiveTab('banners')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -897,7 +897,7 @@ export default function MarketingHubPage() {
           </div>
 
           {banners.length === 0 ? (
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-surface-muted">
               <CardContent className="py-16 text-center text-gray-400">
                 <Megaphone className="h-10 w-10 mx-auto text-gray-600 mb-3" />
                 <p className="font-semibold text-white">No promotional banners deployed</p>
@@ -912,12 +912,12 @@ export default function MarketingHubPage() {
               {banners.map((b: Banner) => (
                 <Card 
                   key={b.id} 
-                  className="bg-[#111827] border-[#1F2937] hover:border-emerald-500/40 transition-all flex flex-col justify-between overflow-hidden"
+                  className="bg-surface border-surface-muted hover:border-emerald-500/40 transition-all flex flex-col justify-between overflow-hidden"
                 >
                   {/* Banner Live Preview Bar */}
                   <div 
                     className="p-4 flex items-center justify-between font-sans shadow-inner transition-colors"
-                    style={{ backgroundColor: b.bg_color || systemAccentColor, color: b.text_color || '#0B0F19' }}
+                    style={{ backgroundColor: b.bg_color || systemAccentColor, color: b.text_color || 'var(--background)' }}
                   >
                     <div className="font-bold text-xs sm:text-sm truncate flex-1 mr-3 flex items-center gap-2">
                       <Sparkles className="h-4 w-4 shrink-0" />
@@ -932,20 +932,20 @@ export default function MarketingHubPage() {
 
                   <CardContent className="p-5 space-y-3 text-xs font-mono">
                     {b.title ? (
-                      <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                      <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                         <span className="text-gray-400">Title / Campaign:</span>
                         <span className="text-gray-200 font-semibold font-sans">{b.title}</span>
                       </div>
                     ) : null}
 
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">Placement Scope:</span>
                       <Badge tone="neutral" size="sm" className="capitalize font-sans">
                         {b.placement === 'both' ? 'Dashboard & Login' : b.placement || 'Global'}
                       </Badge>
                     </div>
 
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">CTA Action:</span>
                       <div className="flex items-center gap-1.5 text-gray-200">
                         <span className="font-semibold">{b.cta_label || 'Claim'}</span>
@@ -954,10 +954,10 @@ export default function MarketingHubPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center py-1 border-b border-[#1F2937]/40">
+                    <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
                       <span className="text-gray-400">Color Theme:</span>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 bg-[#0B0F19] px-2 py-0.5 rounded border border-[#1F2937]">
+                        <div className="flex items-center gap-1.5 bg-background px-2 py-0.5 rounded border border-surface-muted">
                           <div className="h-3.5 w-3.5 rounded-full border border-gray-600 shrink-0" style={{ backgroundColor: b.bg_color || systemAccentColor }} />
                           <span className="text-[10px] text-gray-300 font-mono">{b.bg_color || systemAccentColor}</span>
                         </div>
@@ -965,7 +965,7 @@ export default function MarketingHubPage() {
                     </div>
                   </CardContent>
 
-                  <CardFooter className="border-t border-[#1F2937]/60 pt-3 flex items-center justify-between">
+                  <CardFooter className="border-t border-surface-muted/60 pt-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Switch 
                         checked={!!b.active} 
@@ -981,7 +981,7 @@ export default function MarketingHubPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => openEditBanner(b)}
-                        className="h-8 text-xs border-[#1F2937] hover:border-emerald-500 text-gray-300 hover:text-white gap-1.5"
+                        className="h-8 text-xs border-surface-muted hover:border-emerald-500 text-gray-300 hover:text-white gap-1.5"
                       >
                         <Edit2 className="h-3 w-3 text-emerald-400" />
                         Edit
@@ -1100,7 +1100,7 @@ export default function MarketingHubPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => openEditCoupon(c)}
-                      className="h-8 w-8 p-0 border-[#1F2937] hover:border-emerald-500/50 hover:text-emerald-400"
+                      className="h-8 w-8 p-0 border-surface-muted hover:border-emerald-500/50 hover:text-emerald-400"
                       title="Edit Coupon"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
@@ -1128,7 +1128,7 @@ export default function MarketingHubPage() {
           
           {/* Summary Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-surface-muted">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-400">Total Affiliates</span>
@@ -1143,7 +1143,7 @@ export default function MarketingHubPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-surface-muted">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-400">Lifetime Commission Paid</span>
@@ -1158,7 +1158,7 @@ export default function MarketingHubPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-[#111827] border-[#1F2937]">
+            <Card className="bg-surface border-surface-muted">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-400">Pending Commission Balance</span>
@@ -1175,8 +1175,8 @@ export default function MarketingHubPage() {
           </div>
 
           {/* Multi-Tier Commission Configuration Box */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-emerald-400" />
                 Multi-Tier Commission Engine Configuration
@@ -1236,7 +1236,7 @@ export default function MarketingHubPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="border-t border-[#1F2937]/60 p-4 flex justify-end">
+            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
               <Button
                 variant="primary"
                 size="sm"
@@ -1270,14 +1270,14 @@ export default function MarketingHubPage() {
                     placeholder="Search partner or code..."
                     value={affiliateSearch}
                     onChange={(e) => setAffiliateSearch(e.target.value)}
-                    className="h-8 pl-8 text-xs w-44 bg-[#0B0F19] border-[#1F2937]"
+                    className="h-8 pl-8 text-xs w-44 bg-background border-surface-muted"
                   />
                 </div>
 
                 <select
                   value={affiliateStatusFilter}
                   onChange={(e) => setAffiliateStatusFilter(e.target.value as any)}
-                  className="h-8 px-2.5 rounded-md bg-[#0B0F19] border border-[#1F2937] text-xs text-gray-200 focus:outline-none focus:border-emerald-500"
+                  className="h-8 px-2.5 rounded-md bg-background border border-surface-muted text-xs text-gray-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active Only</option>
@@ -1288,7 +1288,7 @@ export default function MarketingHubPage() {
                   variant="outline"
                   size="sm"
                   onClick={exportAffiliatesCSV}
-                  className="h-8 text-xs gap-1.5 border-[#1F2937] hover:bg-[#1F2937] text-gray-300"
+                  className="h-8 text-xs gap-1.5 border-surface-muted hover:bg-surface-muted text-gray-300"
                 >
                   <Download className="h-3.5 w-3.5" /> Export CSV
                 </Button>
@@ -1415,8 +1415,8 @@ export default function MarketingHubPage() {
           </div>
 
           {/* ── Affiliate Payout Requests Queue ── */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1F2937]/60 pb-3">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-muted/60 pb-3">
               <div>
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <ArrowUpRight className="h-4 w-4 text-emerald-400" />
@@ -1435,7 +1435,7 @@ export default function MarketingHubPage() {
                     className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
                       payoutsFilter === f
                         ? 'bg-emerald-500 text-slate-950 font-bold'
-                        : 'text-gray-400 hover:text-white bg-[#0B0F19] border border-[#1F2937]'
+                        : 'text-gray-400 hover:text-white bg-background border border-surface-muted'
                     }`}
                   >
                     {f}
@@ -1450,7 +1450,7 @@ export default function MarketingHubPage() {
               ) : affiliatePayoutsQueue.length === 0 ? (
                 <div className="p-8 text-center text-xs text-gray-500 font-mono">No {payoutsFilter !== 'all' ? payoutsFilter : ''} payout requests found.</div>
               ) : (
-                <div className="divide-y divide-[#1F2937]/60">
+                <div className="divide-y divide-surface-muted/60">
                   {affiliatePayoutsQueue.map((p) => {
                     const isExpanded = activePayoutRow?.id === p.id
                     const statusTone = p.status === 'paid' ? 'success' : p.status === 'rejected' ? 'danger' : p.status === 'approved' ? 'accent' : 'warning'
@@ -1499,7 +1499,7 @@ export default function MarketingHubPage() {
 
                         {/* Inline Processing Drawer */}
                         {isExpanded && (
-                          <div className="px-4 py-3 bg-[#0B0F19]/80 border-t border-[#1F2937] space-y-3 animate-in fade-in">
+                          <div className="px-4 py-3 bg-background/80 border-t border-surface-muted space-y-3 animate-in fade-in">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                               <div className="space-y-1">
                                 <Label className="text-[10px] text-gray-400">Transaction Hash / Ref</Label>
@@ -1553,7 +1553,7 @@ export default function MarketingHubPage() {
                                 variant="outline"
                                 disabled={isProcessingPayout}
                                 onClick={() => handleProcessPayoutStatus('approved')}
-                                className="h-7 text-xs border-[#1F2937] hover:border-emerald-500/50 hover:text-emerald-400"
+                                className="h-7 text-xs border-surface-muted hover:border-emerald-500/50 hover:text-emerald-400"
                               >
                                 Approve Request
                               </Button>
@@ -1578,8 +1578,8 @@ export default function MarketingHubPage() {
           </Card>
 
           {/* ── Commission Transaction Ledger ── */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1F2937]/60 pb-3">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-muted/60 pb-3">
               <div>
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-emerald-400" />
@@ -1595,7 +1595,7 @@ export default function MarketingHubPage() {
                   variant="outline"
                   size="sm"
                   onClick={exportCommissionsCSV}
-                  className="h-7 text-xs gap-1.5 border-[#1F2937] hover:bg-[#1F2937] text-gray-300"
+                  className="h-7 text-xs gap-1.5 border-surface-muted hover:bg-surface-muted text-gray-300"
                 >
                   <Download className="h-3 w-3" /> Export Ledger (CSV)
                 </Button>
@@ -1608,7 +1608,7 @@ export default function MarketingHubPage() {
                       className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
                         commissionFilter === f
                           ? 'bg-emerald-500 text-slate-950 font-bold'
-                          : 'text-gray-400 hover:text-white bg-[#0B0F19] border border-[#1F2937]'
+                          : 'text-gray-400 hover:text-white bg-background border border-surface-muted'
                       }`}
                     >
                       {f}
@@ -1624,7 +1624,7 @@ export default function MarketingHubPage() {
               ) : commissions.length === 0 ? (
                 <div className="p-8 text-center text-xs text-gray-500 font-mono">No commissions found for this filter.</div>
               ) : (
-                <div className="divide-y divide-[#1F2937]/60">
+                <div className="divide-y divide-surface-muted/60">
                   {commissions.map((c) => {
                     const statusTone = c.status === 'paid' ? 'success' : c.status === 'reversed' ? 'danger' : c.status === 'approved' ? 'accent' : 'warning'
 
@@ -1681,8 +1681,8 @@ export default function MarketingHubPage() {
           
           {/* ── LEFT COLUMN: BROADCAST COMPOSER ENGINE ── */}
           <div className="xl:col-span-6 space-y-6">
-            <Card className="bg-[#111827] border-[#1F2937]">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                     <Send className="h-4 w-4 text-emerald-400" />
@@ -1705,7 +1705,7 @@ export default function MarketingHubPage() {
                       id="broadcast-audience"
                       value={broadcastForm.audience}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, audience: e.target.value })}
-                      className="w-full h-10 px-3 rounded-xl border border-[#1F2937] bg-[#0B0F19] text-gray-200 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                      className="w-full h-10 px-3 rounded-xl border border-surface-muted bg-background text-gray-200 text-xs focus:outline-none focus:border-emerald-500 font-medium"
                     >
                       <option value="all">🌐 All Registered Traders</option>
                       <option value="active">⚡ Active Phase 1 & 2 Traders</option>
@@ -1726,7 +1726,7 @@ export default function MarketingHubPage() {
                 </div>
 
                 {/* Template Tags Ribbon */}
-                <div className="p-3 bg-[#0B0F19] rounded-xl border border-[#1F2937] space-y-2">
+                <div className="p-3 bg-background rounded-xl border border-surface-muted space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
@@ -1738,21 +1738,21 @@ export default function MarketingHubPage() {
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {trader_name}')}
-                      className="px-2.5 py-1 rounded-lg bg-[#111827] hover:bg-slate-800 border border-[#1F2937] text-emerald-400 font-mono text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-emerald-400 font-mono text-[11px] font-semibold transition-colors"
                     >
                       + &#123;trader_name&#125;
                     </button>
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {login_id}')}
-                      className="px-2.5 py-1 rounded-lg bg-[#111827] hover:bg-slate-800 border border-[#1F2937] text-blue-400 font-mono text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-blue-400 font-mono text-[11px] font-semibold transition-colors"
                     >
                       + &#123;login_id&#125;
                     </button>
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {account_balance}')}
-                      className="px-2.5 py-1 rounded-lg bg-[#111827] hover:bg-slate-800 border border-[#1F2937] text-amber-400 font-mono text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-amber-400 font-mono text-[11px] font-semibold transition-colors"
                     >
                       + &#123;account_balance&#125;
                     </button>
@@ -1790,7 +1790,7 @@ export default function MarketingHubPage() {
 
               </CardContent>
 
-              <CardFooter className="border-t border-[#1F2937]/60 p-4 flex items-center justify-between">
+              <CardFooter className="border-t border-surface-muted/60 p-4 flex items-center justify-between">
                 <span className="text-xs text-gray-500">
                   Queued through high-deliverability SMTP pipelines
                 </span>
@@ -1823,8 +1823,8 @@ export default function MarketingHubPage() {
 
           {/* ── RIGHT COLUMN: DEDICATED LIVE DEVICE PREVIEW (DESKTOP & MOBILE) ── */}
           <div className="xl:col-span-6 space-y-4">
-            <Card className="bg-[#111827] border-[#1F2937] overflow-hidden sticky top-6 shadow-xl">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-3">
+            <Card className="bg-surface border-surface-muted overflow-hidden sticky top-6 shadow-xl">
+              <CardHeader className="border-b border-surface-muted/60 pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <CardTitle className="text-sm text-gray-100 flex items-center gap-2">
@@ -1838,7 +1838,7 @@ export default function MarketingHubPage() {
 
                   <div className="flex items-center gap-2">
                     {/* Device Selector (Desktop vs Mobile) */}
-                    <div className="inline-flex p-0.5 rounded-xl bg-[#0B0F19] border border-[#1F2937]">
+                    <div className="inline-flex p-0.5 rounded-xl bg-background border border-surface-muted">
                       <button
                         type="button"
                         onClick={() => setBroadcastPreviewDevice('desktop')}
@@ -1868,7 +1868,7 @@ export default function MarketingHubPage() {
                     </div>
 
                     {/* Inbox Theme Mode Switcher */}
-                    <div className="inline-flex p-0.5 rounded-xl bg-[#0B0F19] border border-[#1F2937]">
+                    <div className="inline-flex p-0.5 rounded-xl bg-background border border-surface-muted">
                       <button
                         type="button"
                         onClick={() => setBroadcastPreviewTheme(broadcastPreviewTheme === 'dark' ? 'light' : 'dark')}
@@ -1898,14 +1898,14 @@ export default function MarketingHubPage() {
                   <div className={cn(
                     "w-full rounded-2xl border shadow-2xl overflow-hidden transition-all duration-300",
                     broadcastPreviewTheme === 'dark' 
-                      ? "bg-[#0B0F19] border-[#1F2937] text-gray-100" 
+                      ? "bg-background border-surface-muted text-gray-100" 
                       : "bg-white border-gray-200 text-gray-900"
                   )}>
                     {/* OS / App Window Title Bar */}
                     <div className={cn(
                       "px-4 py-2.5 border-b flex items-center justify-between text-xs font-mono select-none",
                       broadcastPreviewTheme === 'dark'
-                        ? "bg-[#111827] border-[#1F2937] text-gray-400"
+                        ? "bg-surface border-surface-muted text-gray-400"
                         : "bg-gray-100 border-gray-200 text-gray-600"
                     )}>
                       <div className="flex items-center gap-1.5">
@@ -1920,7 +1920,7 @@ export default function MarketingHubPage() {
                     {/* Mail Metadata Header */}
                     <div className={cn(
                       "p-4 border-b space-y-2",
-                      broadcastPreviewTheme === 'dark' ? "border-[#1F2937]/70 bg-[#0E1524]" : "border-gray-100 bg-gray-50/80"
+                      broadcastPreviewTheme === 'dark' ? "border-surface-muted/70 bg-[#0E1524]" : "border-gray-100 bg-gray-50/80"
                     )}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -1983,7 +1983,7 @@ export default function MarketingHubPage() {
                       {/* Branded Footer */}
                       <div className={cn(
                         "pt-6 mt-6 border-t text-[11px] space-y-1.5",
-                        broadcastPreviewTheme === 'dark' ? "border-[#1F2937]/60 text-gray-500" : "border-gray-200 text-gray-400"
+                        broadcastPreviewTheme === 'dark' ? "border-surface-muted/60 text-gray-500" : "border-gray-200 text-gray-400"
                       )}>
                         <div className="font-semibold text-gray-400">PropFirm System Platform</div>
                         <div>This message was sent to Alexander V. as an official trader update.</div>
@@ -2002,14 +2002,14 @@ export default function MarketingHubPage() {
                     )}>
                       {/* Dynamic Island / Notch */}
                       <div className="absolute top-4 left-1/2 -translate-x-1/2 h-5 w-24 bg-black rounded-full z-20 flex items-center justify-end px-2">
-                        <span className="h-2.5 w-2.5 rounded-full bg-[#111827] border border-gray-800"></span>
+                        <span className="h-2.5 w-2.5 rounded-full bg-surface border border-gray-800"></span>
                       </div>
 
                       {/* Mobile Screen Wrapper */}
                       <div className={cn(
                         "w-full rounded-[32px] overflow-hidden border transition-colors flex flex-col min-h-[520px] max-h-[580px]",
                         broadcastPreviewTheme === 'dark'
-                          ? "bg-[#0B0F19] border-[#1F2937]/80 text-gray-100"
+                          ? "bg-background border-surface-muted/80 text-gray-100"
                           : "bg-white border-gray-200 text-gray-900"
                       )}>
                         {/* Mobile Status Bar */}
@@ -2024,7 +2024,7 @@ export default function MarketingHubPage() {
                         {/* Mobile Mail Top Bar */}
                         <div className={cn(
                           "px-3.5 py-2 border-b flex items-center justify-between text-xs",
-                          broadcastPreviewTheme === 'dark' ? "border-[#1F2937]/70 bg-[#0E1524]" : "border-gray-100 bg-gray-50"
+                          broadcastPreviewTheme === 'dark' ? "border-surface-muted/70 bg-[#0E1524]" : "border-gray-100 bg-gray-50"
                         )}>
                           <div className="flex items-center gap-1 text-emerald-400 font-medium text-[11px]">
                             <ChevronLeft className="h-4 w-4 -ml-1" />
@@ -2133,8 +2133,8 @@ export default function MarketingHubPage() {
             
             {/* Left Column: Template Customizer (5 cols) */}
             <div className="lg:col-span-5 space-y-4">
-              <Card className="bg-[#111827] border-[#1F2937]">
-                <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+              <Card className="bg-surface border-surface-muted">
+                <CardHeader className="pb-3 border-b border-surface-muted/60">
                   <CardTitle className="text-sm text-gray-200">Template Selector & Options</CardTitle>
                 </CardHeader>
 
@@ -2142,7 +2142,7 @@ export default function MarketingHubPage() {
                   {/* Type Selector */}
                   <div className="space-y-1.5">
                     <Label className="text-xs text-gray-400">Certificate Event Type</Label>
-                    <div className="grid grid-cols-3 gap-1.5 bg-[#0B0F19] p-1 rounded-xl border border-[#1F2937]">
+                    <div className="grid grid-cols-3 gap-1.5 bg-background p-1 rounded-xl border border-surface-muted">
                       {(['phase1', 'phase2', 'payout'] as const).map((type) => (
                         <button
                           key={type}
@@ -2247,7 +2247,7 @@ export default function MarketingHubPage() {
                   </div>
 
                   {/* Badge & Color Theme */}
-                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#1F2937]/60">
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-surface-muted/60">
                     <div className="space-y-1.5">
                       <Label htmlFor="cert-badge">Seal Badge Tier</Label>
                       <select
@@ -2260,7 +2260,7 @@ export default function MarketingHubPage() {
                             theme_badge: e.target.value
                           }
                         })}
-                        className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                        className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                       >
                         <option value="gold">🥇 Gold Sovereign Seal</option>
                         <option value="platinum">💎 Platinum Elite Seal</option>
@@ -2292,7 +2292,7 @@ export default function MarketingHubPage() {
                   </div>
 
                   {/* QR Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+                  <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-surface-muted">
                     <div>
                       <p className="text-xs font-semibold text-gray-200">Include Verification QR Code</p>
                       <p className="text-[10px] text-gray-500">Links to public HMAC tamper-proof validator</p>
@@ -2321,7 +2321,7 @@ export default function MarketingHubPage() {
               </Label>
 
               <div 
-                className="relative aspect-[1.414/1] w-full rounded-2xl border-4 bg-[#0B0F19] shadow-2xl p-6 sm:p-8 flex flex-col justify-between overflow-hidden select-none"
+                className="relative aspect-[1.414/1] w-full rounded-2xl border-4 bg-background shadow-2xl p-6 sm:p-8 flex flex-col justify-between overflow-hidden select-none"
                 style={{ borderColor: certTemplates[selectedCertType].accent_color }}
               >
                 {/* Decorative background watermark */}
@@ -2428,7 +2428,7 @@ export default function MarketingHubPage() {
             <Label className="text-xs text-gray-400">Live Preview</Label>
             <div 
               className="p-3.5 sm:p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 font-sans shadow-md transition-colors w-full min-w-0"
-              style={{ backgroundColor: bannerForm.bg_color || systemAccentColor, color: bannerForm.text_color || '#0B0F19' }}
+              style={{ backgroundColor: bannerForm.bg_color || systemAccentColor, color: bannerForm.text_color || 'var(--background)' }}
             >
               <div className="font-bold text-xs sm:text-sm truncate flex-1 min-w-0 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 shrink-0" />
@@ -2481,7 +2481,7 @@ export default function MarketingHubPage() {
                 id="banner-placement"
                 value={bannerForm.placement || 'both'}
                 onChange={(e) => setBannerForm({ ...bannerForm, placement: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
               >
                 <option value="both">Both (Dashboard & Login)</option>
                 <option value="dashboard">Trader Dashboard Only</option>
@@ -2497,7 +2497,7 @@ export default function MarketingHubPage() {
                 id="banner-scope-type"
                 value={bannerForm.scope_type || 'global'}
                 onChange={(e) => setBannerForm({ ...bannerForm, scope_type: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
               >
                 <option value="global">Global (All platform pages)</option>
                 <option value="page">Specific Page Route</option>
@@ -2518,7 +2518,7 @@ export default function MarketingHubPage() {
             ) : (
               <div className="space-y-1.5">
                 <Label className="text-gray-500">Scope Note</Label>
-                <div className="h-10 px-3 flex items-center text-[11px] text-gray-400 bg-[#0B0F19] rounded-lg border border-[#1F2937]/50 font-mono">
+                <div className="h-10 px-3 flex items-center text-[11px] text-gray-400 bg-background rounded-lg border border-surface-muted/50 font-mono">
                   Active across all public & trader routes
                 </div>
               </div>
@@ -2526,7 +2526,7 @@ export default function MarketingHubPage() {
           </div>
 
           {/* Theme Accent Presets */}
-          <div className="space-y-2 pt-2 border-t border-[#1F2937]/60">
+          <div className="space-y-2 pt-2 border-t border-surface-muted/60">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-1.5 text-xs text-gray-300">
                 <Palette className="h-3.5 w-3.5 text-emerald-400" />
@@ -2549,8 +2549,8 @@ export default function MarketingHubPage() {
                     })}
                     className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer ${
                       isSelected 
-                        ? 'border-emerald-400 bg-[#1F2937] shadow-sm ring-1 ring-emerald-500/30' 
-                        : 'border-[#1F2937] bg-[#0B0F19] hover:border-gray-600'
+                        ? 'border-emerald-400 bg-surface-muted shadow-sm ring-1 ring-emerald-500/30' 
+                        : 'border-surface-muted bg-background hover:border-gray-600'
                     }`}
                   >
                     <div 
@@ -2585,10 +2585,10 @@ export default function MarketingHubPage() {
             <div className="space-y-1.5">
               <Label htmlFor="banner-text">Custom Text Color Hex</Label>
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded border border-gray-700 shrink-0" style={{ backgroundColor: bannerForm.text_color || '#0B0F19' }} />
+                <div className="h-8 w-8 rounded border border-gray-700 shrink-0" style={{ backgroundColor: bannerForm.text_color || 'var(--background)' }} />
                 <Input
                   id="banner-text"
-                  value={bannerForm.text_color || '#0B0F19'}
+                  value={bannerForm.text_color || 'var(--background)'}
                   onChange={(e) => setBannerForm({ ...bannerForm, text_color: e.target.value })}
                   className="font-mono uppercase text-xs"
                 />
@@ -2653,7 +2653,7 @@ export default function MarketingHubPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+          <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
             <div>
               <p className="text-xs font-semibold text-gray-200">Active / Live Broadcast</p>
               <p className="text-[10px] text-gray-500">Immediately visible to targeted users</p>
@@ -2664,7 +2664,7 @@ export default function MarketingHubPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-surface-muted">
             <Button variant="outline" size="sm" onClick={() => setIsBannerModalOpen(false)}>
               Cancel
             </Button>
@@ -2710,7 +2710,7 @@ export default function MarketingHubPage() {
                 id="coupon-type"
                 value={couponForm.type || 'percent'}
                 onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
               >
                 <option value="percent">Percentage (%)</option>
                 <option value="fixed">Fixed Dollar ($)</option>
@@ -2784,7 +2784,7 @@ export default function MarketingHubPage() {
                       className={`inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 border transition-all duration-150 font-medium cursor-pointer ${
                         isSelected
                           ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-semibold shadow-sm ring-1 ring-emerald-500/30'
-                          : 'border-[#1F2937] bg-[#0B0F19] text-gray-400 hover:border-slate-600 hover:text-gray-200'
+                          : 'border-surface-muted bg-background text-gray-400 hover:border-slate-600 hover:text-gray-200'
                       }`}
                     >
                       <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-transparent'}`} />
@@ -2798,7 +2798,7 @@ export default function MarketingHubPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3.5 bg-[#0B0F19] rounded-xl border border-[#1F2937]">
+          <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
             <div>
               <p className="text-xs font-semibold text-gray-200">Active Promo Status</p>
               <p className="text-[10px] text-gray-500">Allow users to apply this coupon code at checkout</p>
@@ -2809,7 +2809,7 @@ export default function MarketingHubPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-surface-muted">
             <Button variant="outline" size="sm" onClick={() => setIsCouponModalOpen(false)}>
               Cancel
             </Button>
@@ -2857,7 +2857,7 @@ export default function MarketingHubPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-10 text-xs px-2.5 gap-1 border-[#1F2937] hover:bg-[#1F2937]"
+                className="h-10 text-xs px-2.5 gap-1 border-surface-muted hover:bg-surface-muted"
                 onClick={() => {
                   navigator.clipboard.writeText(String(payoutAmount))
                   toast.success('Payout amount copied!')
@@ -2874,7 +2874,7 @@ export default function MarketingHubPage() {
               id="payout-method"
               value={payoutMethod}
               onChange={(e) => setPayoutMethod(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+              className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
             >
               <option value="crypto">USDT (TRC-20 / ERC-20)</option>
               <option value="bank">Direct Bank Wire / SWIFT</option>
@@ -2909,7 +2909,7 @@ export default function MarketingHubPage() {
 
           {/* ── Scan-to-Pay QR Code Box ── */}
           {payoutDest && payoutQrDataUrl && payoutMethod === 'crypto' && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-[#0B0F19] border border-emerald-500/20">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background border border-emerald-500/20">
               <div className="bg-white p-1 rounded-md shrink-0">
                 <img src={payoutQrDataUrl} alt="TRC-20 QR Code" className="w-20 h-20" />
               </div>
@@ -2944,7 +2944,7 @@ export default function MarketingHubPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-surface-muted">
             <Button variant="outline" size="sm" onClick={() => setIsPayoutModalOpen(false)}>
               Cancel
             </Button>
@@ -2985,27 +2985,27 @@ export default function MarketingHubPage() {
         {selectedAffiliateDetail && (
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+              <div className="p-3 rounded-lg bg-background border border-surface-muted">
                 <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Ref Code</div>
                 <div className="text-sm font-mono font-bold text-emerald-400 mt-0.5">{selectedAffiliateDetail.code}</div>
               </div>
-              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+              <div className="p-3 rounded-lg bg-background border border-surface-muted">
                 <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Commission Split</div>
                 <div className="text-sm font-mono font-bold text-white mt-0.5">{selectedAffiliateDetail.rate_percent ?? 15}%</div>
               </div>
-              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+              <div className="p-3 rounded-lg bg-background border border-surface-muted">
                 <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Unpaid Balance</div>
                 <div className="text-sm font-mono font-bold text-amber-400 mt-0.5">${Number(selectedAffiliateDetail.unpaid || 0).toLocaleString()}</div>
               </div>
-              <div className="p-3 rounded-lg bg-[#0B0F19] border border-[#1F2937]">
+              <div className="p-3 rounded-lg bg-background border border-surface-muted">
                 <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Lifetime Paid</div>
                 <div className="text-sm font-mono font-bold text-emerald-400 mt-0.5">${Number(selectedAffiliateDetail.paid || 0).toLocaleString()}</div>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-lg bg-[#0B0F19] border border-[#1F2937] space-y-2">
+            <div className="p-3.5 rounded-lg bg-background border border-surface-muted space-y-2">
               <div className="text-xs font-bold text-gray-200">Registered Payout Destination</div>
-              <div className="flex items-center justify-between gap-2 p-2 rounded bg-[#111827] border border-[#1F2937] text-xs font-mono">
+              <div className="flex items-center justify-between gap-2 p-2 rounded bg-surface border border-surface-muted text-xs font-mono">
                 <span className="truncate text-gray-300">
                   {selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination || 'No payout destination configured by user yet.'}
                 </span>
@@ -3034,15 +3034,15 @@ export default function MarketingHubPage() {
               </div>
 
               {commissions.filter(c => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id).length === 0 ? (
-                <div className="p-6 text-center text-xs text-gray-500 font-mono rounded-lg border border-[#1F2937] bg-[#0B0F19]">
+                <div className="p-6 text-center text-xs text-gray-500 font-mono rounded-lg border border-surface-muted bg-background">
                   No challenge purchase orders attributed to code {selectedAffiliateDetail.code} yet.
                 </div>
               ) : (
-                <div className="rounded-lg border border-[#1F2937] overflow-hidden divide-y divide-[#1F2937] max-h-48 overflow-y-auto">
+                <div className="rounded-lg border border-surface-muted overflow-hidden divide-y divide-surface-muted max-h-48 overflow-y-auto">
                   {commissions
                     .filter(c => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id)
                     .map((c) => (
-                      <div key={c.id} className="p-2.5 flex items-center justify-between text-xs bg-[#0B0F19] hover:bg-[#111827]">
+                      <div key={c.id} className="p-2.5 flex items-center justify-between text-xs bg-background hover:bg-surface">
                         <div>
                           <div className="font-semibold text-gray-200">Order #{c.order_id || c.id} • {c.buyer_user || 'Trader'}</div>
                           <div className="text-[10px] text-gray-500">{c.created_at || 'Recent'}</div>
@@ -3057,7 +3057,7 @@ export default function MarketingHubPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1F2937]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface-muted">
               <Button variant="outline" size="sm" onClick={() => setIsDetailDrawerOpen(false)}>
                 Close
               </Button>

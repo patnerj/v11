@@ -22,10 +22,12 @@ import {
   RefreshCw, 
   ShieldAlert,
   Swords,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBranding } from "@/store/branding";
+import { cn } from "@/lib/cn";
 
 interface CategoryMeta {
   id: string;
@@ -445,7 +447,7 @@ export function TraderSupport() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-card dark:bg-[#0E131F] px-3 py-1 rounded-full border border-border dark:border-[#1F2937] text-xs shadow-sm">
+          <div className="flex items-center gap-2 bg-card dark:bg-[#0E131F] px-3 py-1 rounded-full border border-border dark:border-surface-muted text-xs shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -470,9 +472,9 @@ export function TraderSupport() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 h-auto lg:h-[calc(100vh-140px)] min-h-0 lg:min-h-[580px] lg:max-h-[860px] w-full">
         
         {/* ── LEFT COLUMN (4 Cols): Tickets Queue Sidebar ─────────────────── */}
-        <div className="lg:col-span-4 flex flex-col h-[340px] lg:h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
+        <div className={cn("lg:col-span-4 flex flex-col h-[340px] lg:h-full bg-card dark:bg-background border border-border dark:border-surface-muted rounded-2xl overflow-hidden shadow-lg", selectedTicketId && "hidden lg:flex")}>
           {/* Queue Header & Filters */}
-          <div className="p-3 border-b border-border dark:border-[#1F2937]/80 bg-muted/40 dark:bg-[#0E131F]/80 space-y-2.5 shrink-0">
+          <div className="p-3 border-b border-border dark:border-surface-muted/80 bg-muted/40 dark:bg-[#0E131F]/80 space-y-2.5 shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
@@ -501,12 +503,12 @@ export function TraderSupport() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ticket # or subject..."
-                className="w-full pl-8 pr-2.5 py-1.5 bg-background dark:bg-[#080C14] border border-border dark:border-[#1F2937] rounded-xl text-xs text-foreground dark:text-gray-200 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 transition-all shadow-sm"
+                className="w-full pl-8 pr-2.5 py-1.5 bg-background dark:bg-[#080C14] border border-border dark:border-surface-muted rounded-xl text-xs text-foreground dark:text-gray-200 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 transition-all shadow-sm"
               />
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex items-center bg-background/80 dark:bg-[#080C14] p-0.5 rounded-lg border border-border dark:border-[#1F2937] text-[11px]">
+            <div className="flex items-center bg-background/80 dark:bg-[#080C14] p-0.5 rounded-lg border border-border dark:border-surface-muted text-[11px]">
               {(['all', 'active', 'resolved'] as const).map((st) => (
                 <button
                   key={st}
@@ -537,8 +539,8 @@ export function TraderSupport() {
                   onClick={() => setSelectedTicketId(Number(t.id))}
                   className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col gap-1.5 ${
                     isSelected
-                      ? 'bg-emerald-500/10 dark:bg-[#111827] border-emerald-500/50 shadow-md shadow-emerald-500/5 dark:shadow-emerald-950/40'
-                      : 'bg-card hover:bg-muted/60 dark:bg-[#0E131F]/50 dark:hover:bg-[#111827]/70 border-border/70 dark:border-[#1F2937]/70 hover:border-border dark:hover:border-gray-700'
+                      ? 'bg-emerald-500/10 dark:bg-surface border-emerald-500/50 shadow-md shadow-emerald-500/5 dark:shadow-emerald-950/40'
+                      : 'bg-card hover:bg-muted/60 dark:bg-[#0E131F]/50 dark:hover:bg-surface/70 border-border/70 dark:border-surface-muted/70 hover:border-border dark:hover:border-gray-700'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1.5">
@@ -574,17 +576,27 @@ export function TraderSupport() {
         </div>
 
         {/* ── RIGHT COLUMN (8 Cols): Active Conversation & Pinned Reply Composer */}
-        <div className="lg:col-span-8 flex flex-col min-h-[520px] lg:h-full bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl overflow-hidden shadow-lg">
+        <div className={cn("lg:col-span-8 flex flex-col min-h-[520px] lg:h-full bg-card dark:bg-background border border-border dark:border-surface-muted rounded-2xl overflow-hidden shadow-lg", !selectedTicketId && "hidden lg:flex")}>
           {activeTicket ? (
             <>
               {/* Active Ticket Header */}
-              <div className="p-3.5 border-b border-border dark:border-[#1F2937]/80 bg-muted/40 dark:bg-[#0E131F]/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+              <div className="p-3.5 border-b border-border dark:border-surface-muted/80 bg-muted/40 dark:bg-[#0E131F]/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
                 <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5 lg:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTicketId(null)}
+                      className="h-7 -ml-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Inquiries
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold tabular text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                       {activeTicket.ticket_number || `#TICK-${activeTicket.id}`}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted dark:bg-[#111827] text-foreground/80 dark:text-gray-300 border border-border dark:border-[#1F2937] text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted dark:bg-surface text-foreground/80 dark:text-gray-300 border border-border dark:border-surface-muted text-xs font-medium">
                       <ActiveCatIcon className="w-3 h-3 text-muted-foreground dark:text-gray-400" />
                       {activeCatMeta?.label}
                     </span>
@@ -659,7 +671,7 @@ export function TraderSupport() {
                               ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-tr-none shadow-emerald-500/20'
                               : isAi
                                 ? 'bg-card dark:bg-[#0D1424] border border-emerald-500/30 text-foreground dark:text-gray-100 rounded-tl-none shadow-md'
-                                : 'bg-muted/70 dark:bg-[#111827] border border-border dark:border-[#1F2937] text-foreground dark:text-gray-100 rounded-tl-none'
+                                : 'bg-muted/70 dark:bg-surface border border-border dark:border-surface-muted text-foreground dark:text-gray-100 rounded-tl-none'
                           }`}
                         >
                           <p className="whitespace-pre-wrap font-sans">{msg.message}</p>
@@ -672,7 +684,7 @@ export function TraderSupport() {
               </div>
 
               {/* ── Ergonomic Pinned Bottom Reply Composer ────────────────── */}
-              <div className="border-t border-border dark:border-[#1F2937]/80 p-3 bg-muted/20 dark:bg-[#0B0F19] shrink-0 space-y-2">
+              <div className="border-t border-border dark:border-surface-muted/80 p-3 bg-muted/20 dark:bg-background shrink-0 space-y-2">
                 {isResolved && (
                   <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-300">
                     <span className="flex items-center gap-1.5">
@@ -695,12 +707,12 @@ export function TraderSupport() {
                         handleSendReply();
                       }
                     }}
-                    className="w-full rounded-xl border p-3 bg-background dark:bg-[#080C14] border-border dark:border-[#1F2937] text-xs sm:text-sm text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all resize-none min-h-[75px] shadow-sm"
+                    className="w-full rounded-xl border p-3 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs sm:text-sm text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all resize-none min-h-[75px] shadow-sm"
                   />
 
                   <div className="flex items-center justify-between gap-2 pt-0.5">
                     <span className="text-[10px] text-muted-foreground dark:text-gray-500 font-sans hidden sm:inline">
-                      Press <kbd className="px-1 py-0.5 rounded bg-muted dark:bg-[#111827] border border-border dark:border-gray-700 text-foreground/80 dark:text-gray-300">Ctrl + Enter</kbd> to send
+                      Press <kbd className="px-1 py-0.5 rounded bg-muted dark:bg-surface border border-border dark:border-gray-700 text-foreground/80 dark:text-gray-300">Ctrl + Enter</kbd> to send
                     </span>
 
                     <Button
@@ -757,10 +769,10 @@ export function TraderSupport() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              className="w-full max-w-2xl bg-card dark:bg-background border border-border dark:border-surface-muted rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
-              <div className="p-4 border-b border-border dark:border-[#1F2937] flex items-center justify-between bg-muted/40 dark:bg-[#0E131F]">
+              <div className="p-4 border-b border-border dark:border-surface-muted flex items-center justify-between bg-muted/40 dark:bg-[#0E131F]">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     <Plus className="w-4 h-4" />
@@ -798,7 +810,7 @@ export function TraderSupport() {
                           className={`p-2.5 rounded-xl text-left border transition-all flex flex-col gap-1 ${
                             isSelected 
                               ? 'bg-emerald-500/15 dark:bg-emerald-500/10 border-emerald-500 text-emerald-800 dark:text-white shadow-sm' 
-                              : 'bg-muted/30 dark:bg-[#111827]/60 hover:bg-muted/70 dark:hover:bg-[#111827] border-border dark:border-[#1F2937] text-muted-foreground dark:text-gray-300'
+                              : 'bg-muted/30 dark:bg-surface/60 hover:bg-muted/70 dark:hover:bg-surface border-border dark:border-surface-muted text-muted-foreground dark:text-gray-300'
                           }`}
                         >
                           <div className="flex items-center gap-1.5">
@@ -823,7 +835,7 @@ export function TraderSupport() {
                     required
                     value={newSubject}
                     onChange={(e) => setNewSubject(e.target.value)}
-                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-[#1F2937] text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 shadow-sm"
+                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 shadow-sm"
                     placeholder="E.g. How can I participate in Arena?"
                   />
                 </div>
@@ -838,13 +850,13 @@ export function TraderSupport() {
                     rows={4}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-[#1F2937] text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 resize-none shadow-sm"
+                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 resize-none shadow-sm"
                     placeholder="Describe what you need help with in detail..."
                   />
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border dark:border-[#1F2937]">
+                <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border dark:border-surface-muted">
                   <Button
                     type="button"
                     variant="outline"

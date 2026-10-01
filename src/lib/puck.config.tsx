@@ -70,7 +70,7 @@ export const config: Config<Props> = {
   root: {
     render: ({ children }) => {
       return (
-        <div className="bg-background text-foreground min-h-screen">
+        <div className="min-h-screen bg-bg text-text transition-colors duration-200">
           {children}
         </div>
       );
@@ -85,10 +85,10 @@ export const config: Config<Props> = {
         subtitle: { type: "textarea" },
       },
       defaultProps: {
-        badge: "Now accepting traders worldwide",
-        title: "Trade",
-        highlight: "our capital.",
-        subtitle: "Pass our two-phase evaluation, get funded with up to $200,000, and trade with zero personal financial risk. Withdraw profits in 24 hours.",
+        badge: "⚡ Next-Gen Institutional Funding • Scale up to $2,000,000",
+        title: "Funded by Professionals.",
+        highlight: "Built for Serious Traders.",
+        subtitle: "Pass our low-target evaluation or trade directly with instant funding. Keep up to 90% of your profits with institutional Pepperstone spreads and bi-weekly crypto payouts.",
       },
       render: ({ title, highlight, subtitle, badge }) => (
         <Hero puckProps={{ title, highlight, subtitle, badge }} />
@@ -101,9 +101,9 @@ export const config: Config<Props> = {
         description: { type: "textarea" },
       },
       defaultProps: {
-        title: "Ready to trade",
-        highlight: "our capital?",
-        description: "Free account in 30 seconds. Start the challenge today. Get funded within weeks, not months.",
+        title: "Ready to Trade Up to $2,000,000",
+        highlight: "in Institutional Capital?",
+        description: "Select your challenge tier today. Pass our fair evaluation, receive funded credentials instantly, and withdraw up to 90% of your profits bi-weekly.",
       },
       render: ({ title, highlight, description }) => (
         <CTASection puckProps={{ title, highlight, description }} />
@@ -147,28 +147,28 @@ export const config: Config<Props> = {
         }
       },
       defaultProps: {
-        badge: "The process",
-        titleText1: "Three steps to",
-        titleAccent: "funded",
-        description: "A clear, transparent evaluation. No hidden rules, no surprise breaches. Just real trading on real terms.",
+        badge: "Evaluation Roadmap",
+        titleText1: "Three simple steps to",
+        titleAccent: "institutional capital",
+        description: "A transparent, rule-first evaluation designed for disciplined traders. No hidden traps, no synthetic delays.",
         steps: [
           {
             n: '01',
-            title: 'Take the challenge',
-            body: 'Pick an account size from $10K to $200K. Hit the profit target while respecting drawdown limits across two phases.',
-            items: [{itemText: 'Phase 1: 8% profit target'}, {itemText: 'Phase 2: 5% profit target'}, {itemText: 'Max 10% total drawdown'}],
+            title: 'Select Your Capital Tier',
+            body: 'Choose from $10,000 up to $200,000 account size. Clear evaluation targets (8% Phase 1, 5% Phase 2) with zero calendar time limits.',
+            items: [{itemText: 'Zero Time Pressure'}, {itemText: 'Raw Pepperstone Spreads'}, {itemText: '1:100 Leverage'}],
           },
           {
             n: '02',
-            title: 'Get funded',
-            body: 'Pass both phases and receive a funded account. Trade real markets with our capital — no personal risk.',
-            items: [{itemText: 'Real-time MT5 access'}, {itemText: 'Same risk parameters'}, {itemText: 'Trade what you want'}],
+            title: 'Trade With Your Edge',
+            body: 'Execute on MetaTrader 5 or WebTrader. News trading, Expert Advisors (EAs), and weekend holding are fully supported with static drawdown protection.',
+            items: [{itemText: 'EAs & Algos Permitted'}, {itemText: 'News Trading Allowed'}, {itemText: 'Static Drawdown Floor'}],
           },
           {
             n: '03',
-            title: 'Get paid',
-            body: 'Withdraw your share of profits every 14 days. Up to 90% profit split on consistent performance.',
-            items: [{itemText: '80% baseline split'}, {itemText: 'Up to 90% scaling'}, {itemText: 'Paid in 24 hours'}],
+            title: 'Keep Up To 90% & Scale',
+            body: 'Receive funded credentials instantly. Withdraw your profits bi-weekly via USDT TRC-20 or Bank Wire with your 100% evaluation fee refunded on first reward.',
+            items: [{itemText: 'Up to 90% Profit Split'}, {itemText: '100% Fee Refund Included'}, {itemText: 'Bi-Weekly Disbursals'}],
           }
         ]
       },
@@ -181,7 +181,7 @@ export const config: Config<Props> = {
         title: { type: "text" }
       },
       defaultProps: {
-        title: "Choose your next challenge"
+        title: "Choose Your Capital Tier"
       },
       render: ({ title }) => <ChallengesPreview puckProps={{ title }} />,
     },
@@ -199,18 +199,18 @@ export const config: Config<Props> = {
         }
       },
       defaultProps: {
-        titleText1: "Everything in",
-        titleAccent: "one platform",
-        description: "A trading terminal, evaluation engine, and payout system — all built for serious capital.",
+        titleText1: "Engineered for",
+        titleAccent: "Serious Trading",
+        description: "A professional-grade prop trading ecosystem built with zero gimmicks, institutional execution, and complete trader protection.",
         features: [
-          { title: 'Real-time execution',  body: 'Live TradingView charts and tick-by-tick price feeds across 19 instruments.' },
-          { title: 'Deep analytics',       body: 'R:R tracker, hourly heatmap, drawdown curve, win streaks, and 30+ KPIs.' },
-          { title: 'Auto-managed risk',    body: 'SL/TP, partial closes, daily DD enforcement, news-event lockouts.' },
-          { title: 'Trade anywhere',       body: 'PWA-installable. Trade and monitor from desktop, tablet, or phone.' },
-          { title: 'Real-time alerts',     body: 'Notifications for fills, breaches, payout approvals — instant.' },
-          { title: 'API access',           body: 'Generate scoped API keys. Run your own algos against our infrastructure.' },
-          { title: 'Global markets',       body: 'Forex majors, indices, metals, crypto. Trade what you know.' },
-          { title: 'Institutional-grade',  body: '2FA, scoped API keys, full audit logs & end-to-end encryption.' },
+          { title: 'Static Drawdown Floor',  body: 'Zero trailing floor traps. Floating profits are never used to drag up your loss limit.' },
+          { title: 'MT5 & WebTrader Parity', body: 'Live 14ms execution bridge across MetaTrader 5 and browser WebTrader.' },
+          { title: 'Bi-Weekly Payouts',      body: 'Guaranteed 24-hour disbursal via USDT TRC-20, ERC-20, BTC or Wire.' },
+          { title: 'PvP Trading Arena',      body: 'Compete in 1v1 trading duels and monthly firm tournaments for cash & accounts.' },
+          { title: 'AI Discipline Copilot',  body: 'Real-time danger zone alerts, lot sizing guidance, and trading journal metrics.' },
+          { title: 'Raw 0.0 Pip Spreads',    body: 'Institutional Pepperstone liquidity with zero markup on major pairs.' },
+          { title: 'EAs & News Permitted',   body: 'Complete strategic freedom without restrictive holding windows.' },
+          { title: '100% Fee Refund',        body: 'Full evaluation fee returned with your very first successful profit withdrawal.' },
         ]
       },
       render: ({ titleText1, titleAccent, description, features }) => (
@@ -231,16 +231,16 @@ export const config: Config<Props> = {
         }
       },
       defaultProps: {
-        badge: "Payouts",
-        titleText1: "Get paid in",
-        titleAccent: "24 hours",
-        description: "First payout 14 days after funding. Then bi-weekly. No minimums, no fees, and a scaling profit split that rewards consistency.",
+        badge: "Disbursal SLA",
+        titleText1: "Bi-Weekly Payouts in",
+        titleAccent: "Under 24 Hours",
+        description: "Request your first withdrawal 14 days after receiving your funded account, and bi-weekly thereafter. Zero withdrawal fees, flexible crypto and wire rails, and a 100% evaluation fee refund on your first payout.",
         items: [
-          { itemText: 'Bi-weekly payout cycle — withdraw on your schedule' },
-          { itemText: 'Crypto (USDT) or Wise — your choice' },
-          { itemText: 'Profit split scales 80% → 85% → 90% with milestones' },
-          { itemText: 'Account scaling: hit 10% profit, get a bigger account' },
-          { itemText: 'No hidden fees, no surprises, fully transparent' },
+          { itemText: 'Bi-weekly payout cycle — regular, predictable withdrawals' },
+          { itemText: 'Crypto (USDT TRC-20, ERC-20, BTC) & Bank Wire supported' },
+          { itemText: '100% Evaluation Fee Refund included with your very first payout' },
+          { itemText: 'Profit split up to 90% with progressive scaling milestones' },
+          { itemText: 'Guaranteed 24-hour processing SLA from request to blockchain confirmation' },
         ]
       },
       render: ({ badge, titleText1, titleAccent, description, items }) => (

@@ -83,7 +83,7 @@ export function DisasterRecoveryCard() {
   return (
     <div className="space-y-6 w-full">
       {/* ── Top Header Banner ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="h-6 w-6 text-emerald-400" />
@@ -105,7 +105,7 @@ export function DisasterRecoveryCard() {
             size="sm"
             onClick={loadStatus}
             disabled={loading}
-            className="border-[#1F2937] bg-[#111827] text-gray-300 hover:text-white"
+            className="border-surface-muted bg-surface text-gray-300 hover:text-white"
           >
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh Telemetry
@@ -135,7 +135,7 @@ export function DisasterRecoveryCard() {
       {/* ── 4 Key KPI Cards ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Disaster Recovery Readiness */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">DR Readiness Score</span>
@@ -157,7 +157,7 @@ export function DisasterRecoveryCard() {
         </Card>
 
         {/* KPI 2: Encryption Cipher */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Encryption Cipher</span>
@@ -178,7 +178,7 @@ export function DisasterRecoveryCard() {
         </Card>
 
         {/* KPI 3: Latest Snapshot Size */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Latest Snapshot</span>
@@ -204,7 +204,7 @@ export function DisasterRecoveryCard() {
         </Card>
 
         {/* KPI 4: Retention Policy */}
-        <Card className="bg-[#111827] border-[#1F2937]">
+        <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 font-medium">Retention Policy</span>
@@ -226,8 +226,8 @@ export function DisasterRecoveryCard() {
       </div>
 
       {/* ── Dual-Tier Automated Daily Schedule & Telemetry Sentinel ─────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
-        <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+      <Card className="bg-surface border-surface-muted">
+        <CardHeader className="pb-3 border-b border-surface-muted/60">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -246,7 +246,7 @@ export function DisasterRecoveryCard() {
         <CardContent className="p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tier 1: In-App WP-Cron Hook */}
-            <div className="p-4 rounded-lg bg-[#0B0F19] border border-[#1F2937] space-y-3">
+            <div className="p-4 rounded-lg bg-background border border-surface-muted space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -261,7 +261,7 @@ export function DisasterRecoveryCard() {
               <p className="text-xs text-gray-400 leading-relaxed">
                 Hooks into <code className="text-emerald-400 font-mono">fxsim_daily_tasks</code> under an atomic MySQL lock (<code className="text-gray-300 font-mono">GET_LOCK</code>). Creates AES-256 snapshots, prunes snapshots older than 7 days, and dispatches webhook alerts.
               </p>
-              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
+              <div className="pt-2 border-t border-surface-muted/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
                 <span>Next Scheduled Run:</span>
                 <span className="text-emerald-400 font-semibold">
                   {status?.next_scheduled_utc ? new Date(status.next_scheduled_utc).toUTCString() : '00:00:00 UTC'}
@@ -270,7 +270,7 @@ export function DisasterRecoveryCard() {
             </div>
 
             {/* Tier 2: Hostinger VPS Linux Crontab */}
-            <div className="p-4 rounded-lg bg-[#0B0F19] border border-[#1F2937] space-y-3">
+            <div className="p-4 rounded-lg bg-background border border-surface-muted space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
@@ -285,7 +285,7 @@ export function DisasterRecoveryCard() {
               <p className="text-xs text-gray-400 leading-relaxed">
                 Autonomous Linux crontab executing <code className="text-blue-400 font-mono">backup_database.sh</code>. Operates completely independently of PHP web traffic, dumping MySQL via native client, gzip level 9, and OpenSSL AES-256-CBC.
               </p>
-              <div className="pt-2 border-t border-[#1F2937]/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
+              <div className="pt-2 border-t border-surface-muted/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
                 <span>Cron Specification:</span>
                 <span className="text-blue-400 font-semibold">
                   {status?.vps_cron_schedule || '0 2 * * * (Daily 02:00 UTC)'}
@@ -295,7 +295,7 @@ export function DisasterRecoveryCard() {
           </div>
 
           {/* Multi-Channel Alerts Notification Sentinel Banner */}
-          <div className="mt-4 p-3 rounded-lg bg-[#0B0F19] border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="mt-4 p-3 rounded-lg bg-background border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="h-4 w-4 text-emerald-400 flex-shrink-0" />
               <span className="text-gray-300">
@@ -316,8 +316,8 @@ export function DisasterRecoveryCard() {
 
       {/* ── Active Vault Manifest Details ──────────────────────────────────── */}
       {latest && (
-        <Card className="bg-[#111827] border-emerald-500/30">
-          <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+        <Card className="bg-surface border-emerald-500/30">
+          <CardHeader className="pb-3 border-b border-surface-muted/60">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                 <Database className="h-4 w-4 text-emerald-400" />
@@ -349,7 +349,7 @@ export function DisasterRecoveryCard() {
               </div>
             </div>
 
-            <div className="p-3 bg-[#0B0F19] rounded-lg border border-[#1F2937] flex items-center justify-between">
+            <div className="p-3 bg-background rounded-lg border border-surface-muted flex items-center justify-between">
               <div className="space-y-0.5 overflow-hidden">
                 <span className="text-gray-500 block text-[10px] uppercase font-bold tracking-wider">
                   SHA-256 Cryptographic Checksum Digest
@@ -372,8 +372,8 @@ export function DisasterRecoveryCard() {
       )}
 
       {/* ── Disaster Recovery Restoration Drill Instructions ────────────────── */}
-      <Card className="bg-[#111827] border-[#1F2937]">
-        <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+      <Card className="bg-surface border-surface-muted">
+        <CardHeader className="pb-3 border-b border-surface-muted/60">
           <CardTitle className="text-base text-gray-100 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-blue-400" />
             Disaster Recovery Restoration Drills (Buyer Due Diligence)
@@ -383,8 +383,8 @@ export function DisasterRecoveryCard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-5 space-y-3">
-          <div className="p-3.5 bg-[#0B0F19] rounded-lg border border-[#1F2937] font-mono text-xs text-gray-300 space-y-2">
-            <div className="flex items-center justify-between text-gray-500 text-[11px] pb-1 border-b border-[#1F2937]">
+          <div className="p-3.5 bg-background rounded-lg border border-surface-muted font-mono text-xs text-gray-300 space-y-2">
+            <div className="flex items-center justify-between text-gray-500 text-[11px] pb-1 border-b border-surface-muted">
               <span>Step 1: Non-Destructive Dry Run Integrity Verification</span>
               <button
                 onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --verify-only', 'Verification command')}
@@ -398,8 +398,8 @@ export function DisasterRecoveryCard() {
             </code>
           </div>
 
-          <div className="p-3.5 bg-[#0B0F19] rounded-lg border border-[#1F2937] font-mono text-xs text-gray-300 space-y-2">
-            <div className="flex items-center justify-between text-gray-500 text-[11px] pb-1 border-b border-[#1F2937]">
+          <div className="p-3.5 bg-background rounded-lg border border-surface-muted font-mono text-xs text-gray-300 space-y-2">
+            <div className="flex items-center justify-between text-gray-500 text-[11px] pb-1 border-b border-surface-muted">
               <span>Step 2: 1-Command Live Database Restoration</span>
               <button
                 onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --restore', 'Restore command')}

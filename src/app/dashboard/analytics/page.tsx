@@ -1,6 +1,6 @@
 'use client'
 
-import { useTheme } from 'next-themes'
+import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 import { api } from '@/lib/api'
 import { fmtUSD, fmtDate, toNum } from '@/lib/format'
 import { useQuery } from '@tanstack/react-query'
@@ -20,7 +20,8 @@ import {
 import { CalendarHeatmap } from '@/components/dashboard/calendar-heatmap'
 
 export default function AnalyticsPage() {
-  const { theme } = useTheme()
+  const isDark = useIsDarkTheme()
+  const theme = isDark ? 'dark' : 'light'
   
   const { data: rawChallenges } = useChallengeMyQuery()
   const { data: myTournaments = [] } = useQuery({

@@ -22,6 +22,7 @@ import {
 import { QrCode } from '@/components/qr-code'
 import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
+import { EmailVerificationGate } from '@/components/dashboard/email-verification-gate'
 
 type Step = 'review' | 'gateway' | 'manual' | 'success'
 type Gateway = 'stripe' | 'manual_crypto' | 'coinpayments' | 'confirmo' | null
@@ -436,6 +437,11 @@ function CheckoutInner() {
         <MarketingFooter />
       </div>
     )
+  }
+
+  // Mandatory email verification before challenge checkout
+  if (ready && user && !user.is_admin && !user.email_verified) {
+    return <EmailVerificationGate user={user} />
   }
 
   return (

@@ -1,7 +1,8 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, CandlestickChart, Trophy, ShieldCheck, User } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
@@ -22,12 +23,24 @@ const PUBLIC_TABS = [
 ]
 
 export function MobileBottomNav() {
+  const router = useRouter()
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
+  const [optimisticPath, setOptimisticPath] = useState<string | null>(null)
 
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout')) {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    setOptimisticPath(null)
+  }, [pathname])
+
+  if (!mounted || pathname?.startsWith('/admin') || pathname?.startsWith('/checkout') || pathname === '/dashboard/trading' || pathname?.startsWith('/dashboard/trading')) {
     return null
   }
 
+  const effectivePath = optimisticPath || pathname
   const isDashboard = pathname?.startsWith('/dashboard')
   const tabs = isDashboard ? DASHBOARD_TABS : PUBLIC_TABS
 
@@ -39,18 +52,26 @@ export function MobileBottomNav() {
       <div className="flex items-center justify-around max-w-md mx-auto">
         {tabs.map((tab) => {
           const isActive = tab.href === '/' 
-            ? pathname === '/'
+            ? effectivePath === '/'
             : tab.href === '/dashboard' 
-              ? pathname === '/dashboard' 
-              : pathname?.startsWith(tab.href)
+              ? effectivePath === '/dashboard' 
+              : effectivePath?.startsWith(tab.href)
           const Icon = tab.icon
 
           return (
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch={true}
+              onClick={() => setOptimisticPath(tab.href)}
+              onMouseEnter={() => {
+                try { router.prefetch(tab.href) } catch {}
+              }}
+              onTouchStart={() => {
+                try { router.prefetch(tab.href) } catch {}
+              }}
               className={cn(
-                "relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-200",
+                "relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-150",
                 isActive 
                   ? "text-accent scale-105" 
                   : "text-text-muted hover:text-text hover:bg-surface-muted/60"

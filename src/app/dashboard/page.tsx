@@ -31,6 +31,7 @@ import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { PerformanceInsights } from '@/components/dashboard/performance-insights'
 import { TraderBadges } from '@/components/dashboard/trader-badges'
 import { QuickActions } from '@/components/dashboard/quick-actions'
+import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
 import {
   TrendingUp, Wallet, Target, ShieldAlert,
   ArrowRight, Trophy, Calendar, MailWarning, LayoutDashboard,
@@ -420,6 +421,9 @@ export default function DashboardOverview() {
           </div>
         </>
       )}
+
+      {/* Phase Pass Celebration Confetti & Congratulations Modal */}
+      <PhasePassCelebrationModal challenge={active} metrics={metrics} />
     </div>
   )
 }

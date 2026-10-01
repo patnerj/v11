@@ -21,9 +21,10 @@ const ASSETS: { field: AssetField; key: string; title: string; size: string; hel
 ]
 
 const DEFAULTS: Record<string, string> = {
-  brand_name: 'LaunchAPropFirm', brand_tagline: 'Institutional High-Frequency Prop Trading',
+  brand_name: 'MassFunded', brand_tagline: 'Institutional High-Frequency Prop Trading',
   accent_color: '#10B981',
-  logo_url: '/branding/brand_logo_600x150.png', login_logo_url: '/branding/login_logo_400x100.png', sidebar_icon_url: '/branding/sidebar_icon_128x128.png', favicon_url: '/branding/favicon_48x48.png',
+  logo_url: '/branding/brand_logo_600x150.png', login_logo_url: '/branding/login_logo_400x100.png', sidebar_icon_url: '/branding/sidebar_icon_128x128.png', favicon_url: '/favicon.svg',
+  ga_measurement_id: 'G-G5758RZV7E',
 }
 
 export function BrandingCenter() {
@@ -57,6 +58,7 @@ export function BrandingCenter() {
       accent_color: vals.accent_color ?? '#10B981',
       logo_url: vals.logo_url ?? '', login_logo_url: vals.login_logo_url ?? '',
       sidebar_icon_url: vals.sidebar_icon_url ?? '', favicon_url: vals.favicon_url ?? '',
+      ga_measurement_id: vals.ga_measurement_id ?? 'G-G5758RZV7E',
     }
     const res = await api.admin.whitelabelSave(payload)
     setSaving(false)
@@ -130,6 +132,54 @@ export function BrandingCenter() {
             <Label htmlFor="bc-support">Support email</Label>
             <Input id="bc-support" type="email" value={vals.support_email ?? ''} onChange={(e) => set('support_email', e.target.value)} placeholder="support@yourfirm.com" />
             <p className="text-2xs text-text-faint">Used in emails and support links across the platform.</p>
+          </div>
+        </div>
+
+        {/* Analytics & Tracking (GA4) */}
+        <div className="rounded-lg border border-border-subtle bg-surface-muted/20 p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="text-sm font-semibold text-text flex items-center gap-2">
+                <span className="text-base">📊</span> Google Analytics 4 (GA4) Tracking
+              </div>
+              <p className="text-2xs text-text-muted mt-0.5">
+                Configure your Google Analytics Measurement ID to track trader visits, page views, signups, and checkout conversions.
+              </p>
+            </div>
+            {vals.ga_measurement_id ? (
+              <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 w-fit">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Active: {vals.ga_measurement_id}
+              </span>
+            ) : (
+              <span className="text-2xs font-mono px-2.5 py-1 rounded-full bg-surface-muted text-text-muted border border-border w-fit">
+                Inactive
+              </span>
+            )}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4 pt-1">
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-ga-id">Measurement ID</Label>
+              <Input
+                id="bc-ga-id"
+                value={vals.ga_measurement_id ?? ''}
+                onChange={(e) => set('ga_measurement_id', e.target.value.trim().toUpperCase())}
+                placeholder="G-G5758RZV7E"
+                className="font-mono text-xs uppercase tracking-wider"
+              />
+              <p className="text-2xs text-text-faint">
+                Format: <code>G-XXXXXXXXXX</code> (Found in Google Analytics → Admin → Data Streams).
+              </p>
+            </div>
+            <div className="rounded-md bg-surface border border-border-subtle p-3 flex flex-col justify-center">
+              <div className="text-2xs font-semibold text-text-muted uppercase tracking-wider mb-1">Telemetry Status</div>
+              <div className="text-xs text-text font-mono flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${vals.ga_measurement_id ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                {vals.ga_measurement_id
+                  ? 'Injected via Next.js Layout Script'
+                  : 'Enter Measurement ID and click Save Branding'}
+              </div>
+            </div>
           </div>
         </div>
 

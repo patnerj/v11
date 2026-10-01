@@ -163,7 +163,7 @@ export default function AdminActivityPage() {
     <div className="space-y-6 w-full pb-16">
       
       {/* ── 1. Top Header Banner ────────────────────────────────────────────── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="h-11 w-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
             <Bell className="h-5 w-5" />
@@ -191,7 +191,7 @@ export default function AdminActivityPage() {
               variant="outline" 
               size="sm" 
               onClick={handleMarkAllRead} 
-              className="gap-1.5 text-xs border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800"
+              className="gap-1.5 text-xs border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800"
             >
               <CheckCheck className="h-4 w-4 text-emerald-400" />
               <span>Mark all read</span>
@@ -201,7 +201,7 @@ export default function AdminActivityPage() {
             variant="outline" 
             size="sm" 
             onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })}
-            className="h-9 w-9 p-0 border-[#1F2937] text-gray-400 hover:text-white hover:bg-slate-800"
+            className="h-9 w-9 p-0 border-surface-muted text-gray-400 hover:text-white hover:bg-slate-800"
             title="Refresh feed"
           >
             <RefreshCw className="h-4 w-4 text-emerald-400" />
@@ -210,7 +210,7 @@ export default function AdminActivityPage() {
       </div>
 
       {/* ── 2. Smart Multi-Category Filter Bar ───────────────────────────────── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-4 shadow-lg space-y-3.5">
+      <div className="bg-surface border border-surface-muted rounded-2xl p-4 shadow-lg space-y-3.5">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           
@@ -222,7 +222,7 @@ export default function AdminActivityPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search trader, account #, or event keyword..."
-              className="w-full pl-9 pr-8 py-2 bg-[#0B0F19] border border-[#1F2937] focus:border-emerald-500 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none transition-colors"
+              className="w-full pl-9 pr-8 py-2 bg-background border border-surface-muted focus:border-emerald-500 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none transition-colors"
             />
             {searchQuery && (
               <button
@@ -246,7 +246,7 @@ export default function AdminActivityPage() {
                 "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
                 unreadOnly
                   ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                  : "bg-[#0B0F19] hover:bg-slate-800 text-gray-400 hover:text-white border border-[#1F2937]"
+                  : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
               )}
             >
               <span>Unread Only</span>
@@ -277,7 +277,7 @@ export default function AdminActivityPage() {
         </div>
 
         {/* Event Category Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-t border-[#1F2937]/60 pt-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-t border-surface-muted/60 pt-3">
           
           <button
             type="button"
@@ -286,7 +286,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'all'
                 ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                : "bg-[#0B0F19] hover:bg-slate-800 text-gray-400 hover:text-white border border-[#1F2937]"
+                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
             )}
           >
             <span>🌐 All Activity</span>
@@ -300,7 +300,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'purchases'
                 ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                : "bg-[#0B0F19] hover:bg-slate-800 text-gray-400 hover:text-white border border-[#1F2937]"
+                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
             )}
           >
             <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
@@ -314,7 +314,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'breaches'
                 ? "bg-rose-500 text-white font-bold shadow-md shadow-rose-500/20"
-                : "bg-[#0B0F19] hover:bg-slate-800 text-gray-400 hover:text-white border border-[#1F2937]"
+                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
             )}
           >
             <AlertCircle className="h-3.5 w-3.5 text-rose-400" />
@@ -328,7 +328,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'passes'
                 ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                : "bg-[#0B0F19] hover:bg-slate-800 text-gray-400 hover:text-white border border-[#1F2937]"
+                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
             )}
           >
             <Trophy className="h-3.5 w-3.5 text-purple-400" />
@@ -342,7 +342,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'support'
                 ? "bg-blue-500 text-white font-bold shadow-md shadow-blue-500/20"
-                : "bg-[#0B0F19] hover:bg-slate-800 text-gray-400 hover:text-white border border-[#1F2937]"
+                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
             )}
           >
             <MessageSquare className="h-3.5 w-3.5 text-blue-400" />
@@ -355,12 +355,12 @@ export default function AdminActivityPage() {
 
       {/* ── 3. High-Density Responsive 3-to-4 Column Grid Layout ───────────── */}
       {isPending ? (
-        <div className="py-24 text-center bg-[#111827] border border-[#1F2937] rounded-2xl">
+        <div className="py-24 text-center bg-surface border border-surface-muted rounded-2xl">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-400 mx-auto" />
           <p className="text-xs text-gray-400 font-mono mt-2">Loading activity logs...</p>
         </div>
       ) : filteredList.length === 0 ? (
-        <div className="py-20 text-center text-gray-400 bg-[#111827] border border-[#1F2937] rounded-2xl space-y-3">
+        <div className="py-20 text-center text-gray-400 bg-surface border border-surface-muted rounded-2xl space-y-3">
           <Bell className="h-10 w-10 mx-auto text-gray-600" />
           <p className="font-semibold text-white text-base">
             {rawList.length === 0 ? 'No activity logs recorded yet' : 'No activity matches your filters'}
@@ -375,7 +375,7 @@ export default function AdminActivityPage() {
               variant="outline"
               size="sm"
               onClick={handleClearFilters}
-              className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800 mt-2"
+              className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 mt-2"
             >
               Reset Filters
             </Button>
@@ -384,7 +384,7 @@ export default function AdminActivityPage() {
               variant="outline"
               size="sm"
               onClick={() => refetch()}
-              className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800 mt-2 gap-1.5"
+              className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 mt-2 gap-1.5"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Refresh Feed</span>
@@ -421,10 +421,10 @@ export default function AdminActivityPage() {
               <div
                 key={n.id}
                 className={cn(
-                  "bg-[#111827] hover:bg-[#151D2C] border rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col justify-between group relative",
+                  "bg-surface hover:bg-[#151D2C] border rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col justify-between group relative",
                   !n.is_read 
-                    ? "border-emerald-500/40 shadow-emerald-500/5 bg-[#111827]" 
-                    : "border-[#1F2937] hover:border-slate-700"
+                    ? "border-emerald-500/40 shadow-emerald-500/5 bg-surface" 
+                    : "border-surface-muted hover:border-slate-700"
                 )}
               >
                 <div>
@@ -458,9 +458,9 @@ export default function AdminActivityPage() {
                 </div>
 
                 {/* Bottom Row: User Tag Pill & Action Button */}
-                <div className="pt-3 border-t border-[#1F2937]/70 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-surface-muted/70 flex items-center justify-between gap-2">
                   {n.ref_user_label ? (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#0B0F19] border border-[#1F2937] text-[11px] font-mono text-gray-300 truncate max-w-[75%]">
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-background border border-surface-muted text-[11px] font-mono text-gray-300 truncate max-w-[75%]">
                       <User className="h-3 w-3 text-emerald-400 shrink-0" />
                       <span className="truncate">{n.ref_user_label}</span>
                     </div>
@@ -472,7 +472,7 @@ export default function AdminActivityPage() {
                     <button
                       type="button"
                       onClick={() => handleMarkOneRead(n.id)}
-                      className="p-1.5 rounded-lg hover:bg-[#0B0F19] border border-transparent hover:border-[#1F2937] text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
+                      className="p-1.5 rounded-lg hover:bg-background border border-transparent hover:border-surface-muted text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
                       title="Mark as read"
                     >
                       <Check className="h-3.5 w-3.5" />
@@ -490,7 +490,7 @@ export default function AdminActivityPage() {
       )}
 
       {/* ── 4. Admin Audit Trail ────────────────────────────────────────────── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-2xl shadow-lg">
+      <div className="bg-surface border border-surface-muted rounded-2xl shadow-lg">
         <button
           type="button"
           onClick={() => setShowAuditTrail((v) => !v)}
@@ -521,10 +521,10 @@ export default function AdminActivityPage() {
               <p className="py-8 text-center text-xs text-gray-500">No audit entries recorded yet.</p>
             ) : (
               <>
-                <div className="overflow-x-auto rounded-xl border border-[#1F2937]">
+                <div className="overflow-x-auto rounded-xl border border-surface-muted">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-[#0B0F19] text-gray-400 text-left">
+                      <tr className="bg-background text-gray-400 text-left">
                         <th className="px-3 py-2 font-semibold">When</th>
                         <th className="px-3 py-2 font-semibold">Admin</th>
                         <th className="px-3 py-2 font-semibold">Action</th>
@@ -534,7 +534,7 @@ export default function AdminActivityPage() {
                     </thead>
                     <tbody>
                       {auditRows.map((row) => (
-                        <tr key={row.id} className="border-t border-[#1F2937]/60 hover:bg-[#151D2C]">
+                        <tr key={row.id} className="border-t border-surface-muted/60 hover:bg-[#151D2C]">
                           <td className="px-3 py-2 font-mono text-gray-500 whitespace-nowrap">{row.created_at || '—'}</td>
                           <td className="px-3 py-2 text-gray-200 whitespace-nowrap">{row.user_login || `#${row.admin_id}`}</td>
                           <td className="px-3 py-2 font-mono text-purple-300 whitespace-nowrap">{row.action}</td>
@@ -552,7 +552,7 @@ export default function AdminActivityPage() {
                       variant="outline" size="sm"
                       disabled={logPage <= 1}
                       onClick={() => setLogPage((p) => Math.max(1, p - 1))}
-                      className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800 gap-1"
+                      className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 gap-1"
                     >
                       <ChevronLeft className="h-3.5 w-3.5" /> Prev
                     </Button>
@@ -560,7 +560,7 @@ export default function AdminActivityPage() {
                       variant="outline" size="sm"
                       disabled={!auditRows || auditRows.length < 100}
                       onClick={() => setLogPage((p) => p + 1)}
-                      className="border-[#1F2937] text-gray-300 hover:text-white hover:bg-slate-800 gap-1"
+                      className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 gap-1"
                     >
                       Next <ChevronRight className="h-3.5 w-3.5" />
                     </Button>

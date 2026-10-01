@@ -31,9 +31,10 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
 
 interface HeaderProps {
   onMobileMenuToggle: () => void
+  onOpenSearch?: () => void
 }
 
-export function Header({ onMobileMenuToggle }: HeaderProps) {
+export function Header({ onMobileMenuToggle, onOpenSearch }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuth()
@@ -77,18 +78,34 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         </div>
       </div>
 
-      {/* Center/Search (Hidden on small mobile) */}
-      <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-surface-muted border border-border rounded-lg text-sm text-text-muted w-64 lg:w-80 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all">
-        <Search className="h-4 w-4 text-text-subtle shrink-0" />
-        <input
-          type="text"
-          placeholder="Search accounts, traders, or rules..."
-          className="bg-transparent border-none outline-none text-text text-xs w-full placeholder:text-text-subtle"
-        />
-      </div>
+      {/* Center/Search (Global Omni-Search Trigger with Ctrl+K) */}
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        className="hidden md:flex items-center justify-between px-3 py-1.5 bg-surface-muted hover:bg-surface border border-border hover:border-accent rounded-lg text-sm text-text-muted w-64 lg:w-80 cursor-pointer transition-all group select-none shadow-xs"
+        title="Open Omni-Search Command Palette (Ctrl + K)"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Search className="h-4 w-4 text-text-muted group-hover:text-accent transition-colors shrink-0" />
+          <span className="text-xs text-text-muted/80 truncate">Search traders, tickets, hubs...</span>
+        </div>
+        <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded bg-surface border border-border/80 font-mono text-[10px] text-text-muted group-hover:text-text shrink-0">
+          Ctrl K
+        </kbd>
+      </button>
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mobile Omni-Search Trigger */}
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className="md:hidden p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface-muted transition-colors cursor-pointer"
+          title="Open Omni-Search"
+          aria-label="Open Omni-Search"
+        >
+          <Search className="h-5 w-5 text-accent" />
+        </button>
         
         {/* System Status Indicator */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-muted border border-border text-xs font-medium text-text-muted">

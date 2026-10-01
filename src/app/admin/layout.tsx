@@ -7,7 +7,9 @@ import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { Header } from '@/components/admin/Header'
+import { OmniSearchDialog } from '@/components/admin/OmniSearchDialog'
 import { TradingScreenLoader } from '@/components/ui/trading-loader'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { cn } from '@/lib/cn'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +20,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const impersonating = useImpersonation((s) => s.record)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [isOmniSearchOpen, setIsOmniSearchOpen] = useState(false)
+
+  // Rule 67.3: Dedicated Dark Portal Initialization & Root Mount Guard
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'midnight-obsidian')
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  }, [])
+
+  // Global Admin Omni-Search Shortcut (Cmd + K / Ctrl + K)
+  useEffect(() => {
+    if (isLoginPage) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setIsOmniSearchOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isLoginPage])
 
   // Auth & Impersonation Guard
   useEffect(() => {
@@ -50,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-bg text-text flex flex-col lg:flex-row antialiased transition-colors">
+    <div className="dark min-h-screen bg-bg text-text flex flex-col lg:flex-row antialiased transition-colors" data-theme="midnight-obsidian">
       
       {/* Desktop Sidebar (Persistent) */}
       <Sidebar 
@@ -81,14 +104,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"
         )}
       >
-        {/* Global Top Header */}
-        <Header onMobileMenuToggle={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
+        {/* Global Top Header with Omni-Search Trigger */}
+        <Header 
+          onMobileMenuToggle={() => setMobileSidebarOpen(!mobileSidebarOpen)} 
+          onOpenSearch={() => setIsOmniSearchOpen(true)}
+        />
 
         {/* Dynamic Page Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-28 lg:pb-8">
-          {children}
+          <SectionErrorBoundary sectionName="Admin Workspace">
+            {children}
+          </SectionErrorBoundary>
         </main>
       </div>
+
+      {/* Admin Global Omni-Search Dialog (Cmd + K / Ctrl + K) */}
+      <OmniSearchDialog 
+        isOpen={isOmniSearchOpen} 
+        onClose={() => setIsOmniSearchOpen(false)} 
+      />
 
     </div>
   )

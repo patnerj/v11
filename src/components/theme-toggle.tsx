@@ -14,29 +14,20 @@ export function ThemeToggle({ className }: { className?: string }) {
     setMounted(true)
   }, [])
 
-  // Consider anything other than clean-light / light as a dark mode variant
-  const isDark = resolvedTheme === 'dark' || (ctxTheme !== 'clean-light' && resolvedTheme !== 'light')
+  // Active theme is dark if ctxTheme is anything other than clean-light
+  const isDark = ctxTheme !== 'clean-light'
 
   const toggleTheme = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
     }
-    if (isDark) {
-      setNextTheme('light')
-      setCtxTheme('clean-light')
-      if (typeof document !== 'undefined') {
-        document.documentElement.classList.remove('dark')
-        document.documentElement.setAttribute('data-theme', 'clean-light')
-      }
-      try {
-        localStorage.setItem('theme', 'light')
-        localStorage.setItem('user-theme', 'clean-light')
-      } catch (err) {}
-    } else {
+    const nextDark = !isDark
+    if (nextDark) {
       setNextTheme('dark')
       setCtxTheme('midnight-obsidian')
       if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('light')
         document.documentElement.classList.add('dark')
         document.documentElement.setAttribute('data-theme', 'midnight-obsidian')
       }
@@ -44,12 +35,24 @@ export function ThemeToggle({ className }: { className?: string }) {
         localStorage.setItem('theme', 'dark')
         localStorage.setItem('user-theme', 'midnight-obsidian')
       } catch (err) {}
+    } else {
+      setNextTheme('light')
+      setCtxTheme('clean-light')
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.add('light')
+        document.documentElement.setAttribute('data-theme', 'clean-light')
+      }
+      try {
+        localStorage.setItem('theme', 'light')
+        localStorage.setItem('user-theme', 'clean-light')
+      } catch (err) {}
     }
   }
 
   if (!mounted) {
     return (
-      <div className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-[#1F2937] bg-gray-100 dark:bg-[#111827] flex items-center justify-center text-gray-400 ${className || ''}`}>
+      <div className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-surface-muted bg-gray-100 dark:bg-surface flex items-center justify-center text-gray-400 ${className || ''}`}>
         <Sun className="h-4 w-4" />
       </div>
     )
@@ -59,7 +62,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all shadow-sm group ${className || ''}`}
+      className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-surface-muted bg-white dark:bg-surface hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all shadow-sm group ${className || ''}`}
       title={isDark ? "Switch to Day Mode (Light)" : "Switch to Night Mode (Dark)"}
       aria-label="Toggle Day/Night Mode"
     >

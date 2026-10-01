@@ -1,24 +1,192 @@
-import type { Metadata } from 'next'
-import { LegalPage } from '@/components/marketing/legal-page'
+'use client'
 
-export const metadata: Metadata = { title: 'About Us' }
+import { motion } from 'framer-motion'
+import { MarketingHeader } from '@/components/marketing/header'
+import { MarketingFooter } from '@/components/marketing/footer'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { 
+  Building2, 
+  ShieldCheck, 
+  TrendingUp, 
+  Sparkles, 
+  Award, 
+  Zap, 
+  Globe, 
+  Coins, 
+  ArrowRight,
+  Terminal,
+  Lock,
+  Mail,
+  CheckCircle2
+} from 'lucide-react'
 
-export default function Page() {
+export default function AboutPage() {
   return (
-    <LegalPage
-      title="About Us"
-      intro="The team and mission behind this prop-firm platform."
-      updated="June 2026"
-      sections={[
-        { title: 'Who we are',
-          body: <p>We operate a funded-trader evaluation platform that lets disciplined traders prove their skill on live market conditions and earn access to a funded account.</p> },
-        { title: 'What we do',
-          body: <p>We provide multi-phase trading challenges evaluated against live market pricing, automatic progression to funded status, a transparent payout workflow, and verifiable certificates for traders who pass.</p> },
-        { title: 'Our approach',
-          body: <p>Transparency first: traders are told plainly how evaluation works, how pricing is sourced, and what the rules are. Clear rules and a fair payout process are the foundation of a credible firm.</p> },
-        { title: 'Contact',
-          body: <p>Reach us any time via the <a className="text-accent hover:underline" href="/contact">Contact</a> page or the <a className="text-accent hover:underline" href="/support">Support Center</a>.</p> },
-      ]}
-    />
+    <div className="min-h-screen bg-bg text-text selection:bg-emerald-500 selection:text-white transition-colors duration-200">
+      <MarketingHeader />
+
+      <main className="relative pt-28 pb-24 overflow-hidden">
+        {/* Background glow effects */}
+        <div className="absolute inset-0 -z-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 blur-[180px]" />
+          <div className="absolute inset-0 bg-grid-overlay opacity-25" />
+        </div>
+
+        <div className="container max-w-7xl mx-auto px-4">
+          
+          {/* Hero Section */}
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 mb-4 shadow-glow-sm"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Next-Gen Proprietary Trading Infrastructure</span>
+            </motion.div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tightest leading-[1.08] text-white">
+              Empowering Traders With <br />
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Institutional Capital</span>
+            </h1>
+            <p className="mt-4 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              MassFunded was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
+            </p>
+          </div>
+
+          {/* Key Metrics Bar */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-20">
+            <div className="p-6 rounded-2xl bg-surface/50 border border-border-subtle/80 backdrop-blur-md text-center">
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono mb-1">$50,000,000+</div>
+              <div className="text-xs font-semibold text-white uppercase tracking-wider">Capital Allocation Pool</div>
+              <div className="text-2xs text-slate-400 mt-1">Institutional risk reserves</div>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface/50 border border-border-subtle/80 backdrop-blur-md text-center">
+              <div className="text-3xl sm:text-4xl font-black text-teal-400 font-mono mb-1">14ms</div>
+              <div className="text-xs font-semibold text-white uppercase tracking-wider">Bridge Latency</div>
+              <div className="text-2xs text-slate-400 mt-1">Equinix LD4 direct fiber</div>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface/50 border border-border-subtle/80 backdrop-blur-md text-center">
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono mb-1">100%</div>
+              <div className="text-xs font-semibold text-white uppercase tracking-wider">Payout SLA Fulfillment</div>
+              <div className="text-2xs text-slate-400 mt-1">Guaranteed under 24 hours</div>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface/50 border border-border-subtle/80 backdrop-blur-md text-center">
+              <div className="text-3xl sm:text-4xl font-black text-cyan-400 font-mono mb-1">120+</div>
+              <div className="text-xs font-semibold text-white uppercase tracking-wider">Countries Supported</div>
+              <div className="text-2xs text-slate-400 mt-1">Worldwide trader network</div>
+            </div>
+          </div>
+
+          {/* The MassFunded Philosophy vs Traditional Prop Firms */}
+          <div className="max-w-5xl mx-auto mb-20">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">The MassFunded Advantage</h2>
+              <p className="mt-2 text-slate-400 text-sm">Why serious traders migrate from legacy prop firms to MassFunded.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="p-7 rounded-3xl bg-surface/40 border border-border-subtle/80 backdrop-blur-md space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Static Drawdown Guarantee</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  We strictly reject trailing drawdown floor manipulation. When you make floating profits, your loss limit is NEVER dragged upwards to lock you into synthetic breaches.
+                </p>
+              </div>
+
+              <div className="p-7 rounded-3xl bg-surface/40 border border-border-subtle/80 backdrop-blur-md space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+                  <Coins className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Bi-Weekly 24h Payouts</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Withdraw your hard-earned profits every two weeks directly to your USDT TRC-20, ERC-20, or Bitcoin wallet with zero withdrawal fees, plus a 100% fee refund on your first payout.
+                </p>
+              </div>
+
+              <div className="p-7 rounded-3xl bg-surface/40 border border-border-subtle/80 backdrop-blur-md space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <Terminal className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white">MT5 &amp; WebTrader Freedom</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Trade using your favorite Expert Advisors (EAs), algorithmic bots, and macroeconomic news strategies on institutional Pepperstone feeds with 0.0 pip raw spreads.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Leadership & Executive Desk */}
+          <div className="max-w-5xl mx-auto rounded-3xl border border-emerald-500/30 bg-surface/50 backdrop-blur-xl p-8 sm:p-12 mb-20 shadow-card">
+            <div className="grid md:grid-cols-12 gap-8 items-center">
+              <div className="md:col-span-8 space-y-4">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs font-bold text-emerald-400">
+                  <Building2 className="h-3.5 w-3.5" />
+                  <span>Executive Governance &amp; Platform Ownership</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                  Led by Traders, Built for Performance
+                </h2>
+                <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
+                  Under the leadership of <strong>Bahadur (Managing Director &amp; Platform Owner)</strong>, MassFunded operates with strict fiduciary standards. We treat our funded traders as long-term portfolio partners rather than statistics.
+                </p>
+                <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Transparent Capital Governance
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Direct Executive Escalations
+                  </span>
+                </div>
+              </div>
+
+              <div className="md:col-span-4 rounded-2xl bg-black/50 border border-emerald-500/20 p-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 mx-auto flex items-center justify-center text-emerald-400 text-xl font-bold">
+                  B
+                </div>
+                <div>
+                  <div className="text-base font-bold text-white">Bahadur</div>
+                  <div className="text-xs text-emerald-400 font-semibold">Managing Director &amp; Owner</div>
+                  <div className="text-2xs font-mono text-slate-400 mt-1">bahadur@massfunded.org</div>
+                </div>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  <span>Contact Executive Desk</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Card */}
+          <div className="max-w-4xl mx-auto rounded-3xl border border-border-subtle/80 bg-surface/40 p-8 sm:p-12 text-center backdrop-blur-md">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-4">
+              Ready to Prove Your Trading Edge?
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto mb-8">
+              Join thousands of qualified traders worldwide. Select your evaluation tier and start trading institutional capital today.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Button asChild className="h-12 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm">
+                <Link href="/challenges" className="flex items-center gap-2">
+                  <span>Explore Evaluation Models</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 px-6 rounded-xl border-border-subtle hover:border-emerald-500/40 text-slate-300 hover:text-white text-sm font-semibold">
+                <Link href="/contact">Contact Support Desk</Link>
+              </Button>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <MarketingFooter />
+    </div>
   )
 }

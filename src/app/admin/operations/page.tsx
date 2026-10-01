@@ -450,7 +450,7 @@ export default function OperationsHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header Banner ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1F2937]/70 pb-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
@@ -572,7 +572,7 @@ export default function OperationsHubPage() {
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
             
             {/* Health Score Radial Widget */}
-            <Card className="bg-[#111827] border-[#1F2937] flex flex-col justify-between">
+            <Card className="bg-surface border-surface-muted flex flex-col justify-between">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <Activity className="h-4 w-4 text-emerald-400" />
@@ -632,7 +632,7 @@ export default function OperationsHubPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="pt-0 border-t border-[#1F2937]/50 text-xs text-gray-400">
+              <CardFooter className="pt-0 border-t border-surface-muted/50 text-xs text-gray-400">
                 {healthUnknown ? (
                   <span className="flex items-center gap-1.5 text-amber-400 font-medium">
                     <AlertCircle className="h-3.5 w-3.5" /> Health API unreachable — status unknown
@@ -650,10 +650,10 @@ export default function OperationsHubPage() {
             </Card>
 
             {/* Master Emergency Control Panel (Wide 2-Columns) */}
-            <Card className="lg:col-span-2 bg-[#111827] border-red-500/30 relative overflow-hidden flex flex-col justify-between">
+            <Card className="lg:col-span-2 bg-surface border-red-500/30 relative overflow-hidden flex flex-col justify-between">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-500 to-red-600" />
               
-              <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+              <CardHeader className="pb-3 border-b border-surface-muted/60">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-red-400 flex items-center gap-2 font-bold">
                     <ShieldAlert className="h-5 w-5 text-red-400" />
@@ -671,7 +671,7 @@ export default function OperationsHubPage() {
               <CardContent className="p-6 space-y-4">
                 
                 {/* Switch 1: Pause New Registrations */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] hover:border-slate-700 transition-colors">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background hover:border-slate-700 transition-colors">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-gray-100">Pause New Registrations</span>
@@ -691,7 +691,7 @@ export default function OperationsHubPage() {
                 </div>
 
                 {/* Switch 2: Global Trading Freeze */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] hover:border-slate-700 transition-colors">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background hover:border-slate-700 transition-colors">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-gray-100">Global Trading Execution Freeze</span>
@@ -711,7 +711,7 @@ export default function OperationsHubPage() {
                 </div>
 
                 {/* Switch 3: Scheduled Platform Maintenance */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-[#1F2937] bg-[#0B0F19] hover:border-slate-700 transition-colors">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background hover:border-slate-700 transition-colors">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-gray-100">Full Platform Maintenance Mode</span>
@@ -732,7 +732,7 @@ export default function OperationsHubPage() {
 
               </CardContent>
 
-              <CardFooter className="pt-3 border-t border-[#1F2937]/50 text-xs text-amber-400/90 flex items-center gap-2">
+              <CardFooter className="pt-3 border-t border-surface-muted/50 text-xs text-amber-400/90 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>Actions here execute immediately and log audit trails to the compliance database.</span>
               </CardFooter>
@@ -788,7 +788,7 @@ export default function OperationsHubPage() {
                 return (
                   <Card 
                     key={key} 
-                    className="bg-[#111827] border-[#1F2937] hover:border-emerald-500/30 transition-all duration-200"
+                    className="bg-surface border-surface-muted hover:border-emerald-500/30 transition-all duration-200"
                   >
                     <CardContent className="p-5 space-y-3">
                       <div className="flex items-center justify-between">
@@ -818,7 +818,7 @@ export default function OperationsHubPage() {
                         )}
                       </p>
 
-                      <div className="pt-2 border-t border-[#1F2937]/50 flex items-center justify-between text-xs font-mono text-gray-500">
+                      <div className="pt-2 border-t border-surface-muted/50 flex items-center justify-between text-xs font-mono text-gray-500">
                         <span>Check Status: <strong className={item.state === 'ok' ? 'text-emerald-400' : item.state === 'warn' ? 'text-amber-400' : 'text-rose-400'}>{item.state.toUpperCase()}</strong></span>
                         <span>{item.ts ? `TS: ${new Date(item.ts * 1000).toLocaleTimeString()}` : 'Live'}</span>
                       </div>
@@ -833,7 +833,7 @@ export default function OperationsHubPage() {
                 .map(([key, item]) => {
                   const tone = item.state === 'ok' ? 'success' : item.state === 'warn' ? 'accent' : 'danger'
                   return (
-                    <Card key={key} className="bg-[#111827] border-[#1F2937]">
+                    <Card key={key} className="bg-surface border-surface-muted">
                       <CardContent className="p-5 space-y-3">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-semibold text-gray-100">{item.label || key}</h4>
@@ -1037,7 +1037,7 @@ export default function OperationsHubPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => refetchNewsEvents()}
-                className="text-xs gap-1.5 border-[#1F2937]"
+                className="text-xs gap-1.5 border-surface-muted"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Refresh Feed
@@ -1060,8 +1060,8 @@ export default function OperationsHubPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Card 1: Engine Controls & Gating Mode */}
-            <Card className="bg-[#111827] border-[#1F2937] lg:col-span-2">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted lg:col-span-2">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
@@ -1099,7 +1099,7 @@ export default function OperationsHubPage() {
                       className={`p-4 rounded-xl border text-left transition-all ${
                         newsSettingsForm.mode === 'hard_gate'
                           ? 'border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                          : 'border-[#1F2937] bg-[#0B0F19] hover:border-gray-700'
+                          : 'border-surface-muted bg-background hover:border-gray-700'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -1121,7 +1121,7 @@ export default function OperationsHubPage() {
                       className={`p-4 rounded-xl border text-left transition-all ${
                         newsSettingsForm.mode === 'soft_breach'
                           ? 'border-amber-500/60 bg-amber-500/10 ring-1 ring-amber-500/30'
-                          : 'border-[#1F2937] bg-[#0B0F19] hover:border-gray-700'
+                          : 'border-surface-muted bg-background hover:border-gray-700'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -1140,7 +1140,7 @@ export default function OperationsHubPage() {
                 </div>
 
                 {/* Buffer Windows */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#1F2937]/60">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-muted/60">
                   <div className="space-y-1.5">
                     <Label htmlFor="buffer-before" className="text-xs font-semibold text-gray-300">
                       Minutes Before Event (Pre-News Buffer)
@@ -1181,7 +1181,7 @@ export default function OperationsHubPage() {
                 </div>
 
                 {/* Monitored Currencies */}
-                <div className="space-y-2 pt-2 border-t border-[#1F2937]/60">
+                <div className="space-y-2 pt-2 border-t border-surface-muted/60">
                   <Label className="text-xs font-semibold text-gray-300">Active Currencies & Cross Pairs Monitored</Label>
                   <div className="flex flex-wrap gap-2">
                     {['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'].map((c) => (
@@ -1199,8 +1199,8 @@ export default function OperationsHubPage() {
             </Card>
 
             {/* Card 2: Quick Telemetry & Calendar Summary */}
-            <Card className="bg-[#111827] border-[#1F2937] flex flex-col justify-between">
-              <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+            <Card className="bg-surface border-surface-muted flex flex-col justify-between">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                   <Activity className="h-4 w-4 text-emerald-400" />
                   Live Guard Status
@@ -1211,7 +1211,7 @@ export default function OperationsHubPage() {
               </CardHeader>
 
               <CardContent className="p-6 space-y-4">
-                <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-1">
+                <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
                   <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Feed Source</span>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white">Central Banks & Economic Calendars</span>
@@ -1219,7 +1219,7 @@ export default function OperationsHubPage() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-1">
+                <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
                   <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Upcoming Red Folders</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-white font-mono">{newsEventsData?.length || 0} Events</span>
@@ -1227,7 +1227,7 @@ export default function OperationsHubPage() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#0B0F19] border border-[#1F2937] space-y-1">
+                <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
                   <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Active Restriction Window</span>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-emerald-400 font-mono">
@@ -1243,7 +1243,7 @@ export default function OperationsHubPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsAddEventModalOpen(true)}
-                    className="w-full text-xs gap-1.5 border-[#1F2937] hover:bg-slate-800"
+                    className="w-full text-xs gap-1.5 border-surface-muted hover:bg-slate-800"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add Custom Economic Release
@@ -1251,7 +1251,7 @@ export default function OperationsHubPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="border-t border-[#1F2937]/60 p-4 text-[11px] text-gray-500">
+              <CardFooter className="border-t border-surface-muted/60 p-4 text-[11px] text-gray-500">
                 <span>Updates automatically every 60 minutes via server cron.</span>
               </CardFooter>
             </Card>
@@ -1259,8 +1259,8 @@ export default function OperationsHubPage() {
           </div>
 
           {/* 2. Upcoming High-Impact Events Table */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -1284,7 +1284,7 @@ export default function OperationsHubPage() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-lg border border-[#1F2937] text-xs">
+                  <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-surface-muted text-xs">
                     {['ALL', 'USD', 'EUR', 'GBP', 'JPY'].map((cur) => (
                       <button
                         key={cur}
@@ -1306,7 +1306,7 @@ export default function OperationsHubPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-[#0B0F19]/80 border-b border-[#1F2937] text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-background/80 border-b border-surface-muted text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="px-5 py-3">Date & Time (UTC)</th>
                       <th className="px-4 py-3">Currency</th>
@@ -1316,7 +1316,7 @@ export default function OperationsHubPage() {
                       <th className="px-5 py-3 text-right">Buffer Window</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1F2937]/50 text-gray-200">
+                  <tbody className="divide-y divide-surface-muted/50 text-gray-200">
                     {isLoadingNewsEvents ? (
                       <tr>
                         <td colSpan={6} className="px-5 py-8 text-center text-gray-500">
@@ -1402,8 +1402,8 @@ export default function OperationsHubPage() {
       {activeTab === 'challenges' && (
         <div className="space-y-6 w-full">
           {/* Header & Safeguard Alert */}
-          <Card className="bg-[#111827] border-[#1F2937]">
-            <CardHeader className="pb-3 border-b border-[#1F2937]/60">
+          <Card className="bg-surface border-surface-muted">
+            <CardHeader className="pb-3 border-b border-surface-muted/60">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -1421,7 +1421,7 @@ export default function OperationsHubPage() {
                       placeholder="Search user, login, or #ID..."
                       value={challengeSearch}
                       onChange={(e) => setChallengeSearch(e.target.value)}
-                      className="pl-8 h-9 text-xs w-56 bg-[#0B0F19] border-[#1F2937]"
+                      className="pl-8 h-9 text-xs w-56 bg-background border-surface-muted"
                     />
                   </div>
                   <Button
@@ -1437,7 +1437,7 @@ export default function OperationsHubPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="p-4 bg-amber-500/5 border-b border-[#1F2937]/50 flex items-start gap-3">
+            <CardContent className="p-4 bg-amber-500/5 border-b border-surface-muted/50 flex items-start gap-3">
               <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-300/90 leading-relaxed font-mono">
                 <strong>Operational Override Notice:</strong> These controls bypass the automated trading rule evaluation engine to directly modify account lifecycle state for customer support and test simulation purposes. Actions take effect immediately.
@@ -1446,7 +1446,7 @@ export default function OperationsHubPage() {
           </Card>
 
           {/* Challenges Table */}
-          <Card className="bg-[#111827] border-[#1F2937]">
+          <Card className="bg-surface border-surface-muted">
             <CardContent className="p-0">
               {isTestChallengesLoading ? (
                 <div className="p-8 text-center text-xs text-gray-400 font-mono flex items-center justify-center gap-2">
@@ -1460,7 +1460,7 @@ export default function OperationsHubPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-[#0B0F19] border-b border-[#1F2937] text-gray-400 uppercase tracking-wider font-mono text-[10px]">
+                    <thead className="bg-background border-b border-surface-muted text-gray-400 uppercase tracking-wider font-mono text-[10px]">
                       <tr>
                         <th className="py-3 px-4">Account / Trader</th>
                         <th className="py-3 px-4">Challenge Plan</th>
@@ -1470,7 +1470,7 @@ export default function OperationsHubPage() {
                         <th className="py-3 px-4 text-right">Lifecycle Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#1F2937]/60">
+                    <tbody className="divide-y divide-surface-muted/60">
                       {(testChallengesList || [])
                         .filter((c: TestToolChallenge) => {
                           const q = challengeSearch.trim().toLowerCase()
@@ -1530,7 +1530,7 @@ export default function OperationsHubPage() {
                                     variant="outline"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'phase1')}
-                                    className="h-7 text-[11px] px-2 border-[#1F2937] hover:border-emerald-500/50 hover:text-emerald-400"
+                                    className="h-7 text-[11px] px-2 border-surface-muted hover:border-emerald-500/50 hover:text-emerald-400"
                                     title="Mark Phase 1 Passed"
                                   >
                                     Phase 1 ✓
@@ -1541,7 +1541,7 @@ export default function OperationsHubPage() {
                                     variant="outline"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'phase2')}
-                                    className="h-7 text-[11px] px-2 border-[#1F2937] hover:border-blue-500/50 hover:text-blue-400"
+                                    className="h-7 text-[11px] px-2 border-surface-muted hover:border-blue-500/50 hover:text-blue-400"
                                     title="Mark Phase 2 Passed"
                                   >
                                     Phase 2 ✓
@@ -1676,7 +1676,7 @@ export default function OperationsHubPage() {
                 id="event-curr"
                 value={newEventForm.currency}
                 onChange={(e) => setNewEventForm({ ...newEventForm, currency: e.target.value })}
-                className="w-full h-9 rounded-md border border-[#1F2937] bg-[#0B0F19] text-white px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full h-9 rounded-md border border-surface-muted bg-background text-white px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
                 {['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'].map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -1690,7 +1690,7 @@ export default function OperationsHubPage() {
                 id="event-impact"
                 value={newEventForm.impact}
                 onChange={(e) => setNewEventForm({ ...newEventForm, impact: e.target.value as 'high' | 'medium' | 'low' })}
-                className="w-full h-9 rounded-md border border-[#1F2937] bg-[#0B0F19] text-white px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full h-9 rounded-md border border-surface-muted bg-background text-white px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
                 <option value="high">High Impact (Red Folder)</option>
                 <option value="medium">Medium Impact (Orange)</option>
@@ -1722,7 +1722,7 @@ export default function OperationsHubPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1F2937]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface-muted">
             <Button
               type="button"
               variant="outline"

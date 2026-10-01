@@ -31,6 +31,8 @@ import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
 import { APP_DISPLAY_VERSION } from '@/lib/version'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Helper formatters
 function formatCurrency(val: number | string | undefined | null) {
@@ -93,8 +95,13 @@ export default function AdminCommandCenter() {
   const [payoutActionLoading, setPayoutActionLoading] = useState(false)
   const [txRefInput, setTxRefInput] = useState('')
 
-  // Chart time range filter
+  // Chart time range filter & SSR hydration mount guard
   const [chartRange, setChartRange] = useState<'7m' | '1y' | 'all'>('7m')
+  const [chartsMounted, setChartsMounted] = useState(false)
+
+  useEffect(() => {
+    setChartsMounted(true)
+  }, [])
 
   // Hydrate firm-wide emergency freeze state from backend
   useEffect(() => {
@@ -111,7 +118,7 @@ export default function AdminCommandCenter() {
     })
   }, [])
 
-  // API Queries with parallel fetching
+  // API Queries with parallel fetching & defensive normalization (AGENTS.md Rule 1.2)
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: () => api.admin.stats().then(res => res.ok ? res.data : null),
@@ -136,24 +143,35 @@ export default function AdminCommandCenter() {
     staleTime: 15000,
   })
 
-  // 'pending' is a valid backend status — the old 'requested' value was
-  // silently dropped server-side, so this list (and every count below)
-  // actually included paid/rejected payouts too.
   const { data: payoutsList, isLoading: payoutsLoading } = useQuery({
     queryKey: ['admin-payouts-list', 'pending'],
-    queryFn: () => api.admin.payoutsList('pending').then(res => res.ok ? res.data : []),
+    queryFn: () => api.admin.payoutsList('pending').then(res => {
+      if (!res.ok) return []
+      if (Array.isArray(res.data)) return res.data
+      if (res.data && Array.isArray((res.data as any).payouts)) return (res.data as any).payouts
+      return []
+    }),
     staleTime: 10000,
   })
 
   const { data: challengesData, isLoading: challengesLoading } = useQuery({
     queryKey: ['admin-challenges'],
-    queryFn: () => api.admin.challenges().then(res => res.ok ? res.data.challenges : []),
+    queryFn: () => api.admin.challenges().then(res => {
+      if (!res.ok) return []
+      if (Array.isArray(res.data)) return res.data
+      if (res.data && Array.isArray((res.data as any).challenges)) return (res.data as any).challenges
+      return []
+    }),
     staleTime: 10000,
   })
 
   const { data: kycList } = useQuery({
     queryKey: ['admin-kyc-pending'],
-    queryFn: () => api.admin.kycList('pending').then(res => res.ok ? res.data : []),
+    queryFn: () => api.admin.kycList('pending').then(res => {
+      if (!res.ok) return []
+      if (Array.isArray(res.data)) return res.data
+      return []
+    }),
     staleTime: 15000,
   })
 
@@ -169,35 +187,38 @@ export default function AdminCommandCenter() {
     staleTime: 10000,
   })
 
-  // Real challenge plans for the Issue Manual Challenge modal — the plan
-  // dropdown must offer actual configured plans, not fixed placeholder labels.
+  // Real challenge plans for the Issue Manual Challenge modal
   const { data: plansList = [] } = useQuery({
     queryKey: ['admin-plans-issue-modal'],
-    queryFn: () => api.admin.plansList().then(res => res.ok ? res.data : []),
+    queryFn: () => api.admin.plansList().then(res => {
+      if (!res.ok) return []
+      if (Array.isArray(res.data)) return res.data
+      return []
+    }),
     staleTime: 30000,
   })
-  const activePlans = useMemo(() => (plansList || []).filter((p: any) => p.is_active !== false && p.is_active !== 0), [plansList])
+  const activePlans = useMemo(() => {
+    const list = Array.isArray(plansList) ? plansList : []
+    return list.filter((p: any) => p && p.is_active !== false && p.is_active !== 0)
+  }, [plansList])
   const selectedPlan = useMemo(() => activePlans.find((p: any) => p.id === issueForm.planId) || activePlans[0] || null, [activePlans, issueForm.planId])
 
-  // Default to the first active plan once the list loads, and keep the
-  // balance field in sync with whatever plan is currently selected.
+  // Default to the first active plan once the list loads
   useEffect(() => {
     if (!issueForm.planId && activePlans.length > 0) {
       setIssueForm((f) => ({ ...f, planId: activePlans[0].id, balance: String(activePlans[0].account_size) }))
     }
   }, [activePlans, issueForm.planId])
 
-  // Founder Action Center calculated values
-  const pendingPayoutsCount = payoutsList?.length || 0
+  // Founder Action Center calculated values (defensively normalized)
+  const safePayoutsList = useMemo(() => Array.isArray(payoutsList) ? payoutsList : [], [payoutsList])
+  const pendingPayoutsCount = safePayoutsList.length
   const pendingPayoutsAmount = useMemo(() => {
-    if (payoutsList && payoutsList.length > 0) {
-      return payoutsList.reduce((acc: number, p: any) => acc + Number(p.amount_requested || p.amount || 0), 0)
-    }
-    return 0
-  }, [payoutsList])
+    return safePayoutsList.reduce((acc: number, p: any) => acc + Number(p.amount_requested || p.amount || 0), 0)
+  }, [safePayoutsList])
 
-  const riskBreachesCount = riskAlertsData ? (riskAlertsData.open_flags ?? ((riskAlertsData.hft_risks?.length || 0) + (riskAlertsData.gambling_risks?.length || 0))) : 0
-  const urgentTicketsCount = ticketsList?.length || 0
+  const riskBreachesCount = riskAlertsData ? (riskAlertsData.open_flags ?? (((Array.isArray(riskAlertsData.hft_risks) ? riskAlertsData.hft_risks.length : 0)) + ((Array.isArray(riskAlertsData.gambling_risks) ? riskAlertsData.gambling_risks.length : 0)))) : 0
+  const urgentTicketsCount = Array.isArray(ticketsList) ? ticketsList.length : 0
 
   // 1. Metric Grid Calculation
   const totalRev = Number(revenue?.total ?? (stats?.total_revenue ?? 0))
@@ -217,7 +238,7 @@ export default function AdminCommandCenter() {
 
   // Dynamic MoM Revenue Growth
   const revenueTrend = useMemo(() => {
-    const monthly = Array.isArray(revenue?.monthly) ? revenue.monthly : []
+    const monthly = (revenue && typeof revenue === 'object' && Array.isArray(revenue.monthly)) ? revenue.monthly : []
     if (monthly.length >= 2) {
       const cur = Number(monthly[monthly.length - 1]?.total || (monthly[monthly.length - 1] as any)?.amount || 0)
       const prev = Number(monthly[monthly.length - 2]?.total || (monthly[monthly.length - 2] as any)?.amount || 0)
@@ -298,19 +319,15 @@ export default function AdminCommandCenter() {
     },
   ]
 
-  // 2. Charts Data Prep
+  // 2. Charts Data Prep (Defensive Normalization - AGENTS.md Rule 1.2)
   const areaChartData = useMemo(() => {
-    if (revenue?.monthly && revenue.monthly.length > 0) {
-      return revenue.monthly.map((m: any, idx: number) => {
-        const rawRev = typeof m.total === 'string' ? parseFloat(m.total) : m.total
-        // Was Math.round(rawRev * 0.28) — an invented "payouts are always 28%
-        // of revenue" assumption with no real basis. A firm with zero actual
-        // payouts saw a payout curve on its executive dashboard. Real
-        // per-month payout totals aren't returned by this endpoint, so this
-        // renders 0 rather than a fabricated figure.
-        const realPayout = typeof m.payouts === 'number' ? m.payouts : 0
+    const monthly = Array.isArray(revenue?.monthly) ? revenue.monthly : []
+    if (monthly.length > 0) {
+      return monthly.map((m: any, idx: number) => {
+        const rawRev = typeof m?.total === 'string' ? parseFloat(m.total) : (typeof m?.total === 'number' ? m.total : 0)
+        const realPayout = typeof m?.payouts === 'number' ? m.payouts : 0
         return {
-          name: m.month ? m.month.split('-').slice(1).join('-') : `M${idx + 1}`,
+          name: m?.month ? m.month.split('-').slice(1).join('-') : `M${idx + 1}`,
           revenue: rawRev || 0,
           payouts: realPayout,
           profit: (rawRev || 0) - realPayout,
@@ -321,18 +338,16 @@ export default function AdminCommandCenter() {
   }, [revenue])
 
   const barChartData = useMemo(() => {
-    if (growth?.new_challenges && growth.new_challenges.length > 0) {
-      return growth.new_challenges.map((item: any) => {
-        const fundedMatch = (growth?.funded_monthly || []).find((f: any) => f.month === item.month)
-        // Was Math.round(item.count * 0.38) when no real funded record existed
-        // for the month — an invented pass rate feeding the "Pass Conversion"
-        // tooltip and "Avg Pass" badge. 0 is the honest value when there's
-        // genuinely no funded data for that month yet.
+    const newChallenges = Array.isArray(growth?.new_challenges) ? growth.new_challenges : []
+    const fundedMonthly = Array.isArray(growth?.funded_monthly) ? growth.funded_monthly : []
+    if (newChallenges.length > 0) {
+      return newChallenges.map((item: any) => {
+        const fundedMatch = fundedMonthly.find((f: any) => f?.month === item?.month)
         const passedCount = fundedMatch ? fundedMatch.count : 0
-        const rate = item.count > 0 ? toNum((passedCount / item.count) * 100).toFixed(1) + '%' : '0%'
+        const rate = (item?.count && item.count > 0) ? toNum((passedCount / item.count) * 100).toFixed(1) + '%' : '0%'
         return {
-          name: item.month ? item.month.split('-').slice(1).join('-') : 'Mo',
-          registrations: item.count || 0,
+          name: item?.month ? item.month.split('-').slice(1).join('-') : 'Mo',
+          registrations: item?.count || 0,
           passes: passedCount,
           passRate: rate,
         }
@@ -738,22 +753,25 @@ export default function AdminCommandCenter() {
       </div>
 
       {/* ── 0. Founder's Morning Action Center ───────────────────────────────── */}
-      <FounderActionCenter
-        pendingPayoutsCount={pendingPayoutsCount}
-        pendingPayoutsAmount={pendingPayoutsAmount}
-        riskBreachesCount={riskBreachesCount}
-        urgentTicketsCount={urgentTicketsCount}
-        onOpenPayoutReview={() => {
-          if (displayedPayouts.length > 0) {
-            setSelectedPayout(displayedPayouts[0])
-            setPayoutReviewModalOpen(true)
-          } else {
-            toast.info('No pending payouts to review.')
-          }
-        }}
-      />
+      <SectionErrorBoundary sectionName="Founder Action Center">
+        <FounderActionCenter
+          pendingPayoutsCount={pendingPayoutsCount}
+          pendingPayoutsAmount={pendingPayoutsAmount}
+          riskBreachesCount={riskBreachesCount}
+          urgentTicketsCount={urgentTicketsCount}
+          onOpenPayoutReview={() => {
+            if (displayedPayouts.length > 0) {
+              setSelectedPayout(displayedPayouts[0])
+              setPayoutReviewModalOpen(true)
+            } else {
+              toast.info('No pending payouts to review.')
+            }
+          }}
+        />
+      </SectionErrorBoundary>
 
       {/* ── 0.5 Executive Financial Health & Liability ──────────────────────── */}
+      <SectionErrorBoundary sectionName="Executive Financial Health">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
@@ -887,8 +905,10 @@ export default function AdminCommandCenter() {
 
         </div>
       </section>
+      </SectionErrorBoundary>
 
       {/* ── 1. Top Metric Grid (8 Key Summary Cards) ─────────────────────────── */}
+      <SectionErrorBoundary sectionName="Firm Performance KPIs">
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
@@ -904,7 +924,7 @@ export default function AdminCommandCenter() {
             return (
               <Card 
                 key={idx} 
-                className="bg-[#111827] border-[#1F2937] hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden"
+                className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardContent className="p-5">
@@ -937,8 +957,10 @@ export default function AdminCommandCenter() {
           })}
         </div>
       </section>
+      </SectionErrorBoundary>
 
       {/* ── 2. Quick Action Grid (4 Operations Cards) ────────────────────────── */}
+      <SectionErrorBoundary sectionName="Fast Dispatch Operations">
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
@@ -1048,8 +1070,10 @@ export default function AdminCommandCenter() {
 
         </div>
       </section>
+      </SectionErrorBoundary>
 
       {/* ── 2.5 Live MT5 Bridge Gateway Telemetry Monitor ─────────────────────── */}
+      <SectionErrorBoundary sectionName="MT5 Gateway Telemetry">
       <section>
         <Mt5GatewayMonitorCard
           onConfigureClick={() => {
@@ -1057,8 +1081,10 @@ export default function AdminCommandCenter() {
           }}
         />
       </section>
+      </SectionErrorBoundary>
 
       {/* ── 3. Interactive Analytics Section (Recharts 2-Col) ────────────────── */}
+      <SectionErrorBoundary sectionName="Interactive Analytics">
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Chart 1: Revenue & Payout Trend (Area Chart) */}
@@ -1092,6 +1118,12 @@ export default function AdminCommandCenter() {
           </CardHeader>
 
           <CardContent className="h-[320px] w-full pt-2 relative">
+            {!chartsMounted ? (
+              <div className="h-full w-full flex items-center justify-center p-4">
+                <Skeleton className="h-[270px] w-full rounded-xl bg-surface-muted/40 animate-pulse" />
+              </div>
+            ) : (
+              <>
             {/* Zero State Telemetry Overlay */}
             {!areaChartData.some(d => d.revenue > 0 || d.payouts > 0) && (
               <div className="absolute inset-x-6 inset-y-10 z-10 flex flex-col items-center justify-center text-center space-y-2 pointer-events-none">
@@ -1125,7 +1157,7 @@ export default function AdminCommandCenter() {
 
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke="#1F2937" 
+                  stroke="var(--surface-muted)" 
                   vertical={false} 
                 />
 
@@ -1134,14 +1166,14 @@ export default function AdminCommandCenter() {
                   stroke="#64748B" 
                   fontSize={11} 
                   tickLine={false} 
-                  axisLine={{ stroke: '#1F2937' }} 
+                  axisLine={{ stroke: 'var(--surface-muted)' }} 
                 />
                 
                 <YAxis 
                   stroke="#64748B" 
                   fontSize={11} 
                   tickLine={false} 
-                  axisLine={{ stroke: '#1F2937' }} 
+                  axisLine={{ stroke: 'var(--surface-muted)' }} 
                   tickFormatter={(val) => `$${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
                 />
 
@@ -1152,8 +1184,8 @@ export default function AdminCommandCenter() {
                       const pay = payload.find(p => p.dataKey === 'payouts')?.value as number || 0
                       const net = rev - pay
                       return (
-                        <div className="bg-[#111827] border border-[#1F2937] p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-                          <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1">
+                        <div className="bg-surface border border-surface-muted p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
+                          <p className="font-bold text-gray-200 border-b border-surface-muted pb-1">
                             Month: {label}
                           </p>
                           <div className="flex justify-between items-center text-accent tabular">
@@ -1164,7 +1196,7 @@ export default function AdminCommandCenter() {
                             <span>Payouts:</span>
                             <span className="font-bold">{formatCurrency(pay)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-gray-300 tabular pt-1 border-t border-[#1F2937]/60">
+                          <div className="flex justify-between items-center text-gray-300 tabular pt-1 border-t border-surface-muted/60">
                             <span>Net Retained:</span>
                             <span className="font-bold text-white">{formatCurrency(net)}</span>
                           </div>
@@ -1195,6 +1227,8 @@ export default function AdminCommandCenter() {
                 />
               </AreaChart>
             </ResponsiveContainer>
+              </>
+            )}
           </CardContent>
 
           <CardFooter className="pt-0 border-t border-border-subtle flex items-center justify-between text-xs text-text-muted">
@@ -1232,6 +1266,12 @@ export default function AdminCommandCenter() {
           </CardHeader>
 
           <CardContent className="h-[320px] w-full pt-2 relative">
+            {!chartsMounted ? (
+              <div className="h-full w-full flex items-center justify-center p-4">
+                <Skeleton className="h-[270px] w-full rounded-xl bg-surface-muted/40 animate-pulse" />
+              </div>
+            ) : (
+              <>
             {/* Zero State Telemetry Overlay */}
             {!barChartData.some(d => d.registrations > 0 || d.passes > 0) && (
               <div className="absolute inset-x-6 inset-y-10 z-10 flex flex-col items-center justify-center text-center space-y-2 pointer-events-none">
@@ -1252,7 +1292,7 @@ export default function AdminCommandCenter() {
               >
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke="#1F2937" 
+                  stroke="var(--surface-muted)" 
                   vertical={false} 
                 />
 
@@ -1261,14 +1301,14 @@ export default function AdminCommandCenter() {
                   stroke="#64748B" 
                   fontSize={11} 
                   tickLine={false} 
-                  axisLine={{ stroke: '#1F2937' }} 
+                  axisLine={{ stroke: 'var(--surface-muted)' }} 
                 />
 
                 <YAxis 
                   stroke="#64748B" 
                   fontSize={11} 
                   tickLine={false} 
-                  axisLine={{ stroke: '#1F2937' }} 
+                  axisLine={{ stroke: 'var(--surface-muted)' }} 
                 />
 
                 <Tooltip 
@@ -1278,8 +1318,8 @@ export default function AdminCommandCenter() {
                       const pass = payload.find(p => p.dataKey === 'passes')?.value as number || 0
                       const rate = reg > 0 ? toNum((pass / reg) * 100).toFixed(1) + '%' : '0%'
                       return (
-                        <div className="bg-[#111827] border border-[#1F2937] p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-                          <p className="font-bold text-gray-200 border-b border-[#1F2937] pb-1">
+                        <div className="bg-surface border border-surface-muted p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
+                          <p className="font-bold text-gray-200 border-b border-surface-muted pb-1">
                             Month: {label}
                           </p>
                           <div className="flex justify-between items-center text-accent tabular">
@@ -1290,7 +1330,7 @@ export default function AdminCommandCenter() {
                             <span>Passed / Funded:</span>
                             <span className="font-bold">{formatInt(pass)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-amber-400 tabular pt-1 border-t border-[#1F2937]/60">
+                          <div className="flex justify-between items-center text-amber-400 tabular pt-1 border-t border-surface-muted/60">
                             <span>Pass Conversion:</span>
                             <span className="font-bold">{rate}</span>
                           </div>
@@ -1315,6 +1355,8 @@ export default function AdminCommandCenter() {
                 />
               </BarChart>
             </ResponsiveContainer>
+              </>
+            )}
           </CardContent>
 
           <CardFooter className="pt-0 border-t border-border-subtle flex items-center justify-between text-xs text-text-muted">
@@ -1335,12 +1377,14 @@ export default function AdminCommandCenter() {
         </Card>
 
       </section>
+      </SectionErrorBoundary>
 
       {/* ── 4. Recent Activity Tables (DataTable side-by-side) ───────────────── */}
+      <SectionErrorBoundary sectionName="Recent Activity Tables">
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Table 1: Pending Payout Approvals */}
-        <Card className="bg-[#111827] border-[#1F2937] flex flex-col">
+        <Card className="bg-surface border-surface-muted flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -1374,7 +1418,7 @@ export default function AdminCommandCenter() {
         </Card>
 
         {/* Table 2: Recent Challenge Registrations */}
-        <Card className="bg-[#111827] border-[#1F2937] flex flex-col">
+        <Card className="bg-surface border-surface-muted flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -1408,19 +1452,22 @@ export default function AdminCommandCenter() {
         </Card>
 
       </section>
+      </SectionErrorBoundary>
 
       {/* ── 5. Interactive Modal 1: Issue Manual Challenge ──────────────────── */}
       <Modal
         isOpen={issueModalOpen}
         onClose={() => setIssueModalOpen(false)}
-        title="Issue Manual Challenge Account"
-        description="Grant a funded or evaluation account directly to a trader without requiring gateway checkout."
+        title={<span className="text-slate-100 font-bold text-lg">Issue Manual Challenge Account</span>}
+        description={<span className="text-slate-400 text-xs">Grant a funded or evaluation account directly to a trader without requiring gateway checkout.</span>}
+        className="dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-emerald-500/20"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
             <Button 
               variant="secondary" 
               onClick={() => setIssueModalOpen(false)}
               disabled={issuingLoading}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
             >
               Cancel
             </Button>
@@ -1428,6 +1475,7 @@ export default function AdminCommandCenter() {
               variant="primary" 
               onClick={handleIssueChallenge}
               loading={issuingLoading}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-500/20"
             >
               Grant Account
             </Button>
@@ -1436,7 +1484,7 @@ export default function AdminCommandCenter() {
       >
         <form onSubmit={handleIssueChallenge} className="space-y-4 py-2">
           <div>
-            <Label htmlFor="trader-email">Trader Email or Username</Label>
+            <Label htmlFor="trader-email" className="text-xs font-semibold text-slate-300">Trader Email or Username</Label>
             <Input
               id="trader-email"
               type="text"
@@ -1444,15 +1492,16 @@ export default function AdminCommandCenter() {
               value={issueForm.email}
               onChange={(e) => setIssueForm({ ...issueForm, email: e.target.value })}
               required
+              className="bg-[#070C14] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 h-10 mt-1"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="plan-type">Challenge Plan</Label>
+              <Label htmlFor="plan-type" className="text-xs font-semibold text-slate-300">Challenge Plan</Label>
               <select
                 id="plan-type"
-                className="flex h-10 w-full rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-emerald-500"
+                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-[#070C14] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
                 value={issueForm.planId || ''}
                 onChange={(e) => {
                   const id = Number(e.target.value)
@@ -1460,45 +1509,46 @@ export default function AdminCommandCenter() {
                   setIssueForm({ ...issueForm, planId: id, balance: plan ? String(plan.account_size) : issueForm.balance })
                 }}
               >
-                {activePlans.length === 0 && <option value="">No active plans — create one in Config first</option>}
+                {activePlans.length === 0 && <option value="" className="bg-[#070C14] text-slate-100">No active plans — create one in Config first</option>}
                 {activePlans.map((p: any) => (
-                  <option key={p.id} value={p.id}>{p.name} — ${Number(p.account_size).toLocaleString()}</option>
+                  <option key={p.id} value={p.id} className="bg-[#070C14] text-slate-100">{p.name} — ${Number(p.account_size).toLocaleString()}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <Label htmlFor="account-phase">Initial Phase</Label>
+              <Label htmlFor="account-phase" className="text-xs font-semibold text-slate-300">Initial Phase</Label>
               <select
                 id="account-phase"
-                className="flex h-10 w-full rounded-lg border border-[#1F2937] bg-[#0B0F19] px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-emerald-500"
+                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-[#070C14] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
                 value={issueForm.phase}
                 onChange={(e) => setIssueForm({ ...issueForm, phase: e.target.value as '1' | 'phase2' | 'funded' })}
               >
-                <option value="1">Phase 1 (Evaluation)</option>
-                <option value="phase2" disabled={!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant'}>
+                <option value="1" className="bg-[#070C14] text-slate-100">Phase 1 (Evaluation)</option>
+                <option value="phase2" disabled={!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant'} className="bg-[#070C14] text-slate-100">
                   Phase 2 (Verification){(!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant') ? ' — not available on this plan' : ''}
                 </option>
-                <option value="funded">Funded (Instant Live)</option>
+                <option value="funded" className="bg-[#070C14] text-slate-100">Funded (Instant Live)</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="start-bal">Starting Balance ($)</Label>
+              <Label htmlFor="start-bal" className="text-xs font-semibold text-slate-300">Starting Balance ($)</Label>
               <Input
                 id="start-bal"
                 type="number"
                 value={issueForm.balance}
                 onChange={(e) => setIssueForm({ ...issueForm, balance: e.target.value })}
+                className="bg-[#070C14] border-slate-700 text-slate-100 focus:border-emerald-500 h-10 mt-1"
               />
             </div>
             <div>
-              <Label>Max Leverage</Label>
-              <div className="flex h-10 w-full items-center rounded-lg border border-[#1F2937] bg-[#0B0F19]/60 px-3 text-sm text-gray-400">
-                {selectedPlan ? `1:${selectedPlan.max_leverage}` : '—'}
-                <span className="ml-2 text-[11px] text-gray-600">(set by the selected plan)</span>
+              <Label className="text-xs font-semibold text-slate-300">Max Leverage</Label>
+              <div className="mt-1 flex h-10 w-full items-center rounded-lg border border-slate-700 bg-[#070C14] px-3 text-sm">
+                <span className="font-semibold text-emerald-400 font-mono">{selectedPlan ? `1:${selectedPlan.max_leverage}` : '—'}</span>
+                <span className="ml-2 text-xs font-normal text-slate-400">(set by the selected plan)</span>
               </div>
             </div>
           </div>
@@ -1509,16 +1559,18 @@ export default function AdminCommandCenter() {
       <Modal
         isOpen={emergencyModalOpen}
         onClose={() => setEmergencyModalOpen(false)}
-        title={isEmergencyPaused ? "Deactivate Emergency Freeze" : "Activate Emergency Trading Freeze"}
-        description="Global kill-switch for trading engine operations during catastrophic events or maintenance."
+        title={<span className="text-slate-100 font-bold text-lg">{isEmergencyPaused ? "Deactivate Emergency Freeze" : "Activate Emergency Trading Freeze"}</span>}
+        description={<span className="text-slate-400 text-xs">Global kill-switch for trading engine operations during catastrophic events or maintenance.</span>}
+        className="dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-red-500/20"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
-            <Button variant="secondary" onClick={() => setEmergencyModalOpen(false)}>
+            <Button variant="secondary" onClick={() => setEmergencyModalOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
               Cancel
             </Button>
             <Button 
               variant={isEmergencyPaused ? "primary" : "destructive"}
               onClick={handleToggleEmergencyPause}
+              className={isEmergencyPaused ? "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold" : "bg-red-600 hover:bg-red-500 text-white font-semibold"}
             >
               {isEmergencyPaused ? "Resume All Trading" : "Confirm Emergency Freeze"}
             </Button>
@@ -1548,12 +1600,13 @@ export default function AdminCommandCenter() {
           </div>
 
           <div>
-            <Label htmlFor="pause-reason">Audit Note / Reason</Label>
+            <Label htmlFor="pause-reason" className="text-xs font-semibold text-slate-300">Audit Note / Reason</Label>
             <Input
               id="pause-reason"
               value={emergencyReason}
               onChange={(e) => setEmergencyReason(e.target.value)}
               placeholder="Specify reason for audit logs..."
+              className="bg-[#070C14] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 h-10 mt-1"
             />
           </div>
         </div>
@@ -1567,14 +1620,16 @@ export default function AdminCommandCenter() {
           setSelectedPayout(null)
           setTxRefInput('')
         }}
-        title={`Review Payout #PAY-${selectedPayout?.id}`}
-        description="Audit profit split calculation and approve on-chain disbursement."
+        title={<span className="text-slate-100 font-bold text-lg">{`Review Payout #PAY-${selectedPayout?.id}`}</span>}
+        description={<span className="text-slate-400 text-xs">Audit profit split calculation and approve on-chain disbursement.</span>}
+        className="dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-emerald-500/20"
         footer={
           <div className="flex items-center justify-between w-full">
             <Button 
               variant="destructive" 
               onClick={() => handleProcessPayout('reject')}
               disabled={payoutActionLoading}
+              className="bg-red-600/80 hover:bg-red-600 text-white font-semibold"
             >
               Reject Payout
             </Button>
@@ -1583,6 +1638,7 @@ export default function AdminCommandCenter() {
                 variant="secondary" 
                 onClick={() => setPayoutReviewModalOpen(false)}
                 disabled={payoutActionLoading}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
               >
                 Close
               </Button>
@@ -1590,6 +1646,7 @@ export default function AdminCommandCenter() {
                 variant="primary" 
                 onClick={() => handleProcessPayout('approve')}
                 loading={payoutActionLoading}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-500/20"
               >
                 Approve & Mark Paid
               </Button>
@@ -1599,32 +1656,33 @@ export default function AdminCommandCenter() {
       >
         {selectedPayout && (
           <div className="space-y-4 py-2">
-            <div className="bg-[#0B0F19] p-4 rounded-xl border border-[#1F2937] space-y-2.5 text-xs">
+            <div className="bg-[#070C14] p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-400">Trader:</span>
-                <span className="font-semibold text-gray-100">{selectedPayout.username || selectedPayout.user_login || 'Trader'}</span>
+                <span className="text-slate-400">Trader:</span>
+                <span className="font-semibold text-slate-100">{selectedPayout.username || selectedPayout.user_login || 'Trader'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Account ID:</span>
-                <span className="tabular text-gray-200">ACC-{selectedPayout.challenge_id || selectedPayout.id}</span>
+                <span className="text-slate-400">Account ID:</span>
+                <span className="tabular text-slate-200">ACC-{selectedPayout.challenge_id || selectedPayout.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Total Profit Requested:</span>
+                <span className="text-slate-400">Total Profit Requested:</span>
                 <span className="tabular font-bold text-emerald-400 text-sm">{formatCurrency(selectedPayout.amount_requested || selectedPayout.amount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Gateway / Destination:</span>
-                <span className="text-gray-200">{selectedPayout.payment_method || selectedPayout.gateway || 'USDT TRC20'}</span>
+                <span className="text-slate-400">Gateway / Destination:</span>
+                <span className="text-slate-200">{selectedPayout.payment_method || selectedPayout.gateway || 'USDT TRC20'}</span>
               </div>
             </div>
 
             <div>
-              <Label htmlFor="tx-ref">Transaction Reference / Tx Hash (Optional)</Label>
+              <Label htmlFor="tx-ref" className="text-xs font-semibold text-slate-300">Transaction Reference / Tx Hash (Optional)</Label>
               <Input
                 id="tx-ref"
                 placeholder="e.g. 0x89f2a71d4..."
                 value={txRefInput}
                 onChange={(e) => setTxRefInput(e.target.value)}
+                className="bg-[#070C14] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 h-10 mt-1"
               />
             </div>
           </div>

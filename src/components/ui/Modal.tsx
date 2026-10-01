@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { usePathname } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,8 @@ export function Modal({
   className,
   maxWidth = 'md'
 }: ModalProps) {
+  const pathname = usePathname()
+  const isAdmin = pathname?.startsWith('/admin')
   const isCurrentlyOpen = isOpen !== undefined ? isOpen : (open !== undefined ? open : false)
   const handleOpenChange = (nextOpen: boolean) => {
     if (onOpenChange) onOpenChange(nextOpen)
@@ -55,11 +58,15 @@ export function Modal({
 
   return (
     <Dialog open={isCurrentlyOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className={cn(resolvedWidth, className)}>
+      <DialogContent className={cn(
+        resolvedWidth,
+        isAdmin && 'dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-emerald-500/20',
+        className
+      )}>
         {(title || description) && (
           <DialogHeader>
-            {title && <DialogTitle>{title}</DialogTitle>}
-            {description && <DialogDescription>{description}</DialogDescription>}
+            {title && <DialogTitle className={isAdmin ? 'text-slate-100 font-bold' : undefined}>{title}</DialogTitle>}
+            {description && <DialogDescription className={isAdmin ? 'text-slate-400' : undefined}>{description}</DialogDescription>}
           </DialogHeader>
         )}
 

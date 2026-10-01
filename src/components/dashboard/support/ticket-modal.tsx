@@ -60,10 +60,10 @@ export function CreateTicketModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-2xl bg-card dark:bg-[#0B0F19] border border-border dark:border-[#1F2937] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="w-full max-w-2xl bg-card dark:bg-background border border-border dark:border-surface-muted rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Modal Header */}
-            <div className="p-4 border-b border-border dark:border-[#1F2937] flex items-center justify-between bg-muted/40 dark:bg-[#0E131F]">
+            <div className="p-4 border-b border-border dark:border-surface-muted flex items-center justify-between bg-muted/40 dark:bg-[#0E131F]">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <Plus className="w-4 h-4" />
@@ -103,7 +103,7 @@ export function CreateTicketModal({
                         className={`p-2.5 rounded-xl text-left border transition-all flex flex-col gap-1 ${
                           isSelected
                             ? 'bg-emerald-500/15 dark:bg-emerald-500/10 border-emerald-500 text-emerald-800 dark:text-white shadow-sm'
-                            : 'bg-muted/30 dark:bg-[#111827]/60 hover:bg-muted/70 dark:hover:bg-[#111827] border-border dark:border-[#1F2937] text-muted-foreground dark:text-gray-300'
+                            : 'bg-muted/30 dark:bg-surface/60 hover:bg-muted/70 dark:hover:bg-surface border-border dark:border-surface-muted text-muted-foreground dark:text-gray-300'
                         }`}
                       >
                         <div className="flex items-center gap-1.5">
@@ -129,7 +129,7 @@ export function CreateTicketModal({
                   required
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-[#1F2937] text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 shadow-sm"
+                  className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 shadow-sm"
                   placeholder="E.g. How can I participate in Arena?"
                 />
               </div>
@@ -145,13 +145,13 @@ export function CreateTicketModal({
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-[#1F2937] text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 resize-none shadow-sm"
+                  className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 resize-none shadow-sm"
                   placeholder="Describe what you need help with in detail..."
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border dark:border-[#1F2937]">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border dark:border-surface-muted">
                 <Button
                   type="button"
                   variant="outline"

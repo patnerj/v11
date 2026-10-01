@@ -24,7 +24,30 @@ import type { ApiResult, ApiErr } from '@/types/api'
  * 2. process.env.NEXT_PUBLIC_FXSIM_API (Secondary / legacy)
  * 3. '/api/wp' (Default relative fallback)
  */
-export function getApiBaseUrl(): string {
+export function getApiBaseUrl(req?: any): string {
+  // 1. If in browser, dynamically bind to window.location.hostname (Rule 46 & 47)
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const host = window.location.hostname
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      const parts = host.split('.')
+      const baseDomain = parts.length > 2 ? parts.slice(-2).join('.') : host
+      return `https://api.${baseDomain}/wp-json/fxsim/v1`
+    }
+  }
+
+  // 2. If server-side with request headers (Rule 47)
+  if (req) {
+    const host = req.headers?.get?.('x-forwarded-host') || req.headers?.get?.('host') || req.headers?.host
+    if (host && typeof host === 'string') {
+      const cleanHost = host.split(':')[0]
+      if (cleanHost !== 'localhost' && cleanHost !== '127.0.0.1') {
+        const parts = cleanHost.split('.')
+        const baseDomain = parts.length > 2 ? parts.slice(-2).join('.') : cleanHost
+        return `https://api.${baseDomain}/wp-json/fxsim/v1`
+      }
+    }
+  }
+
   const envUrl =
     process.env.NEXT_PUBLIC_API_URL ||
     process.env.NEXT_PUBLIC_FXSIM_API ||
@@ -36,7 +59,7 @@ export function getApiBaseUrl(): string {
     return trimmed.endsWith('/wp-json/fxsim/v1') ? trimmed : `${trimmed}/wp-json/fxsim/v1`
   }
 
-  return 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  return process.env.NEXT_PUBLIC_API_FALLBACK || 'https://api.massfunded.org/wp-json/fxsim/v1'
 }
 
 export const FXSIM_BASE = getApiBaseUrl()

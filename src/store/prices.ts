@@ -197,13 +197,12 @@ export const usePrices = create<PriceState>((set, get) => {
         const s = fxsimStream()
         if (!s) { set({ source: 'poll' }); return }
         stream = s
-        set({ source: 'ws' })
 
         s.addEventListener('message', (ev) => {
           try {
             const data = JSON.parse((ev as MessageEvent).data)
             if (data.type === 'prices') {
-              set((st) => ({ prices: { ...st.prices, ...data.data }, ts: Date.now(), connected: true }))
+              set((st) => ({ prices: { ...st.prices, ...data.data }, ts: Date.now(), connected: true, source: 'ws' }))
             }
           } catch { /* malformed */ }
         })
@@ -213,7 +212,8 @@ export const usePrices = create<PriceState>((set, get) => {
           if (disconnected) return
           disconnected = true
 
-          set({ connected: false })
+          const pollIsFresh = get().ts > 0 && (Date.now() - get().ts) < 15000
+          set({ connected: pollIsFresh, source: 'poll' })
           closeStream()
 
           if (reconnectTimeout) {
@@ -243,7 +243,7 @@ export const usePrices = create<PriceState>((set, get) => {
             reconnectTimeout = null
           }
           reconnectAttempts = 0
-          set({ connected: true })
+          set({ connected: true, source: 'ws' })
         }
         s.onerror = handleDisconnect
         s.onclose = handleDisconnect

@@ -1,91 +1,163 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { CheckCircle2, Rocket, Trophy } from 'lucide-react'
+import { CheckCircle2, Rocket, Trophy, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
-const STEPS = [
+const DEFAULT_STEPS = [
   {
     n: '01',
     icon: Rocket,
-    title: 'Take the challenge',
-    body: 'Pick an account size from $10K to $200K. Hit the profit target while respecting drawdown limits across two phases.',
-    items: ['Phase 1: 8% profit target', 'Phase 2: 5% profit target', 'Max 10% total drawdown'],
+    title: 'Select Your Capital Tier',
+    body: 'Choose from $10,000 up to $200,000 account size. Clear evaluation targets (8% Phase 1, 5% Phase 2) with zero calendar time limits.',
+    badges: ['Zero Time Pressure', 'Raw Pepperstone Spreads', '1:100 Leverage'],
   },
   {
     n: '02',
-    icon: CheckCircle2,
-    title: 'Get funded',
-    body: 'Pass both phases and receive a funded account. Trade real markets with our capital — no personal risk.',
-    items: ['Real-time MT5 access', 'Same risk parameters', 'Trade what you want'],
+    icon: ShieldCheck,
+    title: 'Trade With Your Edge',
+    body: 'Execute on MetaTrader 5 or WebTrader. News trading, Expert Advisors (EAs), and weekend holding are fully supported with static drawdown protection.',
+    badges: ['EAs & Algos Permitted', 'News Trading Allowed', 'Static Drawdown Floor'],
   },
   {
     n: '03',
     icon: Trophy,
-    title: 'Get paid',
-    body: 'Withdraw your share of profits every 14 days. Up to 90% profit split on consistent performance.',
-    items: ['80% baseline split', 'Up to 90% scaling', 'Paid in 24 hours'],
+    title: 'Keep Up To 90% & Scale',
+    body: 'Receive funded credentials instantly. Withdraw your profits bi-weekly via USDT TRC-20 or Bank Wire with your 100% evaluation fee refunded on first reward.',
+    badges: ['Up to 90% Profit Split', '100% Fee Refund Included', 'Bi-Weekly Disbursals'],
   },
 ]
 
 export function HowItWorks({ puckProps }: { puckProps?: any }) {
-  const badge = puckProps?.badge || "The process";
-  const titleText1 = puckProps?.titleText1 || "Three steps to";
-  const titleAccent = puckProps?.titleAccent || "funded";
-  const description = puckProps?.description || "A clear, transparent evaluation. No hidden rules, no surprise breaches. Just real trading on real terms.";
-  const steps = puckProps?.steps || STEPS;
+  const rawBadge = puckProps?.badge
+  const rawTitle1 = puckProps?.titleText1
+  const rawAccent = puckProps?.titleAccent
+  const isDefault = !rawBadge || rawBadge === "The process"
+
+  const badge = isDefault ? "Evaluation Roadmap" : rawBadge
+  const titleText1 = isDefault ? "Three simple steps to" : (rawTitle1 || "Three simple steps to")
+  const titleAccent = isDefault ? "institutional capital" : (rawAccent || "institutional capital")
+  const description = (!puckProps?.description || puckProps.description.includes("A clear, transparent evaluation"))
+    ? "A transparent, rule-first evaluation designed for disciplined traders. No hidden traps, no synthetic delays."
+    : puckProps.description
+  const steps = (!puckProps?.steps || puckProps.steps.length === 0 || puckProps.steps[0]?.title === "Take the challenge")
+    ? DEFAULT_STEPS
+    : puckProps.steps
 
   return (
-    <section className="relative py-20 lg:py-28" id="how-it-works">
-      <div className="container">
+    <section className="relative py-20 lg:py-28 overflow-hidden" id="how-it-works">
+      {/* Subtle backdrop grid */}
+      <div className="absolute inset-0 bg-grid-overlay opacity-20 pointer-events-none" />
+
+      <div className="container max-w-7xl mx-auto px-4 relative">
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <Badge tone="accent" className="mb-4">{badge}</Badge>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-            {titleText1} <span className="text-gradient">{titleAccent}</span>
-          </h2>
-          <p className="mt-4 text-text-muted text-lg">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 mb-4"
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{badge}</span>
+            </div>
+          </motion.div>
+
+          <motion.h2 
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text"
+          >
+            {titleText1}{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+              {titleAccent}
+            </span>
+          </motion.h2>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-4 text-base sm:text-lg text-text-muted leading-relaxed"
+          >
             {description}
-          </p>
+          </motion.p>
         </div>
 
         <div className="relative">
-          {/* gradient connector across step cards (desktop) */}
-          <div className="hidden lg:block absolute top-[52px] left-[16%] right-[16%] h-px step-line pointer-events-none" />
+          {/* Connecting gradient line on desktop */}
+          <div className="hidden lg:block absolute top-[56px] left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/40 to-emerald-500/10 pointer-events-none" />
+
           <div className="grid lg:grid-cols-3 gap-6">
             {steps.map((step: any, i: number) => {
-              // Support both standard lucide icons if passed directly (fallback), or default if missing
-              const Icon = step.icon || Rocket;
+              const Icon = step.icon || Rocket
               return (
                 <motion.div
-                  key={step.n}
+                  key={step.n || i}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-80px' }}
-                  transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.5, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   className="relative group"
                 >
-                  <div className="relative h-full p-6 rounded-xl bg-surface border border-border lift card-glow overflow-hidden">
-                    {/* big background number */}
-                    <div className="absolute -top-2 -right-2 text-7xl font-bold tracking-tighter select-none opacity-[0.08] text-gradient">
+                  <div className="relative h-full p-7 rounded-2xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 hover:shadow-card-lg overflow-hidden flex flex-col justify-between">
+                    
+                    {/* Background Step Number Watermark */}
+                    <div className="absolute -top-3 -right-2 text-8xl font-black tracking-tighter select-none opacity-[0.04] text-emerald-400">
                       {step.n}
                     </div>
 
-                    <div className="relative">
-                      <div className="relative h-11 w-11 rounded-lg bg-accent-muted text-accent flex items-center justify-center mb-5 ring-1 ring-accent/20 z-10">
-                        <Icon className="h-5 w-5" />
+                    <div>
+                      {/* Step Header with Icon Badge */}
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-glow-sm">
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-surface border border-border text-emerald-400">
+                          STEP {step.n}
+                        </span>
                       </div>
-                      <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
-                      <p className="mt-2 text-sm text-text-muted leading-relaxed">{step.body}</p>
 
-                      <ul className="mt-5 space-y-2">
-                        {step.items && step.items.map((it: any, idx: number) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm">
-                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                            <span className="text-text-muted">{it.itemText || it}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <h3 className="text-xl font-bold tracking-tight text-text mb-3">
+                        {step.title}
+                      </h3>
+
+                      <p className="text-sm text-text-muted leading-relaxed mb-6">
+                        {step.body}
+                      </p>
                     </div>
+
+                    {/* Step Feature Pills / Items */}
+                    <div className="pt-4 border-t border-border-subtle/60">
+                      <div className="flex flex-wrap gap-2">
+                        {step.badges ? (
+                          step.badges.map((badgeText: string, idx: number) => (
+                            <span 
+                              key={idx}
+                              className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-surface/80 border border-border-subtle text-text-muted flex items-center gap-1.5"
+                            >
+                              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                              <span>{badgeText}</span>
+                            </span>
+                          ))
+                        ) : step.items ? (
+                          step.items.map((it: any, idx: number) => (
+                            <span 
+                              key={idx}
+                              className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-surface/80 border border-border-subtle text-text-muted flex items-center gap-1.5"
+                            >
+                              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                              <span>{it.itemText || it}</span>
+                            </span>
+                          ))
+                        ) : null}
+                      </div>
+                    </div>
+
                   </div>
                 </motion.div>
               )

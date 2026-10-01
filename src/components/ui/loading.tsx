@@ -26,15 +26,15 @@ export function PageLoader({ label = 'Syncing Trading Data...', subtitle = 'Conn
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center p-10 space-y-3 min-h-[260px] bg-[#0B0F19]/60 rounded-2xl border border-[#1F2937]/80 select-none',
+        'flex flex-col items-center justify-center p-10 space-y-3 min-h-[260px] bg-background/60 rounded-2xl border border-surface-muted/80 select-none',
         className,
       )}
     >
       <div className="relative flex items-center justify-center">
-        <div className="h-12 w-12 rounded-xl bg-[#111827] border border-accent/40 flex items-center justify-center shadow-lg shadow-accent/10">
+        <div className="h-12 w-12 rounded-xl bg-surface border border-accent/40 flex items-center justify-center shadow-lg shadow-accent/10">
           <CandlestickChart className="h-6 w-6 text-accent animate-pulse" />
         </div>
-        <div className="absolute -top-1.5 -right-1.5 p-1 rounded-md bg-[#0B0F19] border border-accent/40">
+        <div className="absolute -top-1.5 -right-1.5 p-1 rounded-md bg-background border border-accent/40">
           <Activity className="h-3 w-3 text-accent animate-pulse" />
         </div>
       </div>
@@ -48,7 +48,7 @@ export function PageLoader({ label = 'Syncing Trading Data...', subtitle = 'Conn
 
 export function CardLoader({ label = 'Loading trading metrics...', className }: LoaderProps) {
   return (
-    <Card className={cn('bg-[#111827] border-[#1F2937]', className)}>
+    <Card className={cn('bg-surface border-surface-muted', className)}>
       <CardContent className="p-8 flex flex-col items-center justify-center space-y-3">
         <TradingSpinner size="md" />
         <span className="text-xs font-semibold text-gray-300 tracking-wide animate-pulse">{label}</span>

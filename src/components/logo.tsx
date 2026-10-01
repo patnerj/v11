@@ -45,7 +45,89 @@ export function Logo({
   const imageUrl = variant === 'login'
     ? (branding.login_logo_url || branding.logo_url)
     : branding.logo_url
-  const name = branding.brand_name || 'Apex Horizon Proprietary'
+  const name = branding.brand_name || 'MassFunded'
+
+  const isDefaultMassFundedVector =
+    !imageUrl ||
+    imageUrl.endsWith('/branding/brand_logo.svg') ||
+    imageUrl.endsWith('/branding/login_logo.svg')
+
+  if (isDefaultMassFundedVector && name.toLowerCase() === 'massfunded') {
+    const gradId = variant === 'login' ? 'mfEmeraldGradLogin' : 'mfEmeraldGradMain'
+    const textGradId = variant === 'login' ? 'mfTextGradLogin' : 'mfTextGradMain'
+    return (
+      <div className={cn('flex items-center select-none', className)}>
+        <svg
+          viewBox="0 0 600 150"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-9 md:h-10 w-auto max-w-[220px] overflow-visible"
+          role="img"
+          aria-label={name}
+        >
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#00F5A0" />
+            </linearGradient>
+            <linearGradient id={textGradId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#34D399" />
+            </linearGradient>
+          </defs>
+
+          {/* MassFunded M Emblem */}
+          <g transform="translate(10, 20)">
+            <rect
+              width="110"
+              height="110"
+              rx="28"
+              fill="#070C1B"
+              stroke={`url(#${gradId})`}
+              strokeWidth="3"
+            />
+            <g transform="translate(14, 14) scale(0.16)">
+              <path
+                d="M 120 380 L 120 160 L 195 160 L 256 280 L 317 160 L 392 160 L 392 380 L 332 380 L 332 245 L 282 345 L 230 345 L 180 245 L 180 380 Z"
+                fill={`url(#${gradId})`}
+              />
+              <polygon points="256,110 276,135 256,160 236,135" fill="#00F5A0" />
+            </g>
+          </g>
+
+          {/* Theme-Adaptive Wordmark: Dark Slate in Daylight Mode, Pure White in Night Mode */}
+          {wordmark && (
+            <>
+              <text
+                x="142"
+                y="86"
+                fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                fontSize="54"
+                fontWeight="800"
+                letterSpacing="-1"
+                className="fill-slate-900 dark:fill-white transition-colors duration-200"
+              >
+                Mass<tspan fill={`url(#${textGradId})`}>Funded</tspan>
+              </text>
+              <text
+                x="145"
+                y="114"
+                fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                fontSize="12.5"
+                fontWeight="700"
+                letterSpacing="3.2"
+                className="fill-slate-500 dark:fill-slate-400 transition-colors duration-200"
+              >
+                PROPRIETARY TRADING INFRASTRUCTURE
+              </text>
+            </>
+          )}
+        </svg>
+      </div>
+    )
+  }
 
   if (!loaded) {
     return (
@@ -91,7 +173,7 @@ export function SidebarBrand({ collapsed = false, className }: { collapsed?: boo
   useEffect(() => { load() }, [load])
 
   const icon = branding.sidebar_icon_url || branding.logo_url
-  const name = branding.brand_name || 'Apex Horizon Proprietary'
+  const name = branding.brand_name || 'MassFunded'
 
   return (
     <div className={cn('flex items-center gap-2.5 min-w-0', className)}>

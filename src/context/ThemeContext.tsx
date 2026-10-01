@@ -4,6 +4,27 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 
 export type Theme = 'midnight-obsidian' | 'vscode-dark' | 'cyberpunk-neon' | 'tokyo-night' | 'clean-light'
 
+const VALID_THEMES: Theme[] = ['midnight-obsidian', 'vscode-dark', 'cyberpunk-neon', 'tokyo-night', 'clean-light']
+
+function readInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'midnight-obsidian'
+  try {
+    // Admin routes are strictly locked to midnight-obsidian
+    if (window.location.pathname.startsWith('/admin')) {
+      return 'midnight-obsidian'
+    }
+    const domTheme = document.documentElement.getAttribute('data-theme') as Theme | null
+    if (domTheme && VALID_THEMES.includes(domTheme)) return domTheme
+    const storedTheme = localStorage.getItem('user-theme') as Theme | null
+    if (storedTheme && VALID_THEMES.includes(storedTheme)) return storedTheme
+    const nextTheme = localStorage.getItem('theme')
+    if (nextTheme === 'light' || document.documentElement.classList.contains('light')) {
+      return 'clean-light'
+    }
+  } catch {}
+  return 'midnight-obsidian'
+}
+
 interface ThemeContextType {
   theme: Theme
   setTheme: (theme: Theme) => void
@@ -12,14 +33,11 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeContextProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('midnight-obsidian')
+  const [theme, setThemeState] = useState<Theme>(() => readInitialTheme())
 
   useEffect(() => {
-    // Read initial theme from localStorage on mount
     try {
-      const storedTheme = localStorage.getItem('user-theme') as Theme
-      const validThemes: Theme[] = ['midnight-obsidian', 'vscode-dark', 'cyberpunk-neon', 'tokyo-night', 'clean-light']
-      const active = (storedTheme && validThemes.includes(storedTheme)) ? storedTheme : 'midnight-obsidian'
+      const active = readInitialTheme()
       setThemeState(active)
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', active)

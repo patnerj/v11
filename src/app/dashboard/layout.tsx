@@ -8,9 +8,9 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
 import { ImpersonationBanner } from '@/components/dashboard/impersonation-banner'
 import { BannerBar } from '@/components/banner-bar'
-import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { ZenithAiCopilot } from '@/components/dashboard/zenith-ai-copilot'
 import { AiTiltGuard } from '@/components/dashboard/ai-tilt-guard'
+import { EmailVerificationGate } from '@/components/dashboard/email-verification-gate'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router    = useRouter()
@@ -83,6 +83,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!ready || !user || adminOnTraderOverview) return <DashboardSkeleton />
 
+  // Hard gate: Mandatory email verification before dashboard and trading access.
+  // Admins and admin-impersonators are exempt.
+  if (user && !user.is_admin && !impersonating && !user.email_verified) {
+    return <EmailVerificationGate user={user} />
+  }
+
   return (
     <div className="min-h-screen bg-bg">
       <ImpersonationBanner />
@@ -91,7 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <BannerBar placement="dashboard" />
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <main className={
-          isTerminal ? 'flex-1 min-w-0 w-full p-3 md:p-4 pb-20 md:pb-4' :
+          isTerminal ? 'flex-1 min-w-0 w-full p-3 md:p-4 pb-0 md:pb-4' :
           isSupport ? 'flex-1 p-3 md:p-4 max-w-[1400px] w-full mx-auto pb-28 lg:pb-4' :
           'flex-1 p-4 md:p-8 max-w-[1400px] w-full mx-auto pb-28 md:pb-8'
         }>

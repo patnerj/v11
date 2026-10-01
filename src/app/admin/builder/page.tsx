@@ -79,7 +79,7 @@ export default function AdminPageBuilder() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#0B0F19] text-gray-400 font-mono text-xs">
+      <div className="h-screen w-full flex items-center justify-center bg-background text-gray-400 font-mono text-xs">
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
           <span>Loading Visual Page Builder...</span>
@@ -89,9 +89,9 @@ export default function AdminPageBuilder() {
   }
 
   return (
-    <div className="h-screen w-full fixed inset-0 z-[100] bg-[#0B0F19] flex flex-col">
+    <div className="h-screen w-full fixed inset-0 z-[100] bg-background flex flex-col">
       {/* Top Navbar */}
-      <header className="flex items-center justify-between px-4 py-3 bg-[#111827] border-b border-[#1F2937] shrink-0">
+      <header className="flex items-center justify-between px-4 py-3 bg-surface border-b border-surface-muted shrink-0">
         <div className="flex items-center gap-3">
           <Link href="/admin">
             <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-white gap-1.5 p-2">
@@ -100,7 +100,7 @@ export default function AdminPageBuilder() {
             </Button>
           </Link>
 
-          <div className="h-4 w-[1px] bg-[#1F2937]" />
+          <div className="h-4 w-[1px] bg-surface-muted" />
 
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">
@@ -119,7 +119,7 @@ export default function AdminPageBuilder() {
             variant="outline"
             size="sm"
             onClick={() => setIsResetConfirmOpen(true)}
-            className="text-xs border-[#1F2937] hover:border-slate-700 text-gray-300 gap-1.5 h-8"
+            className="text-xs border-surface-muted hover:border-slate-700 text-gray-300 gap-1.5 h-8"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Reset Template</span>
@@ -135,7 +135,7 @@ export default function AdminPageBuilder() {
               type="button"
               variant="outline"
               size="sm"
-              className="text-xs border-[#1F2937] hover:border-slate-700 text-gray-300 gap-1.5 h-8"
+              className="text-xs border-surface-muted hover:border-slate-700 text-gray-300 gap-1.5 h-8"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Preview Live</span>
@@ -145,7 +145,7 @@ export default function AdminPageBuilder() {
       </header>
 
       {/* Puck Visual Canvas Container */}
-      <div className="flex-1 w-full overflow-hidden bg-[#0B0F19]">
+      <div className="flex-1 w-full overflow-hidden bg-background">
         <Puck
           key={key}
           config={config}

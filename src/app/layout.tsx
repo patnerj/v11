@@ -12,6 +12,7 @@ import {
 } from 'next/font/google'
 
 import './globals.css'
+import Script from 'next/script'
 import { Providers } from '@/components/providers'
 import { LiveChat } from '@/components/marketing/live-chat'
 import { CommandPalette } from '@/components/ui/command-palette'
@@ -212,6 +213,11 @@ function safeCssValue(v: unknown, fallback: string): string {
   return /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(s) ? s : fallback
 }
 
+export function sanitizeThemeCss(css: string): string {
+  if (!css) return ''
+  return css.replace(/expression\s*\(/gi, '')
+}
+
 function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: string): string {
   const cleanHex = colorHex.startsWith('#') ? colorHex : `#${colorHex}`;
   if (!/^#[0-9a-fA-F]{3,8}$/.test(cleanHex)) return '';
@@ -381,6 +387,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     themeCss = await getThemeCSS();
   }
 
+  let settings: any = null
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2000)
+    const bRes = await fetch(`${apiPath}/branding`, {
+      next: { revalidate: 60 },
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    if (bRes.ok) {
+      settings = await bRes.json()
+    }
+  } catch (e) {}
+
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || (settings as any)?.ga_measurement_id || ''
+
   const fontVariables = [
     poppins.variable,
     plusJakarta.variable,
@@ -395,7 +419,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <head>
-        <style id="fxsim-dynamic-theme-ssr" dangerouslySetInnerHTML={{ __html: themeCss || '' }} suppressHydrationWarning />
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://s3.tradingview.com https://*.tradingview.com https://www.googletagmanager.com; frame-src 'self' https://tradingview-widget.com https://*.tradingview.com; connect-src 'self' https: wss:;"
+        />
+        <style id="fxsim-dynamic-theme-ssr" dangerouslySetInnerHTML={{ __html: sanitizeThemeCss(themeCss) || '' }} suppressHydrationWarning />
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             try {
@@ -565,6 +593,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>{children}</Providers>
         <LiveChat />
         <CommandPalette />
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   )

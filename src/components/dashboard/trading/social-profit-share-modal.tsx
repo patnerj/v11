@@ -13,6 +13,7 @@ import { fmtPrice, fmtUSD, fmtPct, toNum } from '@/lib/format'
 import { FONT_PRESETS } from '@/lib/theme-accent'
 import { useAuth } from '@/store/auth'
 import { usePrices } from '@/store/prices'
+import { useBranding } from '@/store/branding'
 
 export interface ShareTradeData {
   symbol: string
@@ -40,6 +41,8 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const authUser = useAuth((s) => s.user)
   const account = usePrices((s) => s.account as any)
+  const branding = useBranding((s) => s.branding)
+  const brandName = branding.brand_name || 'MassFunded'
 
   const [downloading, setDownloading] = useState(false)
   const [copying, setCopying] = useState(false)
@@ -52,7 +55,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ? `@${authUser.username}` 
       : authUser?.email 
         ? `@${authUser.email.split('@')[0]}` 
-        : '@AlphaTrader'
+        : `@${brandName}Trader`
   )
   const accountId = trade?.accountId || (account?.id ? `ACC-${account.id}` : '#Demo-Account')
   const isProfit = (trade?.pnl ?? 0) >= 0
@@ -89,7 +92,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
 
     // 1. Background Gradient (Midnight Obsidian)
     const bgGrad = ctx.createLinearGradient(0, 0, width, height)
-    bgGrad.addColorStop(0, '#0B0F19')
+    bgGrad.addColorStop(0, 'var(--background)')
     bgGrad.addColorStop(0.5, '#0E1424')
     bgGrad.addColorStop(1, '#080C14')
     ctx.fillStyle = bgGrad
@@ -127,7 +130,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.font = '900 115px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('ALPHACAPITAL', 0, 0)
+    ctx.fillText(brandName.toUpperCase(), 0, 0)
     ctx.restore()
 
     // 3.6 Instrument Pair Watermark (Subtle background accent)
@@ -140,7 +143,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.restore()
 
     // 4. Card Outer Border with Neon Accent Line
-    ctx.strokeStyle = '#1F2937'
+    ctx.strokeStyle = 'var(--surface-muted)'
     ctx.lineWidth = 3
     ctx.strokeRect(30, 30, width - 60, height - 60)
 
@@ -170,7 +173,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillStyle = '#FFFFFF'
     ctx.font = `900 24px ${primaryFontFamily}`
     ctx.textAlign = 'left'
-    ctx.fillText('ALPHACAPITAL', 115, 84)
+    ctx.fillText(brandName.toUpperCase(), 115, 84)
 
     ctx.fillStyle = '#9CA3AF'
     ctx.font = `600 12px ${primaryFontFamily}`
@@ -249,7 +252,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       
       // Box Background
       ctx.fillStyle = 'rgba(255, 255, 255, 0.02)'
-      ctx.strokeStyle = '#1F2937'
+      ctx.strokeStyle = 'var(--surface-muted)'
       ctx.lineWidth = 1
       ctx.beginPath()
       ctx.roundRect(colX, statsBoxY, colW - 20, 80, 10)
@@ -269,7 +272,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     const footerY = 540
 
     // Trader Avatar Circle
-    ctx.fillStyle = '#1F2937'
+    ctx.fillStyle = 'var(--surface-muted)'
     ctx.beginPath()
     ctx.arc(105, footerY + 25, 25, 0, Math.PI * 2)
     ctx.fill()
@@ -298,7 +301,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
     
     // QR Pattern mock
-    ctx.fillStyle = '#0B0F19'
+    ctx.fillStyle = 'var(--background)'
     ctx.fillRect(qrX + 6, qrY + 6, 16, 16)
     ctx.fillRect(qrX + 38, qrY + 6, 16, 16)
     ctx.fillRect(qrX + 6, qrY + 38, 16, 16)
@@ -310,9 +313,10 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
     ctx.fillStyle = '#6B7280'
     ctx.font = `500 10px ${primaryFontFamily}`
-    ctx.fillText('launchapropfirm.com', qrX - 110, footerY + 42)
+    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'massfunded.org'
+    ctx.fillText(displayDomain, qrX - 110, footerY + 42)
 
-  }, [trade, traderHandle, accountId, isProfit, pnlPercent])
+  }, [trade, traderHandle, accountId, isProfit, pnlPercent, brandName])
 
   useEffect(() => {
     if (open && trade) {
@@ -338,7 +342,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     try {
       const dataUrl = canvasRef.current.toDataURL('image/png')
       const link = document.createElement('a')
-      link.download = `AlphaCapital-${trade.symbol}-${isProfit ? 'PROFIT' : 'TRADE'}.png`
+      link.download = `${brandName}-${trade.symbol}-${isProfit ? 'PROFIT' : 'TRADE'}.png`
       link.href = dataUrl
       document.body.appendChild(link)
       link.click()
@@ -385,7 +389,9 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
 
   const copySocialText = async () => {
     if (!trade) return
-    const text = `🚀 Verified Profit Flex: ${fmtUSD(trade.pnl, { sign: true })} (${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%) on ${trade.symbol} with @AlphaCapital Prop Firm! 📈 https://demo.launchapropfirm.com`
+    const brandTag = `@${brandName.replace(/\s+/g, '')}`
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const text = `🚀 Verified Profit Flex: ${fmtUSD(trade.pnl, { sign: true })} (${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%) on ${trade.symbol} with ${brandTag} Prop Firm! 📈 ${origin}`
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
@@ -401,16 +407,17 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     if (!trade || !canvasRef.current) return
     setSharing(true)
     try {
-      const shareText = `🚀 Verified Profit Flex: ${fmtUSD(trade.pnl, { sign: true })} on ${trade.symbol} with @AlphaCapital! 📈`
-      const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://demo.launchapropfirm.com'
+      const brandTag = `@${brandName.replace(/\s+/g, '')}`
+      const shareUrl = typeof window !== 'undefined' ? window.location.origin : ''
+      const shareText = `🚀 Verified Profit Flex: ${fmtUSD(trade.pnl, { sign: true })} on ${trade.symbol} with ${brandTag}! 📈`
 
       const blob = await new Promise<Blob | null>((resolve) => canvasRef.current?.toBlob(resolve, 'image/png'))
       if (blob && typeof navigator !== 'undefined' && navigator.share) {
-        const file = new File([blob], `AlphaCapital-${trade.symbol}.png`, { type: 'image/png' })
+        const file = new File([blob], `${brandName}-${trade.symbol}.png`, { type: 'image/png' })
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({
-              title: 'AlphaCapital Profit Share Card',
+              title: `${brandName} Profit Share Card`,
               text: shareText,
               url: shareUrl,
               files: [file],

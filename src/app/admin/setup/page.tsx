@@ -57,7 +57,7 @@ export default function AdminSetupWizardPage() {
           </div>
 
           <Link href="/admin">
-            <Button variant="outline" size="sm" className="text-xs border-[#1F2937] hover:border-slate-700">
+            <Button variant="outline" size="sm" className="text-xs border-surface-muted hover:border-slate-700">
               Exit to Command Center
             </Button>
           </Link>
@@ -65,9 +65,9 @@ export default function AdminSetupWizardPage() {
       </div>
 
       {/* Stepper Progress Indicator */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-4 sm:p-6 space-y-4">
+      <div className="bg-surface border border-surface-muted rounded-2xl p-4 sm:p-6 space-y-4">
         <div className="relative">
-          <div className="absolute top-4 left-0 w-full h-1 bg-[#1F2937] rounded-full hidden md:block" />
+          <div className="absolute top-4 left-0 w-full h-1 bg-surface-muted rounded-full hidden md:block" />
           <div
             className="absolute top-4 left-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 hidden md:block"
             style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }}
@@ -89,10 +89,10 @@ export default function AdminSetupWizardPage() {
                     className={cn(
                       'h-9 w-9 rounded-xl flex items-center justify-center border-2 transition-all duration-300 z-10 shrink-0 shadow-md',
                       active
-                        ? 'border-emerald-500 bg-[#0B0F19] text-emerald-400 ring-4 ring-emerald-500/20 shadow-emerald-500/10 scale-105'
+                        ? 'border-emerald-500 bg-background text-emerald-400 ring-4 ring-emerald-500/20 shadow-emerald-500/10 scale-105'
                         : done
                         ? 'border-emerald-500/60 bg-emerald-500 text-slate-950 font-bold'
-                        : 'border-[#1F2937] bg-[#0B0F19] text-gray-500 group-hover:border-slate-700 group-hover:text-gray-300'
+                        : 'border-surface-muted bg-background text-gray-500 group-hover:border-slate-700 group-hover:text-gray-300'
                     )}
                   >
                     {done ? <CheckCircle2 className="h-4 w-4" /> : <SIcon className="h-4 w-4" />}
@@ -113,7 +113,7 @@ export default function AdminSetupWizardPage() {
       </div>
 
       {/* Step Header Title Box */}
-      <div className="flex items-center gap-3 p-4 rounded-xl border border-[#1F2937] bg-[#111827]/80">
+      <div className="flex items-center gap-3 p-4 rounded-xl border border-surface-muted bg-surface/80">
         <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
           <Icon className="h-5 w-5" />
         </div>
@@ -135,12 +135,12 @@ export default function AdminSetupWizardPage() {
       </div>
 
       {/* Wizard Footer Navigation Controls */}
-      <div className="flex items-center justify-between pt-4 border-t border-[#1F2937]/70">
+      <div className="flex items-center justify-between pt-4 border-t border-surface-muted/70">
         <Button
           variant="outline"
           onClick={() => setStep((s) => Math.max(0, s - 1))}
           disabled={step === 0}
-          className="gap-2 text-xs border-[#1F2937] hover:border-slate-700"
+          className="gap-2 text-xs border-surface-muted hover:border-slate-700"
         >
           <ArrowLeft className="h-4 w-4" /> Previous Step
         </Button>
@@ -212,8 +212,8 @@ function ConnectionStep({ onSetChange }: { onSetChange: (set: boolean) => void }
   }
 
   return (
-    <Card className="bg-[#111827] border-[#1F2937]">
-      <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+    <Card className="bg-surface border-surface-muted">
+      <CardHeader className="border-b border-surface-muted/60 pb-4">
         <CardTitle className="text-base text-gray-100 flex items-center gap-2">
           <Link2 className="h-4 w-4 text-emerald-400" />
           Frontend Trader Application URL
@@ -225,7 +225,7 @@ function ConnectionStep({ onSetChange }: { onSetChange: (set: boolean) => void }
 
       <CardContent className="p-6 space-y-4">
         {loading ? (
-          <div className="h-10 w-full rounded-md bg-[#0B0F19] animate-pulse" />
+          <div className="h-10 w-full rounded-md bg-background animate-pulse" />
         ) : (
           <>
             <div className="space-y-1.5 max-w-xl">
@@ -316,8 +316,8 @@ function FirstChallengeStep() {
   }
 
   return (
-    <Card className="bg-[#111827] border-[#1F2937]">
-      <CardHeader className="border-b border-[#1F2937]/60 pb-4">
+    <Card className="bg-surface border-surface-muted">
+      <CardHeader className="border-b border-surface-muted/60 pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base text-gray-100 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-emerald-400" />
@@ -427,7 +427,7 @@ function LaunchStep({ frontendUrlSet }: { frontendUrlSet: boolean }) {
   }
 
   return (
-    <Card className="bg-[#111827] border-[#1F2937]">
+    <Card className="bg-surface border-surface-muted">
       <CardContent className="py-12 text-center space-y-6">
         <div className="mx-auto h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/10">
           <PartyPopper className="h-8 w-8" />
@@ -467,7 +467,7 @@ function LaunchStep({ frontendUrlSet }: { frontendUrlSet: boolean }) {
 
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link href="/admin/operations">
-            <Button variant="outline" size="sm" className="text-xs border-[#1F2937] hover:border-slate-700">
+            <Button variant="outline" size="sm" className="text-xs border-surface-muted hover:border-slate-700">
               <Activity className="h-3.5 w-3.5 mr-1 text-emerald-400" /> Open System Telemetry
             </Button>
           </Link>

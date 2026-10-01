@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { motion, useDragControls } from 'framer-motion'
-import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap } from 'lucide-react'
+import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
@@ -14,6 +14,7 @@ import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
 import { playOrderSuccessSound, playSltpUpdatedSound } from '@/lib/sound'
+import { ChartTpSlOverlay } from './chart-tp-sl-overlay'
 
 interface Props {
   compact?: boolean
@@ -23,6 +24,8 @@ interface Props {
   onOpenWatchlist?: () => void
   /** Trading Plan rules (e.g. stop loss requirement) */
   plan?: any | null
+  /** Callback when positions / SLTP change */
+  onChanged?: () => void
 }
 
 // Default interval the chart opens on. Users change timeframe with TradingView's
@@ -60,15 +63,17 @@ function loadTvScript(): Promise<void> {
   return tvScriptPromise
 }
 
-export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenWatchlist, plan }: Props) {
+export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenWatchlist, plan, onChanged }: Props) {
   const active  = useTerminal((s) => s.active)
   const meta    = useTerminal((s) => s.getMeta(active))
   const metaRef = useRef(meta)
   useEffect(() => { metaRef.current = meta }, [meta])
   const tick    = usePrices((s) => s.prices[active])
+  const pending = usePrices((s) => s.pending)
 
-  // Open positions on the *active* symbol — drawn as execution-feed overlays.
-  const symPositions = (positions ?? []).filter((p) => p.symbol === active)
+  // Open positions and pending orders on the *active* symbol
+  const symPositions = useMemo(() => (positions ?? []).filter((p) => p.symbol === active), [positions, active])
+  const symPending   = useMemo(() => (pending ?? []).filter((o) => o.symbol === active && o.status === 'pending'), [pending, active])
 
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetRef    = useRef<unknown>(null)
@@ -109,6 +114,23 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   // Stable ref for compact — avoids re-creating buildWidget on every render
   const compactRef = useRef(compact)
   useEffect(() => { compactRef.current = compact }, [compact])
+
+  // TP/SL Levels Overlay visibility state (persisted per device)
+  const [showLevels, setShowLevels] = useState(true)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fxsim:term:levels')
+      if (saved === '0') setShowLevels(false)
+    } catch {}
+  }, [])
+
+  const toggleLevels = useCallback(() => {
+    setShowLevels((prev) => {
+      const next = !prev
+      try { localStorage.setItem('fxsim:term:levels', next ? '1' : '0') } catch {}
+      return next
+    })
+  }, [])
 
   // 1-Click Trade state
   const isSlRequired = Boolean(plan?.stop_loss_required || plan?.require_stop_loss)
@@ -449,11 +471,31 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
           </button>
         )}
 
+        {/* Toggle TP/SL Levels Overlay */}
+        <button
+          onClick={toggleLevels}
+          className={`shrink-0 ml-auto sm:ml-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold focus-ring transition-all ${
+            showLevels && (symPositions.length > 0 || symPending.length > 0)
+              ? 'text-accent bg-accent/15 border border-accent/30 shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle'
+          }`}
+          title="Toggle TP/SL Price Levels & Risk Overlay"
+          aria-pressed={showLevels}
+        >
+          <Crosshair className={`h-3.5 w-3.5 ${showLevels && (symPositions.length > 0 || symPending.length > 0) ? 'text-accent' : ''}`} />
+          <span>TP/SL</span>
+          {symPositions.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-accent/20 text-accent tabular">
+              {symPositions.length}
+            </span>
+          )}
+        </button>
+
         {/* Toggle 1-Click Floating Panel */}
         {!compact && (
           <button
             onClick={toggleOneClick}
-            className={`shrink-0 ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold focus-ring transition-all ${
+            className={`shrink-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold focus-ring transition-all ${
               showOneClick
                 ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 shadow-sm'
                 : 'text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle'
@@ -478,6 +520,24 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
           </button>
         )}
       </div>
+
+      {/* Institutional MT5 Position & Risk Bar (Docked directly under header) */}
+      <ChartTpSlOverlay
+        symbol={active}
+        positions={symPositions}
+        pendingOrders={symPending}
+        digits={digits}
+        pipSize={pipSize(active, digits)}
+        contractSize={toNum(meta?.contract_size) || 100000}
+        currentBid={bid || 0}
+        currentAsk={ask || 0}
+        isSlRequired={isSlRequired}
+        chartHostRef={chartHostRef}
+        compact={compact}
+        onChanged={onChanged}
+        isVisible={showLevels}
+        onToggleVisible={toggleLevels}
+      />
 
       {/* Chart host */}
       <div ref={chartHostRef} className="relative flex-1 min-h-0" style={{ touchAction: 'pan-y' }}>

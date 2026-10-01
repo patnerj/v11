@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles } from 'lucide-react'
+import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles, QrCode, Zap } from 'lucide-react'
+import QRCode from 'qrcode'
 import { api } from '@/lib/api'
 import type { Commission, AffiliatePayout } from '@/types/api'
 import { fmtUSD, timeAgo } from '@/lib/format'
+import { cn } from '@/lib/cn'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -47,7 +49,7 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
   // Dark background gradient
   const bgGrad = ctx.createLinearGradient(0, 0, width, height)
   bgGrad.addColorStop(0, '#06080F')
-  bgGrad.addColorStop(0.5, '#0B0F19')
+  bgGrad.addColorStop(0.5, 'var(--background)')
   bgGrad.addColorStop(1, '#0F172A')
   ctx.fillStyle = bgGrad
   ctx.fillRect(0, 0, width, height)
@@ -154,7 +156,34 @@ export default function AffiliatePage() {
   const [savingMethod, setSavingMethod] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [isTiersModalOpen, setIsTiersModalOpen] = useState(false)
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
+
+  const [origin, setOrigin] = useState('')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      setOrigin(window.location.origin)
+    }
+  }, [])
+
+  const link = me?.code
+    ? `${origin || (typeof window !== 'undefined' ? window.location.origin : '')}/register?ref=${me.code}`
+    : ''
+
+  useEffect(() => {
+    if (link) {
+      QRCode.toDataURL(link, {
+        width: 280,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' },
+        errorCorrectionLevel: 'M',
+      })
+        .then((url) => setQrDataUrl(url))
+        .catch(() => setQrDataUrl(null))
+    }
+  }, [link])
 
   useEffect(() => {
     if (me) {
@@ -201,9 +230,16 @@ export default function AffiliatePage() {
     else toast.error('Could not enroll right now.')
   }
 
-  const link = me?.code ? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?ref=${me.code}` : ''
   const copy = () => {
-    navigator.clipboard?.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) })
+    if (!link) return
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(link).catch(() => {})
+      }
+    } catch {}
+    setCopied(true)
+    toast.success('Referral link copied to clipboard!')
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (loading || !me) {
@@ -230,6 +266,12 @@ export default function AffiliatePage() {
             <p className="text-sm text-text-muted mt-2 max-w-md mx-auto leading-relaxed">
               Get a unique link, share it, and earn a commission on every challenge your referrals purchase.
             </p>
+            <div className="mt-4 flex items-center justify-center">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold shadow-xs select-none">
+                <Zap className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span>⚡ Payouts processed every Tuesday &amp; Friday via USDT TRC-20</span>
+              </div>
+            </div>
             <Button className="mt-6" onClick={enroll} disabled={enrolling}>
               {enrolling ? 'Setting up…' : 'Join the affiliate program'}
             </Button>
@@ -328,7 +370,28 @@ export default function AffiliatePage() {
         <CardContent>
           <div className="flex gap-2">
             <input readOnly value={link} className="flex-1 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text font-mono" />
-            <Button variant="outline" onClick={copy}>{copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied' : 'Copy'}</Button>
+            <Button
+              variant="outline"
+              onClick={copy}
+              className={cn(
+                "transition-all active:scale-95 font-semibold shrink-0 gap-1.5",
+                copied && "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25 shadow-xs"
+              )}
+            >
+              {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+              {copied ? '✓ Copied!' : 'Copy'}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsQrModalOpen(true)}
+              className="gap-1.5 shrink-0 select-none cursor-pointer"
+              title="Show scannable QR Code for in-person or mobile referral sharing"
+            >
+              <QrCode className="h-4 w-4 text-accent" />
+              <span className="hidden sm:inline">Show QR Code</span>
+              <span className="sm:hidden">QR</span>
+            </Button>
           </div>
           <div className="flex gap-2 mt-3 flex-wrap">
             <Button 
@@ -464,11 +527,18 @@ export default function AffiliatePage() {
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={saveMethod} disabled={savingMethod}>Save method</Button>
-              <Button onClick={requestPayout} disabled={requesting || (me.available_balance ?? 0) <= 0}>
-                <ArrowUpRight className="h-4 w-4 mr-1" /> Request withdrawal
-              </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full border-t border-border-subtle pt-3">
+              {/* Affiliate Payout Release Schedule Notice */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold shadow-xs select-none">
+                <Zap className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span>⚡ Payouts processed every Tuesday &amp; Friday via USDT TRC-20</span>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <Button variant="outline" onClick={saveMethod} disabled={savingMethod}>Save method</Button>
+                <Button onClick={requestPayout} disabled={requesting || (me.available_balance ?? 0) <= 0}>
+                  <ArrowUpRight className="h-4 w-4 mr-1" /> Request withdrawal
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -591,6 +661,69 @@ export default function AffiliatePage() {
                 <li>• Custom Revenue Share Contracts</li>
               </ul>
             </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Trader Affiliate QR Code Modal */}
+      <Modal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        title="Your Referral QR Code"
+        description="Scan with a mobile camera or share at in-person events to register referrals instantly."
+        className="max-w-sm"
+      >
+        <div className="flex flex-col items-center justify-center p-4 space-y-4 text-center">
+          {qrDataUrl ? (
+            <div className="p-3 bg-white rounded-2xl shadow-xl border border-gray-200 flex items-center justify-center">
+              <img src={qrDataUrl} alt="Affiliate Referral QR Code" className="w-56 h-56 object-contain rounded-lg" />
+            </div>
+          ) : (
+            <div className="w-56 h-56 bg-surface-muted rounded-2xl animate-pulse flex items-center justify-center text-xs text-text-muted">
+              Generating QR Code...
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <span className="text-2xs uppercase tracking-wider font-semibold text-text-muted">Partner Referral Code</span>
+            <div className="font-mono text-sm font-bold text-text bg-surface-muted px-3 py-1 rounded-md border border-border-subtle inline-block">
+              {me?.code}
+            </div>
+          </div>
+
+          <p className="text-xs text-text-muted">
+            Directs scanners to your unique partner landing page with your commission code pre-applied.
+          </p>
+
+          <div className="flex items-center gap-2 w-full pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => {
+                if (qrDataUrl) {
+                  const a = document.createElement('a')
+                  a.href = qrDataUrl
+                  a.download = `massfunded-ref-${me?.code || 'qr'}.png`
+                  a.click()
+                  toast.success('QR Code downloaded!')
+                }
+              }}
+            >
+              Download PNG
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className={cn(
+                "flex-1 font-semibold transition-all",
+                copied && "bg-emerald-600 hover:bg-emerald-500 text-white"
+              )}
+              onClick={copy}
+            >
+              {copied ? '✓ Copied!' : 'Copy Link'}
+            </Button>
           </div>
         </div>
       </Modal>

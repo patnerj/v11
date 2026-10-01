@@ -181,8 +181,8 @@ export function RedisCacheCard() {
   const isFallback = status?.fallback_active || (!status?.connected && status?.enabled)
 
   return (
-    <Card className="bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] shadow-sm overflow-hidden">
-      <CardHeader className="border-b border-slate-200 dark:border-[#1F2937]/70 pb-4">
+    <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-sm overflow-hidden">
+      <CardHeader className="border-b border-slate-200 dark:border-surface-muted/70 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl border ${

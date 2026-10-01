@@ -127,7 +127,7 @@ export function DeviceFrameMockup({
             <div
               className={cn(
                 'h-[420px] flex flex-col transition-colors duration-200 overflow-hidden text-xs',
-                isDark ? 'bg-[#0B0F19] text-gray-100' : 'bg-gray-50 text-gray-900'
+                isDark ? 'bg-background text-gray-100' : 'bg-gray-50 text-gray-900'
               )}
             >
               {/* Mock Top Nav */}
@@ -338,7 +338,7 @@ export function DeviceFrameMockup({
             <div
               className={cn(
                 'h-[540px] pt-8 pb-5 px-3 flex flex-col justify-between transition-colors duration-200 overflow-y-auto text-xs',
-                isDark ? 'bg-[#0B0F19] text-gray-100' : 'bg-gray-50 text-gray-900'
+                isDark ? 'bg-background text-gray-100' : 'bg-gray-50 text-gray-900'
               )}
             >
               {/* Mobile Header */}

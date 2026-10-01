@@ -1,25 +1,47 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Cookie Policy' }
+export const metadata: Metadata = { title: 'Cookie Policy | MassFunded' }
 
 export default function Page() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="How this platform uses cookies and similar technologies."
-      updated="June 2026"
+      intro="How MassFunded (massfunded.org) uses essential session cookies to provide high-speed, secure trading workspaces."
+      updated="September 2026"
       sections={[
-        { title: '1. What cookies we use',
-          body: <p>We use strictly necessary cookies for authentication and session management, and a small number of preference cookies (for example, your sidebar and theme choices). These are required for the platform to function.</p> },
-        { title: '2. What we do not use',
-          body: <p>We do not use third-party advertising or cross-site tracking cookies. The platform is a workspace, not an ad network.</p> },
-        { title: '3. Analytics',
-          body: <p>If the operator enables analytics, aggregate, privacy-respecting usage data may be collected to improve the product. No personal trading data is sold or shared with advertisers.</p> },
-        { title: '4. Managing cookies',
-          body: <p>You can clear or block cookies in your browser settings, but strictly necessary cookies are required to log in and use the platform. Disabling them will prevent authentication.</p> },
-        { title: '5. Contact',
-          body: <p>Questions about this policy can be sent via the <a className="text-accent hover:underline" href="/contact">Contact</a> page.</p> },
+        { 
+          title: '1. Essential Technical Cookies',
+          body: <p>We deploy strictly necessary session cookies and local storage tokens to maintain authenticated trader sessions, persist theme preferences (Obsidian dark mode), and cache chart workspace settings. These cookies are critical for platform operation.</p> 
+        },
+        { 
+          title: '2. Zero Third-Party Advertising Trackers',
+          body: <p>MassFunded does not utilize third-party advertising cookies, cross-site profiling trackers, or invasive data brokers. Your trading patterns, balance details, and interaction data are never sold or shared with external ad platforms.</p> 
+        },
+        { 
+          title: '3. Security & Anti-Fraud Telemetry',
+          body: <p>Certain encrypted tokens are stored temporarily to protect against cross-site request forgery (CSRF), brute-force authentication attacks, and duplicate order submissions.</p> 
+        },
+        { 
+          title: '4. Managing Browser Cookies',
+          body: <p>You may adjust your browser preferences to block cookies; however, disabling essential session cookies will prevent login access to your Trader Dashboard, WebTrader, and challenge management portal.</p> 
+        },
+        { 
+          title: '5. Policy Inquiries',
+          body: (
+            <p>
+              For questions regarding our cookie practices, reach our support desk at{' '}
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
+                support@massfunded.org
+              </a>{' '}
+              or contact our Managing Director at{' '}
+              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
+                bahadur@massfunded.org
+              </a>
+              .
+            </p>
+          ) 
+        },
       ]}
     />
   )

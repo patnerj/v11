@@ -397,7 +397,7 @@ export default function TradersHubPage() {
       key: 'account_id',
       header: 'Account ID',
       render: (row) => (
-        <span className="font-mono text-xs font-semibold text-gray-300 bg-[#0B0F19] px-2.5 py-1 rounded-md border border-[#1F2937]">
+        <span className="font-mono text-xs font-semibold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
           #TRD-{row.account_id}
         </span>
       )
@@ -775,7 +775,7 @@ export default function TradersHubPage() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="text-xs h-8 px-3 border-[#1F2937] text-gray-300 disabled:opacity-40"
+                className="text-xs h-8 px-3 border-border text-text-muted disabled:opacity-40"
               >
                 Previous
               </Button>
@@ -784,7 +784,7 @@ export default function TradersHubPage() {
                 size="sm"
                 disabled={page >= (usersData.pages || 1)}
                 onClick={() => setPage(p => p + 1)}
-                className="text-xs h-8 px-3 border-[#1F2937] text-gray-300 disabled:opacity-40"
+                className="text-xs h-8 px-3 border-border text-text-muted disabled:opacity-40"
               >
                 Next
               </Button>
@@ -912,14 +912,14 @@ function AdjustBalanceDialog({ user, onClose, onSaved }: {
           <DialogDescription>Use a negative amount to deduct. This is recorded in the admin audit log.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="rounded-md bg-[#0B0F19] border border-[#1F2937] p-3 text-xs space-y-1">
-            <div className="flex justify-between"><span className="text-gray-400">Current balance</span><span className="font-mono text-gray-200">{formatExactMoney(user.balance)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Adjustment</span>
-              <span className={`font-mono font-medium ${amountN > 0 ? 'text-emerald-400' : amountN < 0 ? 'text-rose-400' : 'text-gray-500'}`}>
+          <div className="rounded-md bg-surface-muted border border-border p-3 text-xs space-y-1">
+            <div className="flex justify-between"><span className="text-text-muted">Current balance</span><span className="font-mono text-text">{formatExactMoney(user.balance)}</span></div>
+            <div className="flex justify-between"><span className="text-text-muted">Adjustment</span>
+              <span className={`font-mono font-medium ${amountN > 0 ? 'text-emerald-400' : amountN < 0 ? 'text-rose-400' : 'text-text-muted'}`}>
                 {Number.isFinite(amountN) && amountN !== 0 ? (isAdd ? '+' : '') + formatExactMoney(amountN) : '—'}
               </span>
             </div>
-            <div className="flex justify-between pt-1 border-t border-[#1F2937]">
+            <div className="flex justify-between pt-1 border-t border-border">
               <span className="font-medium text-text">New balance</span>
               <span className="font-mono font-medium text-text">{formatExactMoney(newBalance)}</span>
             </div>

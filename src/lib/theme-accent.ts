@@ -12,7 +12,7 @@ export const THEME_PRESETS = [
     name: 'Midnight Obsidian',
     label: 'Neon Emerald Accent',
     primary: '#10B981',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(16, 185, 129, 0.25)',
   },
   {
@@ -20,7 +20,7 @@ export const THEME_PRESETS = [
     name: 'Electric Blue',
     label: 'Cobalt Accent',
     primary: '#3B82F6',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(59, 130, 246, 0.25)',
   },
   {
@@ -28,7 +28,7 @@ export const THEME_PRESETS = [
     name: 'Gold Sovereign',
     label: 'Amber Gold Accent',
     primary: '#F59E0B',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(245, 158, 11, 0.25)',
   },
   {
@@ -36,7 +36,7 @@ export const THEME_PRESETS = [
     name: 'Crimson Edge',
     label: 'Red Accent',
     primary: '#EF4444',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(239, 68, 68, 0.25)',
   },
   {
@@ -44,7 +44,7 @@ export const THEME_PRESETS = [
     name: 'Cyberpunk Violet',
     label: 'Neon Purple Accent',
     primary: '#8B5CF6',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(139, 92, 246, 0.25)',
   },
   {
@@ -52,7 +52,7 @@ export const THEME_PRESETS = [
     name: 'Nordic Cyan',
     label: 'Arctic Teal Accent',
     primary: '#06B6D4',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(6, 182, 212, 0.25)',
   },
   {
@@ -60,7 +60,7 @@ export const THEME_PRESETS = [
     name: 'Rose Gold Prestige',
     label: 'Luxury Rose Accent',
     primary: '#F43F5E',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(244, 63, 94, 0.25)',
   },
   {
@@ -68,7 +68,7 @@ export const THEME_PRESETS = [
     name: 'Solar Flare',
     label: 'Vibrant Orange Accent',
     primary: '#F97316',
-    secondary: '#111827',
+    secondary: 'var(--surface)',
     glow: 'rgba(249, 115, 22, 0.25)',
   },
 ]

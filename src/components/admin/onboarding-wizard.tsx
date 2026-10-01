@@ -204,7 +204,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
               variant="outline"
               size="sm"
               onClick={() => setCurrentStep((prev) => (prev - 1) as any)}
-              className="border-[#1F2937] text-gray-300 gap-1.5"
+              className="border-surface-muted text-gray-300 gap-1.5"
             >
               <ArrowLeft className="h-4 w-4" />
               Previous Step
@@ -246,7 +246,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentStep(4)}
-                className="border-[#1F2937] text-gray-400 hover:text-white"
+                className="border-surface-muted text-gray-400 hover:text-white"
               >
                 Skip Catalog Setup
               </Button>
@@ -271,7 +271,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
       <div className="space-y-6 py-2">
         
         {/* Step Progress Tracker */}
-        <div className="grid grid-cols-4 gap-2 border-b border-[#1F2937]/80 pb-4 text-xs font-semibold">
+        <div className="grid grid-cols-4 gap-2 border-b border-surface-muted/80 pb-4 text-xs font-semibold">
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 1 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 1 ? 'text-gray-300' : 'text-gray-600'}`}>
             <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">1</span>
             <span className="hidden sm:inline">Firm Info</span>
@@ -340,7 +340,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
             </div>
 
             {/* Logo Upload Dropzone */}
-            <div className="border-2 border-dashed border-[#1F2937] hover:border-emerald-500/50 rounded-xl p-5 text-center bg-[#0B0F19] transition-colors cursor-pointer space-y-1.5">
+            <div className="border-2 border-dashed border-surface-muted hover:border-emerald-500/50 rounded-xl p-5 text-center bg-background transition-colors cursor-pointer space-y-1.5">
               <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
                 <UploadCloud className="h-5 w-5" />
               </div>
@@ -370,8 +370,8 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                   <div
                     key={preset.id}
                     onClick={() => handleSelectColor(preset.primary)}
-                    className={`p-4 rounded-xl border-2 bg-[#0B0F19] space-y-2.5 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                      isSelected ? 'shadow-xl' : 'border-[#1F2937] hover:border-slate-700'
+                    className={`p-4 rounded-xl border-2 bg-background space-y-2.5 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                      isSelected ? 'shadow-xl' : 'border-surface-muted hover:border-slate-700'
                     }`}
                     style={{
                       borderColor: isSelected ? preset.primary : undefined,
@@ -386,8 +386,8 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="h-5 w-5 rounded-full shadow-sm" style={{ backgroundColor: preset.primary }} />
-                      <div className="h-5 w-5 rounded-full bg-[#111827] border border-slate-700" />
-                      <div className="h-5 w-5 rounded-full bg-[#0B0F19] border border-slate-700" />
+                      <div className="h-5 w-5 rounded-full bg-surface border border-slate-700" />
+                      <div className="h-5 w-5 rounded-full bg-background border border-slate-700" />
                     </div>
                     <span className="text-[10px] block font-semibold" style={{ color: preset.primary }}>
                       {preset.label}
@@ -416,7 +416,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
               {STANDARD_CATALOG_PLANS.map((plan, idx) => (
                 <div 
                   key={idx}
-                  className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-3.5 flex items-center justify-between"
+                  className="bg-background border border-surface-muted rounded-xl p-3.5 flex items-center justify-between"
                 >
                   <div className="space-y-0.5">
                     <span className="text-xs font-bold text-white block">{plan.name}</span>
@@ -464,7 +464,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
             </div>
 
             {/* Public Checkout Link Box */}
-            <div className="bg-[#0B0F19] border border-[#1F2937] rounded-xl p-4 text-left space-y-2 max-w-lg mx-auto">
+            <div className="bg-background border border-surface-muted rounded-xl p-4 text-left space-y-2 max-w-lg mx-auto">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
                   <ExternalLink className="h-3.5 w-3.5 text-emerald-400" />
@@ -480,21 +480,21 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 </button>
               </div>
 
-              <div className="bg-[#111827] border border-[#1F2937] p-2.5 rounded-lg font-mono text-xs text-emerald-400 select-all break-all">
+              <div className="bg-surface border border-surface-muted p-2.5 rounded-lg font-mono text-xs text-emerald-400 select-all break-all">
                 {frontendUrl}/#pricing
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 max-w-md mx-auto pt-2">
-              <div className="bg-[#0B0F19] border border-[#1F2937] p-2.5 rounded-lg">
+              <div className="bg-background border border-surface-muted p-2.5 rounded-lg">
                 <span className="text-[10px] text-gray-500 font-medium block">Status</span>
                 <span className="text-xs font-bold text-emerald-400">Live & Open</span>
               </div>
-              <div className="bg-[#0B0F19] border border-[#1F2937] p-2.5 rounded-lg">
+              <div className="bg-background border border-surface-muted p-2.5 rounded-lg">
                 <span className="text-[10px] text-gray-500 font-medium block">Checkout</span>
                 <span className="text-xs font-bold text-blue-400">Integrated</span>
               </div>
-              <div className="bg-[#0B0F19] border border-[#1F2937] p-2.5 rounded-lg">
+              <div className="bg-background border border-surface-muted p-2.5 rounded-lg">
                 <span className="text-[10px] text-gray-500 font-medium block">Risk Engine</span>
                 <span className="text-xs font-bold text-amber-400">Active</span>
               </div>
