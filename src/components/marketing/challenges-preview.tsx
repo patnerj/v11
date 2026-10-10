@@ -24,7 +24,7 @@ import { useBranding } from "@/store/branding";
 
 export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: (planId: number) => void, puckProps?: any }) {
   const title = puckProps?.title || "Choose Your Capital Tier";
-  const brandName = useBranding((s) => s.branding.brand_name) || "MassFunded";
+  const brandName = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm";
   const loadBranding = useBranding((s) => s.load);
 
   useEffect(() => { loadBranding(); }, [loadBranding]);
