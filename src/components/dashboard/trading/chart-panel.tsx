@@ -495,7 +495,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         {!compact && (
           <button
             onClick={toggleOneClick}
-            className={`shrink-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold focus-ring transition-all ${
+            className={`shrink-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-terminal-label font-semibold focus-ring transition-all ${
               showOneClick
                 ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 shadow-sm'
                 : 'text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle'
@@ -543,7 +543,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
           <div className="absolute inset-0 flex items-center justify-center bg-surface z-[1]">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex flex-col items-center gap-3 text-xs text-text-muted"
+              className="flex flex-col items-center gap-3 text-terminal-body text-text-muted"
             >
               <div className="h-6 w-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
               Loading chart…

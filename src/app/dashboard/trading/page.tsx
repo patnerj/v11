@@ -468,6 +468,72 @@ function DesktopLayout({
     }
   }
 
+  // Set all winning positions to breakeven handler
+  const [isSettingBreakeven, setIsSettingBreakeven] = useState(false)
+
+  const handleExecuteBreakevenAll = async () => {
+    if (!positions || positions.length === 0 || isSettingBreakeven) return
+    setIsSettingBreakeven(true)
+    const toastId = toast.loading('Securing winning positions at breakeven...')
+    try {
+      let secured = 0
+      let skipped = 0
+      const errors: string[] = []
+
+      for (const p of positions) {
+        if (!p.id || p.id <= 0) continue
+        const isBuy = p.type === 'buy'
+        const openPrice = toNum(p.open_price)
+        const currentPrice = toNum(p.current_price)
+        const sl = p.sl ? toNum(p.sl) : null
+
+        const inProfit = isBuy ? (currentPrice > openPrice) : (currentPrice < openPrice)
+        if (!inProfit) {
+          skipped++
+          continue
+        }
+
+        // Already at breakeven or better
+        if (sl !== null) {
+          if (isBuy && sl >= openPrice) {
+            skipped++
+            continue
+          }
+          if (!isBuy && sl <= openPrice) {
+            skipped++
+            continue
+          }
+        }
+
+        const res = await api.sltp(p.id, openPrice, p.tp ? toNum(p.tp) : null)
+        if (res.ok && res.data.success) {
+          secured++
+        } else {
+          errors.push(`${p.symbol}: ${res.ok ? res.data.message : res.error}`)
+        }
+      }
+
+      invalidateFxsim('/positions')
+      invalidateFxsim('/account')
+      await usePrices.getState().refresh()
+      onChanged?.()
+
+      if (secured > 0) {
+        toast.success(`Secured ${secured} position(s) at Breakeven! ${skipped > 0 ? `(${skipped} in loss/already secured)` : ''}`, { id: toastId })
+      } else if (skipped > 0 && errors.length === 0) {
+        toast.info(`No winning positions currently eligible to set to breakeven (${skipped} skipped).`, { id: toastId })
+      } else if (errors.length > 0) {
+        toast.error(`Could not set breakeven: ${errors.join(', ')}`, { id: toastId })
+      } else {
+        toast.info('No eligible positions found.', { id: toastId })
+      }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to set breakeven', { id: toastId })
+    } finally {
+      setIsSettingBreakeven(false)
+    }
+  }
+
   const balance = toNum(account?.balance)
   const equity  = toNum(account?.equity)
   const used    = toNum(account?.margin_used)
@@ -594,17 +660,30 @@ function DesktopLayout({
                     )}
                   </TabButton>
 
-                  {/* 1-Click Close All Positions Button */}
+                  {/* Emergency Rapid Actions Toolbar */}
                   {tab === 'positions' && positions && positions.length > 0 && (
-                    <button
-                      onClick={() => setIsCloseAllConfirmOpen(true)}
-                      disabled={isClosingAll}
-                      className="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
-                      title="Close all open positions at current market price"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-                      {isClosingAll ? 'Closing...' : `Close All (${positions.length})`}
-                    </button>
+                    <div className="ml-2 flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleExecuteBreakevenAll}
+                        disabled={isSettingBreakeven}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-40"
+                        title="Set Stop Loss of all winning positions to entry price (breakeven)"
+                      >
+                        <span>🛡️</span>
+                        <span>{isSettingBreakeven ? 'Securing...' : 'Set Breakeven'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsCloseAllConfirmOpen(true)}
+                        disabled={isClosingAll}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                        title="Close all open positions at current market price"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+                        <span>{isClosingAll ? 'Closing...' : `Close All (${positions.length})`}</span>
+                      </button>
+                    </div>
                   )}
 
                   {/* Connection indicator — real WS state, never hardcoded */}

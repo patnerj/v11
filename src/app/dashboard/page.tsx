@@ -25,6 +25,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { PageHeader } from '@/components/ui/page-header'
 import { StatCard, StatGrid } from '@/components/ui/stat-card'
 import { ChallengeProgressCard } from '@/components/dashboard/challenge-progress-card'
+import { RiskSentinelCards } from '@/components/dashboard/risk-sentinel-cards'
 import { EquityChart } from '@/components/dashboard/equity-chart'
 import { KycStatusCard } from '@/components/dashboard/kyc-status-card'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
@@ -282,6 +283,13 @@ export default function DashboardOverview() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Dynamic Risk Sentinel Gauge Cards (P0 Trading Ergonomics) */}
+          {metrics && (
+            <SectionErrorBoundary sectionName="Risk Sentinel">
+              <RiskSentinelCards metrics={metrics} account={acc} />
+            </SectionErrorBoundary>
           )}
 
           {/* Top Stat Cards using StatCard & StatGrid */}

@@ -141,7 +141,21 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   // 1-Click Direct Risk % Calculator Pills: sets required lot size automatically based on current equity, SL distance, and tick value
   const calculateLotForRisk = useCallback((riskPercent: number) => {
     const eq = toNum(account?.equity) || toNum(account?.balance) || 10000
-    if (!slN || (!ask && !bid)) {
+    const pSize = pipSize(active, digits)
+    const currentPrice = ask || bid || 0
+
+    let activeSl = slN
+    if (!activeSl && currentPrice > 0) {
+      // Auto-propose standard 25-pip Stop Loss if trader hasn't entered one yet
+      const defaultDistance = 25 * pSize
+      const proposed = mode === 'market'
+        ? Math.max(0, currentPrice - defaultDistance)
+        : (targetN ? Math.max(0, targetN - defaultDistance) : Math.max(0, currentPrice - defaultDistance))
+      setSl(proposed.toFixed(digits))
+      activeSl = proposed
+    }
+
+    if (!activeSl || currentPrice <= 0) {
       setRisk(String(riskPercent))
       setShowCalc(true)
       toast.info(`Please enter a Stop Loss price first to calculate exact ${riskPercent}% risk lot size.`)
@@ -149,16 +163,15 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     }
 
     // Directional entry price: if SL is below market it's BUY (ask), if SL is above market it's SELL (bid)
-    const defaultEntry = slN < (ask || bid) ? (ask || bid) : (bid || ask)
+    const defaultEntry = activeSl < (ask || bid) ? (ask || bid) : (bid || ask)
     const entry = mode === 'market' ? defaultEntry : (targetN || defaultEntry)
-    const priceDiff = Math.abs(entry - slN)
+    const priceDiff = Math.abs(entry - activeSl)
     if (priceDiff <= 0) {
       toast.error('Stop Loss price cannot equal entry price')
       return
     }
 
     const riskAmt = eq * (riskPercent / 100)
-    const pSize = pipSize(active, digits)
     const pips = pSize > 0 ? priceDiff / pSize : priceDiff
     const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
     const perLotRisk = pipValPer1Lot > 0 ? (pips * pipValPer1Lot) : (priceDiff * contractSize)
@@ -172,7 +185,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const clamped = Math.min(maxLot, Math.max(minLot, Math.round(rawLot * 100) / 100))
     setLot(clamped.toFixed(2))
     setRisk(String(riskPercent))
-    toast.success(`Lot sized to ${clamped.toFixed(2)} lots (${riskPercent}% risk of ${fmtUSD(eq, { decimals: 0 })})`)
+    toast.success(`Lot sized to ${clamped.toFixed(2)} lots (${riskPercent}% risk = -${fmtUSD(riskAmt)})`)
   }, [account, slN, ask, bid, mode, targetN, active, contractSize, digits, minLot, maxLot])
 
   const allPrices = usePrices((s) => s.prices)
@@ -677,15 +690,58 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           )}
         </Field>
 
-        {/* Combined Risk : Reward Ratio Pill */}
-        {slMetrics && tpMetrics && (
-          <div className="px-2.5 py-1.5 rounded-md bg-surface-muted/60 border border-border/80 flex items-center justify-between text-terminal-body terminal-num text-text-muted">
-            <span className="font-semibold text-terminal-body text-text-muted flex items-center gap-1.5">
-              <span>⚖️</span> Risk : Reward Ratio
-            </span>
-            <span className="font-semibold terminal-num text-accent text-terminal-body">
-              1 : {(tpMetrics.profitVal / (slMetrics.lossVal || 1)).toFixed(2)}
-            </span>
+        {/* Dynamic Risk & Reward Sentinel Card */}
+        {slMetrics && (
+          <div className="rounded-xl border border-border/80 bg-surface-muted/60 p-3 shadow-xs space-y-2 select-none">
+            <div className="flex items-center justify-between text-terminal-body">
+              <span className="font-semibold text-text flex items-center gap-1.5">
+                <span>🛡️</span> Risk / Reward Dynamics
+              </span>
+              {tpMetrics ? (
+                <span className="px-2 py-0.5 rounded-full text-terminal-micro font-semibold bg-accent/15 text-accent border border-accent/30 terminal-num">
+                  1 : {(tpMetrics.profitVal / (slMetrics.lossVal || 1)).toFixed(2)} R:R
+                </span>
+              ) : (
+                <span className="text-terminal-micro text-text-muted">
+                  Open Target
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-subtle/80">
+              <div className="flex flex-col">
+                <span className="text-terminal-micro text-text-muted uppercase font-medium">Risk (Max Loss)</span>
+                <span className="text-terminal-body font-bold text-rose-400 terminal-num tracking-tight">
+                  -{fmtUSD(slMetrics.lossVal)}
+                </span>
+                <span className="text-terminal-micro text-rose-400/80 terminal-num">
+                  {slMetrics.pips.toFixed(1)}p · {slMetrics.lossPct.toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="flex flex-col text-right">
+                <span className="text-terminal-micro text-text-muted uppercase font-medium">Reward (Target)</span>
+                {tpMetrics ? (
+                  <>
+                    <span className="text-terminal-body font-bold text-emerald-400 terminal-num tracking-tight">
+                      +{fmtUSD(tpMetrics.profitVal)}
+                    </span>
+                    <span className="text-terminal-micro text-emerald-400/80 terminal-num">
+                      +{tpMetrics.pips.toFixed(1)}p · +{tpMetrics.profitPct.toFixed(2)}%
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-terminal-body font-normal text-text-faint italic">
+                      —
+                    </span>
+                    <span className="text-terminal-micro text-text-faint">
+                      No TP set
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

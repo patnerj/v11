@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CircularProgress } from '@/components/ui/circular-progress'
 import { fmtUSD, fmtPct, statusLabel, statusTone, toNum } from '@/lib/format'
+import { cn } from '@/lib/cn'
 import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { DailyDdTimer, DrawdownAlertBadge } from '@/components/dashboard/trading/daily-dd-timer'
@@ -163,37 +164,69 @@ export function ChallengeProgressCard({ metrics: m }: Props) {
         })()}
 
           {/* Daily DD */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-muted/30 border border-border-subtle">
-            <div className="text-2xs text-text-muted mb-2 uppercase tracking-wider">Daily Drawdown</div>
-            <CircularProgress 
-              value={m.daily_dd_progress} 
-              size={70} 
-              strokeWidth={5} 
-              tone={m.daily_dd_progress > 70 ? 'danger' : 'warn'}
-            >
-              <span className="text-xs font-bold tabular">{fmtPct(m.daily_dd_used_pct, 1)}</span>
-            </CircularProgress>
-            <div className="text-2xs text-text-muted mt-2 tabular">
-              limit {fmtPct(m.daily_dd_pct)}
-            </div>
-            <DailyDdTimer compact className="mt-2 text-2xs py-0.5 px-2" />
-          </div>
+          {(() => {
+            const dailyLimit = toNum(m.daily_dd_val) || (planSize * toNum(m.daily_dd_pct) / 100)
+            const currentDailyLoss = Math.max(0, toNum(m.current_daily_loss))
+            const dailyCushion = Math.max(0, dailyLimit - currentDailyLoss)
+            const cushionPct = dailyLimit > 0 ? (dailyCushion / dailyLimit) * 100 : 100
+            return (
+              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-muted/30 border border-border-subtle">
+                <div className="text-2xs text-text-muted mb-2 uppercase tracking-wider">Daily Drawdown</div>
+                <CircularProgress 
+                  value={m.daily_dd_progress} 
+                  size={70} 
+                  strokeWidth={5} 
+                  tone={m.daily_dd_progress > 70 ? 'danger' : 'warn'}
+                >
+                  <span className="text-xs font-bold tabular terminal-num">{fmtPct(m.daily_dd_used_pct, 1)}</span>
+                </CircularProgress>
+                <div className="text-2xs text-text-muted mt-2 tabular terminal-num">
+                  limit {fmtPct(m.daily_dd_pct)}
+                </div>
+                <div className={cn(
+                  "text-2xs font-semibold terminal-num mt-1 px-1.5 py-0.5 rounded-full border",
+                  cushionPct > 60 ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                  cushionPct >= 30 ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
+                  "text-rose-400 bg-rose-500/15 border-rose-500/30 animate-pulse"
+                )}>
+                  {fmtUSD(dailyCushion)} left
+                </div>
+                <DailyDdTimer compact className="mt-2 text-2xs py-0.5 px-2" />
+              </div>
+            )
+          })()}
 
           {/* Max DD */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-muted/30 border border-border-subtle">
-            <div className="text-2xs text-text-muted mb-2 uppercase tracking-wider">Max Drawdown</div>
-            <CircularProgress 
-              value={m.max_dd_progress} 
-              size={70} 
-              strokeWidth={5} 
-              tone={m.max_dd_progress > 70 ? 'danger' : 'warn'}
-            >
-              <span className="text-xs font-bold tabular">{fmtPct(m.current_dd_pct, 1)}</span>
-            </CircularProgress>
-            <div className="text-2xs text-text-muted mt-2 tabular">
-              limit {fmtPct(m.max_dd_pct)}
-            </div>
-          </div>
+          {(() => {
+            const maxLimit = toNum(m.max_dd_val) || (planSize * toNum(m.max_dd_pct) / 100)
+            const currentMaxLoss = Math.max(0, toNum(m.current_dd))
+            const maxCushion = Math.max(0, maxLimit - currentMaxLoss)
+            const cushionPct = maxLimit > 0 ? (maxCushion / maxLimit) * 100 : 100
+            return (
+              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-muted/30 border border-border-subtle">
+                <div className="text-2xs text-text-muted mb-2 uppercase tracking-wider">Max Drawdown</div>
+                <CircularProgress 
+                  value={m.max_dd_progress} 
+                  size={70} 
+                  strokeWidth={5} 
+                  tone={m.max_dd_progress > 70 ? 'danger' : 'warn'}
+                >
+                  <span className="text-xs font-bold tabular terminal-num">{fmtPct(m.current_dd_pct, 1)}</span>
+                </CircularProgress>
+                <div className="text-2xs text-text-muted mt-2 tabular terminal-num">
+                  limit {fmtPct(m.max_dd_pct)}
+                </div>
+                <div className={cn(
+                  "text-2xs font-semibold terminal-num mt-1 px-1.5 py-0.5 rounded-full border",
+                  cushionPct > 60 ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                  cushionPct >= 30 ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
+                  "text-rose-400 bg-rose-500/15 border-rose-500/30 animate-pulse"
+                )}>
+                  {fmtUSD(maxCushion)} cushion
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Trading days */}
           {!isFunded ? (
