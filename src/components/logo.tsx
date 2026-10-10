@@ -51,7 +51,12 @@ export function Logo({
   const isDefaultLaunchAPropFirmVector =
     !imageUrl ||
     imageUrl.endsWith('/branding/brand_logo.svg') ||
-    imageUrl.endsWith('/branding/login_logo.svg')
+    imageUrl.endsWith('/branding/login_logo.svg') ||
+    imageUrl.endsWith('/brand_logo.svg') ||
+    imageUrl.endsWith('/login_logo.svg') ||
+    imageUrl.endsWith('/brand_logo_600x150.png') ||
+    imageUrl.endsWith('/branding/brand_logo_600x150.png') ||
+    imageUrl.includes('brand_logo')
 
   if (isDefaultLaunchAPropFirmVector && name.toLowerCase() === 'launchapropfirm') {
     const gradId = variant === 'login' ? 'mfEmeraldGradLogin' : 'mfEmeraldGradMain'
