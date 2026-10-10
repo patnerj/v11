@@ -158,19 +158,19 @@ export function TemplateTerminal() {
           {/* Quick Stats Bar */}
           <div className="mt-14 max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-2xl bg-surface/80 border border-border/80 shadow-xs backdrop-blur-sm">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 font-mono terminal-num">$2,000,000</div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 terminal-num">$2,000,000</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider mt-0.5">Scaling Ceiling</div>
             </div>
             <div className="p-4 rounded-2xl bg-surface/80 border border-border/80 shadow-xs backdrop-blur-sm">
-              <div className="text-2xl sm:text-3xl font-black text-teal-500 dark:text-teal-400 font-mono terminal-num">14ms</div>
+              <div className="text-2xl sm:text-3xl font-black text-teal-500 dark:text-teal-400 terminal-num">14ms</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider mt-0.5">Execution Bridge</div>
             </div>
             <div className="p-4 rounded-2xl bg-surface/80 border border-border/80 shadow-xs backdrop-blur-sm">
-              <div className="text-2xl sm:text-3xl font-black text-cyan-500 dark:text-cyan-400 font-mono terminal-num">100%</div>
+              <div className="text-2xl sm:text-3xl font-black text-cyan-500 dark:text-cyan-400 terminal-num">100%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider mt-0.5">Static DD Floor</div>
             </div>
             <div className="p-4 rounded-2xl bg-surface/80 border border-border/80 shadow-xs backdrop-blur-sm">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 font-mono terminal-num">90%</div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 terminal-num">90%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider mt-0.5">Profit Share</div>
             </div>
           </div>
@@ -265,11 +265,11 @@ export function TemplateTerminal() {
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-center">
                     <div className="text-2xs font-bold text-red-500 uppercase">Sell by Market</div>
-                    <div className="text-lg font-black font-mono terminal-num text-red-500 mt-0.5">{activeSymbol.bid}</div>
+                    <div className="text-lg font-black terminal-num text-red-500 mt-0.5">{activeSymbol.bid}</div>
                   </div>
                   <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-center">
                     <div className="text-2xs font-bold text-emerald-500 uppercase">Buy by Market</div>
-                    <div className="text-lg font-black font-mono terminal-num text-emerald-500 mt-0.5">{activeSymbol.ask}</div>
+                    <div className="text-lg font-black terminal-num text-emerald-500 mt-0.5">{activeSymbol.ask}</div>
                   </div>
                 </div>
 
@@ -430,10 +430,10 @@ export function TemplateTerminal() {
                 )}
 
                 <div>
-                  <div className="text-2xl font-black text-text font-mono terminal-num">{p.size}</div>
+                  <div className="text-2xl font-black text-text terminal-num">{p.size}</div>
                   <div className="text-xs text-text-muted mt-0.5">Funded Account</div>
 
-                  <div className="my-5 border-t border-border pt-4 space-y-2.5 text-2xs font-mono">
+                  <div className="my-5 border-t border-border pt-4 space-y-2.5 text-2xs">
                     <div className="flex justify-between">
                       <span className="text-text-muted">Phase 1 (8%):</span>
                       <span className="font-semibold text-text terminal-num">{p.target1}</span>
@@ -460,7 +460,7 @@ export function TemplateTerminal() {
                 <div className="pt-4 border-t border-border">
                   <div className="flex items-baseline justify-between mb-4">
                     <span className="text-2xs text-text-muted">One-time fee:</span>
-                    <span className="text-xl font-black text-text font-mono terminal-num">{p.price}</span>
+                    <span className="text-xl font-black text-text terminal-num">{p.price}</span>
                   </div>
                   <Button asChild className="w-full h-10 font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm">
                     <Link href={`/checkout?plan=${encodeURIComponent(p.size)}`}>

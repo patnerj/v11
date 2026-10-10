@@ -338,11 +338,11 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
     .focus-within\\:ring-\\[\\#10B981\\]:focus-within {
       --tw-ring-color: ${cleanHex} !important;
     }
-    body, html { font-family: ${safeFont}; }
+    body, html { font-family: ${safeFont} !important; }
     *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
-      font-family: ${safeFont};
+      font-family: ${safeFont} !important;
     }
-    code, pre, kbd {
+    code, pre, kbd, code *, pre *, kbd * {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
     }
     .tabular-nums, .tabular, .terminal-num {
@@ -589,7 +589,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 fontTag.id = 'fxsim-live-theme-font';
                 document.head.appendChild(fontTag);
               }
-              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + '; } *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + '; } code, pre, kbd, code *, pre *, kbd * { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; } .tabular-nums, .tabular, .terminal-num { font-variant-numeric: tabular-nums; }';
+              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + ' !important; } *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + ' !important; } code, pre, kbd, code *, pre *, kbd * { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; } .tabular-nums, .tabular, .terminal-num { font-variant-numeric: tabular-nums; }';
 
               var accent = null;
               try {

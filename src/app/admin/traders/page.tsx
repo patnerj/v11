@@ -398,7 +398,7 @@ export default function TradersHubPage() {
       key: 'account_id',
       header: 'Account ID',
       render: (row) => (
-        <span className="font-mono terminal-num text-xs font-semibold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
+        <span className="terminal-num text-xs font-semibold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
           #TRD-{row.account_id}
         </span>
       )

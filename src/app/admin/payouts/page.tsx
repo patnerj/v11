@@ -177,10 +177,16 @@ function PayoutsHubContent() {
     staleTime: 10000,
   })
 
-  // Normalize API data or return authentic empty array
+  // Normalize API data or return authentic empty array (AGENTS.md Rule 1.2)
   const allPayouts: PayoutTableRow[] = useMemo(() => {
-    if (rawPayouts && Array.isArray(rawPayouts) && rawPayouts.length > 0) {
-      return rawPayouts.map((p: any, idx: number) => {
+    const list = Array.isArray(rawPayouts)
+      ? rawPayouts
+      : (rawPayouts && typeof rawPayouts === 'object' && Array.isArray((rawPayouts as any).payouts))
+      ? (rawPayouts as any).payouts
+      : []
+
+    if (list.length > 0) {
+      return list.map((p: any, idx: number) => {
         const rawId = p.id || (idx + 1)
         const amt = Number(p.amount_requested || p.amount || 0)
         const split = Number(p.profit_split_pct || 80)

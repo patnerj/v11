@@ -201,7 +201,7 @@ export default function AdminChallengesPage() {
                             }}
                             className="hover:bg-surface-muted/60 transition-colors cursor-pointer group"
                           >
-                            <td className="px-4 py-3 font-mono font-medium text-text">#{c.id}</td>
+                            <td className="px-4 py-3 terminal-num font-medium text-text">#{c.id}</td>
                             <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                               <Link 
                                 href={`/admin/traders/${c.user_id}`}
@@ -214,11 +214,11 @@ export default function AdminChallengesPage() {
                             <td className="px-4 py-3 text-text font-medium">{c.plan_name ?? 'Standard Evaluation'}</td>
                             <td className="px-4 py-3 text-right tabular text-text-muted">{fmtUSD(size, { decimals: 0 })}</td>
                             <td className="px-4 py-3 text-right tabular font-semibold text-text">{fmtUSD(c.current_balance)}</td>
-                            <td className="px-4 py-3 text-right tabular text-danger font-mono">
+                            <td className="px-4 py-3 text-right tabular text-danger font-semibold">
                               {floor > 0 ? fmtUSD(floor) : '—'}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <span className="px-2 py-0.5 rounded bg-surface-muted border border-border text-2xs font-mono">
+                              <span className="px-2 py-0.5 rounded bg-surface-muted border border-border text-2xs font-semibold">
                                 Phase {c.phase ?? 1}
                               </span>
                             </td>

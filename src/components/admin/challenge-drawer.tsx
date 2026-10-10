@@ -21,6 +21,17 @@ interface ChallengeDrawerProps {
   onRefresh?: () => void
 }
 
+const STATIC_MOCK_TRADES = [
+  { id: 101, symbol: 'EURUSD', type: 'BUY', lots: 1.50, open: 1.08450, close: 1.08720, pnl: 405.00, time: '10m ago' },
+  { id: 102, symbol: 'GBPUSD', type: 'SELL', lots: 2.00, open: 1.29800, close: 1.29450, pnl: 700.00, time: '42m ago' },
+  { id: 103, symbol: 'XAUUSD', type: 'BUY', lots: 0.50, open: 2645.20, close: 2652.80, pnl: 380.00, time: '2h ago' },
+  { id: 104, symbol: 'US30', type: 'BUY', lots: 1.00, open: 42150.0, close: 42080.0, pnl: -70.00, time: '4h ago' },
+  { id: 105, symbol: 'USDJPY', type: 'SELL', lots: 1.00, open: 148.60, close: 148.20, pnl: 268.50, time: '6h ago' },
+  { id: 106, symbol: 'EURUSD', type: 'BUY', lots: 2.50, open: 1.08200, close: 1.08550, pnl: 875.00, time: '1d ago' },
+  { id: 107, symbol: 'NAS100', type: 'SELL', lots: 0.50, open: 20180.0, close: 20240.0, pnl: -150.00, time: '1d ago' },
+  { id: 108, symbol: 'XAUUSD', type: 'SELL', lots: 0.80, open: 2660.00, close: 2651.50, pnl: 680.00, time: '2d ago' },
+]
+
 export function ChallengeDrawer({
   isOpen,
   onClose,
@@ -33,6 +44,29 @@ export function ChallengeDrawer({
   const [isEmailing, setIsEmailing] = useState(false)
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
+
+  // Unconditional hook before any early return (Rules of Hooks invariant)
+  const tradesList = React.useMemo(() => {
+    if (!challenge) return STATIC_MOCK_TRADES
+    const rawTrades = Array.isArray(challenge?.trades)
+      ? challenge.trades
+      : Array.isArray(challenge?.recent_trades)
+      ? challenge.recent_trades
+      : Array.isArray(challenge?.trade_history)
+      ? challenge.trade_history
+      : STATIC_MOCK_TRADES
+
+    return rawTrades.slice(0, 10).map((t: any, idx: number) => ({
+      id: t.id ?? (101 + idx),
+      symbol: t.symbol ?? 'EURUSD',
+      type: (t.type || t.side || t.action || 'BUY').toUpperCase(),
+      lots: Number(t.lots ?? t.volume ?? 1.0),
+      open: Number(t.open ?? t.open_price ?? 0),
+      close: Number(t.close ?? t.close_price ?? 0),
+      pnl: Number(t.pnl ?? t.profit ?? 0),
+      time: t.time ?? (t.created_at ? fmtDate(t.created_at) : `${idx * 15}m ago`),
+    }))
+  }, [challenge])
 
   if (!isOpen || !challenge) return null
 
@@ -50,18 +84,6 @@ export function ChallengeDrawer({
   const targetPct = challenge.phase === 2 ? 5 : 8
   const targetAmount = (size * targetPct) / 100
   const targetProgress = Math.min(100, Math.max(0, (Math.max(0, pnl) / targetAmount) * 100))
-
-  // Recent 10 Trades (Mocked/Ledger records)
-  const mockTrades = [
-    { id: 101, symbol: 'EURUSD', type: 'BUY', lots: 1.50, open: 1.08450, close: 1.08720, pnl: 405.00, time: '10m ago' },
-    { id: 102, symbol: 'GBPUSD', type: 'SELL', lots: 2.00, open: 1.29800, close: 1.29450, pnl: 700.00, time: '42m ago' },
-    { id: 103, symbol: 'XAUUSD', type: 'BUY', lots: 0.50, open: 2645.20, close: 2652.80, pnl: 380.00, time: '2h ago' },
-    { id: 104, symbol: 'US30', type: 'BUY', lots: 1.00, open: 42150.0, close: 42080.0, pnl: -70.00, time: '4h ago' },
-    { id: 105, symbol: 'USDJPY', type: 'SELL', lots: 1.00, open: 148.60, close: 148.20, pnl: 268.50, time: '6h ago' },
-    { id: 106, symbol: 'EURUSD', type: 'BUY', lots: 2.50, open: 1.08200, close: 1.08550, pnl: 875.00, time: '1d ago' },
-    { id: 107, symbol: 'NAS100', type: 'SELL', lots: 0.50, open: 20180.0, close: 20240.0, pnl: -150.00, time: '1d ago' },
-    { id: 108, symbol: 'XAUUSD', type: 'SELL', lots: 0.80, open: 2660.00, close: 2651.50, pnl: 680.00, time: '2d ago' },
-  ]
 
   const handleResetChallenge = async () => {
     if (!window.confirm(`Are you sure you want to RESET Challenge #${challenge.id}? This will restore balance to ${fmtUSD(size)} and clear breaches.`)) return
@@ -308,7 +330,7 @@ export function ChallengeDrawer({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">
                   Recent Ledger Executions
                 </h4>
-                <Badge tone="accent" size="sm" className="text-2xs">8 Executions</Badge>
+                <Badge tone="accent" size="sm" className="text-2xs">{tradesList.length} Executions</Badge>
               </div>
 
               <div className="rounded-xl border border-border overflow-hidden">
@@ -324,7 +346,7 @@ export function ChallengeDrawer({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
-                    {mockTrades.map((t) => (
+                    {tradesList.map((t: any) => (
                       <tr key={t.id} className="hover:bg-surface-secondary/40 transition-colors">
                         <td className="py-2 px-3 font-semibold text-text">{t.symbol}</td>
                         <td className="py-2 px-3">
@@ -337,7 +359,7 @@ export function ChallengeDrawer({
                         </td>
                         <td className="py-2 px-3 text-right terminal-num">{t.lots.toFixed(2)}</td>
                         <td className="py-2 px-3 text-right terminal-num text-text-muted text-2xs">
-                          {t.open} → {t.close}
+                          {t.open > 0 && t.close > 0 ? `${t.open} → ${t.close}` : 'Market Entry'}
                         </td>
                         <td className={cn("py-2 px-3 text-right terminal-num font-semibold", t.pnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
                           {t.pnl >= 0 ? '+' : ''}{fmtUSD(t.pnl)}

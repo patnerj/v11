@@ -362,10 +362,10 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
       --font-poppins: ${found.cssVar} !important;
     }
     html, body {
-      font-family: ${found.cssVar};
+      font-family: ${found.cssVar} !important;
     }
     *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
-      font-family: ${found.cssVar};
+      font-family: ${found.cssVar} !important;
     }
     code, pre, kbd, code *, pre *, kbd * {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;

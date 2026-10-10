@@ -759,10 +759,10 @@ button, input, select, textarea {
 }
 
 *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans) !important;
 }
 
-code, pre, kbd {
+code, pre, kbd, code *, pre *, kbd * {
   font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
 }
 

@@ -231,11 +231,11 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <div className="flex items-baseline justify-between gap-2">
                     <div>
                       <div className="text-2xs sm:text-2xs text-text-muted">Account Equity</div>
-                      <div className="text-xl sm:text-2xl font-bold font-mono text-text">$109,640.50</div>
+                      <div className="text-xl sm:text-2xl font-bold terminal-num text-text">$109,640.50</div>
                     </div>
                     <div className="text-right">
                       <div className="text-2xs sm:text-2xs text-text-muted">Floating Profit</div>
-                      <div className="text-base sm:text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
+                      <div className="text-base sm:text-lg font-bold terminal-num text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
                         <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         +$9,640.50
                       </div>
