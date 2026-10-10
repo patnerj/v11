@@ -5,7 +5,8 @@ import { PayoutTicker } from "@/components/payout-ticker";
 import { MarketingFooter } from "@/components/marketing/footer";
 import { TemplateClassic } from "@/components/marketing/templates/template-classic";
 import { TemplateTerminal } from "@/components/marketing/templates/template-terminal";
-import { TemplateSwitcher } from "@/components/marketing/templates/template-switcher";
+import { TemplateFtmo } from "@/components/marketing/templates/template-ftmo";
+import { TemplateSwitcher, type LandingTemplateId } from "@/components/marketing/templates/template-switcher";
 import { getApiBaseUrl } from "@/lib/fxsim";
 
 export const revalidate = 60;
@@ -74,16 +75,20 @@ export default async function HomePage(props: PageProps) {
   } catch {}
 
   // Determine active template:
-  // If query is specified (?template=terminal, massfunded, pro), prioritize query.
-  // Else if query is ?template=classic, use classic.
-  // Else fallback to cookie if set, otherwise fail-safe default to 'classic' (Rule 66.1).
-  let activeTemplate: 'classic' | 'terminal' = 'classic';
-  if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
+  // Priority: URL query (?template=ftmo, titan, terminal, massfunded, classic) -> cookie -> default ('classic')
+  let activeTemplate: LandingTemplateId = 'classic';
+  if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
+    activeTemplate = 'ftmo';
+  } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
     activeTemplate = 'terminal';
   } else if (queryTemplate === 'classic') {
     activeTemplate = 'classic';
+  } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
+    activeTemplate = 'ftmo';
   } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
     activeTemplate = 'terminal';
+  } else if (cookieTemplate === 'classic') {
+    activeTemplate = 'classic';
   }
 
   return (
@@ -93,7 +98,9 @@ export default async function HomePage(props: PageProps) {
         <PayoutTicker />
       </Suspense>
       <main className="relative pb-20 lg:pb-0">
-        {activeTemplate === 'terminal' ? (
+        {activeTemplate === 'ftmo' ? (
+          <TemplateFtmo />
+        ) : activeTemplate === 'terminal' ? (
           <TemplateTerminal />
         ) : (
           <TemplateClassic data={data} />
