@@ -410,130 +410,6 @@ function DesktopLayout({
     }
   }
 
-  // Close all positions handler
-  const [isClosingAll, setIsClosingAll] = useState(false)
-  const [isCloseAllConfirmOpen, setIsCloseAllConfirmOpen] = useState(false)
-
-  const handleExecuteCloseAll = async () => {
-    if (!positions || positions.length === 0 || isClosingAll) return
-    const closable = positions.filter((p) => p.id > 0)
-    if (closable.length === 0) return
-    setIsClosingAll(true)
-    const toastId = toast.loading(`Closing ${closable.length} position(s)...`)
-    try {
-      const batchRes = await api.closeAll(account?.id ? { account_id: account.id } : undefined)
-      if (batchRes.ok && batchRes.data.success) {
-        invalidateFxsim('/positions')
-        invalidateFxsim('/account')
-        invalidateFxsim('/history')
-        await usePrices.getState().refresh()
-        onChanged?.()
-        playOrderCloseSound()
-        toast.success(`Closed all ${batchRes.data.closed_count || positions.length} position(s)!`, { id: toastId })
-        return
-      }
-
-      const failed: { id: number; symbol: string; error: string }[] = []
-      let succeeded = 0
-      for (const p of closable) {
-        const r = await api.close(p.id)
-        if (r.ok && (r.data as { success?: boolean })?.success) succeeded++
-        else failed.push({ id: p.id, symbol: p.symbol, error: !r.ok ? r.error : ((r.data as { message?: string })?.message || 'Close rejected') })
-      }
-
-      invalidateFxsim('/positions')
-      invalidateFxsim('/account')
-      invalidateFxsim('/history')
-      await usePrices.getState().refresh()
-      onChanged?.()
-
-      if (succeeded > 0) {
-        playOrderCloseSound()
-      }
-
-      if (failed.length === 0) {
-        toast.success(`Closed all ${positions.length} position(s)!`, { id: toastId })
-      } else if (succeeded === 0) {
-        const first = failed[0]
-        toast.error(`Could not close positions: ${first.symbol} — ${first.error}`, { id: toastId })
-      } else {
-        const names = failed.map((f) => f.symbol).join(', ')
-        toast.warning(`Closed ${succeeded} position(s), but ${failed.length} failed: ${names}.`, { id: toastId })
-      }
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to close some positions.', { id: toastId })
-    } finally {
-      setIsClosingAll(false)
-      setIsCloseAllConfirmOpen(false)
-    }
-  }
-
-  // Set all winning positions to breakeven handler
-  const [isSettingBreakeven, setIsSettingBreakeven] = useState(false)
-
-  const handleExecuteBreakevenAll = async () => {
-    if (!positions || positions.length === 0 || isSettingBreakeven) return
-    setIsSettingBreakeven(true)
-    const toastId = toast.loading('Securing winning positions at breakeven...')
-    try {
-      let secured = 0
-      let skipped = 0
-      const errors: string[] = []
-
-      for (const p of positions) {
-        if (!p.id || p.id <= 0) continue
-        const isBuy = p.type === 'buy'
-        const openPrice = toNum(p.open_price)
-        const currentPrice = toNum(p.current_price)
-        const sl = p.sl ? toNum(p.sl) : null
-
-        const inProfit = isBuy ? (currentPrice > openPrice) : (currentPrice < openPrice)
-        if (!inProfit) {
-          skipped++
-          continue
-        }
-
-        // Already at breakeven or better
-        if (sl !== null) {
-          if (isBuy && sl >= openPrice) {
-            skipped++
-            continue
-          }
-          if (!isBuy && sl <= openPrice) {
-            skipped++
-            continue
-          }
-        }
-
-        const res = await api.sltp(p.id, openPrice, p.tp ? toNum(p.tp) : null)
-        if (res.ok && res.data.success) {
-          secured++
-        } else {
-          errors.push(`${p.symbol}: ${res.ok ? res.data.message : res.error}`)
-        }
-      }
-
-      invalidateFxsim('/positions')
-      invalidateFxsim('/account')
-      await usePrices.getState().refresh()
-      onChanged?.()
-
-      if (secured > 0) {
-        toast.success(`Secured ${secured} position(s) at Breakeven! ${skipped > 0 ? `(${skipped} in loss/already secured)` : ''}`, { id: toastId })
-      } else if (skipped > 0 && errors.length === 0) {
-        toast.info(`No winning positions currently eligible to set to breakeven (${skipped} skipped).`, { id: toastId })
-      } else if (errors.length > 0) {
-        toast.error(`Could not set breakeven: ${errors.join(', ')}`, { id: toastId })
-      } else {
-        toast.info('No eligible positions found.', { id: toastId })
-      }
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to set breakeven', { id: toastId })
-    } finally {
-      setIsSettingBreakeven(false)
-    }
-  }
-
   const balance = toNum(account?.balance)
   const equity  = toNum(account?.equity)
   const used    = toNum(account?.margin_used)
@@ -541,7 +417,6 @@ function DesktopLayout({
   const level   = used > 0 ? (equity / used) * 100 : null
   const lev     = toNum(account?.leverage) || 100
   const pnl     = openPnL ?? (equity - balance)
-  const totalPositionsPnL = (positions || []).reduce((acc, p) => acc + (toNum(p.pnl) || 0), 0)
 
   return (
     <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0 w-full overflow-hidden">
@@ -659,32 +534,6 @@ function DesktopLayout({
                       </span>
                     )}
                   </TabButton>
-
-                  {/* Emergency Rapid Actions Toolbar */}
-                  {tab === 'positions' && positions && positions.length > 0 && (
-                    <div className="ml-2 flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={handleExecuteBreakevenAll}
-                        disabled={isSettingBreakeven}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-40"
-                        title="Set Stop Loss of all winning positions to entry price (breakeven)"
-                      >
-                        <span>🛡️</span>
-                        <span>{isSettingBreakeven ? 'Securing...' : 'Set Breakeven'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsCloseAllConfirmOpen(true)}
-                        disabled={isClosingAll}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
-                        title="Close all open positions at current market price"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-                        <span>{isClosingAll ? 'Closing...' : `Close All (${positions.length})`}</span>
-                      </button>
-                    </div>
-                  )}
 
                   {/* Connection indicator — real WS state, never hardcoded */}
                   <div className="ml-auto flex items-center gap-2">
@@ -822,18 +671,6 @@ function DesktopLayout({
           )}
         </Panel>
       </PanelGroup>
-
-      {/* Close All Positions Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={isCloseAllConfirmOpen}
-        onCancel={() => setIsCloseAllConfirmOpen(false)}
-        onConfirm={handleExecuteCloseAll}
-        title="Emergency Close All Positions"
-        description={`Are you sure you want to market-close all ${positions?.length || 0} active position(s) with net P&L of ${fmtUSD(totalPositionsPnL, { sign: true })}? This action executes immediately at current live bid/ask prices and cannot be undone.`}
-        confirmText={`Close All (${positions?.length || 0}) Positions`}
-        isDestructive={true}
-        loading={isClosingAll}
-      />
     </div>
   )
 }

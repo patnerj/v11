@@ -15,6 +15,7 @@ import { usePrices, nextOptimisticId } from '@/store/prices'
 import { cn } from '@/lib/cn'
 import { fmtPrice, fmtUSD, toNum, fmtLots } from '@/lib/format'
 import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies } from '@/lib/symbol-meta'
+import { quoteToUsdRate } from '@/lib/order-math'
 import { useQuery } from '@tanstack/react-query'
 import type { Account, ChallengePlan } from '@/types/api'
 import { playOrderSuccessSound } from '@/lib/sound'
@@ -123,7 +124,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     setLot(next.toFixed(2))
   }, [lotN, minLot, maxLot])
 
-  // Risk calculator: lot sized to risk X% of balance per the SL distance
+  const allPrices = usePrices((s) => s.prices)
+
+  // Risk calculator: lot sized to risk X% of balance per the SL distance with exact quote currency conversion
   const recommendedLot = useMemo(() => {
     if (!account || !slN || !ask) return null
     const balance = toNum(account.balance)
@@ -132,11 +135,12 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const entry   = mode === 'market' ? ask : (targetN || ask)
     const priceDiff = Math.abs(entry - slN)
     if (priceDiff <= 0) return null
-    const perLotRisk = priceDiff * contractSize
+    const qRate = quoteToUsdRate(active, entry, allPrices)
+    const perLotRisk = priceDiff * contractSize * qRate
     if (perLotRisk <= 0) return null
     const rec = riskAmt / perLotRisk
     return Math.min(maxLot, Math.max(minLot, Math.round(rec * 100) / 100))
-  }, [account, slN, ask, risk, mode, targetN, contractSize, minLot, maxLot])
+  }, [account, slN, ask, risk, mode, targetN, contractSize, minLot, maxLot, active, allPrices])
 
   // 1-Click Direct Risk % Calculator Pills: sets required lot size automatically based on current equity, SL distance, and tick value
   const calculateLotForRisk = useCallback((riskPercent: number) => {
@@ -171,10 +175,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       return
     }
 
+    const qRate = quoteToUsdRate(active, entry, allPrices)
     const riskAmt = eq * (riskPercent / 100)
-    const pips = pSize > 0 ? priceDiff / pSize : priceDiff
-    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
-    const perLotRisk = pipValPer1Lot > 0 ? (pips * pipValPer1Lot) : (priceDiff * contractSize)
+    const perLotRisk = priceDiff * contractSize * qRate
 
     if (perLotRisk <= 0) {
       toast.error('Cannot calculate risk for this Stop Loss distance.')
@@ -186,9 +189,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     setLot(clamped.toFixed(2))
     setRisk(String(riskPercent))
     toast.success(`Lot sized to ${clamped.toFixed(2)} lots (${riskPercent}% risk = -${fmtUSD(riskAmt)})`)
-  }, [account, slN, ask, bid, mode, targetN, active, contractSize, digits, minLot, maxLot])
-
-  const allPrices = usePrices((s) => s.prices)
+  }, [account, slN, ask, bid, mode, targetN, active, contractSize, digits, minLot, maxLot, allPrices])
 
   // Approximate margin for the order (mirrors backend calc_margin_usd)
   const accountLev = toNum(account?.leverage) || 100
@@ -221,27 +222,29 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
   // SL/TP preview — in market mode we don't know buy/sell yet so we show the
   // absolute risk/reward magnitude. In pending mode we know the side and can
-  // show a signed P&L.
+  // show a signed P&L with quoteToUsdRate.
   const slPnL = useMemo(() => {
     if (!slN || !ask) return null
+    const qRate = quoteToUsdRate(active, ask, allPrices)
     if (mode === 'market') {
       // Magnitude only — sign will resolve when user picks BUY or SELL
-      return Math.abs(slN - ask) * contractSize * lotN
+      return Math.abs(slN - ask) * contractSize * lotN * qRate
     }
     const direction = pendingType.startsWith('buy') ? 1 : -1
     const px = targetN || ask
-    return (slN - px) * direction * contractSize * lotN
-  }, [slN, ask, lotN, contractSize, mode, pendingType, targetN])
+    return (slN - px) * direction * contractSize * lotN * qRate
+  }, [slN, ask, lotN, contractSize, mode, pendingType, targetN, active, allPrices])
 
   const tpPnL = useMemo(() => {
     if (!tpN || !ask) return null
+    const qRate = quoteToUsdRate(active, ask, allPrices)
     if (mode === 'market') {
-      return Math.abs(tpN - ask) * contractSize * lotN
+      return Math.abs(tpN - ask) * contractSize * lotN * qRate
     }
     const direction = pendingType.startsWith('buy') ? 1 : -1
     const px = targetN || ask
-    return (tpN - px) * direction * contractSize * lotN
-  }, [tpN, ask, lotN, contractSize, mode, pendingType, targetN])
+    return (tpN - px) * direction * contractSize * lotN * qRate
+  }, [tpN, ask, lotN, contractSize, mode, pendingType, targetN, active, allPrices])
 
   // Detailed SL/TP Metrics with Pips, Dollar amounts, and Equity % for live hover & preview
   const slMetrics = useMemo(() => {
@@ -251,12 +254,12 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const priceDiff = Math.abs(entryPx - slN)
     if (priceDiff <= 0) return null
     const pips = pSize > 0 ? priceDiff / pSize : priceDiff
-    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
-    const lossVal = pipValPer1Lot > 0 ? (pips * pipValPer1Lot * lotN) : (priceDiff * contractSize * lotN)
+    const qRate = quoteToUsdRate(active, entryPx, allPrices)
+    const lossVal = priceDiff * contractSize * lotN * qRate
     const eq = toNum(account?.equity) || toNum(account?.balance) || 0
     const lossPct = eq > 0 ? (lossVal / eq) * 100 : 0
     return { pips, lossVal, lossPct, entryPx }
-  }, [slN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account])
+  }, [slN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account, allPrices])
 
   const tpMetrics = useMemo(() => {
     if (!tpN || !ask || lotN <= 0) return null
@@ -265,12 +268,12 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const priceDiff = Math.abs(tpN - entryPx)
     if (priceDiff <= 0) return null
     const pips = pSize > 0 ? priceDiff / pSize : priceDiff
-    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
-    const profitVal = pipValPer1Lot > 0 ? (pips * pipValPer1Lot * lotN) : (priceDiff * contractSize * lotN)
+    const qRate = quoteToUsdRate(active, entryPx, allPrices)
+    const profitVal = priceDiff * contractSize * lotN * qRate
     const eq = toNum(account?.equity) || toNum(account?.balance) || 0
     const profitPct = eq > 0 ? (profitVal / eq) * 100 : 0
     return { pips, profitVal, profitPct, entryPx }
-  }, [tpN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account])
+  }, [tpN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account, allPrices])
 
   // ── Submit ────────────────────────────────────────────────────────────
   // Client-side free-margin gate — mirrors the server check so traders get an

@@ -129,6 +129,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   }, [positions, isClosingAll, onChanged])
 
   const [isSettingBreakeven, setIsSettingBreakeven] = useState(false)
+  const [isPartialClosingAll, setIsPartialClosingAll] = useState(false)
 
   const handleBreakevenAll = useCallback(async () => {
     if (!positions || positions.length === 0 || isSettingBreakeven) return
@@ -138,12 +139,16 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
       let secured = 0
       let skipped = 0
       const errors: string[] = []
+      const livePrices = usePrices.getState().prices
 
       for (const p of positions) {
         if (!p.id || p.id <= 0) continue
         const isBuy = p.type === 'buy'
         const openPrice = toNum(p.open_price)
-        const currentPrice = toNum(p.current_price)
+        const tick = livePrices[p.symbol]
+        const currentPrice = isBuy
+          ? (toNum(tick?.bid) || toNum(p.current_price))
+          : (toNum(tick?.ask) || toNum(p.current_price))
         const sl = p.sl ? toNum(p.sl) : null
 
         const inProfit = isBuy ? (currentPrice > openPrice) : (currentPrice < openPrice)
@@ -193,6 +198,59 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
     }
   }, [positions, isSettingBreakeven, onChanged])
 
+  const handlePartialCloseAll50 = useCallback(async () => {
+    if (!positions || positions.length === 0 || isPartialClosingAll) return
+    setIsPartialClosingAll(true)
+    const toastId = toast.loading('Closing 50% volume across eligible positions...')
+    try {
+      let closedCount = 0
+      let skippedCount = 0
+      const errors: string[] = []
+
+      for (const p of positions) {
+        if (!p.id || p.id <= 0) continue
+        const totalLots = toNum(p.lot_size)
+        // Can only partially close if volume is at least 0.02 lots
+        if (totalLots < 0.02) {
+          skippedCount++
+          continue
+        }
+        const halfLots = Math.round((totalLots / 2) * 100) / 100
+        if (halfLots < 0.01) {
+          skippedCount++
+          continue
+        }
+
+        const res = await api.partialClose(p.id, halfLots)
+        if (res.ok && res.data.success) {
+          closedCount++
+        } else {
+          errors.push(`${p.symbol}: ${res.ok ? res.data.message : res.error}`)
+        }
+      }
+
+      invalidateFxsim('/positions')
+      invalidateFxsim('/account')
+      await usePrices.getState().refresh()
+      onChanged?.()
+
+      if (closedCount > 0) {
+        playOrderCloseSound()
+        toast.success(`Partially closed 50% on ${closedCount} position(s)! ${skippedCount > 0 ? `(${skippedCount} too small to split)` : ''}`, { id: toastId })
+      } else if (skippedCount > 0 && errors.length === 0) {
+        toast.info(`Positions have volume under 0.02 lots; cannot split 50%.`, { id: toastId })
+      } else if (errors.length > 0) {
+        toast.error(`Partial close issues: ${errors.join(', ')}`, { id: toastId })
+      } else {
+        toast.info('No eligible positions found.', { id: toastId })
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to partial close 50%', { id: toastId })
+    } finally {
+      setIsPartialClosingAll(false)
+    }
+  }, [positions, isPartialClosingAll, onChanged])
+
   if (positions === null) {
     return <SkeletonRows />
   }
@@ -225,7 +283,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
           <button
             type="button"
             onClick={handleBreakevenAll}
-            disabled={isSettingBreakeven}
+            disabled={isSettingBreakeven || isClosingAll || isPartialClosingAll}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
             title="Set Stop Loss of all winning positions to entry price (breakeven)"
           >
@@ -234,8 +292,18 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
           </button>
           <button
             type="button"
+            onClick={handlePartialCloseAll50}
+            disabled={isSettingBreakeven || isClosingAll || isPartialClosingAll}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-surface-muted hover:bg-surface-strong text-text-muted hover:text-text border border-border transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
+            title="Close 50% of position size across all open positions"
+          >
+            <span>½</span>
+            <span>{isPartialClosingAll ? 'Closing 50%...' : 'Partial Close 50%'}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setIsCloseAllConfirmOpen(true)}
-            disabled={isClosingAll}
+            disabled={isClosingAll || isSettingBreakeven || isPartialClosingAll}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
             title="Emergency Close All open positions at live market price"
           >
@@ -427,6 +495,13 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
     if (!inProfit) {
       toast.warning(`${pos.symbol} is not in profit. Stop Loss cannot be moved to entry price.`)
       return
+    }
+    const sl = pos.sl ? toNum(pos.sl) : null
+    if (sl !== null) {
+      if ((isBuy && sl >= openPrice) || (!isBuy && sl <= openPrice)) {
+        toast.info(`${pos.symbol} Stop Loss is already at or better than breakeven (${sl}).`)
+        return
+      }
     }
     const toastId = toast.loading(`Securing ${pos.symbol} Stop Loss at Breakeven...`)
     try {

@@ -44,15 +44,16 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
   const peakHwm = toNum((m.challenge as any)?.equity_hwm || m.challenge?.current_balance || startingBalance)
 
   let floorPrice: number
-  let floorCushion: number
 
   if (isTrailing || isEodTrailing) {
     floorPrice = toNum((m.challenge as any)?.trailing_dd_floor) || (startingBalance * (1 - maxLimitPct / 100))
-    floorCushion = Math.max(0, currentEquity - floorPrice)
   } else {
     floorPrice = startingBalance * (1 - maxLimitPct / 100)
-    floorCushion = Math.max(0, currentEquity - floorPrice)
   }
+
+  const rawFloorDiff = currentEquity - floorPrice
+  const isAboveFloor = rawFloorDiff >= 0
+  const floorCushion = Math.max(0, rawFloorDiff)
 
   const maxBufferPct = maxLimitVal > 0
     ? Math.max(0, Math.min(100, (floorCushion / maxLimitVal) * 100))
@@ -130,7 +131,9 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
                 {fmtUSD(dailyCushion)}
               </span>
               <span className="text-terminal-label text-text-muted font-normal">
-                remaining of {fmtUSD(dailyLimitVal)} limit
+                {dailyCushion > 0
+                  ? `remaining of ${fmtUSD(dailyLimitVal)} limit`
+                  : `DAILY LIMIT REACHED (${fmtUSD(currentDailyLoss)} loss)`}
               </span>
             </div>
           </div>
@@ -254,14 +257,20 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
               <span className="text-2xl sm:text-3xl font-extrabold terminal-num tracking-tight text-text">
                 {fmtUSD(floorPrice)}
               </span>
-              <span className={cn(
-                "text-terminal-label font-bold terminal-num",
-                maxTone === 'safe' && "text-emerald-400",
-                maxTone === 'warn' && "text-amber-400",
-                maxTone === 'danger' && "text-rose-400",
-              )}>
-                (+{fmtUSD(floorCushion)} above floor)
-              </span>
+              {isAboveFloor ? (
+                <span className={cn(
+                  "text-terminal-label font-bold terminal-num",
+                  maxTone === 'safe' && "text-emerald-400",
+                  maxTone === 'warn' && "text-amber-400",
+                  maxTone === 'danger' && "text-rose-400",
+                )}>
+                  (+{fmtUSD(floorCushion)} above floor)
+                </span>
+              ) : (
+                <span className="text-terminal-label font-bold terminal-num text-rose-400">
+                  (-{fmtUSD(Math.abs(rawFloorDiff))} below floor · BREACHED)
+                </span>
+              )}
             </div>
           </div>
 
