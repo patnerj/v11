@@ -48,12 +48,12 @@ export function Logo({
     : branding.logo_url
   const name = branding.brand_name || 'LaunchAPropFirm'
 
-  const isDefaultMassFundedVector =
+  const isDefaultLaunchAPropFirmVector =
     !imageUrl ||
     imageUrl.endsWith('/branding/brand_logo.svg') ||
     imageUrl.endsWith('/branding/login_logo.svg')
 
-  if (isDefaultMassFundedVector && name.toLowerCase() === 'massfunded') {
+  if (isDefaultLaunchAPropFirmVector && name.toLowerCase() === 'launchapropfirm') {
     const gradId = variant === 'login' ? 'mfEmeraldGradLogin' : 'mfEmeraldGradMain'
     const textGradId = variant === 'login' ? 'mfTextGradLogin' : 'mfTextGradMain'
     return (
@@ -104,7 +104,7 @@ export function Logo({
             `}</style>
           </defs>
 
-          {/* MassFunded M Emblem */}
+          {/* LaunchAPropFirm M Emblem */}
           <g transform="translate(10, 20)">
             <rect
               width="110"

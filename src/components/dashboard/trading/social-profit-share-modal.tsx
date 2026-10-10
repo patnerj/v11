@@ -42,7 +42,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
   const authUser = useAuth((s) => s.user)
   const account = usePrices((s) => s.account as any)
   const branding = useBranding((s) => s.branding)
-  const brandName = branding.brand_name || 'MassFunded'
+  const brandName = branding.brand_name || 'LaunchAPropFirm'
 
   const [downloading, setDownloading] = useState(false)
   const [copying, setCopying] = useState(false)
@@ -313,7 +313,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
     ctx.fillStyle = '#6B7280'
     ctx.font = `500 10px ${primaryFontFamily}`
-    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'massfunded.org'
+    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'launchapropfirm.com'
     ctx.fillText(displayDomain, qrX - 110, footerY + 42)
 
   }, [trade, traderHandle, accountId, isProfit, pnlPercent, brandName])

@@ -1,18 +1,18 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Terms of Service | MassFunded' }
+export const metadata: Metadata = { title: 'Terms of Service | LaunchAPropFirm' }
 
 export default function Page() {
   return (
     <LegalPage
       title="Terms of Service"
-      intro="By using MassFunded (massfunded.org) you agree to the following institutional terms and service conditions."
+      intro="By using LaunchAPropFirm (launchapropfirm.com) you agree to the following institutional terms and service conditions."
       updated="September 2026"
       sections={[
         { 
           title: '1. The Service & Evaluation Framework',
-          body: <p>MassFunded provides simulated proprietary trading evaluation programmes. Funded accounts operate on demonstration accounts mirroring live institutional market pricing. Payouts represent the operator&apos;s contractual profit-split share of allocated performance capital, backed by our institutional liquidity reserves, and are not the direct result of executions on a retail broker account.</p> 
+          body: <p>LaunchAPropFirm provides simulated proprietary trading evaluation programmes. Funded accounts operate on demonstration accounts mirroring live institutional market pricing. Payouts represent the operator&apos;s contractual profit-split share of allocated performance capital, backed by our institutional liquidity reserves, and are not the direct result of executions on a retail broker account.</p> 
         },
         { 
           title: '2. Eligibility & Compliance',
@@ -32,19 +32,19 @@ export default function Page() {
         },
         { 
           title: '6. Limitation of Liability',
-          body: <p>The service is provided on an &quot;as is&quot; and &quot;as available&quot; basis without warranties of any kind. MassFunded is not liable for indirect, incidental, or consequential damages. Trading foreign exchange and CFDs carries financial risk; past performance does not guarantee future results.</p> 
+          body: <p>The service is provided on an &quot;as is&quot; and &quot;as available&quot; basis without warranties of any kind. LaunchAPropFirm is not liable for indirect, incidental, or consequential damages. Trading foreign exchange and CFDs carries financial risk; past performance does not guarantee future results.</p> 
         },
         { 
           title: '7. Official Notices & Contact Channels',
           body: (
             <p>
               For general client support, order verification, or technical inquiries, contact our 24/7 Operations Desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
-                support@massfunded.org
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
+                support@launchapropfirm.com
               </a>
               . For institutional capital allocations, legal notices, or executive escalations, reach our Managing Director directly at{' '}
-              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
-                bahadur@massfunded.org
+              <a className="text-amber-400 hover:underline font-semibold" href="mailto:vip@launchapropfirm.com">
+                vip@launchapropfirm.com
               </a>
               .
             </p>

@@ -81,7 +81,7 @@ const QUICK_FIXES = [
     a: 'Use server "Pepperstone-Demo" with your assigned MT5 Login ID and Master Password provided in your Trader Dashboard. Ensure "Algo Trading" is enabled in MT5 if executing via WebTrader reverse copier.'
   },
   {
-    q: 'How does MassFunded calculate drawdown differently from other prop firms?',
+    q: 'How does LaunchAPropFirm calculate drawdown differently from other prop firms?',
     a: 'We use 100% Static Drawdown based on your initial starting balance. Unlike trailing drawdown traps that lock in daily peak equity, our drawdown floor never trails up behind you.'
   },
   {
@@ -118,7 +118,7 @@ export default function SupportPage() {
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-6">
               <LifeBuoy className="h-3.5 w-3.5" />
-              <span>MassFunded Client Helpdesk</span>
+              <span>LaunchAPropFirm Client Helpdesk</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tightest leading-[1.08] mb-6 text-text">
@@ -149,7 +149,7 @@ export default function SupportPage() {
                 </span>
               </div>
 
-              <h2 className="text-2xl font-bold text-text mb-2">Bahadur</h2>
+              <h2 className="text-2xl font-bold text-text mb-2">Executive Desk</h2>
               <div className="text-xs font-mono text-amber-500 dark:text-amber-400/90 mb-4 font-semibold uppercase tracking-wider">
                 Platform Managing Director & Founder
               </div>
@@ -164,20 +164,20 @@ export default function SupportPage() {
                   size="md" 
                   className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20"
                 >
-                  <a href="mailto:bahadur@massfunded.org?subject=Executive%20Escalation%20-%20MassFunded">
+                  <a href="mailto:vip@launchapropfirm.com?subject=Executive%20Escalation%20-%20LaunchAPropFirm">
                     <Mail className="h-4 w-4 mr-2" />
-                    bahadur@massfunded.org
+                    vip@launchapropfirm.com
                   </a>
                 </Button>
 
                 <Button
                   size="md"
                   variant="outline"
-                  onClick={() => copyToClipboard('bahadur@massfunded.org', 'Executive email')}
+                  onClick={() => copyToClipboard('vip@launchapropfirm.com', 'Executive email')}
                   className="border-border-subtle hover:border-amber-400 text-text hover:text-amber-500 px-4"
                   title="Copy email address"
                 >
-                  {copiedEmail === 'bahadur@massfunded.org' ? (
+                  {copiedEmail === 'vip@launchapropfirm.com' ? (
                     <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -218,20 +218,20 @@ export default function SupportPage() {
                   size="md" 
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm"
                 >
-                  <a href="mailto:support@massfunded.org?subject=Support%20Inquiry%20-%20MassFunded">
+                  <a href="mailto:support@launchapropfirm.com?subject=Support%20Inquiry%20-%20LaunchAPropFirm">
                     <Mail className="h-4 w-4 mr-2" />
-                    support@massfunded.org
+                    support@launchapropfirm.com
                   </a>
                 </Button>
 
                 <Button
                   size="md"
                   variant="outline"
-                  onClick={() => copyToClipboard('support@massfunded.org', 'Support email')}
+                  onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
                   className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500 px-4"
                   title="Copy email address"
                 >
-                  {copiedEmail === 'support@massfunded.org' ? (
+                  {copiedEmail === 'support@launchapropfirm.com' ? (
                     <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="h-4 w-4" />

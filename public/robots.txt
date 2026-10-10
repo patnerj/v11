@@ -1,5 +1,5 @@
-# MassFunded Robots Configuration & Crawler Directives
-# Website: https://massfunded.org
+# LaunchAPropFirm Robots Configuration & Crawler Directives
+# Website: https://launchapropfirm.com
 
 # ── General Search Engine Crawlers ────────────────────────────────────────────
 User-agent: *
@@ -55,5 +55,5 @@ Disallow: /dashboard/
 Disallow: /admin/
 
 # ── Authoritative Sitemaps & Host ─────────────────────────────────────────────
-Sitemap: https://massfunded.org/sitemap.xml
-Host: https://massfunded.org
+Sitemap: https://launchapropfirm.com/sitemap.xml
+Host: https://launchapropfirm.com

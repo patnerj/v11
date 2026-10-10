@@ -12,7 +12,7 @@ import { ArrowLeft, CheckCircle2, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function ResetPasswordPage() {
-  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
   const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'M'
   // Request mode (enter email) vs. complete mode (key+login from the email link).
   const [resetKey, setResetKey] = useState('')

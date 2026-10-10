@@ -33,9 +33,9 @@ interface SeoFormState {
 }
 
 const DEFAULT_SEO_STATE: SeoFormState = {
-  meta_title: 'MassFunded — Trade Up to $200,000 in Funded Capital',
-  meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with MassFunded.',
-  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, MassFunded',
+  meta_title: 'LaunchAPropFirm — Trade Up to $200,000 in Funded Capital',
+  meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with LaunchAPropFirm.',
+  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, LaunchAPropFirm',
   robots_indexing: true,
   google_site_verification: '',
   bing_site_verification: '',
@@ -226,7 +226,7 @@ export default function AdminSeoPage() {
                       id="meta_title"
                       value={form.meta_title}
                       onChange={(e) => handleChange('meta_title', e.target.value)}
-                      placeholder="e.g. MassFunded — Trade Up to $200,000 in Funded Capital"
+                      placeholder="e.g. LaunchAPropFirm — Trade Up to $200,000 in Funded Capital"
                     />
                     <p className="text-2xs text-muted-foreground">
                       Appears in the browser tab and as the main clickable headline in search results. Recommended: 50–65 characters.
@@ -347,10 +347,10 @@ export default function AdminSeoPage() {
                       </div>
                       <div className="leading-tight overflow-hidden">
                         <div className="text-xs font-normal text-slate-800 dark:text-[#dadce0] truncate">
-                          {branding.brand_name || 'MassFunded'}
+                          {branding.brand_name || 'LaunchAPropFirm'}
                         </div>
                         <div className="text-2xs text-slate-500 dark:text-[#bdc1c6] truncate flex items-center gap-1">
-                          <span>https://massfunded.org</span>
+                          <span>https://launchapropfirm.com</span>
                           <span>›</span>
                           <span>home</span>
                         </div>
@@ -359,7 +359,7 @@ export default function AdminSeoPage() {
 
                     {/* Clickable SERP Title */}
                     <div className="text-base sm:text-lg font-medium text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer leading-snug line-clamp-2 mt-1">
-                      {form.meta_title || 'MassFunded — Trade Up to $200,000 in Funded Capital'}
+                      {form.meta_title || 'LaunchAPropFirm — Trade Up to $200,000 in Funded Capital'}
                     </div>
 
                     {/* Snippet Description */}
@@ -431,7 +431,7 @@ export default function AdminSeoPage() {
                     Webmaster Console Verification
                   </CardTitle>
                   <CardDescription>
-                    Verify ownership of massfunded.org in Google Search Console and Bing Webmaster Tools.
+                    Verify ownership of launchapropfirm.com in Google Search Console and Bing Webmaster Tools.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
@@ -507,19 +507,19 @@ export default function AdminSeoPage() {
                         <span>XML Sitemap</span>
                       </div>
                       <div className="text-2xs text-muted-foreground truncate font-mono mt-0.5">
-                        https://massfunded.org/sitemap.xml
+                        https://launchapropfirm.com/sitemap.xml
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="xs"
-                        onClick={() => handleCopy('https://massfunded.org/sitemap.xml', 'sitemap')}
+                        onClick={() => handleCopy('https://launchapropfirm.com/sitemap.xml', 'sitemap')}
                         title="Copy URL"
                       >
                         {copiedKey === 'sitemap' ? <Check className="h-3.5 w-3.5 text-profit" /> : <Copy className="h-3.5 w-3.5" />}
                       </Button>
-                      <a href="https://massfunded.org/sitemap.xml" target="_blank" rel="noreferrer">
+                      <a href="https://launchapropfirm.com/sitemap.xml" target="_blank" rel="noreferrer">
                         <Button variant="ghost" size="xs" title="Open in new tab">
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Button>
@@ -535,19 +535,19 @@ export default function AdminSeoPage() {
                         <span>Robots File</span>
                       </div>
                       <div className="text-2xs text-muted-foreground truncate font-mono mt-0.5">
-                        https://massfunded.org/robots.txt
+                        https://launchapropfirm.com/robots.txt
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="xs"
-                        onClick={() => handleCopy('https://massfunded.org/robots.txt', 'robots')}
+                        onClick={() => handleCopy('https://launchapropfirm.com/robots.txt', 'robots')}
                         title="Copy URL"
                       >
                         {copiedKey === 'robots' ? <Check className="h-3.5 w-3.5 text-profit" /> : <Copy className="h-3.5 w-3.5" />}
                       </Button>
-                      <a href="https://massfunded.org/robots.txt" target="_blank" rel="noreferrer">
+                      <a href="https://launchapropfirm.com/robots.txt" target="_blank" rel="noreferrer">
                         <Button variant="ghost" size="xs" title="Open in new tab">
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Button>
@@ -563,19 +563,19 @@ export default function AdminSeoPage() {
                         <span>AI Search Manifest (GEO)</span>
                       </div>
                       <div className="text-2xs text-muted-foreground truncate font-mono mt-0.5">
-                        https://massfunded.org/llms.txt
+                        https://launchapropfirm.com/llms.txt
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="xs"
-                        onClick={() => handleCopy('https://massfunded.org/llms.txt', 'llms')}
+                        onClick={() => handleCopy('https://launchapropfirm.com/llms.txt', 'llms')}
                         title="Copy URL"
                       >
                         {copiedKey === 'llms' ? <Check className="h-3.5 w-3.5 text-profit" /> : <Copy className="h-3.5 w-3.5" />}
                       </Button>
-                      <a href="https://massfunded.org/llms.txt" target="_blank" rel="noreferrer">
+                      <a href="https://launchapropfirm.com/llms.txt" target="_blank" rel="noreferrer">
                         <Button variant="ghost" size="xs" title="Open in new tab">
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Button>
@@ -599,7 +599,7 @@ export default function AdminSeoPage() {
                     OpenGraph & Social Sharing Setup
                   </CardTitle>
                   <CardDescription>
-                    Customize the rich thumbnail, title, and preview shown when links to massfunded.org are shared on WhatsApp, Twitter/X, Discord, Telegram, or LinkedIn.
+                    Customize the rich thumbnail, title, and preview shown when links to launchapropfirm.com are shared on WhatsApp, Twitter/X, Discord, Telegram, or LinkedIn.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
@@ -658,10 +658,10 @@ export default function AdminSeoPage() {
                     {/* Card Content */}
                     <div className="p-3.5 space-y-1.5">
                       <div className="text-3xs uppercase tracking-wider font-semibold text-muted-foreground">
-                        MASSFUNDED.ORG
+                        LAUNCHAPROPFIRM.COM
                       </div>
                       <div className="text-sm font-semibold text-foreground line-clamp-1">
-                        {form.meta_title || 'MassFunded — Trade Up to $200,000 in Funded Capital'}
+                        {form.meta_title || 'LaunchAPropFirm — Trade Up to $200,000 in Funded Capital'}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         {form.meta_description || 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.'}

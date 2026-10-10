@@ -21,15 +21,15 @@ const ASSETS: { field: AssetField; key: string; title: string; size: string; hel
 ]
 
 const DEFAULTS: Record<string, string> = {
-  brand_name: 'MassFunded', brand_tagline: 'Institutional High-Frequency Prop Trading',
+  brand_name: 'LaunchAPropFirm', brand_tagline: 'Institutional High-Frequency Prop Trading',
   accent_color: '#10B981',
   logo_url: '/branding/brand_logo_600x150.png', login_logo_url: '/branding/login_logo_400x100.png', sidebar_icon_url: '/branding/sidebar_icon_128x128.png', favicon_url: '/favicon.svg',
   ga_measurement_id: 'G-G5758RZV7E',
   facebook_pixel_id: '',
   google_site_verification: '',
-  youtube_url: 'https://www.youtube.com/@MassFunded',
-  instagram_url: 'https://www.instagram.com/massfundedorg/',
-  tiktok_url: 'https://www.tiktok.com/@massfunded.org',
+  youtube_url: 'https://www.youtube.com/@LaunchAPropFirm',
+  instagram_url: 'https://www.instagram.com/launchapropfirm/',
+  tiktok_url: 'https://www.tiktok.com/@launchapropfirm.com',
   facebook_url: 'https://www.facebook.com/profile.php?id=61591803448831',
   discord_url: 'https://discord.com/channels/1555893909496799312/1555893997103484969',
   developer_url: '',
@@ -69,9 +69,9 @@ export function BrandingCenter() {
       ga_measurement_id: vals.ga_measurement_id ?? 'G-G5758RZV7E',
       facebook_pixel_id: vals.facebook_pixel_id ?? '',
       google_site_verification: vals.google_site_verification ?? '',
-      youtube_url: vals.youtube_url ?? 'https://www.youtube.com/@MassFunded',
-      instagram_url: vals.instagram_url ?? 'https://www.instagram.com/massfundedorg/',
-      tiktok_url: vals.tiktok_url ?? 'https://www.tiktok.com/@massfunded.org',
+      youtube_url: vals.youtube_url ?? 'https://www.youtube.com/@LaunchAPropFirm',
+      instagram_url: vals.instagram_url ?? 'https://www.instagram.com/launchapropfirm/',
+      tiktok_url: vals.tiktok_url ?? 'https://www.tiktok.com/@launchapropfirm.com',
       facebook_url: vals.facebook_url ?? 'https://www.facebook.com/profile.php?id=61591803448831',
       discord_url: vals.discord_url ?? 'https://discord.com/channels/1555893909496799312/1555893997103484969',
       developer_url: vals.developer_url ?? '',
@@ -285,7 +285,7 @@ export function BrandingCenter() {
                   Enter the verification string from Search Console (HTML tag method: content=&quot;...&quot;).
                 </p>
                 <p className="text-2xs text-amber-500/90 font-medium leading-relaxed mt-1">
-                  ⚠️ Google Search Console mein property add karte waqt &quot;URL prefix&quot; select karein (https://massfunded.org), NOT &quot;Domain&quot;. Meta tag verification sirf URL prefix ke sath kaam karti hai. Domain property ke liye DNS TXT record chahiye.
+                  ⚠️ Google Search Console mein property add karte waqt &quot;URL prefix&quot; select karein (https://launchapropfirm.com), NOT &quot;Domain&quot;. Meta tag verification sirf URL prefix ke sath kaam karti hai. Domain property ke liye DNS TXT record chahiye.
                 </p>
               </div>
               <div className="rounded-md bg-surface border border-border-subtle p-3 flex flex-col justify-center">
@@ -322,7 +322,7 @@ export function BrandingCenter() {
                 id="bc-youtube"
                 value={vals.youtube_url ?? ''}
                 onChange={(e) => set('youtube_url', e.target.value.trim())}
-                placeholder="https://www.youtube.com/@MassFunded"
+                placeholder="https://www.youtube.com/@LaunchAPropFirm"
                 className="font-mono text-xs"
               />
               <p className="text-2xs text-text-faint">Video walkthroughs &amp; payouts breakdown.</p>
@@ -337,7 +337,7 @@ export function BrandingCenter() {
                 id="bc-instagram"
                 value={vals.instagram_url ?? ''}
                 onChange={(e) => set('instagram_url', e.target.value.trim())}
-                placeholder="https://www.instagram.com/massfundedorg/"
+                placeholder="https://www.instagram.com/launchapropfirm/"
                 className="font-mono text-xs"
               />
               <p className="text-2xs text-text-faint">Stories, market alerts &amp; trader spotlights.</p>
@@ -352,7 +352,7 @@ export function BrandingCenter() {
                 id="bc-tiktok"
                 value={vals.tiktok_url ?? ''}
                 onChange={(e) => set('tiktok_url', e.target.value.trim())}
-                placeholder="https://www.tiktok.com/@massfunded.org"
+                placeholder="https://www.tiktok.com/@launchapropfirm.com"
                 className="font-mono text-xs"
               />
               <p className="text-2xs text-text-faint">Short-form updates, tips &amp; trading highlights.</p>

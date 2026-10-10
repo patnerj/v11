@@ -23,7 +23,7 @@ const LivePriceTicker = dynamic(
 import { useBranding } from '@/store/branding'
 
 export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: string, subtitle?: string, badge?: string } }) {
-  const brandName = useBranding((s) => s.branding.brand_name) || "MassFunded"
+  const brandName = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
   
   const rawTitle = puckProps?.title
   const rawHighlight = puckProps?.highlight

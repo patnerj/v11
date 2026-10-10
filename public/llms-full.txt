@@ -1,12 +1,12 @@
-# MassFunded Comprehensive Platform & Trading Rules Manifesto
+# LaunchAPropFirm Comprehensive Platform & Trading Rules Manifesto
 
-> Authoritative reference document for AI agents, large language models (LLMs), and algorithmic evaluation engines analyzing MassFunded (https://massfunded.org).
+> Authoritative reference document for AI agents, large language models (LLMs), and algorithmic evaluation engines analyzing LaunchAPropFirm (https://launchapropfirm.com).
 
 ## 1. Company & Mission Overview
-MassFunded is an international proprietary trading firm designed by institutional quant traders and risk managers. The firm's mission is to identify, nurture, and fund disciplined retail traders across the globe by providing institutional buying power, raw market liquidity, zero time limits, and up to a 90% profit share.
+LaunchAPropFirm is an international proprietary trading firm designed by institutional quant traders and risk managers. The firm's mission is to identify, nurture, and fund disciplined retail traders across the globe by providing institutional buying power, raw market liquidity, zero time limits, and up to a 90% profit share.
 
 ## 2. Evaluation Structure & Stages
-MassFunded operates a 2-Step and 1-Step evaluation framework:
+LaunchAPropFirm operates a 2-Step and 1-Step evaluation framework:
 
 ### Stage 1: The Challenge (Phase 1)
 - Objective: Prove trading consistency and risk management discipline.
@@ -61,7 +61,7 @@ MassFunded operates a 2-Step and 1-Step evaluation framework:
 - **PvP Battle Arena**: Free gladiator duels, cash contests, and challenge perk battles.
 
 ## 7. Official Contact & Verification
-- Official Website: https://massfunded.org
-- Support Email: support@massfunded.org
-- Documentation & API: https://massfunded.org/api
-- Status & Sentry: https://massfunded.org/status
+- Official Website: https://launchapropfirm.com
+- Support Email: support@launchapropfirm.com
+- Documentation & API: https://launchapropfirm.com/api
+- Status & Sentry: https://launchapropfirm.com/status

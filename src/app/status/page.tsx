@@ -149,7 +149,7 @@ export default function StatusPage() {
             </h1>
 
             <p className="text-base md:text-lg text-text-muted leading-relaxed">
-              Real-time operational metrics across MassFunded execution nodes, MetaTrader 5 bridge connectors, and institutional liquidity feeds.
+              Real-time operational metrics across LaunchAPropFirm execution nodes, MetaTrader 5 bridge connectors, and institutional liquidity feeds.
             </p>
 
             {/* Overall Health Pill */}
@@ -314,7 +314,7 @@ export default function StatusPage() {
                   </span>
                   <span className="text-xs text-text-muted font-mono">SLA: &lt; 2h</span>
                 </div>
-                <h3 className="text-lg font-bold text-text mb-1">Bahadur (Managing Director)</h3>
+                <h3 className="text-lg font-bold text-text mb-1">Managing Desk (Executive Escalation)</h3>
                 <p className="text-xs text-text-muted mb-5 leading-relaxed">
                   For capital allocations ($100K–$2M+), enterprise partnerships, and senior infrastructure escalations.
                 </p>
@@ -324,18 +324,18 @@ export default function StatusPage() {
                     size="sm" 
                     className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
                   >
-                    <a href="mailto:bahadur@massfunded.org?subject=Executive%20Escalation">
+                    <a href="mailto:vip@launchapropfirm.com?subject=Executive%20Escalation">
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
-                      bahadur@massfunded.org
+                      vip@launchapropfirm.com
                     </a>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => copyToClipboard('bahadur@massfunded.org', 'Executive email')}
+                    onClick={() => copyToClipboard('vip@launchapropfirm.com', 'Executive email')}
                     className="border-border-subtle hover:border-amber-400 text-text hover:text-amber-500"
                   >
-                    {copiedEmail === 'bahadur@massfunded.org' ? (
+                    {copiedEmail === 'vip@launchapropfirm.com' ? (
                       <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -362,18 +362,18 @@ export default function StatusPage() {
                     size="sm" 
                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-glow-sm"
                   >
-                    <a href="mailto:support@massfunded.org?subject=Support%20Request">
+                    <a href="mailto:support@launchapropfirm.com?subject=Support%20Request">
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
-                      support@massfunded.org
+                      support@launchapropfirm.com
                     </a>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => copyToClipboard('support@massfunded.org', 'Support email')}
+                    onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
                     className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500"
                   >
-                    {copiedEmail === 'support@massfunded.org' ? (
+                    {copiedEmail === 'support@launchapropfirm.com' ? (
                       <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                     ) : (
                       <Copy className="h-4 w-4" />
