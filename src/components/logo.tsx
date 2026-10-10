@@ -67,14 +67,16 @@ export function Logo({
           aria-label={name}
         >
           <defs>
-            <linearGradient id={gradId} x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#059669" />
-              <stop offset="50%" stopColor="#10B981" />
-              <stop offset="100%" stopColor="#00F5A0" />
+            <linearGradient id={`${gradId}Left`} x1="20" y1="120" x2="65" y2="20" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#4F46E5" />
+              <stop offset="100%" stopColor="#818CF8" />
             </linearGradient>
-            <linearGradient id={textGradId} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#059669" />
-              <stop offset="50%" stopColor="#10B981" />
+            <linearGradient id={`${gradId}Right`} x1="75" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#06B6D4" />
+              <stop offset="100%" stopColor="#10B981" />
+            </linearGradient>
+            <linearGradient id={textGradId} x1="330" y1="30" x2="560" y2="100" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#10B981" />
               <stop offset="100%" stopColor="#34D399" />
             </linearGradient>
             <style>{`
@@ -104,47 +106,33 @@ export function Logo({
             `}</style>
           </defs>
 
-          {/* LaunchAPropFirm M Emblem */}
-          <g transform="translate(10, 20)">
-            <rect
-              width="110"
-              height="110"
-              rx="28"
-              fill="#070C1B"
-              stroke={`url(#${gradId})`}
-              strokeWidth="3"
-              className="mf-emblem-bg"
-            />
-            <g transform="translate(14, 14) scale(0.16)">
-              <path
-                d="M 120 380 L 120 160 L 195 160 L 256 280 L 317 160 L 392 160 L 392 380 L 332 380 L 332 245 L 282 345 L 230 345 L 180 245 L 180 380 Z"
-                fill={`url(#${gradId})`}
-              />
-              <polygon points="256,110 276,135 256,160 236,135" fill="#00F5A0" />
-            </g>
+          {/* LaunchAPropFirm Authentic Aerodynamic Delta Emblem */}
+          <g transform="translate(18, 12) scale(0.95)">
+            <path d="M60 18L24 104C22.8 106.8 25.4 110 28.5 109.5L58 104V18Z" fill={`url(#${gradId}Left)`} />
+            <path d="M68 18V104L99.5 109.5C102.6 110 105.2 106.8 104 104L68 18Z" fill={`url(#${gradId}Right)`} />
           </g>
 
           {/* Theme-Adaptive Wordmark: Dark Slate in Daylight Mode, Pure White in Night Mode */}
           {wordmark && (
             <>
               <text
-                x="142"
-                y="86"
+                x="145"
+                y="82"
                 fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-                fontSize="54"
-                fontWeight="800"
-                letterSpacing="-1"
+                fontSize="46"
+                fontWeight="700"
+                letterSpacing="-0.8"
                 className="mf-brand-title transition-colors duration-200"
               >
-                Mass<tspan fill={`url(#${textGradId})`}>Funded</tspan>
+                LaunchA<tspan fill={`url(#${textGradId})`} fontWeight="800">PropFirm</tspan>
               </text>
               <text
-                x="145"
-                y="114"
+                x="148"
+                y="108"
                 fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-                fontSize="12.5"
-                fontWeight="700"
-                letterSpacing="3.2"
+                fontSize="13"
+                fontWeight="600"
+                letterSpacing="3"
                 className="mf-brand-sub transition-colors duration-200"
               >
                 PROPRIETARY TRADING INFRASTRUCTURE
