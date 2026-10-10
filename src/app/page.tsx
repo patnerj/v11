@@ -82,7 +82,7 @@ export default async function HomePage(props: PageProps) {
     activeTemplate = 'terminal';
   } else if (queryTemplate === 'classic') {
     activeTemplate = 'classic';
-  } else if (cookieTemplate === 'terminal') {
+  } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
     activeTemplate = 'terminal';
   }
 

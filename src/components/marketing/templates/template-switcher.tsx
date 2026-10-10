@@ -18,10 +18,11 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
     // Persist to cookie for 30 days
     document.cookie = `fxsim_landing_template=${tpl}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`
     
-    // Update URL query parameter
+    // Update URL query parameter and trigger refresh
     const params = new URLSearchParams(searchParams.toString())
     params.set('template', tpl)
     router.push(`/?${params.toString()}`)
+    router.refresh()
     setOpen(false)
   }
 
@@ -42,7 +43,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
           <Layers className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
           <span>Template:</span>
           <span className="font-bold text-emerald-600 dark:text-emerald-400">
-            {currentTemplate === 'terminal' ? 'Institutional Pro' : 'Classic Builder'}
+            {currentTemplate === 'terminal' ? 'Institutional Pro (MassFunded Style)' : 'Classic Builder'}
           </span>
           <ChevronDown className={cn('h-3.5 w-3.5 text-text-muted transition-transform duration-200', open && 'rotate-180')} />
         </button>
@@ -77,7 +78,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 </div>
               </button>
 
-              {/* Template B: Terminal Pro */}
+              {/* Template B: Terminal Pro (MassFunded Style) */}
               <button
                 onClick={() => handleSelect('terminal')}
                 className={cn(
@@ -92,6 +93,9 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-text">Template B: Pro Terminal</span>
                     {currentTemplate === 'terminal' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+                  </div>
+                  <div className="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-3xs font-semibold my-0.5">
+                    MassFunded.org Style
                   </div>
                   <p className="text-2xs text-text-muted mt-0.5 leading-relaxed">
                     Institutional matrix style with live WebTrader preview frame &amp; comparison matrix.
