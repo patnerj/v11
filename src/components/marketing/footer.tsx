@@ -52,6 +52,7 @@ const LINKS: { title: string; items: { href: string; label: string }[] }[] = [
     title: 'Trading Programs',
     items: [
       { href: '/challenges',        label: 'Evaluation Models' },
+      { href: '/tournaments',       label: 'Trading Tournaments' },
       { href: '/how-it-works',      label: 'How It Works & Rules' },
       { href: '/payouts',           label: 'Payouts & Proof' },
       { href: '/leaderboard',       label: 'Trader Leaderboard' },

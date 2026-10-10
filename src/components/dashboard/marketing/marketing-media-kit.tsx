@@ -152,7 +152,9 @@ export function MarketingMediaKit({
       const a = document.createElement('a')
       a.href = dataUrl
       a.download = `${brandName.toLowerCase()}-banner-${type.replace(':', 'x')}-${affiliateCode}.png`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       toast.success(`Banner (${type}) downloaded in Ultra-HD!`)
     } catch {
       toast.error('Failed to generate banner image')

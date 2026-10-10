@@ -82,7 +82,7 @@ const DEFAULTS: Record<string, string> = {
   login_logo_url: '/branding/login_logo_400x100.png',
   sidebar_icon_url: '/branding/sidebar_icon_128x128.png',
   favicon_url: '/favicon.svg',
-  ga_measurement_id: 'G-G5758RZV7E',
+  ga_measurement_id: '',
   facebook_pixel_id: '',
   google_site_verification: '',
   youtube_url: 'https://www.youtube.com/@LaunchAPropFirm',
@@ -141,7 +141,7 @@ export function BrandingCenter() {
       login_logo_url: vals.login_logo_url ?? '',
       sidebar_icon_url: vals.sidebar_icon_url ?? '',
       favicon_url: vals.favicon_url ?? '',
-      ga_measurement_id: vals.ga_measurement_id ?? 'G-G5758RZV7E',
+      ga_measurement_id: vals.ga_measurement_id ?? '',
       facebook_pixel_id: vals.facebook_pixel_id ?? '',
       google_site_verification: vals.google_site_verification ?? '',
       youtube_url: vals.youtube_url ?? 'https://www.youtube.com/@LaunchAPropFirm',
@@ -443,7 +443,7 @@ export function BrandingCenter() {
                   id="bc-ga-id"
                   value={vals.ga_measurement_id ?? ''}
                   onChange={(e) => set('ga_measurement_id', e.target.value.trim().toUpperCase())}
-                  placeholder="G-G5758RZV7E"
+                  placeholder="G-XXXXXXXXXX"
                   className="font-mono text-xs uppercase"
                 />
               </div>

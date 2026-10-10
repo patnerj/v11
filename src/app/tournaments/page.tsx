@@ -102,9 +102,11 @@ export default function PublicTournamentsPage() {
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-text group-hover:text-accent transition-colors line-clamp-1">
-          {cleanTitle(t.name || t.title)}
-        </h3>
+        <Link href={`/tournaments/${tid}`} className="block group/link">
+          <h3 className="text-lg font-bold text-text group-hover/link:text-accent group-hover/link:underline transition-colors line-clamp-1">
+            {cleanTitle(t.name || t.title)}
+          </h3>
+        </Link>
         <p className="text-sm text-text-muted mt-1 line-clamp-2">{cleanDescription(t.description)}</p>
       </div>
 
@@ -145,28 +147,36 @@ export default function PublicTournamentsPage() {
             <span>Ends: <strong className="text-text font-semibold">{new Date(String(t.end_date).replace(' ', 'T')).toLocaleDateString()}</strong></span>
           )}
         </div>
-        {pendingOrder ? (
-          <Link 
-            href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}
-            className="inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-sm gap-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/tournaments/${tid}`}
+            className="inline-flex items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors bg-surface border border-border text-text-muted hover:text-text hover:bg-surface-muted"
           >
-            Payment Pending — View <ArrowRight className="h-3.5 w-3.5" />
+            Details
           </Link>
-        ) : (
-          <Link 
-            href={`/dashboard/tournaments`}
-            className={`inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors shadow-sm gap-1.5 ${
-              isActive 
-                ? 'bg-accent text-accent-foreground hover:bg-accent/90 font-semibold' 
-                : t.status === 'upcoming'
-                ? 'bg-info/15 border border-info/30 text-info hover:bg-info/25 font-semibold'
-                : 'bg-surface border border-border text-text hover:bg-surface-muted'
-            }`}
-          >
-            {isActive ? 'Enter Arena' : t.status === 'upcoming' ? 'Pre-Register Now' : 'View Results'}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        )}
+          {pendingOrder ? (
+            <Link 
+              href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}
+              className="inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-sm gap-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+            >
+              Payment Pending <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : (
+            <Link 
+              href={`/dashboard/tournaments`}
+              className={`inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors shadow-sm gap-1.5 ${
+                isActive 
+                  ? 'bg-accent text-accent-foreground hover:bg-accent/90 font-semibold' 
+                  : t.status === 'upcoming'
+                  ? 'bg-info/15 border border-info/30 text-info hover:bg-info/25 font-semibold'
+                  : 'bg-surface border border-border text-text hover:bg-surface-muted'
+              }`}
+            >
+              {isActive ? 'Enter Arena' : t.status === 'upcoming' ? 'Pre-Register Now' : 'View Results'}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+        </div>
       </div>
     </div>
     )

@@ -40,7 +40,7 @@ const DEFAULT_SEO_STATE: SeoFormState = {
   google_site_verification: '',
   bing_site_verification: '',
   og_image_url: '/branding/brand_logo_600x150.png',
-  ga_measurement_id: 'G-G5758RZV7E',
+  ga_measurement_id: '',
   facebook_pixel_id: '',
   custom_head_code: '',
 }

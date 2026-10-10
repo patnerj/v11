@@ -14,6 +14,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 
 const NAV = [
   { href: '/challenges',     label: 'Challenges' },
+  { href: '/tournaments',    label: 'Tournaments' },
   { href: '/how-it-works',   label: 'How It Works' },
   { href: '/payouts',        label: 'Payouts' },
   { href: '/about',          label: 'About' },

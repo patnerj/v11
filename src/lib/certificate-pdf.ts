@@ -10,23 +10,28 @@ function slug(s: string): string {
 }
 
 /**
- * High-DPI rasterization helper using native browser SVG rendering.
+ * High-DPI rasterization helper using native browser SVG rendering via Blob URL.
  */
 async function rasterizeSvgToDataUrl(svg: string, width: number, height: number): Promise<string> {
-  const img = new Image()
-  const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('SVG render failed'))
-    img.src = svgUrl
-  })
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Canvas unavailable')
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-  return canvas.toDataURL('image/png')
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
+  const blobUrl = URL.createObjectURL(blob)
+  try {
+    const img = new Image()
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('SVG render failed'))
+      img.src = blobUrl
+    })
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas unavailable')
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    return canvas.toDataURL('image/png')
+  } finally {
+    URL.revokeObjectURL(blobUrl)
+  }
 }
 
 /**
@@ -43,8 +48,10 @@ export async function downloadCertificatePng(cert: Cert): Promise<void> {
   const pngUrl = await rasterizeSvgToDataUrl(svg, 1920, 1080)
   const a = document.createElement('a')
   a.href = pngUrl
-  a.download = `${slug(brand)}-Certificate-${slug(cert.trader_name)}.png`
+  a.download = `${slug(brand)}-Certificate-${slug(cert.trader_name || 'Trader')}.png`
+  document.body.appendChild(a)
   a.click()
+  document.body.removeChild(a)
 }
 
 /**

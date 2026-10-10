@@ -588,7 +588,9 @@ export default function AffiliatePage() {
                   const a = document.createElement('a')
                   a.href = qrDataUrl
                   a.download = `launchapropfirm-ref-${me?.code || 'qr'}.png`
+                  document.body.appendChild(a)
                   a.click()
+                  document.body.removeChild(a)
                   toast.success('QR Code downloaded!')
                 }
               }}

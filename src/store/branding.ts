@@ -60,7 +60,7 @@ const DEFAULTS: Branding = {
   bing_site_verification: '',
   robots_indexing: 'index_follow',
   og_image_url: '/og-image.png',
-  ga_measurement_id: 'G-G5758RZV7E',
+  ga_measurement_id: '',
   facebook_pixel_id: '',
   custom_head_code: '',
 }
