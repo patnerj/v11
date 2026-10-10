@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import type { ChallengeAccount, Certificate as Cert, PayoutItem } from '@/types/api'
 import { CertificateDocument, PayoutCertificateDocument } from '@/components/certificate-document'
-import { downloadCertificatePdf } from '@/lib/certificate-pdf'
-import { downloadPayoutCertificatePdf } from '@/lib/certificate-payout-pdf'
+import { downloadCertificatePdf, downloadCertificatePng } from '@/lib/certificate-pdf'
+import { downloadPayoutCertificatePdf, downloadPayoutCertificatePng } from '@/lib/certificate-payout-pdf'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -129,24 +129,35 @@ function CertificateCard({ cert, challenge }: { cert: Cert | null | undefined; c
 
   const doc: Cert = { ...c, status: c.status ?? challenge.status }
   const shareHref = c.share_code ? `/certificate/${c.share_code}` : undefined
-  const download = async () => {
+
+  const downloadPdf = async () => {
     setDownloading(true)
     try { await downloadCertificatePdf(doc) }
     catch { toast.error('Could not generate the PDF. Please try again.') }
     finally { setDownloading(false) }
   }
 
+  const downloadPng = async () => {
+    setDownloading(true)
+    try { await downloadCertificatePng(doc) }
+    catch { toast.error('Could not generate the PNG. Please try again.') }
+    finally { setDownloading(false) }
+  }
+
   return (
-    <Card className="overflow-hidden relative">
+    <Card className="overflow-hidden relative border-accent/20">
       <CertificateDocument cert={doc} />
-      <div className="px-6 pb-4 -mt-1 flex items-center justify-end gap-1.5">
+      <div className="px-6 py-4 flex items-center justify-end flex-wrap gap-2 bg-surface">
         {shareHref && (
           <a href={shareHref} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="sm"><ExternalLink className="h-4 w-4" /> View / Share</Button>
+            <Button variant="ghost" size="sm"><ExternalLink className="h-4 w-4 mr-1" /> View / Share</Button>
           </a>
         )}
-        <Button variant="ghost" size="sm" onClick={download} loading={downloading}>
-          <Download className="h-4 w-4" /> Download
+        <Button variant="outline" size="sm" onClick={downloadPng} loading={downloading}>
+          <Download className="h-4 w-4 mr-1 text-accent" /> Download PNG (HD)
+        </Button>
+        <Button variant="primary" size="sm" onClick={downloadPdf} loading={downloading}>
+          <Download className="h-4 w-4 mr-1" /> Download PDF
         </Button>
       </div>
     </Card>
@@ -156,19 +167,29 @@ function CertificateCard({ cert, challenge }: { cert: Cert | null | undefined; c
 function PayoutCertCard({ payout, planName }: { payout: PayoutItem; planName?: string }) {
   const [downloading, setDownloading] = useState(false)
 
-  const download = async () => {
+  const downloadPdf = async () => {
     setDownloading(true)
     try { await downloadPayoutCertificatePdf(payout, { planName }) }
     catch { toast.error('Could not generate the PDF. Please try again.') }
     finally { setDownloading(false) }
   }
 
+  const downloadPng = async () => {
+    setDownloading(true)
+    try { await downloadPayoutCertificatePng(payout, { planName }) }
+    catch { toast.error('Could not generate the PNG. Please try again.') }
+    finally { setDownloading(false) }
+  }
+
   return (
-    <Card className="overflow-hidden relative border-success/20">
+    <Card className="overflow-hidden relative border-emerald-500/20">
       <PayoutCertificateDocument payout={payout} planName={planName} />
-      <div className="px-6 pb-4 -mt-1 flex items-center justify-end gap-1.5">
-        <Button variant="ghost" size="sm" onClick={download} loading={downloading} className="text-success hover:text-success hover:bg-success/10">
-          <Download className="h-4 w-4" /> Download Payout Certificate
+      <div className="px-6 py-4 flex items-center justify-end flex-wrap gap-2 bg-surface">
+        <Button variant="outline" size="sm" onClick={downloadPng} loading={downloading} className="text-emerald-500 hover:text-emerald-400">
+          <Download className="h-4 w-4 mr-1" /> Download PNG (HD)
+        </Button>
+        <Button variant="primary" size="sm" onClick={downloadPdf} loading={downloading} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+          <Download className="h-4 w-4 mr-1" /> Download PDF
         </Button>
       </div>
     </Card>

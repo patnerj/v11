@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { StatCard, StatGrid } from '@/components/ui/stat-card'
 import { ChallengeProgressCard } from '@/components/dashboard/challenge-progress-card'
 import { RiskSentinelCards } from '@/components/dashboard/risk-sentinel-cards'
+import { MilestoneCelebrationRoadmap } from '@/components/dashboard/milestone-celebration-roadmap'
 import { EquityChart } from '@/components/dashboard/equity-chart'
 import { KycStatusCard } from '@/components/dashboard/kyc-status-card'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
@@ -283,6 +284,13 @@ export default function DashboardOverview() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Challenge Milestone Journey Roadmap (Phase 3 Gamification) */}
+          {active && (
+            <SectionErrorBoundary sectionName="Milestone Roadmap">
+              <MilestoneCelebrationRoadmap challenge={active} metrics={metrics} />
+            </SectionErrorBoundary>
           )}
 
           {/* Dynamic Risk Sentinel Gauge Cards (P0 Trading Ergonomics) */}

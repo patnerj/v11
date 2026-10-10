@@ -19,10 +19,13 @@ import {
 } from '@/components/ui/dialog'
 import { Banknote, ArrowUpRight, AlertCircle, Wallet, CheckCircle2, ShieldAlert, Clock, Share2, Printer, ShieldCheck, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import { ViralPayoutCardModal } from '@/components/dashboard/payouts/viral-payout-card-modal'
+import { useAuth } from '@/store/auth'
 
 type PayoutMethod = 'crypto' | 'wise'
 
 export default function PayoutsPage() {
+  const user = useAuth((s) => s.user)
   const [requestFor, setRequestFor]   = useState<ChallengeAccount | null>(null)
   const [showCertificate, setShowCertificate] = useState(false)
 
@@ -96,8 +99,8 @@ export default function PayoutsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3 flex-wrap gap-2">
               <CardTitle>Funded accounts</CardTitle>
-              <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => setShowCertificate(true)}>
-                ✨ Payout Certificate
+              <Button size="sm" variant="outline" className="gap-1.5 shrink-0 border-accent/40 text-accent hover:bg-accent/10" onClick={() => setShowCertificate(true)}>
+                <Sparkles className="h-4 w-4 text-accent" /> 1-Click Viral Social Card
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -264,11 +267,14 @@ export default function PayoutsPage() {
       )}
 
       {showCertificate && (
-        <PayoutCertificateModal 
+        <ViralPayoutCardModal 
+          isOpen={true}
           onClose={() => setShowCertificate(false)}
           amount={totalPaid > 0 ? totalPaid : (funded[0] ? Math.max(500, toNum(funded[0].current_balance) - toNum(funded[0].starting_balance)) : 1450)}
-          date={funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : 'Active Season'}
+          date={funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : new Date().toLocaleDateString()}
           method={savedMethod?.method ?? 'USDT - TRC20'}
+          traderName={user?.display_name || user?.username || 'Pro Trader'}
+          payoutId={pdata?.history?.[0]?.id || 101}
         />
       )}
     </div>

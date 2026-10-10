@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import type { Competition, PaymentOrder } from '@/types/api'
 import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
+import { TournamentPodium } from '@/components/tournaments/tournament-podium'
 
 export default function PublicTournamentsPage() {
   const [tournaments, setTournaments] = useState<Competition[]>([])
@@ -177,8 +178,8 @@ export default function PublicTournamentsPage() {
           header or footer — a visitor landing here had no navigation back to
           the rest of the site except the browser back button. */}
       <MarketingHeader />
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-surface border-b border-border py-16 sm:py-24">
+      {/* Hero Section with Rule 86.2 Top Clearance for Fixed Navigation */}
+      <div className="relative overflow-hidden bg-surface border-b border-border pt-28 sm:pt-36 pb-16 sm:pb-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] bg-accent/20 rounded-full blur-[100px] opacity-60 mix-blend-screen animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] bg-info/20 rounded-full blur-[80px] opacity-60 mix-blend-screen" />
@@ -197,6 +198,14 @@ export default function PublicTournamentsPage() {
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        {/* 3D Metallic Tournament Podium Showcase */}
+        <TournamentPodium
+          title="Global Arena Champions & Prize Pool Podium"
+          firstPrize="$10,000 + $100K Live Account"
+          secondPrize="$5,000 + $50K Live Account"
+          thirdPrize="$2,500 + $25K Live Account"
+        />
+
         {loading ? (
           <div className="text-center py-20 text-text-muted animate-pulse">Loading arenas...</div>
         ) : tournaments.length === 0 ? (
