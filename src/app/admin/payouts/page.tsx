@@ -8,7 +8,7 @@ import {
   Wallet, DollarSign, ArrowUpRight, ArrowDownRight, Clock, 
   CheckCircle2, XCircle, Search, Filter, Download, RefreshCw,
   ExternalLink, Eye, Sliders, AlertTriangle, ShieldCheck,
-  Building, CreditCard, Check, Copy
+  Building, CreditCard, Check, Copy, QrCode
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -22,6 +22,7 @@ import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PayoutManagementModal, PayoutItemTarget } from '@/components/admin/PayoutManagementModal'
+import { PayoutQrModal } from '@/components/admin/payout-qr-modal'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
 import { APP_DISPLAY_VERSION } from '@/lib/version'
@@ -166,6 +167,8 @@ function PayoutsHubContent() {
   // Modal State
   const [selectedPayout, setSelectedPayout] = useState<PayoutItemTarget | null>(null)
   const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false)
+  const [qrPayout, setQrPayout] = useState<PayoutTableRow | null>(null)
+  const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false)
 
   // API Query
   const { data: rawPayouts, isLoading: payoutsLoading, refetch } = useQuery({
@@ -511,18 +514,35 @@ function PayoutsHubContent() {
       header: '',
       align: 'right',
       render: (row) => (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setSelectedPayout(row)
-            setIsManageModalOpen(true)
-          }}
-          className="h-8 text-xs border-accent/40 text-accent hover:bg-accent/10 hover:border-accent gap-1.5"
-        >
-          <Sliders className="h-3.5 w-3.5" />
-          Manage Payout
-        </Button>
+        <div className="flex items-center justify-end gap-1.5">
+          {row.payment_address && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setQrPayout(row)
+                setIsQrModalOpen(true)
+              }}
+              className="h-8 px-2 text-xs border-border text-text-muted hover:text-accent hover:border-accent gap-1"
+              title="Open QR Code Disbursal Helper"
+            >
+              <QrCode className="h-3.5 w-3.5" />
+              <span className="hidden xl:inline">QR</span>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setSelectedPayout(row)
+              setIsManageModalOpen(true)
+            }}
+            className="h-8 text-xs border-accent/40 text-accent hover:bg-accent/10 hover:border-accent gap-1.5"
+          >
+            <Sliders className="h-3.5 w-3.5" />
+            Manage Payout
+          </Button>
+        </div>
       )
     }
   ]
@@ -800,6 +820,16 @@ function PayoutsHubContent() {
           refetch()
           queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
         }}
+      />
+
+      {/* ── 4.5 Interactive Crypto Disbursal Helper with Dynamic QR (Phase 2) ── */}
+      <PayoutQrModal
+        isOpen={isQrModalOpen}
+        onClose={() => {
+          setIsQrModalOpen(false)
+          setQrPayout(null)
+        }}
+        payout={qrPayout}
       />
 
       {/* ── Bulk Action Modal (PAY-4) ────────────────────────────────────── */}

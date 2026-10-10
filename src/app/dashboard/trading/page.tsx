@@ -566,7 +566,7 @@ function DesktopLayout({
                     {/* MT5 Bottom Telemetry Summary Row with Dynamic Glow */}
                     {account && (
                       <div className={cn(
-                        "shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-terminal-body font-normal select-none overflow-x-auto no-scrollbar transition-all",
+                        "shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-terminal-body font-normal select-none overflow-x-auto no-scrollbar transition-all shadow-xs",
                         isTournamentMode && "border-amber-500/40 bg-gradient-to-r from-amber-950/25 via-bg-subtle/95 to-bg-subtle/95 ring-1 ring-amber-500/30"
                       )}>
                         <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
@@ -576,18 +576,18 @@ function DesktopLayout({
                               Tournament Mode · PnL Isolated
                             </span>
                           )}
-                          <span>Balance: <strong className={cn("font-semibold terminal-num", isTournamentMode ? "text-amber-300" : "text-text")}>{fmtUSD(balance)}</strong></span>
-                          <span>
-                            Equity: <strong className={cn("font-semibold terminal-num", equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>{fmtUSD(equity)}</strong>
+                          <span className="text-text-muted">Balance: <strong className={cn("font-semibold terminal-num text-text", isTournamentMode && "text-amber-300")}>{fmtUSD(balance)}</strong></span>
+                          <span className="text-text-muted">
+                            Equity: <strong className={cn("font-semibold terminal-num", equity >= balance ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}>{fmtUSD(equity)}</strong>
                           </span>
-                          <span>Free Margin: <strong className="text-text font-semibold terminal-num">{fmtUSD(free)}</strong></span>
+                          <span className="text-text-muted">Free Margin: <strong className="text-text font-semibold terminal-num">{fmtUSD(free)}</strong></span>
 
                           {/* Secondary telemetry metrics toggled to avoid visual clutter (TPOL-5) */}
                           {showMoreTelemetry && (
                             <>
-                              <span>Margin: <strong className="text-text font-semibold terminal-num">{fmtUSD(used)}</strong></span>
-                              <span>Margin Level: <strong className={cn("font-semibold terminal-num", level !== null && level <= 120 ? 'text-rose-500' : 'text-text')}>{level !== null ? fmtPct(level, 1) : '—'}</strong></span>
-                              <span>Leverage: <strong className="text-text font-semibold terminal-num">1:{lev}</strong></span>
+                              <span className="text-text-muted">Margin: <strong className="text-text font-semibold terminal-num">{fmtUSD(used)}</strong></span>
+                              <span className="text-text-muted">Margin Level: <strong className={cn("font-semibold terminal-num", level !== null && level <= 120 ? 'text-rose-600 dark:text-rose-400' : 'text-text')}>{level !== null ? fmtPct(level, 1) : '—'}</strong></span>
+                              <span className="text-text-muted">Leverage: <strong className="text-text font-semibold terminal-num">1:{lev}</strong></span>
                             </>
                           )}
 
@@ -604,8 +604,8 @@ function DesktopLayout({
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-text-muted">Total P/L:</span>
                           <span className={cn(
-                            "px-2 py-0.5 rounded text-terminal-body font-semibold terminal-num",
-                            pnl >= 0 ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                            "px-2.5 py-0.5 rounded text-terminal-body font-semibold terminal-num",
+                            pnl >= 0 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
                           )}>
                             {fmtUSD(pnl, { sign: true })}
                           </span>

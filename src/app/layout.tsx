@@ -339,12 +339,14 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       --tw-ring-color: ${cleanHex} !important;
     }
     body, html { font-family: ${safeFont}; }
-    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) {
+    *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
       font-family: ${safeFont};
     }
-    .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd,
-    .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * {
+    code, pre, kbd {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    }
+    .tabular-nums, .tabular, .terminal-num {
+      font-variant-numeric: tabular-nums;
     }
     .bg-primary { color: ${safeFg} !important; }
   `;
@@ -587,7 +589,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 fontTag.id = 'fxsim-live-theme-font';
                 document.head.appendChild(fontTag);
               }
-              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + '; } *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + '; } .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd, .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }';
+              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + '; } *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + '; } code, pre, kbd, code *, pre *, kbd * { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; } .tabular-nums, .tabular, .terminal-num { font-variant-numeric: tabular-nums; }';
 
               var accent = null;
               try {
@@ -702,8 +704,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
                   '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +
                   'body, html { font-family: ' + safeFont + '; }' +
-                  '*:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num), html, body { font-family: ' + safeFont + ' !important; }' +
-                  '.font-mono, [class*="font-mono"], .tabular, .terminal-num, code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
+                  '*:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]), html, body { font-family: ' + safeFont + ' !important; }' +
+                  'code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
+                  '.tabular-nums, .tabular, .terminal-num { font-variant-numeric: tabular-nums; }' +
                   '.bg-primary { color: ' + safeFgVal + ' !important; }';
 
                   var ssrEl = document.getElementById('fxsim-dynamic-theme-ssr');

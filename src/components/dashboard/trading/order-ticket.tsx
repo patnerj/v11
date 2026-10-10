@@ -638,16 +638,18 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               placeholder="Optional"
               title={slMetrics ? `Max Loss: -${fmtUSD(slMetrics.lossVal)} (-${slMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
-                "w-full h-9 px-3 rounded-md bg-bg-subtle border shadow-inner text-terminal-title terminal-num focus-ring focus:bg-surface transition-colors",
-                slMetrics ? "border-rose-500/50 text-rose-300 focus:border-rose-500" : "border-border-subtle focus:border-accent"
+                "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
+                slMetrics
+                  ? "border-rose-500/60 bg-rose-500/5 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 focus:border-rose-500"
+                  : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
               )}
             />
           </div>
           {/* Prominent Live Calculated Loss Badge */}
           {slMetrics && (
-            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-terminal-body text-rose-400 terminal-num transition-all hover:bg-rose-500/15 hover:border-rose-500/50 shadow-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-rose-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-terminal-body text-rose-600 dark:text-rose-400 terminal-num transition-all hover:bg-rose-500/15 hover:border-rose-500/50 shadow-xs">
+              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-rose-600 dark:text-rose-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                 Est. Loss:
               </span>
               <span className="font-semibold terminal-num tracking-tight">
@@ -674,16 +676,18 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               placeholder="Optional"
               title={tpMetrics ? `Target Profit: +${fmtUSD(tpMetrics.profitVal)} (+${tpMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
-                "w-full h-9 px-3 rounded-md bg-bg-subtle border shadow-inner text-terminal-title terminal-num focus-ring focus:bg-surface transition-colors",
-                tpMetrics ? "border-emerald-500/50 text-emerald-300 focus:border-emerald-500" : "border-border-subtle focus:border-accent"
+                "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
+                tpMetrics
+                  ? "border-emerald-500/60 bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 focus:border-emerald-500"
+                  : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
               )}
             />
           </div>
           {/* Prominent Live Calculated Profit Badge */}
           {tpMetrics && (
-            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-terminal-body text-emerald-400 terminal-num transition-all hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-terminal-body text-emerald-600 dark:text-emerald-400 terminal-num transition-all hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-xs">
+              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-emerald-600 dark:text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Est. Profit:
               </span>
               <span className="font-semibold terminal-num tracking-tight">
