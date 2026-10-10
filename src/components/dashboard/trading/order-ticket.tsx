@@ -230,6 +230,35 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     return (tpN - px) * direction * contractSize * lotN
   }, [tpN, ask, lotN, contractSize, mode, pendingType, targetN])
 
+  // Detailed SL/TP Metrics with Pips, Dollar amounts, and Equity % for live hover & preview
+  const slMetrics = useMemo(() => {
+    if (!slN || !ask || lotN <= 0) return null
+    const pSize = pipSize(active, digits)
+    const entryPx = mode === 'market' ? (bid && ask ? (slN < (ask || bid) ? ask : bid) : ask) : (targetN || ask)
+    const priceDiff = Math.abs(entryPx - slN)
+    if (priceDiff <= 0) return null
+    const pips = pSize > 0 ? priceDiff / pSize : priceDiff
+    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
+    const lossVal = pipValPer1Lot > 0 ? (pips * pipValPer1Lot * lotN) : (priceDiff * contractSize * lotN)
+    const eq = toNum(account?.equity) || toNum(account?.balance) || 0
+    const lossPct = eq > 0 ? (lossVal / eq) * 100 : 0
+    return { pips, lossVal, lossPct, entryPx }
+  }, [slN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account])
+
+  const tpMetrics = useMemo(() => {
+    if (!tpN || !ask || lotN <= 0) return null
+    const pSize = pipSize(active, digits)
+    const entryPx = mode === 'market' ? (bid && ask ? (tpN > (bid || ask) ? ask : bid) : ask) : (targetN || ask)
+    const priceDiff = Math.abs(tpN - entryPx)
+    if (priceDiff <= 0) return null
+    const pips = pSize > 0 ? priceDiff / pSize : priceDiff
+    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
+    const profitVal = pipValPer1Lot > 0 ? (pips * pipValPer1Lot * lotN) : (priceDiff * contractSize * lotN)
+    const eq = toNum(account?.equity) || toNum(account?.balance) || 0
+    const profitPct = eq > 0 ? (profitVal / eq) * 100 : 0
+    return { pips, profitVal, profitPct, entryPx }
+  }, [tpN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account])
+
   // ── Submit ────────────────────────────────────────────────────────────
   // Client-side free-margin gate — mirrors the server check so traders get an
   // instant, clear rejection instead of waiting for a server error.
@@ -441,17 +470,17 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface">
+    <div className="flex flex-col h-full min-h-0 bg-surface select-none">
       {/* Mode toggle */}
-      <div className={cn('shrink-0 px-3 pt-3', compact && 'px-3 pt-3')}>
-        <div className="flex gap-1 p-0.5 rounded-md bg-surface-muted/60 text-2xs">
+      <div className={cn('shrink-0 px-2.5 sm:px-3 pt-2 sm:pt-2.5', compact && 'px-2 pt-2')}>
+        <div className="flex gap-1 p-0.5 rounded-md bg-surface-muted/60 text-terminal-body">
           {(['market', 'pending'] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
               className={cn(
-                'flex-1 h-7 rounded transition-colors font-medium uppercase tracking-wider',
-                mode === m ? 'bg-bg-subtle text-text shadow-card' : 'text-text-muted hover:text-text',
+                'flex-1 h-7 rounded transition-colors font-normal uppercase tracking-wider',
+                mode === m ? 'bg-bg-subtle text-text shadow-card font-semibold' : 'text-text-muted hover:text-text',
               )}
             >
               {m}
@@ -460,20 +489,20 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-2.5 min-h-0">
+      <div className="flex-1 overflow-y-auto px-2.5 sm:px-3 py-2 space-y-2 min-h-0">
         {/* Pending type selector */}
         {mode === 'pending' && (
-          <div className="grid grid-cols-2 gap-1 text-2xs">
+          <div className="grid grid-cols-2 gap-1 text-terminal-body">
             {(['buy_limit', 'sell_limit', 'buy_stop', 'sell_stop'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setPendingType(t)}
                 className={cn(
-                  'h-8 rounded-md border font-medium uppercase tracking-wider transition-colors px-1 truncate whitespace-nowrap',
+                  'h-8 rounded-md border font-normal uppercase tracking-wider transition-colors px-1 truncate whitespace-nowrap',
                   pendingType === t
                     ? t.startsWith('buy')
-                      ? 'border-success/40 bg-success-muted text-success'
-                      : 'border-danger/40 bg-danger-muted text-danger'
+                      ? 'border-success/40 bg-success-muted text-success font-semibold'
+                      : 'border-danger/40 bg-danger-muted text-danger font-semibold'
                     : 'border-border bg-surface text-text-muted hover:text-text hover:border-border-strong',
                 )}
               >
@@ -484,18 +513,18 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         )}
 
         {/* Market info strip */}
-        <div className="grid grid-cols-3 gap-1 rounded-md bg-bg-subtle/60 border border-border-subtle p-2 text-2xs min-w-0">
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-bg-subtle/60 border border-border-subtle p-1.5 sm:p-2 text-terminal-body min-w-0">
           <div className="min-w-0">
             <div className="text-text-faint">Bid</div>
-            <div className="tabular font-medium text-success truncate">{bid ? fmtPrice(bid, digits) : '—'}</div>
+            <div className="terminal-num font-semibold text-success truncate">{bid ? fmtPrice(bid, digits) : '—'}</div>
           </div>
           <div className="text-center min-w-0">
             <div className="text-text-faint">Spread</div>
-            <div className="tabular font-medium truncate">{bid && ask ? `${spreadPips.toFixed(1)}p` : '—'}</div>
+            <div className="terminal-num font-normal truncate">{bid && ask ? `${spreadPips.toFixed(1)}p` : '—'}</div>
           </div>
           <div className="text-right min-w-0">
             <div className="text-text-faint">Ask</div>
-            <div className="tabular font-medium text-danger truncate">{ask ? fmtPrice(ask, digits) : '—'}</div>
+            <div className="terminal-num font-semibold text-danger truncate">{ask ? fmtPrice(ask, digits) : '—'}</div>
           </div>
         </div>
 
@@ -514,7 +543,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 const n = Math.min(maxLot, Math.max(minLot, toNum(lot) || minLot))
                 setLot(n.toFixed(2))
               }}
-              className="flex-1 h-9 px-3 rounded-md bg-surface border border-border text-sm tabular text-center focus-ring focus:border-accent"
+              className="flex-1 h-9 px-3 rounded-md bg-surface border border-border text-terminal-title terminal-num text-center focus-ring focus:border-accent"
             />
             <button onClick={() => bumpLot(lotStep)} className="h-9 w-9 rounded-md border border-border bg-surface text-text-muted hover:text-text hover:bg-surface-muted/60 focus-ring flex items-center justify-center">
               <Plus className="h-3.5 w-3.5" />
@@ -527,9 +556,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 key={v}
                 onClick={() => setLot(v.toFixed(2))}
                 className={cn(
-                  'flex-1 h-6 rounded text-2xs font-medium transition-colors tabular',
+                  'flex-1 h-6 rounded text-terminal-micro font-normal transition-colors terminal-num',
                   lotN === v
-                    ? 'bg-accent-muted text-accent'
+                    ? 'bg-accent-muted text-accent font-semibold'
                     : 'bg-surface-muted/50 text-text-muted hover:text-text',
                 )}
               >
@@ -538,9 +567,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             ))}
           </div>
 
-          {/* Quick-Risk Preset Pills (1-Click Auto Lot Sizing) */}
+          {/* Quick-Risk Preset Pills (TPOL-6: Simplified without redundant "Risk" word) */}
           <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-border-subtle/60">
-            <span className="text-3xs font-bold text-text-muted uppercase tracking-wider shrink-0">
+            <span className="text-terminal-micro font-semibold text-text-muted uppercase tracking-wider shrink-0">
               Risk:
             </span>
             {[0.5, 1.0, 2.0].map((rPct) => (
@@ -549,14 +578,14 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 type="button"
                 onClick={() => calculateLotForRisk(rPct)}
                 className={cn(
-                  'flex-1 h-6 rounded text-2xs font-semibold transition-all tabular border select-none cursor-pointer flex items-center justify-center',
+                  'flex-1 h-6 rounded text-terminal-body font-semibold transition-all terminal-num border select-none cursor-pointer flex items-center justify-center',
                   Number(risk) === rPct && slN
-                    ? 'bg-accent/20 border-accent/60 text-accent font-bold shadow-xs'
+                    ? 'bg-accent/20 border-accent/60 text-accent font-semibold shadow-xs'
                     : 'bg-surface-muted/60 hover:bg-surface-muted border-border/70 text-text-muted hover:text-text hover:border-border-strong',
                 )}
                 title={`Auto-size position to risk exactly ${rPct}% of equity based on Stop Loss`}
               >
-                Risk {rPct.toFixed(1)}%
+                {rPct === 1.0 ? '1%' : rPct === 2.0 ? '2%' : `${rPct}%`}
               </button>
             ))}
           </div>
@@ -571,7 +600,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               value={target}
               onChange={(e) => setTarget(e.target.value.replace(/[^\d.]/g, ''))}
               placeholder={ask ? fmtPrice(ask, digits) : '0.00000'}
-              className="w-full h-9 px-3 rounded-md bg-surface border border-border text-sm tabular focus-ring focus:border-accent"
+              className="w-full h-9 px-3 rounded-md bg-surface border border-border text-terminal-title terminal-num focus-ring focus:border-accent"
             />
           </Field>
         )}
@@ -579,43 +608,91 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         {/* SL */}
         <Field label="Stop loss" hint={
           slPnL !== null && Number.isFinite(slPnL)
-            ? <span className={mode === 'market' ? 'text-danger' : pnlClassOrNull(slPnL)}>
-                {mode === 'market' ? '−' : ''}{fmtUSD(Math.abs(slPnL))} {mode === 'market' && <span className="text-text-faint">risk</span>}
+            ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-danger' : pnlClassOrNull(slPnL))}>
+                {mode === 'market' ? '−' : ''}{fmtUSD(Math.abs(slPnL))} {mode === 'market' && <span className="text-text-faint font-normal">risk</span>}
               </span>
             : null
         }>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={sl}
-            onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
-            placeholder="Optional"
-            className="w-full h-9 px-3 rounded-md bg-bg-subtle border border-border-subtle shadow-inner text-sm tabular focus-ring focus:bg-surface focus:border-accent transition-colors"
-          />
+          <div className="relative group">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={sl}
+              onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
+              placeholder="Optional"
+              title={slMetrics ? `Max Loss: -${fmtUSD(slMetrics.lossVal)} (-${slMetrics.pips.toFixed(1)}p)` : undefined}
+              className={cn(
+                "w-full h-9 px-3 rounded-md bg-bg-subtle border shadow-inner text-terminal-title terminal-num focus-ring focus:bg-surface transition-colors",
+                slMetrics ? "border-rose-500/50 text-rose-300 focus:border-rose-500" : "border-border-subtle focus:border-accent"
+              )}
+            />
+          </div>
+          {/* Prominent Live Calculated Loss Badge */}
+          {slMetrics && (
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-terminal-body text-rose-400 terminal-num transition-all hover:bg-rose-500/15 hover:border-rose-500/50 shadow-xs">
+              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-rose-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+                Est. Loss:
+              </span>
+              <span className="font-semibold terminal-num tracking-tight">
+                -{fmtUSD(slMetrics.lossVal)} <span className="opacity-80 text-terminal-micro">(-{slMetrics.pips.toFixed(1)}p · -{slMetrics.lossPct.toFixed(1)}%)</span>
+              </span>
+            </div>
+          )}
         </Field>
 
         {/* TP */}
         <Field label="Take profit" hint={
           tpPnL !== null && Number.isFinite(tpPnL)
-            ? <span className={mode === 'market' ? 'text-success' : pnlClassOrNull(tpPnL)}>
-                {mode === 'market' ? '+' : ''}{fmtUSD(Math.abs(tpPnL))} {mode === 'market' && <span className="text-text-faint">target</span>}
+            ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-success' : pnlClassOrNull(tpPnL))}>
+                {mode === 'market' ? '+' : ''}{fmtUSD(Math.abs(tpPnL))} {mode === 'market' && <span className="text-text-faint font-normal">target</span>}
               </span>
             : null
         }>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={tp}
-            onChange={(e) => setTp(e.target.value.replace(/[^\d.]/g, ''))}
-            placeholder="Optional"
-            className="w-full h-9 px-3 rounded-md bg-bg-subtle border border-border-subtle shadow-inner text-sm tabular focus-ring focus:bg-surface focus:border-accent transition-colors"
-          />
+          <div className="relative group">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={tp}
+              onChange={(e) => setTp(e.target.value.replace(/[^\d.]/g, ''))}
+              placeholder="Optional"
+              title={tpMetrics ? `Target Profit: +${fmtUSD(tpMetrics.profitVal)} (+${tpMetrics.pips.toFixed(1)}p)` : undefined}
+              className={cn(
+                "w-full h-9 px-3 rounded-md bg-bg-subtle border shadow-inner text-terminal-title terminal-num focus-ring focus:bg-surface transition-colors",
+                tpMetrics ? "border-emerald-500/50 text-emerald-300 focus:border-emerald-500" : "border-border-subtle focus:border-accent"
+              )}
+            />
+          </div>
+          {/* Prominent Live Calculated Profit Badge */}
+          {tpMetrics && (
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-terminal-body text-emerald-400 terminal-num transition-all hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-xs">
+              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Est. Profit:
+              </span>
+              <span className="font-semibold terminal-num tracking-tight">
+                +{fmtUSD(tpMetrics.profitVal)} <span className="opacity-80 text-terminal-micro">(+{tpMetrics.pips.toFixed(1)}p · +{tpMetrics.profitPct.toFixed(1)}%)</span>
+              </span>
+            </div>
+          )}
         </Field>
+
+        {/* Combined Risk : Reward Ratio Pill */}
+        {slMetrics && tpMetrics && (
+          <div className="px-2.5 py-1.5 rounded-md bg-surface-muted/60 border border-border/80 flex items-center justify-between text-terminal-body terminal-num text-text-muted">
+            <span className="font-semibold text-terminal-body text-text-muted flex items-center gap-1.5">
+              <span>⚖️</span> Risk : Reward Ratio
+            </span>
+            <span className="font-semibold terminal-num text-accent text-terminal-body">
+              1 : {(tpMetrics.profitVal / (slMetrics.lossVal || 1)).toFixed(2)}
+            </span>
+          </div>
+        )}
 
         {/* Risk calculator */}
         <button
           onClick={() => setShowCalc((v) => !v)}
-          className="w-full inline-flex items-center justify-center gap-1.5 h-7 rounded-md border border-border-subtle bg-surface text-2xs text-text-muted hover:text-text hover:border-border focus-ring"
+          className="w-full inline-flex items-center justify-center gap-1.5 h-7 rounded-md border border-border-subtle bg-surface text-terminal-body text-text-muted hover:text-text hover:border-border focus-ring"
         >
           <Calculator className="h-3 w-3" />
           {showCalc ? 'Hide' : 'Show'} risk calculator
@@ -629,7 +706,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="rounded-md bg-bg-subtle/60 border border-border-subtle p-3 space-y-2 text-2xs">
+              <div className="rounded-md bg-bg-subtle/60 border border-border-subtle p-3 space-y-2 text-terminal-body">
                 <div className="flex items-center gap-2">
                   <span className="text-text-muted">Risk</span>
                   <input
@@ -637,13 +714,13 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                     inputMode="decimal"
                     value={risk}
                     onChange={(e) => setRisk(e.target.value.replace(/[^\d.]/g, ''))}
-                    className="w-14 h-7 px-2 rounded border border-border bg-surface text-2xs tabular text-center focus-ring"
+                    className="w-14 h-7 px-2 rounded border border-border bg-surface text-terminal-body terminal-num text-center focus-ring"
                   />
                   <span className="text-text-muted">% of balance</span>
                   {recommendedLot !== null && (
                     <button
                       onClick={() => setLot(recommendedLot.toFixed(2))}
-                      className="ml-auto h-6 px-2 rounded bg-accent-muted text-accent text-2xs font-medium hover:bg-accent/30 transition-colors"
+                      className="ml-auto h-6 px-2 rounded bg-accent-muted text-accent text-terminal-body font-semibold hover:bg-accent/30 transition-colors"
                     >
                       Use {recommendedLot.toFixed(2)} lots
                     </button>
@@ -651,16 +728,16 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 </div>
                 {/* Preset Chips */}
                 <div className="flex items-center gap-1.5 pt-1">
-                  <span className="text-3xs text-text-muted">Presets:</span>
+                  <span className="text-terminal-micro text-text-muted">Presets:</span>
                   {[0.5, 1.0, 2.0].map((rPct) => (
                     <button
                       key={rPct}
                       type="button"
                       onClick={() => calculateLotForRisk(rPct)}
                       className={cn(
-                        'px-2 py-0.5 rounded text-3xs font-semibold border transition-all select-none cursor-pointer',
+                        'px-2 py-0.5 rounded text-terminal-micro font-semibold border transition-all select-none cursor-pointer',
                         Number(risk) === rPct
-                          ? 'bg-accent/20 border-accent/50 text-accent font-bold'
+                          ? 'bg-accent/20 border-accent/50 text-accent font-semibold'
                           : 'bg-surface border-border text-text-muted hover:text-text'
                       )}
                     >
@@ -668,7 +745,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                     </button>
                   ))}
                 </div>
-                <div className="text-text-faint">
+                <div className="text-text-faint text-terminal-micro">
                   {recommendedLot === null
                     ? 'Enter a stop loss to calculate position size.'
                     : `Risking ${fmtUSD(toNum(account?.balance) * toNum(risk) / 100)} of ${fmtUSD(account?.balance)}`}
@@ -678,32 +755,29 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           )}
         </AnimatePresence>
 
-        {/* Cost preview */}
-        <div className="rounded-md bg-bg-subtle/40 border border-border-subtle p-2.5 space-y-1.5 text-2xs shadow-sm">
-          <KV label="Position size"  value={`${fmtLots(lotN)} lots`} />
-          <KV label="Pip value"      value={fmtUSD(estimatedPipValue(active, contractSize, lotN))} />
+        {/* Cost preview (TPOL-8) */}
+        <div className="rounded-md bg-bg-subtle/40 border border-border-subtle p-2 space-y-1 text-terminal-body shadow-sm">
+          <KV label="Position size"  value={`${fmtLots(lotN)} lots`} mono />
+          <KV label="Pip value"      value={fmtUSD(estimatedPipValue(active, contractSize, lotN))} mono />
           <KV label="Required margin" value={fmtUSD(margin)} mono />
-          {account?.equity != null && (
-            <KV label="Free margin" value={fmtUSD(toNum(account.equity) - toNum(account.margin_used))} mono />
-          )}
         </div>
       </div>
 
       {/* Buy/Sell action bar — pinned at bottom of ticket */}
-      <div className="shrink-0 px-3 pb-2.5 pt-2 bg-surface border-t border-border-subtle flex flex-col gap-1.5">
+      <div className="shrink-0 px-2.5 sm:px-3 pb-2 pt-1.5 sm:pb-2.5 sm:pt-2 bg-surface border-t border-border-subtle flex flex-col gap-1.5">
         {isTournament && (
           <div
             title={`Tournament Mode: Orders execute on ${tournamentTitle || 'Tournament'} only and are isolated from evaluation/funded accounts.`}
-            className="flex items-center gap-1.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/35 px-2 py-1 text-3xs"
+            className="flex items-center gap-1.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/35 px-2 py-1 text-terminal-micro"
           >
             <Trophy className="h-3 w-3 text-amber-500 dark:text-amber-400 shrink-0" />
             <span className="truncate">
-              <strong className="text-amber-800 dark:text-amber-200 uppercase">Tournament Order:</strong> Isolated PnL
+              <strong className="text-amber-800 dark:text-amber-200 uppercase font-semibold">Tournament Order:</strong> Isolated PnL
             </span>
           </div>
         )}
         {isNewsRestricted && (
-          <div className="flex items-center gap-2 rounded-md bg-warning-muted text-warning-strong p-2.5 text-2xs shadow-sm border border-warning/20">
+          <div className="flex items-center gap-2 rounded-md bg-warning-muted text-warning-strong p-2.5 text-terminal-body shadow-sm border border-warning/20">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>
               High-impact news window active ({plan?.news_window_minutes} min). Trading is disabled.
@@ -711,7 +785,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           </div>
         )}
         {isIpRestricted && (
-          <div className="flex items-center gap-2 rounded-md bg-destructive-muted text-destructive-strong p-2.5 text-2xs shadow-sm border border-destructive/20">
+          <div className="flex items-center gap-2 rounded-md bg-destructive-muted text-destructive-strong p-2.5 text-terminal-body shadow-sm border border-destructive/20">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>
               Strict Mode active: Your current IP address does not match your registered IP. Trading is disabled.
@@ -729,8 +803,8 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             >
               <ArrowDownRight className="h-4 w-4 shrink-0" />
               <div className="flex flex-col items-start leading-tight min-w-0">
-                <span className="text-2xs opacity-80">SELL</span>
-                <span className="text-xs sm:text-sm tabular font-semibold truncate">{bid ? fmtPrice(bid, digits) : '—'}</span>
+                <span className="text-terminal-micro opacity-80 font-normal">SELL</span>
+                <span className="text-terminal-title terminal-num font-semibold truncate">{bid ? fmtPrice(bid, digits) : '—'}</span>
               </div>
             </ActionButton>
             <ActionButton
@@ -740,8 +814,8 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               onClick={() => submitMarket('buy')}
             >
               <div className="flex flex-col items-end leading-tight min-w-0">
-                <span className="text-2xs opacity-80">BUY</span>
-                <span className="text-xs sm:text-sm tabular font-semibold truncate">{ask ? fmtPrice(ask, digits) : '—'}</span>
+                <span className="text-terminal-micro opacity-80 font-normal">BUY</span>
+                <span className="text-terminal-title terminal-num font-semibold truncate">{ask ? fmtPrice(ask, digits) : '—'}</span>
               </div>
               <ArrowUpRight className="h-4 w-4 shrink-0" />
             </ActionButton>
@@ -751,7 +825,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             disabled={busy !== null || !targetN || isNewsRestricted || isIpRestricted}
             onClick={submitPending}
             className={cn(
-              'w-full h-11 rounded-md font-semibold text-sm flex items-center justify-center gap-2 transition-all focus-ring',
+              'w-full h-11 rounded-md font-semibold text-terminal-title flex items-center justify-center gap-2 transition-all focus-ring',
               busy === 'pending' && 'opacity-60',
               pendingType.startsWith('buy')
                 ? 'bg-success text-white hover:bg-success-hover disabled:bg-success/40'
@@ -777,8 +851,8 @@ function Field({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <label className="text-2xs uppercase tracking-wider text-text-muted font-medium">{label}</label>
-        {hint && <span className="text-2xs tabular">{hint}</span>}
+        <label className="text-terminal-micro uppercase tracking-wider text-text-muted font-semibold">{label}</label>
+        {hint && <span className="text-terminal-body terminal-num">{hint}</span>}
       </div>
       {children}
     </div>
@@ -787,9 +861,9 @@ function Field({
 
 function KV({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center text-terminal-body">
       <span className="text-text-muted">{label}</span>
-      <span className={cn('font-medium text-text', mono && 'tabular')}>{value}</span>
+      <span className={cn('font-normal text-text', mono && 'terminal-num')}>{value}</span>
     </div>
   )
 }
@@ -808,7 +882,7 @@ function ActionButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'group relative h-12 rounded-md font-semibold text-white px-2.5 flex items-center justify-between gap-1 transition-all focus-ring overflow-hidden',
+        'group relative h-11 sm:h-12 rounded-md font-semibold text-white px-2.5 flex items-center justify-between gap-1 transition-all focus-ring overflow-hidden',
         'shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.15)] active:scale-[0.98]',
         tone === 'buy'
           ? 'bg-gradient-to-b from-success/90 to-success hover:from-success hover:to-success-hover shadow-success/20 disabled:from-success/40 disabled:to-success/40'

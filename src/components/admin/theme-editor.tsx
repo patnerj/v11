@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { ThemeSettings } from "@/types/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { toast } from "sonner";
-import { applyThemeAccent } from "@/lib/theme-accent";
+import { applyThemeAccent, applyFontFamily } from "@/lib/theme-accent";
 
 export function ThemeEditor() {
   const defaultSettings: ThemeSettings = {
@@ -53,6 +53,11 @@ export function ThemeEditor() {
         localStorage.setItem('fxsim:theme-accent', color);
         document.cookie = "fxsim-theme-accent=" + encodeURIComponent(color) + "; path=/; max-age=31536000; SameSite=Lax";
       }
+      const font = data.fontFamily || data.font_family;
+      if (font) {
+        localStorage.setItem('fxsim:theme-font', font);
+        document.cookie = "fxsim-theme-font=" + encodeURIComponent(font) + "; path=/; max-age=31536000; SameSite=Lax";
+      }
       document.cookie = "fxsim-theme-data=" + encodeURIComponent(JSON.stringify(data)) + "; path=/; max-age=31536000; SameSite=Lax";
     } catch (e) {}
   };
@@ -65,6 +70,10 @@ export function ThemeEditor() {
       const colorToApply = settings.primaryColor || settings.primary_color;
       if (colorToApply) {
         applyThemeAccent(colorToApply);
+      }
+      const fontToApply = settings.fontFamily || settings.font_family;
+      if (fontToApply) {
+        applyFontFamily(fontToApply);
       }
       toast.success("Theme settings saved successfully.");
       window.location.reload();

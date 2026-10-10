@@ -178,22 +178,22 @@ export default function StatusPage() {
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
               <div className="text-xs text-text-muted font-medium mb-1">MT5 London Latency</div>
               <div className="text-2xl font-bold font-mono text-emerald-500 dark:text-emerald-400">14 ms</div>
-              <div className="text-[11px] text-text-faint mt-1">Equinix LD4 Fiber</div>
+              <div className="text-2xs text-text-faint mt-1">Equinix LD4 Fiber</div>
             </div>
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
               <div className="text-xs text-text-muted font-medium mb-1">90-Day Uptime</div>
               <div className="text-2xl font-bold font-mono text-emerald-500 dark:text-emerald-400">99.98%</div>
-              <div className="text-[11px] text-text-faint mt-1">Zero downtime breaches</div>
+              <div className="text-2xs text-text-faint mt-1">Zero downtime breaches</div>
             </div>
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
               <div className="text-xs text-text-muted font-medium mb-1">Tick Processing</div>
               <div className="text-2xl font-bold font-mono text-teal-500 dark:text-teal-300">240+ /sec</div>
-              <div className="text-[11px] text-text-faint mt-1">Zero slip execution</div>
+              <div className="text-2xs text-text-faint mt-1">Zero slip execution</div>
             </div>
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
               <div className="text-xs text-text-muted font-medium mb-1">Treasury Settlement</div>
               <div className="text-2xl font-bold font-mono text-cyan-500 dark:text-cyan-400">&lt; 8h SLA</div>
-              <div className="text-[11px] text-text-faint mt-1">Crypto & Wire Rails</div>
+              <div className="text-2xs text-text-faint mt-1">Crypto & Wire Rails</div>
             </div>
           </div>
 
@@ -223,7 +223,7 @@ export default function StatusPage() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-text-faint font-mono mt-3">
+            <div className="flex items-center justify-between text-2xs text-text-faint font-mono mt-3">
               <span>90 days ago</span>
               <span className="text-emerald-500 dark:text-emerald-400 font-medium">No critical outages recorded</span>
               <span>Today</span>
@@ -252,7 +252,7 @@ export default function StatusPage() {
                       <div>
                         <div className="flex items-center gap-2.5">
                           <h4 className="font-bold text-text text-sm sm:text-base">{s.name}</h4>
-                          <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-surface-secondary text-text-muted border border-border-subtle">
+                          <span className="hidden sm:inline-block px-2 py-0.5 rounded text-2xs font-mono bg-surface-secondary text-text-muted border border-border-subtle">
                             {s.location}
                           </span>
                         </div>
@@ -262,11 +262,11 @@ export default function StatusPage() {
 
                     <div className="flex items-center gap-6 self-end md:self-auto shrink-0 font-mono text-xs">
                       <div className="text-right">
-                        <div className="text-[10px] text-text-faint uppercase">Latency</div>
+                        <div className="text-2xs text-text-faint uppercase">Latency</div>
                         <div className="text-text font-semibold">{s.latency}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[10px] text-text-faint uppercase">Uptime</div>
+                        <div className="text-2xs text-text-faint uppercase">Uptime</div>
                         <div className="text-emerald-500 dark:text-emerald-400 font-semibold">{s.uptime}</div>
                       </div>
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 font-semibold text-xs">
@@ -309,7 +309,7 @@ export default function StatusPage() {
               {/* Executive Desk */}
               <div className="p-6 rounded-2xl bg-surface-secondary/70 border border-amber-500/30 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                  <span className="text-2xs font-bold uppercase tracking-wider font-mono text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
                     Executive / Owner Desk
                   </span>
                   <span className="text-xs text-text-muted font-mono">SLA: &lt; 2h</span>
@@ -347,7 +347,7 @@ export default function StatusPage() {
               {/* 24/7 Operations Desk */}
               <div className="p-6 rounded-2xl bg-surface-secondary/70 border border-emerald-500/30 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
+                  <span className="text-2xs font-bold uppercase tracking-wider font-mono text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
                     24/7 Operations Desk
                   </span>
                   <span className="text-xs text-text-muted font-mono">SLA: &lt; 15m</span>

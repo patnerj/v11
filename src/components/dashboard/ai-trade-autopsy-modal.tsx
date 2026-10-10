@@ -66,7 +66,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-text tracking-tight font-sans">AI Post-Trade Autopsy</h3>
-                <span className="text-3xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/25 font-bold tabular">
+                <span className="text-2xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/25 font-bold tabular">
                   Trade #{autopsy.trade_id || (autopsy as any).id || '—'}
                 </span>
               </div>
@@ -86,7 +86,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
           {/* Scorecard Hero Strip */}
           <div className="p-4 rounded-xl bg-surface-muted/60 border border-border-subtle flex items-center justify-between">
             <div>
-              <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Trade Result</span>
+              <span className="text-2xs uppercase tracking-wider font-semibold text-text-muted font-sans block">Trade Result</span>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`text-xl font-black tabular ${isProfit ? 'text-accent' : 'text-danger'}`}>
                   {autopsy.pnl_formatted || fmtUSD(pnlNum, { sign: true })}
@@ -99,7 +99,7 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
 
             {/* Execution Grade Badge */}
             <div className="text-center">
-              <span className="text-3xs uppercase tracking-wider font-semibold text-text-muted font-sans block mb-0.5">Grade</span>
+              <span className="text-2xs uppercase tracking-wider font-semibold text-text-muted font-sans block mb-0.5">Grade</span>
               <span className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-xl font-black border shadow-lg ${gradeClass}`}>
                 {gradeKey || 'N/A'}
               </span>

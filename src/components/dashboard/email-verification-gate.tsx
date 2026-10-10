@@ -23,19 +23,58 @@ import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import type { AuthUser } from '@/types/api'
 
+function getWebmailProvider(email: string) {
+  const domain = email?.split('@')[1]?.toLowerCase() || ''
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    return { name: 'Open Gmail', url: 'https://mail.google.com' }
+  }
+  if (domain === 'yahoo.com' || domain === 'ymail.com') {
+    return { name: 'Open Yahoo Mail', url: 'https://mail.yahoo.com' }
+  }
+  if (['outlook.com', 'hotmail.com', 'live.com', 'msn.com'].includes(domain)) {
+    return { name: 'Open Outlook', url: 'https://outlook.live.com' }
+  }
+  if (domain === 'proton.me' || domain === 'protonmail.com') {
+    return { name: 'Open Proton Mail', url: 'https://mail.proton.me' }
+  }
+  if (domain === 'icloud.com' || domain === 'me.com') {
+    return { name: 'Open iCloud Mail', url: 'https://www.icloud.com/mail' }
+  }
+  if (domain) {
+    return { name: `Open ${domain}`, url: `https://${domain}` }
+  }
+  return { name: 'Open Webmail', url: 'https://mail.google.com' }
+}
+
 export function EmailVerificationGate({ user }: { user: AuthUser }) {
   const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@massfunded.org'
   const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'M'
   const [resending, setResending] = useState(false)
   const [checking, setChecking] = useState(false)
-  const [cooldown, setCooldown] = useState(0)
+  const [cooldown, setCooldown] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    try {
+      const until = parseInt(localStorage.getItem('fxsim:resend_cooldown_until') || '0', 10)
+      const remaining = Math.max(0, Math.ceil((until - Date.now()) / 1000))
+      return remaining
+    } catch {
+      return 0
+    }
+  })
   const [copied, setCopied] = useState(false)
 
   // Countdown timer for resend email
   useEffect(() => {
     if (cooldown <= 0) return
     const timer = setInterval(() => {
-      setCooldown((c) => Math.max(0, c - 1))
+      setCooldown((c) => {
+        const next = Math.max(0, c - 1)
+        if (next === 0 && typeof window !== 'undefined') {
+          try { localStorage.removeItem('fxsim:resend_cooldown_until') } catch {}
+        }
+        return next
+      })
     }, 1000)
     return () => clearInterval(timer)
   }, [cooldown])
@@ -77,6 +116,9 @@ export function EmailVerificationGate({ user }: { user: AuthUser }) {
       if (res.ok) {
         toast.success('Verification email sent! Please check your inbox and spam folder.')
         setCooldown(60)
+        try {
+          localStorage.setItem('fxsim:resend_cooldown_until', String(Date.now() + 60 * 1000))
+        } catch {}
       } else {
         toast.error(res.error || 'Failed to resend verification email. Please try again in a moment.')
       }
@@ -148,7 +190,7 @@ export function EmailVerificationGate({ user }: { user: AuthUser }) {
           <div className="p-4 rounded-2xl bg-surface-secondary/70 dark:bg-black/40 border border-border mb-6">
             <div className="flex items-center justify-between text-xs text-text-muted mb-2">
               <span className="font-medium">Verification link sent to:</span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center gap-1 text-2xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
                 <Clock className="h-3 w-3" />
                 <span>Pending Confirmation</span>
               </span>
@@ -192,15 +234,15 @@ export function EmailVerificationGate({ user }: { user: AuthUser }) {
             </div>
             <ol className="text-xs text-text-muted space-y-2">
               <li className="flex items-start gap-2">
-                <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-2xs">1</span>
                 <span>Open your inbox and look for the verification email from <strong className="text-text">{brandName}</strong>.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-2xs">2</span>
                 <span>Click the green <strong className="text-emerald-600 dark:text-emerald-400">"Verify My Email →"</strong> button inside the message.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-2xs">3</span>
                 <span>Your dashboard will automatically unlock with full WebTrader and challenge access.</span>
               </li>
             </ol>
@@ -254,22 +296,27 @@ export function EmailVerificationGate({ user }: { user: AuthUser }) {
                 )}
               </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                asChild
-                className="h-11 bg-surface hover:bg-surface-muted border-border text-xs font-semibold text-text flex items-center justify-center gap-2 rounded-xl transition-all"
-              >
-                <a 
-                  href="https://mail.google.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5"
-                >
-                  <span>Open Gmail</span>
-                  <ExternalLink className="h-3.5 w-3.5 text-text-muted" />
-                </a>
-              </Button>
+              {(() => {
+                const webmail = getWebmailProvider(user.email)
+                return (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    asChild
+                    className="h-11 bg-surface hover:bg-surface-muted border-border text-xs font-semibold text-text flex items-center justify-center gap-2 rounded-xl transition-all"
+                  >
+                    <a 
+                      href={webmail.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5"
+                    >
+                      <span className="truncate">{webmail.name}</span>
+                      <ExternalLink className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                    </a>
+                  </Button>
+                )
+              })()}
             </div>
           </div>
 
@@ -285,7 +332,7 @@ export function EmailVerificationGate({ user }: { user: AuthUser }) {
             </button>
 
             <a
-              href="mailto:support@massfunded.org?subject=Email%20Verification%20Assistance"
+              href={`mailto:${supportEmail}?subject=Email%20Verification%20Assistance`}
               className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"
             >
               Need help? Contact Desk

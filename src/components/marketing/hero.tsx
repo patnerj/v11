@@ -14,9 +14,12 @@ import {
   TrendingUp, 
   Lock, 
   Activity,
-  Layers
 } from 'lucide-react'
-import { LivePriceTicker } from './live-price-ticker'
+import dynamic from 'next/dynamic'
+const LivePriceTicker = dynamic(
+  () => import('./live-price-ticker').then((m) => m.LivePriceTicker),
+  { ssr: false, loading: () => <div className="h-24 w-full skel rounded-xl" /> }
+)
 import { useBranding } from '@/store/branding'
 
 export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: string, subtitle?: string, badge?: string } }) {
@@ -63,7 +66,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="text-[11px] sm:text-xs font-semibold tracking-wide text-emerald-400 truncate sm:whitespace-normal">
+                <span className="text-2xs sm:text-xs font-semibold tracking-wide text-emerald-400 truncate sm:whitespace-normal">
                   {badgeText}
                 </span>
               </div>
@@ -104,8 +107,8 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <div className="text-[11px] sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">0.0 Pips Raw Spreads</div>
-                  <div className="text-[9px] sm:text-[10px] text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Pepperstone Tier-1 Feeds</div>
+                  <div className="text-2xs sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">0.0 Pips Raw Spreads</div>
+                  <div className="text-3xs sm:text-2xs text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Pepperstone Tier-1 Feeds</div>
                 </div>
               </div>
 
@@ -114,8 +117,8 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <div className="text-[11px] sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">Bi-Weekly Payouts</div>
-                  <div className="text-[9px] sm:text-[10px] text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Direct USDT TRC-20 & Bank</div>
+                  <div className="text-2xs sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">Bi-Weekly Payouts</div>
+                  <div className="text-3xs sm:text-2xs text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Direct USDT TRC-20 & Bank</div>
                 </div>
               </div>
 
@@ -124,8 +127,8 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <div className="text-[11px] sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">Automated Risk Engine</div>
-                  <div className="text-[9px] sm:text-[10px] text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Fair Trailing & Daily DD</div>
+                  <div className="text-2xs sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">Automated Risk Engine</div>
+                  <div className="text-3xs sm:text-2xs text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Fair Trailing & Daily DD</div>
                 </div>
               </div>
 
@@ -134,8 +137,8 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <div className="text-[11px] sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">14ms Execution SLA</div>
-                  <div className="text-[9px] sm:text-[10px] text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">WebTrader & MT5 Parity</div>
+                  <div className="text-2xs sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">14ms Execution SLA</div>
+                  <div className="text-3xs sm:text-2xs text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">WebTrader & MT5 Parity</div>
                 </div>
               </div>
             </motion.div>
@@ -152,7 +155,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                 size="xl" 
                 className="h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold shadow-glow hover:shadow-glow-success transition-all duration-300 group btn-shine rounded-xl"
               >
-                <Link href="/challenges" className="flex items-center justify-center gap-2">
+                <Link href="/challenges" prefetch={false} className="flex items-center justify-center gap-2">
                   <span>Start Challenge</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -163,7 +166,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                 variant="outline" 
                 className="h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base bg-surface/50 hover:bg-surface-muted border-border hover:border-emerald-500/50 backdrop-blur-sm transition-all rounded-xl"
               >
-                <Link href="/#challenges">View Challenge Models</Link>
+                <Link href="/#challenges" prefetch={false}>View Challenge Models</Link>
               </Button>
             </motion.div>
 
@@ -172,7 +175,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.28 }}
-              className="pt-1 sm:pt-2 flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-text-muted flex-wrap"
+              className="pt-1 sm:pt-2 flex items-center gap-3 sm:gap-4 text-2xs sm:text-xs text-text-muted flex-wrap"
             >
               <div className="flex items-center text-amber-400">
                 {"★★★★★"}
@@ -198,41 +201,42 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
               <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-b from-emerald-500/20 to-teal-500/5 blur-xl pointer-events-none" />
 
               {/* Main Terminal Frame */}
-              <div className="relative rounded-2xl border border-border bg-surface/95 dark:bg-background/95 backdrop-blur-2xl p-3.5 sm:p-5 shadow-2xl overflow-hidden transition-colors duration-200 min-w-0">
+              <div className="relative rounded-2xl border border-border bg-surface/95 dark:bg-background/95 backdrop-blur-2xl p-3 sm:p-5 shadow-2xl overflow-hidden transition-colors duration-200 min-w-0">
                 
                 {/* Window Traffic Lights & Status */}
-                <div className="flex items-center justify-between pb-4 border-b border-border-subtle/80">
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-red-500/80" />
-                    <span className="h-3 w-3 rounded-full bg-amber-500/80" />
-                    <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                    <span className="text-[11px] font-mono text-text-muted font-medium ml-2">
+                <div className="flex items-center justify-between pb-3 sm:pb-4 gap-2 border-b border-border-subtle/80">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-red-500/80 shrink-0" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-500/80 shrink-0" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-500/80 shrink-0" />
+                    <span className="text-2xs sm:text-2xs font-mono text-text-muted font-medium ml-1 sm:ml-2 truncate">
                       {brandName} Pro Terminal v11.5
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-semibold">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-1.5 py-0.5 sm:px-2 rounded-full border border-emerald-500/20 font-semibold shrink-0">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                    Pepperstone Live (14ms)
+                    <span>Pepperstone Live</span>
+                    <span className="hidden xs:inline">(14ms)</span>
                   </div>
                 </div>
 
                 {/* Trader Account Overview */}
-                <div className="mt-4 p-4 rounded-xl bg-surface-secondary/70 dark:bg-surface/40 border border-border-subtle">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="text-text-muted font-medium">Funded Trader #61583264</span>
-                    <Badge tone="accent" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] py-0 px-2 font-semibold">
+                <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-surface-secondary/70 dark:bg-surface/40 border border-border-subtle">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs mb-2">
+                    <span className="text-text-muted font-medium text-2xs sm:text-xs">Funded Trader #61583264</span>
+                    <Badge tone="accent" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-3xs sm:text-2xs py-0 px-2 font-semibold shrink-0">
                       🛡️ FUNDED ELITE
                     </Badge>
                   </div>
-                  <div className="flex items-baseline justify-between">
+                  <div className="flex items-baseline justify-between gap-2">
                     <div>
-                      <div className="text-[11px] text-text-muted">Account Equity</div>
-                      <div className="text-2xl font-bold font-mono text-text">$109,640.50</div>
+                      <div className="text-2xs sm:text-2xs text-text-muted">Account Equity</div>
+                      <div className="text-xl sm:text-2xl font-bold font-mono text-text">$109,640.50</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[11px] text-text-muted">Floating Profit</div>
-                      <div className="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
-                        <TrendingUp className="h-4 w-4" />
+                      <div className="text-2xs sm:text-2xs text-text-muted">Floating Profit</div>
+                      <div className="text-base sm:text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
+                        <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         +$9,640.50
                       </div>
                     </div>
@@ -240,59 +244,59 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                 </div>
 
                 {/* Live Market Feeds Mini-Table */}
-                <div className="mt-4 space-y-2">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-1 flex justify-between">
+                <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
+                  <div className="text-2xs font-bold uppercase tracking-wider text-text-muted px-1 flex justify-between">
                     <span>Institutional Raw Feeds</span>
                     <span>Spread</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary dark:bg-surface/30 dark:hover:bg-surface/50 border border-border-subtle/70 text-xs font-mono transition-colors">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary dark:bg-surface/30 dark:hover:bg-surface/50 border border-border-subtle/70 text-2xs sm:text-xs font-mono transition-colors">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <span className="font-bold text-text">EURUSD</span>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+0.42%</span>
+                      <span className="text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+0.42%</span>
                     </div>
-                    <div className="text-right flex items-center gap-3">
+                    <div className="text-right flex items-center gap-2 sm:gap-3">
                       <span className="text-text font-semibold">1.08452</span>
-                      <span className="text-[10px] text-text-muted">0.1 pip</span>
+                      <span className="text-3xs sm:text-2xs text-text-muted">0.1 pip</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary dark:bg-surface/30 dark:hover:bg-surface/50 border border-border-subtle/70 text-xs font-mono transition-colors">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary dark:bg-surface/30 dark:hover:bg-surface/50 border border-border-subtle/70 text-2xs sm:text-xs font-mono transition-colors">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <span className="font-bold text-text">BTCUSD</span>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+2.85%</span>
+                      <span className="text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+2.85%</span>
                     </div>
-                    <div className="text-right flex items-center gap-3">
+                    <div className="text-right flex items-center gap-2 sm:gap-3">
                       <span className="text-text font-semibold">$84,920.00</span>
-                      <span className="text-[10px] text-text-muted">Raw</span>
+                      <span className="text-3xs sm:text-2xs text-text-muted">Raw</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary dark:bg-surface/30 dark:hover:bg-surface/50 border border-border-subtle/70 text-xs font-mono transition-colors">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary dark:bg-surface/30 dark:hover:bg-surface/50 border border-border-subtle/70 text-2xs sm:text-xs font-mono transition-colors">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <span className="font-bold text-text">XAUUSD</span>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+1.18%</span>
+                      <span className="text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+1.18%</span>
                     </div>
-                    <div className="text-right flex items-center gap-3">
+                    <div className="text-right flex items-center gap-2 sm:gap-3">
                       <span className="text-text font-semibold">$2,654.80</span>
-                      <span className="text-[10px] text-text-muted">0.8 pip</span>
+                      <span className="text-3xs sm:text-2xs text-text-muted">0.8 pip</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Risk & Milestone Progress Gauges */}
-                <div className="mt-4 pt-4 border-t border-border/60 grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-2.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20">
-                    <div className="text-[10px] text-text-muted">Daily DD Buffer</div>
-                    <div className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">0.8% / 5.0% (Safe)</div>
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border/60 grid grid-cols-2 gap-2 sm:gap-3 text-xs">
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 min-w-0">
+                    <div className="text-3xs sm:text-2xs text-text-muted truncate">Daily DD Buffer</div>
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400 text-2xs sm:text-xs mt-0.5 truncate">0.8% / 5.0% (Safe)</div>
                     <div className="w-full bg-border-subtle h-1.5 rounded-full mt-1.5 overflow-hidden">
                       <div className="bg-emerald-500 dark:bg-emerald-400 h-full w-[16%]" />
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20">
-                    <div className="text-[10px] text-text-muted">Next Bi-Weekly Payout</div>
-                    <div className="font-bold text-text mt-0.5">80% Share · $7,712.40</div>
+                  <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 min-w-0">
+                    <div className="text-3xs sm:text-2xs text-text-muted truncate">Next Bi-Weekly Payout</div>
+                    <div className="font-bold text-text text-2xs sm:text-xs mt-0.5 truncate">80% · $7,712.40</div>
                     <div className="w-full bg-border-subtle h-1.5 rounded-full mt-1.5 overflow-hidden">
                       <div className="bg-emerald-500 dark:bg-emerald-400 h-full w-[100%]" />
                     </div>
@@ -300,12 +304,12 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                 </div>
 
                 {/* Floating Verified Payout Ribbon */}
-                <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg bg-surface-secondary/70 dark:bg-gradient-to-r dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-500/30 text-[11px]">
-                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>Instant USDT Payout Disbursal SLA</span>
+                <div className="mt-2.5 sm:mt-3 flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-surface-secondary/70 dark:bg-gradient-to-r dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-500/30 text-2xs sm:text-2xs gap-2">
+                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold truncate">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">Instant USDT Payout Disbursal SLA</span>
                   </div>
-                  <span className="font-mono text-text-muted">⚡ &lt; 24h</span>
+                  <span className="font-mono text-text-muted shrink-0">⚡ &lt; 24h</span>
                 </div>
               </div>
             </motion.div>

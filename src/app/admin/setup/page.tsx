@@ -99,7 +99,7 @@ export default function AdminSetupWizardPage() {
                   </div>
                   <div
                     className={cn(
-                      'text-[11px] font-mono whitespace-nowrap transition-colors hidden md:block',
+                      'text-2xs font-mono whitespace-nowrap transition-colors hidden md:block',
                       active ? 'text-white font-bold' : done ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'
                     )}
                   >

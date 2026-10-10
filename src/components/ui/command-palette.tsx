@@ -65,7 +65,7 @@ export function CommandPalette() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-slate-700 bg-slate-800 px-2 font-mono text-[10px] font-medium text-slate-300 opacity-100">
+            <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-slate-700 bg-slate-800 px-2 font-mono text-2xs font-medium text-slate-300 opacity-100">
               <span className="text-xs">ESC</span>
             </kbd>
           </div>

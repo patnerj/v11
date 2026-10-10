@@ -100,7 +100,7 @@ export function CalendarHeatmap({ trades }: CalendarHeatmapProps) {
         </div>
         
         <div className="flex gap-1">
-          <div className="flex flex-col gap-1 text-[10px] text-text-muted pr-2 justify-between py-1 h-[100px]">
+          <div className="flex flex-col gap-1 text-2xs text-text-muted pr-2 justify-between py-1 h-[100px]">
             <span>Mon</span>
             <span>Wed</span>
             <span>Fri</span>

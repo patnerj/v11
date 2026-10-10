@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { clearFxsimCache, invalidateFxsim } from '@/lib/fxsim'
 import { fmtUSD, toNum } from '@/lib/format'
+import { trackInitiateCheckout } from '@/lib/meta-pixel'
 import { useAuth } from '@/store/auth'
 import type { ChallengePlan, PaymentConfig } from '@/types/api'
 import { cn } from '@/lib/cn'
@@ -102,6 +103,14 @@ function CheckoutInner() {
             ],
             currency: 'USD',
           } as unknown as ChallengePlan)
+          try {
+            trackInitiateCheckout({
+              content_name: t.title || `Tournament #${t.id}`,
+              value: toNum(t.entry_fee),
+              currency: 'USD',
+              content_ids: [t.id],
+            })
+          } catch {}
           const ord = params.get('order')
           if (ord) {
             setOrderId(Number(ord))
@@ -126,6 +135,14 @@ function CheckoutInner() {
         const p = res.data.find((pl) => Number(pl.id) === planId)
         if (p) {
           setPlan(p)
+          try {
+            trackInitiateCheckout({
+              content_name: p.name,
+              value: toNum(p.price),
+              currency: 'USD',
+              content_ids: [p.id],
+            })
+          } catch {}
         } else {
           setPlanErr("Selected plan could not be found.")
         }
@@ -358,7 +375,7 @@ function CheckoutInner() {
     return (
       <div className="min-h-screen flex flex-col bg-bg text-text">
         <MarketingHeader />
-        <main className="flex-1 flex items-center justify-center p-4">
+        <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-12">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
             <p className="text-text-muted">Loading checkout...</p>
@@ -374,7 +391,7 @@ function CheckoutInner() {
     return (
       <div className="min-h-screen flex flex-col bg-bg text-text">
         <MarketingHeader />
-        <main className="flex-1 flex items-center justify-center p-4">
+        <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-12">
           <div className="text-center space-y-4 max-w-md w-full">
             <div className="h-16 w-16 bg-danger/10 text-danger rounded-full flex items-center justify-center mx-auto">
               <ShieldAlert className="h-8 w-8" />
@@ -396,8 +413,8 @@ function CheckoutInner() {
     return (
       <div className="min-h-screen flex flex-col bg-bg text-text">
         <MarketingHeader />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-surface border border-border rounded-xl p-8 text-center space-y-6 shadow-sm">
+        <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-12 sm:pt-28">
+          <div className="max-w-md w-full bg-surface border border-border rounded-xl p-6 sm:p-8 text-center space-y-6 shadow-sm">
             <div className="space-y-2">
               <h1 className="text-2xl font-bold">Sign in to continue</h1>
               <p className="text-text-muted">You need an account to purchase a challenge. It only takes 30 seconds.</p>
@@ -455,7 +472,7 @@ function CheckoutInner() {
           
           <AnimatePresence mode="wait">
             {step === 'review'  && <ReviewStep    key="review"  plan={plan} onNext={() => isFree ? startFree() : setStep('gateway')} loading={loading} isFree={isFree} error={error} coupon={coupon} setCoupon={setCoupon} applyCoupon={applyCoupon} clearCoupon={clearCoupon} couponInfo={couponInfo} couponErr={couponErr} couponBusy={couponBusy} />}
-            {step === 'gateway' && <GatewayStep   key="gateway" plan={plan} gateways={gateways} configLoaded={!!config} onRetryConfig={loadPaymentConfig} chooseGateway={chooseGateway} onBack={() => setStep('review')} loading={loading} error={error} amountDue={finalPrice} couponApplied={!!couponInfo} />}
+            {step === 'gateway' && <GatewayStep   key="gateway" plan={plan} gateways={gateways} configLoaded={!!config} onRetryConfig={loadPaymentConfig} chooseGateway={chooseGateway} onBack={() => setStep('review')} loading={loading} error={error} amountDue={finalPrice} couponApplied={!!couponInfo} selectedGateway={gateway} />}
             {step === 'manual'  && <ManualStep    key="manual"  plan={plan} gateway={gateway} config={config} orderId={orderId} proofFile={proofFile} setProof={setProof} txnRef={txnRef} setTxnRef={setTxnRef} onBack={() => setStep('gateway')} onSubmit={submitProof} loading={loading} error={error} amountDue={finalPrice} />}
             {step === 'success' && <SuccessStep   key="success" tournamentId={tournamentId} />}
           </AnimatePresence>
@@ -510,17 +527,35 @@ function ReviewStep({
         <div className="space-y-3">
           {!couponInfo ? (
             <div>
-              <Label className="sr-only">Coupon Code</Label>
+              <Label htmlFor="coupon_code" className="sr-only">Coupon Code</Label>
               <div className="flex gap-2">
                 <input
+                  id="coupon_code"
+                  name="coupon_code"
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                   onKeyDown={(e) => { if (e.key === 'Enter') applyCoupon() }}
                   placeholder="Have a coupon code?"
+                  aria-label="Coupon Code"
                   className="flex-1 h-11 rounded-lg bg-bg border border-border px-4 text-sm uppercase tracking-wide focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                 />
-                <Button variant="secondary" onClick={applyCoupon} disabled={couponBusy || !coupon.trim()} className="h-11 px-6">
-                  {couponBusy ? 'Checking…' : 'Apply'}
+                <Button 
+                  variant="secondary" 
+                  onClick={applyCoupon} 
+                  loading={couponBusy}
+                  isSubmitting={couponBusy}
+                  isPending={couponBusy}
+                  disabled={couponBusy || !coupon.trim()} 
+                  className="h-11 px-6"
+                >
+                  {couponBusy ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin shrink-0 mr-1.5" data-spinner="true" />
+                      <span>Checking…</span>
+                    </>
+                  ) : (
+                    'Apply'
+                  )}
                 </Button>
               </div>
               {couponErr && <p className="text-xs text-danger mt-2 font-medium">{couponErr}</p>}
@@ -554,9 +589,25 @@ function ReviewStep({
         </div>
       )}
 
-      <Button onClick={onNext} className="w-full h-12 text-base font-medium shadow-accent/20 hover:shadow-accent/40 shadow-lg transition-all" loading={loading}>
-        {isFree ? 'Start challenge' : 'Continue to payment'}
-        <ArrowRight className="h-5 w-5 ml-2" />
+      <Button 
+        onClick={onNext} 
+        className="w-full h-12 text-base font-medium shadow-accent/20 hover:shadow-accent/40 shadow-lg transition-all" 
+        loading={loading}
+        isSubmitting={loading}
+        isPending={loading}
+        disabled={loading}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" data-spinner="true" />
+            <span>Processing...</span>
+          </>
+        ) : (
+          <>
+            <span>{isFree ? 'Start challenge' : 'Continue to payment'}</span>
+            <ArrowRight className="h-5 w-5 ml-2" />
+          </>
+        )}
       </Button>
 
       <p className="mt-2 text-xs text-text-muted text-center flex items-center justify-center gap-1.5">
@@ -578,7 +629,7 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
 
 // ── Step 2: Pick gateway ───────────────────────────────────────────────────
 function GatewayStep({
-  plan, gateways, configLoaded, onRetryConfig, chooseGateway, onBack, loading, error, amountDue, couponApplied,
+  plan, gateways, configLoaded, onRetryConfig, chooseGateway, onBack, loading, error, amountDue, couponApplied, selectedGateway,
 }: {
   plan:     ChallengePlan
   gateways: { id: Gateway; label: string; sub: string; icon: React.ComponentType<{ className?: string }>; tone: string }[]
@@ -590,6 +641,7 @@ function GatewayStep({
   error:    string | null
   amountDue: number
   couponApplied: boolean
+  selectedGateway: Gateway
 }) {
   return (
     <motion.div
@@ -639,6 +691,7 @@ function GatewayStep({
             )
             : gateways.map((g) => {
                 const Icon = g.icon
+                const isCurrentActive = loading && selectedGateway === g.id
                 return (
                   <button
                     key={String(g.id)}
@@ -652,13 +705,23 @@ function GatewayStep({
                     )}
                   >
                     <div className={cn('h-12 w-12 rounded-lg flex items-center justify-center bg-surface border border-border shadow-sm', g.tone)}>
-                      <Icon className="h-6 w-6" />
+                      {isCurrentActive ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                      ) : (
+                        <Icon className="h-6 w-6" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold">{g.label}</div>
-                      <div className="text-sm text-text-muted mt-0.5">{g.sub}</div>
+                      <div className="text-sm text-text-muted mt-0.5">
+                        {isCurrentActive ? 'Connecting to payment provider…' : g.sub}
+                      </div>
                     </div>
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin text-text-muted" /> : <ArrowRight className="h-5 w-5 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />}
+                    {isCurrentActive ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-accent shrink-0" />
+                    ) : (
+                      <ArrowRight className="h-5 w-5 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all shrink-0" />
+                    )}
                   </button>
                 )
               })}
@@ -781,11 +844,22 @@ function ManualStep({
         <Button
           onClick={onSubmit}
           loading={loading}
-          disabled={!proofFile || !txnRef}
+          isSubmitting={loading}
+          isPending={loading}
+          disabled={!proofFile || !txnRef || loading}
           className="flex-[2] h-12 shadow-accent/20 hover:shadow-accent/40 shadow-lg"
         >
-          Submit for review
-          <ArrowRight className="h-4 w-4 ml-2" />
+          {loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin mr-2 shrink-0" data-spinner="true" />
+              <span>Submitting for review...</span>
+            </>
+          ) : (
+            <>
+              <span>Submit for review</span>
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </motion.div>

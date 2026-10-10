@@ -72,7 +72,7 @@ export function FounderActionCenter({
         </div>
         <div className="flex items-center gap-2">
           <Badge tone="accent" size="sm">
-            {totalUrgentItems} Action Category{totalUrgentItems > 1 ? 'ies' : 'y'} Pending
+            {totalUrgentItems} Action {totalUrgentItems > 1 ? 'Categories' : 'Category'} Pending
           </Badge>
         </div>
       </div>
@@ -85,8 +85,8 @@ export function FounderActionCenter({
         >
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Treasury Action</span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="text-2xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Treasury Action</span>
+              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Wallet className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -97,7 +97,7 @@ export function FounderActionCenter({
               {pendingPayoutsCount > 0 ? `${pendingPayoutsCount} payout withdrawal${pendingPayoutsCount > 1 ? 's' : ''} awaiting sign-off` : 'No pending payout requests'}
             </p>
           </div>
-          <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-emerald-400 group-hover:text-emerald-300">
+          <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500">
             <span>Review & Approve Payouts</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -110,8 +110,8 @@ export function FounderActionCenter({
         >
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Risk Audit</span>
-              <div className="h-7 w-7 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="text-2xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Risk Audit</span>
+              <div className="h-7 w-7 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <ShieldAlert className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -122,7 +122,7 @@ export function FounderActionCenter({
               {riskBreachesCount > 0 ? 'HFT scalping, lot stacking, or drawdown warnings' : 'Zero active risk breaches detected'}
             </p>
           </div>
-          <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-amber-400 group-hover:text-amber-300">
+          <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400 group-hover:text-amber-500">
             <span>Inspect Risk Alerts</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -135,8 +135,8 @@ export function FounderActionCenter({
         >
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Trader Support</span>
-              <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Trader Support</span>
+              <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <MessageSquare className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -147,7 +147,7 @@ export function FounderActionCenter({
               {urgentTicketsCount > 0 ? 'Inquiries awaiting admin reply in helpdesk' : 'All trader support inquiries answered'}
             </p>
           </div>
-          <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-blue-400 group-hover:text-blue-300">
+          <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-500">
             <span>Open Support Desk</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>

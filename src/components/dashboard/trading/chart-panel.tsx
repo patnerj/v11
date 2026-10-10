@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { motion, useDragControls } from 'framer-motion'
-import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair } from 'lucide-react'
+import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair, Info } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
@@ -437,17 +437,17 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
             className={compact && onOpenWatchlist ? 'min-w-0 text-left hover:opacity-80 transition-opacity' : 'min-w-0 text-left cursor-default'}
           >
             <div className="flex items-baseline gap-1.5">
-              <span className="text-sm font-semibold tabular truncate">{active}</span>
+              <span className="text-terminal-title font-semibold terminal-num truncate">{active}</span>
               {meta && (
-                <span className="text-2xs text-text-muted truncate hidden sm:inline">
+                <span className="text-terminal-body text-text-muted truncate hidden sm:inline">
                   · {meta.display_name}
                 </span>
               )}
               {compact && onOpenWatchlist && (
-                <span className="text-2xs text-accent truncate sm:hidden">· tap to change</span>
+                <span className="text-terminal-body text-accent truncate sm:hidden">· tap to change</span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-2xs tabular">
+            <div className="flex items-center gap-1.5 text-terminal-body terminal-num">
               <span className="text-text-faint uppercase tracking-wider mr-0.5">Exec</span>
               <span className="text-success">{bid ? fmtPrice(bid, digits) : '—'}</span>
               <span className="text-text-faint">/</span>
@@ -463,7 +463,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         {compact && (
           <button
             onClick={toggleMobileDraw}
-            className={`shrink-0 ml-auto h-7 px-2 inline-flex items-center gap-1 rounded text-2xs focus-ring ${mobileDraw ? 'text-accent bg-accent/10' : 'text-text-muted hover:text-text hover:bg-surface-muted/50'}`}
+            className={`shrink-0 ml-auto h-7 px-2 inline-flex items-center gap-1 rounded text-terminal-body focus-ring ${mobileDraw ? 'text-accent bg-accent/10' : 'text-text-muted hover:text-text hover:bg-surface-muted/50'}`}
             aria-pressed={mobileDraw}
             aria-label="Toggle drawing tools"
           >
@@ -474,7 +474,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         {/* Toggle TP/SL Levels Overlay */}
         <button
           onClick={toggleLevels}
-          className={`shrink-0 ml-auto sm:ml-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold focus-ring transition-all ${
+          className={`shrink-0 ml-auto sm:ml-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-terminal-label font-semibold focus-ring transition-all ${
             showLevels && (symPositions.length > 0 || symPending.length > 0)
               ? 'text-accent bg-accent/15 border border-accent/30 shadow-sm'
               : 'text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle'
@@ -485,7 +485,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
           <Crosshair className={`h-3.5 w-3.5 ${showLevels && (symPositions.length > 0 || symPending.length > 0) ? 'text-accent' : ''}`} />
           <span>TP/SL</span>
           {symPositions.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-accent/20 text-accent tabular">
+            <span className="px-1.5 py-0.2 rounded-full text-terminal-micro font-semibold bg-accent/20 text-accent terminal-num">
               {symPositions.length}
             </span>
           )}
@@ -509,16 +509,14 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         )}
 
         {/* Fullscreen */}
-        {!compact && (
-          <button
-            onClick={toggleFs}
-            className="shrink-0 h-7 w-7 inline-flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle focus-ring transition-colors"
-            aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-            title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          >
-            {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-          </button>
-        )}
+        <button
+          onClick={toggleFs}
+          className="shrink-0 h-7 w-7 inline-flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle focus-ring transition-colors"
+          aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+        >
+          {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+        </button>
       </div>
 
       {/* Institutional MT5 Position & Risk Bar (Docked directly under header) */}
@@ -555,8 +553,8 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         {error && (
           <div className="absolute inset-0 flex items-center justify-center text-center px-6">
             <div>
-              <div className="text-sm text-text-muted">Chart temporarily unavailable</div>
-              <div className="text-2xs text-text-faint mt-1">{error}</div>
+              <div className="text-terminal-body text-text-muted">Chart temporarily unavailable</div>
+              <div className="text-terminal-micro text-text-faint mt-1">{error}</div>
             </div>
           </div>
         )}
@@ -587,11 +585,11 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                   type="button"
                   onClick={() => handleOneClick('sell')}
                   disabled={busy !== null || !bid}
-                  className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-xs font-semibold tabular flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+                  className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
                 >
                   {busy === 'sell' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (bid ? fmtPrice(bid, digits) : 'SELL')}
                 </button>
-                <div className="text-[9px] font-bold text-danger tracking-wider uppercase">Sell</div>
+                <div className="text-terminal-micro font-semibold text-danger tracking-wider uppercase">Sell</div>
               </div>
               
               <div className="flex flex-col justify-center px-1">
@@ -599,9 +597,9 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                   type="text"
                   value={oneClickLot}
                   onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
-                  className="w-12 h-7 text-center bg-surface border border-border rounded-md text-xs tabular font-bold text-text focus-ring focus:border-accent"
+                  className="w-12 h-7 text-center bg-surface border border-border rounded-md text-terminal-body terminal-num font-semibold text-text focus-ring focus:border-accent"
                 />
-                <span className="text-[8px] text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
+                <span className="text-terminal-micro text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
               </div>
 
               {isSlRequired && (
@@ -610,11 +608,11 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                     type="text"
                     value={oneClickSlPips}
                     onChange={(e) => setOneClickSlPips(e.target.value.replace(/[^\d.]/g, ''))}
-                    className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-xs tabular font-bold text-rose-600 dark:text-rose-300 focus-ring focus:border-rose-400"
+                    className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-terminal-body terminal-num font-semibold text-rose-600 dark:text-rose-300 focus-ring focus:border-rose-400"
                     placeholder="30"
                     title="Stop loss distance in pips (Required by plan)"
                   />
-                  <span className="text-[8px] text-rose-500 dark:text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-bold">SL (Pips)</span>
+                  <span className="text-terminal-micro text-rose-500 dark:text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-semibold">SL (Pips)</span>
                 </div>
               )}
 
@@ -623,11 +621,11 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                   type="button"
                   onClick={() => handleOneClick('buy')}
                   disabled={busy !== null || !ask}
-                  className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-xs font-semibold tabular flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+                  className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
                 >
                   {busy === 'buy' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (ask ? fmtPrice(ask, digits) : 'BUY')}
                 </button>
-                <div className="text-[9px] font-bold text-success tracking-wider uppercase">Buy</div>
+                <div className="text-terminal-micro font-semibold text-success tracking-wider uppercase">Buy</div>
               </div>
             </motion.div>
           </div>
@@ -635,12 +633,26 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
       </div>
 
       {/* Chart data disclosure + session-retention note */}
-      <div className="shrink-0 px-3 py-1 border-t border-border-subtle bg-bg-subtle/30 text-[10px] leading-tight text-text-faint flex flex-wrap gap-x-3 gap-y-0.5">
-        <span>Chart data is provided by TradingView reference feeds. Trade execution and challenge evaluation use platform pricing.</span>
-        {!compact && (
+      {compact ? (
+        <div className="absolute bottom-1 left-1.5 z-10 pointer-events-auto">
+          <button
+            type="button"
+            className="p-1 rounded bg-surface/85 hover:bg-surface border border-border/40 text-text-faint hover:text-text-muted shadow-xs transition-colors backdrop-blur-xs flex items-center justify-center cursor-pointer"
+            title="Chart data is provided by TradingView reference feeds. Trade execution and challenge evaluation use platform pricing."
+            aria-label="Feed disclaimer"
+            onClick={() => {
+              toast.info('Chart data is provided by TradingView reference feeds. Trade execution and challenge evaluation use platform pricing.')
+            }}
+          >
+            <Info className="h-3 w-3" />
+          </button>
+        </div>
+      ) : (
+        <div className="shrink-0 px-3 py-1 border-t border-border-subtle bg-bg-subtle/30 text-terminal-micro leading-tight text-text-faint flex flex-wrap gap-x-3 gap-y-0.5">
+          <span>Chart data is provided by TradingView reference feeds. Trade execution and challenge evaluation use platform pricing.</span>
           <span>Recent chart drawings remain available while working between your recent charts during the current session.</span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 })

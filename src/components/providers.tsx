@@ -13,6 +13,7 @@ import { usePrices } from '@/store/prices'
 import { OfflineBanner } from '@/components/ui/offline-banner'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { TopProgressBar } from '@/components/ui/top-progress-bar'
+import { MetaPixelTracker } from '@/components/meta-pixel-tracker'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const bootstrap = useAuth((s) => s.bootstrap)
@@ -49,6 +50,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ThemeLoader />
           <OfflineBanner />
           <TopProgressBar />
+          <MetaPixelTracker />
           {children}
           <MobileBottomNav />
           <Toaster

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { useThemeContext } from '@/context/ThemeContext'
 import { useTheme } from 'next-themes'
+import { cn } from '@/lib/cn'
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme: ctxTheme, setTheme: setCtxTheme } = useThemeContext()
@@ -62,14 +63,17 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`h-9 w-9 rounded-xl border border-gray-200 dark:border-surface-muted bg-white dark:bg-surface hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all shadow-sm group ${className || ''}`}
+      className={cn(
+        "h-9 w-9 rounded-xl border border-border bg-surface hover:bg-surface-muted text-text-muted hover:text-text flex items-center justify-center transition-all shadow-sm group focus-ring select-none",
+        className
+      )}
       title={isDark ? "Switch to Day Mode (Light)" : "Switch to Night Mode (Dark)"}
       aria-label="Toggle Day/Night Mode"
     >
       {isDark ? (
         <Sun className="h-4 w-4 text-amber-400 group-hover:rotate-45 transition-transform" />
       ) : (
-        <Moon className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:-rotate-12 transition-transform" />
+        <Moon className="h-4 w-4 text-accent group-hover:-rotate-12 transition-transform" />
       )}
       <span className="sr-only">{isDark ? 'Day Mode' : 'Night Mode'}</span>
     </button>

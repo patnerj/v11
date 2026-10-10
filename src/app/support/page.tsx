@@ -269,7 +269,7 @@ export default function SupportPage() {
                       <div className="p-2.5 rounded-xl bg-surface-secondary border border-border-subtle text-emerald-500 dark:text-emerald-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-300 group-hover:scale-110 transition-all">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wider bg-surface-secondary px-2 py-0.5 rounded border border-border-subtle">
+                      <span className="text-2xs font-mono font-bold text-text-muted uppercase tracking-wider bg-surface-secondary px-2 py-0.5 rounded border border-border-subtle">
                         {t.badge}
                       </span>
                     </div>

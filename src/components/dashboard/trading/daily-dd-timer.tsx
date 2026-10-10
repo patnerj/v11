@@ -58,18 +58,18 @@ export const DailyDdTimer = memo(function DailyDdTimer({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-body font-normal',
         'bg-surface-muted/90 border border-border/80 text-text-muted shadow-xs select-none',
         className
       )}
       title="Server Daily Drawdown reset occurs daily at 00:00 UTC."
     >
-      <span className="text-xs shrink-0 select-none">⏳</span>
-      <span className="text-2xs text-text-muted hidden sm:inline">
+      <span className="text-terminal-body shrink-0 select-none">⏳</span>
+      <span className="text-terminal-micro text-text-muted hidden sm:inline">
         {compact ? 'Resets in:' : 'Daily DD Resets in:'}
       </span>
-      <span className="font-bold tabular text-text tracking-wider">{remaining}</span>
-      <span className="text-2xs text-text-muted/70 font-sans hidden sm:inline">UTC</span>
+      <span className="font-semibold tabular terminal-num text-text tracking-wider">{remaining}</span>
+      <span className="text-terminal-micro text-text-muted/70 font-sans hidden sm:inline">UTC</span>
     </div>
   )
 })
@@ -119,15 +119,15 @@ export const DrawdownAlertBadge = memo(function DrawdownAlertBadge({
     <div
       role="alert"
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold shadow-xs select-none',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-body font-semibold shadow-xs select-none',
         'bg-rose-500/15 border border-rose-500/50 text-rose-300 animate-pulse',
         'shadow-[0_0_12px_rgba(244,63,94,0.25)]',
         className
       )}
       title={isMaxMoreCritical ? "Danger: You are approaching your maximum account drawdown limit!" : "Caution: You are approaching your daily drawdown maximum limit!"}
     >
-      <span className="text-xs shrink-0 select-none">{isMaxMoreCritical ? '🚨' : '⚠️'}</span>
-      <span className="font-bold tracking-tight">
+      <span className="text-terminal-body shrink-0 select-none">{isMaxMoreCritical ? '🚨' : '⚠️'}</span>
+      <span className="font-semibold tracking-tight">
         {isMaxMoreCritical
           ? `Danger: Max Drawdown at ${maxUsedPct.toFixed(1)}% (Limit: ${maxLimitPct.toFixed(1)}%)`
           : `Caution: Daily Drawdown at ${dailyUsedPct.toFixed(1)}% (Limit: ${dailyLimitPct.toFixed(1)}%)`}

@@ -17,6 +17,7 @@ interface Health {
   symbol_count: number; secret_set: boolean; market_open: boolean
   ingest_secret?: string; ingest_url?: string
   auto_failover?: boolean; auto_freeze?: boolean
+  wp_cron_disabled?: boolean
 }
 
 const STATUS_TONE: Record<string, 'success' | 'warn' | 'danger' | 'neutral'> = {
@@ -104,6 +105,29 @@ export function PriceFeedCard() {
           <Stat label="MT5 last push" value={health?.mt5_age_sec != null ? `${health.mt5_age_sec}s ago` : 'never'} />
           <Stat label="Symbols" value={health ? String(health.symbol_count) : '—'} />
           <Stat label="Market" value={health ? (health.market_open ? 'Open' : 'Closed') : '—'} />
+        </div>
+
+        {/* Background Cron / SLTP Sentry Execution Status (FINAL-3) */}
+        <div className="rounded-lg border border-border-subtle bg-surface-muted/20 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="space-y-0.5">
+            <div className="text-xs font-semibold text-text flex items-center gap-1.5">
+              <span>⏱️</span> Background Cron Execution (DISABLE_WP_CRON)
+            </div>
+            <p className="text-2xs text-text-faint">
+              Deterministic 5s SL/TP sentry loop and tick evaluation status.
+            </p>
+          </div>
+          {health?.wp_cron_disabled ? (
+            <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 w-fit">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              System Cron Active (DISABLE_WP_CRON: true)
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 w-fit">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              WP-Cron Fallback (Visitor-Driven)
+            </span>
+          )}
         </div>
 
         {/* Source mode */}

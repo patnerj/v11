@@ -92,7 +92,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
 
     // 1. Background Gradient (Midnight Obsidian)
     const bgGrad = ctx.createLinearGradient(0, 0, width, height)
-    bgGrad.addColorStop(0, 'var(--background)')
+    bgGrad.addColorStop(0, '#0A0E17')
     bgGrad.addColorStop(0.5, '#0E1424')
     bgGrad.addColorStop(1, '#080C14')
     ctx.fillStyle = bgGrad
@@ -143,7 +143,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.restore()
 
     // 4. Card Outer Border with Neon Accent Line
-    ctx.strokeStyle = 'var(--surface-muted)'
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
     ctx.lineWidth = 3
     ctx.strokeRect(30, 30, width - 60, height - 60)
 
@@ -252,7 +252,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       
       // Box Background
       ctx.fillStyle = 'rgba(255, 255, 255, 0.02)'
-      ctx.strokeStyle = 'var(--surface-muted)'
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
       ctx.lineWidth = 1
       ctx.beginPath()
       ctx.roundRect(colX, statsBoxY, colW - 20, 80, 10)
@@ -272,7 +272,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     const footerY = 540
 
     // Trader Avatar Circle
-    ctx.fillStyle = 'var(--surface-muted)'
+    ctx.fillStyle = '#1E293B'
     ctx.beginPath()
     ctx.arc(105, footerY + 25, 25, 0, Math.PI * 2)
     ctx.fill()
@@ -301,7 +301,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
     
     // QR Pattern mock
-    ctx.fillStyle = 'var(--background)'
+    ctx.fillStyle = '#0A0E17'
     ctx.fillRect(qrX + 6, qrY + 6, 16, 16)
     ctx.fillRect(qrX + 38, qrY + 6, 16, 16)
     ctx.fillRect(qrX + 6, qrY + 38, 16, 16)
@@ -324,13 +324,18 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       const render = () => {
         if (active) drawCanvas()
       }
+      // Immediate render on next paint
+      requestAnimationFrame(render)
+
       if (typeof document !== 'undefined' && document.fonts) {
-        document.fonts.ready.then(render)
+        document.fonts.ready.then(render).catch(() => {})
       }
-      const t = setTimeout(render, 60)
+      const t1 = setTimeout(render, 50)
+      const t2 = setTimeout(render, 200)
       return () => {
         active = false
-        clearTimeout(t)
+        clearTimeout(t1)
+        clearTimeout(t2)
       }
     }
   }, [open, trade, drawCanvas])
@@ -460,8 +465,8 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-text">Social Profit Share Card</h3>
-                <p className="text-2xs text-text-muted">Branded P&L flex banner with verifiable trade telemetry</p>
+                <h3 className="text-terminal-title font-semibold text-text">Social Profit Share Card</h3>
+                <p className="text-terminal-micro text-text-muted">Branded P&L flex banner with verifiable trade telemetry</p>
               </div>
             </div>
             <button
@@ -474,52 +479,59 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
           </div>
 
           {/* Body Preview */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             
             {/* Live Interactive Card Canvas Container */}
-            <div className="rounded-xl border border-border overflow-hidden bg-surface-muted shadow-card relative group">
+            <div className="rounded-xl border border-border overflow-hidden bg-[#0A0E17] shadow-card relative group aspect-[16/9] w-full flex items-center justify-center">
               <canvas
                 ref={canvasRef}
                 className="w-full h-auto block select-none pointer-events-none"
               />
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur px-2.5 py-1 rounded-md text-3xs tabular text-text-muted border border-border-subtle shadow-xs">
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur px-2.5 py-1 rounded-md text-terminal-micro tabular terminal-num text-text-muted border border-border-subtle shadow-xs">
                 1200 x 675 Ultra HD
               </div>
             </div>
 
             {/* Quick stats highlight */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
-                <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
-                  Trading Pair
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-surface-muted/60 border border-border-subtle text-center flex flex-col justify-between items-center min-w-0 h-full">
+                <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-semibold block truncate w-full">
+                  <span className="sm:hidden">Pair</span>
+                  <span className="hidden sm:inline">Trading Pair</span>
                 </span>
-                <div className="flex items-center justify-center gap-1.5 mt-0.5">
-                  <span className="text-base font-extrabold text-text">
-                    {trade.symbol}
-                  </span>
-                  <span className={`px-1.5 py-0.5 rounded text-3xs font-bold uppercase tabular ${
-                    trade.type === 'buy' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                  }`}>
-                    {trade.type} {Number(trade.lotSize).toFixed(2)}L
-                  </span>
-                </div>
+                <span className="text-terminal-label font-semibold text-text tracking-tight truncate w-full terminal-num py-0.5">
+                  {trade.symbol}
+                </span>
+                <span className={`text-terminal-micro font-semibold uppercase tracking-wider tabular terminal-num whitespace-nowrap block truncate w-full ${
+                  trade.type === 'buy' ? 'text-emerald-400' : 'text-rose-400'
+                }`}>
+                  {trade.type} · {Number(trade.lotSize).toFixed(2)}L
+                </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
-                <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
-                  Net Profit
+              <div className="p-2 sm:p-2.5 rounded-xl bg-surface-muted/60 border border-border-subtle text-center flex flex-col justify-between items-center min-w-0 h-full">
+                <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-semibold block truncate w-full">
+                  <span className="sm:hidden">Profit</span>
+                  <span className="hidden sm:inline">Net Profit</span>
                 </span>
-                <span className={`text-base font-extrabold tabular ${isProfit ? 'text-accent' : 'text-danger'} block mt-0.5`}>
+                <span className={`text-terminal-label font-semibold tabular terminal-num truncate w-full py-0.5 ${isProfit ? 'text-accent' : 'text-danger'}`}>
                   {fmtUSD(trade.pnl, { sign: true })}
                 </span>
+                <span className="text-terminal-micro font-normal text-text-muted whitespace-nowrap block truncate w-full">
+                  USD Realized
+                </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-surface-muted/60 border border-border-subtle text-center">
-                <span className="text-3xs uppercase tracking-wider text-text-muted font-semibold block">
-                  ROI Return
+              <div className="p-2 sm:p-2.5 rounded-xl bg-surface-muted/60 border border-border-subtle text-center flex flex-col justify-between items-center min-w-0 h-full">
+                <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-semibold block truncate w-full">
+                  <span className="sm:hidden">ROI</span>
+                  <span className="hidden sm:inline">ROI Return</span>
                 </span>
-                <span className={`text-base font-extrabold tabular ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'} block mt-0.5`}>
+                <span className={`text-terminal-label font-semibold tabular terminal-num truncate w-full py-0.5 ${pnlPercent >= 0 ? 'text-accent' : 'text-danger'}`}>
                   {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
+                </span>
+                <span className="text-terminal-micro font-normal text-text-muted whitespace-nowrap block truncate w-full">
+                  Trade Gain
                 </span>
               </div>
             </div>

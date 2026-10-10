@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn'
 import { Mail, Send, CheckCircle2 } from 'lucide-react'
 
 interface Draft {
-  host: string; port: number; user: string; pass: string
+  host: string; port: number; auth?: boolean; user: string; pass: string
   secure: 'tls' | 'ssl' | ''; from_email: string; from_name: string; reply_to: string
 }
 
@@ -29,20 +29,25 @@ export function EmailSettingsPanel() {
 
   useEffect(() => {
     api.admin.smtpGet().then((res) => {
-      if (!res.ok) { setD({ host: '', port: 587, user: '', pass: '', secure: 'tls', from_email: '', from_name: '', reply_to: '' }); return }
+      if (!res.ok) { setD({ host: '', port: 587, auth: true, user: '', pass: '', secure: 'tls', from_email: '', from_name: '', reply_to: '' }); return }
       const c = res.data
       setPassSet(c.pass_set)
-      setD({ host: c.host, port: c.port || 587, user: c.user, pass: '', secure: (c.secure as Draft['secure']) ?? 'tls', from_email: c.from_email, from_name: c.from_name, reply_to: c.reply_to })
+      setD({ host: c.host, port: c.port || 587, auth: (c as any).auth ?? true, user: c.user, pass: '', secure: (c.secure as Draft['secure']) ?? 'tls', from_email: c.from_email, from_name: c.from_name, reply_to: c.reply_to })
     })
   }, [])
 
-  const set = (k: keyof Draft, v: string | number) => setD((p) => (p ? { ...p, [k]: v } : p))
+  const set = (k: keyof Draft, v: string | number | boolean) => setD((p) => (p ? { ...p, [k]: v } : p))
 
   const save = async () => {
     if (!d) return
+    const portNum = Number(d.port)
+    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+      toast.error('Port must be a valid number between 1 and 65535')
+      return
+    }
     setSaving(true)
     const payload: Record<string, unknown> = {
-      host: d.host, port: d.port, auth: true, user: d.user, secure: d.secure,
+      host: d.host, port: portNum, auth: d.auth ?? true, user: d.user, secure: d.secure,
       from_email: d.from_email, from_name: d.from_name, reply_to: d.reply_to,
     }
     if (d.pass.trim()) payload.pass = d.pass.trim() // write-only: empty = keep existing
@@ -54,7 +59,16 @@ export function EmailSettingsPanel() {
 
   const sendTest = async () => {
     setTesting(true)
-    const res = await api.admin.smtpTest(testTo.trim() || undefined, d || undefined)
+    // NOTIFYUI-1: Do not send empty password override in test payload to prevent clobbering stored credentials
+    let testPayload: Record<string, unknown> | undefined = undefined
+    if (d) {
+      const { pass, ...rest } = d
+      testPayload = { ...rest, auth: d.auth ?? true }
+      if (pass && pass.trim()) {
+        testPayload.pass = pass.trim()
+      }
+    }
+    const res = await api.admin.smtpTest(testTo.trim() || undefined, testPayload)
     setTesting(false)
     if (res.ok && res.data.success) toast.success('Test email sent — check the inbox (and spam folder).')
     else toast.error(res.ok ? (res.data.message || 'Test email failed — check your SMTP settings.') : res.error)
@@ -87,6 +101,19 @@ export function EmailSettingsPanel() {
             <Label htmlFor="sm-port">Port</Label>
             <Input id="sm-port" type="number" value={d.port} onChange={(e) => set('port', parseInt(e.target.value || '587', 10))} placeholder="587" />
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-0.5">
+          <input
+            id="sm-auth"
+            type="checkbox"
+            checked={d.auth ?? true}
+            onChange={(e) => set('auth', e.target.checked)}
+            className="h-4 w-4 rounded border-border-subtle text-accent focus:ring-accent cursor-pointer"
+          />
+          <Label htmlFor="sm-auth" className="text-xs text-text-muted cursor-pointer font-medium">
+            SMTP Authentication Required (disable for internal relays without auth)
+          </Label>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-3">

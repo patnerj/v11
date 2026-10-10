@@ -52,7 +52,7 @@ export function OfflineBanner() {
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-md text-[11px] transition-colors"
+              className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-md text-2xs transition-colors"
             >
               <RefreshCw className="h-3 w-3" />
               <span>Retry</span>

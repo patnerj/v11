@@ -181,21 +181,21 @@ export function RedisCacheCard() {
   const isFallback = status?.fallback_active || (!status?.connected && status?.enabled)
 
   return (
-    <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-sm overflow-hidden">
-      <CardHeader className="border-b border-slate-200 dark:border-surface-muted/70 pb-4">
+    <Card className="bg-surface border-border shadow-xs overflow-hidden">
+      <CardHeader className="border-b border-border pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl border ${
               isConnected
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
                 : isFallback
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
-                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                : 'bg-surface-muted border-border text-text-muted'
             }`}>
               <Zap className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <CardTitle className="text-base font-bold text-text flex items-center gap-2">
                 In-Memory Redis Caching Engine
                 {isConnected && (
                   <span className="relative flex h-2.5 w-2.5">
@@ -204,7 +204,7 @@ export function RedisCacheCard() {
                   </span>
                 )}
               </CardTitle>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1">
+              <p className="text-xs text-text-muted font-normal mt-1">
                 Ultra-low latency RAM caching for MT5 live prices, atomic rate-limiting, and distributed locks.
               </p>
             </div>
@@ -229,7 +229,7 @@ export function RedisCacheCard() {
               size="sm"
               variant="outline"
               onClick={loadStatus}
-              className="h-8 text-xs gap-1.5 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-100"
+              className="h-8 text-xs gap-1.5 border-border text-text bg-surface hover:bg-surface-muted"
             >
               <RefreshCw className="h-3 w-3" />
             </Button>
@@ -238,16 +238,16 @@ export function RedisCacheCard() {
       </CardHeader>
 
       <CardContent className="p-6 space-y-6">
-        {/* Fail-Soft Guarantee Banner - High Contrast Neutral Slate with Emerald Badge */}
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-start gap-3.5 text-xs shadow-xs">
-          <div className="p-1.5 rounded-lg bg-emerald-600 text-white shrink-0 mt-0.5 shadow-xs">
+        {/* Fail-Soft Guarantee Banner */}
+        <div className="p-4 rounded-xl border border-border bg-surface-muted/50 flex items-start gap-3.5 text-xs shadow-xs">
+          <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 shrink-0 mt-0.5 shadow-xs">
             <CheckCircle2 className="h-4 w-4" />
           </div>
           <div className="space-y-1">
-            <span className="font-bold text-slate-900 dark:text-white text-xs block">
+            <span className="font-bold text-text text-xs block">
               100% Fail-Soft Architecture:
             </span>
-            <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed font-normal">
+            <p className="text-text-muted text-xs leading-relaxed font-normal">
               If Redis disconnects, operations automatically fall back to local database transients without interrupting service.
             </p>
           </div>
@@ -255,48 +255,48 @@ export function RedisCacheCard() {
 
         {/* Real-time Telemetry Metrics Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 shadow-xs">
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 block font-bold uppercase tracking-wider">
+          <div className="p-3.5 rounded-xl border border-border bg-surface-muted/60 shadow-xs">
+            <span className="text-2xs text-text-muted block font-semibold uppercase tracking-wider">
               Round-Trip Latency
             </span>
             <div className="flex items-baseline gap-1.5 mt-1.5">
-              <span className={`text-xl font-black tabular ${isConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+              <span className={`text-xl font-bold font-mono tabular ${isConnected ? 'text-emerald-500' : 'text-text-muted'}`}>
                 {isConnected && status?.latency_ms !== null ? `${status.latency_ms} ms` : '—'}
               </span>
               {isConnected && status?.latency_ms !== null && status.latency_ms < 1 && (
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Sub-ms</span>
+                <span className="text-3xs text-emerald-500 font-bold uppercase bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Sub-ms</span>
               )}
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 shadow-xs">
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 block font-bold uppercase tracking-wider">
+          <div className="p-3.5 rounded-xl border border-border bg-surface-muted/60 shadow-xs">
+            <span className="text-2xs text-text-muted block font-semibold uppercase tracking-wider">
               Active Cache Tier
             </span>
             <div className="mt-1.5">
-              <span className="text-sm font-black text-slate-900 dark:text-white">
+              <span className="text-sm font-bold text-text">
                 {status?.cache_backend === 'redis' ? 'In-Memory Redis' : status?.cache_backend === 'object_cache' ? 'WP Object Cache' : 'MySQL Transients'}
               </span>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 shadow-xs">
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 block font-bold uppercase tracking-wider">
+          <div className="p-3.5 rounded-xl border border-border bg-surface-muted/60 shadow-xs">
+            <span className="text-2xs text-text-muted block font-semibold uppercase tracking-wider">
               Keys in Memory
             </span>
             <div className="mt-1.5">
-              <span className="text-xl font-black tabular text-slate-900 dark:text-white">
+              <span className="text-xl font-bold font-mono tabular text-text">
                 {isConnected && status?.dbsize !== null ? status.dbsize : '0'}
               </span>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 shadow-xs">
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 block font-bold uppercase tracking-wider">
+          <div className="p-3.5 rounded-xl border border-border bg-surface-muted/60 shadow-xs">
+            <span className="text-2xs text-text-muted block font-semibold uppercase tracking-wider">
               Server Memory / Uptime
             </span>
             <div className="mt-1.5">
-              <span className="text-xs font-black tabular text-slate-900 dark:text-white">
+              <span className="text-xs font-bold font-mono tabular text-text">
                 {isConnected && status?.used_memory_human ? status.used_memory_human : '—'}
                 {isConnected && status?.uptime_days !== null ? ` • ${status.uptime_days}d` : ''}
               </span>
@@ -305,14 +305,14 @@ export function RedisCacheCard() {
         </div>
 
         {/* Configuration Form */}
-        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <div className="space-y-4 pt-3 border-t border-border">
           <div className="flex items-center justify-between pb-1">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Database className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <h4 className="text-sm font-bold text-text flex items-center gap-2">
+              <Database className="h-4 w-4 text-emerald-500" />
               Connection Configuration
             </h4>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-800 dark:text-slate-200 font-bold">Enable Redis</span>
+              <span className="text-xs text-text font-medium">Enable Redis</span>
               <Switch
                 checked={enabled}
                 onCheckedChange={setEnabled}
@@ -322,34 +322,34 @@ export function RedisCacheCard() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs font-bold text-slate-900 dark:text-white">Redis Host / URI</Label>
+              <Label className="text-xs font-semibold text-text">Redis Host / URI</Label>
               <Input
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
                 placeholder="127.0.0.1 or tls://your-cloud-redis.upstash.io"
-                className="text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="text-xs bg-surface border-border text-text font-medium placeholder:text-text-muted focus:border-accent"
               />
-              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Supports standard TCP (127.0.0.1) or encrypted TLS (tls://...).</span>
+              <span className="text-2xs text-text-muted font-normal">Supports standard TCP (127.0.0.1) or encrypted TLS (tls://...).</span>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-900 dark:text-white">Port</Label>
+              <Label className="text-xs font-semibold text-text">Port</Label>
               <Input
                 value={port}
                 onChange={(e) => setPort(e.target.value)}
                 placeholder="6379"
-                className="tabular text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="tabular text-xs bg-surface border-border text-text font-medium placeholder:text-text-muted focus:border-accent"
               />
-              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Default: 6379 (or 6380 for TLS).</span>
+              <span className="text-2xs text-text-muted font-normal">Default: 6379 (or 6380 for TLS).</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold text-slate-900 dark:text-white">Auth Password (Optional)</Label>
+                <Label className="text-xs font-semibold text-text">Auth Password (Optional)</Label>
                 {status?.has_password && !password && (
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-2xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                     ✓ Password currently saved
                   </span>
                 )}
@@ -362,7 +362,7 @@ export function RedisCacheCard() {
                   if (clearPassword) setClearPassword(false)
                 }}
                 placeholder={status?.has_password ? '•••••••••••••••• (Leave blank to keep)' : 'No auth required on local LAN'}
-                className="text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="text-xs bg-surface border-border text-text font-medium placeholder:text-text-muted focus:border-accent"
               />
               {status?.has_password && (
                 <div className="flex items-center gap-1.5 mt-1">
@@ -371,9 +371,9 @@ export function RedisCacheCard() {
                     id="clear_pass_chk"
                     checked={clearPassword}
                     onChange={(e) => setClearPassword(e.target.checked)}
-                    className="rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-emerald-600 text-xs"
+                    className="rounded border-border bg-surface text-emerald-600 text-xs"
                   />
-                  <label htmlFor="clear_pass_chk" className="text-[11px] text-rose-600 dark:text-rose-400 font-medium cursor-pointer">
+                  <label htmlFor="clear_pass_chk" className="text-2xs text-rose-500 font-medium cursor-pointer">
                     Clear stored password (switch to unauthenticated)
                   </label>
                 </div>
@@ -381,26 +381,26 @@ export function RedisCacheCard() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-900 dark:text-white">Database Index</Label>
+              <Label className="text-xs font-semibold text-text">Database Index</Label>
               <Input
                 value={db}
                 onChange={(e) => setDb(e.target.value)}
                 placeholder="0"
-                className="tabular text-xs bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                className="tabular text-xs bg-surface border-border text-text font-medium placeholder:text-text-muted focus:border-accent"
               />
-              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Default: 0 (range 0–15).</span>
+              <span className="text-2xs text-text-muted font-normal">Default: 0 (range 0–15).</span>
             </div>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="border-t border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <CardFooter className="border-t border-border p-4 bg-surface-muted/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <Button
           size="sm"
           variant="outline"
           onClick={() => setFlushConfirmOpen(true)}
           disabled={flushing}
-          className="text-xs text-rose-700 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 border-rose-300 dark:border-rose-900/50 bg-white dark:bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/20 font-bold gap-1.5"
+          className="text-xs text-rose-500 hover:text-rose-600 border-rose-500/30 bg-surface hover:bg-rose-500/10 font-semibold gap-1.5"
         >
           <Trash2 className="h-3.5 w-3.5" />
           Purge Cache (Flush)
@@ -412,9 +412,9 @@ export function RedisCacheCard() {
             variant="outline"
             onClick={handleTestConnection}
             loading={testing}
-            className="text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 font-bold gap-1.5 shadow-xs"
+            className="text-xs border-border bg-surface text-text hover:bg-surface-muted font-semibold gap-1.5 shadow-xs"
           >
-            <Activity className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <Activity className="h-3.5 w-3.5 text-emerald-500" />
             Test Connection
           </Button>
 
@@ -422,7 +422,7 @@ export function RedisCacheCard() {
             size="sm"
             onClick={handleSaveConfig}
             loading={saving}
-            className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-1.5 shadow-sm"
+            className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold gap-1.5 shadow-xs"
           >
             <Save className="h-3.5 w-3.5" />
             Save & Connect

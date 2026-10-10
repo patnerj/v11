@@ -113,15 +113,15 @@ export default function DashboardChallenges() {
                   <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-4">
                     <div>
                       <div className="font-semibold text-text truncate">{c.plan_name ?? `Challenge #${c.id}`}</div>
-                      <div className="text-2xs text-text-muted tabular">{fmtUSD(c.account_size ?? 0, { decimals: 0 })}</div>
+                      <div className="text-2xs text-text-muted terminal-num">{fmtUSD(c.account_size ?? 0, { decimals: 0 })}</div>
                     </div>
                     <div className="hidden sm:block">
-                      <div className="text-2xs text-text-muted">Phase</div>
+                      <div className="text-2xs font-semibold uppercase tracking-wider text-text-muted">Phase</div>
                       <div className="text-sm font-medium text-text">{c.phase}</div>
                     </div>
                     <div className="hidden sm:block">
-                      <div className="text-2xs text-text-muted">P&L</div>
-                      <div className={cn('text-sm font-medium tabular', pnlClass(profit))}>
+                      <div className="text-2xs font-semibold uppercase tracking-wider text-text-muted">P&L</div>
+                      <div className={cn('text-sm font-semibold terminal-num', pnlClass(profit))}>
                         {fmtUSD(profit, { sign: true })} <span className="text-2xs text-text-muted">({fmtPct(profitPct, 1, true)})</span>
                       </div>
                     </div>
@@ -133,10 +133,10 @@ export default function DashboardChallenges() {
                             e.stopPropagation()
                             setCelebratingChallenge(c)
                           }}
-                          className="px-2 py-0.5 rounded text-3xs font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all flex items-center gap-1 shrink-0 active:scale-95 cursor-pointer"
+                          className="px-2 py-0.5 rounded text-2xs font-bold uppercase tracking-wider bg-profit-subtle text-profit border border-profit-subtle hover:bg-profit/20 transition-all flex items-center gap-1 shrink-0 active:scale-95 cursor-pointer"
                           title="View Phase Pass Celebration"
                         >
-                          <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" />
+                          <Sparkles className="w-3 h-3 text-profit animate-pulse" />
                           <span>Passed! 🎉</span>
                         </button>
                       )}
@@ -215,18 +215,18 @@ function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
   return (
     <div className="mt-3 pt-3 border-t border-border-subtle space-y-2">
       <div className="flex items-center justify-between text-xs">
-        <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+        <span className="font-semibold text-accent flex items-center gap-1.5">
           MetaTrader 5 Credentials
         </span>
         <button
           type="button"
           onClick={handleCopyAll}
-          className="text-3xs font-semibold text-accent hover:text-accent-hover flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-accent/10 transition-colors cursor-pointer select-none"
+          className="text-2xs font-semibold text-accent hover:text-accent-hover flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-accent/10 transition-colors cursor-pointer select-none"
         >
           {copiedKey === 'all' ? (
             <>
-              <Check className="w-3 h-3 text-emerald-400" />
-              <span className="text-emerald-400 font-bold">✓ Copied!</span>
+              <Check className="w-3 h-3 text-profit" />
+              <span className="text-profit font-bold">✓ Copied!</span>
             </>
           ) : (
             <>
@@ -236,10 +236,10 @@ function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
           )}
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-lg border border-border-subtle">
         <div className="flex items-center justify-between group">
           <div>
-            <span className="text-text-muted text-[10px] block">Broker Server</span>
+            <span className="text-text-muted text-2xs block">Broker Server</span>
             <span className="font-medium text-text">{c.mt5_server || 'MetaQuotes-Demo'}</span>
           </div>
           <button
@@ -248,13 +248,13 @@ function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
             className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
             title="Copy Server"
           >
-            {copiedKey === 'server' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+            {copiedKey === 'server' ? <span className="text-2xs text-profit font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
           </button>
         </div>
         <div className="flex items-center justify-between group">
           <div>
-            <span className="text-text-muted text-[10px] block">MT5 Login ID</span>
-            <span className="font-bold tabular text-emerald-400">{c.mt5_login}</span>
+            <span className="text-text-muted text-2xs block">MT5 Login ID</span>
+            <span className="font-bold terminal-num text-text">{c.mt5_login}</span>
           </div>
           <button
             type="button"
@@ -262,12 +262,12 @@ function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
             className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
             title="Copy Login"
           >
-            {copiedKey === 'login' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+            {copiedKey === 'login' ? <span className="text-2xs text-profit font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
           </button>
         </div>
         <div className="flex items-center justify-between group">
           <div>
-            <span className="text-text-muted text-[10px] block">Trader Password</span>
+            <span className="text-text-muted text-2xs block">Trader Password</span>
             <span className="font-medium tabular text-text">{c.mt5_password || '••••••••'}</span>
           </div>
           {c.mt5_password && (
@@ -277,13 +277,13 @@ function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
               className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
               title="Copy Password"
             >
-              {copiedKey === 'pass' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+              {copiedKey === 'pass' ? <span className="text-2xs text-profit font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
             </button>
           )}
         </div>
         <div className="flex items-center justify-between group">
           <div>
-            <span className="text-text-muted text-[10px] block">Investor (Myfxbook)</span>
+            <span className="text-text-muted text-2xs block">Investor (Myfxbook)</span>
             <span className="font-medium tabular text-text">{(c as any).mt5_investor_password || '••••••••'}</span>
           </div>
           {(c as any).mt5_investor_password && (
@@ -293,7 +293,7 @@ function CredentialsBox({ challenge: c }: { challenge: ChallengeAccount }) {
               className="p-1 rounded text-text-muted hover:text-text transition-colors cursor-pointer"
               title="Copy Investor Password"
             >
-              {copiedKey === 'inv' ? <span className="text-3xs text-emerald-400 font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
+              {copiedKey === 'inv' ? <span className="text-2xs text-profit font-bold">✓ Copied!</span> : <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />}
             </button>
           )}
         </div>
@@ -308,7 +308,7 @@ function ChallengeDetailCard({ challenge: c, metrics: m }: { challenge: Challeng
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle>Account details</CardTitle>
         {c.mt5_login && (
-          <Badge tone="accent" size="sm" className="tabular font-semibold text-3xs">
+          <Badge tone="accent" size="sm" className="tabular font-semibold text-2xs">
             MT5: #{c.mt5_login}
           </Badge>
         )}
@@ -343,7 +343,7 @@ function KV({ label, value, mono, tone }: { label: string; value: string; mono?:
       <span className="text-text-muted">{label}</span>
       <span className={cn(
         'font-medium',
-        mono && 'tabular',
+        mono && 'terminal-num font-semibold',
         tone === 'success' && 'text-success',
         tone === 'danger'  && 'text-danger',
       )}>{value}</span>

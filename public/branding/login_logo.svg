@@ -13,6 +13,14 @@
       <feGaussianBlur stdDeviation="2" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
+    <style>
+      .mf-svg-text { fill: #FFFFFF; }
+      .mf-svg-sub { fill: #94A3B8; }
+      @media (prefers-color-scheme: light) {
+        .mf-svg-text { fill: #0F172A; }
+        .mf-svg-sub { fill: #475569; }
+      }
+    </style>
   </defs>
 
   <!-- MassFunded M Emblem -->
@@ -25,10 +33,10 @@
   </g>
 
   <!-- Typography -->
-  <text x="110" y="58" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="38" font-weight="800" fill="#FFFFFF" letter-spacing="-0.8">
+  <text x="110" y="58" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="38" font-weight="800" class="mf-svg-text" letter-spacing="-0.8">
     Mass<tspan fill="url(#textGradL)">Funded</tspan>
   </text>
-  <text x="112" y="78" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="600" fill="#94A3B8" letter-spacing="2.5" text-transform="uppercase">
+  <text x="112" y="78" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="600" class="mf-svg-sub" letter-spacing="2.5" text-transform="uppercase">
     THE INSTITUTIONAL PROP PLATFORM
   </text>
 </svg>

@@ -17,6 +17,22 @@ export interface Branding {
   footer_text: string
   /** Platform→TradingView chart symbol overrides (JSON object string, V10.5). */
   tv_symbol_map: string
+  youtube_url?: string
+  instagram_url?: string
+  tiktok_url?: string
+  facebook_url?: string
+  discord_url?: string
+  developer_url?: string
+  meta_title?: string
+  meta_description?: string
+  meta_keywords?: string
+  google_site_verification?: string
+  bing_site_verification?: string
+  robots_indexing?: string
+  og_image_url?: string
+  ga_measurement_id?: string
+  facebook_pixel_id?: string
+  custom_head_code?: string
 }
 
 const DEFAULTS: Branding = {
@@ -31,6 +47,22 @@ const DEFAULTS: Branding = {
   secondary_color: '#00e5a0',
   footer_text: '© 2026 MassFunded. All rights reserved.',
   tv_symbol_map: '',
+  youtube_url: 'https://www.youtube.com/@MassFunded',
+  instagram_url: 'https://www.instagram.com/massfundedorg/',
+  tiktok_url: 'https://www.tiktok.com/@massfunded.org',
+  facebook_url: 'https://www.facebook.com/profile.php?id=61591803448831',
+  discord_url: 'https://discord.com/channels/1555893909496799312/1555893997103484969',
+  developer_url: '',
+  meta_title: 'MassFunded — Trade Up to $200,000 in Funded Capital',
+  meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.',
+  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, MassFunded',
+  google_site_verification: '',
+  bing_site_verification: '',
+  robots_indexing: 'index_follow',
+  og_image_url: '/og-image.png',
+  ga_measurement_id: 'G-G5758RZV7E',
+  facebook_pixel_id: '',
+  custom_head_code: '',
 }
 
 interface BrandingState {

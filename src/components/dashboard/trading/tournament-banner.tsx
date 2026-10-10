@@ -143,19 +143,19 @@ export function TournamentWarningBanner({
     >
       {/* Left: Compact Tournament Mode Pill + Live Rank & PnL Telemetry */}
       <div className="flex items-center gap-2 min-w-0 flex-nowrap">
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/45 text-2xs font-extrabold tracking-wider text-amber-700 dark:text-amber-300 uppercase shrink-0">
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/45 text-terminal-micro font-semibold tracking-wider text-amber-700 dark:text-amber-300 uppercase shrink-0">
           <Trophy className="h-3 w-3 text-amber-500 dark:text-amber-400 shrink-0" />
           <span>TOURNAMENT MODE ACTIVE</span>
           <span className="sr-only">TOURNAMENT MODE ACTIVE: {displayTitle} — Trades executed in Tournament Mode are isolated to this competition.</span>
         </span>
 
         {/* Telemetry pill: (Rank: #[Rank] · PnL: $[PnL]) — crisp in both Daylight and Obsidian Dark */}
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface dark:bg-slate-900/90 border border-amber-500/45 shadow-2xs text-2xs font-semibold tabular shrink-0">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface dark:bg-slate-900/90 border border-amber-500/45 shadow-2xs text-terminal-micro font-semibold tabular terminal-num shrink-0">
           <span className="text-amber-700 dark:text-amber-400 font-semibold">Rank:</span>
-          <span className="text-text dark:text-white font-extrabold">{rankDisplay}</span>
+          <span className="text-text dark:text-white font-semibold">{rankDisplay}</span>
           <span className="text-amber-500/50">·</span>
           <span className="text-amber-700 dark:text-amber-400 font-semibold">PnL:</span>
-          <span className={cn('font-extrabold', pnlVal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}>
+          <span className={cn('font-semibold terminal-num', pnlVal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}>
             {pnlDisplay}
           </span>
         </div>
@@ -169,7 +169,7 @@ export function TournamentWarningBanner({
               type="button"
               disabled={isSwitching}
               onClick={() => handleSwitch(targetAccount.entry)}
-              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-2xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-xs transition-all select-none cursor-pointer focus-ring active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-terminal-micro font-semibold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-xs transition-all select-none cursor-pointer focus-ring active:scale-95 disabled:opacity-50"
               title={`Switch to ${targetAccount.entry.label}`}
             >
               {isSwitching ? (
@@ -193,7 +193,7 @@ export function TournamentWarningBanner({
 
                 {showDropdown && (
                   <div className="absolute right-0 top-full mt-1.5 w-60 rounded-lg bg-surface/98 border border-amber-500/40 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-xl">
-                    <div className="px-2 py-1 text-3xs uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
+                    <div className="px-2 py-1 text-terminal-micro uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold">
                       Switch to Account:
                     </div>
                     {otherAccounts.map((e) => (
@@ -201,15 +201,15 @@ export function TournamentWarningBanner({
                         key={e.key}
                         type="button"
                         onClick={() => handleSwitch(e)}
-                        className="w-full text-left px-2.5 py-1.5 rounded text-xs flex items-center justify-between hover:bg-surface-muted text-text transition-colors cursor-pointer"
+                        className="w-full text-left px-2.5 py-1.5 rounded text-terminal-body flex items-center justify-between hover:bg-surface-muted text-text transition-colors cursor-pointer"
                       >
-                        <span className="truncate font-medium">{e.planName || e.label}</span>
+                        <span className="truncate font-normal">{e.planName || e.label}</span>
                         {e.status === 'funded' ? (
-                          <span className="text-3xs font-semibold px-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          <span className="text-terminal-micro font-semibold px-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
                             Funded
                           </span>
                         ) : (
-                          <span className="text-3xs font-medium text-text-muted">#{e.accountId}</span>
+                          <span className="text-terminal-micro font-normal tabular terminal-num text-text-muted">#{e.accountId}</span>
                         )}
                       </button>
                     ))}
@@ -221,7 +221,7 @@ export function TournamentWarningBanner({
         ) : (
           <Link
             href="/challenges"
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-2xs font-bold bg-amber-400 hover:bg-amber-300 text-black shadow-xs transition-all select-none cursor-pointer focus-ring"
+            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-terminal-micro font-semibold bg-amber-400 hover:bg-amber-300 text-black shadow-xs transition-all select-none cursor-pointer focus-ring"
           >
             <Sparkles className="w-3 h-3" />
             <span>Get Funded Account</span>

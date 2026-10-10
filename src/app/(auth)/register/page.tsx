@@ -12,6 +12,7 @@ import { useAuth } from '@/store/auth'
 import { useBranding } from '@/store/branding'
 import { AlertCircle, ArrowRight, Check, Sparkles, Mail, Clock, ExternalLink, RotateCcw, CheckCircle2, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { trackRegistration } from '@/lib/meta-pixel'
 import { Suspense } from 'react'
 
 export default function RegisterPage() {
@@ -137,6 +138,7 @@ function RegisterForm() {
     setLoading(false)
     if (res.ok) {
       try { localStorage.removeItem('fxsim:ref') } catch { /* ignore */ }
+      try { trackRegistration({ method: 'email', status: 'success' }) } catch { /* ignore */ }
       toast.success('Account created! Verification link sent to your email.')
       setRegisteredEmail(email)
     } else {
@@ -153,7 +155,7 @@ function RegisterForm() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Card className="p-8 glass-strong border-border-strong card-glow text-center">
+        <Card className="p-5 sm:p-8 glass-strong border-border-strong card-glow text-center">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto mb-5 shadow-glow-sm">
             <Mail className="h-8 w-8 animate-pulse" />
           </div>
@@ -249,8 +251,8 @@ function RegisterForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Card className="p-8 glass-strong border-border-strong card-glow">
-        <div className="text-center mb-6">
+      <Card className="p-5 sm:p-8 glass-strong border-border-strong card-glow">
+        <div className="text-center mb-4 sm:mb-6">
           <div className="brand-emblem">
             <span className="text-lg font-black text-slate-950">{brandInitial}</span>
           </div>
@@ -268,13 +270,13 @@ function RegisterForm() {
         )}
 
         {ref && (
-          <div className="mb-5 flex items-center justify-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 shadow-sm shadow-emerald-500/5">
+          <div className="mb-4 sm:mb-5 flex items-center justify-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 shadow-sm shadow-emerald-500/5">
             <Sparkles className="h-4 w-4 shrink-0 text-emerald-400 animate-pulse" />
-            <span>Referred by partner: <strong className="font-mono font-bold text-white bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">{ref}</strong> • Welcome Benefit Attached</span>
+            <span>🎁 Referred by: <strong className="font-mono font-bold text-white bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">{ref}</strong> — You'll get a special discount!</span>
           </div>
         )}
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-3.5 sm:space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="user">Username</Label>
             <Input
@@ -320,19 +322,36 @@ function RegisterForm() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full btn-shine" loading={loading} size="lg">
-            Create account
-            <ArrowRight className="h-4 w-4" />
+          <Button 
+            type="submit" 
+            className="w-full btn-shine" 
+            loading={loading}
+            isSubmitting={loading}
+            isPending={loading}
+            disabled={loading}
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin shrink-0 mr-2" data-spinner="true" />
+                <span>Creating account...</span>
+              </>
+            ) : (
+              <>
+                <span>Create account</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </>
+            )}
           </Button>
         </form>
 
-        <p className="mt-4 text-xs text-text-faint text-center leading-relaxed">
+        <p className="mt-3.5 sm:mt-4 text-xs text-text-faint text-center leading-relaxed">
           By creating an account you agree to our{' '}
           <Link href="/terms" className="hover:text-text">Terms</Link> and{' '}
           <Link href="/privacy" className="hover:text-text">Privacy Policy</Link>.
         </p>
 
-        <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-muted">
+        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border-subtle text-center text-sm text-text-muted">
           Already have an account?{' '}
           <Link href="/login" className="text-accent hover:text-accent-hover font-medium">
             Sign in
@@ -340,5 +359,6 @@ function RegisterForm() {
         </div>
       </Card>
     </motion.div>
+
   )
 }

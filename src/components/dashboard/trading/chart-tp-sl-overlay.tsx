@@ -8,6 +8,7 @@ import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices } from '@/store/prices'
 import { fmtPrice, fmtUSD, fmtLots, toNum, pnlClass } from '@/lib/format'
 import { toast } from 'sonner'
+import { cn } from '@/lib/cn'
 import { playOrderCloseSound, playSltpUpdatedSound } from '@/lib/sound'
 import type { Position, PendingOrder } from '@/types/api'
 
@@ -72,6 +73,29 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
   const [draftSl, setDraftSl] = useState('')
   const [draftTp, setDraftTp] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+
+  const draftSlNum = draftSl.trim() ? toNum(draftSl) : null
+  const draftTpNum = draftTp.trim() ? toNum(draftTp) : null
+
+  const draftSlMetrics = useMemo(() => {
+    if (!draftSlNum || !activePos) return null
+    const openPx = toNum(activePos.open_price)
+    const diff = Math.abs(draftSlNum - openPx)
+    if (diff <= 0) return null
+    const pips = pSize > 0 ? diff / pSize : diff
+    const loss = diff * contract * toNum(activePos.lot_size)
+    return { diff, pips, loss }
+  }, [draftSlNum, activePos, pSize, contract])
+
+  const draftTpMetrics = useMemo(() => {
+    if (!draftTpNum || !activePos) return null
+    const openPx = toNum(activePos.open_price)
+    const diff = Math.abs(draftTpNum - openPx)
+    if (diff <= 0) return null
+    const pips = pSize > 0 ? diff / pSize : diff
+    const profit = diff * contract * toNum(activePos.lot_size)
+    return { diff, pips, profit }
+  }, [draftTpNum, activePos, pSize, contract])
 
   // Open inline editor for a position
   const startEdit = useCallback((p: Position) => {
@@ -266,23 +290,23 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
         {/* Left: Position Identifier + Multi-trade Selector + Entry + PnL */}
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <span
-            className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1 shadow-sm ${
+            className={`px-1.5 py-0.5 rounded text-terminal-micro font-semibold uppercase tracking-wider inline-flex items-center gap-1 shadow-sm ${
               isBuy
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                 : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
             }`}
           >
             {isBuy ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-            {pos.type.toUpperCase()} {fmtLots(lots)}
+            {pos.type.toUpperCase()} <span className="terminal-num">{fmtLots(lots)}</span>
           </span>
 
-          <span className="text-[11px] font-mono text-text-muted">
-            #{pos.id} @ <span className="text-text font-bold">{fmtPrice(openPx, digits)}</span>
+          <span className="text-terminal-body terminal-num text-text-muted">
+            #{pos.id} @ <span className="text-text font-semibold terminal-num">{fmtPrice(openPx, digits)}</span>
           </span>
 
           {/* Live Floating PnL */}
           <span
-            className={`text-[11px] font-mono font-bold tabular px-2 py-0.5 rounded ${pnlClass(
+            className={`text-terminal-body terminal-num font-semibold px-2 py-0.5 rounded ${pnlClass(
               livePnl
             )} bg-bg-subtle/80 border border-border-subtle shadow-sm`}
           >
@@ -293,7 +317,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           {/* Multi-Position Switcher (If multiple trades exist on this symbol) */}
           {positions.length > 1 && (
             <div className="flex items-center gap-1 border-l border-border-subtle pl-2 ml-1">
-              <span className="text-[10px] text-text-faint uppercase font-sans">Trades:</span>
+              <span className="text-terminal-micro text-text-faint uppercase font-semibold">Trades:</span>
               {positions.map((p) => (
                 <button
                   key={p.id}
@@ -302,7 +326,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
                     setSelectedPosId(p.id)
                     setIsEditing(false)
                   }}
-                  className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                  className={`px-1.5 py-0.2 rounded text-terminal-micro terminal-num font-semibold transition-all cursor-pointer ${
                     p.id === pos.id
                       ? 'bg-accent text-accent-contrast shadow-sm'
                       : 'bg-surface-muted text-text-muted hover:text-text'
@@ -312,8 +336,8 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
                   #{p.id}
                 </button>
               ))}
-              <span className="text-[10px] font-mono text-text-muted ml-1 tabular hidden md:inline">
-                (Net: <b className={pnlClass(totalNetPnl)}>{fmtUSD(totalNetPnl, { sign: true })}</b>)
+              <span className="text-terminal-micro terminal-num text-text-muted ml-1 hidden md:inline">
+                (Net: <b className={cn("terminal-num font-semibold", pnlClass(totalNetPnl))}>{fmtUSD(totalNetPnl, { sign: true })}</b>)
               </span>
             </div>
           )}
@@ -325,7 +349,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           <button
             type="button"
             onClick={() => startEdit(pos)}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-[11px] transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-md terminal-num text-terminal-body transition-all cursor-pointer ${
               hasSl
                 ? 'bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400'
                 : 'bg-surface-muted/80 hover:bg-rose-500/15 border border-dashed border-rose-500/40 text-rose-300'
@@ -334,9 +358,9 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           >
             {hasSl ? (
               <>
-                <span className="text-[10px] uppercase font-sans font-bold text-rose-300">SL</span>
-                <span className="font-bold">{fmtPrice(slPx, digits)}</span>
-                <span className="text-[10px] opacity-75 hidden sm:inline">
+                <span className="text-terminal-micro uppercase font-semibold text-rose-300">SL</span>
+                <span className="font-semibold terminal-num">{fmtPrice(slPx, digits)}</span>
+                <span className="text-terminal-micro opacity-75 hidden sm:inline">
                   (-{slPips.toFixed(1)}p · -{fmtUSD(Math.abs(slRisk))})
                 </span>
                 <Pencil className="h-2.5 w-2.5 ml-0.5 opacity-70" />
@@ -344,7 +368,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
             ) : (
               <>
                 <Plus className="h-2.5 w-2.5" />
-                <span className="text-[10px] font-sans font-bold">Add SL</span>
+                <span className="text-terminal-micro font-semibold">Add SL</span>
               </>
             )}
           </button>
@@ -353,7 +377,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           <button
             type="button"
             onClick={() => startEdit(pos)}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-[11px] transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-md terminal-num text-terminal-body transition-all cursor-pointer ${
               hasTp
                 ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                 : 'bg-surface-muted/80 hover:bg-emerald-500/15 border border-dashed border-emerald-500/40 text-emerald-300'
@@ -362,9 +386,9 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           >
             {hasTp ? (
               <>
-                <span className="text-[10px] uppercase font-sans font-bold text-emerald-300">TP</span>
-                <span className="font-bold">{fmtPrice(tpPx, digits)}</span>
-                <span className="text-[10px] opacity-75 hidden sm:inline">
+                <span className="text-terminal-micro uppercase font-semibold text-emerald-300">TP</span>
+                <span className="font-semibold terminal-num">{fmtPrice(tpPx, digits)}</span>
+                <span className="text-terminal-micro opacity-75 hidden sm:inline">
                   (+{tpPips.toFixed(1)}p · +{fmtUSD(tpReward)})
                 </span>
                 <Pencil className="h-2.5 w-2.5 ml-0.5 opacity-70" />
@@ -372,7 +396,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
             ) : (
               <>
                 <Plus className="h-2.5 w-2.5" />
-                <span className="text-[10px] font-sans font-bold">Add TP</span>
+                <span className="text-terminal-micro font-semibold">Add TP</span>
               </>
             )}
           </button>
@@ -382,7 +406,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
             type="button"
             onClick={() => handleBreakEven(pos)}
             disabled={!canBE}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-terminal-micro font-semibold border transition-all cursor-pointer ${
               canBE
                 ? 'bg-sky-500/15 hover:bg-sky-500/30 text-sky-300 border-sky-500/40 shadow-sm'
                 : 'bg-surface-muted/40 text-text-faint border-border-subtle opacity-40 cursor-not-allowed'
@@ -397,7 +421,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           <button
             type="button"
             onClick={() => handleClose(pos)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-danger/15 hover:bg-danger text-rose-300 hover:text-white border border-danger/30 text-[10px] font-bold transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-danger/15 hover:bg-danger text-rose-300 hover:text-white border border-danger/30 text-terminal-micro font-semibold transition-all shadow-sm cursor-pointer"
             title="Close Position at Market"
           >
             <X className="h-2.5 w-2.5" />
@@ -417,34 +441,38 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
           >
             <div className="flex flex-wrap items-center gap-3">
               {/* SL Input & Quick Offsets */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-rose-400 uppercase">SL:</span>
+              <div className="flex items-center gap-1.5 relative group">
+                <span className="text-terminal-micro font-semibold text-rose-400 uppercase">SL:</span>
                 <input
                   type="text"
                   value={draftSl}
                   onChange={(e) => setDraftSl(e.target.value.replace(/[^\d.]/g, ''))}
                   placeholder={openPx.toFixed(digits)}
-                  className="w-20 h-6 px-1.5 text-2xs font-mono font-bold bg-bg border border-border rounded text-right focus-ring"
+                  title={draftSlMetrics ? `Calculated Loss: -${fmtUSD(draftSlMetrics.loss)} (-${draftSlMetrics.pips.toFixed(1)}p)` : undefined}
+                  className={cn(
+                    "w-20 h-6 px-1.5 text-terminal-body terminal-num font-semibold bg-bg border rounded text-right focus-ring transition-colors",
+                    draftSlMetrics ? "border-rose-500/50 text-rose-300 focus:border-rose-500" : "border-border text-foreground"
+                  )}
                 />
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => applyPipOffset(pos, 'sl', 20)}
-                    className="px-1.5 py-0.5 rounded text-[9px] bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
+                    className="px-1.5 py-0.5 rounded text-terminal-micro bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
                   >
                     20p
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPipOffset(pos, 'sl', 35)}
-                    className="px-1.5 py-0.5 rounded text-[9px] bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
+                    className="px-1.5 py-0.5 rounded text-terminal-micro bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
                   >
                     35p
                   </button>
                   <button
                     type="button"
                     onClick={() => setDraftSl(openPx.toFixed(digits))}
-                    className="px-1.5 py-0.5 rounded text-[9px] bg-sky-500/20 text-sky-300 font-bold cursor-pointer"
+                    className="px-1.5 py-0.5 rounded text-terminal-micro bg-sky-500/20 text-sky-300 font-semibold cursor-pointer"
                     title="Set to Break-Even"
                   >
                     BE
@@ -452,7 +480,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
                   <button
                     type="button"
                     onClick={() => setDraftSl('')}
-                    className="px-1 py-0.5 rounded text-[9px] text-text-faint hover:text-danger cursor-pointer"
+                    className="px-1 py-0.5 rounded text-terminal-micro text-text-faint hover:text-danger cursor-pointer"
                     title="Clear Stop Loss"
                   >
                     ✕
@@ -461,41 +489,45 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
               </div>
 
               {/* TP Input & Quick Offsets */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-emerald-400 uppercase">TP:</span>
+              <div className="flex items-center gap-1.5 relative group">
+                <span className="text-terminal-micro font-semibold text-emerald-400 uppercase">TP:</span>
                 <input
                   type="text"
                   value={draftTp}
                   onChange={(e) => setDraftTp(e.target.value.replace(/[^\d.]/g, ''))}
                   placeholder={(openPx * 1.01).toFixed(digits)}
-                  className="w-20 h-6 px-1.5 text-2xs font-mono font-bold bg-bg border border-border rounded text-right focus-ring"
+                  title={draftTpMetrics ? `Calculated Profit: +${fmtUSD(draftTpMetrics.profit)} (+${draftTpMetrics.pips.toFixed(1)}p)` : undefined}
+                  className={cn(
+                    "w-20 h-6 px-1.5 text-terminal-body terminal-num font-semibold bg-bg border rounded text-right focus-ring transition-colors",
+                    draftTpMetrics ? "border-emerald-500/50 text-emerald-300 focus:border-emerald-500" : "border-border text-foreground"
+                  )}
                 />
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => applyPipOffset(pos, 'tp', 30)}
-                    className="px-1.5 py-0.5 rounded text-[9px] bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
+                    className="px-1.5 py-0.5 rounded text-terminal-micro bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
                   >
                     30p
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPipOffset(pos, 'tp', 60)}
-                    className="px-1.5 py-0.5 rounded text-[9px] bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
+                    className="px-1.5 py-0.5 rounded text-terminal-micro bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
                   >
                     60p
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPipOffset(pos, 'tp', 100)}
-                    className="px-1.5 py-0.5 rounded text-[9px] bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
+                    className="px-1.5 py-0.5 rounded text-terminal-micro bg-surface-muted hover:bg-surface-muted/80 text-text-muted cursor-pointer"
                   >
                     100p
                   </button>
                   <button
                     type="button"
                     onClick={() => setDraftTp('')}
-                    className="px-1 py-0.5 rounded text-[9px] text-text-faint hover:text-danger cursor-pointer"
+                    className="px-1 py-0.5 rounded text-terminal-micro text-text-faint hover:text-danger cursor-pointer"
                     title="Clear Take Profit"
                   >
                     ✕
@@ -504,12 +536,30 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
               </div>
             </div>
 
+            {/* Live Calculated Loss / Profit Strip */}
+            {(draftSlMetrics || draftTpMetrics) && (
+              <div className="w-full flex items-center gap-2 pt-1 border-t border-border-subtle/40 text-terminal-micro terminal-num">
+                {draftSlMetrics && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 font-semibold shadow-xs">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+                    Est. Loss: -{fmtUSD(draftSlMetrics.loss)} (-{draftSlMetrics.pips.toFixed(1)}p)
+                  </span>
+                )}
+                {draftTpMetrics && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold shadow-xs">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Est. Profit: +{fmtUSD(draftTpMetrics.profit)} (+{draftTpMetrics.pips.toFixed(1)}p)
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex items-center gap-1.5 ml-auto">
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-2 py-0.5 rounded text-2xs text-text-muted hover:text-text cursor-pointer"
+                className="px-2 py-0.5 rounded text-terminal-body text-text-muted hover:text-text cursor-pointer"
               >
                 Cancel
               </button>
@@ -517,7 +567,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
                 type="button"
                 onClick={() => handleSave(pos)}
                 disabled={isSaving}
-                className="px-2.5 py-0.5 rounded bg-accent text-accent-contrast font-bold text-2xs shadow-sm hover:bg-accent-hover transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-2.5 py-0.5 rounded bg-accent text-accent-contrast font-semibold text-terminal-body shadow-sm hover:bg-accent-hover transition-colors flex items-center gap-1 cursor-pointer"
               >
                 {isSaving ? (
                   <span className="h-2.5 w-2.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -541,15 +591,15 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
         return (
           <div
             key={ord.id}
-            className="flex items-center justify-between gap-2 rounded bg-surface-muted/40 border border-border-subtle px-2 py-0.5 text-2xs font-mono"
+            className="flex items-center justify-between gap-2 rounded bg-surface-muted/40 border border-border-subtle px-2 py-0.5 text-terminal-body terminal-num"
           >
             <div className="flex items-center gap-2">
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <span className="px-1.5 py-0.2 rounded text-terminal-micro font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
                 <Clock className="h-2.5 w-2.5" />
-                {ord.type.toUpperCase()} {fmtLots(lots)}
+                {ord.type.toUpperCase()} <span className="terminal-num">{fmtLots(lots)}</span>
               </span>
               <span className="text-text-muted">
-                #{ord.id} @ <span className="text-text font-bold">{fmtPrice(targetPx, digits)}</span>
+                #{ord.id} @ <span className="text-text font-semibold terminal-num">{fmtPrice(targetPx, digits)}</span>
               </span>
               {slPx > 0 && <span className="text-rose-400">SL: {fmtPrice(slPx, digits)}</span>}
               {tpPx > 0 && <span className="text-emerald-400">TP: {fmtPrice(tpPx, digits)}</span>}
@@ -557,7 +607,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
             <button
               type="button"
               onClick={() => handleCancelPending(ord.id)}
-              className="px-1.5 py-0.2 rounded text-[9px] font-sans font-bold bg-danger/15 hover:bg-danger text-rose-300 hover:text-white transition-colors cursor-pointer"
+              className="px-1.5 py-0.2 rounded text-terminal-micro font-semibold bg-danger/15 hover:bg-danger text-rose-300 hover:text-white transition-colors cursor-pointer"
             >
               ✕ Cancel
             </button>

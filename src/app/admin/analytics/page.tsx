@@ -296,10 +296,10 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-gray-400 leading-tight block flex-1">
                     Gross challenge fees & add-ons
                   </span>
-                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-2xs px-2 py-0.5">
                     {revenueTrend}
                   </Badge>
                 </div>
@@ -326,10 +326,10 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-gray-400 leading-tight block flex-1">
                     Active KYC & verified profiles
                   </span>
-                  <Badge tone="info" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone="info" size="sm" className="shrink-0 font-mono text-2xs px-2 py-0.5">
                     {totalUsersVal > 0 ? `${totalUsersVal} Active` : '0 Active'}
                   </Badge>
                 </div>
@@ -356,10 +356,10 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-gray-400 leading-tight block flex-1">
                     Total evaluation orders fulfilled
                   </span>
-                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-2xs px-2 py-0.5">
                     {totalChallengesVal > 0 ? `${totalChallengesVal} Fulfilled` : '0 Sold'}
                   </Badge>
                 </div>
@@ -386,10 +386,10 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-gray-400 leading-tight block flex-1">
                     Active live capital accounts
                   </span>
-                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-2xs px-2 py-0.5">
                     {totalChallengesVal > 0 ? `${((totalFundedVal / totalChallengesVal) * 100).toFixed(1)}% Pass` : '0.0% Pass'}
                   </Badge>
                 </div>
@@ -560,7 +560,7 @@ export default function AdminAnalyticsPage() {
                       <div className="flex items-center justify-between text-xs">
                         <div>
                           <span className="font-bold text-white block">{plan.name}</span>
-                          <span className="text-gray-400 font-mono text-[11px]">
+                          <span className="text-gray-400 font-mono text-2xs">
                             {plan.purchases} sales • {plan.sharePct}% total revenue
                           </span>
                         </div>
@@ -612,7 +612,7 @@ export default function AdminAnalyticsPage() {
                       <div key={i} className="p-3 bg-background rounded-xl border border-surface-muted flex items-center justify-between">
                         <div className="space-y-0.5">
                           <span className="text-xs font-bold text-white block">{pr.plan_name || pr.name}</span>
-                          <span className="text-[11px] text-gray-400 font-mono">
+                          <span className="text-2xs text-gray-400 font-mono">
                             {pr.passed || 0} passed / {pr.total || 0} evaluations
                           </span>
                         </div>
@@ -645,35 +645,35 @@ export default function AdminAnalyticsPage() {
 
               <div className="grid grid-cols-2 gap-3.5 pt-1">
                 <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
-                  <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Active Evaluations</span>
+                  <span className="text-2xs font-semibold text-gray-400 block uppercase tracking-wider">Active Evaluations</span>
                   <span className="text-2xl font-extrabold text-blue-400 font-mono block">
                     {activeCount}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-mono">Phase 1 & Phase 2</span>
+                  <span className="text-2xs text-gray-500 font-mono">Phase 1 & Phase 2</span>
                 </div>
 
                 <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
-                  <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Funded Live Pro</span>
+                  <span className="text-2xs font-semibold text-gray-400 block uppercase tracking-wider">Funded Live Pro</span>
                   <span className="text-2xl font-extrabold text-accent font-mono block">
                     {fundedCount}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-mono">Generating PnL</span>
+                  <span className="text-2xs text-gray-500 font-mono">Generating PnL</span>
                 </div>
 
                 <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
-                  <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Completed / Passed</span>
+                  <span className="text-2xs font-semibold text-gray-400 block uppercase tracking-wider">Completed / Passed</span>
                   <span className="text-2xl font-extrabold text-purple-400 font-mono block">
                     {passedCount}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-mono">Ready for KYC/Funded</span>
+                  <span className="text-2xs text-gray-500 font-mono">Ready for KYC/Funded</span>
                 </div>
 
                 <div className="p-4 bg-background rounded-xl border border-surface-muted text-left space-y-1">
-                  <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider">Breached / Reset</span>
+                  <span className="text-2xs font-semibold text-gray-400 block uppercase tracking-wider">Breached / Reset</span>
                   <span className="text-2xl font-extrabold text-red-400 font-mono block">
                     {failedCount}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-mono">Drawdown Exceeded</span>
+                  <span className="text-2xs text-gray-500 font-mono">Drawdown Exceeded</span>
                 </div>
               </div>
             </div>

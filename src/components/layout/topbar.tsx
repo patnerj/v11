@@ -177,6 +177,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
           onReadAll={async () => {
             await (adminMode ? api.admin.notificationsRead([]) : api.notificationsRead([]))
             loadNotifs()
+            void queryClient.invalidateQueries({ queryKey: ['notifications'] })
           }}
           onRead={(id: number) => {
             if (adminMode) api.admin.notificationsRead([id])
@@ -198,6 +199,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
                 unread_count: countChanged ? Math.max(0, old.unread_count - 1) : old.unread_count
               }
             })
+            void queryClient.invalidateQueries({ queryKey: ['notifications'] })
           }}
         />
 

@@ -9,14 +9,10 @@ const VALID_THEMES: Theme[] = ['midnight-obsidian', 'vscode-dark', 'cyberpunk-ne
 function readInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'midnight-obsidian'
   try {
-    // Admin routes are strictly locked to midnight-obsidian
-    if (window.location.pathname.startsWith('/admin')) {
-      return 'midnight-obsidian'
-    }
-    const domTheme = document.documentElement.getAttribute('data-theme') as Theme | null
-    if (domTheme && VALID_THEMES.includes(domTheme)) return domTheme
     const storedTheme = localStorage.getItem('user-theme') as Theme | null
     if (storedTheme && VALID_THEMES.includes(storedTheme)) return storedTheme
+    const domTheme = document.documentElement.getAttribute('data-theme') as Theme | null
+    if (domTheme && VALID_THEMES.includes(domTheme)) return domTheme
     const nextTheme = localStorage.getItem('theme')
     if (nextTheme === 'light' || document.documentElement.classList.contains('light')) {
       return 'clean-light'

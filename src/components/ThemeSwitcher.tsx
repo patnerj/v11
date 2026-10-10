@@ -26,7 +26,7 @@ const themes: { value: Theme; label: string; icon: React.FC<any> }[] = [
 export function ThemeSwitcher({ className }: { className?: string } = {}) {
   const { theme, setTheme } = useThemeContext()
   const { setTheme: setNextTheme } = useTheme()
-  
+  const [open, setOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
 
@@ -35,12 +35,13 @@ export function ThemeSwitcher({ className }: { className?: string } = {}) {
     try {
       setNextTheme(val === 'clean-light' ? 'light' : 'dark')
     } catch (e) {}
+    setOpen(false)
   }
 
   const ActiveIcon = themes.find(t => t.value === theme)?.icon || Palette
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button 
           type="button"
@@ -56,8 +57,8 @@ export function ThemeSwitcher({ className }: { className?: string } = {}) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 bg-surface border border-border shadow-2xl p-1.5 z-50">
-        <DropdownMenuLabel className="text-text-subtle font-semibold text-[11px] tracking-wider uppercase px-2.5 py-1.5">
-          IDE Themes
+        <DropdownMenuLabel className="text-text-subtle font-semibold text-2xs tracking-wider uppercase px-2.5 py-1.5">
+          Interface Theme
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border" />
         {themes.map((t) => {
@@ -65,20 +66,21 @@ export function ThemeSwitcher({ className }: { className?: string } = {}) {
           return (
             <DropdownMenuItem 
               key={t.value} 
+              onSelect={() => handleSelectTheme(t.value)}
               onClick={() => handleSelectTheme(t.value)}
               className={cn(
                 "flex items-center justify-between cursor-pointer py-2 px-2.5 rounded-lg text-xs font-medium transition-colors",
                 isSelected 
-                  ? "bg-accent/15 text-accent font-semibold" 
+                  ? "bg-accent/15 text-emerald-700 dark:text-emerald-400 font-semibold" 
                   : "text-text-muted hover:text-text hover:bg-surface-muted"
               )}
             >
               <div className="flex items-center gap-2">
-                <t.icon className={cn("w-4 h-4", isSelected ? "text-accent" : "text-text-subtle")} />
+                <t.icon className={cn("w-4 h-4", isSelected ? "text-emerald-700 dark:text-emerald-400" : "text-text-subtle")} />
                 <span>{t.label}</span>
               </div>
               {isSelected && (
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
               )}
             </DropdownMenuItem>
           )

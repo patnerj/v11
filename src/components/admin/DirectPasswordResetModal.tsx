@@ -191,7 +191,7 @@ export function DirectPasswordResetModal({
 
             <div className="rounded-lg bg-amber-950/20 border border-amber-500/20 p-2.5 flex items-start gap-2">
               <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-amber-300/90 leading-tight">
+              <p className="text-2xs text-amber-300/90 leading-tight">
                 This writes the hashed password directly to WordPress database. No email is sent or needed.
               </p>
             </div>

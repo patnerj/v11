@@ -24,12 +24,12 @@ export function PayoutsSection({ puckProps }: { puckProps?: any }) {
   ]
 
   return (
-    <section className="py-20 lg:py-28 relative overflow-hidden" id="payouts">
+    <section className="py-14 sm:py-20 lg:py-28 relative overflow-hidden" id="payouts">
       {/* Background glow */}
       <div className="absolute inset-0 -z-10 bg-aurora opacity-40 pointer-events-none" />
 
       <div className="container max-w-7xl mx-auto px-4">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Column: Payout Propositions & SLA Guarantee */}
           <motion.div
@@ -37,31 +37,31 @@ export function PayoutsSection({ puckProps }: { puckProps?: any }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-6 space-y-6"
+            className="lg:col-span-6 space-y-4 sm:space-y-6"
           >
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400">
               <Sparkles className="h-3.5 w-3.5" />
               <span>{badge}</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text">
               {titleText1}{' '}
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                 {titleAccent}
               </span>
             </h2>
 
-            <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-text-muted leading-relaxed">
               {description}
             </p>
 
-            <ul className="space-y-3.5 pt-2">
+            <ul className="space-y-2.5 sm:space-y-3.5 pt-1 sm:pt-2">
               {items.map((it: any, idx: number) => (
-                <li key={idx} className="flex items-start gap-3">
+                <li key={idx} className="flex items-start gap-2.5 sm:gap-3">
                   <div className="h-5 w-5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="h-3 w-3" />
                   </div>
-                  <span className="text-sm text-text font-medium leading-snug">
+                  <span className="text-xs sm:text-sm text-text font-medium leading-snug">
                     {it.itemText || it}
                   </span>
                 </li>
@@ -69,24 +69,24 @@ export function PayoutsSection({ puckProps }: { puckProps?: any }) {
             </ul>
 
             {/* SLA Badge */}
-            <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 rounded-2xl bg-surface/60 border border-border-subtle flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="h-5 w-5" />
+            <div className="pt-2 sm:pt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-surface/60 border border-border-subtle flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-bold text-text truncate">24-Hour Payout SLA</div>
-                  <div className="text-[11px] text-text-muted truncate">Guaranteed disbursal timeframe</div>
+                  <div className="text-2xs sm:text-2xs text-text-muted truncate">Guaranteed disbursal timeframe</div>
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-surface/60 border border-border-subtle flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Coins className="h-5 w-5" />
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-surface/60 border border-border-subtle flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                  <Coins className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-bold text-text truncate">0% Withdrawal Fees</div>
-                  <div className="text-[11px] text-text-muted truncate">We absorb transfer costs</div>
+                  <div className="text-2xs sm:text-2xs text-text-muted truncate">We absorb transfer costs</div>
                 </div>
               </div>
             </div>
@@ -98,7 +98,7 @@ export function PayoutsSection({ puckProps }: { puckProps?: any }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-6 relative"
+            className="lg:col-span-6 relative mt-4 lg:mt-0"
           >
             <PayoutLedgerVisual />
           </motion.div>
@@ -119,72 +119,72 @@ function PayoutLedgerVisual() {
   ]
 
   return (
-    <div className="relative rounded-3xl border border-border/80 bg-surface/60 backdrop-blur-xl overflow-hidden shadow-card-lg p-6 sm:p-7">
+    <div className="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/60 backdrop-blur-xl overflow-hidden shadow-card-lg p-3.5 sm:p-6 lg:p-7">
       <div className="absolute inset-0 bg-grid-overlay opacity-30 pointer-events-none" />
 
       {/* Header bar */}
-      <div className="relative flex items-center justify-between pb-4 border-b border-border-subtle/80 mb-5">
+      <div className="relative flex flex-wrap items-center justify-between gap-2 pb-3 sm:pb-4 border-b border-border-subtle/80 mb-3.5 sm:mb-5">
         <div>
-          <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+          <span className="text-2xs font-mono font-bold tracking-wider uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
             Treasury Ledger
           </span>
-          <h3 className="text-base font-bold text-text mt-1">Verified Trader Disbursals</h3>
+          <h3 className="text-sm sm:text-base font-bold text-text mt-1">Verified Trader Disbursals</h3>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Automated Queue Active</span>
+        <div className="flex items-center gap-1.5 text-2xs sm:text-xs text-emerald-400 font-mono">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span className="truncate">Automated Queue Active</span>
         </div>
       </div>
 
       {/* Total Historical Payouts Banner */}
-      <div className="relative p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-surface/80 to-surface/40 border border-emerald-500/20 mb-5 flex items-center justify-between">
-        <div>
-          <div className="text-xs text-text-muted">Total Capital Disbursed to Date</div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400 mt-0.5">
+      <div className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500/10 via-surface/80 to-surface/40 border border-emerald-500/20 mb-3.5 sm:mb-5 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-2xs sm:text-xs text-text-muted truncate">Total Capital Disbursed to Date</div>
+          <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-emerald-400 mt-0.5">
             $4,250,000+
           </div>
         </div>
-        <Badge tone="success" className="font-semibold text-xs py-1 px-3">
-          <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
+        <Badge tone="success" className="shrink-0 font-semibold text-2xs sm:text-xs py-0.5 px-2 sm:py-1 sm:px-3">
+          <ArrowUpRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />
           100% Fulfillment
         </Badge>
       </div>
 
       {/* Verified Transactions Stream */}
-      <div className="relative space-y-2.5">
+      <div className="relative space-y-2 sm:space-y-2.5">
         {verifiedPayouts.map((tx) => (
           <div
             key={tx.id}
-            className="flex items-center justify-between p-3 rounded-xl bg-surface/40 hover:bg-surface/70 border border-border-subtle/60 text-xs transition-colors"
+            className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-surface/40 hover:bg-surface/70 border border-border-subtle/60 text-xs transition-colors gap-2"
           >
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <Coins className="h-4 w-4" />
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <div>
-                <div className="font-mono font-bold text-text flex items-center gap-1.5">
+              <div className="min-w-0">
+                <div className="font-mono font-bold text-text flex items-center gap-1.5 truncate">
                   <span>{tx.amount}</span>
-                  <span className="text-[10px] font-normal text-text-muted">({tx.account})</span>
+                  <span className="text-2xs font-normal text-text-muted hidden xs:inline truncate">({tx.account})</span>
                 </div>
-                <div className="text-[11px] text-text-muted font-mono">
+                <div className="text-2xs sm:text-2xs text-text-muted font-mono truncate max-w-[130px] xs:max-w-none">
                   {tx.method} · {tx.address}
                 </div>
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                <Check className="h-3 w-3" />
+            <div className="text-right shrink-0">
+              <span className="inline-flex items-center gap-1 text-2xs sm:text-2xs font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded-md border border-emerald-500/20">
+                <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 <span>Paid</span>
               </span>
-              <div className="text-[10px] text-text-muted mt-0.5">{tx.time}</div>
+              <div className="text-3xs sm:text-2xs text-text-muted mt-0.5">{tx.time}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Footer Info */}
-      <div className="relative mt-5 pt-4 border-t border-border-subtle/80 flex items-center justify-between text-[11px] text-text-muted">
+      <div className="relative mt-3.5 sm:mt-5 pt-3 sm:pt-4 border-t border-border-subtle/80 flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-2xs sm:text-2xs text-text-muted">
         <span>Crypto Rails: TRC-20, ERC-20, BTC</span>
         <span className="text-emerald-400 font-medium">Fee Refund on 1st Payout: 100%</span>
       </div>

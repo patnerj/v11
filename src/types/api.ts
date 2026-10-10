@@ -466,6 +466,7 @@ export interface AffiliateMe {
   payout_method?:      'usdt_trc20' | 'usdt_bep20' | 'wise' | null
   payout_destination?: string | null
   available_balance?:  number
+  min_payout?:         number
   stats?:        { referrals: number; conversions: number; total: number; unpaid: number; paid: number }
 }
 export interface AffiliatePayout {
@@ -1160,7 +1161,7 @@ export interface PvpMatch {
   perk_reward?: 'FREE_RETRY' | 'DRAWDOWN_BUFFER_1PCT' | 'CHALLENGE_50PCT_OFF' | string | null;
   stake_amount: number | string;
   prize_pool: number | string;
-  platform_rake: number | string;
+  platform_rake?: number | string;
   starting_balance: number | string;
   duration_minutes: number;
   creator_user_id: number;
@@ -1173,10 +1174,12 @@ export interface PvpMatch {
   challenger_login?: string;
   winner_name?: string;
   winner_email?: string;
-  creator_pnl: number | string;
-  challenger_pnl: number | string;
-  creator_trades_count: number;
-  challenger_trades_count: number;
+  creator_pnl?: number | string;
+  challenger_pnl?: number | string;
+  creator_pnl_display?: string;
+  challenger_pnl_display?: string;
+  creator_trades_count?: number;
+  challenger_trades_count?: number;
   winner_user_id?: number | null;
   status: 'waiting' | 'active' | 'completed' | 'cancelled';
   started_at?: string | null;
@@ -1195,9 +1198,12 @@ export interface PvpPosition {
 export interface PvpGladiator {
   user_id: number;
   name: string;
-  equity: number;
-  pnl: number;
-  trades_count: number;
+  equity?: number;
+  pnl?: number;
+  pnl_display?: string;
+  realized_pnl?: number;
+  floating_pnl?: number;
+  trades_count?: number;
   position?: PvpPosition | null;
 }
 
@@ -1221,11 +1227,19 @@ export interface PvpLeaderboardEntry {
   streak: number;
 }
 
+export interface PvpArenaWalletResponse {
+  success: boolean;
+  wallet_mode?: 'demo' | 'live';
+  wallet: PvpArenaWallet;
+  balance?: number;
+}
+
 export interface PvpArenaWallet {
   success: boolean;
   user_id: number;
   balance: number;
   currency: string;
+  wallet_mode?: 'demo' | 'live';
   total_won: number;
   total_lost: number;
   transactions: PvpWalletTxn[];
@@ -1234,7 +1248,7 @@ export interface PvpArenaWallet {
 export interface PvpWalletTxn {
   id: number;
   user_id: number;
-  type: 'deposit' | 'withdrawal' | 'pvp_stake' | 'pvp_prize' | 'pvp_refund';
+  type: 'deposit' | 'withdrawal' | 'withdrawal_pending' | 'withdrawal_rejected' | 'pvp_stake' | 'pvp_prize' | 'pvp_refund';
   amount: number;
   balance_after: number;
   reference_id: string;
@@ -1300,8 +1314,10 @@ export interface PvpLiveStateResponse {
   events: PvpEvent[];
   creator: PvpGladiator;
   challenger: PvpGladiator;
-  lead_delta: number;
+  lead_delta?: number;
   leader: 'creator' | 'challenger' | 'tied';
+  creator_pnl_display?: string;
+  challenger_pnl_display?: string;
 }
 
 export interface PvpAnalyticsResponse {

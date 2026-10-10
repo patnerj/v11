@@ -99,7 +99,7 @@ export default function AdminChallengesPage() {
         >
           <Activity className="h-4 w-4" /> Active Challenge Accounts
           {rawChallenges.length > 0 && (
-            <Badge tone="accent" size="sm" className="ml-1 text-[10px]">{rawChallenges.length}</Badge>
+            <Badge tone="accent" size="sm" className="ml-1 text-2xs">{rawChallenges.length}</Badge>
           )}
         </button>
         <button
@@ -208,7 +208,7 @@ export default function AdminChallengesPage() {
                               {floor > 0 ? fmtUSD(floor) : '—'}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <span className="px-2 py-0.5 rounded bg-surface-muted border border-border text-[10px] font-mono">
+                              <span className="px-2 py-0.5 rounded bg-surface-muted border border-border text-2xs font-mono">
                                 Phase {c.phase ?? 1}
                               </span>
                             </td>
@@ -311,7 +311,7 @@ export default function AdminChallengesPage() {
               <p>
                 The Trailing Drawdown Floor is calculated dynamically from the trader&apos;s <strong>Equity High Water Mark (HWM)</strong>.
               </p>
-              <div className="p-3 bg-surface-muted rounded-lg font-mono text-[11px] text-text border border-border">
+              <div className="p-3 bg-surface-muted rounded-lg font-mono text-2xs text-text border border-border">
                 Trailing Floor = HWM - (Starting Balance * 10%)
               </div>
               <p>
@@ -334,7 +334,7 @@ export default function AdminChallengesPage() {
               <p>
                 When a challenge account reaches <strong>+5% profit</strong>, the trailing floor locks permanently at the <strong>Starting Balance</strong>.
               </p>
-              <div className="p-3 bg-emerald-500/10 rounded-lg text-[11px] text-emerald-400 border border-emerald-500/20 font-medium">
+              <div className="p-3 bg-emerald-500/10 rounded-lg text-2xs text-emerald-400 border border-emerald-500/20 font-medium">
                 🛡️ Once locked, the trader can never lose their initial capital floor even if equity climbs further.
               </div>
               <p>
@@ -357,7 +357,7 @@ export default function AdminChallengesPage() {
               <p>
                 Daily drawdown is limited to <strong>5%</strong> of the previous server midnight equity or balance (whichever is higher).
               </p>
-              <div className="p-3 bg-surface-muted rounded-lg font-mono text-[11px] text-text border border-border">
+              <div className="p-3 bg-surface-muted rounded-lg font-mono text-2xs text-text border border-border">
                 Daily Limit = Midnight Base * 0.95
               </div>
               <p>

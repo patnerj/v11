@@ -108,7 +108,7 @@ export default function AdminPageBuilder() {
             </div>
             <div>
               <h1 className="font-bold text-sm text-text leading-tight">Homepage Visual Builder</h1>
-              <p className="text-[10px] text-gray-400 font-mono">Puck Drag &amp; Drop Component Engine</p>
+              <p className="text-2xs text-gray-400 font-mono">Puck Drag &amp; Drop Component Engine</p>
             </div>
           </div>
         </div>

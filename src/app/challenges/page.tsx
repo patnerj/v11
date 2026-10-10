@@ -55,14 +55,14 @@ function ChallengesPageInner() {
 
         {/* Top Assurance Bar */}
         <div className="container max-w-7xl mx-auto px-4 mb-8">
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 py-3 px-6 rounded-2xl bg-surface/30 border border-border-subtle/80 backdrop-blur-md text-xs text-slate-400 font-mono">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 py-3 px-6 rounded-2xl bg-surface border border-border shadow-xs backdrop-blur-md text-xs text-text-muted font-mono">
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="h-4 w-4" /> Static Drawdown Only
             </span>
-            <span className="flex items-center gap-1.5 text-teal-400 font-bold">
+            <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400 font-bold">
               <Coins className="h-4 w-4" /> 100% Fee Refund on 1st Payout
             </span>
-            <span className="flex items-center gap-1.5 text-cyan-400 font-bold">
+            <span className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400 font-bold">
               <Zap className="h-4 w-4" /> 14ms MT5 Server Execution
             </span>
           </div>

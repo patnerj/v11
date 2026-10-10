@@ -5,6 +5,25 @@
  * Zero external audio files required, zero latency, lightweight.
  */
 
+import { playHapticFeedback } from './haptics'
+export { playHapticFeedback }
+
+export function isSoundEnabled(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    return localStorage.getItem('fxsim_sound_enabled') !== 'false'
+  } catch {
+    return true
+  }
+}
+
+export function setSoundEnabled(enabled: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem('fxsim_sound_enabled', String(enabled))
+  } catch {}
+}
+
 let audioCtx: AudioContext | null = null
 
 function getAudioContext(): AudioContext | null {
@@ -26,6 +45,7 @@ function getAudioContext(): AudioContext | null {
 }
 
 export function playOrderSuccessSound() {
+  if (!isSoundEnabled()) return
   const ctx = getAudioContext()
   if (!ctx) return
 
@@ -61,6 +81,7 @@ export function playOrderSuccessSound() {
 }
 
 export function playOrderCloseSound() {
+  if (!isSoundEnabled()) return
   const ctx = getAudioContext()
   if (!ctx) return
 
@@ -87,6 +108,7 @@ export function playOrderCloseSound() {
 }
 
 export function playSltpUpdatedSound() {
+  if (!isSoundEnabled()) return
   const ctx = getAudioContext()
   if (!ctx) return
 
@@ -113,6 +135,7 @@ export function playSltpUpdatedSound() {
 }
 
 export function playCelebrationVictorySound() {
+  if (!isSoundEnabled()) return
   const ctx = getAudioContext()
   if (!ctx) return
 
@@ -161,4 +184,3 @@ export function playCelebrationVictorySound() {
     /* Audio disabled or blocked by browser policy */
   }
 }
-

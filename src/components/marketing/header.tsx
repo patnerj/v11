@@ -75,6 +75,7 @@ export function MarketingHeader() {
             <Link
               key={it.href}
               href={it.href}
+              prefetch={false}
               className="px-3 py-1.5 text-xs font-semibold text-text-muted hover:text-emerald-400 hover:bg-surface-muted/60 transition-colors focus-ring rounded-lg"
             >
               {it.label}
@@ -88,7 +89,7 @@ export function MarketingHeader() {
             <div className="h-8 w-32 rounded-md skel" aria-hidden />
           ) : user ? (
             <Button asChild size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold shadow-glow-sm btn-shine">
-              <Link href="/dashboard" className="flex items-center gap-1.5">
+              <Link href="/dashboard" prefetch={false} className="flex items-center gap-1.5">
                 <span>Dashboard</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -96,10 +97,10 @@ export function MarketingHeader() {
           ) : (
             <>
               <Button asChild size="sm" variant="ghost" className="text-xs font-medium text-text-muted hover:text-text">
-                <Link href="/login">Sign In</Link>
+                <Link href="/login" prefetch={false}>Sign In</Link>
               </Button>
               <Button asChild size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-glow-sm btn-shine">
-                <Link href="/register" className="flex items-center gap-1">
+                <Link href="/register" prefetch={false} className="flex items-center gap-1">
                   <span>Start Trading</span>
                   <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -148,6 +149,7 @@ export function MarketingHeader() {
                 <Link
                   key={it.href}
                   href={it.href}
+                  prefetch={false}
                   onClick={() => setOpen(false)}
                   className="px-4 py-2.5 text-sm font-medium text-text-muted hover:text-emerald-400 hover:bg-surface-muted rounded-lg transition-colors"
                 >
@@ -158,19 +160,19 @@ export function MarketingHeader() {
               <div className="pt-3 mt-2 border-t border-border-subtle flex flex-col gap-2">
                 {user ? (
                   <Button asChild size="md" className="bg-emerald-500 text-white font-bold w-full">
-                    <Link href="/dashboard" onClick={() => setOpen(false)}>
+                    <Link href="/dashboard" prefetch={false} onClick={() => setOpen(false)}>
                       Dashboard →
                     </Link>
                   </Button>
                 ) : (
                   <>
                     <Button asChild size="md" variant="outline" className="w-full">
-                      <Link href="/login" onClick={() => setOpen(false)}>
+                      <Link href="/login" prefetch={false} onClick={() => setOpen(false)}>
                         Sign In
                       </Link>
                     </Button>
                     <Button asChild size="md" className="bg-emerald-500 text-white font-bold w-full">
-                      <Link href="/register" onClick={() => setOpen(false)}>
+                      <Link href="/register" prefetch={false} onClick={() => setOpen(false)}>
                         Start Trading →
                       </Link>
                     </Button>

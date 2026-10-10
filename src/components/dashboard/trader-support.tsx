@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { 
   LifeBuoy, 
@@ -268,6 +268,28 @@ export function TraderSupport() {
   const rawMessages = Array.isArray(activeTicketData?.messages) ? activeTicketData.messages : [];
   const activeTicket = (activeTicketData as any)?.ticket || tickets.find(t => Number(t.id) === selectedTicketId) || null;
 
+  const queryClient = useQueryClient();
+  const prevMsgCountRef = useRef<number | null>(null);
+  const prevTicketIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (activeTicketData && selectedTicketId) {
+      const msgs = Array.isArray(activeTicketData.messages) ? activeTicketData.messages : [];
+      if (prevTicketIdRef.current === selectedTicketId && prevMsgCountRef.current !== null && msgs.length > prevMsgCountRef.current) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg && (lastMsg.sender_type === 'admin' || (lastMsg.sender_type as string) === 'ai_assistant')) {
+          toast.info(`New support reply on Ticket #${selectedTicketId}`);
+          void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      }
+      prevTicketIdRef.current = selectedTicketId;
+      prevMsgCountRef.current = msgs.length;
+    } else {
+      prevTicketIdRef.current = selectedTicketId;
+      prevMsgCountRef.current = null;
+    }
+  }, [activeTicketData, selectedTicketId, queryClient]);
+
   // Transform and sanitize messages: replace generic robotic fallback or mismatched response with relevant answer
   const messages = useMemo(() => {
     return rawMessages.map((m, idx) => {
@@ -397,21 +419,21 @@ export function TraderSupport() {
       case 'resolved':
       case 'closed':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
             Resolved
           </span>
         );
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
             In Progress
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-ping" />
             Open
           </span>
@@ -442,7 +464,7 @@ export function TraderSupport() {
           </div>
           <div>
             <h2 className="text-base font-bold text-foreground dark:text-white tracking-tight leading-none">Trader Support Desk</h2>
-            <span className="text-[11px] text-muted-foreground dark:text-gray-400">Direct 24/7 assistance for platform, trades, rules & payouts</span>
+            <span className="text-2xs text-muted-foreground dark:text-gray-400">Direct 24/7 assistance for platform, trades, rules & payouts</span>
           </div>
         </div>
 
@@ -452,8 +474,8 @@ export function TraderSupport() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">24/7 AI Desk: ONLINE</span>
-            <span className="text-muted-foreground dark:text-gray-500 text-[10px] hidden md:inline">(&lt; 5s instant answer)</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-2xs">24/7 AI Desk: ONLINE</span>
+            <span className="text-muted-foreground dark:text-gray-500 text-2xs hidden md:inline">(&lt; 5s instant answer)</span>
           </div>
 
           <Button 
@@ -503,12 +525,12 @@ export function TraderSupport() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ticket # or subject..."
-                className="w-full pl-8 pr-2.5 py-1.5 bg-background dark:bg-[#080C14] border border-border dark:border-surface-muted rounded-xl text-xs text-foreground dark:text-gray-200 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 transition-all shadow-sm"
+                className="w-full pl-8 pr-2.5 py-1.5 bg-background dark:bg-surface border border-border dark:border-surface-muted rounded-xl text-xs text-foreground dark:text-gray-200 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 transition-all shadow-sm"
               />
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex items-center bg-background/80 dark:bg-[#080C14] p-0.5 rounded-lg border border-border dark:border-surface-muted text-[11px]">
+            <div className="flex items-center bg-background/80 dark:bg-surface p-0.5 rounded-lg border border-border dark:border-surface-muted text-2xs">
               {(['all', 'active', 'resolved'] as const).map((st) => (
                 <button
                   key={st}
@@ -544,7 +566,7 @@ export function TraderSupport() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1.5">
-                    <span className="font-bold tabular text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    <span className="font-bold tabular text-2xs text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                       {t.ticket_number || `#TICK-${t.id}`}
                     </span>
                     {getStatusBadge(t.status)}
@@ -554,7 +576,7 @@ export function TraderSupport() {
                     {t.subject}
                   </h3>
 
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground dark:text-gray-500 tabular pt-0.5">
+                  <div className="flex items-center justify-between text-2xs text-muted-foreground dark:text-gray-500 tabular pt-0.5">
                     <span className="inline-flex items-center gap-1">
                       <CatIcon className="w-3 h-3 text-muted-foreground dark:text-gray-500" />
                       {cat.label}
@@ -569,7 +591,7 @@ export function TraderSupport() {
               <div className="py-12 text-center text-muted-foreground dark:text-gray-500 text-xs px-3">
                 <LifeBuoy className="w-8 h-8 mx-auto text-muted-foreground/60 dark:text-gray-600 mb-2 opacity-60" />
                 <p className="font-semibold text-foreground/80 dark:text-gray-400">No tickets found</p>
-                <p className="text-[11px] text-muted-foreground dark:text-gray-500 mt-1">Open a new ticket to get 24/7 assistance.</p>
+                <p className="text-2xs text-muted-foreground dark:text-gray-500 mt-1">Open a new ticket to get 24/7 assistance.</p>
               </div>
             )}
           </div>
@@ -608,14 +630,14 @@ export function TraderSupport() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                  <div className="text-right text-[11px] text-muted-foreground dark:text-gray-500 tabular hidden md:block">
+                  <div className="text-right text-2xs text-muted-foreground dark:text-gray-500 tabular hidden md:block">
                     <span>{new Date(activeTicket.created_at).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
               {/* Chat Messages Stream (Scrollable) */}
-              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/15 dark:bg-[#080C14]/40">
+              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/15 dark:bg-surface/40">
                 {messages.length === 0 ? (
                   <div className="py-16 text-center text-muted-foreground dark:text-gray-500 text-xs">
                     <Sparkles className="w-6 h-6 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 animate-pulse" />
@@ -640,7 +662,7 @@ export function TraderSupport() {
                         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
                         {/* Header line above bubble */}
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground dark:text-gray-400 mb-1 px-1 tabular">
+                        <div className="flex items-center gap-2 text-2xs text-muted-foreground dark:text-gray-400 mb-1 px-1 tabular">
                           {isMe ? (
                             <>
                               <span className="font-semibold text-foreground/80 dark:text-gray-300 flex items-center gap-1">
@@ -655,7 +677,7 @@ export function TraderSupport() {
                                 <Bot className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                 {isAi ? `✨ ${brandName} AI Desk` : `${brandName} Support`}
                               </span>
-                              <span className="text-[9px] uppercase font-bold tracking-wider px-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+                              <span className="text-3xs uppercase font-bold tracking-wider px-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
                                 Official
                               </span>
                               <span>•</span>
@@ -686,7 +708,7 @@ export function TraderSupport() {
               {/* ── Ergonomic Pinned Bottom Reply Composer ────────────────── */}
               <div className="border-t border-border dark:border-surface-muted/80 p-3 bg-muted/20 dark:bg-background shrink-0 space-y-2">
                 {isResolved && (
-                  <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-300">
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-2xs text-emerald-700 dark:text-emerald-300">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       This ticket was marked resolved. Type below anytime to re-open or ask a follow-up!
@@ -707,11 +729,11 @@ export function TraderSupport() {
                         handleSendReply();
                       }
                     }}
-                    className="w-full rounded-xl border p-3 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs sm:text-sm text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all resize-none min-h-[75px] shadow-sm"
+                    className="w-full rounded-xl border p-3 bg-background dark:bg-surface border-border dark:border-surface-muted text-xs sm:text-sm text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all resize-none min-h-[75px] shadow-sm"
                   />
 
                   <div className="flex items-center justify-between gap-2 pt-0.5">
-                    <span className="text-[10px] text-muted-foreground dark:text-gray-500 font-sans hidden sm:inline">
+                    <span className="text-2xs text-muted-foreground dark:text-gray-500 font-sans hidden sm:inline">
                       Press <kbd className="px-1 py-0.5 rounded bg-muted dark:bg-surface border border-border dark:border-gray-700 text-foreground/80 dark:text-gray-300">Ctrl + Enter</kbd> to send
                     </span>
 
@@ -779,7 +801,7 @@ export function TraderSupport() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-foreground dark:text-white">Open Support Ticket</h3>
-                    <p className="text-[11px] text-muted-foreground dark:text-gray-400">Our 24/7 AI Desk will review and respond instantly</p>
+                    <p className="text-2xs text-muted-foreground dark:text-gray-400">Our 24/7 AI Desk will review and respond instantly</p>
                   </div>
                 </div>
                 <button
@@ -795,7 +817,7 @@ export function TraderSupport() {
               <form onSubmit={handleCreateTicket} className="p-5 space-y-4">
                 {/* Category Tiles */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-2">
+                  <label className="block text-2xs font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-2">
                     Select Category
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -825,7 +847,7 @@ export function TraderSupport() {
 
                 {/* Subject */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
+                  <label className="block text-2xs font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
                     Subject
                   </label>
                   <input
@@ -835,14 +857,14 @@ export function TraderSupport() {
                     required
                     value={newSubject}
                     onChange={(e) => setNewSubject(e.target.value)}
-                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 shadow-sm"
+                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-surface border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 shadow-sm"
                     placeholder="E.g. How can I participate in Arena?"
                   />
                 </div>
 
                 {/* Message */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
+                  <label className="block text-2xs font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
                     Description & Details
                   </label>
                   <textarea
@@ -850,7 +872,7 @@ export function TraderSupport() {
                     rows={4}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-[#080C14] border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 resize-none shadow-sm"
+                    className="w-full rounded-xl border p-2.5 bg-background dark:bg-surface border-border dark:border-surface-muted text-xs text-foreground dark:text-gray-100 placeholder:text-muted-foreground dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 resize-none shadow-sm"
                     placeholder="Describe what you need help with in detail..."
                   />
                 </div>

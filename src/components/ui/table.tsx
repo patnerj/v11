@@ -63,7 +63,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-11 px-4 text-left align-middle text-[11px] font-bold uppercase tracking-wider text-text-muted [&:has([role=checkbox])]:pr-0',
+      'h-10 px-4 text-left align-middle text-2xs font-semibold uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0',
       align === 'center' && 'text-center',
       align === 'right' && 'text-right',
       hideOn === 'sm' && 'hidden sm:table-cell',
@@ -83,7 +83,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      'p-4 align-middle text-sm text-text [&:has([role=checkbox])]:pr-0',
+      'p-4 align-middle text-sm text-foreground [&:has([role=checkbox])]:pr-0',
       align === 'center' && 'text-center',
       align === 'right' && 'text-right',
       hideOn === 'sm' && 'hidden sm:table-cell',

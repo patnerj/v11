@@ -1,10 +1,11 @@
+import { Suspense, cache } from "react";
 import { PuckRenderer } from "@/components/puck/puck-renderer";
 import { MarketingHeader } from "@/components/marketing/header";
 import { PayoutTicker } from "@/components/payout-ticker";
 import { MarketingFooter } from "@/components/marketing/footer";
 import { getApiBaseUrl } from "@/lib/fxsim";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 // Default fallback layout if database has no schema saved yet
 const defaultData = {
@@ -22,10 +23,16 @@ const defaultData = {
   root: {}
 };
 
-async function getPageSchema() {
+const getCachedPageSchema = cache(async () => {
   try {
     const baseUrl = getApiBaseUrl();
-    const res = await fetch(`${baseUrl}/page-schema`, { cache: 'no-store' });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    const res = await fetch(`${baseUrl}/page-schema`, { 
+      next: { revalidate: 300 },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
     if (res.ok) {
       const data = await res.json();
       const schema = data?.schema || (data?.content ? data : null);
@@ -43,20 +50,24 @@ async function getPageSchema() {
       }
     }
   } catch (err) {
-    console.error("Error fetching page schema:", err);
+    // silently fallback on timeout or fetch error
   }
   return defaultData;
-}
+});
 
 export default async function HomePage() {
-  const data = await getPageSchema();
+  const data = await getCachedPageSchema();
 
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-emerald-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
       <MarketingHeader />
-      <PayoutTicker />
+      <Suspense fallback={null}>
+        <PayoutTicker />
+      </Suspense>
       <main className="relative pb-20 lg:pb-0">
-        <PuckRenderer data={data} />
+        <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" /></div>}>
+          <PuckRenderer data={data} />
+        </Suspense>
       </main>
       <MarketingFooter />
     </div>

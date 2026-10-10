@@ -18,6 +18,7 @@ import { toNum } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import { Input, Label, Textarea } from '@/components/ui/input'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -377,17 +378,17 @@ export default function TradersHubPage() {
         const initial = (row.name || 'T').charAt(0).toUpperCase()
         return (
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
+            <div className="h-9 w-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-bold text-xs shrink-0">
               {initial}
             </div>
             <div className="min-w-0">
               <Link 
                 href={`/admin/traders/${row.user_id}`}
-                className="font-semibold text-gray-100 hover:text-emerald-400 transition-colors text-sm truncate block"
+                className="font-semibold text-text hover:text-accent transition-colors text-sm truncate block"
               >
                 {row.name}
               </Link>
-              <p className="text-xs text-gray-500 truncate font-mono">{row.email}</p>
+              <p className="text-xs text-text-muted truncate font-mono">{row.email}</p>
             </div>
           </div>
         )
@@ -397,7 +398,7 @@ export default function TradersHubPage() {
       key: 'account_id',
       header: 'Account ID',
       render: (row) => (
-        <span className="font-mono text-xs font-semibold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
+        <span className="font-mono terminal-num text-xs font-semibold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
           #TRD-{row.account_id}
         </span>
       )
@@ -414,7 +415,7 @@ export default function TradersHubPage() {
 
         return (
           <div className="space-y-1">
-            <p className="text-xs font-medium text-gray-200">{row.plan_name}</p>
+            <p className="text-xs font-medium text-text">{row.plan_name}</p>
             <div>
               {isBanned ? (
                 <Badge tone="danger" size="sm">Banned</Badge>
@@ -440,17 +441,17 @@ export default function TradersHubPage() {
       align: 'right',
       render: (row) => {
         if (row.starting_balance === 0 && row.balance === 0) {
-          return <span className="text-xs text-gray-500 font-mono">—</span>
+          return <span className="text-xs text-text-muted font-mono">—</span>
         }
         const pnl = row.equity - row.starting_balance
         const isProfit = pnl >= 0
         return (
-          <div className="text-right font-mono space-y-0.5">
-            <div className="text-sm font-bold text-gray-100">
+          <div className="text-right terminal-num space-y-0.5">
+            <div className="text-sm font-semibold text-text">
               {formatExactMoney(row.balance)}
             </div>
             <div className={`text-xs flex items-center justify-end gap-1 ${
-              isProfit ? 'text-emerald-400' : 'text-red-400'
+              isProfit ? 'text-profit' : 'text-loss'
             }`}>
               {isProfit ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
               <span>{formatExactMoney(row.equity)} Eq</span>
@@ -484,7 +485,7 @@ export default function TradersHubPage() {
       header: 'Joined Date',
       align: 'right',
       render: (row) => (
-        <span className="text-xs text-gray-400 font-mono">
+        <span className="text-xs text-text-muted font-mono">
           {new Date(row.created_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -505,7 +506,7 @@ export default function TradersHubPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-slate-800"
+                className="h-8 w-8 p-0 text-text-muted hover:text-text hover:bg-surface-muted"
               >
                 <MoreVertical className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
@@ -517,7 +518,7 @@ export default function TradersHubPage() {
               
               <Link href={`/admin/traders/${row.user_id}`}>
                 <DropdownMenuItem className="gap-2.5">
-                  <ExternalLink className="h-4 w-4 text-emerald-400" />
+                  <ExternalLink className="h-4 w-4 text-accent" />
                   View 360 Profile
                 </DropdownMenuItem>
               </Link>
@@ -559,7 +560,7 @@ export default function TradersHubPage() {
                 className="gap-2.5"
                 onClick={() => setBalanceTarget(row)}
               >
-                <Wallet className="h-4 w-4 text-emerald-400" />
+                <Wallet className="h-4 w-4 text-accent" />
                 Adjust Balance
               </DropdownMenuItem>
 
@@ -594,50 +595,41 @@ export default function TradersHubPage() {
       <Mt5UnassignedBanner />
 
       {/* ── Top Bar Header ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
+      <PageHeader
+        title="Traders Management"
+        description="Directory of registered prop traders, challenge progression, KYC verification, and custom risk overrides."
+        badge={{ label: `${allTraders.length} Active Accounts`, tone: 'accent' }}
+        actions={
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
-              Traders Management
-            </h1>
-            <Badge tone="accent" size="sm" className="font-mono">
-              {allTraders.length} Active Accounts
-            </Badge>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportCSV}
+              className="border-border text-text hover:bg-surface-muted gap-2 h-9"
+            >
+              <Download className="h-4 w-4 text-accent" />
+              Export CSV
+            </Button>
+
+            <Button 
+              variant="primary" 
+              size="sm" 
+              className="gap-2 h-9 shadow-accent/20"
+              onClick={() => {
+                if (filteredTraders.length > 0) {
+                  setSelectedTrader(filteredTraders[0])
+                  setOverrideModalOpen(true)
+                } else {
+                  toast.info('Select a trader to apply overrides')
+                }
+              }}
+            >
+              <Sliders className="h-4 w-4" />
+              Apply Overrides
+            </Button>
           </div>
-          <p className="text-sm text-text-muted mt-1">
-            Directory of registered prop traders, challenge progression, KYC verification, and custom risk overrides.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportCSV}
-            className="border-border text-text hover:bg-surface-muted gap-2 h-9"
-          >
-            <Download className="h-4 w-4 text-emerald-400" />
-            Export CSV
-          </Button>
-
-          <Button 
-            variant="primary" 
-            size="sm" 
-            className="gap-2 h-9 shadow-emerald-500/20"
-            onClick={() => {
-              if (filteredTraders.length > 0) {
-                setSelectedTrader(filteredTraders[0])
-                setOverrideModalOpen(true)
-              } else {
-                toast.info('Select a trader to apply overrides')
-              }
-            }}
-          >
-            <Sliders className="h-4 w-4" />
-            Apply Overrides
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Filter Bar Card ───────────────────────────────────────────────── */}
       <Card className="bg-surface border-border">
@@ -672,7 +664,7 @@ export default function TradersHubPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-emerald-500 cursor-pointer"
+                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-accent cursor-pointer"
                 >
                   <option value="all">All Statuses</option>
                   <option value="phase1">Phase 1 Evaluation</option>
@@ -689,7 +681,7 @@ export default function TradersHubPage() {
                 <select
                   value={kycFilter}
                   onChange={(e) => setKycFilter(e.target.value)}
-                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-emerald-500 cursor-pointer"
+                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-accent cursor-pointer"
                 >
                   <option value="all">All KYC</option>
                   <option value="verified">Verified</option>
@@ -915,7 +907,7 @@ function AdjustBalanceDialog({ user, onClose, onSaved }: {
           <div className="rounded-md bg-surface-muted border border-border p-3 text-xs space-y-1">
             <div className="flex justify-between"><span className="text-text-muted">Current balance</span><span className="font-mono text-text">{formatExactMoney(user.balance)}</span></div>
             <div className="flex justify-between"><span className="text-text-muted">Adjustment</span>
-              <span className={`font-mono font-medium ${amountN > 0 ? 'text-emerald-400' : amountN < 0 ? 'text-rose-400' : 'text-text-muted'}`}>
+              <span className={`terminal-num font-medium ${amountN > 0 ? 'text-profit' : amountN < 0 ? 'text-loss' : 'text-text-muted'}`}>
                 {Number.isFinite(amountN) && amountN !== 0 ? (isAdd ? '+' : '') + formatExactMoney(amountN) : '—'}
               </span>
             </div>

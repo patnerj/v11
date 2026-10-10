@@ -10,6 +10,7 @@ import { Header } from '@/components/admin/Header'
 import { OmniSearchDialog } from '@/components/admin/OmniSearchDialog'
 import { TradingScreenLoader } from '@/components/ui/trading-loader'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
+import { useThemeContext } from '@/context/ThemeContext'
 import { cn } from '@/lib/cn'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -21,13 +22,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isOmniSearchOpen, setIsOmniSearchOpen] = useState(false)
+  const { theme } = useThemeContext()
+  const isDark = theme !== 'clean-light'
 
-  // Rule 67.3: Dedicated Dark Portal Initialization & Root Mount Guard
+  // Dynamic Theme Synchronization for Admin Portal
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'midnight-obsidian')
-    document.documentElement.classList.add('dark')
-    document.documentElement.classList.remove('light')
-  }, [])
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme)
+      if (theme === 'clean-light') {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.add('light')
+      } else {
+        document.documentElement.classList.add('dark')
+        document.documentElement.classList.remove('light')
+      }
+    }
+  }, [theme])
 
   // Global Admin Omni-Search Shortcut (Cmd + K / Ctrl + K)
   useEffect(() => {
@@ -42,13 +52,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isLoginPage])
 
-  // Auth & Impersonation Guard
+  const [isVerifying, setIsVerifying] = useState(!isLoginPage)
+
+  // Auth & Impersonation Guard (ADMINUI-3: Await server verification before rendering)
   useEffect(() => {
     if (isLoginPage) return
-    if (!ready) return
-    // Re-verify the role against the SERVER on every admin mount — never trust
-    // cached client state for an authorization decision.
-    void useAuth.getState().refresh(true)
+    let active = true
+
+    async function verifySession() {
+      setIsVerifying(true)
+      try {
+        // Re-verify the role against the SERVER on every admin mount — never trust
+        // cached client state for an authorization decision.
+        await useAuth.getState().refresh(true)
+      } catch {
+        // ignore network error, user state will handle redirection
+      } finally {
+        if (active) setIsVerifying(false)
+      }
+    }
+
+    verifySession()
+    return () => { active = false }
+  }, [isLoginPage])
+
+  useEffect(() => {
+    if (isLoginPage || isVerifying || !ready) return
     if (!user) {
       router.replace('/admin/login')
       return
@@ -56,14 +85,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (impersonating || !user.is_admin) {
       router.replace('/dashboard')
     }
-  }, [ready, user?.id, user?.is_admin, impersonating, router, isLoginPage])
+  }, [isLoginPage, isVerifying, ready, user?.id, user?.is_admin, impersonating, router])
 
   // If on admin login page, bypass layout shell and loaders completely
   if (isLoginPage) {
     return <>{children}</>
   }
 
-  if (!ready || !user || !user.is_admin || impersonating) {
+  if (isVerifying || !ready || !user || !user.is_admin || impersonating) {
     return (
       <TradingScreenLoader
         label="Checking your session"
@@ -73,7 +102,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="dark min-h-screen bg-bg text-text flex flex-col lg:flex-row antialiased transition-colors" data-theme="midnight-obsidian">
+    <div 
+      className={cn(
+        "min-h-screen bg-bg text-text flex flex-col lg:flex-row antialiased transition-colors min-w-0 max-w-full overflow-x-hidden",
+        isDark ? "dark" : "light"
+      )} 
+      data-theme={theme}
+    >
       
       {/* Desktop Sidebar (Persistent) */}
       <Sidebar 
@@ -100,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content Wrapper */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-h-screen w-full transition-all duration-300",
+          "flex-1 flex flex-col min-h-screen w-full min-w-0 max-w-full overflow-x-hidden transition-all duration-300",
           sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"
         )}
       >
@@ -111,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-28 lg:pb-8">
+        <main className="flex-1 min-w-0 max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-28 lg:pb-8">
           <SectionErrorBoundary sectionName="Admin Workspace">
             {children}
           </SectionErrorBoundary>

@@ -70,7 +70,7 @@ export function CreateTicketModal({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground dark:text-white">Open Support Ticket</h3>
-                  <p className="text-[11px] text-muted-foreground dark:text-gray-400">Our 24/7 AI Desk will review and respond instantly</p>
+                  <p className="text-2xs text-muted-foreground dark:text-gray-400">Our 24/7 AI Desk will review and respond instantly</p>
                 </div>
               </div>
               <button
@@ -88,7 +88,7 @@ export function CreateTicketModal({
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {/* Category Tiles */}
               <div>
-                <label className="block text-[11px] font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-2">
+                <label className="block text-2xs font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-2">
                   Select Category
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -118,7 +118,7 @@ export function CreateTicketModal({
 
               {/* Subject Input with Auto-Focus */}
               <div>
-                <label htmlFor="ticket-subject" className="block text-[11px] font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
+                <label htmlFor="ticket-subject" className="block text-2xs font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
                   Subject
                 </label>
                 <input
@@ -136,7 +136,7 @@ export function CreateTicketModal({
 
               {/* Description Textarea */}
               <div>
-                <label htmlFor="ticket-description" className="block text-[11px] font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
+                <label htmlFor="ticket-description" className="block text-2xs font-semibold text-foreground/80 dark:text-gray-300 uppercase tracking-wider mb-1">
                   Description & Details
                 </label>
                 <textarea

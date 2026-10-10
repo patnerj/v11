@@ -13,6 +13,7 @@ import { useAuth } from '@/store/auth'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
@@ -89,7 +90,7 @@ export function Header({ onMobileMenuToggle, onOpenSearch }: HeaderProps) {
           <Search className="h-4 w-4 text-text-muted group-hover:text-accent transition-colors shrink-0" />
           <span className="text-xs text-text-muted/80 truncate">Search traders, tickets, hubs...</span>
         </div>
-        <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded bg-surface border border-border/80 font-mono text-[10px] text-text-muted group-hover:text-text shrink-0">
+        <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded bg-surface border border-border/80 font-mono text-2xs text-text-muted group-hover:text-text shrink-0">
           Ctrl K
         </kbd>
       </button>
@@ -113,13 +114,13 @@ export function Header({ onMobileMenuToggle, onOpenSearch }: HeaderProps) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
           </span>
-          <span className="text-[11px] font-semibold text-text">System Live</span>
+          <span className="text-2xs font-semibold text-text">System Live</span>
         </div>
 
         <div className="h-5 w-px bg-border hidden sm:block" />
 
-        {/* IDE Themes Switcher */}
-        <ThemeSwitcher />
+        {/* Theme Toggle (Daylight / Obsidian Mode) */}
+        <ThemeToggle />
 
         {/* Notifications Icon with Badge */}
         <Link
@@ -154,7 +155,7 @@ export function Header({ onMobileMenuToggle, onOpenSearch }: HeaderProps) {
               <div className="absolute right-0 mt-2 w-56 rounded-xl bg-surface border border-border shadow-xl z-50 p-1.5 text-xs text-text">
                 <div className="px-3 py-2 border-b border-border mb-1">
                   <p className="font-semibold text-text truncate">{user?.email || 'admin@firm.com'}</p>
-                  <p className="text-[10px] text-accent mt-0.5">Enterprise SuperAdmin</p>
+                  <p className="text-2xs text-accent mt-0.5">Enterprise SuperAdmin</p>
                 </div>
 
                 <div className="px-3 py-1.5 flex items-center justify-between border-b border-border mb-1">

@@ -29,11 +29,28 @@ async function establishSessionSafe(token: string, remember = true): Promise<boo
   return true
 }
 
+const defaultPreferences: Record<string, boolean> = {
+  email_notifications: true,
+  push_notifications: true,
+  trade_alerts: true,
+  marketing_emails: false,
+}
+
+function loadLocalPreferences(): Record<string, boolean> {
+  if (typeof window === 'undefined') return defaultPreferences
+  try {
+    const raw = localStorage.getItem('fxsim:notification_preferences')
+    if (raw) return { ...defaultPreferences, ...JSON.parse(raw) }
+  } catch {}
+  return defaultPreferences
+}
+
 interface AuthState {
   user:        AuthUser | null
   loading:     boolean
   ready:       boolean
   error:       string | null
+  preferences: Record<string, boolean>
   /** Timestamp of last successful /auth/me — used to avoid re-querying frequently. */
   lastChecked: number
 
@@ -45,6 +62,7 @@ interface AuthState {
   signout:   () => Promise<void>
   logout:    () => Promise<void>
   refresh:   (force?: boolean) => Promise<void>
+  updatePreference: (key: string, value: boolean) => Promise<void>
 }
 
 // Dedupe concurrent bootstrap() calls
@@ -57,6 +75,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   loading: false,
   ready: false,
   error: null,
+  preferences: loadLocalPreferences(),
   lastChecked: 0,
 
   bootstrap: async () => {
@@ -72,7 +91,15 @@ export const useAuth = create<AuthState>((set, get) => ({
         if (token || nonce) {
           setSession({ nonce: nonce || null, bearer: token || null })
         }
-        set({ user: res.data, ready: true, loading: false, error: null, lastChecked: Date.now() })
+        const prefs = (res.data as any)?.preferences || {}
+        set({
+          user: res.data,
+          ready: true,
+          loading: false,
+          error: null,
+          preferences: { ...loadLocalPreferences(), ...prefs },
+          lastChecked: Date.now()
+        })
       } else {
         set({ user: null, ready: true, loading: false, lastChecked: Date.now() })
       }
@@ -231,7 +258,12 @@ export const useAuth = create<AuthState>((set, get) => ({
       if (token || nonce) {
         setSession({ nonce: nonce || null, bearer: token || null })
       }
-      set({ user: res.data, lastChecked: Date.now() })
+      const prefs = (res.data as any)?.preferences
+      set({
+        user: res.data,
+        lastChecked: Date.now(),
+        ...(prefs ? { preferences: { ...get().preferences, ...prefs } } : {})
+      })
     }
     else if (res.status === 401 || res.status === 403) {
       // Session expired — clear without calling /logout (likely will 401 too)
@@ -239,6 +271,16 @@ export const useAuth = create<AuthState>((set, get) => ({
       void sessionDestroy()
       clearFxsimCache()
       set({ user: null, lastChecked: Date.now() })
+    }
+  },
+
+  updatePreference: async (key: string, value: boolean) => {
+    const updated = { ...get().preferences, [key]: value }
+    set({ preferences: updated })
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('fxsim:notification_preferences', JSON.stringify(updated))
+      } catch {}
     }
   },
 }))

@@ -293,7 +293,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <span className="text-xl font-extrabold tabular text-accent">
                 {parityDrift}
               </span>
-              <Badge tone="success" size="sm" className="font-bold tabular text-[9px] px-1.5 py-0">
+              <Badge tone="success" size="sm" className="font-bold tabular text-3xs px-1.5 py-0">
                 100% PARITY
               </Badge>
             </div>
@@ -312,7 +312,7 @@ export function Mt5GatewayMonitorCard({ onConfigureClick, compact = false }: Mt5
               <span className="text-xs font-bold text-text">
                 Active Telemetry Ingestion Endpoint:
               </span>
-              <Badge tone="success" size="sm" className="font-semibold text-[10px]">
+              <Badge tone="success" size="sm" className="font-semibold text-2xs">
                 HTTP 200 OK Active
               </Badge>
             </div>

@@ -193,7 +193,7 @@ export default function DashboardOverview() {
 
       {/* Tournament selected — plainly-labeled summary, not the challenge card below */}
       {!isError && isTournamentView ? (
-        <Card className="relative overflow-hidden border-border/60">
+        <Card className="relative overflow-hidden border-border/60 rounded-2xl shadow-sm">
           <CardContent className="p-6 sm:p-8">
             <div className="flex items-center gap-2">
               <span className="text-2xs uppercase tracking-wider text-text-muted font-semibold">Tournament</span>
@@ -205,9 +205,9 @@ export default function DashboardOverview() {
             </div>
             {selectedTournament ? (
               <>
-                <div className="mt-2 text-2xl font-extrabold tracking-tight text-text">{selectedTournament.title}</div>
+                <div className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-text">{selectedTournament.title}</div>
                 <div className="text-2xs text-text-muted mt-1">
-                  Starting equity {fmtUSD(selectedTournament.starting_equity)} · Prize pool {selectedTournament.prize_pool}
+                  Starting equity <span className="terminal-num font-semibold text-text">{fmtUSD(selectedTournament.starting_equity)}</span> · Prize pool {selectedTournament.prize_pool}
                 </div>
               </>
             ) : (
@@ -226,7 +226,7 @@ export default function DashboardOverview() {
         <>
           {/* Active Challenge Overview */}
           {acc && active && (
-            <Card className="relative overflow-hidden border-border/60">
+            <Card className="relative overflow-hidden border-border/60 rounded-2xl shadow-sm">
               <CardContent className="p-6 sm:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -249,9 +249,9 @@ export default function DashboardOverview() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-2 text-3xl font-extrabold tracking-tight tabular text-text">{fmtUSD(acc.equity)}</div>
+                    <div className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight terminal-num text-text">{fmtUSD(acc.equity)}</div>
                     <div className="text-2xs text-text-muted mt-1">
-                      Equity · balance {fmtUSD(acc.balance)} · {active.trading_days} trading {active.trading_days === 1 ? 'day' : 'days'}
+                      Equity · balance <span className="terminal-num font-semibold text-text">{fmtUSD(acc.balance)}</span> · {active.trading_days} trading {active.trading_days === 1 ? 'day' : 'days'}
                     </div>
                   </div>
                   <Button asChild variant="outline" size="sm">

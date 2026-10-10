@@ -12,7 +12,9 @@
     --primary-rgb: 16, 185, 129;
     --accent-glow: rgba(16, 185, 129, 0.25);
     --accent-rgb: 16, 185, 129;
-    --font-sans: var(--font-poppins), 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-poppins: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-jetbrains: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
     /* Midnight Obsidian (Default Dark) — aligned to the app's canonical
        slate surface family (#0B0F19 / #111827 / #1F2937) so token-driven
@@ -136,137 +138,68 @@
   }
 
   /* ── Universal Daylight / Clean-Light Contrast & Visibility Protections ── */
-  html.light h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light h6:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] h6:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] h6:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) h1:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) h2:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) h3:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) h4:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) h5:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) h6:not(.dark *):not([data-theme="midnight-obsidian"] *) {
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    h1, h2, h3, h4, h5, h6,
+    .text-slate-950, .text-slate-900, .text-gray-950, .text-gray-900
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #0F172A !important;
   }
 
-  /* Any text-white outside of colored buttons or badges converts to deep readable dark text */
-  html.light .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
-  [data-theme="clean-light"] .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
-  [data-theme="light"] .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]),
-  html:not(.dark) .text-white:not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not([class*="bg-emerald"]):not([class*="bg-accent"]):not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-blue"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-green"]):not([class*="badge"]):not([class*="Badge"]) {
+  /* Any light text (white, gray/slate/zinc 100-300) outside colored buttons/badges converts to readable dark text */
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-white,
+    .text-gray-100, .text-gray-200, .text-gray-300,
+    .text-slate-100, .text-slate-200, .text-slate-300,
+    .text-zinc-100, .text-zinc-200, .text-zinc-300
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *):not(button):not(button *):not(.btn):not(.btn *):not(.badge):not(.badge *):not([class*="badge"]):not([class*="Badge"]) {
     color: #0F172A !important;
   }
 
   /* Daylight high-contrast guarantees for amber/cyan/emerald/rose text on light surfaces */
-  html.light .text-amber-200, html.light .text-amber-300, html.light .text-amber-400, html.light .text-amber-500,
-  [data-theme="clean-light"] .text-amber-200, [data-theme="clean-light"] .text-amber-300, [data-theme="clean-light"] .text-amber-400, [data-theme="clean-light"] .text-amber-500,
-  html:not(.dark) .text-amber-200, html:not(.dark) .text-amber-300, html:not(.dark) .text-amber-400, html:not(.dark) .text-amber-500 {
+  :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-amber-200, .text-amber-300, .text-amber-400, .text-amber-500
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #B45309 !important;
   }
 
-  html.light .text-cyan-200, html.light .text-cyan-300, html.light .text-cyan-400,
-  [data-theme="clean-light"] .text-cyan-200, [data-theme="clean-light"] .text-cyan-300, [data-theme="clean-light"] .text-cyan-400,
-  html:not(.dark) .text-cyan-200, html:not(.dark) .text-cyan-300, html:not(.dark) .text-cyan-400 {
+  :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-cyan-200, .text-cyan-300, .text-cyan-400
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #0369A1 !important;
   }
 
-  html.light .text-emerald-300, html.light .text-emerald-400,
-  [data-theme="clean-light"] .text-emerald-300, [data-theme="clean-light"] .text-emerald-400,
-  html:not(.dark) .text-emerald-300, html:not(.dark) .text-emerald-400 {
+  :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-emerald-300, .text-emerald-400
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #047857 !important;
   }
 
-  html.light .text-rose-300, html.light .text-rose-400,
-  [data-theme="clean-light"] .text-rose-300, [data-theme="clean-light"] .text-rose-400,
-  html:not(.dark) .text-rose-300, html:not(.dark) .text-rose-400 {
+  :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-rose-300, .text-rose-400
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #DC2626 !important;
   }
 
-  /* Subtitles and muted text must be crisp, legible slate in daylight mode (never faint or washed out) */
-  html.light .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-400:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-zinc-400:not(.dark *):not([data-theme="midnight-obsidian"] *) {
+  /* Subtitles and muted text must be crisp, legible slate in daylight mode */
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-gray-400, .text-slate-400, .text-zinc-400
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #475569 !important;
   }
 
-  html.light .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-500:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-500:not(.dark *):not([data-theme="midnight-obsidian"] *) {
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-gray-500, .text-slate-500
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #334155 !important;
   }
 
-  html.light .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-900:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-950:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-900:not(.dark *):not([data-theme="midnight-obsidian"] *) {
-    color: #0F172A !important;
+  /* SVG text contrast protections for Daylight mode (Rule 85.2) */
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) svg text:is(.fill-slate-900, .mf-brand-title) {
+    fill: #0F172A !important;
   }
 
-  html.light .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html.light .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="clean-light"] .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  [data-theme="light"] .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-gray-300:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-100:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-200:not(.dark *):not([data-theme="midnight-obsidian"] *),
-  html:not(.dark) .text-slate-300:not(.dark *):not([data-theme="midnight-obsidian"] *) {
-    color: #0F172A !important;
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) svg text:is(.fill-slate-500, .mf-brand-sub) {
+    fill: #475569 !important;
   }
 
   /* Hardcoded pitch-black cards adapt to clean white surfaces */
@@ -300,18 +233,18 @@
   }
 
   /* Universal Daylight overrides for dark slate utility classes & borders */
-  html.light .bg-slate-800:not(button):not(input):not(select),
-  [data-theme="clean-light"] .bg-slate-800:not(button):not(input):not(select),
-  [data-theme="light"] .bg-slate-800:not(button):not(input):not(select),
-  html:not(.dark) .bg-slate-800:not(button):not(input):not(select),
+  html.light .bg-slate-800,
+  [data-theme="clean-light"] .bg-slate-800,
+  [data-theme="light"] .bg-slate-800,
+  html:not(.dark) .bg-slate-800,
   html.light .bg-slate-800\/80, [data-theme="clean-light"] .bg-slate-800\/80, [data-theme="light"] .bg-slate-800\/80, html:not(.dark) .bg-slate-800\/80,
   html.light .bg-slate-800\/60, [data-theme="clean-light"] .bg-slate-800\/60, [data-theme="light"] .bg-slate-800\/60, html:not(.dark) .bg-slate-800\/60,
   html.light .bg-slate-800\/50, [data-theme="clean-light"] .bg-slate-800\/50, [data-theme="light"] .bg-slate-800\/50, html:not(.dark) .bg-slate-800\/50,
   html.light .bg-slate-800\/40, [data-theme="clean-light"] .bg-slate-800\/40, [data-theme="light"] .bg-slate-800\/40, html:not(.dark) .bg-slate-800\/40,
-  html.light .bg-slate-900:not(button):not(input):not(select),
-  [data-theme="clean-light"] .bg-slate-900:not(button):not(input):not(select),
-  [data-theme="light"] .bg-slate-900:not(button):not(input):not(select),
-  html:not(.dark) .bg-slate-900:not(button):not(input):not(select),
+  html.light .bg-slate-900,
+  [data-theme="clean-light"] .bg-slate-900,
+  [data-theme="light"] .bg-slate-900,
+  html:not(.dark) .bg-slate-900,
   html.light .bg-slate-900\/60, [data-theme="clean-light"] .bg-slate-900\/60, [data-theme="light"] .bg-slate-900\/60, html:not(.dark) .bg-slate-900\/60 {
     background-color: #f1f5f9 !important;
     color: #334155 !important;
@@ -423,9 +356,11 @@
     color: #38BDF8 !important;
   }
 
-  html.dark .text-emerald-300, html[data-theme="midnight-obsidian"] .text-emerald-300, .dark .text-emerald-300, [data-theme="midnight-obsidian"] .text-emerald-300,
+  html.dark .text-emerald-300, html[data-theme="midnight-obsidian"] .text-emerald-300, .dark .text-emerald-300, [data-theme="midnight-obsidian"] .text-emerald-300 {
+    color: #6EE7B7 !important;
+  }
   html.dark .text-emerald-400, html[data-theme="midnight-obsidian"] .text-emerald-400, .dark .text-emerald-400, [data-theme="midnight-obsidian"] .text-emerald-400 {
-    color: var(--primary, #10B981) !important;
+    color: #34D399 !important;
   }
 
   html.dark .text-rose-300, html[data-theme="midnight-obsidian"] .text-rose-300, .dark .text-rose-300, [data-theme="midnight-obsidian"] .text-rose-300,
@@ -446,6 +381,8 @@
   html {
     color-scheme: light dark;
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100%;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -454,6 +391,8 @@
 
   body {
     @apply bg-bg text-text font-sans;
+    overflow-x: hidden;
+    max-width: 100%;
     font-feature-settings: 'ss01', 'cv11', 'tnum';
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -20%, HSL(var(--accent) / 0.08), transparent),
@@ -675,36 +614,45 @@
 }
 
 /* ── REAL-TIME DYNAMIC THEME ACCENT SYSTEM ──────────────────────── */
-.bg-emerald-500,
 .bg-primary {
   background-color: var(--primary, #10B981) !important;
 }
 
-.hover\:bg-emerald-400:hover,
-.hover\:bg-emerald-500:hover {
-  filter: brightness(1.1);
-}
-
-.border-emerald-500 {
+.border-primary {
   border-color: var(--primary, #10B981) !important;
 }
 
-.text-emerald-400,
-.text-emerald-500 {
+.text-primary {
   color: var(--primary, #10B981) !important;
 }
 
-html.light .text-emerald-300,
-html.light .text-emerald-400,
-[data-theme="clean-light"] .text-emerald-300,
-[data-theme="clean-light"] .text-emerald-400 {
-  color: #047857 !important;
+/* ── FINANCIAL INVARIANTS: Decoupled permanently from brand theme ── */
+.text-profit {
+  color: #10B981 !important;
+}
+.text-loss {
+  color: #EF4444 !important;
+}
+.bg-profit-subtle {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+.bg-loss-subtle {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+.border-profit-subtle {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+.border-loss-subtle {
+  border-color: rgba(239, 68, 68, 0.25) !important;
 }
 
-.shadow-emerald-500\/20 {
+.shadow-emerald-500\/20,
+.shadow-primary-glow {
   box-shadow: 0 4px 14px 0 var(--accent-glow, rgba(16, 185, 129, 0.25)) !important;
 }
 
+.focus\:border-primary:focus,
+.focus-visible\:ring-primary\/50:focus-visible,
 .focus\:border-emerald-500:focus,
 .focus-visible\:ring-emerald-500\/50:focus-visible {
   border-color: var(--primary, #10B981) !important;
@@ -809,5 +757,16 @@ html, body {
 button, input, select, textarea {
   font-family: inherit;
 }
+
+/* Trading Terminal & Financial Numbers Tabular Alignment (Pillar 1 & 2 / Rule 84 / Rule 85.5) */
+.terminal-num,
+.tabular,
+[class*="tabular-nums"] {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+
 
 

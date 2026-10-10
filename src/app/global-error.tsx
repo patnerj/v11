@@ -59,7 +59,7 @@ export default function GlobalError({
               </Button>
             </div>
             <p className="text-xs text-text-muted/70">
-              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-surface-muted border text-[11px]">Ctrl+F5</kbd> or open in Incognito to clear browser cache.
+              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-surface-muted border text-2xs">Ctrl+F5</kbd> or open in Incognito to clear browser cache.
             </p>
           </div>
         </div>

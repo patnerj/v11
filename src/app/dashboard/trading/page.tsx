@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowUpRight, BarChart3, Clock, ListOrdered, PanelLeftClose, PanelLeftOpen, ShoppingCart, CheckCircle2, XCircle, Trophy } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Clock, ListOrdered, PanelLeftClose, PanelLeftOpen, ShoppingCart, CheckCircle2, XCircle, Trophy, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
@@ -59,6 +59,7 @@ export default function TradingTerminalPage() {
   // Local state for challenges fallback
   const [chs,       setChs]       = useState<ChallengeAccount[] | null>(null)
   const [loaded,    setLoaded]    = useState(false)
+  const [showMoreTelemetry, setShowMoreTelemetry] = useState(false)
   // Fresh-account gate: on mount we force-refetch /account so a stale cached
   // "no challenge / read_only" payload (from before the purchase completed)
   // never flashes the frozen/lock screen for a second before the real
@@ -195,7 +196,10 @@ export default function TradingTerminalPage() {
   // Aggregate open PnL — drives AccountStrip's "P&L" tile
   const openPnL = useMemo(() => {
     if (!positions) return 0
-    return positions.reduce((s, p) => s + toNum(p.pnl) + toNum(p.swap) - toNum(p.commission), 0)
+    return positions.reduce((s, p) => {
+      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 100000)
+      return s + (isMt5 ? toNum(p.pnl) + toNum(p.swap) - toNum(p.commission) : toNum(p.pnl))
+    }, 0)
   }, [positions])
 
   const accountId = account && 'id' in account ? account.id : null
@@ -306,6 +310,7 @@ function DesktopLayout({
   tournamentTitle?: string
 }) {
   const [tab, setTab] = useState<Tab>('positions')
+  const [showMoreTelemetry, setShowMoreTelemetry] = useState(false)
   const mwPanelRef = useRef<PanelImperativeHandle>(null)
   const posPanelRef = useRef<PanelImperativeHandle>(null)
 
@@ -473,19 +478,23 @@ function DesktopLayout({
   const totalPositionsPnL = (positions || []).reduce((acc, p) => acc + (toNum(p.pnl) || 0), 0)
 
   return (
-    <div className="flex flex-col gap-2 h-[calc(100dvh-4.5rem)] min-h-[600px]">
+    <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0 w-full overflow-hidden">
       {/* Tournament Warning Banner */}
       {isTournamentMode && tournamentId && (
-        <TournamentWarningBanner
-          tournamentId={tournamentId}
-          tournamentTitle={tournamentTitle}
-          account={account}
-          myTournaments={myTournaments}
-          switchEntries={switchEntries}
-        />
+        <div className="shrink-0">
+          <TournamentWarningBanner
+            tournamentId={tournamentId}
+            tournamentTitle={tournamentTitle}
+            account={account}
+            myTournaments={myTournaments}
+            switchEntries={switchEntries}
+          />
+        </div>
       )}
       {/* Account switcher — Challenge ↔ Tournament trading context */}
-      <AccountSwitcher entries={switchEntries} metrics={metrics} />
+      <div className="shrink-0">
+        <AccountSwitcher entries={switchEntries} metrics={metrics} />
+      </div>
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
         {/* Left: market watch */}
         <Panel
@@ -511,14 +520,14 @@ function DesktopLayout({
               >
                 <PanelLeftOpen className="h-4 w-4" />
               </button>
-              <span className="mt-3 text-2xs font-semibold uppercase tracking-wider text-text-faint [writing-mode:vertical-rl] whitespace-nowrap">
+              <span className="mt-3 text-terminal-micro font-semibold uppercase tracking-wider text-text-faint [writing-mode:vertical-rl] whitespace-nowrap">
                 Market watch
               </span>
             </aside>
           ) : (
             <aside className="rounded-lg border border-border bg-surface flex flex-col h-full min-h-0 overflow-hidden">
               <div className="shrink-0 px-3 py-2.5 border-b border-border-subtle flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Market watch</h3>
+                <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">Market watch</h3>
                 <button
                   onClick={toggleMw}
                   className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
@@ -571,7 +580,7 @@ function DesktopLayout({
                   <TabButton active={tab === 'positions'} onClick={() => setTab('positions')}>
                     Positions
                     {positions && positions.length > 0 && (
-                      <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-muted text-accent text-2xs font-medium px-1">
+                      <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-muted text-accent text-terminal-micro font-semibold px-1">
                         {positions.length}
                       </span>
                     )}
@@ -579,7 +588,7 @@ function DesktopLayout({
                   <TabButton active={tab === 'pending'} onClick={() => setTab('pending')}>
                     Pending
                     {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
-                      <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-2xs font-medium px-1">
+                      <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-terminal-micro font-semibold px-1">
                         {pending.filter((o) => o.status === 'pending').length}
                       </span>
                     )}
@@ -590,7 +599,7 @@ function DesktopLayout({
                     <button
                       onClick={() => setIsCloseAllConfirmOpen(true)}
                       disabled={isClosingAll}
-                      className="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                      className="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
                       title="Close all open positions at current market price"
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
@@ -629,28 +638,47 @@ function DesktopLayout({
                     {/* MT5 Bottom Telemetry Summary Row with Dynamic Glow */}
                     {account && (
                       <div className={cn(
-                        "shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-sans tabular select-none overflow-x-auto no-scrollbar transition-all",
+                        "shrink-0 border-t border-border-subtle bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-terminal-body font-normal select-none overflow-x-auto no-scrollbar transition-all",
                         isTournamentMode && "border-amber-500/40 bg-gradient-to-r from-amber-950/25 via-bg-subtle/95 to-bg-subtle/95 ring-1 ring-amber-500/30"
                       )}>
-                        <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-text-muted">
+                        <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
                           {isTournamentMode && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-2xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs animate-pulse">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-terminal-micro font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs animate-pulse">
                               <Trophy className="w-3 h-3 text-amber-400" />
                               Tournament Mode · PnL Isolated
                             </span>
                           )}
-                          <span>Balance: <strong className={isTournamentMode ? "text-amber-300 font-semibold" : "text-text font-semibold"}>{fmtUSD(balance)}</strong></span>
+                          <span>Balance: <strong className={cn("font-semibold terminal-num", isTournamentMode ? "text-amber-300" : "text-text")}>{fmtUSD(balance)}</strong></span>
                           <span>
-                            Equity: <strong className={equity >= balance ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{fmtUSD(equity)}</strong>
+                            Equity: <strong className={cn("font-semibold terminal-num", equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>{fmtUSD(equity)}</strong>
                           </span>
-                          <span>Margin: <strong className="text-text font-medium">{fmtUSD(used)}</strong></span>
-                          <span>Free Margin: <strong className="text-text font-semibold">{fmtUSD(free)}</strong></span>
-                          <span>Margin Level: <strong className={level !== null && level <= 120 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-text font-medium'}>{level !== null ? fmtPct(level, 1) : '—'}</strong></span>
-                          <span>Leverage: <strong className="text-text font-medium">1:{lev}</strong></span>
+                          <span>Free Margin: <strong className="text-text font-semibold terminal-num">{fmtUSD(free)}</strong></span>
+
+                          {/* Secondary telemetry metrics toggled to avoid visual clutter (TPOL-5) */}
+                          {showMoreTelemetry && (
+                            <>
+                              <span>Margin: <strong className="text-text font-semibold terminal-num">{fmtUSD(used)}</strong></span>
+                              <span>Margin Level: <strong className={cn("font-semibold terminal-num", level !== null && level <= 120 ? 'text-rose-500' : 'text-text')}>{level !== null ? fmtPct(level, 1) : '—'}</strong></span>
+                              <span>Leverage: <strong className="text-text font-semibold terminal-num">1:{lev}</strong></span>
+                            </>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => setShowMoreTelemetry((v) => !v)}
+                            className="inline-flex items-center gap-0.5 text-terminal-micro font-normal text-text-muted hover:text-text px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer"
+                            title={showMoreTelemetry ? "Show fewer metrics" : "Show Margin, Margin Level, Leverage"}
+                          >
+                            <span>{showMoreTelemetry ? 'Less' : 'More'}</span>
+                            <ChevronDown className={cn("h-3 w-3 transition-transform", showMoreTelemetry && "rotate-180")} />
+                          </button>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-text-muted">Total P/L:</span>
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold tabular ${pnl >= 0 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'}`}>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded text-terminal-body font-semibold terminal-num",
+                            pnl >= 0 ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                          )}>
                             {fmtUSD(pnl, { sign: true })}
                           </span>
                         </div>
@@ -691,14 +719,14 @@ function DesktopLayout({
               >
                 <PanelLeftOpen className="h-4 w-4 rotate-180" />
               </button>
-              <span className="mt-3 text-2xs font-semibold uppercase tracking-wider text-text-faint [writing-mode:vertical-rl] whitespace-nowrap">
+              <span className="mt-3 text-terminal-micro font-semibold uppercase tracking-wider text-text-faint [writing-mode:vertical-rl] whitespace-nowrap">
                 New order
               </span>
             </aside>
           ) : (
             <aside className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
               <div className="shrink-0 px-3 py-2.5 border-b border-border-subtle flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">New order</h3>
+                <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">New order</h3>
                 <button
                   onClick={toggleOrder}
                   className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
@@ -736,8 +764,8 @@ function TabButton({ children, active, onClick }: { children: React.ReactNode; a
     <button
       onClick={onClick}
       className={cn(
-        'relative h-9 px-3 text-xs font-medium transition-colors focus-ring',
-        active ? 'text-text' : 'text-text-muted hover:text-text',
+        'relative h-9 px-3 text-terminal-label transition-colors focus-ring',
+        active ? 'text-text font-semibold' : 'text-text-muted hover:text-text font-normal',
       )}
     >
       {children}
@@ -757,7 +785,7 @@ function WsBadge() {
   const connected = usePrices((s) => s.connected)
   return (
     <div className={cn(
-      'flex items-center gap-1.5 text-[10px] font-sans font-medium px-2 py-0.5 rounded-md border',
+      'flex items-center gap-1.5 text-terminal-micro font-normal px-2 py-0.5 rounded-md border',
       connected
         ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
         : 'text-warn bg-warn-muted border-warn/30',
@@ -814,21 +842,21 @@ function MobileLayout({
 
       {/* Account switcher — Challenge ↔ Tournament trading context */}
       {account && (
-        <div className="px-3 pt-2 shrink-0">
-          <AccountSwitcher entries={switchEntries} metrics={metrics} />
+        <div className="px-1 pt-1 shrink-0">
+          <AccountSwitcher entries={switchEntries} metrics={metrics} compact />
         </div>
       )}
 
       {/* Chart — fills remaining space; ChartPanel header has symbol + tap-to-change */}
-      <div className="flex-1 mx-4 rounded-lg border border-border overflow-hidden min-h-0">
+      <div className="flex-1 mx-1 rounded-lg border border-border overflow-hidden min-h-0">
         <SectionErrorBoundary>
           <ChartPanel compact positions={positions} plan={plan || metrics?.plan} onOpenWatchlist={() => setSheet('watchlist')} onChanged={onChanged} />
         </SectionErrorBoundary>
       </div>
 
-      {/* Bottom dock — tab strip + floating buy/sell */}
+      {/* Bottom dock — tab strip + integrated trade action */}
       <div className="shrink-0 relative pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
-        <div className="grid grid-cols-3 gap-1 mx-4 mb-1 p-1 rounded-md bg-surface border border-border text-2xs">
+        <div className="grid grid-cols-4 gap-1 mx-1 mb-1 p-1 rounded-md bg-surface border border-border text-terminal-micro">
           <DockButton
             icon={BarChart3}
             label="Markets"
@@ -846,29 +874,24 @@ function MobileLayout({
             count={pending?.filter((o) => o.status === 'pending').length}
             onClick={() => setSheet('pending')}
           />
+          <button
+            type="button"
+            onClick={() => setSheet('order')}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-md font-semibold transition-all active:scale-95 shadow-xs select-none cursor-pointer",
+              isTournamentMode
+                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500 border border-amber-300/50"
+                : "bg-accent text-accent-contrast hover:bg-accent-hover active:bg-accent-active"
+            )}
+            aria-label="Open order ticket"
+          >
+            {isTournamentMode ? <Trophy className="h-4 w-4 text-black shrink-0 animate-pulse" /> : <ShoppingCart className="h-4 w-4 shrink-0" />}
+            <span className="text-terminal-micro leading-none font-semibold">
+              {isTournamentMode ? 'Tourney' : 'Trade'}
+            </span>
+          </button>
         </div>
       </div>
-
-      {/* Floating order FAB — anchored bottom-right above dock & safe area */}
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        whileTap={{ scale: 0.94 }}
-        onClick={() => setSheet('order')}
-        className={cn(
-          'fixed right-4 bottom-[calc(max(0.5rem,env(safe-area-inset-bottom,0px))+3.5rem)] z-30 flex items-center gap-2 h-12 px-4 rounded-full font-semibold text-xs shadow-xl transition-all',
-          isTournamentMode
-            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500 border border-amber-300/50 ring-2 ring-amber-500/40 shadow-amber-500/20 font-bold'
-            : 'bg-accent text-accent-contrast hover:bg-accent-hover active:bg-accent-active border border-accent-contrast/20',
-        )}
-        aria-label="Open order ticket"
-      >
-        {isTournamentMode ? <Trophy className="h-4 w-4 text-black shrink-0 animate-pulse" /> : <ShoppingCart className="h-4 w-4 shrink-0" />}
-        <span>{isTournamentMode ? 'Tournament Trade' : 'Trade'}</span>
-        <span className={cn('text-3xs opacity-80 tabular', isTournamentMode && 'font-bold text-black')}>
-          {bid > 0 ? `${fmtPrice(bid, digits)} / ${fmtPrice(ask, digits)}` : active}
-        </span>
-      </motion.button>
 
       {/* Bottom sheets */}
       <MobileBottomSheet
@@ -936,9 +959,9 @@ function DockButton({
       className="relative flex flex-col items-center justify-center gap-0.5 h-12 rounded text-text-muted hover:text-text hover:bg-surface-muted/50 focus-ring transition-colors active:scale-95"
     >
       <Icon className="h-4 w-4" />
-      <span className="text-2xs font-medium">{label}</span>
+      <span className="text-terminal-micro font-normal">{label}</span>
       {count !== undefined && count > 0 && (
-        <span className="absolute top-1 right-2 h-4 min-w-4 px-1 inline-flex items-center justify-center rounded-full bg-accent text-white text-2xs font-medium">
+        <span className="absolute top-1 right-2 h-4 min-w-4 px-1 inline-flex items-center justify-center rounded-full bg-accent text-white text-terminal-micro font-semibold">
           {count}
         </span>
       )}
@@ -1003,30 +1026,30 @@ function TradingLockState({ accounts, account, challengeStatus }: {
         <div className={`inline-flex h-12 w-12 rounded-xl items-center justify-center mb-4 ${bg}`}>
           <Icon className="h-6 w-6" />
         </div>
-        <h2 className="text-xl font-semibold tracking-tight">{cfg.title}</h2>
-        <p className="text-sm text-text-muted mt-2">{cfg.body}</p>
+        <h2 className="text-terminal-title font-semibold tracking-tight">{cfg.title}</h2>
+        <p className="text-terminal-body text-text-muted mt-2">{cfg.body}</p>
 
         {account && (
           <div className="mt-5 grid grid-cols-2 gap-2 text-left">
             {statusLabel && (
               <div className="col-span-2 flex items-center justify-between rounded-md border border-border-subtle px-3 py-2">
-                <span className="text-2xs uppercase tracking-wider text-text-muted">Final status</span>
-                <span className={`text-sm font-semibold ${failed ? 'text-danger' : 'text-success'}`}>{statusLabel}</span>
+                <span className="text-terminal-micro font-semibold uppercase tracking-wider text-text-muted">Final status</span>
+                <span className={`text-terminal-body font-semibold ${failed ? 'text-danger' : 'text-success'}`}>{statusLabel}</span>
               </div>
             )}
             <div className="rounded-md border border-border-subtle px-3 py-2">
-              <div className="text-2xs uppercase tracking-wider text-text-muted">Balance</div>
-              <div className="text-sm font-semibold tabular">{fmtUSD(toNum(account.balance))}</div>
+              <div className="text-terminal-micro font-semibold uppercase tracking-wider text-text-muted">Balance</div>
+              <div className="text-terminal-body font-semibold terminal-num">{fmtUSD(toNum(account.balance))}</div>
             </div>
             <div className="rounded-md border border-border-subtle px-3 py-2">
-              <div className="text-2xs uppercase tracking-wider text-text-muted">Equity</div>
-              <div className="text-sm font-semibold tabular">{fmtUSD(toNum(account.equity))}</div>
+              <div className="text-terminal-micro font-semibold uppercase tracking-wider text-text-muted">Equity</div>
+              <div className="text-terminal-body font-semibold terminal-num">{fmtUSD(toNum(account.equity))}</div>
             </div>
           </div>
         )}
 
         <div className="mt-6">
-          <a href={cfg.cta.href} className="inline-flex h-10 px-5 items-center rounded-md bg-accent text-white text-sm font-medium hover:bg-accent-hover focus-ring">
+          <a href={cfg.cta.href} className="inline-flex h-10 px-5 items-center rounded-md bg-accent text-white text-terminal-label font-semibold hover:bg-accent-hover focus-ring">
             {cfg.cta.label}
           </a>
         </div>

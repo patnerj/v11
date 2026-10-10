@@ -592,7 +592,6 @@ export default function MarketingHubPage() {
 
   // Affiliate Config State
   const [tier1Rate, setTier1Rate] = useState<number>(15)
-  const [tier2Rate, setTier2Rate] = useState<number>(5)
   const [cookieDays, setCookieDays] = useState<number>(60)
   const [minPayout, setMinPayout] = useState<number>(100)
 
@@ -606,7 +605,6 @@ export default function MarketingHubPage() {
   useEffect(() => {
     if (affiliateConfig) {
       if (affiliateConfig.tier_1_pct !== undefined) setTier1Rate(Number(affiliateConfig.tier_1_pct))
-      if (affiliateConfig.tier_2_pct !== undefined) setTier2Rate(Number(affiliateConfig.tier_2_pct))
       if (affiliateConfig.cookie_days !== undefined) setCookieDays(Number(affiliateConfig.cookie_days))
       if (affiliateConfig.min_payout !== undefined) setMinPayout(Number(affiliateConfig.min_payout))
     }
@@ -950,7 +948,7 @@ export default function MarketingHubPage() {
                       <div className="flex items-center gap-1.5 text-gray-200">
                         <span className="font-semibold">{b.cta_label || 'Claim'}</span>
                         <ArrowRight className="h-3 w-3 text-emerald-400" />
-                        <span className="text-gray-400 text-[11px]">{b.cta_url || '/checkout'}</span>
+                        <span className="text-gray-400 text-xs">{b.cta_url || '/checkout'}</span>
                       </div>
                     </div>
 
@@ -959,7 +957,7 @@ export default function MarketingHubPage() {
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1.5 bg-background px-2 py-0.5 rounded border border-surface-muted">
                           <div className="h-3.5 w-3.5 rounded-full border border-gray-600 shrink-0" style={{ backgroundColor: b.bg_color || systemAccentColor }} />
-                          <span className="text-[10px] text-gray-300 font-mono">{b.bg_color || systemAccentColor}</span>
+                          <span className="text-2xs text-gray-300 font-mono">{b.bg_color || systemAccentColor}</span>
                         </div>
                       </div>
                     </div>
@@ -1139,7 +1137,7 @@ export default function MarketingHubPage() {
                 <div className="text-2xl font-bold text-white mt-2 font-mono">
                   {affiliateMetrics.totalAffiliates}
                 </div>
-                <span className="text-[11px] text-gray-500 font-mono">Active partners driving traffic</span>
+                <span className="text-xs text-gray-500 font-mono">Active partners driving traffic</span>
               </CardContent>
             </Card>
 
@@ -1154,7 +1152,7 @@ export default function MarketingHubPage() {
                 <div className="text-2xl font-bold text-emerald-400 mt-2 font-mono">
                   ${affiliateMetrics.totalPaid.toLocaleString()}
                 </div>
-                <span className="text-[11px] text-gray-500 font-mono">Disbursed referral rewards</span>
+                <span className="text-xs text-gray-500 font-mono">Disbursed referral rewards</span>
               </CardContent>
             </Card>
 
@@ -1169,7 +1167,7 @@ export default function MarketingHubPage() {
                 <div className="text-2xl font-bold text-amber-400 mt-2 font-mono">
                   ${affiliateMetrics.totalUnpaid.toLocaleString()}
                 </div>
-                <span className="text-[11px] text-gray-500 font-mono">Awaiting payout execution</span>
+                <span className="text-xs text-gray-500 font-mono">Awaiting payout execution</span>
               </CardContent>
             </Card>
           </div>
@@ -1187,28 +1185,17 @@ export default function MarketingHubPage() {
             </CardHeader>
 
             <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 
                 <div className="space-y-1.5">
-                  <Label htmlFor="tier1-rate">Tier 1 Direct Referral (%)</Label>
+                  <Label htmlFor="tier1-rate">Direct Referral Commission (%)</Label>
                   <Input
                     id="tier1-rate"
                     type="number"
                     value={tier1Rate}
                     onChange={(e) => setTier1Rate(Number(e.target.value))}
                   />
-                  <span className="text-[10px] text-gray-500">Earned on direct purchaser</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="tier2-rate">Tier 2 Sub-Affiliate (%)</Label>
-                  <Input
-                    id="tier2-rate"
-                    type="number"
-                    value={tier2Rate}
-                    onChange={(e) => setTier2Rate(Number(e.target.value))}
-                  />
-                  <span className="text-[10px] text-gray-500">Earned on 2nd degree referrals</span>
+                  <span className="text-2xs text-gray-500">Earned on direct referred purchases</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1219,7 +1206,7 @@ export default function MarketingHubPage() {
                     value={cookieDays}
                     onChange={(e) => setCookieDays(Number(e.target.value))}
                   />
-                  <span className="text-[10px] text-gray-500">Tracking duration</span>
+                  <span className="text-2xs text-gray-500">Tracking duration</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1230,7 +1217,7 @@ export default function MarketingHubPage() {
                     value={minPayout}
                     onChange={(e) => setMinPayout(Number(e.target.value))}
                   />
-                  <span className="text-[10px] text-gray-500">Threshold for withdrawal</span>
+                  <span className="text-2xs text-gray-500">Threshold for withdrawal</span>
                 </div>
 
               </div>
@@ -1242,7 +1229,6 @@ export default function MarketingHubPage() {
                 size="sm"
                 onClick={() => saveAffiliateConfigMutation.mutate({
                   tier_1_pct: tier1Rate,
-                  tier_2_pct: tier2Rate,
                   cookie_days: cookieDays,
                   min_payout: minPayout,
                 })}
@@ -1316,7 +1302,7 @@ export default function MarketingHubPage() {
                           {a.status}
                         </Badge>
                       </div>
-                      <div className="text-[11px] text-gray-500 font-mono mt-0.5">
+                      <div className="text-xs text-gray-500 font-mono mt-0.5">
                         User #{a.user_id} • {a.user_email || 'No email'}
                       </div>
                     </div>
@@ -1355,7 +1341,7 @@ export default function MarketingHubPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleSetAffiliateRate(a)}
-                        className="h-8 px-2 text-[11px]"
+                        className="h-8 px-2 text-xs"
                       >
                         Set
                       </Button>
@@ -1456,7 +1442,7 @@ export default function MarketingHubPage() {
                     const statusTone = p.status === 'paid' ? 'success' : p.status === 'rejected' ? 'danger' : p.status === 'approved' ? 'accent' : 'warning'
 
                     return (
-                      <div key={p.id} className="transition-colors hover:bg-[#1A2234]/30">
+                      <div key={p.id} className="transition-colors hover:bg-surface-strong/30">
                         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs">
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-2">
@@ -1464,7 +1450,7 @@ export default function MarketingHubPage() {
                               <Badge tone={statusTone as any} size="sm" className="capitalize font-mono">{p.status}</Badge>
                               <span className="text-gray-400 font-mono">#{p.id}</span>
                             </div>
-                            <div className="text-[11px] text-gray-400 font-mono">
+                            <div className="text-xs text-gray-400 font-mono">
                               <strong>{p.display_name || p.user_login}</strong> • Method: <span className="text-gray-200">{p.method}</span> • Dest: <span className="text-gray-300 font-mono">{p.destination}</span>
                               {p.tx_reference && <> • Tx Ref: <span className="text-emerald-400">{p.tx_reference}</span></>}
                             </div>
@@ -1488,7 +1474,7 @@ export default function MarketingHubPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => isExpanded ? setActivePayoutRow(null) : openProcessPayoutRow(p)}
-                                className="h-7 text-[11px] gap-1 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
+                                className="h-7 text-xs gap-1 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
                               >
                                 <ArrowUpRight className="h-3 w-3" />
                                 {isExpanded ? 'Close' : 'Process'}
@@ -1502,7 +1488,7 @@ export default function MarketingHubPage() {
                           <div className="px-4 py-3 bg-background/80 border-t border-surface-muted space-y-3 animate-in fade-in">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                               <div className="space-y-1">
-                                <Label className="text-[10px] text-gray-400">Transaction Hash / Ref</Label>
+                                <Label className="text-2xs text-gray-400">Transaction Hash / Ref</Label>
                                 <Input
                                   value={payoutTx}
                                   onChange={(e) => setPayoutTx(e.target.value)}
@@ -1511,7 +1497,7 @@ export default function MarketingHubPage() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-[10px] text-gray-400">Proof URL (Optional)</Label>
+                                <Label className="text-2xs text-gray-400">Proof URL (Optional)</Label>
                                 <Input
                                   value={payoutProof}
                                   onChange={(e) => setPayoutProof(e.target.value)}
@@ -1520,7 +1506,7 @@ export default function MarketingHubPage() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-[10px] text-gray-400">Admin Note</Label>
+                                <Label className="text-2xs text-gray-400">Admin Note</Label>
                                 <Input
                                   value={payoutNoteText}
                                   onChange={(e) => setPayoutNoteText(e.target.value)}
@@ -1629,14 +1615,14 @@ export default function MarketingHubPage() {
                     const statusTone = c.status === 'paid' ? 'success' : c.status === 'reversed' ? 'danger' : c.status === 'approved' ? 'accent' : 'warning'
 
                     return (
-                      <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-[#1A2234]/30 text-xs">
+                      <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-surface-strong/30 text-xs">
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white font-mono text-sm">${Number(c.amount).toLocaleString()}</span>
                             <Badge tone={statusTone as any} size="sm" className="capitalize font-mono">{c.status}</Badge>
                             <span className="text-gray-400 font-mono">#{c.id}</span>
                           </div>
-                          <div className="text-[11px] text-gray-400 font-mono">
+                          <div className="text-xs text-gray-400 font-mono">
                             Partner: <strong className="text-gray-200">{c.affiliate_login}</strong> ← Buyer: <span className="text-gray-300">{c.referred_login || 'Trader'}</span> • Order #{c.order_id} • {c.rate_percent}% of ${Number(c.base_amount || 0).toLocaleString()}
                           </div>
                         </div>
@@ -1647,7 +1633,7 @@ export default function MarketingHubPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleSetCommissionStatus(c, 'paid')}
-                              className="h-7 text-[11px] border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
+                              className="h-7 text-xs border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
                             >
                               <Check className="h-3 w-3 mr-1 text-emerald-400" /> Mark Paid
                             </Button>
@@ -1657,7 +1643,7 @@ export default function MarketingHubPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleSetCommissionStatus(c, 'reversed')}
-                              className="h-7 text-[11px] text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                              className="h-7 text-xs text-gray-400 hover:text-red-400 hover:bg-red-500/10"
                               title="Reverse Commission"
                             >
                               <RotateCcw className="h-3 w-3 mr-1 text-red-400" /> Reverse
@@ -1732,27 +1718,27 @@ export default function MarketingHubPage() {
                       <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
                       1-Click Dynamic Personalization Tags
                     </span>
-                    <span className="text-[10px] text-gray-500 font-mono">Click to insert at cursor</span>
+                    <span className="text-2xs text-gray-500 font-mono">Click to insert at cursor</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {trader_name}')}
-                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-emerald-400 font-mono text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-emerald-400 font-mono text-xs font-semibold transition-colors"
                     >
                       + &#123;trader_name&#125;
                     </button>
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {login_id}')}
-                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-blue-400 font-mono text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-blue-400 font-mono text-xs font-semibold transition-colors"
                     >
                       + &#123;login_id&#125;
                     </button>
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {account_balance}')}
-                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-amber-400 font-mono text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-amber-400 font-mono text-xs font-semibold transition-colors"
                     >
                       + &#123;account_balance&#125;
                     </button>
@@ -1779,7 +1765,7 @@ export default function MarketingHubPage() {
                       <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
                       <div>
                         <p className="font-bold text-white">{broadcastSentResult.message}</p>
-                        <p className="text-[11px] text-emerald-400/80 font-mono">Dispatched to cohort: {broadcastSentResult.audience.toUpperCase()}</p>
+                        <p className="text-xs text-emerald-400/80 font-mono">Dispatched to cohort: {broadcastSentResult.audience.toUpperCase()}</p>
                       </div>
                     </div>
                     <Badge tone="success" size="sm" className="font-mono">
@@ -1878,12 +1864,12 @@ export default function MarketingHubPage() {
                         {broadcastPreviewTheme === 'dark' ? (
                           <>
                             <Moon className="h-3.5 w-3.5 text-blue-400" />
-                            <span className="text-[11px] font-mono">Dark</span>
+                            <span className="text-xs font-mono">Dark</span>
                           </>
                         ) : (
                           <>
                             <Sun className="h-3.5 w-3.5 text-amber-400" />
-                            <span className="text-[11px] font-mono">Light</span>
+                            <span className="text-xs font-mono">Light</span>
                           </>
                         )}
                       </button>
@@ -1892,7 +1878,7 @@ export default function MarketingHubPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="p-4 sm:p-6 bg-[#080C14]/80 min-h-[580px] flex items-center justify-center overflow-x-hidden">
+              <CardContent className="p-4 sm:p-6 bg-surface/80 min-h-[580px] flex items-center justify-center overflow-x-hidden">
                 {broadcastPreviewDevice === 'desktop' ? (
                   /* ── DESKTOP CLIENT FRAME ── */
                   <div className={cn(
@@ -1913,14 +1899,14 @@ export default function MarketingHubPage() {
                         <span className="h-3 w-3 rounded-full bg-[#F59E0B]/90 inline-block"></span>
                         <span className="h-3 w-3 rounded-full bg-[#10B981]/90 inline-block"></span>
                       </div>
-                      <span className="font-semibold text-[11px] truncate max-w-[200px]">PropFirm Mail — Inbox</span>
-                      <div className="text-[10px] opacity-70">Desktop View</div>
+                      <span className="font-semibold text-xs truncate max-w-[200px]">PropFirm Mail — Inbox</span>
+                      <div className="text-2xs opacity-70">Desktop View</div>
                     </div>
 
                     {/* Mail Metadata Header */}
                     <div className={cn(
                       "p-4 border-b space-y-2",
-                      broadcastPreviewTheme === 'dark' ? "border-surface-muted/70 bg-[#0E1524]" : "border-gray-100 bg-gray-50/80"
+                      broadcastPreviewTheme === 'dark' ? "border-surface-muted/70 bg-surface-muted" : "border-gray-100 bg-gray-50/80"
                     )}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -1932,19 +1918,19 @@ export default function MarketingHubPage() {
                               <span className={cn("font-bold text-xs truncate", broadcastPreviewTheme === 'dark' ? "text-white" : "text-gray-900")}>
                                 PropFirm Official
                               </span>
-                              <Badge tone="accent" size="sm" className="text-[9px] py-0 px-1.5">Verified</Badge>
+                              <Badge tone="accent" size="sm" className="text-2xs py-0 px-1.5">Verified</Badge>
                             </div>
-                            <div className="text-[11px] text-gray-400 font-mono truncate">
+                            <div className="text-xs text-gray-400 font-mono truncate">
                               &lt;notifications@yourbrand.com&gt;
                             </div>
                           </div>
                         </div>
-                        <span className="text-[11px] text-gray-400 shrink-0 font-mono">Today, 10:45 AM</span>
+                        <span className="text-xs text-gray-400 shrink-0 font-mono">Today, 10:45 AM</span>
                       </div>
 
-                      <div className="pt-1 flex items-center justify-between text-[11px] text-gray-400 font-mono">
+                      <div className="pt-1 flex items-center justify-between text-xs text-gray-400 font-mono">
                         <span>To: Alexander V. &lt;demo@trader.io&gt;</span>
-                        <span className="text-emerald-400 flex items-center gap-1 font-sans text-[10px]">
+                        <span className="text-emerald-400 flex items-center gap-1 font-sans text-2xs">
                           <ShieldCheck className="h-3 w-3" /> Signed & Verified
                         </span>
                       </div>
@@ -1982,12 +1968,12 @@ export default function MarketingHubPage() {
 
                       {/* Branded Footer */}
                       <div className={cn(
-                        "pt-6 mt-6 border-t text-[11px] space-y-1.5",
+                        "pt-6 mt-6 border-t text-xs space-y-1.5",
                         broadcastPreviewTheme === 'dark' ? "border-surface-muted/60 text-gray-500" : "border-gray-200 text-gray-400"
                       )}>
                         <div className="font-semibold text-gray-400">PropFirm System Platform</div>
                         <div>This message was sent to Alexander V. as an official trader update.</div>
-                        <div className="text-[10px] opacity-75">© {new Date().getFullYear()} PropFirm Inc. • High Deliverability SMTP Certified</div>
+                        <div className="text-2xs opacity-75">© {new Date().getFullYear()} PropFirm Inc. • High Deliverability SMTP Certified</div>
                       </div>
                     </div>
                   </div>
@@ -1997,7 +1983,7 @@ export default function MarketingHubPage() {
                     <div className={cn(
                       "w-[330px] rounded-[42px] border-[6px] shadow-2xl p-2.5 relative transition-all duration-300 select-none",
                       broadcastPreviewTheme === 'dark'
-                        ? "bg-[#090D16] border-[#1E293B] shadow-black/80"
+                        ? "bg-surface border-[#1E293B] shadow-black/80"
                         : "bg-slate-100 border-slate-300 shadow-slate-900/20"
                     )}>
                       {/* Dynamic Island / Notch */}
@@ -2013,7 +1999,7 @@ export default function MarketingHubPage() {
                           : "bg-white border-gray-200 text-gray-900"
                       )}>
                         {/* Mobile Status Bar */}
-                        <div className="px-5 pt-3 pb-2 flex items-center justify-between text-[11px] font-semibold text-gray-400">
+                        <div className="px-5 pt-3 pb-2 flex items-center justify-between text-xs font-semibold text-gray-400">
                           <span>9:41</span>
                           <div className="flex items-center gap-1.5">
                             <Wifi className="h-3 w-3" />
@@ -2024,13 +2010,13 @@ export default function MarketingHubPage() {
                         {/* Mobile Mail Top Bar */}
                         <div className={cn(
                           "px-3.5 py-2 border-b flex items-center justify-between text-xs",
-                          broadcastPreviewTheme === 'dark' ? "border-surface-muted/70 bg-[#0E1524]" : "border-gray-100 bg-gray-50"
+                          broadcastPreviewTheme === 'dark' ? "border-surface-muted/70 bg-surface-muted" : "border-gray-100 bg-gray-50"
                         )}>
-                          <div className="flex items-center gap-1 text-emerald-400 font-medium text-[11px]">
+                          <div className="flex items-center gap-1 text-emerald-400 font-medium text-xs">
                             <ChevronLeft className="h-4 w-4 -ml-1" />
                             <span>Inbox</span>
                           </div>
-                          <span className="text-[10px] text-gray-400 font-mono">1 of 12</span>
+                          <span className="text-2xs text-gray-400 font-mono">1 of 12</span>
                         </div>
 
                         {/* Mobile Email Header */}
@@ -2044,12 +2030,12 @@ export default function MarketingHubPage() {
                                 <div className={cn("font-bold text-xs truncate", broadcastPreviewTheme === 'dark' ? "text-white" : "text-gray-900")}>
                                   PropFirm Official
                                 </div>
-                                <div className="text-[10px] text-gray-400 truncate">notifications@yourbrand.com</div>
+                                <div className="text-2xs text-gray-400 truncate">notifications@yourbrand.com</div>
                               </div>
                             </div>
-                            <span className="text-[10px] text-gray-400 shrink-0">10:45 AM</span>
+                            <span className="text-2xs text-gray-400 shrink-0">10:45 AM</span>
                           </div>
-                          <div className="text-[10px] text-gray-400 font-mono truncate">
+                          <div className="text-2xs text-gray-400 font-mono truncate">
                             To: Alexander V. (demo@trader.io)
                           </div>
                         </div>
@@ -2061,7 +2047,7 @@ export default function MarketingHubPage() {
                           </div>
 
                           <div className={cn(
-                            "text-[11px] leading-relaxed whitespace-pre-wrap font-sans",
+                            "text-xs leading-relaxed whitespace-pre-wrap font-sans",
                             broadcastPreviewTheme === 'dark' ? "text-gray-300" : "text-gray-700"
                           )}>
                             {(broadcastForm.message || '')
@@ -2074,7 +2060,7 @@ export default function MarketingHubPage() {
                           <div className="pt-2">
                             <button
                               type="button"
-                              className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-[11px] flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20"
+                              className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20"
                             >
                               Open Trading Terminal
                               <ArrowRight className="h-3 w-3" />
@@ -2082,7 +2068,7 @@ export default function MarketingHubPage() {
                           </div>
 
                           {/* Mobile Footer */}
-                          <div className="pt-4 border-t border-inherit text-[9px] text-gray-500 text-center space-y-1">
+                          <div className="pt-4 border-t border-inherit text-2xs text-gray-500 text-center space-y-1">
                             <div>PropFirm System Announcement</div>
                             <div>© {new Date().getFullYear()} All rights reserved.</div>
                           </div>
@@ -2148,7 +2134,7 @@ export default function MarketingHubPage() {
                           key={type}
                           type="button"
                           onClick={() => setSelectedCertType(type)}
-                          className={`py-1.5 px-2 rounded-lg text-[11px] font-bold capitalize transition-all ${
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold capitalize transition-all ${
                             selectedCertType === type
                               ? 'bg-emerald-500 text-slate-950 shadow-sm'
                               : 'text-gray-400 hover:text-white'
@@ -2295,7 +2281,7 @@ export default function MarketingHubPage() {
                   <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-surface-muted">
                     <div>
                       <p className="text-xs font-semibold text-gray-200">Include Verification QR Code</p>
-                      <p className="text-[10px] text-gray-500">Links to public HMAC tamper-proof validator</p>
+                      <p className="text-2xs text-gray-500">Links to public HMAC tamper-proof validator</p>
                     </div>
                     <Switch
                       checked={certTemplates[selectedCertType].show_qr === 1}
@@ -2317,7 +2303,7 @@ export default function MarketingHubPage() {
             <div className="lg:col-span-7 space-y-3">
               <Label className="text-xs text-gray-400 flex items-center justify-between">
                 <span>Live Certificate Rendering Preview</span>
-                <span className="font-mono text-[10px] text-emerald-400">100% Vector Scalable</span>
+                <span className="font-mono text-2xs text-emerald-400">100% Vector Scalable</span>
               </Label>
 
               <div 
@@ -2357,7 +2343,7 @@ export default function MarketingHubPage() {
 
                 {/* Center Content */}
                 <div className="text-center space-y-3 relative z-10 py-4 max-w-lg mx-auto">
-                  <p className="text-[11px] text-gray-400 uppercase tracking-wider">This credential is awarded to</p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">This credential is awarded to</p>
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-serif border-b border-gray-700/60 pb-2">
                     Alexander Volkov
                   </h2>
@@ -2378,7 +2364,7 @@ export default function MarketingHubPage() {
                       {certTemplates[selectedCertType].signatory_name}
                     </p>
                     <div className="h-0.5 w-24 bg-gray-600 my-1" />
-                    <p className="text-[9px] uppercase tracking-wider text-gray-500 font-mono">
+                    <p className="text-2xs uppercase tracking-wider text-gray-500 font-mono">
                       {certTemplates[selectedCertType].signatory_role}
                     </p>
                   </div>
@@ -2388,7 +2374,7 @@ export default function MarketingHubPage() {
                     <div className="h-14 w-14 rounded-full border-2 border-amber-400/80 bg-amber-500/10 flex items-center justify-center shadow-lg text-amber-400">
                       <Award className="h-7 w-7" />
                     </div>
-                    <span className="text-[8px] font-mono text-amber-400 uppercase mt-1 tracking-widest font-bold">
+                    <span className="text-3xs font-mono text-amber-400 uppercase mt-1 tracking-widest font-bold">
                       VERIFIED PASS
                     </span>
                   </div>
@@ -2399,7 +2385,7 @@ export default function MarketingHubPage() {
                       <div className="h-11 w-11 bg-white p-1 rounded-lg ml-auto flex items-center justify-center">
                         <QrCode className="h-9 w-9 text-slate-950" />
                       </div>
-                      <p className="text-[8px] font-mono text-gray-500 uppercase tracking-wider">
+                      <p className="text-3xs font-mono text-gray-500 uppercase tracking-wider">
                         CERT #8849-VLD
                       </p>
                     </div>
@@ -2518,7 +2504,7 @@ export default function MarketingHubPage() {
             ) : (
               <div className="space-y-1.5">
                 <Label className="text-gray-500">Scope Note</Label>
-                <div className="h-10 px-3 flex items-center text-[11px] text-gray-400 bg-background rounded-lg border border-surface-muted/50 font-mono">
+                <div className="h-10 px-3 flex items-center text-xs text-gray-400 bg-background rounded-lg border border-surface-muted/50 font-mono">
                   Active across all public & trader routes
                 </div>
               </div>
@@ -2532,7 +2518,7 @@ export default function MarketingHubPage() {
                 <Palette className="h-3.5 w-3.5 text-emerald-400" />
                 Whitelabel Theme Accent Presets
               </Label>
-              <span className="text-[10px] text-gray-500">System Accent: {systemAccentColor}</span>
+              <span className="text-2xs text-gray-500">System Accent: {systemAccentColor}</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -2558,8 +2544,8 @@ export default function MarketingHubPage() {
                       style={{ backgroundColor: preset.bg }} 
                     />
                     <div className="truncate flex-1 min-w-0">
-                      <p className="text-[11px] font-bold text-white truncate">{preset.name}</p>
-                      <p className="text-[9px] text-gray-400 font-mono">{preset.bg}</p>
+                      <p className="text-xs font-bold text-white truncate">{preset.name}</p>
+                      <p className="text-2xs text-gray-400 font-mono">{preset.bg}</p>
                     </div>
                   </button>
                 )
@@ -2656,7 +2642,7 @@ export default function MarketingHubPage() {
           <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
             <div>
               <p className="text-xs font-semibold text-gray-200">Active / Live Broadcast</p>
-              <p className="text-[10px] text-gray-500">Immediately visible to targeted users</p>
+              <p className="text-2xs text-gray-500">Immediately visible to targeted users</p>
             </div>
             <Switch
               checked={!!bannerForm.active}
@@ -2767,7 +2753,7 @@ export default function MarketingHubPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold text-gray-200">Applies to Plans</Label>
-              <span className="text-[10px] text-gray-400 font-mono">None selected = Valid for all challenge plans</span>
+              <span className="text-2xs text-gray-400 font-mono">None selected = Valid for all challenge plans</span>
             </div>
             <div className="flex flex-wrap gap-2 pt-1 max-h-36 overflow-y-auto custom-scrollbar p-1">
               {challengePlans.length > 0 ? (
@@ -2801,7 +2787,7 @@ export default function MarketingHubPage() {
           <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
             <div>
               <p className="text-xs font-semibold text-gray-200">Active Promo Status</p>
-              <p className="text-[10px] text-gray-500">Allow users to apply this coupon code at checkout</p>
+              <p className="text-2xs text-gray-500">Allow users to apply this coupon code at checkout</p>
             </div>
             <Switch
               checked={!!couponForm.active}
@@ -2892,7 +2878,7 @@ export default function MarketingHubPage() {
                     navigator.clipboard.writeText(payoutDest)
                     toast.success('Wallet address copied!')
                   }}
-                  className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-mono"
+                  className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-mono"
                 >
                   <Copy className="h-2.5 w-2.5" /> Copy Address
                 </button>
@@ -2917,8 +2903,8 @@ export default function MarketingHubPage() {
                 <span className="text-2xs uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
                   <QrCode className="h-3 w-3" /> Scan-to-Pay QR
                 </span>
-                <p className="text-[11px] text-gray-400 leading-tight">Scan with TrustWallet or Binance App for 1-click mobile transfer.</p>
-                <div className="text-[10px] text-gray-500 font-mono truncate">{payoutDest}</div>
+                <p className="text-xs text-gray-400 leading-tight">Scan with TrustWallet or Binance App for 1-click mobile transfer.</p>
+                <div className="text-2xs text-gray-500 font-mono truncate">{payoutDest}</div>
               </div>
             </div>
           )}
@@ -2986,19 +2972,19 @@ export default function MarketingHubPage() {
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div className="p-3 rounded-lg bg-background border border-surface-muted">
-                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Ref Code</div>
+                <div className="text-2xs uppercase tracking-wider text-gray-400 font-semibold">Ref Code</div>
                 <div className="text-sm font-mono font-bold text-emerald-400 mt-0.5">{selectedAffiliateDetail.code}</div>
               </div>
               <div className="p-3 rounded-lg bg-background border border-surface-muted">
-                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Commission Split</div>
+                <div className="text-2xs uppercase tracking-wider text-gray-400 font-semibold">Commission Split</div>
                 <div className="text-sm font-mono font-bold text-white mt-0.5">{selectedAffiliateDetail.rate_percent ?? 15}%</div>
               </div>
               <div className="p-3 rounded-lg bg-background border border-surface-muted">
-                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Unpaid Balance</div>
+                <div className="text-2xs uppercase tracking-wider text-gray-400 font-semibold">Unpaid Balance</div>
                 <div className="text-sm font-mono font-bold text-amber-400 mt-0.5">${Number(selectedAffiliateDetail.unpaid || 0).toLocaleString()}</div>
               </div>
               <div className="p-3 rounded-lg bg-background border border-surface-muted">
-                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Lifetime Paid</div>
+                <div className="text-2xs uppercase tracking-wider text-gray-400 font-semibold">Lifetime Paid</div>
                 <div className="text-sm font-mono font-bold text-emerald-400 mt-0.5">${Number(selectedAffiliateDetail.paid || 0).toLocaleString()}</div>
               </div>
             </div>
@@ -3013,7 +2999,7 @@ export default function MarketingHubPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 text-[10px] px-2 text-emerald-400 hover:text-emerald-300"
+                    className="h-6 text-2xs px-2 text-emerald-400 hover:text-emerald-300"
                     onClick={() => {
                       navigator.clipboard.writeText(selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination || '')
                       toast.success('Wallet address copied!')
@@ -3028,7 +3014,7 @@ export default function MarketingHubPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-200">Affiliate Orders & Commission Ledger</span>
-                <span className="text-[11px] font-mono text-gray-400">
+                <span className="text-xs font-mono text-gray-400">
                   {commissions.filter(c => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id).length} transactions
                 </span>
               </div>
@@ -3045,7 +3031,7 @@ export default function MarketingHubPage() {
                       <div key={c.id} className="p-2.5 flex items-center justify-between text-xs bg-background hover:bg-surface">
                         <div>
                           <div className="font-semibold text-gray-200">Order #{c.order_id || c.id} • {c.buyer_user || 'Trader'}</div>
-                          <div className="text-[10px] text-gray-500">{c.created_at || 'Recent'}</div>
+                          <div className="text-2xs text-gray-500">{c.created_at || 'Recent'}</div>
                         </div>
                         <div className="text-right">
                           <div className="font-mono font-bold text-emerald-400">+${Number(c.amount || 0).toLocaleString()}</div>

@@ -171,6 +171,8 @@ export default function PvpLiveBattleArenaPage() {
     const cPnl = creator.pnl || 0
     const chPnl = challenger.pnl || 0
     if (cPnl === 0 && chPnl === 0) {
+      if (liveState?.leader === 'creator') return { creatorPct: 60, challengerPct: 40 }
+      if (liveState?.leader === 'challenger') return { creatorPct: 40, challengerPct: 60 }
       return { creatorPct: 50, challengerPct: 50 }
     }
     const diff = cPnl - chPnl
@@ -178,7 +180,7 @@ export default function PvpLiveBattleArenaPage() {
     const normalized = Math.max(-35, Math.min(35, (diff / 500) * 35))
     const cPct = Math.round(50 + normalized)
     return { creatorPct: cPct, challengerPct: 100 - cPct }
-  }, [creator.pnl, challenger.pnl])
+  }, [creator.pnl, challenger.pnl, liveState?.leader])
 
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -232,25 +234,25 @@ export default function PvpLiveBattleArenaPage() {
             <Swords className="h-3.5 w-3.5 text-red-500" />
             {match?.match_code || 'PVP-MATCH'}
           </span>
-          <Badge tone="accent" size="sm" className="tabular font-semibold text-[10px] px-2 py-0.5">
+          <Badge tone="accent" size="sm" className="tabular font-semibold text-2xs px-2 py-0.5">
             {match?.symbol || 'BTCUSD'}
           </Badge>
           {match?.arena_mode === 'league' && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+            <span className="hidden sm:inline-flex items-center gap-1 text-2xs font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
               🛡️ Gladiator League (Free)
             </span>
           )}
           {match?.arena_mode === 'cash' && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+            <span className="hidden sm:inline-flex items-center gap-1 text-2xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
               ⚔️ Real Cash Duel (USDC)
             </span>
           )}
           {match?.arena_mode === 'perk' && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+            <span className="hidden sm:inline-flex items-center gap-1 text-2xs font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
               🏆 Challenge Perk: {match?.perk_reward || 'Perk'}
             </span>
           )}
-          <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+          <span className="hidden md:inline-flex items-center gap-1 text-2xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
             <Radio className="h-2.5 w-2.5 animate-pulse" />
             24/7 Live Feed
           </span>
@@ -310,7 +312,7 @@ export default function PvpLiveBattleArenaPage() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-base font-extrabold text-text tracking-tight">{match?.symbol || 'BTCUSD'}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-surface-muted text-text-muted border border-border">
+                <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-surface-muted text-text-muted border border-border">
                   5M Candlesticks
                 </span>
               </div>
@@ -329,12 +331,12 @@ export default function PvpLiveBattleArenaPage() {
 
             <div className="flex items-center gap-3 text-xs tabular">
               <div className="text-right">
-                <span className="text-[10px] uppercase text-text-muted block leading-none">Prize Pool</span>
+                <span className="text-2xs uppercase text-text-muted block leading-none">Prize Pool</span>
                 <span className="font-extrabold text-amber-500">{formatMoney(match?.prize_pool)} USDC</span>
               </div>
               <div className="h-4 w-[1px] bg-border" />
               <div className="text-right">
-                <span className="text-[10px] uppercase text-text-muted block leading-none">Stake Each</span>
+                <span className="text-2xs uppercase text-text-muted block leading-none">Stake Each</span>
                 <span className="font-bold text-text">{formatMoney(match?.stake_amount)} USDC</span>
               </div>
             </div>
@@ -364,7 +366,7 @@ export default function PvpLiveBattleArenaPage() {
                   size="sm"
                   onClick={() => settleMatchMutation.mutate()}
                   loading={settleMatchMutation.isPending}
-                  className="h-7 text-[11px] text-red-500 hover:bg-red-500/10 px-2"
+                  className="h-7 text-2xs text-red-500 hover:bg-red-500/10 px-2"
                 >
                   <StopCircle className="h-3 w-3 mr-1" />
                   Conclude Duel
@@ -385,11 +387,11 @@ export default function PvpLiveBattleArenaPage() {
             <div className="bg-surface border border-blue-500/30 p-3.5 rounded-xl relative overflow-hidden shadow-sm">
               <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
               <div className="flex items-center justify-between">
-                <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 text-[9px] font-extrabold uppercase">
+                <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 text-3xs font-extrabold uppercase">
                   Blue Corner (P1)
                 </span>
-                <span className="text-[11px] font-bold tabular text-blue-500">
-                  {creator.trades_count} Orders
+                <span className="text-2xs font-bold tabular text-blue-500">
+                  {creator.trades_count !== undefined ? `${creator.trades_count} Orders` : (creator.pnl_display || 'Spectating')}
                 </span>
               </div>
               <div className="font-bold text-sm text-text truncate mt-1">
@@ -397,12 +399,16 @@ export default function PvpLiveBattleArenaPage() {
               </div>
               <div className="mt-2 pt-2 border-t border-border flex items-baseline justify-between">
                 <div className="text-xs text-text-muted tabular">
-                  {formatMoney(creator.equity)}
+                  {creator.equity !== undefined ? formatMoney(creator.equity) : '---'}
                 </div>
                 <div className={`text-xs font-black tabular ${
-                  creator.pnl >= 0 ? 'text-emerald-500' : 'text-red-500'
+                  creator.pnl !== undefined
+                    ? (creator.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')
+                    : 'text-text'
                 }`}>
-                  {creator.pnl >= 0 ? '+' : ''}{formatMoney(creator.pnl)}
+                  {creator.pnl !== undefined
+                    ? `${creator.pnl >= 0 ? '+' : ''}${formatMoney(creator.pnl)}`
+                    : (creator.pnl_display || '---')}
                 </div>
               </div>
             </div>
@@ -411,11 +417,11 @@ export default function PvpLiveBattleArenaPage() {
             <div className="bg-surface border border-amber-500/30 p-3.5 rounded-xl relative overflow-hidden shadow-sm">
               <div className="absolute top-0 right-0 w-1 h-full bg-amber-500" />
               <div className="flex items-center justify-between">
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-extrabold uppercase">
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 text-3xs font-extrabold uppercase">
                   Red Corner (P2)
                 </span>
-                <span className="text-[11px] font-bold tabular text-amber-500">
-                  {challenger.trades_count} Orders
+                <span className="text-2xs font-bold tabular text-amber-500">
+                  {challenger.trades_count !== undefined ? `${challenger.trades_count} Orders` : (challenger.pnl_display || 'Spectating')}
                 </span>
               </div>
               <div className="font-bold text-sm text-text truncate mt-1">
@@ -423,12 +429,16 @@ export default function PvpLiveBattleArenaPage() {
               </div>
               <div className="mt-2 pt-2 border-t border-border flex items-baseline justify-between">
                 <div className="text-xs text-text-muted tabular">
-                  {formatMoney(challenger.equity)}
+                  {challenger.equity !== undefined ? formatMoney(challenger.equity) : '---'}
                 </div>
                 <div className={`text-xs font-black tabular ${
-                  challenger.pnl >= 0 ? 'text-emerald-500' : 'text-red-500'
+                  challenger.pnl !== undefined
+                    ? (challenger.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')
+                    : 'text-text'
                 }`}>
-                  {challenger.pnl >= 0 ? '+' : ''}{formatMoney(challenger.pnl)}
+                  {challenger.pnl !== undefined
+                    ? `${challenger.pnl >= 0 ? '+' : ''}${formatMoney(challenger.pnl)}`
+                    : (challenger.pnl_display || '---')}
                 </div>
               </div>
             </div>
@@ -442,13 +452,13 @@ export default function PvpLiveBattleArenaPage() {
                 <span className="h-2 w-2 rounded-full bg-blue-500" />
                 {creator.name} ({creatorPct}%)
               </span>
-              <span className="text-text-muted text-[11px] flex items-center gap-1">
+              <span className="text-text-muted text-2xs flex items-center gap-1">
                 <Swords className="h-3 w-3 text-red-500" />
                 {leadDelta > 0 
                   ? `Blue +${formatMoney(leadDelta)}`
                   : leadDelta < 0 
                   ? `Red +${formatMoney(Math.abs(leadDelta))}`
-                  : 'Dead Heat 50/50'}
+                  : (liveState?.leader === 'creator' ? 'Blue Leading' : liveState?.leader === 'challenger' ? 'Red Leading' : 'Dead Heat 50/50')}
               </span>
               <span className="text-amber-500 flex items-center gap-1">
                 ({challengerPct}%) {challenger.name}
@@ -478,7 +488,7 @@ export default function PvpLiveBattleArenaPage() {
                   Your Active Battle Ticket
                 </div>
                 {myPosition && myPosition.direction && myPosition.direction !== 'flat' ? (
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                  <span className={`px-2 py-0.5 rounded text-2xs font-extrabold uppercase ${
                     myPosition.direction === 'buy'
                       ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40'
                       : 'bg-red-500/20 text-red-500 border border-red-500/40'
@@ -486,7 +496,7 @@ export default function PvpLiveBattleArenaPage() {
                     {myPosition.direction.toUpperCase()} {myPosition.lot_size}L
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-surface-muted text-text-muted border border-border">
+                  <span className="px-2 py-0.5 rounded text-2xs font-bold uppercase bg-surface-muted text-text-muted border border-border">
                     FLAT (No Open Orders)
                   </span>
                 )}
@@ -496,13 +506,13 @@ export default function PvpLiveBattleArenaPage() {
                 <div className="space-y-2.5">
                   <div className="grid grid-cols-2 gap-2 bg-surface-muted p-2.5 rounded-lg text-xs tabular">
                     <div>
-                      <div className="text-[10px] text-text-muted uppercase">Entry Price</div>
+                      <div className="text-2xs text-text-muted uppercase">Entry Price</div>
                       <div className="font-bold text-text mt-0.5">
                         {myPosition.open_price.toFixed(match?.symbol?.includes('BTC') ? 2 : 4)}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] text-text-muted uppercase">Floating PnL</div>
+                      <div className="text-2xs text-text-muted uppercase">Floating PnL</div>
                       <div className={`font-black text-sm mt-0.5 ${
                         myPosition.floating_pnl >= 0 ? 'text-emerald-500' : 'text-red-500'
                       }`}>
@@ -539,7 +549,7 @@ export default function PvpLiveBattleArenaPage() {
                   </div>
                 </div>
               ) : (
-                <div className="text-[11px] text-text-muted bg-surface-muted/50 p-2.5 rounded-lg border border-border">
+                <div className="text-2xs text-text-muted bg-surface-muted/50 p-2.5 rounded-lg border border-border">
                   You have no active position open. Select lot size below and click BUY or SELL to strike!
                 </div>
               )}
@@ -554,7 +564,7 @@ export default function PvpLiveBattleArenaPage() {
                   <Zap className="h-3.5 w-3.5 text-amber-500" />
                   Order Execution Deck
                 </CardTitle>
-                <span className="text-[10px] text-text-muted uppercase tabular">
+                <span className="text-2xs text-text-muted uppercase tabular">
                   Sub-ms Fill Latency
                 </span>
               </div>
@@ -564,7 +574,7 @@ export default function PvpLiveBattleArenaPage() {
               
               {/* Lot Selector Pills */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-text">
+                <div className="flex items-center justify-between text-2xs font-semibold text-text">
                   <span>Lot Size</span>
                   <span className="text-text-muted tabular">{selectedLot.toFixed(1)} Lots selected</span>
                 </div>
@@ -593,7 +603,7 @@ export default function PvpLiveBattleArenaPage() {
                     <Radio className="h-3.5 w-3.5 animate-pulse" />
                     <span>Spectator & Referee Observation Suite</span>
                   </div>
-                  <p className="text-[11px] text-text-muted">
+                  <p className="text-2xs text-text-muted">
                     Viewing battle live. Order executions are reserved for matched gladiators ({creator.name} vs {challenger.name}).
                   </p>
                 </div>
@@ -601,7 +611,7 @@ export default function PvpLiveBattleArenaPage() {
                 <>
                   {/* Weekend Closed Warning */}
                   {isWeekendClosed && (
-                    <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-[11px] flex items-center gap-2">
+                    <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-2xs flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 shrink-0" />
                       <div>{match?.symbol} is closed for weekend trading. Weekend duels require BTCUSD.</div>
                     </div>
@@ -635,7 +645,7 @@ export default function PvpLiveBattleArenaPage() {
                   {/* Creator Cancel / Withdraw Button if Waiting */}
                   {isWaiting && currentUserId === Number(match?.creator_user_id) && (
                     <div className="pt-2 border-t border-border flex items-center justify-between">
-                      <span className="text-[11px] text-text-muted">Awaiting opponent...</span>
+                      <span className="text-2xs text-text-muted">Awaiting opponent...</span>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -661,7 +671,7 @@ export default function PvpLiveBattleArenaPage() {
                   <MessageSquare className="h-3.5 w-3.5 text-cyan-500" />
                   Stadium Banter & Action Log
                 </CardTitle>
-                <span className="text-[10px] text-text-muted tabular">Live Feed</span>
+                <span className="text-2xs text-text-muted tabular">Live Feed</span>
               </div>
             </CardHeader>
 
@@ -678,7 +688,7 @@ export default function PvpLiveBattleArenaPage() {
                 return (
                   <div 
                     key={ev.id}
-                    className={`p-2 rounded-lg border text-[11px] ${
+                    className={`p-2 rounded-lg border text-2xs ${
                       isSettled 
                         ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold'
                         : isStarted
@@ -688,7 +698,7 @@ export default function PvpLiveBattleArenaPage() {
                         : 'bg-surface-muted/60 border-border text-text'
                     }`}
                   >
-                    <div className="flex items-center justify-between text-[9px] text-text-muted mb-0.5">
+                    <div className="flex items-center justify-between text-3xs text-text-muted mb-0.5">
                       <span className="font-semibold text-text">{isChat ? (author || 'Gladiator') : ev.event_type}</span>
                       <span>{ev.created_at?.substring(11, 19)}</span>
                     </div>

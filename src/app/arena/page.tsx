@@ -15,7 +15,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { 
   PvpMatch, PvpLobbyResponse, PvpLeaderboardEntry, 
-  PvpArenaWallet, TraderPerk, PvpLeaguePodiumResponse, ChallengeAccount 
+  PvpArenaWallet, PvpArenaWalletResponse, TraderPerk, PvpLeaguePodiumResponse, ChallengeAccount 
 } from '@/types/api'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
@@ -102,7 +102,7 @@ export default function PvpArenaLobbyPage() {
     refetchInterval: 5000,
   })
 
-  const { data: walletData, refetch: refetchWallet } = useQuery<PvpArenaWallet>({
+  const { data: walletData, refetch: refetchWallet } = useQuery<PvpArenaWalletResponse>({
     queryKey: ['pvp-arena-wallet'],
     queryFn: async () => {
       const res = await api.pvp.wallet()
@@ -217,8 +217,12 @@ export default function PvpArenaLobbyPage() {
       if (!res.ok) throw new Error(res.error || 'Withdrawal failed.')
       return res.data
     },
-    onSuccess: (data) => {
-      toast.success(`💸 Withdrawn $${withdrawAmount.toFixed(2)} USDC from Arena Wallet!`)
+    onSuccess: (data: any) => {
+      if (data?.pending) {
+        toast.success('🛡️ Withdrawal request submitted — pending review.')
+      } else {
+        toast.success(`💸 Withdrawn $${withdrawAmount.toFixed(2)} USDC from Arena Wallet!`)
+      }
       setIsWithdrawModalOpen(false)
       setWithdrawAddress('')
       refetchWallet()
@@ -279,7 +283,8 @@ export default function PvpArenaLobbyPage() {
   ]
 
   const practiceChips = lobbyData?.practice_balance ?? 1000
-  const cashBalance = walletData?.balance ?? lobbyData?.cash_balance ?? 0
+  const cashBalance = walletData?.wallet?.balance ?? walletData?.balance ?? lobbyData?.cash_balance ?? 0
+  const walletMode = walletData?.wallet_mode || 'demo'
   const availablePerksCount = (perksData?.perks || []).filter(p => p.status === 'available').length
 
   const getPerkName = (type: string) => {
@@ -360,13 +365,13 @@ export default function PvpArenaLobbyPage() {
                   <CircleDollarSign className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase font-bold text-text-muted tracking-wider">Free Practice Chips</div>
+                  <div className="text-2xs uppercase font-bold text-text-muted tracking-wider">Free Practice Chips</div>
                   <div className="text-lg font-black tabular text-blue-500 dark:text-blue-400">
                     {practiceChips.toLocaleString()} Chips
                   </div>
                 </div>
               </div>
-              <Badge tone="info" size="sm" className="text-[10px]">
+              <Badge tone="info" size="sm" className="text-2xs">
                 Daily Refill
               </Badge>
             </div>
@@ -378,7 +383,18 @@ export default function PvpArenaLobbyPage() {
                   <Wallet className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase font-bold text-text-muted tracking-wider">Arena Cash Wallet (USDC)</div>
+                  <div className="text-2xs uppercase font-bold text-text-muted tracking-wider flex items-center gap-1.5">
+                    <span>Arena Cash Wallet (USDC)</span>
+                    {walletMode === 'demo' ? (
+                      <span className="px-1.5 py-0.5 text-3xs font-black uppercase tracking-wider rounded bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                        DEMO FUNDS
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 text-3xs font-black uppercase tracking-wider rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                        LIVE
+                      </span>
+                    )}
+                  </div>
                   <div className="text-lg font-black tabular text-emerald-500 dark:text-emerald-400">
                     {formatMoney(cashBalance)}
                   </div>
@@ -411,7 +427,7 @@ export default function PvpArenaLobbyPage() {
                   <Gift className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase font-bold text-text-muted tracking-wider">Challenge Perks</div>
+                  <div className="text-2xs uppercase font-bold text-text-muted tracking-wider">Challenge Perks</div>
                   <div className="text-lg font-black tabular text-purple-500 dark:text-purple-400">
                     {availablePerksCount} Available
                   </div>
@@ -444,7 +460,7 @@ export default function PvpArenaLobbyPage() {
                 <span className="font-extrabold text-xs sm:text-sm text-text">All Arenas</span>
                 <Swords className="h-4 w-4 text-red-500" />
               </div>
-              <p className="text-[11px] text-text-muted mt-1">Unified view of all duel types</p>
+              <p className="text-2xs text-text-muted mt-1">Unified view of all duel types</p>
             </button>
 
             <button
@@ -459,9 +475,9 @@ export default function PvpArenaLobbyPage() {
                 <span className="font-extrabold text-xs sm:text-sm text-blue-500 dark:text-blue-400 flex items-center gap-1.5">
                   <Shield className="h-4 w-4" /> Mode 1: Gladiator League
                 </span>
-                <Badge tone="info" size="sm" className="text-[9px]">100% Free</Badge>
+                <Badge tone="info" size="sm" className="text-3xs">100% Free</Badge>
               </div>
-              <p className="text-[11px] text-text-muted mt-1">Free Chips • Win $25K Challenge</p>
+              <p className="text-2xs text-text-muted mt-1">Free Chips • Win $25K Challenge</p>
             </button>
 
             <button
@@ -476,9 +492,9 @@ export default function PvpArenaLobbyPage() {
                 <span className="font-extrabold text-xs sm:text-sm text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
                   <DollarSign className="h-4 w-4" /> Mode 2: Cash Duels
                 </span>
-                <Badge tone="success" size="sm" className="text-[9px]">USDC</Badge>
+                <Badge tone="success" size="sm" className="text-3xs">USDC</Badge>
               </div>
-              <p className="text-[11px] text-text-muted mt-1">$10-$100 • 85% Winner Payout</p>
+              <p className="text-2xs text-text-muted mt-1">$10-$100 • 85% Winner Payout</p>
             </button>
 
             <button
@@ -493,9 +509,9 @@ export default function PvpArenaLobbyPage() {
                 <span className="font-extrabold text-xs sm:text-sm text-purple-500 dark:text-purple-400 flex items-center gap-1.5">
                   <Trophy className="h-4 w-4" /> Mode 3: Perk Battles
                 </span>
-                <Badge tone="accent" size="sm" className="text-[9px]">Prop Perks</Badge>
+                <Badge tone="accent" size="sm" className="text-3xs">Prop Perks</Badge>
               </div>
-              <p className="text-[11px] text-text-muted mt-1">Win Free Retries & +1% Buffers</p>
+              <p className="text-2xs text-text-muted mt-1">Win Free Retries & +1% Buffers</p>
             </button>
 
           </div>
@@ -511,7 +527,7 @@ export default function PvpArenaLobbyPage() {
               <div className="text-2xl font-black tabular text-text mt-1">
                 {stats.active_count} LIVE
               </div>
-              <div className="text-[11px] text-text-muted mt-1">Real-time spectator rooms</div>
+              <div className="text-2xs text-text-muted mt-1">Real-time spectator rooms</div>
             </div>
 
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
@@ -522,7 +538,7 @@ export default function PvpArenaLobbyPage() {
               <div className="text-2xl font-black tabular text-emerald-600 dark:text-emerald-400 mt-1">
                 {formatMoney(stats.total_staked)}
               </div>
-              <div className="text-[11px] text-text-muted mt-1">Cumulative stake turnover</div>
+              <div className="text-2xs text-text-muted mt-1">Cumulative stake turnover</div>
             </div>
 
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
@@ -533,7 +549,7 @@ export default function PvpArenaLobbyPage() {
               <div className="text-2xl font-black tabular text-amber-600 dark:text-amber-400 mt-1">
                 85% Winner
               </div>
-              <div className="text-[11px] text-text-muted mt-1">15% platform escrow rake</div>
+              <div className="text-2xs text-text-muted mt-1">15% platform escrow rake</div>
             </div>
 
             <div className="bg-surface border border-border p-4 rounded-xl shadow-sm">
@@ -544,7 +560,7 @@ export default function PvpArenaLobbyPage() {
               <div className="text-2xl font-black tabular text-purple-600 dark:text-purple-400 mt-1">
                 {stats.total_matches} Duels
               </div>
-              <div className="text-[11px] text-text-muted mt-1">100% automated payouts</div>
+              <div className="text-2xs text-text-muted mt-1">100% automated payouts</div>
             </div>
 
           </div>
@@ -594,11 +610,11 @@ export default function PvpArenaLobbyPage() {
               <div className="bg-surface/80 border border-amber-500/40 rounded-xl p-4 flex items-center gap-3 relative overflow-hidden">
                 <div className="text-3xl font-black text-amber-500 shrink-0">🥇</div>
                 <div className="space-y-0.5 flex-1 min-w-0">
-                  <div className="text-[11px] uppercase font-bold text-amber-500">1st Place Prize</div>
+                  <div className="text-2xs uppercase font-bold text-amber-500">1st Place Prize</div>
                   <div className="text-sm font-extrabold text-text truncate">
                     {podiumData?.podium?.[0]?.name ? `${podiumData.podium[0].name} (${podiumData.podium[0].wins}W)` : 'Free $25K Challenge'}
                   </div>
-                  <div className="text-[11px] text-text-muted font-medium">
+                  <div className="text-2xs text-text-muted font-medium">
                     Reward: <strong>$25,000 Free Challenge</strong>
                   </div>
                 </div>
@@ -608,11 +624,11 @@ export default function PvpArenaLobbyPage() {
               <div className="bg-surface/80 border border-slate-400/40 rounded-xl p-4 flex items-center gap-3">
                 <div className="text-3xl font-black text-slate-400 shrink-0">🥈</div>
                 <div className="space-y-0.5 flex-1 min-w-0">
-                  <div className="text-[11px] uppercase font-bold text-slate-400">2nd Place Prize</div>
+                  <div className="text-2xs uppercase font-bold text-slate-400">2nd Place Prize</div>
                   <div className="text-sm font-extrabold text-text truncate">
                     {podiumData?.podium?.[1]?.name ? `${podiumData.podium[1].name} (${podiumData.podium[1].wins}W)` : 'Free $10K Challenge'}
                   </div>
-                  <div className="text-[11px] text-text-muted font-medium">
+                  <div className="text-2xs text-text-muted font-medium">
                     Reward: <strong>$10,000 Free Challenge</strong>
                   </div>
                 </div>
@@ -622,11 +638,11 @@ export default function PvpArenaLobbyPage() {
               <div className="bg-surface/80 border border-amber-700/40 rounded-xl p-4 flex items-center gap-3">
                 <div className="text-3xl font-black text-amber-700 shrink-0">🥉</div>
                 <div className="space-y-0.5 flex-1 min-w-0">
-                  <div className="text-[11px] uppercase font-bold text-amber-700">3rd Place Prize</div>
+                  <div className="text-2xs uppercase font-bold text-amber-700">3rd Place Prize</div>
                   <div className="text-sm font-extrabold text-text truncate">
                     {podiumData?.podium?.[2]?.name ? `${podiumData.podium[2].name} (${podiumData.podium[2].wins}W)` : 'Free $5K Challenge'}
                   </div>
-                  <div className="text-[11px] text-text-muted font-medium">
+                  <div className="text-2xs text-text-muted font-medium">
                     Reward: <strong>$5,000 Free Challenge</strong>
                   </div>
                 </div>
@@ -748,44 +764,44 @@ export default function PvpArenaLobbyPage() {
                         <span className="tabular text-xs font-bold text-text">
                           {match.match_code}
                         </span>
-                        <Badge tone="info" size="sm" className="tabular font-semibold text-[10px]">
+                        <Badge tone="info" size="sm" className="tabular font-semibold text-2xs">
                           {match.symbol}
                         </Badge>
                         
                         {/* Arena Mode Badge */}
                         {mode === 'league' && (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">
+                          <span className="px-2 py-0.5 rounded text-3xs font-bold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30">
                             🛡️ League (Free)
                           </span>
                         )}
                         {mode === 'cash' && (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
+                          <span className="px-2 py-0.5 rounded text-3xs font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
                             ⚔️ Cash (USDC)
                           </span>
                         )}
                         {mode === 'perk' && (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">
+                          <span className="px-2 py-0.5 rounded text-3xs font-bold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">
                             🏆 Challenge Perk
                           </span>
                         )}
                       </div>
 
                       {isActive && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-2xs font-semibold bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/40 animate-pulse flex items-center gap-1">
                           <Radio className="h-2.5 w-2.5" />
                           LIVE
                         </span>
                       )}
 
                       {isWaiting && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-2xs font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
                           <Clock className="h-2.5 w-2.5" />
                           OPEN
                         </span>
                       )}
 
                       {isCompleted && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                           <Trophy className="h-2.5 w-2.5" />
                           CONCLUDED
                         </span>
@@ -810,7 +826,7 @@ export default function PvpArenaLobbyPage() {
                       {/* Stakes Showcase based on Mode */}
                       <div className="bg-surface-muted p-3.5 rounded-xl border border-border grid grid-cols-2 gap-3 text-center">
                         <div>
-                          <div className="text-[10px] uppercase font-semibold text-text-muted tracking-wider">Entry Stake</div>
+                          <div className="text-2xs uppercase font-semibold text-text-muted tracking-wider">Entry Stake</div>
                           <div className="text-sm sm:text-base font-bold tabular text-text mt-0.5">
                             {mode === 'perk' 
                               ? 'Challenge Honor' 
@@ -821,7 +837,7 @@ export default function PvpArenaLobbyPage() {
                         </div>
 
                         <div className="border-l border-border">
-                          <div className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
+                          <div className="text-2xs uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
                             {mode === 'perk' ? 'Winner Reward' : 'Winner Takes (85%)'}
                           </div>
                           <div className="text-sm sm:text-base font-extrabold tabular text-amber-600 dark:text-amber-400 mt-0.5 truncate">
@@ -838,7 +854,7 @@ export default function PvpArenaLobbyPage() {
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/60 border border-border">
                           <div className="flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-full bg-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center tabular font-bold text-[10px]">
+                            <span className="h-6 w-6 rounded-full bg-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center tabular font-bold text-2xs">
                               P1
                             </span>
                             <span className="font-semibold text-text">{match.creator_name || 'Creator'}</span>
@@ -850,7 +866,7 @@ export default function PvpArenaLobbyPage() {
 
                         <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/60 border border-border">
                           <div className="flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center tabular font-bold text-[10px]">
+                            <span className="h-6 w-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center tabular font-bold text-2xs">
                               P2
                             </span>
                             <span className="font-semibold text-text">{match.challenger_name || (isWaiting ? 'Waiting Challenger...' : 'Opponent')}</span>
@@ -940,7 +956,7 @@ export default function PvpArenaLobbyPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border text-text-muted font-semibold uppercase text-[11px] tracking-wider">
+                <tr className="border-b border-border text-text-muted font-semibold uppercase text-2xs tracking-wider">
                   <th className="py-3 px-4">Rank</th>
                   <th className="py-3 px-4">Gladiator</th>
                   <th className="py-3 px-4 text-center">Duels Won</th>
@@ -968,7 +984,7 @@ export default function PvpArenaLobbyPage() {
                       {row.win_rate}%
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tabular font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs tabular font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
                         <Flame className="h-3 w-3 text-amber-500" />
                         {row.streak} Streak
                       </span>
@@ -1007,7 +1023,7 @@ export default function PvpArenaLobbyPage() {
                 }`}
               >
                 <div className="font-bold text-xs">🛡️ League</div>
-                <div className="text-[10px] opacity-80">Free Practice</div>
+                <div className="text-2xs opacity-80">Free Practice</div>
               </button>
 
               <button
@@ -1020,7 +1036,7 @@ export default function PvpArenaLobbyPage() {
                 }`}
               >
                 <div className="font-bold text-xs">⚔️ Cash Duel</div>
-                <div className="text-[10px] opacity-80">USDC Stakes</div>
+                <div className="text-2xs opacity-80">USDC Stakes</div>
               </button>
 
               <button
@@ -1033,7 +1049,7 @@ export default function PvpArenaLobbyPage() {
                 }`}
               >
                 <div className="font-bold text-xs">🏆 Perk Battle</div>
-                <div className="text-[10px] opacity-80">Challenge Buffs</div>
+                <div className="text-2xs opacity-80">Challenge Buffs</div>
               </button>
             </div>
           </div>
@@ -1060,7 +1076,7 @@ export default function PvpArenaLobbyPage() {
                   >
                     <div>
                       <div className="font-bold">{p.label}</div>
-                      <div className="text-[10px] opacity-80">{p.desc}</div>
+                      <div className="text-2xs opacity-80">{p.desc}</div>
                     </div>
                     {createForm.perk_reward === p.key && <Check className="h-4 w-4 shrink-0" />}
                   </button>
@@ -1074,7 +1090,7 @@ export default function PvpArenaLobbyPage() {
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold text-text">Choose Battle Instrument</Label>
               {isWeekend && (
-                <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                <span className="text-2xs font-bold text-emerald-500 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                   Weekend: 24/7 Crypto Feed Active
                 </span>
@@ -1099,7 +1115,7 @@ export default function PvpArenaLobbyPage() {
                     }`}
                   >
                     <span>{sym}</span>
-                    <span className={`text-[9px] font-semibold ${isClosed ? 'text-red-500' : isCrypto ? 'text-emerald-500' : 'text-text-muted'}`}>
+                    <span className={`text-3xs font-semibold ${isClosed ? 'text-red-500' : isCrypto ? 'text-emerald-500' : 'text-text-muted'}`}>
                       {isClosed ? 'Closed Weekend' : isCrypto ? '24/7 Live' : 'Open'}
                     </span>
                   </button>
@@ -1162,7 +1178,7 @@ export default function PvpArenaLobbyPage() {
                   }`}
                 >
                   <div className="font-bold tabular">{dur.label}</div>
-                  <div className="text-[10px] opacity-80">{dur.desc}</div>
+                  <div className="text-2xs opacity-80">{dur.desc}</div>
                 </button>
               ))}
             </div>
@@ -1256,24 +1272,44 @@ export default function PvpArenaLobbyPage() {
             />
           </div>
 
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300">
-            <div className="font-bold flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4" /> Instant Credit Enabled
+          {walletMode === 'live' ? (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-xs">
+                <AlertCircle className="h-4 w-4" /> Live Mode Gateway Notice
+              </div>
+              <div className="text-2xs leading-relaxed opacity-95">
+                Live arena deposits require automated crypto gateway or manual escrow crediting. Direct sandbox credit is disabled in live mode. Please contact firm support or admin to fund your live arena wallet.
+              </div>
             </div>
-            <div className="text-[11px] mt-0.5 opacity-90">
-              Demo sandbox mode credits your arena wallet immediately. In production, deposits settle within 1 confirmation on Arbitrum/Polygon USDC.
+          ) : (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300">
+              <div className="font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" /> Instant Credit Enabled (DEMO FUNDS)
+              </div>
+              <div className="text-2xs mt-0.5 opacity-90">
+                Demo sandbox mode credits your arena wallet immediately with simulated test USDC for practice duels.
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
             <Button variant="outline" onClick={() => setIsDepositModalOpen(false)}>Cancel</Button>
-            <Button
-              onClick={() => depositMutation.mutate(depositAmount)}
-              loading={depositMutation.isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-            >
-              Deposit ${depositAmount.toFixed(2)} USDC
-            </Button>
+            {walletMode === 'live' ? (
+              <Button
+                disabled
+                className="bg-surface-muted text-text-muted border border-border cursor-not-allowed font-semibold"
+              >
+                Contact Support for Live Deposit
+              </Button>
+            ) : (
+              <Button
+                onClick={() => depositMutation.mutate(depositAmount)}
+                loading={depositMutation.isPending}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                Deposit ${depositAmount.toFixed(2)} Demo USDC
+              </Button>
+            )}
           </div>
         </div>
       </Modal>
@@ -1362,7 +1398,7 @@ export default function PvpArenaLobbyPage() {
               <div className="text-center py-8 text-text-muted">
                 <Gift className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No perks in your inventory yet.</p>
-                <p className="text-[11px] mt-1">Win a Mode 3 Perk Duel in the arena to unlock Free Retries and Drawdown Buffers!</p>
+                <p className="text-2xs mt-1">Win a Mode 3 Perk Duel in the arena to unlock Free Retries and Drawdown Buffers!</p>
               </div>
             ) : (
               (perksData?.perks || []).map((perk) => {
@@ -1381,7 +1417,7 @@ export default function PvpArenaLobbyPage() {
                         </Badge>
                         <span className="font-extrabold text-text truncate">{getPerkName(perk.perk_type)}</span>
                       </div>
-                      <div className="text-[11px] text-text-muted">
+                      <div className="text-2xs text-text-muted">
                         Earned: {perk.created_at?.substring(0, 10)}
                         {perk.applied_account_id && ` • Applied to Account #${perk.applied_account_id}`}
                       </div>

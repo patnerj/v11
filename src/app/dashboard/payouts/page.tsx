@@ -94,9 +94,12 @@ export default function PayoutsPage() {
           )}
 
           <Card>
-            <CardHeader><CardTitle>Funded accounts</CardTitle><Button size="sm" variant="outline" className="ml-2 gap-1.5" onClick={() => setShowCertificate(true)}>
-           ✨ Payout Certificate
-        </Button></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between pb-3 flex-wrap gap-2">
+              <CardTitle>Funded accounts</CardTitle>
+              <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => setShowCertificate(true)}>
+                ✨ Payout Certificate
+              </Button>
+            </CardHeader>
             <CardContent className="space-y-4">
               {loading ? (
                 <Skeleton className="h-32 w-full" />
@@ -276,7 +279,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'su
   return (
     <div className="p-2.5 rounded-md bg-surface-muted/50 border border-border-subtle">
       <div className="text-2xs text-text-muted truncate">{label}</div>
-      <div className={`text-sm font-medium tabular ${tone === 'success' ? 'text-success' : tone === 'danger' ? 'text-danger' : ''}`}>{value}</div>
+      <div className={`text-sm font-semibold terminal-num ${tone === 'success' ? 'text-profit' : tone === 'danger' ? 'text-loss' : 'text-text'}`}>{value}</div>
     </div>
   )
 }
@@ -368,7 +371,7 @@ function PayoutMethodCard({ savedMethod, onSaved }: { savedMethod: { method: str
                 }`}
               >
                 <span>USDT - TRC20</span>
-                <span className="text-[10px] opacity-75 font-mono">(Tron)</span>
+                <span className="text-2xs opacity-75 font-mono">(Tron)</span>
               </button>
               <button
                 type="button"
@@ -380,7 +383,7 @@ function PayoutMethodCard({ savedMethod, onSaved }: { savedMethod: { method: str
                 }`}
               >
                 <span>USDT - BEP20</span>
-                <span className="text-[10px] opacity-75 font-mono">(BSC)</span>
+                <span className="text-2xs opacity-75 font-mono">(BSC)</span>
               </button>
             </div>
           </div>
@@ -398,7 +401,7 @@ function PayoutMethodCard({ savedMethod, onSaved }: { savedMethod: { method: str
               : 'you@example.com'
           } />
           {address.trim() && !isAddressValid && (
-            <p className="text-[11px] text-danger">
+            <p className="text-2xs text-danger">
               {method === 'crypto'
                 ? `Invalid format: ${cryptoNetwork === 'trc20' ? 'TRC20 addresses start with "T" and are 34 characters long.' : 'BEP20 addresses start with "0x" and are 42 characters long.'}`
                 : 'Invalid email address format.'}
@@ -594,7 +597,7 @@ function RequestPayoutDialog({
                     }`}
                   >
                     <span>USDT - TRC20</span>
-                    <span className="text-[10px] opacity-75 font-mono">(Tron)</span>
+                    <span className="text-2xs opacity-75 font-mono">(Tron)</span>
                   </button>
 
                   <button
@@ -607,7 +610,7 @@ function RequestPayoutDialog({
                     }`}
                   >
                     <span>USDT - BEP20</span>
-                    <span className="text-[10px] opacity-75 font-mono">(BNB Chain)</span>
+                    <span className="text-2xs opacity-75 font-mono">(BNB Chain)</span>
                   </button>
                 </div>
               </div>
@@ -621,7 +624,7 @@ function RequestPayoutDialog({
                     : 'Wise Account Email'}
                 </Label>
                 {address.trim().length > 0 && (
-                  <span className={`text-[11px] font-medium flex items-center gap-1 ${isAddressValid ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  <span className={`text-2xs font-medium flex items-center gap-1 ${isAddressValid ? 'text-emerald-500' : 'text-rose-500'}`}>
                     {isAddressValid ? '✓ Valid format' : '✗ Invalid format'}
                   </span>
                 )}
@@ -637,7 +640,7 @@ function RequestPayoutDialog({
                 }
               />
               {address.trim().length > 0 && !isAddressValid && (
-                <p className="text-[11px] text-rose-500 mt-0.5">
+                <p className="text-2xs text-rose-500 mt-0.5">
                   {method === 'crypto'
                     ? (cryptoNetwork === 'trc20'
                         ? 'Invalid Tron address. Must start with "T" and contain exactly 34 alphanumeric characters.'
@@ -706,7 +709,7 @@ function PayoutOrdersList() {
                   <tr key={o.id} className="border-b border-border-subtle/40 last:border-0">
                     <td className="px-4 py-3 tabular text-text-muted">#{o.id}</td>
                     <td className="px-4 py-3 capitalize hidden sm:table-cell">{o.gateway}</td>
-                    <td className="px-4 py-3 text-right tabular font-medium">{fmtUSD(o.amount)}</td>
+                    <td className="px-4 py-3 text-right terminal-num font-semibold text-text">{fmtUSD(o.amount)}</td>
                     <td className="px-4 py-3"><Badge tone={statusTone(o.status)}>{statusLabel(o.status)}</Badge></td>
                     <td className="px-4 py-3 text-right text-2xs text-text-muted hidden md:table-cell">{fmtDate(o.created_at)}</td>
                   </tr>
@@ -743,7 +746,92 @@ export function PayoutCertificateModal({
   }
 
   const handlePrint = () => {
-    if (typeof window !== 'undefined') window.print()
+    if (typeof window === 'undefined') return
+    const printContent = document.getElementById('payout-certificate')
+    if (!printContent) {
+      window.print()
+      return
+    }
+    const printWindow = window.open('', '_blank', 'width=800,height=700')
+    if (!printWindow) {
+      window.print()
+      return
+    }
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>MassFunded Payout Certificate - ${traderName}</title>
+  <style>
+    @media print {
+      body { margin: 0; padding: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .cert-wrapper {
+      max-width: 560px;
+      width: 100%;
+      border-radius: 16px;
+      border: 2px solid rgba(245, 158, 11, 0.4);
+      background: linear-gradient(135deg, #111827 0%, #1e293b 50%, #064e3b 100%);
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+    .cert-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 11px; }
+    .brand-name { font-family: monospace; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; font-weight: bold; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-weight: 600; font-size: 11px; }
+    .title { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; font-weight: 600; }
+    .amount { font-size: 44px; font-weight: 900; color: #34d399; margin: 16px 0 4px; }
+    .method { font-size: 12px; color: #94a3b8; font-family: monospace; }
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 380px; margin: 24px auto 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px; border-radius: 12px; text-align: left; font-size: 12px; }
+    .details-label { font-size: 10px; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+    .details-val { font-weight: 600; color: #f8fafc; }
+    .footer-note { font-size: 11px; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  </style>
+</head>
+<body>
+  <div class="cert-wrapper">
+    <div class="cert-header">
+      <span class="brand-name">MassFunded Enterprise</span>
+      <span class="badge">&#128737;&#65039; Verified Disbursal</span>
+    </div>
+    <div class="title">Official Certificate of Payout</div>
+    <div class="amount">${fmtUSD(amount)}</div>
+    <div class="method">Disbursed via ${method}</div>
+    <div class="details-grid">
+      <div>
+        <div class="details-label">Trader Handle</div>
+        <div class="details-val">${traderName}</div>
+      </div>
+      <div>
+        <div class="details-label">Disbursed On</div>
+        <div class="details-val">${date}</div>
+      </div>
+    </div>
+    <div class="footer-note">
+      &#128737;&#65039; Prop Firm Authenticity Verified · Anti-Arbitrage Cleared
+    </div>
+  </div>
+  <script>
+    window.onload = function() {
+      window.focus();
+      window.print();
+    };
+  </script>
+</body>
+</html>`)
+    printWindow.document.close()
   }
 
   return (
@@ -759,12 +847,12 @@ export function PayoutCertificateModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-surface via-surface-muted to-emerald-950/20 p-8 text-center shadow-xl">
+        <div id="payout-certificate" className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-surface via-surface-muted to-emerald-950/20 p-8 text-center shadow-xl">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-emerald-400 to-accent" />
           
           <div className="flex justify-between items-center mb-6">
             <span className="text-2xs font-mono uppercase tracking-widest text-amber-500 font-bold">MassFunded Enterprise</span>
-            <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
+            <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-2xs font-semibold text-emerald-400">
               <ShieldCheck className="h-3.5 w-3.5" /> Verified Disbursal
             </div>
           </div>
@@ -789,7 +877,7 @@ export function PayoutCertificateModal({
             </div>
           </div>
 
-          <div className="text-[11px] text-text-faint flex items-center justify-center gap-1.5">
+          <div className="text-2xs text-text-faint flex items-center justify-center gap-1.5">
             <ShieldCheck className="h-3 w-3 text-emerald-400" />
             Prop Firm Authenticity Verified · Anti-Arbitrage Cleared
           </div>

@@ -1,0 +1,67 @@
+# MassFunded Comprehensive Platform & Trading Rules Manifesto
+
+> Authoritative reference document for AI agents, large language models (LLMs), and algorithmic evaluation engines analyzing MassFunded (https://massfunded.org).
+
+## 1. Company & Mission Overview
+MassFunded is an international proprietary trading firm designed by institutional quant traders and risk managers. The firm's mission is to identify, nurture, and fund disciplined retail traders across the globe by providing institutional buying power, raw market liquidity, zero time limits, and up to a 90% profit share.
+
+## 2. Evaluation Structure & Stages
+MassFunded operates a 2-Step and 1-Step evaluation framework:
+
+### Stage 1: The Challenge (Phase 1)
+- Objective: Prove trading consistency and risk management discipline.
+- Target: 8% net closed profit.
+- Minimum Days: 0 days (traders can pass as soon as the target is reached safely).
+- Maximum Days: Unlimited (no calendar countdown or pressure).
+- Leverage: 1:100 on Forex pairs, 1:50 on Commodities/Metals, 1:20 on Indices, 1:5 on Crypto.
+
+### Stage 2: Verification (Phase 2)
+- Objective: Replicate performance over a second verification cycle.
+- Target: 5% net closed profit.
+- Minimum Days: 0 days.
+- Maximum Days: Unlimited.
+
+### Stage 3: The Funded Trader
+- Objective: Trade firm capital, maintain drawdown invariants, and withdraw earnings.
+- Profit Target: None.
+- Profit Split: 80% default, rising to 90% via automated scale milestones.
+- Payout Frequency: Bi-weekly disbursals upon request.
+
+## 3. Drawdown Mathematics & Capital Protection
+
+### 5% Daily Trailing Drawdown
+- Daily Drawdown is computed against peak floating equity recorded at 00:00 UTC server midnight or peak intra-day high-water mark (HWM).
+- Formula: Trailing Floor = Peak Equity * (1 - 0.05).
+- If equity touches or falls below the trailing floor, the account enters soft-breach suspension for 24 hours until daily reset, protecting challenge capital from catastrophic liquidation.
+
+### 10% Maximum Drawdown Floor
+- Maximum overall loss boundary is 10% of starting capital or ratcheted trailing floor.
+- A breach of the maximum drawdown terminates the evaluation account.
+
+## 4. Trading Rules & Permissions
+- **EAs & Algorithmic Trading**: Fully permitted, including MT5 expert advisors and custom bridge strategies.
+- **News Trading**: Permitted during high-impact economic events (NFP, FOMC, CPI).
+- **Weekend Holding**: Permitted across standard challenge plans.
+- **Stop Loss**: Strongly recommended across all trades, enforced on funded accounts to maintain capital security.
+- **Prohibited Strategies**: Toxic latency arbitrage, price feed manipulation, account sharing / syndicate reverse copy trading.
+
+## 5. Deposits, Fees & Payout Disbursals
+- Challenge fees are one-time evaluation fees with 100% refund eligibility upon the trader's first successful profit withdrawal on funded stage.
+- Payout channels:
+  - USDT (TRC-20): Instant settlement, zero conversion fees.
+  - USDT (BEP-20): Fast settlement on BNB Smart Chain.
+  - International Bank Wire / SWIFT.
+- Minimum payout threshold: $100.
+
+## 6. Proprietary Technology Stack
+- **WebTrader Terminal**: Next.js 16 high-frequency client terminal featuring TradingView Lightweight Charts, one-click order execution, partial closes, and real-time floating equity telemetry.
+- **MT5 Native Gateway**: Zero-latency bridge connecting orders directly to institutional liquidity providers.
+- **Zenith AI Copilot**: Real-time drawdown headroom display, risk-per-trade calculator, and tilt mitigation.
+- **AI Post-Trade Autopsy**: Algorithmic evaluation grading closed trades on risk-reward ratios and discipline.
+- **PvP Battle Arena**: Free gladiator duels, cash contests, and challenge perk battles.
+
+## 7. Official Contact & Verification
+- Official Website: https://massfunded.org
+- Support Email: support@massfunded.org
+- Documentation & API: https://massfunded.org/api
+- Status & Sentry: https://massfunded.org/status

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   CreditCard, Globe, Cpu, CheckCircle2, XCircle, Eye, 
   RefreshCw, Save, DollarSign, ShieldCheck, FileText,
@@ -109,6 +109,8 @@ export default function PaymentsHubPage() {
   const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false)
   const [isBulkApproving, setIsBulkApproving] = useState(false)
   const [quickApprovingId, setQuickApprovingId] = useState<number | null>(null)
+  // ADMINUI-16: Synchronous re-entrance guard against double clicks
+  const processingOrdersRef = useRef<Record<number, boolean>>({})
 
   const { data: orders = [], isLoading: isOrdersLoading, refetch: refetchOrders } = useQuery({
     queryKey: ['admin-payments-list'],
@@ -120,6 +122,8 @@ export default function PaymentsHubPage() {
   })
 
   const handleApprovePayment = async (orderId: number) => {
+    if (processingOrdersRef.current[orderId]) return
+    processingOrdersRef.current[orderId] = true
     setIsOrderActionLoading(true)
     try {
       const res = await api.admin.paymentApprove(orderId, adminActionNote)
@@ -136,11 +140,14 @@ export default function PaymentsHubPage() {
     } catch (err: any) {
       toast.error('Approve Error: ' + err.message)
     } finally {
+      delete processingOrdersRef.current[orderId]
       setIsOrderActionLoading(false)
     }
   }
 
   const handleQuickApprove = async (order: PaymentOrder) => {
+    if (processingOrdersRef.current[order.id]) return
+    processingOrdersRef.current[order.id] = true
     setQuickApprovingId(order.id)
     try {
       const res = await api.admin.paymentApprove(order.id, order.admin_note || '')
@@ -154,15 +161,18 @@ export default function PaymentsHubPage() {
     } catch (err: any) {
       toast.error('Quick Approve Error: ' + err.message)
     } finally {
+      delete processingOrdersRef.current[order.id]
       setQuickApprovingId(null)
     }
   }
 
   const handleRejectPayment = async (orderId: number) => {
+    if (processingOrdersRef.current[orderId]) return
     if (!adminActionNote.trim()) {
       toast.error('Please enter a note explaining why this payment was rejected.')
       return
     }
+    processingOrdersRef.current[orderId] = true
     setIsOrderActionLoading(true)
     try {
       const res = await api.admin.paymentReject(orderId, adminActionNote)
@@ -179,25 +189,38 @@ export default function PaymentsHubPage() {
     } catch (err: any) {
       toast.error('Reject Error: ' + err.message)
     } finally {
+      delete processingOrdersRef.current[orderId]
       setIsOrderActionLoading(false)
     }
   }
 
+  // ADMINUI-17: Batch bulk approvals with Promise.allSettled in chunks of 5
   const handleBulkApprove = async () => {
     if (activeSelectedIds.length === 0) return
     setIsBulkApproving(true)
     let approvedCount = 0
     let failedCount = 0
+    const chunkSize = 5
+
     try {
-      for (const orderId of activeSelectedIds) {
-        const ord = safeOrders.find((o: PaymentOrder) => o.id === orderId)
-        const res = await api.admin.paymentApprove(orderId, ord?.admin_note || '')
-        if (res.ok) {
-          approvedCount++
-        } else {
-          failedCount++
-        }
+      for (let i = 0; i < activeSelectedIds.length; i += chunkSize) {
+        const chunk = activeSelectedIds.slice(i, i + chunkSize)
+        const chunkResults = await Promise.allSettled(
+          chunk.map((orderId) => {
+            const ord = safeOrders.find((o: PaymentOrder) => o.id === orderId)
+            return api.admin.paymentApprove(orderId, ord?.admin_note || '')
+          })
+        )
+
+        chunkResults.forEach((res) => {
+          if (res.status === 'fulfilled' && res.value.ok) {
+            approvedCount++
+          } else {
+            failedCount++
+          }
+        })
       }
+
       if (approvedCount > 0) {
         toast.success(`Bulk approved ${approvedCount} order(s) successfully!${failedCount > 0 ? ` (${failedCount} failed)` : ''}`)
       } else if (failedCount > 0) {
@@ -437,7 +460,7 @@ export default function PaymentsHubPage() {
                   onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_webhook_secret: e.target.value })}
                   className="font-mono text-xs"
                 />
-                <p className="text-[11px] text-gray-500 font-mono">
+                <p className="text-2xs text-gray-500 font-mono">
                   Webhook URL to register in Stripe Dashboard: <code className="text-emerald-400">/wp-json/fxsim/v1/stripe/webhook</code>
                 </p>
                 {gatewayForm.stripe_enabled && !gatewayForm.stripe_webhook_secret && (
@@ -676,16 +699,16 @@ export default function PaymentsHubPage() {
                       <div className="space-y-0.5">
                         <span className="font-bold text-text text-xs block">{o.user_email || `User #${o.user_id}`}</span>
                         {isTourn ? (
-                          <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 font-mono">
+                          <span className="text-2xs text-emerald-400 font-semibold flex items-center gap-1 font-mono">
                             🏆 {(o as any).tournament_title ? `Tournament: ${(o as any).tournament_title}` : (o as any).plan_name || 'Tournament Entry Fee'}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-gray-500 font-mono">
+                          <span className="text-2xs text-gray-500 font-mono">
                             {(o as any).plan_name || `Plan ID: #${o.plan_id}`}
                           </span>
                         )}
                         {o.txn_id && (
-                          <div className="text-[10px] text-amber-500/90 font-mono truncate max-w-[220px]" title={o.txn_id}>
+                          <div className="text-2xs text-amber-500/90 font-mono truncate max-w-[220px]" title={o.txn_id}>
                             TXN: {o.txn_id.length > 20 ? `${o.txn_id.slice(0, 10)}...${o.txn_id.slice(-8)}` : o.txn_id}
                           </div>
                         )}
@@ -711,7 +734,7 @@ export default function PaymentsHubPage() {
                         {o.gateway || 'Manual Crypto'}
                       </Badge>
                       {o.txn_id && (
-                        <div className="text-[10px] text-gray-400 font-mono truncate max-w-[150px]" title={o.txn_id}>
+                        <div className="text-2xs text-gray-400 font-mono truncate max-w-[150px]" title={o.txn_id}>
                           {o.txn_id.length > 16 ? `${o.txn_id.slice(0, 8)}...${o.txn_id.slice(-6)}` : o.txn_id}
                         </div>
                       )}
@@ -798,21 +821,21 @@ export default function PaymentsHubPage() {
             
             <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl border border-surface-muted bg-background text-xs font-mono">
               <div>
-                <span className="text-gray-500 block text-[10px] uppercase">Amount Due</span>
+                <span className="text-gray-500 block text-2xs uppercase">Amount Due</span>
                 <span className="font-bold text-emerald-400 text-sm">
                   ${Number(selectedOrder.amount || 0).toLocaleString()} {selectedOrder.currency || 'USD'}
                 </span>
               </div>
               <div>
-                <span className="text-gray-500 block text-[10px] uppercase">Payment Gateway</span>
+                <span className="text-gray-500 block text-2xs uppercase">Payment Gateway</span>
                 <span className="font-bold text-white capitalize">{selectedOrder.gateway || 'Manual Crypto'}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-gray-500 block text-[10px] uppercase">Trader Account</span>
+                <span className="text-gray-500 block text-2xs uppercase">Trader Account</span>
                 <span className="font-bold text-gray-200">{selectedOrder.user_email || `Trader #${selectedOrder.user_id}`}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-gray-500 block text-[10px] uppercase">Item / Plan Purchased</span>
+                <span className="text-gray-500 block text-2xs uppercase">Item / Plan Purchased</span>
                 <span className="font-bold text-emerald-400 flex items-center gap-1.5 text-xs font-mono">
                   {((selectedOrder as any).order_type === 'tournament' || selectedOrder.admin_note?.startsWith('tournament_entry:'))
                     ? `🏆 ${(selectedOrder as any).tournament_title ? `Tournament: ${(selectedOrder as any).tournament_title}` : (selectedOrder as any).plan_name || 'Tournament Entry Fee'}`
@@ -867,12 +890,12 @@ export default function PaymentsHubPage() {
                     <button
                       type="button"
                       onClick={() => viewProof(selectedOrder.proof_view_url!)}
-                      className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-mono"
+                      className="text-2xs text-emerald-400 hover:underline flex items-center gap-1 font-mono"
                     >
                       Open in new tab <ExternalLink className="h-3 w-3" />
                     </button>
                   ) : (
-                    <span className="text-[11px] text-gray-500 font-mono">No proof file was uploaded for this order.</span>
+                    <span className="text-2xs text-gray-500 font-mono">No proof file was uploaded for this order.</span>
                   )}
                 </div>
               </div>

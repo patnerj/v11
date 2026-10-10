@@ -146,8 +146,8 @@ export function ChartSymbolMap() {
                       <div className="text-sm font-medium tabular flex items-center gap-1.5">
                         {inst.symbol}
                         {inst.is_active
-                          ? <span className="text-[9px] uppercase tracking-wider font-semibold text-success bg-success-muted px-1 py-px rounded">Live</span>
-                          : <span className="text-[9px] uppercase tracking-wider font-semibold text-text-faint bg-surface-muted px-1 py-px rounded">Off</span>}
+                          ? <span className="text-3xs uppercase tracking-wider font-semibold text-success bg-success-muted px-1 py-px rounded">Live</span>
+                          : <span className="text-3xs uppercase tracking-wider font-semibold text-text-faint bg-surface-muted px-1 py-px rounded">Off</span>}
                       </div>
                       <div className="text-2xs text-text-faint truncate">{inst.display_name}</div>
                     </div>

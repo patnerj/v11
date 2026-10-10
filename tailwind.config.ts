@@ -24,8 +24,25 @@ const t = {
   infoTint: 'hsl(var(--info) / 0.12)',
 }
 
+// Stock grayscale remapped to dynamic theme tokens for automatic daylight/obsidian adaptation
+const bridgeGrayScale = {
+  50:  'hsl(var(--text) / <alpha-value>)',
+  100: 'hsl(var(--text) / <alpha-value>)',
+  200: t.text,
+  300: t.text,
+  400: t.muted,
+  500: t.muted,
+  600: t.border,
+  700: t.border,
+  800: t.surface,
+  900: t.bg,
+  950: t.bg,
+}
+
 const stockBridge = {
-  emerald: { 50: t.accentTint, 100: t.accentTint, 200: t.accentTint, 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 800: t.accent, 900: t.accent, 950: t.accentTint },
+  slate: bridgeGrayScale,
+  zinc:  bridgeGrayScale,
+  gray:  bridgeGrayScale,
   green:  { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
   teal:   { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
   lime:   { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent },
@@ -58,7 +75,8 @@ const config: Config = {
         ...stockBridge,
         // ── Design tokens ─────────────────────────────────────────────
         bg:        { DEFAULT: 'hsl(var(--bg) / <alpha-value>)', subtle: 'hsl(var(--bg-subtle) / <alpha-value>)', raised: 'hsl(var(--bg-raised) / <alpha-value>)' },
-        surface:   { DEFAULT: 'hsl(var(--surface) / <alpha-value>)', muted: 'hsl(var(--surface-muted) / <alpha-value>)', strong: 'hsl(var(--surface-strong) / <alpha-value>)' },
+        surface:   { DEFAULT: 'hsl(var(--surface) / <alpha-value>)', muted: 'hsl(var(--surface-muted) / <alpha-value>)', strong: 'hsl(var(--surface-strong) / <alpha-value>)', subtle: 'hsl(var(--surface-subtle, var(--surface-muted)) / <alpha-value>)' },
+        'surface-subtle': 'hsl(var(--surface-subtle, var(--surface-muted)) / <alpha-value>)',
         border:    { DEFAULT: 'hsl(var(--border) / <alpha-value>)', strong: 'hsl(var(--border-strong) / <alpha-value>)', subtle: 'hsl(var(--border-subtle) / <alpha-value>)' },
         text:      { DEFAULT: 'hsl(var(--text) / <alpha-value>)', muted: 'hsl(var(--text-muted) / <alpha-value>)', subtle: 'hsl(var(--text-subtle) / <alpha-value>)' },
         accent:    { DEFAULT: 'hsl(var(--accent) / <alpha-value>)', hover: 'hsl(var(--accent-hover, var(--accent)) / <alpha-value>)', muted: 'hsl(var(--accent) / 0.14)' },
@@ -66,6 +84,9 @@ const config: Config = {
         danger:    { DEFAULT: 'hsl(var(--danger) / <alpha-value>)', hover: 'hsl(var(--danger-hover) / <alpha-value>)', muted: 'hsl(var(--danger) / 0.14)' },
         warn:      { DEFAULT: 'hsl(var(--warn) / <alpha-value>)', hover: 'hsl(var(--warn) / <alpha-value>)', muted: 'hsl(var(--warn) / 0.14)' },
         info:      { DEFAULT: 'hsl(var(--info) / <alpha-value>)', hover: 'hsl(var(--info) / <alpha-value>)', muted: 'hsl(var(--info) / 0.14)' },
+        // Permanent financial invariants
+        profit:    { DEFAULT: '#10B981', subtle: 'rgba(16, 185, 129, 0.12)' },
+        loss:      { DEFAULT: '#EF4444', subtle: 'rgba(239, 68, 68, 0.12)' },
         // shadcn aliases (used by ported primitives)
         background:  'hsl(var(--bg) / <alpha-value>)',
         foreground:  'hsl(var(--text) / <alpha-value>)',
@@ -79,18 +100,23 @@ const config: Config = {
         ring:        'hsl(var(--accent) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'var(--font-poppins)', 'Poppins', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Poppins', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-        poppins: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
-        inter: ['var(--font-inter)', 'Inter', 'sans-serif'],
-        jakarta: ['var(--font-plus-jakarta)', 'Plus Jakarta Sans', 'sans-serif'],
-        outfit: ['var(--font-outfit)', 'Outfit', 'sans-serif'],
-        manrope: ['var(--font-manrope)', 'Manrope', 'sans-serif'],
-        space: ['var(--font-space-grotesk)', 'Space Grotesk', 'sans-serif'],
-        urbanist: ['var(--font-urbanist)', 'Urbanist', 'sans-serif'],
+        poppins: ['var(--font-sans)', 'Poppins', 'sans-serif'],
+        inter: ['var(--font-sans)', 'Poppins', 'sans-serif'],
+        jakarta: ['var(--font-sans)', 'Poppins', 'sans-serif'],
+        outfit: ['var(--font-sans)', 'Poppins', 'sans-serif'],
+        manrope: ['var(--font-sans)', 'Poppins', 'sans-serif'],
+        space: ['var(--font-sans)', 'Poppins', 'sans-serif'],
+        urbanist: ['var(--font-sans)', 'Poppins', 'sans-serif'],
       },
       fontSize: {
-        '2xs': ['0.6875rem', { lineHeight: '0.875rem' }],
+        '3xs': ['0.5rem', { lineHeight: '0.75rem' }],                   // 8px — ultra-compact tags & badges (resolves phantom text-3xs)
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],                 // 10px — compact tooltips, subtitle meta
+        'terminal-micro': ['0.5625rem', { lineHeight: '0.75rem' }],    // 9px — chart axis, badges only
+        'terminal-body':  ['0.6875rem', { lineHeight: '1rem' }],       // 11px — ALL data cells, inputs, labels  
+        'terminal-label': ['0.75rem',   { lineHeight: '1.125rem' }],   // 12px — column headers, section titles
+        'terminal-title': ['0.875rem',  { lineHeight: '1.25rem' }],    // 14px — panel titles, account name
       },
       letterSpacing: {
         tightest: '-0.04em',
@@ -108,6 +134,7 @@ const config: Config = {
       boxShadow: {
         'card':      '0 1px 2px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.02) inset',
         'card-lg':   '0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset',
+        'glow-sm':   '0 0 10px rgba(var(--accent-rgb, 16, 185, 129), 0.2)',
         'glow':      '0 0 0 1px rgba(var(--accent-rgb, 16, 185, 129), .4), 0 0 24px rgba(var(--accent-rgb, 16, 185, 129), .25)',
         'glow-success': '0 0 0 1px rgba(16,185,129,.4), 0 0 24px rgba(16,185,129,.25)',
       },

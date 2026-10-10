@@ -36,14 +36,27 @@ function KycDocViewer({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPdf, setIsPdf] = useState(false)
+  const [mimeType, setMimeType] = useState<string>('')
   const [zoom, setZoom] = useState(1)
   const [rotate, setRotate] = useState(0)
+
+  const getExtension = (mime: string, fallback = 'jpg'): string => {
+    if (mime.includes('pdf')) return 'pdf'
+    if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg'
+    if (mime.includes('png')) return 'png'
+    if (mime.includes('webp')) return 'webp'
+    if (mime.includes('gif')) return 'gif'
+    if (mime.includes('svg')) return 'svg'
+    if (mime.includes('html')) return 'html'
+    return fallback
+  }
 
   React.useEffect(() => {
     if (!docPath) {
       setBlobUrl(null)
       setError(null)
       setIsPdf(false)
+      setMimeType('')
       return
     }
 
@@ -100,10 +113,12 @@ function KycDocViewer({
         const blob = await res.blob()
         if (isCancelled) return
 
+        const resolvedMime = contentType || blob.type || ''
         const url = URL.createObjectURL(blob)
         currentUrl = url
         setBlobUrl(url)
-        setIsPdf(contentType.includes('pdf') || blob.type === 'application/pdf')
+        setMimeType(resolvedMime)
+        setIsPdf(resolvedMime.includes('pdf') || blob.type === 'application/pdf')
       } catch (err: any) {
         if (!isCancelled) {
           setError(err?.message || 'Could not load document')
@@ -130,7 +145,7 @@ function KycDocViewer({
         <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">
           {tabName === 'back' ? 'Optional Back ID: Not Uploaded' : `No Document Uploaded: ${tabName.toUpperCase()}`}
         </p>
-        <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
+        <p className="text-2xs text-gray-500 max-w-sm mx-auto">
           {tabName === 'back' 
             ? 'Single-sided ID / Passport submitted. Back ID was not required or provided.' 
             : 'The trader has not submitted a file for this document category yet.'}
@@ -161,7 +176,7 @@ function KycDocViewer({
         headers: { 'X-FXSIM-Token': token, 'Authorization': `Bearer ${token}` },
       })
         .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob() })
-        .then((b) => { setBlobUrl(URL.createObjectURL(b)); setError(null) })
+        .then((b) => { setBlobUrl(URL.createObjectURL(b)); setMimeType(b.type || ''); setError(null) })
         .catch((e) => setError(e?.message || 'Proxy download failed'))
     }
 
@@ -169,7 +184,7 @@ function KycDocViewer({
       <div className="text-center space-y-2 py-8 text-red-400">
         <AlertTriangle className="h-8 w-8 mx-auto" />
         <p className="text-xs font-bold uppercase">Failed to load document preview</p>
-        <p className="text-[11px] text-gray-400 max-w-sm mx-auto">{error || 'Unknown error'}</p>
+        <p className="text-2xs text-gray-400 max-w-sm mx-auto">{error || 'Unknown error'}</p>
         <Button
           size="sm"
           variant="outline"
@@ -178,6 +193,31 @@ function KycDocViewer({
         >
           <ExternalLink className="h-3 w-3" />
           Retry via secure proxy
+        </Button>
+      </div>
+    )
+  }
+
+  if (mimeType.includes('text/html')) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 gap-4 text-center">
+        <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+          <FileText className="h-8 w-8" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-white">HTML Document Attached</p>
+          <p className="text-xs text-gray-400 mt-1">For platform security, HTML files are not previewed inline.</p>
+        </div>
+        <Button 
+          asChild 
+          variant="outline" 
+          size="sm" 
+          className="border-gray-700 text-gray-300 gap-2"
+        >
+          <a href={blobUrl} download={`kyc_${kycId}_${tabName}.html`}>
+            <Download className="h-4 w-4" />
+            Download File Safely
+          </a>
         </Button>
       </div>
     )
@@ -210,7 +250,7 @@ function KycDocViewer({
             size="sm" 
             className="border-gray-700 text-gray-300 gap-2"
           >
-            <a href={blobUrl} download={`kyc_${kycId}_${tabName}.pdf`}>
+            <a href={blobUrl} download={`kyc_${kycId}_${tabName}.${getExtension(mimeType, 'pdf')}`}>
               <Download className="h-4 w-4" />
               Download
             </a>
@@ -231,7 +271,7 @@ function KycDocViewer({
         >
           -
         </button>
-        <span className="tabular font-semibold text-[10px] text-emerald-400 px-1">{Math.round(zoom * 100)}%</span>
+        <span className="tabular font-semibold text-2xs text-emerald-400 px-1">{Math.round(zoom * 100)}%</span>
         <button 
           onClick={() => setZoom(z => Math.min(3, z + 0.25))}
           className="p-1 text-gray-300 hover:text-white rounded hover:bg-white/10"
@@ -256,12 +296,11 @@ function KycDocViewer({
         </button>
         <a 
           href={blobUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
+          download={`kyc_${kycId}_${tabName}.${getExtension(mimeType, 'jpg')}`}
           className="p-1 text-gray-300 hover:text-white rounded hover:bg-white/10 ml-1"
-          title="Full Resolution"
+          title="Download Document"
         >
-          <ExternalLink className="h-3 w-3" />
+          <Download className="h-3 w-3" />
         </a>
       </div>
 
@@ -376,7 +415,7 @@ export default function KycHubPage() {
       await reviewMutation.mutateAsync({ 
         id, 
         action: 'approve', 
-        note: rejectionNote, 
+        note: allowForceOverride ? (rejectionNote.trim() || 'Manual administrative override') : '', 
         force_override: !hasDocs && allowForceOverride 
       })
     } finally {
@@ -562,11 +601,11 @@ export default function KycHubPage() {
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-text text-xs">{k.name || k.username || 'Unnamed Trader'}</span>
-                    <span className="tabular font-semibold text-[10px] text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    <span className="tabular font-semibold text-2xs text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                       ID #{k.user_id}
                     </span>
                   </div>
-                  <p className="text-[11px] text-text-muted truncate">{k.email}</p>
+                  <p className="text-2xs text-text-muted truncate">{k.email}</p>
                 </div>
               ),
             },
@@ -694,19 +733,19 @@ export default function KycHubPage() {
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-border bg-surface-muted text-xs tabular font-medium">
                     <div>
-                      <span className="text-text-muted block text-[10px] uppercase">Trader Name</span>
+                      <span className="text-text-muted block text-2xs uppercase">Trader Name</span>
                       <span className="font-bold text-text truncate block">{selectedKyc.name || selectedKyc.username}</span>
                     </div>
                     <div>
-                      <span className="text-text-muted block text-[10px] uppercase">User ID</span>
+                      <span className="text-text-muted block text-2xs uppercase">User ID</span>
                       <span className="font-bold text-emerald-400">#{selectedKyc.user_id}</span>
                     </div>
                     <div>
-                      <span className="text-text-muted block text-[10px] uppercase">Country</span>
+                      <span className="text-text-muted block text-2xs uppercase">Country</span>
                       <span className="font-bold text-text">{selectedKyc.country || 'Global'}</span>
                     </div>
                     <div>
-                      <span className="text-text-muted block text-[10px] uppercase">Attached Files</span>
+                      <span className="text-text-muted block text-2xs uppercase">Attached Files</span>
                       <span className={`font-bold ${isDone ? 'text-emerald-400' : 'text-amber-400'}`}>
                         {currentCount} / {reqCount} Uploaded {isDone ? '(Complete)' : ''}
                       </span>
@@ -794,7 +833,7 @@ export default function KycHubPage() {
                   <button
                     type="button"
                     onClick={handlePreFillMissingDocNotice}
-                    className="text-[11px] text-amber-400 hover:underline font-medium"
+                    className="text-2xs text-amber-400 hover:underline font-medium"
                   >
                     Auto-Fill Missing Doc Notice
                   </button>

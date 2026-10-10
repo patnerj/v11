@@ -25,6 +25,27 @@ export function getCrossRate(currency: string, prices: PricesMap | Record<string
   return 1.0
 }
 
+type Px = { bid?: number | string; ask?: number | string; mid?: number | string }
+const QUOTE_USD_FALLBACK: Record<string, number> = { JPY: 1 / 150, CAD: 1 / 1.36, CHF: 1 / 0.88, GBP: 1.27, EUR: 1.08, AUD: 0.65, NZD: 0.6 }
+
+export function quoteToUsdRate(symbol: string, closePx: number, prices: Record<string, Px | undefined> = {}): number {
+  const s = (symbol || '').toUpperCase()
+  let quote = 'USD'
+  if (s === 'GER40') quote = 'EUR'
+  else if (s === 'UK100') quote = 'GBP'
+  else if (/^[A-Z]{6}$/.test(s)) quote = s.slice(3)
+  if (quote === 'USD') return 1
+  if (s.startsWith('USD') && closePx > 0) return 1 / closePx
+  const mid = (k: string) => {
+    const p = prices?.[k]; if (!p) return 0
+    const m = Number(p.mid) || (Number(p.bid) + Number(p.ask)) / 2
+    return Number.isFinite(m) && m > 0 ? m : 0
+  }
+  const direct = mid(quote + 'USD'); if (direct > 0) return direct
+  const inv = mid('USD' + quote); if (inv > 0) return 1 / inv
+  return QUOTE_USD_FALLBACK[quote] ?? 1
+}
+
 /** Position size (lots) that risks `riskPct`% of balance across the SL distance. */
 export function calcRecommendedLot(args: {
   balance: number

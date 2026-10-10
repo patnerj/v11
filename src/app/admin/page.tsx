@@ -22,11 +22,13 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
 import { FounderActionCenter } from '@/components/admin/founder-action-center'
 import { Mt5GatewayMonitorCard } from '@/components/admin/mt5-gateway-monitor-card'
+import { PriceFeedHealthCard } from '@/components/admin/price-feed-health-card'
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
@@ -94,6 +96,8 @@ export default function AdminCommandCenter() {
   const [issuingLoading, setIssuingLoading] = useState(false)
   const [payoutActionLoading, setPayoutActionLoading] = useState(false)
   const [txRefInput, setTxRefInput] = useState('')
+  const [payoutRejectReason, setPayoutRejectReason] = useState('')
+  const [isPausingLoading, setIsPausingLoading] = useState(false)
 
   // Chart time range filter & SSR hydration mount guard
   const [chartRange, setChartRange] = useState<'7m' | '1y' | 'all'>('7m')
@@ -234,7 +238,9 @@ export default function AdminCommandCenter() {
   const retainedMarginPct = totalRev > 0 
     ? `${Math.max(0, Math.min(100, Math.round(((totalRev - pendingPayoutVal) / totalRev) * 100)))}.0%` 
     : '100.0%'
-  const coverageRatio = 'Safe'
+  const coverageRatio = pendingPayoutVal > 0 
+    ? `${(totalRev / pendingPayoutVal).toFixed(1)}x (${totalRev / pendingPayoutVal >= 2 ? 'Safe' : (totalRev / pendingPayoutVal >= 1 ? 'Adequate' : 'Low Reserve')})` 
+    : (totalRev > 0 ? '10x+ (Safe)' : 'N/A')
 
   // Dynamic MoM Revenue Growth
   const revenueTrend = useMemo(() => {
@@ -323,7 +329,9 @@ export default function AdminCommandCenter() {
   const areaChartData = useMemo(() => {
     const monthly = Array.isArray(revenue?.monthly) ? revenue.monthly : []
     if (monthly.length > 0) {
-      return monthly.map((m: any, idx: number) => {
+      const sliceCount = chartRange === '7m' ? -7 : (chartRange === '1y' ? -12 : 0)
+      const list = sliceCount === 0 ? monthly : monthly.slice(sliceCount)
+      return list.map((m: any, idx: number) => {
         const rawRev = typeof m?.total === 'string' ? parseFloat(m.total) : (typeof m?.total === 'number' ? m.total : 0)
         const realPayout = typeof m?.payouts === 'number' ? m.payouts : 0
         return {
@@ -332,10 +340,10 @@ export default function AdminCommandCenter() {
           payouts: realPayout,
           profit: (rawRev || 0) - realPayout,
         }
-      }).slice(-7)
+      })
     }
     return DEFAULT_REVENUE_SERIES
-  }, [revenue])
+  }, [revenue, chartRange])
 
   const barChartData = useMemo(() => {
     const newChallenges = Array.isArray(growth?.new_challenges) ? growth.new_challenges : []
@@ -395,12 +403,12 @@ export default function AdminCommandCenter() {
         const initial = name.charAt(0).toUpperCase()
         return (
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="h-8 w-8 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-bold text-xs">
               {initial}
             </div>
             <div>
-              <p className="font-semibold text-gray-100 text-sm leading-tight">{name}</p>
-              <p className="text-xs text-gray-500 tabular">ACC-{(row.challenge_id || row.id)}</p>
+              <p className="font-semibold text-text text-sm leading-tight">{name}</p>
+              <p className="text-xs text-text-subtle tabular">ACC-{(row.challenge_id || row.id)}</p>
             </div>
           </div>
         )
@@ -411,7 +419,7 @@ export default function AdminCommandCenter() {
       header: 'Payout ID',
       className: 'whitespace-nowrap',
       render: (row) => (
-        <span className="tabular font-medium text-xs text-slate-700 dark:text-gray-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
+        <span className="tabular font-medium text-xs text-text-muted bg-surface-muted px-2 py-1 rounded border border-border">
           #PAY-{row.id}
         </span>
       )
@@ -424,7 +432,7 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const amt = row.amount_requested || row.amount || 0
         return (
-          <div className="text-right tabular font-bold text-sm text-emerald-400">
+          <div className="text-right terminal-num font-semibold text-sm text-profit">
             {formatCurrency(amt)}
           </div>
         )
@@ -437,8 +445,8 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const method = (row.payment_method || row.gateway || row.method || 'USDT TRC20').toUpperCase()
         return (
-          <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-            <Wallet className="h-3.5 w-3.5 text-gray-400" />
+          <span className="text-xs font-medium text-text-muted flex items-center gap-1.5">
+            <Wallet className="h-3.5 w-3.5 text-text-subtle" />
             {method}
           </span>
         )
@@ -464,7 +472,7 @@ export default function AdminCommandCenter() {
         <Button 
           size="sm" 
           variant="outline" 
-          className="h-7 text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500"
+          className="h-7 text-xs border-accent/40 text-accent hover:bg-accent/10 hover:border-accent"
           onClick={() => {
             setSelectedPayout(row)
             setPayoutReviewModalOpen(true)
@@ -496,12 +504,12 @@ export default function AdminCommandCenter() {
       className: 'whitespace-nowrap',
       render: (row) => (
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center tabular font-bold text-xs">
+          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center tabular font-bold text-xs">
             #{row.id}
           </div>
           <div>
-            <p className="font-semibold text-gray-200 text-sm">ACC-{row.id}</p>
-            <p className="text-[11px] text-gray-500">User ID: {row.user_id ? `#${row.user_id}` : '—'}</p>
+            <p className="font-semibold text-text text-sm">ACC-{row.id}</p>
+            <p className="text-xs text-text-subtle">User ID: {row.user_id ? `#${row.user_id}` : '—'}</p>
           </div>
         </div>
       )
@@ -511,7 +519,7 @@ export default function AdminCommandCenter() {
       header: 'Plan Type',
       className: 'whitespace-nowrap',
       render: (row) => (
-        <span className="text-xs text-gray-300 font-medium">
+        <span className="text-xs text-text-muted font-medium">
           {row.plan_name || '—'}
         </span>
       )
@@ -524,7 +532,7 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const cap = row.starting_balance || row.balance || row.current_balance
         return (
-          <span className="tabular text-xs font-bold text-gray-100">
+          <span className="terminal-num font-semibold text-xs text-text">
             {cap ? formatCurrency(cap) : '—'}
           </span>
         )
@@ -555,8 +563,8 @@ export default function AdminCommandCenter() {
       render: (row) => {
         const dt = row.created_at ? new Date(row.created_at).toLocaleDateString() : 'Just now'
         return (
-          <span className="text-xs text-gray-400 tabular flex items-center justify-end gap-1">
-            <Clock className="h-3 w-3 text-gray-500" />
+          <span className="text-xs text-text-muted tabular flex items-center justify-end gap-1">
+            <Clock className="h-3 w-3 text-text-subtle" />
             {dt}
           </span>
         )
@@ -575,7 +583,7 @@ export default function AdminCommandCenter() {
         row.user_id ? (
           <Link
             href={`/admin/traders/${row.user_id}`}
-            className="text-gray-500 hover:text-emerald-400 transition-colors p-1"
+            className="text-text-muted hover:text-accent transition-colors p-1"
           >
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -623,18 +631,18 @@ export default function AdminCommandCenter() {
 
   const handleToggleEmergencyPause = async () => {
     const nextState = !isEmergencyPaused
-    setIsEmergencyPaused(nextState)
-    setEmergencyModalOpen(false)
+    setIsPausingLoading(true)
     try {
       const [wlRes] = await Promise.all([
         api.admin.whitelabelSave({ pause_trading: nextState ? '1' : '0' }),
         api.admin.newsLock(nextState, emergencyReason)
       ])
       if (!wlRes.ok) {
-        setIsEmergencyPaused(!nextState)
         toast.error(wlRes.error || 'Failed to update emergency state')
         return
       }
+      setIsEmergencyPaused(nextState)
+      setEmergencyModalOpen(false)
       if (nextState) {
         toast.error('EMERGENCY PAUSE ACTIVATED: All live orders & trading execution halted firm-wide.', {
           duration: 5000,
@@ -645,19 +653,25 @@ export default function AdminCommandCenter() {
         })
       }
     } catch (err: any) {
-      setIsEmergencyPaused(!nextState)
-      toast.error(err.message || 'Failed to update emergency state')
+      toast.error(err?.message || 'Failed to update emergency state')
+    } finally {
+      setIsPausingLoading(false)
     }
   }
 
   const handleProcessPayout = async (action: 'approve' | 'reject') => {
     if (!selectedPayout) return
+    if (action === 'reject' && !payoutRejectReason.trim()) {
+      toast.error('Please specify a rejection reason for the audit trail')
+      return
+    }
     setPayoutActionLoading(true)
     try {
+      const note = payoutRejectReason.trim() || (action === 'approve' ? 'Approved from Command Center' : 'Rejected by Compliance Admin')
       const res = await api.admin.payoutStatus(
         selectedPayout.id,
         action === 'approve' ? 'approved' : 'rejected',
-        action === 'approve' ? 'Approved from Command Center' : 'Rejected by Compliance Admin',
+        note,
         txRefInput ? { tx_reference: txRefInput } : undefined
       )
       // fxsim() resolves { ok: false } rather than throwing, so a rejected
@@ -673,6 +687,7 @@ export default function AdminCommandCenter() {
       setPayoutReviewModalOpen(false)
       setSelectedPayout(null)
       setTxRefInput('')
+      setPayoutRejectReason('')
       queryClient.invalidateQueries({ queryKey: ['admin-payouts-list'] })
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
     } catch (err: any) {
@@ -695,62 +710,55 @@ export default function AdminCommandCenter() {
     <div className="space-y-8 pb-12">
       
       {/* ── Top Header Banner & Quick Refresh ──────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/70 pb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-sans">
-              Command Center
-            </h1>
-            <Badge tone="accent" size="sm" pulsing className="tabular font-semibold">
-              Live System {APP_DISPLAY_VERSION}
-            </Badge>
+      <PageHeader
+        title="Command Center"
+        description="Real-time operations, revenue stream, risk monitor, and fast execution dispatch."
+        badge={{ label: `Live System ${APP_DISPLAY_VERSION}`, tone: 'accent' }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {isEmergencyPaused && (
               <Badge tone="danger" size="sm" pulsing>
                 TRADING HALTED
               </Badge>
             )}
-          </div>
-          <p className="text-sm text-text-muted mt-1">
-            Real-time operations, revenue stream, risk monitor, and fast execution dispatch.
-          </p>
-        </div>
+            <Link href="/admin/setup">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-9"
+              >
+                <Rocket className="h-3.5 w-3.5 text-accent" />
+                Setup Wizard
+              </Button>
+            </Link>
 
-        <div className="flex items-center gap-3">
-          <Link href="/admin/setup">
             <Button 
               variant="outline" 
               size="sm" 
               className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-9"
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['admin'] })
+                queryClient.invalidateQueries({ predicate: (query) => String(query.queryKey[0]).startsWith('admin') })
+                refetchStats()
+                toast.success('Command center metrics refreshed')
+              }}
             >
-              <Rocket className="h-3.5 w-3.5 text-accent" />
-              Setup Wizard
+              <RefreshCw className="h-3.5 w-3.5 text-accent" />
+              Refresh
             </Button>
-          </Link>
 
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-9"
-            onClick={() => {
-              refetchStats()
-              toast.success('Command center metrics refreshed')
-            }}
-          >
-            <RefreshCw className="h-3.5 w-3.5 text-accent" />
-            Refresh
-          </Button>
-
-          <Button 
-            variant="primary" 
-            size="sm" 
-            className="gap-2 h-9 shadow-emerald-500/20"
-            onClick={() => setIssueModalOpen(true)}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Issue Challenge
-          </Button>
-        </div>
-      </div>
+            <Button 
+              variant="primary" 
+              size="sm" 
+              className="gap-2 h-9 shadow-accent/20"
+              onClick={() => setIssueModalOpen(true)}
+            >
+              <PlusCircle className="h-4 w-4" />
+              Issue Challenge
+            </Button>
+          </div>
+        }
+      />
 
       {/* ── 0. Founder's Morning Action Center ───────────────────────────────── */}
       <SectionErrorBoundary sectionName="Founder Action Center">
@@ -774,11 +782,11 @@ export default function AdminCommandCenter() {
       <SectionErrorBoundary sectionName="Executive Financial Health">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-accent" />
             Executive Financial Health & Liability
           </h2>
-          <Badge tone="accent" size="sm" className="font-semibold text-[10px]">Real-Time Treasury</Badge>
+          <Badge tone="accent" size="sm" className="font-semibold text-2xs">Real-Time Treasury</Badge>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -797,16 +805,16 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
+                <h3 className="text-2xl font-bold terminal-num text-text tracking-tight">
                   {formatCurrency(totalRev)}
                 </h3>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-xs text-text-muted leading-tight block flex-1">
                   Challenge purchases & add-ons
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   {revenueTrend}
                 </Badge>
               </div>
@@ -821,22 +829,22 @@ export default function AdminCommandCenter() {
                 <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Funded Payout Liability
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-warn group-hover:border-warn/40 transition-colors">
                   <Wallet className="h-4 w-4" />
                 </div>
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold tabular text-amber-400 tracking-tight">
+                <h3 className="text-2xl font-bold terminal-num text-warn tracking-tight">
                   {formatCurrency(pendingPayoutVal)}
                 </h3>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-xs text-text-muted leading-tight block flex-1">
                   Pending & open profitable trades
                 </span>
-                <Badge tone={pendingPayoutsCount > 0 ? 'warning' : 'neutral'} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone={pendingPayoutsCount > 0 ? 'warning' : 'neutral'} size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   {pendingPayoutsCount} Pending
                 </Badge>
               </div>
@@ -851,22 +859,22 @@ export default function AdminCommandCenter() {
                 <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                   Retained Margin %
                 </span>
-                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-emerald-400 group-hover:border-emerald-500/40 transition-colors">
+                <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-profit group-hover:border-profit/40 transition-colors">
                   <PiggyBank className="h-4 w-4" />
                 </div>
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold tabular text-emerald-400 tracking-tight">
+                <h3 className="text-2xl font-bold terminal-num text-profit tracking-tight">
                   {retainedMarginPct}
                 </h3>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-xs text-text-muted leading-tight block flex-1">
                   Retained after all payouts
                 </span>
-                <Badge tone="success" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone="success" size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   Target &gt;85%
                 </Badge>
               </div>
@@ -887,16 +895,16 @@ export default function AdminCommandCenter() {
               </div>
 
               <div className="mt-3 flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
+                <h3 className="text-2xl font-bold terminal-num text-text tracking-tight">
                   {coverageRatio}
                 </h3>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-xs text-text-muted leading-tight block flex-1">
                   Total exposure vs bridge
                 </span>
-                <Badge tone="neutral" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone="neutral" size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   0 Flags
                 </Badge>
               </div>
@@ -911,11 +919,11 @@ export default function AdminCommandCenter() {
       <SectionErrorBoundary sectionName="Firm Performance KPIs">
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-accent" />
             Firm Performance KPIs
           </h2>
-          <span className="text-xs text-gray-500">Updated real-time</span>
+          <span className="text-xs text-text-subtle">Updated real-time</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -924,30 +932,30 @@ export default function AdminCommandCenter() {
             return (
               <Card 
                 key={idx} 
-                className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden"
+                className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                    <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                       {metric.title}
                     </span>
-                    <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                    <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
                       <Icon className="h-4 w-4" />
                     </div>
                   </div>
 
                   <div className="mt-3 flex items-baseline justify-between">
-                    <h3 className="text-2xl font-bold tabular text-text tracking-tight">
+                    <h3 className="text-2xl font-bold terminal-num text-text tracking-tight">
                       {metric.value}
                     </h3>
                   </div>
 
                   <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                    <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                    <span className="text-xs text-text-muted leading-tight block flex-1">
                       {metric.subtitle}
                     </span>
-                    <Badge tone={metric.tone} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                    <Badge tone={metric.tone} size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                       {metric.trend}
                     </Badge>
                   </div>
@@ -963,7 +971,7 @@ export default function AdminCommandCenter() {
       <SectionErrorBoundary sectionName="Fast Dispatch Operations">
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
             <Zap className="h-4 w-4 text-accent" />
             Fast Dispatch Operations
           </h2>
@@ -1004,7 +1012,7 @@ export default function AdminCommandCenter() {
                     <h4 className="text-sm font-semibold text-text group-hover:text-blue-400 transition-colors">
                       Review KYC Queue
                     </h4>
-                    <span className="bg-blue-500/20 text-blue-400 text-[10px] tabular font-bold px-1.5 py-0.2 rounded">
+                    <span className="bg-blue-500/20 text-blue-400 text-2xs tabular font-bold px-1.5 py-0.2 rounded">
                       {kycList?.length ?? 0}
                     </span>
                   </div>
@@ -1026,7 +1034,7 @@ export default function AdminCommandCenter() {
                     <h4 className="text-sm font-semibold text-text group-hover:text-amber-400 transition-colors">
                       Process Payouts
                     </h4>
-                    <span className="bg-amber-500/20 text-amber-400 text-[10px] tabular font-bold px-1.5 py-0.2 rounded">
+                    <span className="bg-amber-500/20 text-amber-400 text-2xs tabular font-bold px-1.5 py-0.2 rounded">
                       {payoutsList?.length ?? 0}
                     </span>
                   </div>
@@ -1072,9 +1080,14 @@ export default function AdminCommandCenter() {
       </section>
       </SectionErrorBoundary>
 
-      {/* ── 2.5 Live MT5 Bridge Gateway Telemetry Monitor ─────────────────────── */}
-      <SectionErrorBoundary sectionName="MT5 Gateway Telemetry">
-      <section>
+      {/* ── 2.5 Live MT5 Bridge Gateway & Price Feed SL/TP Sentinel ───────────── */}
+      <SectionErrorBoundary sectionName="Price Feed Sentinel & MT5 Gateway">
+      <section className="space-y-4">
+        <PriceFeedHealthCard
+          onConfigureClick={() => {
+            router.push('/admin/operations?tab=feed')
+          }}
+        />
         <Mt5GatewayMonitorCard
           onConfigureClick={() => {
             router.push('/admin/operations?tab=mt5')
@@ -1101,14 +1114,14 @@ export default function AdminCommandCenter() {
             </div>
             
             <div className="flex items-center gap-1 bg-surface-muted p-1 rounded-lg border border-border-subtle">
-              {(['7m', '1y'] as const).map((r) => (
+              {(['7m', '1y', 'all'] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setChartRange(r)}
-                  className={`px-2.5 py-1 text-[11px] font-semibold rounded-md uppercase transition-all ${
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-md uppercase transition-all ${
                     chartRange === r
                       ? 'bg-accent text-slate-950 font-bold'
-                      : 'text-gray-400 hover:text-white'
+                      : 'text-text-muted hover:text-text'
                   }`}
                 >
                   {r}
@@ -1131,8 +1144,8 @@ export default function AdminCommandCenter() {
                   <TrendingUp className="h-5 w-5 animate-pulse" />
                 </div>
                 <div className="space-y-0.5 max-w-xs">
-                  <h4 className="text-xs font-bold text-gray-200">Awaiting Billing Cycle Activity</h4>
-                  <p className="text-[11px] text-gray-400 leading-tight">Live revenue and payout streams will automatically populate as challenges are purchased.</p>
+                  <h4 className="text-xs font-bold text-text">Awaiting Billing Cycle Activity</h4>
+                  <p className="text-xs text-text-muted leading-tight">Live revenue and payout streams will automatically populate as challenges are purchased.</p>
                 </div>
               </div>
             )}
@@ -1184,21 +1197,21 @@ export default function AdminCommandCenter() {
                       const pay = payload.find(p => p.dataKey === 'payouts')?.value as number || 0
                       const net = rev - pay
                       return (
-                        <div className="bg-surface border border-surface-muted p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-                          <p className="font-bold text-gray-200 border-b border-surface-muted pb-1">
+                        <div className="bg-surface border border-border p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
+                          <p className="font-bold text-text border-b border-border pb-1">
                             Month: {label}
                           </p>
                           <div className="flex justify-between items-center text-accent tabular">
                             <span>Revenue:</span>
                             <span className="font-bold">{formatCurrency(rev)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-indigo-400 tabular">
+                          <div className="flex justify-between items-center text-indigo-500 dark:text-indigo-400 tabular">
                             <span>Payouts:</span>
                             <span className="font-bold">{formatCurrency(pay)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-gray-300 tabular pt-1 border-t border-surface-muted/60">
+                          <div className="flex justify-between items-center text-text-muted tabular pt-1 border-t border-border">
                             <span>Net Retained:</span>
-                            <span className="font-bold text-white">{formatCurrency(net)}</span>
+                            <span className="font-bold text-text">{formatCurrency(net)}</span>
                           </div>
                         </div>
                       )
@@ -1242,7 +1255,7 @@ export default function AdminCommandCenter() {
                 Disbursed Payouts
               </span>
             </div>
-            <Link href="/admin/analytics" className="text-accent hover:underline flex items-center gap-1 text-[11px]">
+            <Link href="/admin/analytics" className="text-accent hover:underline flex items-center gap-1 text-xs">
               Full Financials <ArrowRight className="h-3 w-3" />
             </Link>
           </CardFooter>
@@ -1260,7 +1273,7 @@ export default function AdminCommandCenter() {
                 New challenge account signups vs successful trader evaluations
               </CardDescription>
             </div>
-            <Badge tone="neutral" size="sm" className="tabular font-semibold text-[10px]">
+            <Badge tone="neutral" size="sm" className="tabular font-semibold text-2xs">
               {avgPassRate !== null ? `Avg Pass: ${toNum(avgPassRate).toFixed(1)}%` : 'Avg Pass: —'}
             </Badge>
           </CardHeader>
@@ -1279,8 +1292,8 @@ export default function AdminCommandCenter() {
                   <Target className="h-5 w-5 animate-pulse" />
                 </div>
                 <div className="space-y-0.5 max-w-xs">
-                  <h4 className="text-xs font-bold text-gray-200">Awaiting Evaluation Funnel Data</h4>
-                  <p className="text-[11px] text-gray-400 leading-tight">Phase 1 registrations and pass conversion statistics will render dynamically.</p>
+                  <h4 className="text-xs font-bold text-text">Awaiting Evaluation Funnel Data</h4>
+                  <p className="text-xs text-text-muted leading-tight">Phase 1 registrations and pass conversion statistics will render dynamically.</p>
                 </div>
               </div>
             )}
@@ -1318,19 +1331,19 @@ export default function AdminCommandCenter() {
                       const pass = payload.find(p => p.dataKey === 'passes')?.value as number || 0
                       const rate = reg > 0 ? toNum((pass / reg) * 100).toFixed(1) + '%' : '0%'
                       return (
-                        <div className="bg-surface border border-surface-muted p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-                          <p className="font-bold text-gray-200 border-b border-surface-muted pb-1">
+                        <div className="bg-surface border border-border p-3 rounded-lg shadow-2xl text-xs space-y-1.5 min-w-[170px]">
+                          <p className="font-bold text-text border-b border-border pb-1">
                             Month: {label}
                           </p>
                           <div className="flex justify-between items-center text-accent tabular">
                             <span>Registrations:</span>
                             <span className="font-bold">{formatInt(reg)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-blue-400 tabular">
+                          <div className="flex justify-between items-center text-blue-500 dark:text-blue-400 tabular">
                             <span>Passed / Funded:</span>
                             <span className="font-bold">{formatInt(pass)}</span>
                           </div>
-                          <div className="flex justify-between items-center text-amber-400 tabular pt-1 border-t border-surface-muted/60">
+                          <div className="flex justify-between items-center text-amber-500 dark:text-amber-400 tabular pt-1 border-t border-border">
                             <span>Pass Conversion:</span>
                             <span className="font-bold">{rate}</span>
                           </div>
@@ -1370,7 +1383,7 @@ export default function AdminCommandCenter() {
                 Passed & Funded
               </span>
             </div>
-            <Link href="/admin/traders" className="text-accent hover:underline flex items-center gap-1 text-[11px]">
+            <Link href="/admin/traders" className="text-accent hover:underline flex items-center gap-1 text-xs">
               Traders Directory <ArrowRight className="h-3 w-3" />
             </Link>
           </CardFooter>
@@ -1384,19 +1397,19 @@ export default function AdminCommandCenter() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Table 1: Pending Payout Approvals */}
-        <Card className="bg-surface border-surface-muted flex flex-col">
+        <Card className="bg-surface border-border flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-amber-400" />
+              <CardTitle className="text-base text-text flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                 Pending Payout Approvals
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 Trader profit share requests awaiting verification
               </CardDescription>
             </div>
             <Link href="/admin/payouts">
-              <Button size="sm" variant="ghost" className="text-xs text-emerald-400 hover:text-emerald-300 gap-1 h-7">
+              <Button size="sm" variant="ghost" className="text-xs text-accent hover:text-accent-hover gap-1 h-7">
                 View All <ArrowRight className="h-3 w-3" />
               </Button>
             </Link>
@@ -1418,19 +1431,19 @@ export default function AdminCommandCenter() {
         </Card>
 
         {/* Table 2: Recent Challenge Registrations */}
-        <Card className="bg-surface border-surface-muted flex flex-col">
+        <Card className="bg-surface border-border flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                <Target className="h-4 w-4 text-emerald-400" />
+              <CardTitle className="text-base text-text flex items-center gap-2">
+                <Target className="h-4 w-4 text-accent" />
                 Recent Challenge Accounts
               </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
+              <CardDescription className="text-xs text-text-muted">
                 Latest evaluations started across all models
               </CardDescription>
             </div>
             <Link href="/admin/traders">
-              <Button size="sm" variant="ghost" className="text-xs text-emerald-400 hover:text-emerald-300 gap-1 h-7">
+              <Button size="sm" variant="ghost" className="text-xs text-accent hover:text-accent-hover gap-1 h-7">
                 View All <ArrowRight className="h-3 w-3" />
               </Button>
             </Link>
@@ -1460,7 +1473,7 @@ export default function AdminCommandCenter() {
         onClose={() => setIssueModalOpen(false)}
         title={<span className="text-slate-100 font-bold text-lg">Issue Manual Challenge Account</span>}
         description={<span className="text-slate-400 text-xs">Grant a funded or evaluation account directly to a trader without requiring gateway checkout.</span>}
-        className="dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-emerald-500/20"
+        className="dark bg-surface-muted border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-accent/20"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
             <Button 
@@ -1475,7 +1488,7 @@ export default function AdminCommandCenter() {
               variant="primary" 
               onClick={handleIssueChallenge}
               loading={issuingLoading}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-500/20"
+              className="bg-accent hover:bg-accent/90 text-primary-foreground font-semibold shadow-md shadow-accent/20"
             >
               Grant Account
             </Button>
@@ -1492,7 +1505,7 @@ export default function AdminCommandCenter() {
               value={issueForm.email}
               onChange={(e) => setIssueForm({ ...issueForm, email: e.target.value })}
               required
-              className="bg-[#070C14] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 h-10 mt-1"
+              className="bg-surface border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-accent h-10 mt-1"
             />
           </div>
 
@@ -1501,7 +1514,7 @@ export default function AdminCommandCenter() {
               <Label htmlFor="plan-type" className="text-xs font-semibold text-slate-300">Challenge Plan</Label>
               <select
                 id="plan-type"
-                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-[#070C14] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
+                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-accent"
                 value={issueForm.planId || ''}
                 onChange={(e) => {
                   const id = Number(e.target.value)
@@ -1509,9 +1522,9 @@ export default function AdminCommandCenter() {
                   setIssueForm({ ...issueForm, planId: id, balance: plan ? String(plan.account_size) : issueForm.balance })
                 }}
               >
-                {activePlans.length === 0 && <option value="" className="bg-[#070C14] text-slate-100">No active plans — create one in Config first</option>}
+                {activePlans.length === 0 && <option value="" className="bg-surface text-slate-100">No active plans — create one in Config first</option>}
                 {activePlans.map((p: any) => (
-                  <option key={p.id} value={p.id} className="bg-[#070C14] text-slate-100">{p.name} — ${Number(p.account_size).toLocaleString()}</option>
+                  <option key={p.id} value={p.id} className="bg-surface text-slate-100">{p.name} — ${Number(p.account_size).toLocaleString()}</option>
                 ))}
               </select>
             </div>
@@ -1520,15 +1533,15 @@ export default function AdminCommandCenter() {
               <Label htmlFor="account-phase" className="text-xs font-semibold text-slate-300">Initial Phase</Label>
               <select
                 id="account-phase"
-                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-[#070C14] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
+                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-accent"
                 value={issueForm.phase}
                 onChange={(e) => setIssueForm({ ...issueForm, phase: e.target.value as '1' | 'phase2' | 'funded' })}
               >
-                <option value="1" className="bg-[#070C14] text-slate-100">Phase 1 (Evaluation)</option>
-                <option value="phase2" disabled={!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant'} className="bg-[#070C14] text-slate-100">
+                <option value="1" className="bg-surface text-slate-100">Phase 1 (Evaluation)</option>
+                <option value="phase2" disabled={!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant'} className="bg-surface text-slate-100">
                   Phase 2 (Verification){(!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant') ? ' — not available on this plan' : ''}
                 </option>
-                <option value="funded" className="bg-[#070C14] text-slate-100">Funded (Instant Live)</option>
+                <option value="funded" className="bg-surface text-slate-100">Funded (Instant Live)</option>
               </select>
             </div>
           </div>
@@ -1541,13 +1554,13 @@ export default function AdminCommandCenter() {
                 type="number"
                 value={issueForm.balance}
                 onChange={(e) => setIssueForm({ ...issueForm, balance: e.target.value })}
-                className="bg-[#070C14] border-slate-700 text-slate-100 focus:border-emerald-500 h-10 mt-1"
+                className="bg-surface border-slate-700 text-slate-100 focus:border-accent h-10 mt-1"
               />
             </div>
             <div>
               <Label className="text-xs font-semibold text-slate-300">Max Leverage</Label>
-              <div className="mt-1 flex h-10 w-full items-center rounded-lg border border-slate-700 bg-[#070C14] px-3 text-sm">
-                <span className="font-semibold text-emerald-400 font-mono">{selectedPlan ? `1:${selectedPlan.max_leverage}` : '—'}</span>
+              <div className="mt-1 flex h-10 w-full items-center rounded-lg border border-slate-700 bg-surface px-3 text-sm">
+                <span className="font-semibold text-accent font-mono">{selectedPlan ? `1:${selectedPlan.max_leverage}` : '—'}</span>
                 <span className="ml-2 text-xs font-normal text-slate-400">(set by the selected plan)</span>
               </div>
             </div>
@@ -1561,16 +1574,23 @@ export default function AdminCommandCenter() {
         onClose={() => setEmergencyModalOpen(false)}
         title={<span className="text-slate-100 font-bold text-lg">{isEmergencyPaused ? "Deactivate Emergency Freeze" : "Activate Emergency Trading Freeze"}</span>}
         description={<span className="text-slate-400 text-xs">Global kill-switch for trading engine operations during catastrophic events or maintenance.</span>}
-        className="dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-red-500/20"
+        className="dark bg-surface-muted border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-red-500/20"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
-            <Button variant="secondary" onClick={() => setEmergencyModalOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+            <Button 
+              variant="secondary" 
+              onClick={() => setEmergencyModalOpen(false)} 
+              disabled={isPausingLoading}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+            >
               Cancel
             </Button>
             <Button 
               variant={isEmergencyPaused ? "primary" : "destructive"}
               onClick={handleToggleEmergencyPause}
-              className={isEmergencyPaused ? "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold" : "bg-red-600 hover:bg-red-500 text-white font-semibold"}
+              loading={isPausingLoading}
+              disabled={isPausingLoading}
+              className={isEmergencyPaused ? "bg-profit hover:bg-profit/90 text-white font-semibold shadow-md shadow-profit/20" : "bg-red-600 hover:bg-red-500 text-white font-semibold"}
             >
               {isEmergencyPaused ? "Resume All Trading" : "Confirm Emergency Freeze"}
             </Button>
@@ -1580,7 +1600,7 @@ export default function AdminCommandCenter() {
         <div className="space-y-4 py-2">
           <div className={`p-4 rounded-xl border ${
             isEmergencyPaused 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+              ? 'bg-profit-subtle border-profit-subtle text-profit' 
               : 'bg-red-500/10 border-red-500/30 text-red-300'
           }`}>
             <div className="flex items-start gap-3">
@@ -1606,7 +1626,7 @@ export default function AdminCommandCenter() {
               value={emergencyReason}
               onChange={(e) => setEmergencyReason(e.target.value)}
               placeholder="Specify reason for audit logs..."
-              className="bg-[#070C14] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 h-10 mt-1"
+              className="bg-surface border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-accent h-10 mt-1"
             />
           </div>
         </div>
@@ -1619,10 +1639,11 @@ export default function AdminCommandCenter() {
           setPayoutReviewModalOpen(false)
           setSelectedPayout(null)
           setTxRefInput('')
+          setPayoutRejectReason('')
         }}
         title={<span className="text-slate-100 font-bold text-lg">{`Review Payout #PAY-${selectedPayout?.id}`}</span>}
         description={<span className="text-slate-400 text-xs">Audit profit split calculation and approve on-chain disbursement.</span>}
-        className="dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-emerald-500/20"
+        className="dark bg-surface-muted border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-accent/20"
         footer={
           <div className="flex items-center justify-between w-full">
             <Button 
@@ -1636,7 +1657,12 @@ export default function AdminCommandCenter() {
             <div className="flex items-center gap-2">
               <Button 
                 variant="secondary" 
-                onClick={() => setPayoutReviewModalOpen(false)}
+                onClick={() => {
+                  setPayoutReviewModalOpen(false)
+                  setSelectedPayout(null)
+                  setTxRefInput('')
+                  setPayoutRejectReason('')
+                }}
                 disabled={payoutActionLoading}
                 className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
               >
@@ -1646,9 +1672,10 @@ export default function AdminCommandCenter() {
                 variant="primary" 
                 onClick={() => handleProcessPayout('approve')}
                 loading={payoutActionLoading}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-500/20"
+                disabled={payoutActionLoading}
+                className="bg-profit hover:bg-profit/90 text-white font-semibold shadow-md shadow-profit/20"
               >
-                Approve & Mark Paid
+                Approve
               </Button>
             </div>
           </div>
@@ -1656,7 +1683,7 @@ export default function AdminCommandCenter() {
       >
         {selectedPayout && (
           <div className="space-y-4 py-2">
-            <div className="bg-[#070C14] p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+            <div className="bg-surface p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-400">Trader:</span>
                 <span className="font-semibold text-slate-100">{selectedPayout.username || selectedPayout.user_login || 'Trader'}</span>
@@ -1667,7 +1694,7 @@ export default function AdminCommandCenter() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Total Profit Requested:</span>
-                <span className="tabular font-bold text-emerald-400 text-sm">{formatCurrency(selectedPayout.amount_requested || selectedPayout.amount)}</span>
+                <span className="terminal-num font-bold text-profit text-sm">{formatCurrency(selectedPayout.amount_requested || selectedPayout.amount)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Gateway / Destination:</span>
@@ -1682,7 +1709,19 @@ export default function AdminCommandCenter() {
                 placeholder="e.g. 0x89f2a71d4..."
                 value={txRefInput}
                 onChange={(e) => setTxRefInput(e.target.value)}
-                className="bg-[#070C14] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 h-10 mt-1"
+                className="bg-surface border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-accent h-10 mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="payout-reject-reason" className="text-xs font-semibold text-slate-300">Audit Note / Rejection Reason</Label>
+              <textarea
+                id="payout-reject-reason"
+                rows={2}
+                placeholder="Required if rejecting (e.g. Risk rule breach, invalid wallet)..."
+                value={payoutRejectReason}
+                onChange={(e) => setPayoutRejectReason(e.target.value)}
+                className="w-full mt-1 rounded-lg border border-slate-700 bg-surface p-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-accent"
               />
             </div>
           </div>

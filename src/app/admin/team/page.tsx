@@ -5,11 +5,13 @@ import { useState, useMemo } from 'react'
 import { 
   Users2, UserPlus, Shield, ShieldCheck, ShieldAlert, 
   Lock, Key, Check, X, RefreshCw, Trash2, Edit, 
-  Mail, User, Clock, CheckCircle2, AlertTriangle, Sparkles
+  Mail, User, Clock, CheckCircle2, AlertTriangle, Sparkles,
+  Eye, EyeOff
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { TeamMember } from '@/types/api'
+import { useAuth } from '@/store/auth'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
 } from '@/components/ui/card'
@@ -23,6 +25,7 @@ import { toast } from 'sonner'
 
 export default function TeamHubPage() {
   const queryClient = useQueryClient()
+  const { user: currentAdmin } = useAuth()
 
   // Invite Modal State
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
@@ -32,6 +35,7 @@ export default function TeamHubPage() {
     role: 'support_agent',
     password: '',
   })
+  const [showInvitePassword, setShowInvitePassword] = useState(false)
   const [isInviting, setIsInviting] = useState(false)
 
   // Edit Role Modal State
@@ -53,7 +57,7 @@ export default function TeamHubPage() {
     staleTime: 5000,
   })
 
-  // Role Counts
+  // Role Counts & Active Super Admins
   const counts = useMemo(() => {
     return {
       super_admin: team.filter(t => t.role === 'super_admin').length,
@@ -63,15 +67,19 @@ export default function TeamHubPage() {
     }
   }, [team])
 
+  const activeSuperAdmins = useMemo(() => {
+    return team.filter(t => t.role === 'super_admin' && (t.status === 'active' || !t.status)).length
+  }, [team])
+
   // Generate random strong password
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*'
     let pass = ''
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 14; i++) {
       pass += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     setInviteForm(prev => ({ ...prev, password: pass }))
-    toast.success('Generated secure 12-character temporary password.')
+    toast.success('Generated secure temporary password.')
   }
 
   // Create Staff Member
@@ -79,6 +87,13 @@ export default function TeamHubPage() {
     e.preventDefault()
     if (!inviteForm.name || !inviteForm.email || !inviteForm.password) {
       toast.error('All fields are required.')
+      return
+    }
+
+    // ADMINUI-15: Email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(inviteForm.email)) {
+      toast.error('Please enter a valid email address.')
       return
     }
 
@@ -100,9 +115,18 @@ export default function TeamHubPage() {
     }
   }
 
-  // Update Role
+  // Update Role (ADMINUI-13, ADMINUI-14)
   const handleUpdateRole = async () => {
     if (!editingMember || !newRole) return
+    if (editingMember.id === currentAdmin?.id && newRole !== editingMember.role) {
+      toast.error('You cannot modify your own administrative role.')
+      return
+    }
+    if (activeSuperAdmins <= 1 && editingMember.role === 'super_admin' && newRole !== 'super_admin') {
+      toast.error('Cannot demote the sole remaining active Super Admin.')
+      return
+    }
+
     setIsUpdatingRole(true)
     try {
       const res = await api.admin.teamUpdateRole(editingMember.id, newRole)
@@ -120,8 +144,25 @@ export default function TeamHubPage() {
     }
   }
 
+  // Deactivate Member (ADMINUI-13, ADMINUI-14)
   const handleConfirmDeactivate = async () => {
     if (!memberToDeactivate) return
+    if (memberToDeactivate.id === currentAdmin?.id) {
+      toast.error('You cannot deactivate your own administrative account.')
+      setMemberToDeactivate(null)
+      return
+    }
+    if (memberToDeactivate.id === 1) {
+      toast.error('Primary Super Admin (#1) cannot be deactivated.')
+      setMemberToDeactivate(null)
+      return
+    }
+    if (activeSuperAdmins <= 1 && memberToDeactivate.role === 'super_admin') {
+      toast.error('Cannot deactivate the sole remaining active Super Admin.')
+      setMemberToDeactivate(null)
+      return
+    }
+
     setIsDeactivating(true)
     try {
       const res = await api.admin.teamDelete(memberToDeactivate.id)
@@ -217,34 +258,34 @@ export default function TeamHubPage() {
       {/* ── Role KPI Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card className="bg-surface border-surface-muted p-4">
-          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Super Admins</span>
+          <span className="text-2xs font-semibold text-gray-400 uppercase tracking-wider block">Super Admins</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.super_admin}</span>
-            <span className="text-[10px] text-red-400 font-semibold">Unrestricted</span>
+            <span className="text-2xs text-red-400 font-semibold">Unrestricted</span>
           </div>
         </Card>
 
         <Card className="bg-surface border-surface-muted p-4">
-          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Risk Officers</span>
+          <span className="text-2xs font-semibold text-gray-400 uppercase tracking-wider block">Risk Officers</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.risk_officer}</span>
-            <span className="text-[10px] text-emerald-400 font-semibold">Risk Desk</span>
+            <span className="text-2xs text-emerald-400 font-semibold">Risk Desk</span>
           </div>
         </Card>
 
         <Card className="bg-surface border-surface-muted p-4">
-          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Support Agents</span>
+          <span className="text-2xs font-semibold text-gray-400 uppercase tracking-wider block">Support Agents</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.support_agent}</span>
-            <span className="text-[10px] text-blue-400 font-semibold">Helpdesk / KYC</span>
+            <span className="text-2xs text-blue-400 font-semibold">Helpdesk / KYC</span>
           </div>
         </Card>
 
         <Card className="bg-surface border-surface-muted p-4">
-          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Treasury Desk</span>
+          <span className="text-2xs font-semibold text-gray-400 uppercase tracking-wider block">Treasury Desk</span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white tracking-tight font-mono">{counts.accountant}</span>
-            <span className="text-[10px] text-amber-400 font-semibold">Payouts & Orders</span>
+            <span className="text-2xs text-amber-400 font-semibold">Payouts & Orders</span>
           </div>
         </Card>
       </div>
@@ -269,9 +310,9 @@ export default function TeamHubPage() {
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white text-xs">{t.name}</span>
-                      <span className="font-mono text-[10px] text-gray-500">#{t.id}</span>
+                      <span className="font-mono text-2xs text-gray-500">#{t.id}</span>
                     </div>
-                    <p className="text-[11px] text-gray-400 font-mono truncate">{t.email}</p>
+                    <p className="text-2xs text-gray-400 font-mono truncate">{t.email}</p>
                   </div>
                 ),
               },
@@ -302,30 +343,46 @@ export default function TeamHubPage() {
                 key: 'actions',
                 header: 'Actions',
                 align: 'right',
-                render: (t: TeamMember) => (
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingMember(t)
-                        setNewRole(t.role)
-                      }}
-                      className="h-8 text-xs gap-1 border-surface-muted hover:bg-slate-800"
-                    >
-                      <Edit className="h-3.5 w-3.5 text-blue-400" />
-                      Role
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setMemberToDeactivate(t)}
-                      className="h-8 text-xs gap-1 border-surface-muted hover:bg-red-500/20 text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ),
+                render: (t: TeamMember) => {
+                  const isSelf = t.id === currentAdmin?.id
+                  const isPrimary = t.id === 1
+                  const isSoleSuper = activeSuperAdmins <= 1 && t.role === 'super_admin'
+                  const cannotDeactivate = isSelf || isPrimary || isSoleSuper
+                  const deactivateTooltip = isSelf
+                    ? 'Cannot deactivate your own account'
+                    : isPrimary
+                    ? 'Primary Super Admin cannot be deactivated'
+                    : isSoleSuper
+                    ? 'Cannot deactivate the sole remaining Super Admin'
+                    : 'Deactivate Staff Access'
+
+                  return (
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingMember(t)
+                          setNewRole(t.role)
+                        }}
+                        className="h-8 text-xs gap-1 border-surface-muted hover:bg-slate-800"
+                      >
+                        <Edit className="h-3.5 w-3.5 text-blue-400" />
+                        Role
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={cannotDeactivate}
+                        title={deactivateTooltip}
+                        onClick={() => setMemberToDeactivate(t)}
+                        className="h-8 text-xs gap-1 border-surface-muted hover:bg-red-500/20 text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )
+                },
               },
             ]}
           />
@@ -350,7 +407,7 @@ export default function TeamHubPage() {
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-surface-muted bg-background text-gray-400 uppercase text-[10px]">
+              <tr className="border-b border-surface-muted bg-background text-gray-400 uppercase text-2xs">
                 <th className="py-3 px-4 font-bold">Platform Feature & Route</th>
                 <th className="py-3 px-4 text-center text-red-400">Super Admin</th>
                 <th className="py-3 px-4 text-center text-emerald-400">Risk Officer</th>
@@ -438,17 +495,28 @@ export default function TeamHubPage() {
               <button
                 type="button"
                 onClick={generatePassword}
-                className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-mono"
+                className="text-2xs text-emerald-400 hover:underline flex items-center gap-1 font-mono"
               >
                 <Sparkles className="h-3 w-3" /> Auto-Generate
               </button>
             </div>
-            <Input
-              id="staff-pass"
-              value={inviteForm.password}
-              onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })}
-              className="font-mono text-xs"
-            />
+            <div className="relative">
+              <Input
+                id="staff-pass"
+                type={showInvitePassword ? 'text' : 'password'}
+                value={inviteForm.password}
+                onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })}
+                className="font-mono text-xs pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowInvitePassword(!showInvitePassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                tabIndex={-1}
+              >
+                {showInvitePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-surface-muted">

@@ -17,11 +17,15 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { Progress } from '@/components/ui/progress'
-import { Input, Label } from '@/components/ui/input'
+import { Input, Label, Textarea } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { AiSentinelPanel } from '@/components/admin/risk/ai-sentinel-panel'
 import { APP_DISPLAY_VERSION } from '@/lib/version'
@@ -78,6 +82,9 @@ export default function RiskManagementHubPage() {
   const [forceCloseTarget, setForceCloseTarget] = useState<ViolationAlertRow | null>(null)
   const [isForceClosing, setIsForceClosing] = useState(false)
   const [freezeClusterTarget, setFreezeClusterTarget] = useState<SyndicateCluster | null>(null)
+  const [flagTraderTarget, setFlagTraderTarget] = useState<ViolationAlertRow | null>(null)
+  const [flagReason, setFlagReason] = useState('')
+  const [isFlagging, setIsFlagging] = useState(false)
 
   // ─────────────────────────────────────────────────────────────────
   // ANTI-SYNDICATE FRAUD & GROUP HEDGING RADAR STATE
@@ -245,22 +252,50 @@ export default function RiskManagementHubPage() {
     }
   }
 
-  const handleFlagTrader = async (row: ViolationAlertRow) => {
-    if (!row.user_id) {
+  const handleConfirmFlagTrader = async () => {
+    if (!flagTraderTarget) return
+    if (!flagTraderTarget.user_id) {
       toast.error('This alert has no real trader id on file — refusing to act on it.')
+      setFlagTraderTarget(null)
       return
     }
+    setIsFlagging(true)
     try {
-      const res = await api.admin.riskFlagTrader({ user_id: row.user_id, reason: row.details })
+      const res = await api.admin.riskFlagTrader({
+        user_id: flagTraderTarget.user_id,
+        reason: flagReason.trim() || flagTraderTarget.details
+      })
       if (res.ok && res.data.success) {
-        toast.warning(`Account ${row.account_id} tagged with Compliance Risk Flag. Trader notified of audit.`)
+        toast.warning(`Account ${flagTraderTarget.account_id} tagged with Compliance Risk Flag. Trader notified of audit.`)
         refetchAlerts()
+        setFlagTraderTarget(null)
       } else {
         toast.error((!res.ok ? res.error : res.data.message) || 'Failed to flag trader')
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to flag trader')
+    } finally {
+      setIsFlagging(false)
     }
+  }
+
+  // Bounds validation for syndicate radar thresholds (ADMINUI-21)
+  const handleSaveRadarSettings = () => {
+    const timeDelta = Number(syndicateSettingsForm.time_delta_ms)
+    const lotMatch = Number(syndicateSettingsForm.lot_match_pct)
+    if (isNaN(timeDelta) || timeDelta < 100 || timeDelta > 10000) {
+      toast.error('Time delta sensitivity must be between 100ms and 10,000ms.')
+      return
+    }
+    if (isNaN(lotMatch) || lotMatch < 1 || lotMatch > 100) {
+      toast.error('Lot size match ratio must be between 1% and 100%.')
+      return
+    }
+    saveSyndicateSettingsMutation.mutate({
+      ...syndicateSettingsForm,
+      time_delta_ms: timeDelta,
+      lot_match_pct: lotMatch,
+    })
   }
 
   // DataTable Column Definitions
@@ -277,7 +312,7 @@ export default function RiskManagementHubPage() {
             {row.trader_name}
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Link>
-          <span className="font-mono text-[11px] text-gray-500">{row.account_id} • {row.email}</span>
+          <span className="font-mono text-2xs text-gray-500">{row.account_id} • {row.email}</span>
         </div>
       )
     },
@@ -336,7 +371,10 @@ export default function RiskManagementHubPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleFlagTrader(row)}
+            onClick={() => {
+              setFlagTraderTarget(row)
+              setFlagReason(row.details || 'Risk violation detected during automated telemetry audit')
+            }}
             className="h-7 text-xs border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500"
           >
             Flag Account
@@ -383,77 +421,11 @@ export default function RiskManagementHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header ────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
-              Institutional Risk & Threat Control
-            </h1>
-            <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live Feed Active
-            </Badge>
-          </div>
-          <p className="text-sm text-gray-400 mt-1">
-            Real-time monitoring of funded liabilities, symbol net exposures, anti-syndicate reverse hedging, and algorithmic collusion.
-          </p>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center bg-slate-100 dark:bg-surface p-1 rounded-xl border border-slate-200 dark:border-surface-muted">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'overview'
-                  ? 'bg-white dark:bg-accent text-slate-900 dark:text-slate-950 font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Activity className="h-3.5 w-3.5" />
-              Exposure & Violations
-            </button>
-
-            <button
-              onClick={() => setActiveTab('syndicate')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'syndicate'
-                  ? 'bg-red-600 text-white font-bold shadow-sm shadow-red-600/30'
-                  : 'text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <ShieldAlert className={`h-3.5 w-3.5 ${activeTab === 'syndicate' ? 'text-white' : 'text-red-600 dark:text-red-400'}`} />
-              Syndicate Risk Radar
-              {flaggedClustersCount > 0 && (
-                <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold border ${
-                  activeTab === 'syndicate'
-                    ? 'bg-white/20 text-white border-white/40'
-                    : 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30'
-                }`}>
-                  {flaggedClustersCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('sentinel')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'sentinel'
-                  ? 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30'
-                  : 'text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Zap className={`h-3.5 w-3.5 ${activeTab === 'sentinel' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
-              AI Sentinel (Watchtower)
-              <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold border ${
-                activeTab === 'sentinel'
-                  ? 'bg-white/20 text-white border-white/30'
-                  : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-              }`}>
-                {APP_DISPLAY_VERSION}
-              </span>
-            </button>
-          </div>
-
+      <PageHeader
+        title="Institutional Risk & Threat Control"
+        description="Real-time monitoring of funded liabilities, symbol net exposures, anti-syndicate reverse hedging, and algorithmic collusion."
+        badge={{ label: 'Live Feed Active', tone: 'accent' }}
+        actions={
           <Button 
             variant="outline" 
             size="sm" 
@@ -467,12 +439,67 @@ export default function RiskManagementHubPage() {
                 toast.success('Syndicate radar refreshed')
               }
             }}
-            className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-2 h-8 text-xs"
           >
-            <RefreshCw className="h-4 w-4 text-accent" />
+            <RefreshCw className="h-3.5 w-3.5 text-accent" />
             Refresh
           </Button>
-        </div>
+        }
+      />
+
+      {/* ── Risk Control Tabs ──────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1.5 bg-surface-muted/60 p-1.5 rounded-xl border border-border overflow-x-auto scrollbar-none w-full">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'overview'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-xs'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Activity className="h-3.5 w-3.5" />
+          Exposure & Violations
+        </button>
+
+        <button
+          onClick={() => setActiveTab('syndicate')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'syndicate'
+              ? 'bg-danger text-white font-semibold shadow-sm shadow-red-600/30'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <ShieldAlert className={`h-3.5 w-3.5 ${activeTab === 'syndicate' ? 'text-white' : 'text-danger'}`} />
+          Syndicate Risk Radar
+          {flaggedClustersCount > 0 && (
+            <span className={`ml-1 px-1.5 py-0.2 rounded-full text-2xs font-mono font-bold border ${
+              activeTab === 'syndicate'
+                ? 'bg-white/20 text-white border-white/40'
+                : 'bg-danger/15 text-danger border-danger/30'
+            }`}>
+              {flaggedClustersCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('sentinel')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'sentinel'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Zap className={`h-3.5 w-3.5 ${activeTab === 'sentinel' ? 'text-primary-foreground' : 'text-accent'}`} />
+          AI Sentinel (Watchtower)
+          <span className={`ml-1 px-1.5 py-0.2 rounded-full text-3xs font-mono font-bold border ${
+            activeTab === 'sentinel'
+              ? 'bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30'
+              : 'bg-accent/15 text-accent border-accent/30'
+          }`}>
+            {APP_DISPLAY_VERSION}
+          </span>
+        </button>
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════════ */}
@@ -484,29 +511,29 @@ export default function RiskManagementHubPage() {
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             
             {/* Card 1: Funded Capital Liability */}
-            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                  <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                     Total Funded Liability
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-accent group-hover:border-accent/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
                     <Wallet className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-2xl font-bold terminal-num text-text tracking-tight">
                     {formatMoney(fundedCap)}
                   </h3>
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-text-muted leading-tight block flex-1">
                     Pool backed by liquidity reserve
                   </span>
-                  <Badge tone="accent" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone="accent" size="sm" className="shrink-0 terminal-num text-2xs px-2 py-0.5">
                     {fundedCap > 0 ? 'Allocated' : '$0 Allocated'}
                   </Badge>
                 </div>
@@ -514,29 +541,29 @@ export default function RiskManagementHubPage() {
             </Card>
 
             {/* Card 2: Net Unhedged Exposure */}
-            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                  <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                     Net Unhedged Exposure
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-blue-400 group-hover:border-blue-500/40 transition-colors">
                     <Scale className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-2xl font-bold terminal-num text-text tracking-tight">
                     {formatMoney(unhedgedExp)}
                   </h3>
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-text-muted leading-tight block flex-1">
                     Floating exposure in market
                   </span>
-                  <Badge tone="info" size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone="info" size="sm" className="shrink-0 terminal-num text-2xs px-2 py-0.5">
                     {unhedgedExp > 0 ? `${((unhedgedExp / (fundedCap || 1)) * 100).toFixed(1)}% of pool` : '0.0% of pool'}
                   </Badge>
                 </div>
@@ -544,29 +571,29 @@ export default function RiskManagementHubPage() {
             </Card>
 
             {/* Card 3: High-Risk Accounts */}
-            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                  <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                     High Drawdown Accounts
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-warn group-hover:border-warn/40 transition-colors">
                     <TrendingDown className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className="text-2xl font-bold font-mono text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-2xl font-bold terminal-num text-text tracking-tight">
                     {highRiskCount}
                   </h3>
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-text-muted leading-tight block flex-1">
                     Accounts &gt; 80% DD threshold
                   </span>
-                  <Badge tone={highRiskCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone={highRiskCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 terminal-num text-2xs px-2 py-0.5">
                     {highRiskCount > 0 ? "Approaching Breach" : "0 Breaches"}
                   </Badge>
                 </div>
@@ -574,29 +601,29 @@ export default function RiskManagementHubPage() {
             </Card>
 
             {/* Card 4: Active Algorithmic Threat Alerts */}
-            <Card className="bg-surface border-surface-muted hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
+            <Card className="bg-surface border-border hover:border-accent/40 hover:shadow-[0_0_15px_var(--accent-glow)] transition-all duration-200 group relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-200 transition-colors">
+                  <span className="text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
                     Algorithmic Violations
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-gray-400 group-hover:text-red-400 group-hover:border-red-500/40 transition-colors">
+                  <div className="h-8 w-8 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-text-muted group-hover:text-loss group-hover:border-loss/40 transition-colors">
                     <ShieldAlert className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between">
-                  <h3 className={`text-2xl font-bold font-mono tracking-tight ${activeAlertsCount > 0 ? 'text-red-400' : 'text-accent'}`}>
+                  <h3 className={`text-2xl font-bold terminal-num tracking-tight ${activeAlertsCount > 0 ? 'text-loss' : 'text-profit'}`}>
                     {activeAlertsCount > 0 ? `${activeAlertsCount} Active` : '0 Active'}
                   </h3>
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 leading-tight block flex-1">
+                  <span className="text-2xs text-text-muted leading-tight block flex-1">
                     HFT, martingale & spike detection
                   </span>
-                  <Badge tone={activeAlertsCount > 0 ? "danger" : "accent"} size="sm" className="shrink-0 font-mono text-[10px] px-2 py-0.5">
+                  <Badge tone={activeAlertsCount > 0 ? "danger" : "accent"} size="sm" className="shrink-0 terminal-num text-2xs px-2 py-0.5">
                     {activeAlertsCount > 0 ? "Immediate Review" : "System Safe"}
                   </Badge>
                 </div>
@@ -632,12 +659,12 @@ export default function RiskManagementHubPage() {
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                       <div>
                         <CardTitle className="text-base font-mono text-gray-100">{item.symbol}</CardTitle>
-                        <CardDescription className="text-[11px] text-gray-400">{item.name}</CardDescription>
+                        <CardDescription className="text-2xs text-gray-400">{item.name}</CardDescription>
                       </div>
                       <Badge 
                         tone={item.direction === 'Flat' ? 'neutral' : item.netLots >= 0 ? 'accent' : 'danger'} 
                         size="sm"
-                        className="font-mono text-[10px]"
+                        className="font-mono text-2xs"
                       >
                         {item.direction}
                       </Badge>
@@ -663,7 +690,7 @@ export default function RiskManagementHubPage() {
                             title={`Short: ${shortLots} Lots (${shortPct}%)`}
                           />
                         </div>
-                        <div className="flex justify-between text-[10px] font-mono text-gray-400">
+                        <div className="flex justify-between text-2xs font-mono text-gray-400">
                           <span className="text-accent font-semibold">{total > 0 ? `${longPct}% Long (${longLots}L)` : '0% Long'}</span>
                           <span className="text-red-400 font-semibold">{total > 0 ? `${shortPct}% Short (${shortLots}L)` : '0% Short'}</span>
                         </div>
@@ -725,7 +752,7 @@ export default function RiskManagementHubPage() {
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       Anti-Syndicate Fraud & Group Hedging Radar
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/30 font-bold animate-pulse">
+                      <span className="px-2 py-0.5 rounded-full text-2xs font-mono uppercase bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/30 font-bold animate-pulse">
                         Active Interceptor
                       </span>
                     </h2>
@@ -738,7 +765,7 @@ export default function RiskManagementHubPage() {
 
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="bg-white dark:bg-slate-950/80 px-4 py-2 rounded-xl border border-red-200 dark:border-red-500/20 text-right shadow-xs">
-                  <div className="text-[10px] font-mono uppercase text-slate-500 dark:text-gray-400">Flagged Clusters</div>
+                  <div className="text-2xs font-mono uppercase text-slate-500 dark:text-gray-400">Flagged Clusters</div>
                   <div className="text-xl font-bold font-mono text-red-600 dark:text-red-400 flex items-center justify-end gap-1.5">
                     <Radio className="h-4 w-4 animate-ping text-red-500" />
                     {flaggedClustersCount} Threat(s)
@@ -746,7 +773,7 @@ export default function RiskManagementHubPage() {
                 </div>
 
                 <div className="bg-white dark:bg-slate-950/80 px-4 py-2 rounded-xl border border-emerald-200 dark:border-emerald-500/20 text-right shadow-xs">
-                  <div className="text-[10px] font-mono uppercase text-slate-500 dark:text-gray-400">Radar Sensitivity</div>
+                  <div className="text-2xs font-mono uppercase text-slate-500 dark:text-gray-400">Radar Sensitivity</div>
                   <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
                     {syndicateSettingsForm.time_delta_ms} ms
                   </div>
@@ -788,7 +815,7 @@ export default function RiskManagementHubPage() {
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">ms</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-500">
+                  <p className="text-2xs text-slate-500 dark:text-gray-500">
                     Maximum time window between opposing trades to trigger syndicate flagging (Default: 1,500ms).
                   </p>
                 </div>
@@ -811,7 +838,7 @@ export default function RiskManagementHubPage() {
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">%</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-500">
+                  <p className="text-2xs text-slate-500 dark:text-gray-500">
                     Volume symmetry requirement between Buy & Sell legs to qualify as reverse hedging (Default: 85%).
                   </p>
                 </div>
@@ -833,7 +860,7 @@ export default function RiskManagementHubPage() {
                       }`}
                     >
                       Subnet /24
-                      <span className="block text-[9px] text-slate-500 dark:text-gray-400 font-normal">Proxy/VPN Cluster</span>
+                      <span className="block text-3xs text-slate-500 dark:text-gray-400 font-normal">Proxy/VPN Cluster</span>
                     </button>
 
                     <button
@@ -846,10 +873,10 @@ export default function RiskManagementHubPage() {
                       }`}
                     >
                       Exact Match
-                      <span className="block text-[9px] text-slate-500 dark:text-gray-500 font-normal">Identical IP Only</span>
+                      <span className="block text-3xs text-slate-500 dark:text-gray-500 font-normal">Identical IP Only</span>
                     </button>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-500">
+                  <p className="text-2xs text-slate-500 dark:text-gray-500">
                     Subnet /24 detects VPN colluders rotating within the same data center range.
                   </p>
                 </div>
@@ -865,7 +892,7 @@ export default function RiskManagementHubPage() {
 
               <Button
                 variant="primary"
-                onClick={() => saveSyndicateSettingsMutation.mutate(syndicateSettingsForm)}
+                onClick={handleSaveRadarSettings}
                 loading={saveSyndicateSettingsMutation.isPending}
                 className="gap-1.5 shadow-emerald-500/20"
               >
@@ -904,7 +931,7 @@ export default function RiskManagementHubPage() {
                   <div className="flex items-center bg-slate-100 dark:bg-background p-0.5 rounded-lg border border-slate-200 dark:border-surface-muted">
                     <button
                       onClick={() => setSyndicateStatusFilter('all')}
-                      className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                      className={`px-2.5 py-1 rounded text-2xs font-semibold transition-all ${
                         syndicateStatusFilter === 'all'
                           ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                           : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -914,7 +941,7 @@ export default function RiskManagementHubPage() {
                     </button>
                     <button
                       onClick={() => setSyndicateStatusFilter('flagged')}
-                      className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                      className={`px-2.5 py-1 rounded text-2xs font-semibold transition-all ${
                         syndicateStatusFilter === 'flagged'
                           ? 'bg-red-500/20 text-red-700 dark:text-red-300 font-bold'
                           : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -924,7 +951,7 @@ export default function RiskManagementHubPage() {
                     </button>
                     <button
                       onClick={() => setSyndicateStatusFilter('frozen')}
-                      className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                      className={`px-2.5 py-1 rounded text-2xs font-semibold transition-all ${
                         syndicateStatusFilter === 'frozen'
                           ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                           : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -941,7 +968,7 @@ export default function RiskManagementHubPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-surface-muted bg-slate-100/90 dark:bg-background/80 text-slate-700 dark:text-gray-400 font-mono uppercase text-[11px]">
+                    <tr className="border-b border-slate-200 dark:border-surface-muted bg-slate-100/90 dark:bg-background/80 text-slate-700 dark:text-gray-400 font-mono uppercase text-2xs">
                       <th className="py-3.5 px-4">Cluster ID & Symbol</th>
                       <th className="py-3.5 px-4">Flagged Accounts</th>
                       <th className="py-3.5 px-4">Opposing Positions</th>
@@ -983,10 +1010,10 @@ export default function RiskManagementHubPage() {
                                   <ShieldAlert className={`h-3.5 w-3.5 ${isFrozen ? 'text-slate-400 dark:text-gray-500' : 'text-red-500 dark:text-red-400'}`} />
                                   {cluster.cluster_code}
                                 </span>
-                                <Badge tone="info" size="sm" className="font-mono text-[10px]">
+                                <Badge tone="info" size="sm" className="font-mono text-2xs">
                                   {cluster.symbol}
                                 </Badge>
-                                <div className="text-[10px] text-slate-500 dark:text-gray-500 font-mono">
+                                <div className="text-2xs text-slate-500 dark:text-gray-500 font-mono">
                                   {cluster.created_at}
                                 </div>
                               </div>
@@ -996,7 +1023,7 @@ export default function RiskManagementHubPage() {
                             <td className="py-4 px-4 align-top">
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-mono text-[10px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-mono text-2xs font-bold">
                                     Leg A
                                   </span>
                                   <div>
@@ -1007,14 +1034,14 @@ export default function RiskManagementHubPage() {
                                       {cluster.trader_a_name || `Trader #${cluster.user_a_id}`}
                                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                                     </Link>
-                                    <div className="text-[11px] text-slate-500 dark:text-gray-500 font-mono">
+                                    <div className="text-2xs text-slate-500 dark:text-gray-500 font-mono">
                                       Acc #{cluster.account_a_id} • {cluster.trader_a_email || 'trader@propfirm.com'}
                                     </div>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-mono text-[10px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 font-mono text-2xs font-bold">
                                     Leg B
                                   </span>
                                   <div>
@@ -1025,7 +1052,7 @@ export default function RiskManagementHubPage() {
                                       {cluster.trader_b_name || `Trader #${cluster.user_b_id}`}
                                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                                     </Link>
-                                    <div className="text-[11px] text-slate-500 dark:text-gray-500 font-mono">
+                                    <div className="text-2xs text-slate-500 dark:text-gray-500 font-mono">
                                       Acc #{cluster.account_b_id} • {cluster.trader_b_email || 'trader@propfirm.com'}
                                     </div>
                                   </div>
@@ -1040,15 +1067,15 @@ export default function RiskManagementHubPage() {
                                   <span className={cluster.action_a === 'BUY' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold'}>
                                     {cluster.action_a} {cluster.lot_a} Lots
                                   </span>
-                                  <span className="text-slate-500 dark:text-gray-500 text-[10px]">on {cluster.symbol}</span>
+                                  <span className="text-slate-500 dark:text-gray-500 text-2xs">on {cluster.symbol}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <span className={cluster.action_b === 'BUY' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold'}>
                                     {cluster.action_b} {cluster.lot_b} Lots
                                   </span>
-                                  <span className="text-slate-500 dark:text-gray-500 text-[10px]">on {cluster.symbol}</span>
+                                  <span className="text-slate-500 dark:text-gray-500 text-2xs">on {cluster.symbol}</span>
                                 </div>
-                                <div className="text-[10px] text-slate-600 dark:text-gray-400 flex items-center gap-1">
+                                <div className="text-2xs text-slate-600 dark:text-gray-400 flex items-center gap-1">
                                   <Scale className="h-3 w-3 text-amber-500 dark:text-amber-400" />
                                   <span>Hedging Ratio: <strong>{Math.round((Math.min(Number(cluster.lot_a), Number(cluster.lot_b)) / Math.max(Number(cluster.lot_a), Number(cluster.lot_b))) * 100)}%</strong></span>
                                 </div>
@@ -1057,7 +1084,7 @@ export default function RiskManagementHubPage() {
 
                             {/* IP Correlation */}
                             <td className="py-4 px-4 align-top">
-                              <div className="space-y-1 font-mono text-[11px]">
+                              <div className="space-y-1 font-mono text-2xs">
                                 <div className="text-slate-700 dark:text-gray-300 flex items-center gap-1">
                                   <span className="text-slate-500 dark:text-gray-500">A:</span> {cluster.ip_a}
                                 </div>
@@ -1067,7 +1094,7 @@ export default function RiskManagementHubPage() {
                                 <Badge 
                                   tone={cluster.ip_match_type === 'exact' ? 'danger' : 'warning'} 
                                   size="sm"
-                                  className="text-[9px] uppercase tracking-wider font-mono mt-1"
+                                  className="text-3xs uppercase tracking-wider font-mono mt-1"
                                 >
                                   {cluster.ip_match_type === 'exact' ? 'Exact IP Match' : 'Subnet /24 Match'}
                                 </Badge>
@@ -1079,7 +1106,7 @@ export default function RiskManagementHubPage() {
                               <span className="inline-block px-2.5 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-mono text-xs font-bold">
                                 +{cluster.time_delta_ms} ms
                               </span>
-                              <div className="text-[10px] text-slate-500 dark:text-gray-500 font-mono mt-1">
+                              <div className="text-2xs text-slate-500 dark:text-gray-500 font-mono mt-1">
                                 Execution Gap
                               </div>
                             </td>
@@ -1098,7 +1125,7 @@ export default function RiskManagementHubPage() {
                                     className="bg-red-500 h-full rounded-full"
                                   />
                                 </div>
-                                <span className="text-[9px] uppercase font-mono tracking-wider text-red-600/80 dark:text-red-400/80">
+                                <span className="text-3xs uppercase font-mono tracking-wider text-red-600/80 dark:text-red-400/80">
                                   Critical Collusion
                                 </span>
                               </div>
@@ -1108,10 +1135,10 @@ export default function RiskManagementHubPage() {
                             <td className="py-4 px-4 align-top text-right">
                               {isFrozen ? (
                                 <div className="space-y-1">
-                                  <Badge tone="danger" size="sm" className="font-mono text-[10px]">
+                                  <Badge tone="danger" size="sm" className="font-mono text-2xs">
                                     Frozen & Suspended
                                   </Badge>
-                                  <div className="text-[10px] text-gray-500 font-mono">
+                                  <div className="text-2xs text-gray-500 font-mono">
                                     Positions Liquidated
                                   </div>
                                 </div>
@@ -1183,6 +1210,55 @@ export default function RiskManagementHubPage() {
         isDestructive
         loading={freezeClusterMutation.isPending}
       />
+
+      {/* ── Flag Account Confirmation Dialog (ADMINUI-22) ─────────────────── */}
+      <Dialog open={!!flagTraderTarget} onOpenChange={(open) => { if (!open && !isFlagging) setFlagTraderTarget(null) }}>
+        <DialogContent className="max-w-md bg-surface border-border text-foreground p-6 shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Flag Account #{flagTraderTarget?.account_id}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Are you sure you want to flag trader {flagTraderTarget?.trader_name} ({flagTraderTarget?.email})? This adds a Compliance Risk Flag and audits all associated telemetry.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-3">
+            <Label className="text-xs font-semibold text-foreground">Audit Reason / Flag Details</Label>
+            <Textarea
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+              placeholder="Enter reason for flagging this account..."
+              rows={3}
+              className="text-xs bg-background border-border"
+            />
+          </div>
+
+          <DialogFooter className="flex items-center justify-end gap-2.5 pt-2 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isFlagging}
+              onClick={() => setFlagTraderTarget(null)}
+              className="text-xs h-9 px-4"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              loading={isFlagging}
+              onClick={handleConfirmFlagTrader}
+              className="text-xs font-semibold h-9 px-4 bg-amber-600 hover:bg-amber-500 text-white"
+            >
+              Confirm Flag
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   )

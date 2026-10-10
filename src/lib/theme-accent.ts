@@ -78,49 +78,49 @@ export const FONT_PRESETS = [
     id: 'poppins',
     name: 'Poppins',
     tag: 'Default • Geometric & Modern',
-    cssVar: 'var(--font-poppins), Poppins, system-ui, sans-serif',
+    cssVar: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     category: 'Geometric Sans',
   },
   {
     id: 'plus-jakarta',
     name: 'Plus Jakarta Sans',
     tag: 'High-End Fintech Standard',
-    cssVar: 'var(--font-plus-jakarta), Plus Jakarta Sans, system-ui, sans-serif',
+    cssVar: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
     category: 'Clean Sans',
   },
   {
     id: 'outfit',
     name: 'Outfit',
     tag: 'Futuristic & Clean',
-    cssVar: 'var(--font-outfit), Outfit, system-ui, sans-serif',
+    cssVar: "'Outfit', system-ui, -apple-system, sans-serif",
     category: 'Geometric Display',
   },
   {
     id: 'inter',
     name: 'Inter',
     tag: 'Institutional Precision',
-    cssVar: 'var(--font-inter), Inter, system-ui, sans-serif',
+    cssVar: "'Inter', system-ui, -apple-system, sans-serif",
     category: 'Technical Sans',
   },
   {
     id: 'manrope',
     name: 'Manrope',
     tag: 'Modern Grotesque',
-    cssVar: 'var(--font-manrope), Manrope, system-ui, sans-serif',
+    cssVar: "'Manrope', system-ui, -apple-system, sans-serif",
     category: 'Semi-Geometric',
   },
   {
     id: 'space-grotesk',
     name: 'Space Grotesk',
     tag: 'Cyber & Web3 Trading',
-    cssVar: 'var(--font-space-grotesk), Space Grotesk, system-ui, sans-serif',
+    cssVar: "'Space Grotesk', system-ui, -apple-system, sans-serif",
     category: 'Tech Display',
   },
   {
     id: 'urbanist',
     name: 'Urbanist',
     tag: 'Sleek Minimalist',
-    cssVar: 'var(--font-urbanist), Urbanist, system-ui, sans-serif',
+    cssVar: "'Urbanist', system-ui, -apple-system, sans-serif",
     category: 'Modern Sans',
   },
 ]
@@ -288,8 +288,19 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
       localStorage.setItem('fxsim:theme-accent', cleanHex)
       // Set cookie for instant SSR detection on page reloads/first paint
       document.cookie = 'fxsim-theme-accent=' + encodeURIComponent(cleanHex) + '; path=/; max-age=31536000; SameSite=Lax'
-      // Overwrite legacy keys so old #7c6ef5 purple is eradicated forever
-      const legacyData = { primaryColor: cleanHex, primary_color: cleanHex }
+      // Overwrite legacy keys non-destructively preserving font_family
+      let legacyData: any = {}
+      try {
+        const stored = localStorage.getItem('fxsim-theme')
+        if (stored) legacyData = JSON.parse(stored)
+      } catch {}
+      const savedFont = localStorage.getItem('fxsim:theme-font') || legacyData.font_family || legacyData.fontFamily
+      legacyData.primaryColor = cleanHex
+      legacyData.primary_color = cleanHex
+      if (savedFont) {
+        legacyData.font_family = savedFont
+        legacyData.fontFamily = savedFont
+      }
       localStorage.setItem('fxsim-theme', JSON.stringify(legacyData))
       document.cookie = 'fxsim-theme-data=' + encodeURIComponent(JSON.stringify(legacyData)) + '; path=/; max-age=31536000; SameSite=Lax'
     } catch {
@@ -302,12 +313,41 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
   const { persist = true } = opts
   if (typeof window === 'undefined') return
 
-  const found = FONT_PRESETS.find((f) => f.id === fontId) || FONT_PRESETS[0]
+  const clean = (fontId || '').toLowerCase().trim()
+  const normalized = clean.replace(/[+_]/g, '-').replace(/\s+/g, '-')
+  const found = FONT_PRESETS.find((f) => {
+    const fId = f.id.toLowerCase()
+    const fName = f.name.toLowerCase().replace(/[+_]/g, '-').replace(/\s+/g, '-')
+    return (
+      fId === clean ||
+      fId === normalized ||
+      fName === clean ||
+      fName === normalized ||
+      f.name.toLowerCase() === clean ||
+      (f.id === 'plus-jakarta' && (normalized === 'plus-jakarta-sans' || clean === 'plus jakarta sans')) ||
+      (f.id === 'space-grotesk' && (normalized === 'space-grotesk' || clean === 'space grotesk'))
+    )
+  }) || FONT_PRESETS[0]
   const root = document.documentElement
 
+  // Ensure Google Fonts stylesheet for all 7 presets is present
+  const GOOGLE_FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap'
+  let fontLink = document.getElementById('fxsim-google-fonts') as HTMLLinkElement | null
+  const fontSearchName = found.name.replace(/\s+/g, '+')
+  if (!fontLink && !document.querySelector('link[href*="Space+Grotesk"]') && !document.querySelector(`link[href*="${fontSearchName}"]`)) {
+    fontLink = document.createElement('link')
+    fontLink.id = 'fxsim-google-fonts'
+    fontLink.rel = 'stylesheet'
+    fontLink.href = GOOGLE_FONTS_HREF
+    document.head.appendChild(fontLink)
+  }
+
   root.style.setProperty('--font-sans', found.cssVar)
+  root.style.setProperty('--font-poppins', found.cssVar)
   root.style.setProperty('font-family', found.cssVar)
-  document.body.style.fontFamily = found.cssVar
+  if (document.body) {
+    document.body.style.fontFamily = found.cssVar
+  }
 
   // Inject or update real-time font override tag
   let fontStyleEl = document.getElementById('fxsim-live-theme-font')
@@ -317,11 +357,18 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
     document.head.appendChild(fontStyleEl)
   }
   fontStyleEl.innerHTML = `
-    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]),
+    :root, [data-theme], .dark {
+      --font-sans: ${found.cssVar} !important;
+      --font-poppins: ${found.cssVar} !important;
+    }
     html, body {
       font-family: ${found.cssVar};
     }
-    .font-mono, [class*="font-mono"], .tabular, code, pre, kbd {
+    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) {
+      font-family: ${found.cssVar};
+    }
+    .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd,
+    .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
     }
   `
@@ -330,6 +377,16 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
     try {
       localStorage.setItem('fxsim:theme-font', found.id)
       document.cookie = 'fxsim-theme-font=' + encodeURIComponent(found.id) + '; path=/; max-age=31536000; SameSite=Lax'
+      // Also update legacy structures non-destructively
+      try {
+        let legacy: any = {}
+        const stored = localStorage.getItem('fxsim-theme')
+        if (stored) legacy = JSON.parse(stored)
+        legacy.font_family = found.id
+        legacy.fontFamily = found.id
+        localStorage.setItem('fxsim-theme', JSON.stringify(legacy))
+        document.cookie = 'fxsim-theme-data=' + encodeURIComponent(JSON.stringify(legacy)) + '; path=/; max-age=31536000; SameSite=Lax'
+      } catch {}
     } catch {
       /* private mode */
     }
@@ -425,14 +482,55 @@ export function initializeSavedTheme() {
       } catch {}
     }
     if (savedAccent) {
-      applyThemeAccent(savedAccent)
+      applyThemeAccent(savedAccent, { persist: false })
     }
 
-    const savedFont = localStorage.getItem('fxsim:theme-font') || 'poppins'
-    applyFontFamily(savedFont)
+    let savedFont: string | null = null
+    try {
+      savedFont = localStorage.getItem('fxsim:theme-font')
+    } catch {}
+
+    if (!savedFont) {
+      const cookies = document.cookie ? document.cookie.split(';') : []
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim()
+        if (c.indexOf('fxsim-theme-font=') === 0) {
+          try {
+            savedFont = decodeURIComponent(c.substring('fxsim-theme-font='.length)).trim()
+          } catch {}
+          break
+        }
+      }
+    }
+
+    if (!savedFont) {
+      try {
+        const legacy = localStorage.getItem('fxsim-theme')
+        if (legacy) {
+          const parsed = JSON.parse(legacy)
+          savedFont = parsed?.font_family || parsed?.fontFamily || null
+        }
+      } catch {}
+    }
+
+    if (!savedFont) {
+      const cookies = document.cookie ? document.cookie.split(';') : []
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim()
+        if (c.indexOf('fxsim-theme-data=') === 0) {
+          try {
+            const parsed = JSON.parse(decodeURIComponent(c.substring('fxsim-theme-data='.length)))
+            savedFont = parsed?.font_family || parsed?.fontFamily || null
+          } catch {}
+          break
+        }
+      }
+    }
+
+    applyFontFamily(savedFont || 'poppins', { persist: false })
 
     const savedRadius = localStorage.getItem('fxsim:theme-radius') || 'md'
-    applyRadius(savedRadius)
+    applyRadius(savedRadius, { persist: false })
   } catch {
     /* private mode */
   }

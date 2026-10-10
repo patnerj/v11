@@ -60,22 +60,28 @@ export function Modal({
     <Dialog open={isCurrentlyOpen} onOpenChange={handleOpenChange}>
       <DialogContent className={cn(
         resolvedWidth,
-        isAdmin && 'dark bg-[#0A0E17] border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-emerald-500/20',
+        'bg-surface border border-border text-foreground shadow-2xl flex flex-col overflow-hidden p-0',
         className
       )}>
-        {(title || description) && (
-          <DialogHeader>
-            {title && <DialogTitle className={isAdmin ? 'text-slate-100 font-bold' : undefined}>{title}</DialogTitle>}
-            {description && <DialogDescription className={isAdmin ? 'text-slate-400' : undefined}>{description}</DialogDescription>}
-          </DialogHeader>
+        {(title || description) ? (
+          <>
+            <DialogHeader className="px-4 pt-4 pb-3 sm:px-6 sm:pt-5 sm:pb-3.5 shrink-0 pr-12 sm:pr-14 border-b border-surface-muted/50">
+              {title && <DialogTitle className="text-foreground font-bold text-base sm:text-lg min-w-0">{title}</DialogTitle>}
+              {description && <DialogDescription className="text-muted-foreground text-2xs sm:text-xs mt-0.5">{description}</DialogDescription>}
+            </DialogHeader>
+
+            <div className="px-4 py-3 sm:px-6 sm:py-4 flex-1 overflow-y-auto min-h-0">
+              {children}
+            </div>
+          </>
+        ) : (
+          <div className="p-4 sm:p-6 flex-1 overflow-y-auto min-h-0">
+            {children}
+          </div>
         )}
 
-        <div className="py-2">
-          {children}
-        </div>
-
         {footer && (
-          <DialogFooter>
+          <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 shrink-0 border-t border-surface-muted/50">
             {footer}
           </DialogFooter>
         )}

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import { Switch } from '@/components/ui/switch'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
@@ -80,11 +81,8 @@ export default function OperationsHubPage() {
   }
 
   const handleChallengeActionClick = (c: TestToolChallenge, action: 'phase1' | 'phase2' | 'funded' | 'payout_ready' | 'reset') => {
-    if (action === 'reset' || action === 'funded') {
-      setChallengeConfirmTarget({ challenge: c, action })
-    } else {
-      executeChallengeAction(c, action)
-    }
+    // ADMINUI-24: Gate all lifecycle test actions behind confirmation dialog
+    setChallengeConfirmTarget({ challenge: c, action })
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -415,10 +413,22 @@ export default function OperationsHubPage() {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // 1-CLICK AUTOMATED HEALTH REPAIR
+  // 1-CLICK AUTOMATED HEALTH REPAIR (ADMINUI-23)
   // ─────────────────────────────────────────────────────────────────
   const [isRepairing, setIsRepairing] = useState(false)
+  const [isRepairModalOpen, setIsRepairModalOpen] = useState(false)
+  const [repairConfirmText, setRepairConfirmText] = useState('')
+
+  const handleOpenRepairModal = () => {
+    setRepairConfirmText('')
+    setIsRepairModalOpen(true)
+  }
+
   const handleAutoRepair = async () => {
+    if (repairConfirmText.trim().toUpperCase() !== 'CONFIRM REPAIR') {
+      toast.error('Please type "CONFIRM REPAIR" to authorize.')
+      return
+    }
     setIsRepairing(true)
     try {
       const res = await api.admin.healthRepair()
@@ -430,6 +440,7 @@ export default function OperationsHubPage() {
           })
         }
         await refetch()
+        setIsRepairModalOpen(false)
       } else {
         toast.error((res as any).error || 'Self-repair completed with warnings. Check logs.')
         await refetch()
@@ -450,119 +461,132 @@ export default function OperationsHubPage() {
     <div className="w-full space-y-8 pb-16">
       
       {/* ── Top Header Banner ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-muted/70 pb-6 w-full">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
-              Operations Hub & Infrastructure
-            </h1>
-            <Badge tone="accent" size="sm" pulsing className="font-mono">
-              Live Operations
-            </Badge>
+      <PageHeader
+        title="Operations Hub & Infrastructure"
+        description="Global infrastructure health telemetry, server status diagnostics, and master kill-switches."
+        badge={{ label: 'Live Operations', tone: 'accent' }}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              loading={isHealthLoading}
+              className="h-8 text-xs gap-1.5"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Re-check
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleOpenRepairModal}
+              disabled={isRepairing}
+              className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-sm"
+            >
+              {isRepairing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+              1-Click Auto-Repair
+            </Button>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
-            Global infrastructure health telemetry, server status diagnostics, and master kill-switches.
-          </p>
-        </div>
+        }
+      />
 
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-surface-muted p-1.5 rounded-xl border border-border">
-          <button
-            onClick={() => setActiveTab('health')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'health'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <Activity className="h-3.5 w-3.5" />
-            System Health & Overrides
-          </button>
+      {/* ── Operations Navigation Tabs ───────────────────────────────────────── */}
+      <div className="flex items-center gap-1.5 bg-surface-muted/60 p-1.5 rounded-xl border border-border overflow-x-auto scrollbar-none w-full">
+        <button
+          onClick={() => setActiveTab('health')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'health'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Activity className="h-3.5 w-3.5" />
+          System Health & Overrides
+        </button>
 
-          <button
-            onClick={() => setActiveTab('feed')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'feed'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <Radio className="h-3.5 w-3.5" />
-            Price Feed & Failover
-          </button>
+        <button
+          onClick={() => setActiveTab('feed')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'feed'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Radio className="h-3.5 w-3.5" />
+          Price Feed & Failover
+        </button>
 
-          <button
-            onClick={() => setActiveTab('mt5')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'mt5'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <Server className="h-3.5 w-3.5" />
-            MT5 Gateway Bridge
-          </button>
+        <button
+          onClick={() => setActiveTab('mt5')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'mt5'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Server className="h-3.5 w-3.5" />
+          MT5 Gateway Bridge
+        </button>
 
-          <button
-            onClick={() => setActiveTab('news')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'news'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            Macro News Guard
-          </button>
+        <button
+          onClick={() => setActiveTab('news')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'news'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Calendar className="h-3.5 w-3.5" />
+          Macro News Guard
+        </button>
 
-          <button
-            onClick={() => setActiveTab('challenges')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'challenges'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Challenge Lifecycle & Test Tools
-          </button>
+        <button
+          onClick={() => setActiveTab('challenges')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'challenges'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Challenge Lifecycle & Test Tools
+        </button>
 
-          <button
-            onClick={() => setActiveTab('redis')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'redis'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <Zap className="h-3.5 w-3.5" />
-            Redis In-Memory Engine
-          </button>
+        <button
+          onClick={() => setActiveTab('redis')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'redis'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Zap className="h-3.5 w-3.5" />
+          Redis In-Memory Engine
+        </button>
 
-          <button
-            onClick={() => setActiveTab('backup')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'backup'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Disaster Recovery & Encrypted Backups
-          </button>
+        <button
+          onClick={() => setActiveTab('backup')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'backup'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Disaster Recovery & Encrypted Backups
+        </button>
 
-          <button
-            onClick={() => setActiveTab('sentry')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'sentry'
-                ? 'bg-emerald-500 text-white font-bold shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface'
-            }`}
-          >
-            <Bug className="h-3.5 w-3.5" />
-            Sentry Crash Sentinel
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveTab('sentry')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'sentry'
+              ? 'bg-accent text-primary-foreground font-semibold shadow-sm'
+              : 'text-text-muted hover:text-text hover:bg-surface'
+          }`}
+        >
+          <Bug className="h-3.5 w-3.5" />
+          Sentry Crash Sentinel
+        </button>
       </div>
 
       {/* ── TAB 1: SYSTEM HEALTH & OVERRIDES ──────────────────────────────── */}
@@ -613,7 +637,7 @@ export default function OperationsHubPage() {
                     <span className={`text-3xl font-bold font-mono tracking-tight ${healthUnknown ? 'text-warn' : 'text-white'}`}>
                       {healthUnknown ? '—' : healthScore}
                     </span>
-                    <span className={`text-[10px] uppercase font-bold font-mono tracking-wider ${healthUnknown ? 'text-warn' : 'text-emerald-400'}`}>
+                    <span className={`text-2xs uppercase font-bold font-mono tracking-wider ${healthUnknown ? 'text-warn' : 'text-emerald-400'}`}>
                       {healthUnknown ? 'Data unavailable' : 'Operational'}
                     </span>
                   </div>
@@ -802,11 +826,11 @@ export default function OperationsHubPage() {
                           </div>
                           <div>
                             <h4 className="text-sm font-semibold text-gray-100">{item.label || conf.name}</h4>
-                            <span className="text-[11px] text-gray-500 font-mono">{conf.category}</span>
+                            <span className="text-2xs text-gray-500 font-mono">{conf.category}</span>
                           </div>
                         </div>
 
-                        <Badge tone={tone as any} size="sm" className="font-mono text-[10px]">
+                        <Badge tone={tone as any} size="sm" className="font-mono text-2xs">
                           {statusLabel}
                         </Badge>
                       </div>
@@ -814,7 +838,7 @@ export default function OperationsHubPage() {
                       <p className="text-xs text-gray-400 leading-relaxed font-mono">
                         {item.detail || 'Service responding within normal operating thresholds.'}
                         {item.explain && (
-                          <span className="block text-[11px] text-gray-500 mt-1">({item.explain})</span>
+                          <span className="block text-2xs text-gray-500 mt-1">({item.explain})</span>
                         )}
                       </p>
 
@@ -940,7 +964,7 @@ export default function OperationsHubPage() {
                     onChange={(e) => setMt5OpsForm({ ...mt5OpsForm, demo_group: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <span className="text-[10px] text-text-muted">Group assigned for Phase 1 & 2 accounts</span>
+                  <span className="text-2xs text-text-muted">Group assigned for Phase 1 & 2 accounts</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -952,7 +976,7 @@ export default function OperationsHubPage() {
                     onChange={(e) => setMt5OpsForm({ ...mt5OpsForm, funded_group: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <span className="text-[10px] text-text-muted">Group assigned when passing into Funded status</span>
+                  <span className="text-2xs text-text-muted">Group assigned when passing into Funded status</span>
                 </div>
               </div>
 
@@ -1110,7 +1134,7 @@ export default function OperationsHubPage() {
                           <Badge tone="success" size="sm">Default</Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                      <p className="text-2xs text-gray-400 leading-relaxed">
                         Instantly blocks order submissions within the buffer window with HTTP 400 error.
                       </p>
                     </button>
@@ -1132,7 +1156,7 @@ export default function OperationsHubPage() {
                           <Badge tone="warning" size="sm">Audit Mode</Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                      <p className="text-2xs text-gray-400 leading-relaxed">
                         Allows order to execute, but logs violation audit to deduct profits during payout review.
                       </p>
                     </button>
@@ -1157,7 +1181,7 @@ export default function OperationsHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">min</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Standard market rule: 2 to 5 minutes before</span>
+                    <span className="text-2xs text-gray-500">Standard market rule: 2 to 5 minutes before</span>
                   </div>
 
                   <div className="space-y-1.5">
@@ -1176,7 +1200,7 @@ export default function OperationsHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">min</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Standard market rule: 2 to 5 minutes after</span>
+                    <span className="text-2xs text-gray-500">Standard market rule: 2 to 5 minutes after</span>
                   </div>
                 </div>
 
@@ -1190,7 +1214,7 @@ export default function OperationsHubPage() {
                       </span>
                     ))}
                   </div>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-2xs text-gray-500">
                     Also protects derived assets: Gold (`XAUUSD`), US Indices (`US30`, `NAS100`, `SPX500`), and Oil (`WTI`, `BRENT`).
                   </p>
                 </div>
@@ -1212,7 +1236,7 @@ export default function OperationsHubPage() {
 
               <CardContent className="p-6 space-y-4">
                 <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Feed Source</span>
+                  <span className="text-2xs text-gray-500 uppercase tracking-wider font-semibold">Feed Source</span>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white">Central Banks & Economic Calendars</span>
                     <Badge tone="success" size="sm">Online</Badge>
@@ -1220,7 +1244,7 @@ export default function OperationsHubPage() {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Upcoming Red Folders</span>
+                  <span className="text-2xs text-gray-500 uppercase tracking-wider font-semibold">Upcoming Red Folders</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-white font-mono">{newsEventsData?.length || 0} Events</span>
                     <Badge tone="danger" size="sm">Next 7 Days</Badge>
@@ -1228,7 +1252,7 @@ export default function OperationsHubPage() {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Active Restriction Window</span>
+                  <span className="text-2xs text-gray-500 uppercase tracking-wider font-semibold">Active Restriction Window</span>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-emerald-400 font-mono">
                       ±{newsSettingsForm.buffer_before_minutes}m ({newsSettingsForm.buffer_before_minutes + newsSettingsForm.buffer_after_minutes} min total)
@@ -1251,7 +1275,7 @@ export default function OperationsHubPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="border-t border-surface-muted/60 p-4 text-[11px] text-gray-500">
+              <CardFooter className="border-t border-surface-muted/60 p-4 text-2xs text-gray-500">
                 <span>Updates automatically every 60 minutes via server cron.</span>
               </CardFooter>
             </Card>
@@ -1289,7 +1313,7 @@ export default function OperationsHubPage() {
                       <button
                         key={cur}
                         onClick={() => setSelectedCurrencyFilter(cur)}
-                        className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
+                        className={`px-2 py-1 rounded text-2xs font-bold transition-all ${
                           selectedCurrencyFilter === cur
                             ? 'bg-emerald-500 text-slate-950 shadow-sm'
                             : 'text-gray-400 hover:text-white'
@@ -1306,7 +1330,7 @@ export default function OperationsHubPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-background/80 border-b border-surface-muted text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-background/80 border-b border-surface-muted text-gray-400 font-semibold uppercase tracking-wider text-2xs">
                     <tr>
                       <th className="px-5 py-3">Date & Time (UTC)</th>
                       <th className="px-4 py-3">Currency</th>
@@ -1363,23 +1387,23 @@ export default function OperationsHubPage() {
                                     the event's real impact — the desk couldn't tell which
                                     events actually gate trading. */}
                                 {evt.impact === 'high' ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/10 border border-red-500/30 text-red-400">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-red-500/10 border border-red-500/30 text-red-400">
                                     <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
                                     High Impact
                                   </span>
                                 ) : evt.impact === 'medium' ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400">
                                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                                     Medium Impact
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-700/40 border border-slate-600 text-gray-300">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-slate-700/40 border border-slate-600 text-gray-300">
                                     <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
                                     Low Impact
                                   </span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-gray-400 text-[11px] whitespace-nowrap">
+                              <td className="px-4 py-3 text-gray-400 text-2xs whitespace-nowrap">
                                 {evt.source || 'Central Bank / Bureau'}
                               </td>
                               <td className="px-5 py-3 text-right font-mono font-bold text-emerald-400 whitespace-nowrap">
@@ -1460,7 +1484,7 @@ export default function OperationsHubPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-background border-b border-surface-muted text-gray-400 uppercase tracking-wider font-mono text-[10px]">
+                    <thead className="bg-background border-b border-surface-muted text-gray-400 uppercase tracking-wider font-mono text-2xs">
                       <tr>
                         <th className="py-3 px-4">Account / Trader</th>
                         <th className="py-3 px-4">Challenge Plan</th>
@@ -1491,9 +1515,9 @@ export default function OperationsHubPage() {
                               <td className="py-3.5 px-4">
                                 <div className="font-semibold text-white flex items-center gap-2">
                                   <span>{c.display_name || c.user_login}</span>
-                                  <span className="text-[10px] font-mono text-gray-500">#{c.id}</span>
+                                  <span className="text-2xs font-mono text-gray-500">#{c.id}</span>
                                 </div>
-                                <div className="text-[11px] text-gray-400 font-mono mt-0.5">
+                                <div className="text-2xs text-gray-400 font-mono mt-0.5">
                                   User #{c.user_id} • @{c.user_login}
                                 </div>
                               </td>
@@ -1518,7 +1542,7 @@ export default function OperationsHubPage() {
                                 <div className="text-white font-bold">
                                   ${Number(c.current_balance || 0).toLocaleString()}
                                 </div>
-                                <div className="text-[10px] text-gray-500">
+                                <div className="text-2xs text-gray-500">
                                   Start: ${Number(c.starting_balance || 0).toLocaleString()}
                                 </div>
                               </td>
@@ -1530,7 +1554,7 @@ export default function OperationsHubPage() {
                                     variant="outline"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'phase1')}
-                                    className="h-7 text-[11px] px-2 border-surface-muted hover:border-emerald-500/50 hover:text-emerald-400"
+                                    className="h-7 text-2xs px-2 border-surface-muted hover:border-emerald-500/50 hover:text-emerald-400"
                                     title="Mark Phase 1 Passed"
                                   >
                                     Phase 1 ✓
@@ -1541,7 +1565,7 @@ export default function OperationsHubPage() {
                                     variant="outline"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'phase2')}
-                                    className="h-7 text-[11px] px-2 border-surface-muted hover:border-blue-500/50 hover:text-blue-400"
+                                    className="h-7 text-2xs px-2 border-surface-muted hover:border-blue-500/50 hover:text-blue-400"
                                     title="Mark Phase 2 Passed"
                                   >
                                     Phase 2 ✓
@@ -1552,7 +1576,7 @@ export default function OperationsHubPage() {
                                     variant="primary"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'funded')}
-                                    className="h-7 text-[11px] px-2 bg-emerald-600 hover:bg-emerald-500 text-white"
+                                    className="h-7 text-2xs px-2 bg-emerald-600 hover:bg-emerald-500 text-white"
                                     title="Promote directly to Funded Status"
                                   >
                                     <Trophy className="h-3 w-3 mr-1" /> Funded
@@ -1563,7 +1587,7 @@ export default function OperationsHubPage() {
                                     variant="outline"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'payout_ready')}
-                                    className="h-7 text-[11px] px-2 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20"
+                                    className="h-7 text-2xs px-2 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20"
                                     title="Fund account and credit test simulated profit for payout testing"
                                   >
                                     Payout Ready
@@ -1574,7 +1598,7 @@ export default function OperationsHubPage() {
                                     variant="ghost"
                                     disabled={isBusy}
                                     onClick={() => handleChallengeActionClick(c, 'reset')}
-                                    className="h-7 text-[11px] px-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                                    className="h-7 text-2xs px-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
                                     title="Reset account to Phase 1"
                                   >
                                     <RotateCcw className="h-3 w-3" />
@@ -1591,20 +1615,38 @@ export default function OperationsHubPage() {
             </CardContent>
           </Card>
 
-          {/* Lifecycle Action Safeguard Dialog */}
+          {/* Lifecycle Action Safeguard Dialog (ADMINUI-24) */}
           <ConfirmDialog
             isOpen={!!challengeConfirmTarget}
             title={
               challengeConfirmTarget?.action === 'reset' 
                 ? `Reset Challenge #${challengeConfirmTarget?.challenge.id}?` 
+                : challengeConfirmTarget?.action === 'payout_ready'
+                ? `Simulate Payout Ready for Challenge #${challengeConfirmTarget?.challenge.id}?`
+                : challengeConfirmTarget?.action === 'phase1'
+                ? `Mark Phase 1 Passed for Challenge #${challengeConfirmTarget?.challenge.id}?`
+                : challengeConfirmTarget?.action === 'phase2'
+                ? `Mark Phase 2 Passed for Challenge #${challengeConfirmTarget?.challenge.id}?`
                 : `Force-Promote Challenge #${challengeConfirmTarget?.challenge.id} to Funded?`
             }
             description={
               challengeConfirmTarget?.action === 'reset'
                 ? `This will reset ${challengeConfirmTarget?.challenge.user_login}'s account back to Phase 1 with starting balance restored to $${Number(challengeConfirmTarget?.challenge.starting_balance || 0).toLocaleString()}.`
+                : challengeConfirmTarget?.action === 'payout_ready'
+                ? `This will promote ${challengeConfirmTarget?.challenge.user_login}'s account to Funded and inject simulated profit to test the payout request lifecycle.`
+                : challengeConfirmTarget?.action === 'phase1'
+                ? `This will bypass trading targets and advance ${challengeConfirmTarget?.challenge.user_login}'s account to Phase 2.`
+                : challengeConfirmTarget?.action === 'phase2'
+                ? `This will bypass Phase 2 trading targets and mark the evaluation as completed.`
                 : `This will bypass evaluation metrics and immediately mark ${challengeConfirmTarget?.challenge.user_login}'s account as Fully Funded.`
             }
-            confirmText={challengeConfirmTarget?.action === 'reset' ? 'Confirm Reset' : 'Confirm Promotion'}
+            confirmText={
+              challengeConfirmTarget?.action === 'reset' 
+                ? 'Confirm Reset' 
+                : challengeConfirmTarget?.action === 'payout_ready'
+                ? 'Confirm Payout Ready'
+                : 'Confirm Action'
+            }
             isDestructive={challengeConfirmTarget?.action === 'reset'}
             loading={busyChallengeId === challengeConfirmTarget?.challenge.id}
             onConfirm={() => {
@@ -1616,6 +1658,55 @@ export default function OperationsHubPage() {
           />
         </div>
       )}
+
+      {/* ── Auto-Repair High Friction Confirmation Modal (ADMINUI-23) ── */}
+      <Modal
+        open={isRepairModalOpen}
+        onOpenChange={(open) => {
+          if (!isRepairing) {
+            setIsRepairModalOpen(open)
+            if (!open) setRepairConfirmText('')
+          }
+        }}
+        title="⚠️ Confirm System Auto-Repair"
+        description="Auto-repair executes database schema synchronization, verifies 42 required tables, re-provisions missing options, and restarts health sentinels."
+      >
+        <div className="space-y-4 pt-2">
+          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs leading-relaxed">
+            <strong>Warning:</strong> This will mutate database configuration and schema options. Type <span className="font-mono font-bold text-white bg-amber-950/60 px-1 py-0.5 rounded">CONFIRM REPAIR</span> below to verify authorization.
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="repair-confirm-input" className="text-xs">Type &quot;CONFIRM REPAIR&quot; to authorize:</Label>
+            <Input
+              id="repair-confirm-input"
+              value={repairConfirmText}
+              onChange={(e) => setRepairConfirmText(e.target.value)}
+              placeholder="CONFIRM REPAIR"
+              className="font-mono text-xs uppercase"
+            />
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface-muted">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isRepairing}
+              onClick={() => setIsRepairModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={repairConfirmText.trim().toUpperCase() !== 'CONFIRM REPAIR' || isRepairing}
+              loading={isRepairing}
+              onClick={handleAutoRepair}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              Execute Auto-Repair
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* ── TAB 6: REDIS IN-MEMORY ENGINE ─────────────────────────────────── */}
       {activeTab === 'redis' && (

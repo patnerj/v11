@@ -149,7 +149,7 @@ export function DisasterRecoveryCard() {
               </span>
               <span className="text-xs text-gray-500">Readiness</span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5">
+            <p className="text-2xs text-gray-400 mt-2 flex items-center gap-1.5">
               <CheckCircle2 className="h-3 w-3 text-emerald-400" />
               ACID Single-Transaction Isolation
             </p>
@@ -170,7 +170,7 @@ export function DisasterRecoveryCard() {
                 AES-256-CBC
               </span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5">
+            <p className="text-2xs text-gray-400 mt-2 flex items-center gap-1.5">
               <Key className="h-3 w-3 text-blue-400" />
               PBKDF2 (100,000 HMAC-SHA256 Iters)
             </p>
@@ -196,7 +196,7 @@ export function DisasterRecoveryCard() {
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5">
+            <p className="text-2xs text-gray-400 mt-2 flex items-center gap-1.5">
               <HardDrive className="h-3 w-3 text-amber-400" />
               GZIP Level 9 Compression
             </p>
@@ -217,7 +217,7 @@ export function DisasterRecoveryCard() {
                 {status?.retention_policy || '7 Daily / 4 Weekly / 3 Monthly'}
               </span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-2 flex items-center gap-1.5">
+            <p className="text-2xs text-gray-400 mt-2 flex items-center gap-1.5">
               <Clock className="h-3 w-3 text-purple-400" />
               Automated 7-Day Snapshot Pruning
             </p>
@@ -254,14 +254,14 @@ export function DisasterRecoveryCard() {
                     Tier 1: Application WP-Cron
                   </span>
                 </div>
-                <Badge tone="success" size="sm" className="text-[10px] tabular font-semibold">
+                <Badge tone="success" size="sm" className="text-2xs tabular font-semibold">
                   Daily 00:00 UTC
                 </Badge>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 Hooks into <code className="text-emerald-400 font-mono">fxsim_daily_tasks</code> under an atomic MySQL lock (<code className="text-gray-300 font-mono">GET_LOCK</code>). Creates AES-256 snapshots, prunes snapshots older than 7 days, and dispatches webhook alerts.
               </p>
-              <div className="pt-2 border-t border-surface-muted/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
+              <div className="pt-2 border-t border-surface-muted/80 flex items-center justify-between text-2xs text-gray-400 tabular font-medium">
                 <span>Next Scheduled Run:</span>
                 <span className="text-emerald-400 font-semibold">
                   {status?.next_scheduled_utc ? new Date(status.next_scheduled_utc).toUTCString() : '00:00:00 UTC'}
@@ -278,14 +278,14 @@ export function DisasterRecoveryCard() {
                     Tier 2: Hostinger VPS Crontab
                   </span>
                 </div>
-                <Badge tone="info" size="sm" className="text-[10px] tabular font-semibold">
+                <Badge tone="info" size="sm" className="text-2xs tabular font-semibold">
                   Daily 02:00 UTC
                 </Badge>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 Autonomous Linux crontab executing <code className="text-blue-400 font-mono">backup_database.sh</code>. Operates completely independently of PHP web traffic, dumping MySQL via native client, gzip level 9, and OpenSSL AES-256-CBC.
               </p>
-              <div className="pt-2 border-t border-surface-muted/80 flex items-center justify-between text-[11px] text-gray-400 tabular font-medium">
+              <div className="pt-2 border-t border-surface-muted/80 flex items-center justify-between text-2xs text-gray-400 tabular font-medium">
                 <span>Cron Specification:</span>
                 <span className="text-blue-400 font-semibold">
                   {status?.vps_cron_schedule || '0 2 * * * (Daily 02:00 UTC)'}
@@ -303,10 +303,10 @@ export function DisasterRecoveryCard() {
               </span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge tone="neutral" size="sm" className="text-[10px] tabular font-semibold text-emerald-400 border-emerald-500/30">
+              <Badge tone="neutral" size="sm" className="text-2xs tabular font-semibold text-emerald-400 border-emerald-500/30">
                 Discord Active
               </Badge>
-              <Badge tone="neutral" size="sm" className="text-[10px] tabular font-semibold text-blue-400 border-blue-500/30">
+              <Badge tone="neutral" size="sm" className="text-2xs tabular font-semibold text-blue-400 border-blue-500/30">
                 Telegram Active
               </Badge>
             </div>
@@ -351,7 +351,7 @@ export function DisasterRecoveryCard() {
 
             <div className="p-3 bg-background rounded-lg border border-surface-muted flex items-center justify-between">
               <div className="space-y-0.5 overflow-hidden">
-                <span className="text-gray-500 block text-[10px] uppercase font-bold tracking-wider">
+                <span className="text-gray-500 block text-2xs uppercase font-bold tracking-wider">
                   SHA-256 Cryptographic Checksum Digest
                 </span>
                 <span className="font-mono text-xs text-emerald-400 truncate block">
@@ -384,7 +384,7 @@ export function DisasterRecoveryCard() {
         </CardHeader>
         <CardContent className="p-5 space-y-3">
           <div className="p-3.5 bg-background rounded-lg border border-surface-muted font-mono text-xs text-gray-300 space-y-2">
-            <div className="flex items-center justify-between text-gray-500 text-[11px] pb-1 border-b border-surface-muted">
+            <div className="flex items-center justify-between text-gray-500 text-2xs pb-1 border-b border-surface-muted">
               <span>Step 1: Non-Destructive Dry Run Integrity Verification</span>
               <button
                 onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --verify-only', 'Verification command')}
@@ -399,7 +399,7 @@ export function DisasterRecoveryCard() {
           </div>
 
           <div className="p-3.5 bg-background rounded-lg border border-surface-muted font-mono text-xs text-gray-300 space-y-2">
-            <div className="flex items-center justify-between text-gray-500 text-[11px] pb-1 border-b border-surface-muted">
+            <div className="flex items-center justify-between text-gray-500 text-2xs pb-1 border-b border-surface-muted">
               <span>Step 2: 1-Command Live Database Restoration</span>
               <button
                 onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --restore', 'Restore command')}

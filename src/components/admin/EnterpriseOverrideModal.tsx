@@ -65,15 +65,25 @@ export function EnterpriseOverrideModal({
     }
   }, [trader])
 
-  const traderName = trader?.name || trader?.username || trader?.user_login || `Trader #${trader?.user_id || trader?.id}`
-  const accountId = trader?.account_id || trader?.id || 88219
-  const basePlan = trader?.plan_name || '$100K Stellar 2-Step'
+  const traderName = trader?.name || trader?.username || trader?.user_login || `Trader #${trader?.user_id || trader?.id || 'N/A'}`
+  const accountId = trader?.account_id || trader?.id || 'N/A'
+  const basePlan = trader?.plan_name || 'N/A'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!adminNote.trim()) {
       toast.error('Audit note is required for applying custom risk overrides.')
+      return
+    }
+
+    if (maxDailyLoss > maxTotalLoss) {
+      toast.error('Max Daily Loss cannot exceed Max Total Loss.')
+      return
+    }
+
+    if (maxDailyLoss < 0 || maxTotalLoss < 0 || profitSplit < 0 || profitSplit > 100) {
+      toast.error('Please enter valid positive risk and profit split values.')
       return
     }
 
@@ -148,7 +158,7 @@ export function EnterpriseOverrideModal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-gray-100 text-sm">{traderName}</span>
-                <Badge tone="accent" size="sm" className="tabular font-medium text-[10px]">
+                <Badge tone="accent" size="sm" className="tabular font-medium text-2xs">
                   #TRD-{accountId}
                 </Badge>
               </div>
@@ -170,7 +180,7 @@ export function EnterpriseOverrideModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="profit-split" className="mb-0">Profit Split (%)</Label>
-              <span className="text-[11px] text-emerald-400 tabular font-semibold">{profitSplit}% Trader</span>
+              <span className="text-2xs text-emerald-400 tabular font-semibold">{profitSplit}% Trader</span>
             </div>
             <div className="relative">
               <Input
@@ -184,14 +194,14 @@ export function EnterpriseOverrideModal({
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">%</span>
             </div>
-            <p className="text-[11px] text-gray-500">Default 80%, configurable up to 95%.</p>
+            <p className="text-2xs text-gray-500">Default 80%, configurable up to 95%.</p>
           </div>
 
           {/* Min Trading Days */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="min-days" className="mb-0">Min Trading Days</Label>
-              <span className="text-[11px] text-gray-400 tabular font-medium">{minTradingDays} Days</span>
+              <span className="text-2xs text-gray-400 tabular font-medium">{minTradingDays} Days</span>
             </div>
             <div className="relative">
               <Input
@@ -205,14 +215,14 @@ export function EnterpriseOverrideModal({
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">Days</span>
             </div>
-            <p className="text-[11px] text-gray-500">Set 0 to remove minimum requirement.</p>
+            <p className="text-2xs text-gray-500">Set 0 to remove minimum requirement.</p>
           </div>
 
           {/* Max Daily Loss (%) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="max-daily-loss" className="mb-0">Max Daily Loss (%)</Label>
-              <span className="text-[11px] text-amber-400 tabular font-semibold">{maxDailyLoss}%</span>
+              <span className="text-2xs text-amber-400 tabular font-semibold">{maxDailyLoss}%</span>
             </div>
             <div className="relative">
               <Input
@@ -227,14 +237,14 @@ export function EnterpriseOverrideModal({
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">%</span>
             </div>
-            <p className="text-[11px] text-gray-500">Daily drawdown threshold relative to start balance.</p>
+            <p className="text-2xs text-gray-500">Daily drawdown threshold relative to start balance.</p>
           </div>
 
           {/* Max Total Loss (%) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="max-total-loss" className="mb-0">Max Total Loss (%)</Label>
-              <span className="text-[11px] text-red-400 tabular font-semibold">{maxTotalLoss}%</span>
+              <span className="text-2xs text-red-400 tabular font-semibold">{maxTotalLoss}%</span>
             </div>
             <div className="relative">
               <Input
@@ -249,7 +259,7 @@ export function EnterpriseOverrideModal({
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 tabular">%</span>
             </div>
-            <p className="text-[11px] text-gray-500">Overall account breach ceiling.</p>
+            <p className="text-2xs text-gray-500">Overall account breach ceiling.</p>
           </div>
 
         </div>
@@ -261,7 +271,7 @@ export function EnterpriseOverrideModal({
           <div className="flex items-center justify-between p-3 rounded-lg border border-surface-muted bg-background">
             <div className="space-y-0.5">
               <span className="text-xs font-semibold text-gray-200">News Trading Allowed</span>
-              <p className="text-[11px] text-gray-500">Permit execution during high-impact news</p>
+              <p className="text-2xs text-gray-500">Permit execution during high-impact news</p>
             </div>
             <Switch
               checked={newsTradingAllowed}
@@ -273,7 +283,7 @@ export function EnterpriseOverrideModal({
           <div className="flex items-center justify-between p-3 rounded-lg border border-surface-muted bg-background">
             <div className="space-y-0.5">
               <span className="text-xs font-semibold text-gray-200">Weekend Holding Allowed</span>
-              <p className="text-[11px] text-gray-500">Allow holding positions over market close</p>
+              <p className="text-2xs text-gray-500">Allow holding positions over market close</p>
             </div>
             <Switch
               checked={weekendHoldingAllowed}
@@ -289,7 +299,7 @@ export function EnterpriseOverrideModal({
             <Label htmlFor="admin-note" className="mb-0">
               Admin Note / Audit Reason <span className="text-red-400">*</span>
             </Label>
-            <span className="text-[10px] text-gray-500">Logged to compliance trail</span>
+            <span className="text-2xs text-gray-500">Logged to compliance trail</span>
           </div>
           <Textarea
             id="admin-note"

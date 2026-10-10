@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { fmtUSD, fmtPct, toNum } from '@/lib/format'
 import type { ChallengeAccount, ChallengeMetrics } from '@/types/api'
 import Link from 'next/link'
-import { cn } from '@/lib/cn'
-import { playCelebrationVictorySound } from '@/lib/sound'
+import { playCelebrationVictorySound, playHapticFeedback } from '@/lib/sound'
 
 interface Props {
   challenge?: ChallengeAccount | null
@@ -77,9 +76,7 @@ export const PhasePassCelebrationModal = memo(function PhasePassCelebrationModal
       if (explicitIsOpen) {
         fireCelebrationConfetti()
         playCelebrationVictorySound()
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate([300, 100, 300, 100, 300])
-        }
+        playHapticFeedback([300, 100, 300, 100, 300])
       }
       return
     }
@@ -90,9 +87,7 @@ export const PhasePassCelebrationModal = memo(function PhasePassCelebrationModal
         setIsOpen(true)
         fireCelebrationConfetti()
         playCelebrationVictorySound()
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate([300, 100, 300, 100, 300])
-        }
+        playHapticFeedback([300, 100, 300, 100, 300])
       }
     }
   }, [isPassed, challengeId, explicitIsOpen])
@@ -140,21 +135,21 @@ export const PhasePassCelebrationModal = memo(function PhasePassCelebrationModal
         {/* Milestone Performance Highlights */}
         <div className="relative z-10 grid grid-cols-3 gap-2.5 my-3">
           <div className="p-3 rounded-xl bg-surface/70 border border-border/80 text-center space-y-1">
-            <span className="text-[10px] text-text-muted uppercase font-semibold block">Capital Size</span>
+            <span className="text-2xs text-text-muted uppercase font-semibold block">Capital Size</span>
             <span className="text-sm sm:text-base font-bold tabular text-text block">
               {fmtUSD(accountSize, { decimals: 0 })}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-surface/70 border border-border/80 text-center space-y-1">
-            <span className="text-[10px] text-text-muted uppercase font-semibold block">Profit Target</span>
+            <span className="text-2xs text-text-muted uppercase font-semibold block">Profit Target</span>
             <span className="text-sm sm:text-base font-bold tabular text-emerald-400 block">
               {profitTargetVal > 0 ? fmtUSD(profitTargetVal, { decimals: 0 }) : fmtUSD(currentProfit, { decimals: 0, sign: true })}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-surface/70 border border-border/80 text-center space-y-1">
-            <span className="text-[10px] text-text-muted uppercase font-semibold block">Discipline</span>
+            <span className="text-2xs text-text-muted uppercase font-semibold block">Discipline</span>
             <span className="text-sm sm:text-base font-bold tabular text-cyan-400 block flex items-center justify-center gap-1">
               <ShieldCheck className="w-4 h-4 text-cyan-400" /> 100% Clean
             </span>

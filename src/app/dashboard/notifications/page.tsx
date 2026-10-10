@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { api } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
@@ -29,7 +30,28 @@ export default function NotificationsPage() {
       if (!res.ok) throw new Error('Failed to fetch')
       return res.data
     },
-    refetchInterval: 20_000,
+    refetchInterval: page === 1 ? 20_000 : false,
+  })
+
+  // When paginated beyond page 1, poll page 1 in background to avoid missing new notifications
+  useQuery({
+    queryKey: ['notifications-poll-latest'],
+    queryFn: async () => {
+      if (page === 1) return null
+      const res = await api.notifications(1, 20)
+      if (!res.ok) return null
+      const notifs = Array.isArray(res.data.notifications) ? res.data.notifications : []
+      setItems(prev => {
+        const existingIds = new Set(prev.map(p => p.id))
+        const fresh = notifs.filter(n => !existingIds.has(n.id))
+        if (fresh.length === 0) return prev
+        return [...fresh, ...prev]
+      })
+      setUnreadCount(res.data.unread_count ?? 0)
+      setTotalCount(res.data.total ?? 0)
+      return res.data
+    },
+    refetchInterval: page > 1 ? 20_000 : false,
   })
 
   useEffect(() => {
@@ -180,7 +202,15 @@ function NotificationRow({ n, index, onRead }: { n: Notification; index: number;
         </div>
         <div className="text-sm text-text-muted mt-0.5 leading-relaxed">{n.message}</div>
         {n.link && (
-          <a href={n.link} className="text-2xs text-accent hover:underline mt-1 inline-block font-medium">View details →</a>
+          n.link.startsWith('/') ? (
+            <Link href={n.link} className="text-2xs text-accent hover:underline mt-1 inline-block font-medium">
+              View details →
+            </Link>
+          ) : (
+            <a href={n.link} target="_blank" rel="noopener noreferrer" className="text-2xs text-accent hover:underline mt-1 inline-block font-medium">
+              View details →
+            </a>
+          )
         )}
       </div>
       {!n.is_read && (

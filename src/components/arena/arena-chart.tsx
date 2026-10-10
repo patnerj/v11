@@ -177,12 +177,12 @@ export const ArenaChart = memo(function ArenaChart({
 
           {/* Real-time Market Status Indicator */}
           {isForexClosed ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-[11px] font-bold tabular">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-2xs font-bold tabular">
               <span className="h-2 w-2 rounded-full bg-red-500" />
               <span>Market Closed (Weekend) · Reopens Sun 22:00 UTC</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold tabular">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-2xs font-bold tabular">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
               <span>{isCrypto ? '🟢 24/7 Weekend Market Live' : '🟢 Market Open · ECN Feed Active'}</span>
             </div>
@@ -193,13 +193,13 @@ export const ArenaChart = memo(function ArenaChart({
         <div className="flex items-center gap-3 tabular">
           {currentPrice && currentPrice > 0 && (
             <div className="text-right">
-              <span className="text-[10px] uppercase font-semibold text-text-muted mr-1.5">Live Feed:</span>
+              <span className="text-2xs uppercase font-semibold text-text-muted mr-1.5">Live Feed:</span>
               <span className="text-sm font-black text-text">
                 {currentPrice.toLocaleString(undefined, { minimumFractionDigits: symbol.includes('JPY') ? 3 : symbol.includes('BTC') ? 2 : 4 })}
               </span>
             </div>
           )}
-          <span className="text-[10px] text-text-muted bg-surface px-2 py-0.5 rounded border border-border">
+          <span className="text-2xs text-text-muted bg-surface px-2 py-0.5 rounded border border-border">
             5M Candlestick · Dual Telemetry
           </span>
         </div>

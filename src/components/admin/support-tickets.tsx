@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -22,6 +23,7 @@ export function AdminSupportTickets() {
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(false);
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const prevCountRef = useRef<number | null>(null);
 
   // Auto-focus reply textarea when opening a ticket
   useEffect(() => {
@@ -40,9 +42,19 @@ export function AdminSupportTickets() {
       if (!res.ok) throw new Error('Failed to fetch tickets');
       return res.data;
     },
-    refetchInterval: selectedTicket ? false : 10000,
+    refetchInterval: 15000,
   });
   const tickets = ticketsData ?? [];
+
+  useEffect(() => {
+    if (ticketsData) {
+      const currentCount = Array.isArray(ticketsData) ? ticketsData.length : 0;
+      if (prevCountRef.current !== null && currentCount > prevCountRef.current) {
+        toast.warning(`New support ticket received (${currentCount - prevCountRef.current} new)`);
+      }
+      prevCountRef.current = currentCount;
+    }
+  }, [ticketsData]);
 
   const { data: activeTicketData, refetch: refetchMessages } = useQuery({
     queryKey: ['admin.tickets.get', selectedTicket?.id],
@@ -142,7 +154,7 @@ export function AdminSupportTickets() {
                       ? 'bg-accent text-accent-foreground rounded-tr-sm' 
                       : 'bg-surface-strong text-text border border-border-subtle rounded-tl-sm'
                   }`}>
-                    <div className="text-[10px] font-medium opacity-70 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                    <div className="text-2xs font-medium opacity-70 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
                       {isAdmin ? 'Support Team' : 'Trader'}
                       <span className="opacity-50">•</span>
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

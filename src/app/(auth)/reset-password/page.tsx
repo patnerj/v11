@@ -9,6 +9,7 @@ import { Input, Label } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { useBranding } from '@/store/branding'
 import { ArrowLeft, CheckCircle2, KeyRound } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function ResetPasswordPage() {
   const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
@@ -21,8 +22,18 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(60)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const timer = setInterval(() => {
+      setResendCooldown((c) => Math.max(0, c - 1))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [resendCooldown])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -46,8 +57,22 @@ export default function ResetPasswordPage() {
     // left a trader waiting on a reset link that was never queued.
     if (res.ok) {
       setSent(true)
+      setResendCooldown(60)
     } else {
       setError((res as any).error || 'Could not send the reset email right now. Please try again in a moment.')
+    }
+  }
+
+  async function handleResendReset() {
+    if (resendCooldown > 0 || resending || !login) return
+    setResending(true)
+    const res = await api.auth.requestReset(login)
+    setResending(false)
+    if (res.ok) {
+      toast.success('Reset email sent again! Please check your inbox.')
+      setResendCooldown(60)
+    } else {
+      toast.error((res as any).error || 'Failed to resend reset email.')
     }
   }
 
@@ -119,7 +144,20 @@ export default function ResetPasswordPage() {
             <p className="text-sm text-text-muted mt-2 leading-relaxed">
               If an account exists for <span className="text-text">{login}</span>, we&apos;ve sent a reset link. The link expires in 24 hours.
             </p>
-            <Button asChild className="w-full mt-6" variant="secondary"><Link href="/login"><ArrowLeft className="h-4 w-4" /> Back to sign in</Link></Button>
+            <div className="mt-6 space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResendReset}
+                disabled={resending || resendCooldown > 0}
+                className="w-full"
+              >
+                {resending ? 'Sending...' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Email'}
+              </Button>
+              <Button asChild className="w-full" variant="secondary">
+                <Link href="/login"><ArrowLeft className="h-4 w-4" /> Back to sign in</Link>
+              </Button>
+            </div>
           </div>
         ) : (
           <>

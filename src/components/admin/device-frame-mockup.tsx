@@ -115,7 +115,7 @@ export function DeviceFrameMockup({
                 <span className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E] inline-block" />
                 <span className="h-2.5 w-2.5 rounded-full bg-[#27C93F] inline-block" />
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/40 text-[10px] text-gray-400 font-mono max-w-[280px] truncate border border-white/5">
+              <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/40 text-2xs text-gray-400 font-mono max-w-[280px] truncate border border-white/5">
                 <span className="text-emerald-400">https://</span>
                 <span className="text-gray-200">{effectiveName.toLowerCase().replace(/\s+/g, '')}.com</span>
                 <span className="text-gray-500">/dashboard</span>
@@ -154,7 +154,7 @@ export function DeviceFrameMockup({
                   )}
                   <span className="font-bold text-xs tracking-tight truncate max-w-[140px]">{effectiveName}</span>
                   <span
-                    className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                    className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-3xs font-bold uppercase tracking-wider"
                     style={{ backgroundColor: `${effectiveAccent}20`, color: effectiveAccent }}
                   >
                     Funded Trader
@@ -162,7 +162,7 @@ export function DeviceFrameMockup({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-[11px] font-medium text-gray-400">
+                  <div className="flex items-center gap-2 text-2xs font-medium text-gray-400">
                     <span className="hidden md:inline">Account:</span>
                     <span
                       className="font-bold tabular px-2 py-0.5 rounded-md border"
@@ -222,11 +222,11 @@ export function DeviceFrameMockup({
                   >
                     <div>
                       <h4 className="text-xs font-bold leading-tight">{effectiveName} Portal</h4>
-                      <p className="text-[10px] text-gray-400">{effectiveTagline}</p>
+                      <p className="text-2xs text-gray-400">{effectiveTagline}</p>
                     </div>
                     <button
                       type="button"
-                      className="px-3 py-1 rounded-md text-[11px] font-bold text-white shadow-sm"
+                      className="px-3 py-1 rounded-md text-2xs font-bold text-white shadow-sm"
                       style={{ backgroundColor: effectiveAccent }}
                     >
                       Trade Now
@@ -241,9 +241,9 @@ export function DeviceFrameMockup({
                         isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200 shadow-2xs'
                       )}
                     >
-                      <span className="text-[10px] text-gray-400 block font-medium">Balance</span>
+                      <span className="text-2xs text-gray-400 block font-medium">Balance</span>
                       <span className="text-sm font-bold tabular">$108,450.00</span>
-                      <span className="text-[9px] text-emerald-400 block mt-0.5">+8.45% all-time</span>
+                      <span className="text-3xs text-emerald-400 block mt-0.5">+8.45% all-time</span>
                     </div>
 
                     <div
@@ -252,9 +252,9 @@ export function DeviceFrameMockup({
                         isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200 shadow-2xs'
                       )}
                     >
-                      <span className="text-[10px] text-gray-400 block font-medium">Daily DD Buffer</span>
+                      <span className="text-2xs text-gray-400 block font-medium">Daily DD Buffer</span>
                       <span className="text-sm font-bold tabular">$4,850.00</span>
-                      <span className="text-[9px] text-emerald-400 block mt-0.5">4.85% of 5% max</span>
+                      <span className="text-3xs text-emerald-400 block mt-0.5">4.85% of 5% max</span>
                     </div>
 
                     <div
@@ -263,14 +263,14 @@ export function DeviceFrameMockup({
                         isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200 shadow-2xs'
                       )}
                     >
-                      <span className="text-[10px] text-gray-400 block font-medium">Profit Split</span>
+                      <span className="text-2xs text-gray-400 block font-medium">Profit Split</span>
                       <span
                         className="text-sm font-bold tabular"
                         style={{ color: effectiveAccent }}
                       >
                         80% Trader
                       </span>
-                      <span className="text-[9px] text-gray-400 block mt-0.5">Bi-weekly cycle</span>
+                      <span className="text-3xs text-gray-400 block mt-0.5">Bi-weekly cycle</span>
                     </div>
                   </div>
 
@@ -281,10 +281,10 @@ export function DeviceFrameMockup({
                       isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200 shadow-2xs'
                     )}
                   >
-                    <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center justify-between text-2xs">
                       <span className="font-bold">Equity Performance Curve</span>
                       <span
-                        className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+                        className="font-mono text-2xs font-bold px-1.5 py-0.5 rounded"
                         style={{ backgroundColor: `${effectiveAccent}20`, color: effectiveAccent }}
                       >
                         + $8,450.00
@@ -362,7 +362,7 @@ export function DeviceFrameMockup({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span
-                    className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                    className="px-2 py-0.5 rounded-full text-3xs font-bold"
                     style={{ backgroundColor: `${effectiveAccent}20`, color: effectiveAccent }}
                   >
                     $100K
@@ -380,9 +380,9 @@ export function DeviceFrameMockup({
                     borderColor: `${effectiveAccent}35`,
                   }}
                 >
-                  <span className="text-[10px] text-gray-400 font-medium block">Net Account Equity</span>
+                  <span className="text-2xs text-gray-400 font-medium block">Net Account Equity</span>
                   <div className="text-xl font-black tabular tracking-tight">$109,210.00</div>
-                  <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                  <div className="inline-flex items-center gap-1 text-2xs font-bold text-emerald-400">
                     <TrendingUp className="h-3 w-3" />
                     <span>+$9,210.00 (+9.21%)</span>
                   </div>
@@ -396,7 +396,7 @@ export function DeviceFrameMockup({
                       isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200'
                     )}
                   >
-                    <span className="text-[9px] text-gray-400 block font-medium">Daily Limit</span>
+                    <span className="text-3xs text-gray-400 block font-medium">Daily Limit</span>
                     <span className="text-xs font-bold tabular text-emerald-400">$5,000 OK</span>
                   </div>
                   <div
@@ -405,7 +405,7 @@ export function DeviceFrameMockup({
                       isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200'
                     )}
                   >
-                    <span className="text-[9px] text-gray-400 block font-medium">Max Drawdown</span>
+                    <span className="text-3xs text-gray-400 block font-medium">Max Drawdown</span>
                     <span className="text-xs font-bold tabular">$10,000 Static</span>
                   </div>
                 </div>
@@ -417,7 +417,7 @@ export function DeviceFrameMockup({
                     isDark ? 'bg-[#0E1524] border-gray-800' : 'bg-white border-gray-200'
                   )}
                 >
-                  <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center justify-between text-2xs">
                     <span className={cn('font-semibold', isDark ? 'text-gray-300' : 'text-gray-700')}>Live PnL Curve</span>
                     <span className="text-emerald-400 font-bold">12 Trades</span>
                   </div>

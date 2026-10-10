@@ -256,16 +256,28 @@ export const CHALLENGE_BLUEPRINTS: ChallengeBlueprintPreset[] = [
   }
 ]
 
+function parseNum(val: any, fallback: number): number {
+  return val != null && val !== '' && !isNaN(Number(val)) ? Number(val) : fallback
+}
+
 export default function ConfigurationHubPage() {
   const queryClient = useQueryClient()
 
   // Main Tab: 'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling'
   const [activeTab, setActiveTab] = useState<'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling' | 'license' | 'ai_engine'>('plans')
 
+  // Dirty state tracking to prevent race condition clobbers (ADMINUI-10)
+  const [isAiDirty, setIsAiDirty] = useState(false)
+  const [isScalingDirty, setIsScalingDirty] = useState(false)
+  const [isBrandingDirty, setIsBrandingDirty] = useState(false)
+  const [isRulesDirty, setIsRulesDirty] = useState(false)
+  const [isSmtpDirty, setIsSmtpDirty] = useState(false)
+  const [isMt5Dirty, setIsMt5Dirty] = useState(false)
+
   // ─────────────────────────────────────────────────────────────────
   // AI POWERHOUSE (GEMINI 2.0 FLASH & DEEPSEEK) ENGINE STATE
   // ─────────────────────────────────────────────────────────────────
-  const [aiForm, setAiForm] = useState<AiSettings>({
+  const [aiForm, _setAiForm] = useState<AiSettings>({
     provider: 'hybrid',
     gemini_api_key: '',
     gemini_model: 'gemini-2.0-flash',
@@ -279,6 +291,10 @@ export default function ConfigurationHubPage() {
     max_tokens: 1024,
     temperature: 0.3,
   })
+  const setAiForm: React.Dispatch<React.SetStateAction<AiSettings>> = React.useCallback((action) => {
+    setIsAiDirty(true)
+    _setAiForm(action)
+  }, [])
   const [showGeminiKey, setShowGeminiKey] = useState(false)
   const [showDeepSeekKey, setShowDeepSeekKey] = useState(false)
 
@@ -288,11 +304,12 @@ export default function ConfigurationHubPage() {
       const res = await api.admin.ai.getSettings()
       return res.ok && res.data ? res.data : null
     },
+    enabled: activeTab === 'ai_engine',
   })
 
   useEffect(() => {
-    if (aiSettingsData) {
-      setAiForm(prev => ({
+    if (aiSettingsData && !isAiDirty) {
+      _setAiForm(prev => ({
         ...prev,
         ...aiSettingsData,
         gemini_api_key: aiSettingsData.gemini_api_key || '',
@@ -302,7 +319,7 @@ export default function ConfigurationHubPage() {
         provider: aiSettingsData.provider || 'gemini',
       }))
     }
-  }, [aiSettingsData])
+  }, [aiSettingsData, isAiDirty])
 
   const [testingGemini, setTestingGemini] = useState(false)
   const [geminiTestResult, setGeminiTestResult] = useState<{
@@ -360,6 +377,7 @@ export default function ConfigurationHubPage() {
       return res.data
     },
     onSuccess: () => {
+      setIsAiDirty(false)
       toast.success('✨ Gemini API Key & AI Engine configuration saved!')
       queryClient.invalidateQueries({ queryKey: ['admin-ai-settings-config'] })
       queryClient.invalidateQueries({ queryKey: ['admin-ai-settings'] })
@@ -373,7 +391,7 @@ export default function ConfigurationHubPage() {
   // ─────────────────────────────────────────────────────────────────
   // AUTOMATED SCALING PLAN ENGINE STATE
   // ─────────────────────────────────────────────────────────────────
-  const [scalingRulesForm, setScalingRulesForm] = useState<ScalingRules>({
+  const [scalingRulesForm, _setScalingRulesForm] = useState<ScalingRules>({
     profit_target_pct: 10,
     evaluation_period_days: 90,
     min_payouts: 2,
@@ -382,6 +400,10 @@ export default function ConfigurationHubPage() {
     max_capital_cap: 2000000,
     auto_scale: false,
   })
+  const setScalingRulesForm: React.Dispatch<React.SetStateAction<ScalingRules>> = React.useCallback((action) => {
+    setIsScalingDirty(true)
+    _setScalingRulesForm(action)
+  }, [])
 
   const [scalingSearch, setScalingSearch] = useState('')
   const [scalingFilter, setScalingFilter] = useState<'all' | 'eligible' | 'applied'>('all')
@@ -393,13 +415,14 @@ export default function ConfigurationHubPage() {
       return res.ok && res.data ? res.data : null
     },
     staleTime: 5000,
+    enabled: activeTab === 'scaling',
   })
 
   useEffect(() => {
-    if (scalingData?.rules) {
-      setScalingRulesForm(scalingData.rules)
+    if (scalingData?.rules && !isScalingDirty) {
+      _setScalingRulesForm(scalingData.rules)
     }
-  }, [scalingData])
+  }, [scalingData, isScalingDirty])
 
   const saveScalingRulesMutation = useMutation({
     mutationFn: async (payload: Partial<ScalingRules>) => {
@@ -408,6 +431,7 @@ export default function ConfigurationHubPage() {
       return res.data
     },
     onSuccess: () => {
+      setIsScalingDirty(false)
       toast.success('Scaling plan parameters & rewards saved!')
       queryClient.invalidateQueries({ queryKey: ['admin-scaling-queue'] })
     },
@@ -426,6 +450,7 @@ export default function ConfigurationHubPage() {
       const res = await api.admin.licenseStatus()
       return res.ok && res.data ? res.data.data : null
     },
+    enabled: activeTab === 'license',
   })
 
   useEffect(() => {
@@ -491,7 +516,8 @@ export default function ConfigurationHubPage() {
   // ─────────────────────────────────────────────────────────────────
   // WEBHOOKS & INSTANT ALERTS (DISCORD & TELEGRAM)
   // ─────────────────────────────────────────────────────────────────
-  const [webhookForm, setWebhookForm] = useState<WebhookConfig>({
+  const [isWebhooksDirty, setIsWebhooksDirty] = useState(false)
+  const [webhookForm, _setWebhookForm] = useState<WebhookConfig>({
     discord_enabled: false,
     discord_webhook_url: '',
     telegram_enabled: false,
@@ -502,6 +528,10 @@ export default function ConfigurationHubPage() {
     notify_on_breach: true,
     notify_on_kyc: true,
   })
+  const setWebhookForm: React.Dispatch<React.SetStateAction<WebhookConfig>> = React.useCallback((action) => {
+    setIsWebhooksDirty(true)
+    _setWebhookForm(action)
+  }, [])
 
   const [isTestingDiscord, setIsTestingDiscord] = useState(false)
   const [isTestingTelegram, setIsTestingTelegram] = useState(false)
@@ -513,13 +543,14 @@ export default function ConfigurationHubPage() {
       return res.ok && res.data ? res.data : null
     },
     staleTime: 10000,
+    enabled: activeTab === 'integrations',
   })
 
   useEffect(() => {
-    if (webhooksData) {
-      setWebhookForm(webhooksData)
+    if (webhooksData && !isWebhooksDirty) {
+      _setWebhookForm(webhooksData)
     }
-  }, [webhooksData])
+  }, [webhooksData, isWebhooksDirty])
 
   const saveWebhooksMutation = useMutation({
     mutationFn: async (payload: WebhookConfig) => {
@@ -528,6 +559,7 @@ export default function ConfigurationHubPage() {
       return res.data
     },
     onSuccess: () => {
+      setIsWebhooksDirty(false)
       toast.success('Founder instant alert webhooks saved successfully!')
       queryClient.invalidateQueries({ queryKey: ['admin-webhooks-config'] })
     },
@@ -593,6 +625,7 @@ export default function ConfigurationHubPage() {
       if (!res.ok) throw new Error((res as any).error || 'Failed to load challenge plans.')
       return Array.isArray(res.data) ? res.data : []
     },
+    enabled: activeTab === 'plans',
   })
 
   const plans = plansData || []
@@ -931,34 +964,34 @@ export default function ConfigurationHubPage() {
     const payload: Partial<ChallengePlan> & Record<string, any> = {
       ...(editingPlan?.id ? { id: editingPlan.id } : (planForm.id ? { id: planForm.id } : {})),
       name: planForm.name.trim(),
-      slug: planForm.slug?.trim() || `${planForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Number(planForm.account_size) || 50000}`,
-      account_size: Number(planForm.account_size) || 50000,
-      starting_balance: Number(planForm.account_size) || 50000,
-      price: Number(planForm.price) || 0,
+      slug: planForm.slug?.trim() || `${planForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${parseNum(planForm.account_size, 50000)}`,
+      account_size: parseNum(planForm.account_size, 50000),
+      starting_balance: parseNum(planForm.account_size, 50000),
+      price: parseNum(planForm.price, 0),
       currency: planForm.currency || 'USD',
       plan_type: planForm.plan_type || '2-step',
       phases: planForm.plan_type === '1-step' ? 1 : planForm.plan_type === '2-step' ? 2 : planForm.plan_type === '3-step' ? 3 : 0,
       is_instant_funding: planForm.plan_type === 'instant' ? 1 : 0,
       drawdown_type: planForm.drawdown_type || 'static',
-      max_leverage: Number(planForm.max_leverage) || 100,
-      max_lot_size: Number(planForm.max_lot_size) || 50,
-      p1_profit_target: Number(planForm.p1_profit_target) || 8,
-      p2_profit_target: Number(planForm.p2_profit_target) || 5,
-      p3_profit_target: Number(planForm.p3_profit_target) || 3,
-      p1_daily_dd: Number(planForm.p1_daily_dd) || 5,
-      p2_daily_dd: Number(planForm.p2_daily_dd ?? planForm.p1_daily_dd) || 5,
-      p3_daily_dd: Number(planForm.p3_daily_dd ?? planForm.p1_daily_dd) || 5,
-      p1_max_dd: Number(planForm.p1_max_dd) || 10,
-      p2_max_dd: Number(planForm.p2_max_dd ?? planForm.p1_max_dd) || 10,
-      p3_max_dd: Number(planForm.p3_max_dd ?? planForm.p1_max_dd) || 10,
-      p1_min_days: Number(planForm.p1_min_days) || 5,
-      p2_min_days: Number(planForm.p2_min_days) || 5,
-      p3_min_days: Number(planForm.p3_min_days) || 5,
-      p1_max_days: Number(planForm.p1_max_days) || 30,
-      p2_max_days: Number(planForm.p2_max_days) || 60,
-      p3_max_days: Number(planForm.p3_max_days) || 60,
-      funded_profit_split: Number(planForm.funded_profit_split) || 80,
-      funded_max_dd: Number(planForm.funded_max_dd ?? planForm.p1_max_dd) || 10,
+      max_leverage: parseNum(planForm.max_leverage, 100),
+      max_lot_size: parseNum(planForm.max_lot_size, 50),
+      p1_profit_target: parseNum(planForm.p1_profit_target, 8),
+      p2_profit_target: parseNum(planForm.p2_profit_target, 5),
+      p3_profit_target: parseNum(planForm.p3_profit_target, 3),
+      p1_daily_dd: parseNum(planForm.p1_daily_dd, 5),
+      p2_daily_dd: parseNum(planForm.p2_daily_dd ?? planForm.p1_daily_dd, 5),
+      p3_daily_dd: parseNum(planForm.p3_daily_dd ?? planForm.p1_daily_dd, 5),
+      p1_max_dd: parseNum(planForm.p1_max_dd, 10),
+      p2_max_dd: parseNum(planForm.p2_max_dd ?? planForm.p1_max_dd, 10),
+      p3_max_dd: parseNum(planForm.p3_max_dd ?? planForm.p1_max_dd, 10),
+      p1_min_days: parseNum(planForm.p1_min_days, 5),
+      p2_min_days: parseNum(planForm.p2_min_days, 5),
+      p3_min_days: parseNum(planForm.p3_min_days, 5),
+      p1_max_days: parseNum(planForm.p1_max_days, 30),
+      p2_max_days: parseNum(planForm.p2_max_days, 60),
+      p3_max_days: parseNum(planForm.p3_max_days, 60),
+      funded_profit_split: parseNum(planForm.funded_profit_split, 80),
+      funded_max_dd: parseNum(planForm.funded_max_dd ?? planForm.p1_max_dd, 10),
       news_trading: Number(planForm.news_trading ?? 1),
       news_window_minutes: Number(planForm.news_window_minutes ?? 5),
       weekend_holding: Number(planForm.weekend_holding ?? 0),
@@ -1000,10 +1033,11 @@ export default function ConfigurationHubPage() {
         return res.data
       }
       return {}
-    }
+    },
+    enabled: activeTab === 'branding',
   })
 
-  const [brandingForm, setBrandingForm] = useState({
+  const [brandingForm, _setBrandingForm] = useState({
     brand_name: 'Spark Proprietary Trading',
     brand_tagline: 'The Premier Prop Trading Firm',
     support_email: 'support@sparkpropfirm.com',
@@ -1022,6 +1056,10 @@ export default function ConfigurationHubPage() {
     sidebar_icon_url: '',
     favicon_url: '',
   })
+  const setBrandingForm: React.Dispatch<React.SetStateAction<typeof brandingForm>> = React.useCallback((action) => {
+    setIsBrandingDirty(true)
+    _setBrandingForm(action)
+  }, [])
 
   const [logoPreviewTheme, setLogoPreviewTheme] = useState<'dark' | 'light'>('dark')
   const logoFileInputRef = useRef<HTMLInputElement>(null)
@@ -1042,8 +1080,9 @@ export default function ConfigurationHubPage() {
 
   const handleSelectFont = (fontId: string) => {
     setBrandingForm((prev) => ({ ...prev, font_family: fontId }))
-    applyFontFamily(fontId, { persist: false })
-    toast.success(`Platform font updated to ${fontId}`)
+    applyFontFamily(fontId, { persist: true })
+    const matched = FONT_PRESETS.find((f) => f.id === fontId || f.name.toLowerCase() === fontId.toLowerCase())
+    toast.success(`Platform font updated to ${matched?.name || fontId}`)
   }
 
   const handleSelectRadius = (radiusId: string) => {
@@ -1068,11 +1107,11 @@ export default function ConfigurationHubPage() {
   }, [brandingForm.favicon_url])
 
   useEffect(() => {
-    if (whitelabelData && Object.keys(whitelabelData).length > 0) {
+    if (whitelabelData && Object.keys(whitelabelData).length > 0 && !isBrandingDirty) {
       const activeAccent = (whitelabelData as any).primary_color || (whitelabelData as any).primaryColor || '#10B981'
       const activeFont = (whitelabelData as any).font_family || (whitelabelData as any).fontFamily || 'poppins'
       const activeRadius = (whitelabelData as any).radius || 'md'
-      setBrandingForm((prev) => ({
+      _setBrandingForm((prev) => ({
         ...prev,
         brand_name: whitelabelData.brand_name || prev.brand_name,
         brand_tagline: whitelabelData.brand_tagline || prev.brand_tagline,
@@ -1096,7 +1135,7 @@ export default function ConfigurationHubPage() {
       applyFontFamily(activeFont)
       applyRadius(activeRadius)
     }
-  }, [whitelabelData])
+  }, [whitelabelData, isBrandingDirty])
 
   const handleMediaUpload = async (field: 'logo' | 'login_logo' | 'sidebar_icon' | 'favicon', file: File) => {
     try {
@@ -1129,6 +1168,7 @@ export default function ConfigurationHubPage() {
       return res.data
     },
     onSuccess: () => {
+      setIsBrandingDirty(false)
       applyThemeAccent(brandingForm.primary_color)
       if (brandingForm.font_family) {
         applyFontFamily(brandingForm.font_family)
@@ -1152,10 +1192,11 @@ export default function ConfigurationHubPage() {
         return res.data
       }
       return {}
-    }
+    },
+    enabled: activeTab === 'rules',
   })
 
-  const [systemRulesForm, setSystemRulesForm] = useState({
+  const [systemRulesForm, _setSystemRulesForm] = useState({
     min_trading_days_default: 5,
     max_inactivity_days: 30,
     news_window_minutes: 5,
@@ -1166,23 +1207,27 @@ export default function ConfigurationHubPage() {
     weekend_holding_default: 0,
     stop_loss_required_default: 0,
   })
+  const setSystemRulesForm: React.Dispatch<React.SetStateAction<typeof systemRulesForm>> = React.useCallback((action) => {
+    setIsRulesDirty(true)
+    _setSystemRulesForm(action)
+  }, [])
 
   useEffect(() => {
-    if (rulesData && Object.keys(rulesData).length > 0) {
-      setSystemRulesForm((prev) => ({
+    if (rulesData && Object.keys(rulesData).length > 0 && !isRulesDirty) {
+      _setSystemRulesForm((prev) => ({
         ...prev,
-        min_trading_days_default: Number(rulesData.min_trading_days_default ?? prev.min_trading_days_default),
-        max_inactivity_days: Number(rulesData.max_inactivity_days ?? prev.max_inactivity_days),
-        news_window_minutes: Number(rulesData.news_window_minutes ?? prev.news_window_minutes),
-        min_payout_amount: Number(rulesData.min_payout_amount ?? prev.min_payout_amount),
-        large_payout_threshold: Number(rulesData.large_payout_threshold ?? prev.large_payout_threshold),
-        payout_frequency_days: Number(rulesData.payout_frequency_days ?? prev.payout_frequency_days),
-        mandatory_kyc: Number(rulesData.mandatory_kyc ?? prev.mandatory_kyc),
-        weekend_holding_default: Number(rulesData.weekend_holding_default ?? prev.weekend_holding_default),
-        stop_loss_required_default: Number(rulesData.stop_loss_required_default ?? prev.stop_loss_required_default),
+        min_trading_days_default: parseNum(rulesData.min_trading_days_default, prev.min_trading_days_default),
+        max_inactivity_days: parseNum(rulesData.max_inactivity_days, prev.max_inactivity_days),
+        news_window_minutes: parseNum(rulesData.news_window_minutes, prev.news_window_minutes),
+        min_payout_amount: parseNum(rulesData.min_payout_amount, prev.min_payout_amount),
+        large_payout_threshold: parseNum(rulesData.large_payout_threshold, prev.large_payout_threshold),
+        payout_frequency_days: parseNum(rulesData.payout_frequency_days, prev.payout_frequency_days),
+        mandatory_kyc: parseNum(rulesData.mandatory_kyc, prev.mandatory_kyc),
+        weekend_holding_default: parseNum(rulesData.weekend_holding_default, prev.weekend_holding_default),
+        stop_loss_required_default: parseNum(rulesData.stop_loss_required_default, prev.stop_loss_required_default),
       }))
     }
-  }, [rulesData])
+  }, [rulesData, isRulesDirty])
 
   const saveRulesMutation = useMutation({
     mutationFn: async (payload: Record<string, any>) => {
@@ -1193,6 +1238,7 @@ export default function ConfigurationHubPage() {
       return res.data
     },
     onSuccess: () => {
+      setIsRulesDirty(false)
       toast.success('Global trading rules & compliance guardrails saved successfully!')
       queryClient.invalidateQueries({ queryKey: ['admin-system-rules'] })
     },
@@ -1204,7 +1250,7 @@ export default function ConfigurationHubPage() {
   // ─────────────────────────────────────────────────────────────────
   // 4. SMTP MAIL SERVER CONFIGURATION
   // ─────────────────────────────────────────────────────────────────
-  const [smtpForm, setSmtpForm] = useState<{
+  const [smtpForm, _setSmtpForm] = useState<{
     host: string
     port: number
     auth: boolean
@@ -1225,21 +1271,26 @@ export default function ConfigurationHubPage() {
     from_name: 'PropFirm Support',
     reply_to: 'support@yourpropfirm.com',
   })
+  const setSmtpForm: React.Dispatch<React.SetStateAction<typeof smtpForm>> = React.useCallback((action) => {
+    setIsSmtpDirty(true)
+    _setSmtpForm(action)
+  }, [])
 
   const { data: smtpData, isLoading: isSmtpLoading } = useQuery({
     queryKey: ['admin-smtp-config'],
     queryFn: async () => {
       const res = await api.admin.smtpGet()
       return res.ok && res.data ? res.data : null
-    }
+    },
+    enabled: activeTab === 'smtp',
   })
 
   useEffect(() => {
-    if (smtpData) {
-      setSmtpForm((prev) => ({
+    if (smtpData && !isSmtpDirty) {
+      _setSmtpForm((prev) => ({
         ...prev,
         host: smtpData.host || prev.host,
-        port: smtpData.port || prev.port,
+        port: parseNum(smtpData.port, prev.port),
         auth: smtpData.auth ?? prev.auth,
         user: smtpData.user || prev.user,
         secure: (smtpData.secure || 'tls') as '' | 'ssl' | 'tls',
@@ -1248,15 +1299,20 @@ export default function ConfigurationHubPage() {
         reply_to: smtpData.reply_to || prev.reply_to,
       }))
     }
-  }, [smtpData])
+  }, [smtpData, isSmtpDirty])
 
   const saveSmtpMutation = useMutation({
     mutationFn: async (payload: typeof smtpForm) => {
-      const res = await api.admin.smtpSave(payload)
+      const finalPayload: Record<string, any> = { ...payload }
+      if (!finalPayload.pass || finalPayload.pass.trim() === '') {
+        delete finalPayload.pass
+      }
+      const res = await api.admin.smtpSave(finalPayload as any)
       if (!res.ok) throw new Error(res.error || 'Failed to save SMTP settings')
       return res.data
     },
     onSuccess: () => {
+      setIsSmtpDirty(false)
       toast.success('SMTP mail server configuration saved!')
       queryClient.invalidateQueries({ queryKey: ['admin-smtp-config'] })
     },
@@ -1324,7 +1380,8 @@ export default function ConfigurationHubPage() {
     queryFn: async () => {
       const res = await api.admin.demoStatus()
       return res.ok && res.data ? res.data : null
-    }
+    },
+    enabled: activeTab === 'sandbox',
   })
 
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false)
@@ -1382,7 +1439,7 @@ export default function ConfigurationHubPage() {
   // ─────────────────────────────────────────────────────────────────
   // 6. METATRADER 5 BRIDGE STATE & MUTATIONS
   // ─────────────────────────────────────────────────────────────────
-  const [mt5Form, setMt5Form] = useState({
+  const [mt5Form, _setMt5Form] = useState({
     server_ip: '127.0.0.1',
     server_port: 443,
     manager_login: '1001',
@@ -1391,28 +1448,33 @@ export default function ConfigurationHubPage() {
     funded_group: 'real\\funded-pro',
     bridge_secret: '',
   })
+  const setMt5Form: React.Dispatch<React.SetStateAction<typeof mt5Form>> = React.useCallback((action) => {
+    setIsMt5Dirty(true)
+    _setMt5Form(action)
+  }, [])
 
   const { data: mt5Data, isLoading: isMt5Loading } = useQuery({
     queryKey: ['admin-mt5-bridge-config'],
     queryFn: async () => {
       const res = await api.admin.mt5BridgeGet()
       return res.ok && res.data ? res.data : null
-    }
+    },
+    enabled: activeTab === 'mt5',
   })
 
   useEffect(() => {
-    if (mt5Data) {
-      setMt5Form((prev) => ({
+    if (mt5Data && !isMt5Dirty) {
+      _setMt5Form((prev) => ({
         ...prev,
         server_ip: mt5Data.server_ip || prev.server_ip,
-        server_port: Number(mt5Data.server_port || prev.server_port),
+        server_port: parseNum(mt5Data.server_port, prev.server_port),
         manager_login: mt5Data.manager_login || prev.manager_login,
         demo_group: mt5Data.demo_group || prev.demo_group,
         funded_group: mt5Data.funded_group || prev.funded_group,
         bridge_secret: mt5Data.bridge_secret || mt5Data.ingest_secret || prev.bridge_secret,
       }))
     }
-  }, [mt5Data])
+  }, [mt5Data, isMt5Dirty])
 
   const saveMt5Mutation = useMutation({
     mutationFn: async (payload: typeof mt5Form) => {
@@ -1421,6 +1483,7 @@ export default function ConfigurationHubPage() {
       return res.data
     },
     onSuccess: () => {
+      setIsMt5Dirty(false)
       toast.success('MetaTrader 5 Bridge Gateway settings saved!')
       queryClient.invalidateQueries({ queryKey: ['admin-mt5-bridge-config'] })
     },
@@ -1656,14 +1719,14 @@ export default function ConfigurationHubPage() {
                       <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
                         {bp.name}
                       </h4>
-                      <p className="text-[11px] text-gray-400 mt-1 leading-snug">
+                      <p className="text-xs text-gray-400 mt-1 leading-snug">
                         {bp.description}
                       </p>
                     </div>
 
                     <div className="space-y-1.5 pt-2 border-t border-surface-muted/60">
                       {bp.bullets.map((bullet, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-[11px] text-gray-300 font-mono">
+                        <div key={i} className="flex items-center gap-1.5 text-xs text-gray-300 font-mono">
                           <Check className="w-3 h-3 text-emerald-400 shrink-0" />
                           <span className="truncate">{bullet}</span>
                         </div>
@@ -1810,7 +1873,7 @@ export default function ConfigurationHubPage() {
                 <Card 
                   key={plan.id}
                   className={`bg-surface border transition-all flex flex-col justify-between ${
-                    isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-[#0e1726]' : 'border-surface-muted hover:border-emerald-500/40'
+                    isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-surface-muted' : 'border-surface-muted hover:border-emerald-500/40'
                   }`}
                 >
                   <CardHeader className="pb-3 border-b border-surface-muted/60">
@@ -1834,7 +1897,7 @@ export default function ConfigurationHubPage() {
                       <CardDescription className="text-xs text-emerald-400 font-mono">
                         Capital: ${(accountSize).toLocaleString()}
                       </CardDescription>
-                      <Badge tone="neutral" size="sm" className="text-[10px] uppercase font-mono">
+                      <Badge tone="neutral" size="sm" className="text-2xs uppercase font-mono">
                         {plan.plan_type || (plan.is_instant_funding ? 'Instant' : `${plan.phases || 2}-Step`)}
                       </Badge>
                     </div>
@@ -1862,7 +1925,7 @@ export default function ConfigurationHubPage() {
                       <span className="text-gray-400">Max Total Drawdown:</span>
                       <div className="flex items-center gap-1.5">
                         <span className="text-red-400 font-bold">{maxDD}% (${((accountSize * maxDD) / 100).toLocaleString()})</span>
-                        <Badge tone="neutral" size="sm" className="text-[9px] lowercase font-sans">
+                        <Badge tone="neutral" size="sm" className="text-2xs lowercase font-sans">
                           {ddType.includes('trailing') ? 'trailing' : 'static'}
                         </Badge>
                       </div>
@@ -1876,22 +1939,22 @@ export default function ConfigurationHubPage() {
                     {/* Feature Badges Matrix */}
                     <div className="pt-2 flex flex-wrap gap-1.5">
                       {plan.news_trading ? (
-                        <Badge tone="success" size="sm" className="text-[10px]">News: OK</Badge>
+                        <Badge tone="success" size="sm" className="text-2xs">News: OK</Badge>
                       ) : (
-                        <Badge tone="danger" size="sm" className="text-[10px]">No News</Badge>
+                        <Badge tone="danger" size="sm" className="text-2xs">No News</Badge>
                       )}
                       {plan.weekend_holding ? (
-                        <Badge tone="success" size="sm" className="text-[10px]">Weekend: OK</Badge>
+                        <Badge tone="success" size="sm" className="text-2xs">Weekend: OK</Badge>
                       ) : (
-                        <Badge tone="neutral" size="sm" className="text-[10px]">No Weekend</Badge>
+                        <Badge tone="neutral" size="sm" className="text-2xs">No Weekend</Badge>
                       )}
                       {plan.ea_allowed ? (
-                        <Badge tone="accent" size="sm" className="text-[10px]">EA: Allowed</Badge>
+                        <Badge tone="accent" size="sm" className="text-2xs">EA: Allowed</Badge>
                       ) : (
-                        <Badge tone="danger" size="sm" className="text-[10px]">No EA</Badge>
+                        <Badge tone="danger" size="sm" className="text-2xs">No EA</Badge>
                       )}
                       {plan.scaling_enabled ? (
-                        <Badge tone="neutral" size="sm" className="text-[10px]">Scaling +{plan.scaling_growth_pct || 25}%</Badge>
+                        <Badge tone="neutral" size="sm" className="text-2xs">Scaling +{plan.scaling_growth_pct || 25}%</Badge>
                       ) : null}
                     </div>
                   </CardContent>
@@ -2007,7 +2070,7 @@ export default function ConfigurationHubPage() {
                     />
                     <Badge tone="success" size="sm" className="shrink-0">Whitelisted</Badge>
                   </div>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-2xs text-gray-500">
                     Trusted origin for cross-origin headless authentication and payment redirect loops.
                   </p>
                 </div>
@@ -2015,7 +2078,7 @@ export default function ConfigurationHubPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="cookie-domain">Auth Cookie Domain (Optional)</Label>
-                    <span className="text-[10px] text-gray-400 font-mono">Cross-Subdomain Sharing</span>
+                    <span className="text-2xs text-gray-400 font-mono">Cross-Subdomain Sharing</span>
                   </div>
                   <Input
                     id="cookie-domain"
@@ -2024,7 +2087,7 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setBrandingForm({ ...brandingForm, cookie_domain: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-2xs text-gray-500">
                     Only needed if your login/API domain (e.g. <code>api.yoursite.com</code>) is on a different subdomain from your app (e.g. <code>app.yoursite.com</code>). Enter the shared parent domain with a leading dot, e.g. <code>.yoursite.com</code>. Leave blank if both are on the exact same domain.
                   </p>
                 </div>
@@ -2037,12 +2100,20 @@ export default function ConfigurationHubPage() {
                     <Label className="text-sm font-semibold text-white">Platform Typography & Font Family</Label>
                     <p className="text-xs text-gray-400">Select the primary font family rendered across the entire trading portal, admin panel, and sidebar</p>
                   </div>
-                  <Badge tone="accent" size="sm" className="font-bold tracking-wide">{brandingForm.font_family?.toUpperCase() || 'POPPINS'}</Badge>
+                  <Badge tone="accent" size="sm" className="font-bold tracking-wide">
+                    {FONT_PRESETS.find((f) => f.id === (brandingForm.font_family || '').toLowerCase() || f.name.toLowerCase() === (brandingForm.font_family || '').toLowerCase())?.name.toUpperCase() || brandingForm.font_family?.toUpperCase() || 'POPPINS'}
+                  </Badge>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {FONT_PRESETS.map((font) => {
-                    const isSelected = (brandingForm.font_family || 'poppins').toLowerCase() === font.id.toLowerCase()
+                    const currentActive = (brandingForm.font_family || 'poppins').toLowerCase().trim()
+                    const normalizedActive = currentActive.replace(/[+_]/g, '-').replace(/\s+/g, '-')
+                    const isSelected = font.id.toLowerCase() === currentActive ||
+                                       font.id.toLowerCase() === normalizedActive ||
+                                       font.name.toLowerCase() === currentActive ||
+                                       (font.id === 'plus-jakarta' && (normalizedActive === 'plus-jakarta-sans' || currentActive === 'plus jakarta sans')) ||
+                                       (font.id === 'space-grotesk' && (normalizedActive === 'space-grotesk' || currentActive === 'space grotesk'))
                     return (
                       <div
                         key={font.id}
@@ -2052,15 +2123,15 @@ export default function ConfigurationHubPage() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-100" style={{ fontFamily: font.cssVar }}>
+                          <span className="text-xs font-bold text-gray-100 font-preset-preview" data-font-preview style={{ fontFamily: font.cssVar }}>
                             {font.name}
                           </span>
                           {isSelected && <Check className="h-4 w-4 text-emerald-400" />}
                         </div>
-                        <div className="text-sm font-medium text-gray-300 truncate" style={{ fontFamily: font.cssVar }}>
+                        <div className="text-sm font-medium text-gray-300 truncate font-preset-preview" data-font-preview style={{ fontFamily: font.cssVar }}>
                           Aa Bb Gg 123
                         </div>
-                        <span className="text-[10px] font-medium block text-gray-400 truncate">
+                        <span className="text-2xs font-medium block text-gray-400 truncate">
                           {font.tag}
                         </span>
                       </div>
@@ -2106,7 +2177,7 @@ export default function ConfigurationHubPage() {
                           <div className="h-4 w-4 rounded-full bg-surface border border-slate-700" />
                           <div className="h-4 w-4 rounded-full bg-background border border-slate-700" />
                         </div>
-                        <span className="text-[10px] font-medium block" style={{ color: preset.primary }}>
+                        <span className="text-2xs font-medium block" style={{ color: preset.primary }}>
                           {preset.label}
                         </span>
                       </div>
@@ -2187,13 +2258,13 @@ export default function ConfigurationHubPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <Label className="text-xs font-semibold text-gray-200">1. Primary Brand Logo (Web & Email)</Label>
-                      <p className="text-[11px] text-gray-400">Main header and email logo, rendered 160–200px wide (Recommended: ≥400px transparent PNG/WebP)</p>
+                      <p className="text-xs text-gray-400">Main header and email logo, rendered 160–200px wide (Recommended: ≥400px transparent PNG/WebP)</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setLogoPreviewTheme('dark')}
-                        className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                        className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
                           logoPreviewTheme === 'dark' ? 'bg-slate-800 text-white border border-slate-700' : 'text-gray-400 hover:text-white'
                         }`}
                       >
@@ -2202,7 +2273,7 @@ export default function ConfigurationHubPage() {
                       <button
                         type="button"
                         onClick={() => setLogoPreviewTheme('light')}
-                        className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                        className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
                           logoPreviewTheme === 'light' ? 'bg-gray-200 text-slate-950 border border-white' : 'text-gray-400 hover:text-white'
                         }`}
                       >
@@ -2228,7 +2299,7 @@ export default function ConfigurationHubPage() {
                           </span>
                         </div>
                       )}
-                      <span className="text-[10px] text-gray-500 mt-2 font-mono">Live Responsive Render</span>
+                      <span className="text-2xs text-gray-500 mt-2 font-mono">Live Responsive Render</span>
                     </div>
 
                     <div className="md:col-span-2 space-y-2">
@@ -2272,7 +2343,7 @@ export default function ConfigurationHubPage() {
                           </Button>
                         )}
                       </div>
-                      <p className="text-[11px] text-gray-500">Supports direct upload or absolute remote CDN URL (PNG, JPEG, WebP max 2MB).</p>
+                      <p className="text-xs text-gray-500">Supports direct upload or absolute remote CDN URL (PNG, JPEG, WebP max 2MB).</p>
                     </div>
                   </div>
                 </div>
@@ -2281,7 +2352,7 @@ export default function ConfigurationHubPage() {
                 <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-gray-200">2. Login Screen Logo</Label>
-                    <p className="text-[11px] text-gray-400">Horizontal logo on authentication / login portal (Recommended: ≥320×80px transparent PNG/WebP)</p>
+                    <p className="text-xs text-gray-400">Horizontal logo on authentication / login portal (Recommended: ≥320×80px transparent PNG/WebP)</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
@@ -2343,7 +2414,7 @@ export default function ConfigurationHubPage() {
                 <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-gray-200">3. Sidebar Square Icon / App Mark</Label>
-                    <p className="text-[11px] text-gray-400">Square mark rendered in collapsed sidebar &amp; mobile headers (Recommended: 128×128px square PNG/WebP)</p>
+                    <p className="text-xs text-gray-400">Square mark rendered in collapsed sidebar &amp; mobile headers (Recommended: 128×128px square PNG/WebP)</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
@@ -2407,7 +2478,7 @@ export default function ConfigurationHubPage() {
                 <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-gray-200">4. Browser Tab Favicon (.ico / .png / .webp)</Label>
-                    <p className="text-[11px] text-gray-400">Updates the browser tab icon in real-time and appears in trader bookmarks (48×48px).</p>
+                    <p className="text-xs text-gray-400">Updates the browser tab icon in real-time and appears in trader bookmarks (48×48px).</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
@@ -2467,7 +2538,7 @@ export default function ConfigurationHubPage() {
                           </Button>
                         )}
                       </div>
-                      <p className="text-[11px] text-gray-500">Live synchronizes dynamically with browser &lt;link rel=&quot;icon&quot;&gt; tags.</p>
+                      <p className="text-xs text-gray-500">Live synchronizes dynamically with browser &lt;link rel=&quot;icon&quot;&gt; tags.</p>
                     </div>
                   </div>
                 </div>
@@ -2528,7 +2599,7 @@ export default function ConfigurationHubPage() {
                   onChange={(e) => setBrandingForm({ ...brandingForm, manual_payment_instructions: e.target.value })}
                   className="w-full rounded-xl bg-background border border-surface-muted text-xs text-white p-3 font-sans focus:outline-none focus:border-accent"
                 />
-                <p className="text-[11px] text-gray-500">
+                <p className="text-xs text-gray-500">
                   Traders will see this text formatted on the checkout modal upon selecting Manual / Bank Transfer.
                 </p>
               </div>
@@ -2575,7 +2646,7 @@ export default function ConfigurationHubPage() {
                     value={systemRulesForm.min_trading_days_default}
                     onChange={(e) => setSystemRulesForm({ ...systemRulesForm, min_trading_days_default: Number(e.target.value) })}
                   />
-                  <span className="text-[10px] text-gray-500">Days per evaluation phase</span>
+                  <span className="text-2xs text-gray-500">Days per evaluation phase</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -2586,7 +2657,7 @@ export default function ConfigurationHubPage() {
                     value={systemRulesForm.max_inactivity_days}
                     onChange={(e) => setSystemRulesForm({ ...systemRulesForm, max_inactivity_days: Number(e.target.value) })}
                   />
-                  <span className="text-[10px] text-gray-500">Auto-breach if inactive (Days)</span>
+                  <span className="text-2xs text-gray-500">Auto-breach if inactive (Days)</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -2597,7 +2668,7 @@ export default function ConfigurationHubPage() {
                     value={systemRulesForm.news_window_minutes}
                     onChange={(e) => setSystemRulesForm({ ...systemRulesForm, news_window_minutes: Number(e.target.value) })}
                   />
-                  <span className="text-[10px] text-gray-500">Minutes before/after high impact news</span>
+                  <span className="text-2xs text-gray-500">Minutes before/after high impact news</span>
                 </div>
 
               </div>
@@ -2613,7 +2684,7 @@ export default function ConfigurationHubPage() {
                     value={systemRulesForm.min_payout_amount}
                     onChange={(e) => setSystemRulesForm({ ...systemRulesForm, min_payout_amount: Number(e.target.value) })}
                   />
-                  <span className="text-[10px] text-gray-500">Minimum withdrawal floor</span>
+                  <span className="text-2xs text-gray-500">Minimum withdrawal floor</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -2624,7 +2695,7 @@ export default function ConfigurationHubPage() {
                     value={systemRulesForm.large_payout_threshold}
                     onChange={(e) => setSystemRulesForm({ ...systemRulesForm, large_payout_threshold: Number(e.target.value) })}
                   />
-                  <span className="text-[10px] text-gray-500">Requires dual admin sign-off</span>
+                  <span className="text-2xs text-gray-500">Requires dual admin sign-off</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -2635,7 +2706,7 @@ export default function ConfigurationHubPage() {
                     value={systemRulesForm.payout_frequency_days}
                     onChange={(e) => setSystemRulesForm({ ...systemRulesForm, payout_frequency_days: Number(e.target.value) })}
                   />
-                  <span className="text-[10px] text-gray-500">Interval between payout requests</span>
+                  <span className="text-2xs text-gray-500">Interval between payout requests</span>
                 </div>
 
               </div>
@@ -2647,7 +2718,7 @@ export default function ConfigurationHubPage() {
                 <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                   <div>
                     <p className="text-xs font-semibold text-gray-200">Mandatory KYC Before First Payout</p>
-                    <p className="text-[11px] text-gray-500">Require photo ID and address verification before withdrawal approvals</p>
+                    <p className="text-xs text-gray-500">Require photo ID and address verification before withdrawal approvals</p>
                   </div>
                   <Switch
                     checked={!!systemRulesForm.mandatory_kyc}
@@ -2658,7 +2729,7 @@ export default function ConfigurationHubPage() {
                 <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                   <div>
                     <p className="text-xs font-semibold text-gray-200">Weekend Position Holding Default</p>
-                    <p className="text-[11px] text-gray-500">Allow traders to maintain open swing positions through market close</p>
+                    <p className="text-xs text-gray-500">Allow traders to maintain open swing positions through market close</p>
                   </div>
                   <Switch
                     checked={!!systemRulesForm.weekend_holding_default}
@@ -2669,7 +2740,7 @@ export default function ConfigurationHubPage() {
                 <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                   <div>
                     <p className="text-xs font-semibold text-gray-200">Mandatory Stop Loss on Every Trade</p>
-                    <p className="text-[11px] text-gray-500">Require SL parameter on all opened market and pending orders</p>
+                    <p className="text-xs text-gray-500">Require SL parameter on all opened market and pending orders</p>
                   </div>
                   <Switch
                     checked={!!systemRulesForm.stop_loss_required_default}
@@ -2908,7 +2979,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-surface-muted/60">
-                  <span className="text-[11px] text-gray-500 font-mono">
+                  <span className="text-xs text-gray-500 font-mono">
                     Tagged with DEMO metadata for clean isolated removal
                   </span>
                   <Button
@@ -2940,7 +3011,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-red-500/20">
-                  <span className="text-[11px] text-red-400/80 font-mono">
+                  <span className="text-xs text-red-400/80 font-mono">
                     Requires typing &quot;PURGE&quot; double-confirmation
                   </span>
                   <Button
@@ -3048,7 +3119,7 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setMt5Form({ ...mt5Form, demo_group: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <span className="text-[10px] text-gray-500">Group assigned for Phase 1 & 2 accounts</span>
+                  <span className="text-2xs text-gray-500">Group assigned for Phase 1 & 2 accounts</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -3060,7 +3131,7 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setMt5Form({ ...mt5Form, funded_group: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <span className="text-[10px] text-gray-500">Group assigned when passing into Funded status</span>
+                  <span className="text-2xs text-gray-500">Group assigned when passing into Funded status</span>
                 </div>
               </div>
 
@@ -3162,11 +3233,11 @@ export default function ConfigurationHubPage() {
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       Google Gemini (Ultra-Fast Free Tier) &amp; DeepSeek AI Engine
                       {aiForm.gemini_api_key ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/40">
+                        <span className="text-2xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/40">
                           Active
                         </span>
                       ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/40">
+                        <span className="text-2xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/40">
                           Key Required
                         </span>
                       )}
@@ -3221,7 +3292,7 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setWebhookForm({ ...webhookForm, discord_webhook_url: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <p className="text-[11px] text-gray-500 font-mono">
+                  <p className="text-xs text-gray-500 font-mono">
                     Channel Settings → Integrations → Webhooks → Copy Webhook URL
                   </p>
                 </div>
@@ -3275,7 +3346,7 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setWebhookForm({ ...webhookForm, telegram_bot_token: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <p className="text-[11px] text-gray-500 font-mono">
+                  <p className="text-xs text-gray-500 font-mono">
                     Obtain from @BotFather on Telegram
                   </p>
                 </div>
@@ -3289,7 +3360,7 @@ export default function ConfigurationHubPage() {
                     onChange={(e) => setWebhookForm({ ...webhookForm, telegram_chat_id: e.target.value })}
                     className="font-mono text-xs"
                   />
-                  <p className="text-[11px] text-gray-500 font-mono">
+                  <p className="text-xs text-gray-500 font-mono">
                     User/Group numeric ID (e.g. from @userinfobot)
                   </p>
                 </div>
@@ -3503,7 +3574,7 @@ export default function ConfigurationHubPage() {
                           <Badge tone="success" size="sm">Recommended</Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                      <p className="text-xs text-gray-400 leading-relaxed">
                         Enqueues qualified traders into the Scaling Queue below for 1-click administrative review and capital provisioning.
                       </p>
                     </button>
@@ -3525,7 +3596,7 @@ export default function ConfigurationHubPage() {
                           <Badge tone="accent" size="sm">Autonomous</Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                      <p className="text-xs text-gray-400 leading-relaxed">
                         Instantly increases capital balance and unlocks split upgrades the moment a qualifying payout is approved.
                       </p>
                     </button>
@@ -3551,7 +3622,7 @@ export default function ConfigurationHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">%</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Benchmark: 10% gain</span>
+                    <span className="text-2xs text-gray-500">Benchmark: 10% gain</span>
                   </div>
 
                   <div className="space-y-1.5">
@@ -3570,7 +3641,7 @@ export default function ConfigurationHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">days</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Benchmark: 90 days / 3 mo</span>
+                    <span className="text-2xs text-gray-500">Benchmark: 90 days / 3 mo</span>
                   </div>
 
                   <div className="space-y-1.5">
@@ -3589,7 +3660,7 @@ export default function ConfigurationHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">payouts</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Benchmark: 2+ processed payouts</span>
+                    <span className="text-2xs text-gray-500">Benchmark: 2+ processed payouts</span>
                   </div>
 
                 </div>
@@ -3612,7 +3683,7 @@ export default function ConfigurationHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">%</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Standard: +25% capital</span>
+                    <span className="text-2xs text-gray-500">Standard: +25% capital</span>
                   </div>
 
                   <div className="space-y-1.5">
@@ -3631,7 +3702,7 @@ export default function ConfigurationHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">%</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Standard: 90% payout share</span>
+                    <span className="text-2xs text-gray-500">Standard: 90% payout share</span>
                   </div>
 
                   <div className="space-y-1.5">
@@ -3651,7 +3722,7 @@ export default function ConfigurationHubPage() {
                       />
                       <span className="absolute right-3 top-2.5 text-xs text-gray-500 font-mono">$</span>
                     </div>
-                    <span className="text-[10px] text-gray-500">Maximum allocation cap</span>
+                    <span className="text-2xs text-gray-500">Maximum allocation cap</span>
                   </div>
 
                 </div>
@@ -3673,7 +3744,7 @@ export default function ConfigurationHubPage() {
 
               <CardContent className="p-6 space-y-4">
                 <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Scaling Multiplier</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Scaling Multiplier</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-emerald-400 font-mono">+{scalingRulesForm.balance_multiplier_pct}% Capital</span>
                     <Badge tone="success" size="sm">Milestone</Badge>
@@ -3681,7 +3752,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Profit Split Bump</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Profit Split Bump</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-white font-mono">80% ➔ {scalingRulesForm.new_profit_split}%</span>
                     <Badge tone="accent" size="sm">VIP Tier</Badge>
@@ -3689,7 +3760,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-1">
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Capital Ceiling Limit</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Capital Ceiling Limit</span>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-white font-mono">
                       ${(scalingRulesForm.max_capital_cap / 1000000).toFixed(1)}M USD
@@ -3699,7 +3770,7 @@ export default function ConfigurationHubPage() {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-                  <span className="text-[11px] text-emerald-400 uppercase tracking-wider font-semibold">Queue Status</span>
+                  <span className="text-xs text-emerald-400 uppercase tracking-wider font-semibold">Queue Status</span>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white">
                       {(scalingData?.queue || []).filter(q => q.is_eligible).length} Eligible Trader(s)
@@ -3711,7 +3782,7 @@ export default function ConfigurationHubPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="border-t border-surface-muted/60 p-4 text-[11px] text-gray-500">
+              <CardFooter className="border-t border-surface-muted/60 p-4 text-xs text-gray-500">
                 <span>Calculated dynamically from settled payouts & starting balance PnL.</span>
               </CardFooter>
             </Card>
@@ -3748,7 +3819,7 @@ export default function ConfigurationHubPage() {
                       <button
                         key={filter}
                         onClick={() => setScalingFilter(filter)}
-                        className={`px-2.5 py-1 rounded text-[11px] font-bold capitalize transition-all ${
+                        className={`px-2.5 py-1 rounded text-xs font-bold capitalize transition-all ${
                           scalingFilter === filter
                             ? 'bg-emerald-500 text-slate-950 shadow-sm'
                             : 'text-gray-400 hover:text-white'
@@ -3765,7 +3836,7 @@ export default function ConfigurationHubPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-background/80 border-b border-surface-muted text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-background/80 border-b border-surface-muted text-gray-400 font-semibold uppercase tracking-wider text-2xs">
                     <tr>
                       <th className="px-5 py-3">Trader & Account</th>
                       <th className="px-4 py-3">Current Capital</th>
@@ -3810,7 +3881,7 @@ export default function ConfigurationHubPage() {
                                 </span>
                                 <div>
                                   <div className="font-semibold">{trader.trader_name}</div>
-                                  <div className="text-[10px] text-gray-400 font-mono">Account #{trader.id} • {trader.trader_email}</div>
+                                  <div className="text-2xs text-gray-400 font-mono">Account #{trader.id} • {trader.trader_email}</div>
                                 </div>
                               </div>
                             </td>
@@ -3819,14 +3890,14 @@ export default function ConfigurationHubPage() {
                             </td>
                             <td className="px-4 py-3 font-mono font-bold text-emerald-400 whitespace-nowrap">
                               ${trader.scaled_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                              <span className="text-[10px] text-emerald-500 ml-1">(+{scalingRulesForm.balance_multiplier_pct}%)</span>
+                              <span className="text-2xs text-emerald-500 ml-1">(+{scalingRulesForm.balance_multiplier_pct}%)</span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 <Badge tone={trader.current_profit_pct >= scalingRulesForm.profit_target_pct ? 'success' : 'neutral'} size="sm" className="font-mono">
                                   +{trader.current_profit_pct}% ROI
                                 </Badge>
-                                <span className="text-[11px] text-gray-400 font-mono">
+                                <span className="text-xs text-gray-400 font-mono">
                                   {trader.payouts_count} / {scalingRulesForm.min_payouts} payouts
                                 </span>
                               </div>
@@ -3837,7 +3908,7 @@ export default function ConfigurationHubPage() {
                               <span className="text-emerald-400 font-bold">{trader.new_split}%</span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-slate-800 border border-slate-700 text-gray-300">
+                              <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-slate-800 border border-slate-700 text-gray-300">
                                 Tier {trader.scaling_level}
                               </span>
                             </td>
@@ -4024,11 +4095,11 @@ export default function ConfigurationHubPage() {
                       <CardTitle className="text-base text-gray-100 flex items-center gap-2">
                         Google Gemini AI Engine
                         {aiForm.gemini_api_key ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             CONNECTED
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
                             KEY REQUIRED
                           </span>
                         )}
@@ -4049,7 +4120,7 @@ export default function ConfigurationHubPage() {
                       href="https://aistudio.google.com/app/apikey"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 underline"
+                      className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 underline"
                     >
                       Get Free API Key from Google AI Studio &rarr;
                     </a>
@@ -4071,7 +4142,7 @@ export default function ConfigurationHubPage() {
                       <Eye className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-xs text-gray-500">
                     Your key is stored securely in your WordPress database and only used for your prop firm.
                   </p>
                 </div>
@@ -4132,21 +4203,21 @@ export default function ConfigurationHubPage() {
                         <span>{geminiTestResult.success ? 'Gemini API Connected Successfully' : 'Connection Failed'}</span>
                       </div>
                       {geminiTestResult.latency_ms !== undefined && (
-                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">
+                        <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">
                           {geminiTestResult.latency_ms}ms
                         </span>
                       )}
                     </div>
                     {geminiTestResult.model && (
-                      <p className="text-[11px] opacity-90 font-mono">Verified Model: {geminiTestResult.model}</p>
+                      <p className="text-xs opacity-90 font-mono">Verified Model: {geminiTestResult.model}</p>
                     )}
                     {geminiTestResult.reply && (
-                      <p className="text-[11px] italic bg-emerald-100/60 dark:bg-black/30 p-2 rounded border border-emerald-200 dark:border-emerald-500/20 text-emerald-900 dark:text-emerald-100">
+                      <p className="text-xs italic bg-emerald-100/60 dark:bg-black/30 p-2 rounded border border-emerald-200 dark:border-emerald-500/20 text-emerald-900 dark:text-emerald-100">
                         &ldquo;{geminiTestResult.reply}&rdquo;
                       </p>
                     )}
                     {geminiTestResult.error && (
-                      <p className="text-[11px] text-rose-700 dark:text-rose-300 font-mono font-semibold break-all">
+                      <p className="text-xs text-rose-700 dark:text-rose-300 font-mono font-semibold break-all">
                         Error: {geminiTestResult.error}
                       </p>
                     )}
@@ -4171,11 +4242,11 @@ export default function ConfigurationHubPage() {
                     </div>
                   </div>
                   {aiForm.deepseek_api_key ? (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <span className="px-2 py-0.5 rounded text-2xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                       CLOUD KEY SET
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono text-gray-500 bg-gray-800/40 border border-gray-700">
+                    <span className="px-2 py-0.5 rounded text-2xs font-mono text-gray-500 bg-gray-800/40 border border-gray-700">
                       OLLAMA READY
                     </span>
                   )}
@@ -4191,7 +4262,7 @@ export default function ConfigurationHubPage() {
                       href="https://platform.deepseek.com/api_keys"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
+                      className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
                     >
                       Get API Key from DeepSeek Platform &rarr;
                     </a>
@@ -4213,7 +4284,7 @@ export default function ConfigurationHubPage() {
                       <Eye className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-xs text-gray-500">
                     If provided, platform routes directly to DeepSeek Cloud without requiring a VPS.
                   </p>
                 </div>
@@ -4229,7 +4300,7 @@ export default function ConfigurationHubPage() {
                       onChange={(e) => setAiForm({ ...aiForm, ollama_endpoint: e.target.value })}
                       className="font-mono text-xs"
                     />
-                    <p className="text-[11px] text-gray-500 font-mono">
+                    <p className="text-xs text-gray-500 font-mono">
                       Run `ollama run deepseek-r1:latest` on your VPS or PC
                     </p>
                   </div>
@@ -4277,7 +4348,7 @@ export default function ConfigurationHubPage() {
                     }`}
                   >
                     <span className="text-xs font-bold">{m.title}</span>
-                    <span className="text-[11px] text-gray-400">{m.desc}</span>
+                    <span className="text-xs text-gray-400">{m.desc}</span>
                   </button>
                 ))}
               </div>
@@ -4285,7 +4356,7 @@ export default function ConfigurationHubPage() {
               <div className="pt-4 border-t border-surface-muted flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-gray-200">24/7 AI Support Desk Autopilot</div>
-                  <div className="text-[11px] text-gray-400">Automatically answers incoming trader support tickets in real-time.</div>
+                  <div className="text-xs text-gray-400">Automatically answers incoming trader support tickets in real-time.</div>
                 </div>
                 <Switch
                   checked={Boolean(aiForm.ai_support_autopilot)}
@@ -4296,7 +4367,7 @@ export default function ConfigurationHubPage() {
               <div className="pt-4 border-t border-surface-muted flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-gray-200">AI Sentinel Toxic Scalper &amp; Syndicate Autoban</div>
-                  <div className="text-[11px] text-gray-400">Automatically freezes accounts identified in severe microsecond copy-trading clusters.</div>
+                  <div className="text-xs text-gray-400">Automatically freezes accounts identified in severe microsecond copy-trading clusters.</div>
                 </div>
                 <Switch
                   checked={Boolean(aiForm.ai_sentinel_autoban)}
@@ -4324,7 +4395,7 @@ export default function ConfigurationHubPage() {
             <div className="w-full lg:w-64 shrink-0 flex flex-col justify-between space-y-4 border-b lg:border-b-0 lg:border-r border-surface-muted/80 pb-4 lg:pb-0 lg:pr-5">
               
               <div className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block px-1">
+                <span className="text-2xs font-bold uppercase tracking-wider text-gray-500 block px-1">
                   Configuration Steps
                 </span>
 
@@ -4352,7 +4423,7 @@ export default function ConfigurationHubPage() {
                       </span>
                       {planForm.name && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 ml-1" />}
                     </div>
-                    <span className="text-[11px] text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-gray-500 block truncate mt-0.5">
                       Capital, Price & Model
                     </span>
                   </div>
@@ -4382,7 +4453,7 @@ export default function ConfigurationHubPage() {
                       </span>
                       {planForm.drawdown_type && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 ml-1" />}
                     </div>
-                    <span className="text-[11px] text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-gray-500 block truncate mt-0.5">
                       Targets, DD Floor & Split
                     </span>
                   </div>
@@ -4411,7 +4482,7 @@ export default function ConfigurationHubPage() {
                         3. Execution Rules
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-gray-500 block truncate mt-0.5">
                       EA, News & Shields
                     </span>
                   </div>
@@ -4440,7 +4511,7 @@ export default function ConfigurationHubPage() {
                         4. Scaling & Perks
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-gray-500 block truncate mt-0.5">
                       Growth & Refund Fee
                     </span>
                   </div>
@@ -4450,8 +4521,8 @@ export default function ConfigurationHubPage() {
               {/* Live Summary Card */}
               <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase text-gray-400 tracking-wider">Plan Summary</span>
-                  <Badge tone={planForm.is_active ? 'accent' : 'neutral'} size="sm" className="text-[9px] px-1.5 py-0">
+                  <span className="text-2xs font-mono uppercase text-gray-400 tracking-wider">Plan Summary</span>
+                  <Badge tone={planForm.is_active ? 'accent' : 'neutral'} size="sm" className="text-2xs px-1.5 py-0">
                     {planForm.is_active ? 'Active' : 'Draft'}
                   </Badge>
                 </div>
@@ -4514,7 +4585,7 @@ export default function ConfigurationHubPage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="plan-slug" className="text-xs font-semibold text-gray-300">URL Slug</Label>
-                        <span className="text-[10px] text-gray-500 font-mono">Auto-generated</span>
+                        <span className="text-2xs text-gray-500 font-mono">Auto-generated</span>
                       </div>
                       <Input
                         id="plan-slug"
@@ -4575,7 +4646,7 @@ export default function ConfigurationHubPage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="plan-sort-order" className="text-xs font-semibold text-gray-300">Display Sort Order</Label>
-                        <span className="text-[10px] text-gray-500 font-mono">0 = First</span>
+                        <span className="text-2xs text-gray-500 font-mono">0 = First</span>
                       </div>
                       <Input
                         id="plan-sort-order"
@@ -4589,7 +4660,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Active / Live Product</p>
-                        <p className="text-[10px] text-gray-500">Visible in client checkout catalog</p>
+                        <p className="text-2xs text-gray-500">Visible in client checkout catalog</p>
                       </div>
                       <Switch
                         checked={!!planForm.is_active}
@@ -4599,7 +4670,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Refundable Fee</p>
-                        <p className="text-[10px] text-gray-500">100% refund on 1st payout</p>
+                        <p className="text-2xs text-gray-500">100% refund on 1st payout</p>
                       </div>
                       <Switch
                         checked={!!planForm.refundable_fee}
@@ -4665,7 +4736,7 @@ export default function ConfigurationHubPage() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-target" className="text-[11px] text-gray-300">Target (%)</Label>
+                        <Label htmlFor="p1-target" className="text-xs text-gray-300">Target (%)</Label>
                         <Input
                           id="p1-target"
                           type="number"
@@ -4675,7 +4746,7 @@ export default function ConfigurationHubPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-daily-dd" className="text-[11px] text-gray-300">Daily DD (%)</Label>
+                        <Label htmlFor="p1-daily-dd" className="text-xs text-gray-300">Daily DD (%)</Label>
                         <Input
                           id="p1-daily-dd"
                           type="number"
@@ -4685,7 +4756,7 @@ export default function ConfigurationHubPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-max-dd" className="text-[11px] text-gray-300">Max DD (%)</Label>
+                        <Label htmlFor="p1-max-dd" className="text-xs text-gray-300">Max DD (%)</Label>
                         <Input
                           id="p1-max-dd"
                           type="number"
@@ -4695,7 +4766,7 @@ export default function ConfigurationHubPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-min-days" className="text-[11px] text-gray-300">Min Days</Label>
+                        <Label htmlFor="p1-min-days" className="text-xs text-gray-300">Min Days</Label>
                         <Input
                           id="p1-min-days"
                           type="number"
@@ -4705,7 +4776,7 @@ export default function ConfigurationHubPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-max-days" className="text-[11px] text-gray-300">Max Days (0=∞)</Label>
+                        <Label htmlFor="p1-max-days" className="text-xs text-gray-300">Max Days (0=∞)</Label>
                         <Input
                           id="p1-max-days"
                           type="number"
@@ -4729,7 +4800,7 @@ export default function ConfigurationHubPage() {
 
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-target" className="text-[11px] text-gray-300">Target (%)</Label>
+                          <Label htmlFor="p2-target" className="text-xs text-gray-300">Target (%)</Label>
                           <Input
                             id="p2-target"
                             type="number"
@@ -4739,7 +4810,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-daily-dd" className="text-[11px] text-gray-300">Daily DD (%)</Label>
+                          <Label htmlFor="p2-daily-dd" className="text-xs text-gray-300">Daily DD (%)</Label>
                           <Input
                             id="p2-daily-dd"
                             type="number"
@@ -4749,7 +4820,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-max-dd" className="text-[11px] text-gray-300">Max DD (%)</Label>
+                          <Label htmlFor="p2-max-dd" className="text-xs text-gray-300">Max DD (%)</Label>
                           <Input
                             id="p2-max-dd"
                             type="number"
@@ -4759,7 +4830,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-min-days" className="text-[11px] text-gray-300">Min Days</Label>
+                          <Label htmlFor="p2-min-days" className="text-xs text-gray-300">Min Days</Label>
                           <Input
                             id="p2-min-days"
                             type="number"
@@ -4769,7 +4840,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-max-days" className="text-[11px] text-gray-300">Max Days (0=∞)</Label>
+                          <Label htmlFor="p2-max-days" className="text-xs text-gray-300">Max Days (0=∞)</Label>
                           <Input
                             id="p2-max-days"
                             type="number"
@@ -4794,7 +4865,7 @@ export default function ConfigurationHubPage() {
 
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-target" className="text-[11px] text-gray-300">Target (%)</Label>
+                          <Label htmlFor="p3-target" className="text-xs text-gray-300">Target (%)</Label>
                           <Input
                             id="p3-target"
                             type="number"
@@ -4804,7 +4875,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-daily-dd" className="text-[11px] text-gray-300">Daily DD (%)</Label>
+                          <Label htmlFor="p3-daily-dd" className="text-xs text-gray-300">Daily DD (%)</Label>
                           <Input
                             id="p3-daily-dd"
                             type="number"
@@ -4814,7 +4885,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-max-dd" className="text-[11px] text-gray-300">Max DD (%)</Label>
+                          <Label htmlFor="p3-max-dd" className="text-xs text-gray-300">Max DD (%)</Label>
                           <Input
                             id="p3-max-dd"
                             type="number"
@@ -4824,7 +4895,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-min-days" className="text-[11px] text-gray-300">Min Days</Label>
+                          <Label htmlFor="p3-min-days" className="text-xs text-gray-300">Min Days</Label>
                           <Input
                             id="p3-min-days"
                             type="number"
@@ -4834,7 +4905,7 @@ export default function ConfigurationHubPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-max-days" className="text-[11px] text-gray-300">Max Days (0=∞)</Label>
+                          <Label htmlFor="p3-max-days" className="text-xs text-gray-300">Max Days (0=∞)</Label>
                           <Input
                             id="p3-max-days"
                             type="number"
@@ -4858,7 +4929,7 @@ export default function ConfigurationHubPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="margin-call" className="text-[11px] text-gray-300">Margin Call Level (%)</Label>
+                        <Label htmlFor="margin-call" className="text-xs text-gray-300">Margin Call Level (%)</Label>
                         <Input
                           id="margin-call"
                           type="number"
@@ -4869,7 +4940,7 @@ export default function ConfigurationHubPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="max-lot" className="text-[11px] text-gray-300">Max Lot Size Limit (Lots)</Label>
+                        <Label htmlFor="max-lot" className="text-xs text-gray-300">Max Lot Size Limit (Lots)</Label>
                         <Input
                           id="max-lot"
                           type="number"
@@ -4880,7 +4951,7 @@ export default function ConfigurationHubPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="funded-max-dd" className="text-[11px] text-gray-300">Funded Max Total DD (%)</Label>
+                        <Label htmlFor="funded-max-dd" className="text-xs text-gray-300">Funded Max Total DD (%)</Label>
                         <Input
                           id="funded-max-dd"
                           type="number"
@@ -4891,7 +4962,7 @@ export default function ConfigurationHubPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="eval-split" className="text-[11px] text-gray-300">Eval Profit Share (%)</Label>
+                        <Label htmlFor="eval-split" className="text-xs text-gray-300">Eval Profit Share (%)</Label>
                         <Input
                           id="eval-split"
                           type="number"
@@ -4902,7 +4973,7 @@ export default function ConfigurationHubPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="reset-discount" className="text-[11px] text-gray-300">Breach Reset Discount (%)</Label>
+                        <Label htmlFor="reset-discount" className="text-xs text-gray-300">Breach Reset Discount (%)</Label>
                         <Input
                           id="reset-discount"
                           type="number"
@@ -4933,7 +5004,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">EA & Bot Trading</p>
-                        <p className="text-[10px] text-gray-500">Allow automated Expert Advisors</p>
+                        <p className="text-2xs text-gray-500">Allow automated Expert Advisors</p>
                       </div>
                       <Switch
                         checked={!!planForm.ea_allowed}
@@ -4944,7 +5015,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Copy Trading</p>
-                        <p className="text-[10px] text-gray-500">Allow account-to-account trade copiers</p>
+                        <p className="text-2xs text-gray-500">Allow account-to-account trade copiers</p>
                       </div>
                       <Switch
                         checked={!!planForm.copy_trading_allowed}
@@ -4955,7 +5026,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Hedging Allowed</p>
-                        <p className="text-[10px] text-gray-500">Allow simultaneous buy/sell on same pair</p>
+                        <p className="text-2xs text-gray-500">Allow simultaneous buy/sell on same pair</p>
                       </div>
                       <Switch
                         checked={!!planForm.hedging_allowed}
@@ -4966,7 +5037,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Martingale / Grid</p>
-                        <p className="text-[10px] text-gray-500">Allow doubling lot sizes on losing streaks</p>
+                        <p className="text-2xs text-gray-500">Allow doubling lot sizes on losing streaks</p>
                       </div>
                       <Switch
                         checked={!!planForm.martingale_allowed}
@@ -4977,7 +5048,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Weekend Holding</p>
-                        <p className="text-[10px] text-gray-500">Allow open swing trades over weekend</p>
+                        <p className="text-2xs text-gray-500">Allow open swing trades over weekend</p>
                       </div>
                       <Switch
                         checked={!!planForm.weekend_holding}
@@ -4988,7 +5059,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">News Event Trading</p>
-                        <p className="text-[10px] text-gray-500">Allow orders during high impact news</p>
+                        <p className="text-2xs text-gray-500">Allow orders during high impact news</p>
                       </div>
                       <Switch
                         checked={!!planForm.news_trading}
@@ -4999,7 +5070,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Stop Loss Required</p>
-                        <p className="text-[10px] text-gray-500">Enforce mandatory SL on position open</p>
+                        <p className="text-2xs text-gray-500">Enforce mandatory SL on position open</p>
                       </div>
                       <Switch
                         checked={!!planForm.stop_loss_required}
@@ -5010,7 +5081,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Consistency Rule</p>
-                        <p className="text-[10px] text-gray-500">Cap max profit from any single trading day</p>
+                        <p className="text-2xs text-gray-500">Cap max profit from any single trading day</p>
                       </div>
                       <Switch
                         checked={!!planForm.consistency_rule}
@@ -5021,7 +5092,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Strict IP Matching</p>
-                        <p className="text-[10px] text-gray-500">Enforce verified IP addresses on trades</p>
+                        <p className="text-2xs text-gray-500">Enforce verified IP addresses on trades</p>
                       </div>
                       <Switch
                         checked={!!planForm.ip_matching_required}
@@ -5042,7 +5113,7 @@ export default function ConfigurationHubPage() {
                           className="h-10 px-3 rounded-xl bg-background border-amber-500/30 text-amber-200 text-xs focus:outline-none focus:border-amber-400 font-sans transition-all"
                         />
                       </div>
-                      <div className="flex items-start gap-2.5 pt-1 text-[11px] text-amber-200/90 leading-relaxed border-t border-amber-500/20">
+                      <div className="flex items-start gap-2.5 pt-1 text-xs text-amber-200/90 leading-relaxed border-t border-amber-500/20">
                         <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                         <p>
                           <strong>Capital Protection Rule:</strong> Prevents one-off 'gambling' trades. No single trading day can exceed {planForm.consistency_pct || 50}% of the total required profit target. Traders must demonstrate consistent edge over multiple sessions.
@@ -5061,7 +5132,7 @@ export default function ConfigurationHubPage() {
                         onChange={(e) => setPlanForm({ ...planForm, min_trade_seconds: Number(e.target.value) })}
                         className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
-                      <span className="text-[10px] text-gray-500">Minimum time a position must remain open</span>
+                      <span className="text-2xs text-gray-500">Minimum time a position must remain open</span>
                     </div>
 
                     <div className="space-y-1.5">
@@ -5080,7 +5151,7 @@ export default function ConfigurationHubPage() {
                   </div>
 
                   {(planForm.min_trade_seconds || 0) > 0 && (
-                    <div className="p-3.5 bg-blue-500/10 rounded-xl border border-blue-500/30 flex items-start gap-2.5 text-[11px] text-blue-200 leading-relaxed">
+                    <div className="p-3.5 bg-blue-500/10 rounded-xl border border-blue-500/30 flex items-start gap-2.5 text-xs text-blue-200 leading-relaxed">
                       <Zap className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                       <p>
                         <strong>Bridge & Liquidity Shield:</strong> Trades closed in under {planForm.min_trade_seconds} seconds will be {planForm.min_hold_action === 'void_pnl' ? 'voided (0 PnL credited)' : planForm.min_hold_action === 'reject' ? 'breached automatically' : 'flagged for compliance review'}. This protects your liquidity provider connections against toxic high-frequency latency arbitrage.
@@ -5131,7 +5202,7 @@ export default function ConfigurationHubPage() {
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Account Scaling Program</p>
-                        <p className="text-[10px] text-gray-500">Auto-bump capital on milestone</p>
+                        <p className="text-2xs text-gray-500">Auto-bump capital on milestone</p>
                       </div>
                       <Switch
                         checked={!!planForm.scaling_enabled}
@@ -5184,13 +5255,13 @@ export default function ConfigurationHubPage() {
                         onChange={(e) => setPlanForm({ ...planForm, reset_discount_pct: Number(e.target.value) })}
                         className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
-                      <span className="text-[10px] text-gray-500">Discount coupon generated upon breach</span>
+                      <span className="text-2xs text-gray-500">Discount coupon generated upon breach</span>
                     </div>
 
                     <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
                       <div>
                         <p className="text-xs font-semibold text-gray-200">Refundable Evaluation Fee</p>
-                        <p className="text-[10px] text-gray-500">100% fee refunded on 1st payout</p>
+                        <p className="text-2xs text-gray-500">100% fee refunded on 1st payout</p>
                       </div>
                       <Switch
                         checked={!!planForm.refundable_fee}
@@ -5325,7 +5396,7 @@ export default function ConfigurationHubPage() {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-[11px] text-gray-500 font-mono">Target: {testEmailTo}</span>
+            <span className="text-xs text-gray-500 font-mono">Target: {testEmailTo}</span>
             <Button
               variant="outline"
               size="sm"

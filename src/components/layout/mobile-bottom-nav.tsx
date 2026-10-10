@@ -36,7 +36,17 @@ export function MobileBottomNav() {
     setOptimisticPath(null)
   }, [pathname])
 
-  if (!mounted || pathname?.startsWith('/admin') || pathname?.startsWith('/checkout') || pathname === '/dashboard/trading' || pathname?.startsWith('/dashboard/trading')) {
+  if (
+    !mounted ||
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/checkout') ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname?.startsWith('/login') ||
+    pathname?.startsWith('/register') ||
+    pathname === '/dashboard/trading' ||
+    pathname?.startsWith('/dashboard/trading')
+  ) {
     return null
   }
 
@@ -80,13 +90,13 @@ export function MobileBottomNav() {
               <div className="relative">
                 <Icon className={cn("h-5 w-5 transition-transform", isActive && "stroke-[2.5px]")} />
                 {tab.badge && (
-                  <span className="absolute -top-1.5 -right-2 px-1 py-0.2 text-[8px] font-black text-slate-950 bg-accent rounded-full animate-pulse">
+                  <span className="absolute -top-1.5 -right-2 px-1 py-0.2 text-3xs font-black text-slate-950 bg-accent rounded-full animate-pulse">
                     {tab.badge}
                   </span>
                 )}
               </div>
               <span className={cn(
-                "text-[10px] mt-1 font-medium tracking-tight",
+                "text-2xs mt-1 font-medium tracking-tight",
                 isActive ? "font-bold text-accent" : "text-text-muted"
               )}>
                 {tab.label}

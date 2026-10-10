@@ -70,7 +70,7 @@ export function AffiliateLeaderboard() {
                   </div>
                   <span className="font-medium text-text">{leader.name}</span>
                 </div>
-                <span className="font-bold text-emerald-400">
+                <span className="font-semibold terminal-num text-profit">
                   {fmtUSD(leader.earned)}
                 </span>
               </div>

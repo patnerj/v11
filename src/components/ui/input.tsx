@@ -12,10 +12,10 @@ export const Input = React.forwardRef<
     ref={ref}
     type={type}
     className={cn(
-      'flex h-10 w-full rounded-lg border border-surface-muted bg-background px-3.5 py-2 text-sm text-gray-100 shadow-sm transition-all duration-150',
-      'placeholder:text-gray-500',
-      'focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 hover:border-gray-700',
-      'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-surface-muted',
+      'flex h-10 w-full rounded-lg border border-border bg-surface px-3.5 py-2 text-sm text-foreground shadow-sm transition-all duration-150',
+      'placeholder:text-muted-foreground',
+      'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 hover:border-border-strong',
+      'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
       'file:border-0 file:bg-transparent file:text-sm file:font-medium',
       className,
     )}
@@ -31,10 +31,10 @@ export const Textarea = React.forwardRef<
   <textarea
     ref={ref}
     className={cn(
-      'flex min-h-[90px] w-full rounded-lg border border-surface-muted bg-background px-3.5 py-2.5 text-sm text-gray-100 shadow-sm transition-all duration-150',
-      'placeholder:text-gray-500',
-      'focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 hover:border-gray-700',
-      'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-surface-muted',
+      'flex min-h-[90px] w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm transition-all duration-150',
+      'placeholder:text-muted-foreground',
+      'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 hover:border-border-strong',
+      'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
       className,
     )}
     {...props}
@@ -48,7 +48,7 @@ export const Label = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <LabelPrimitive.Root
     ref={ref}
-    className={cn('text-xs font-semibold text-gray-300 leading-none peer-disabled:opacity-70 mb-1.5 block', className)}
+    className={cn('text-xs font-semibold text-foreground/80 leading-none peer-disabled:opacity-70 mb-1.5 block', className)}
     {...props}
   />
 ))

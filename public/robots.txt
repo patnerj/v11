@@ -1,2 +1,59 @@
+# MassFunded Robots Configuration & Crawler Directives
+# Website: https://massfunded.org
+
+# ── General Search Engine Crawlers ────────────────────────────────────────────
 User-agent: *
 Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-success
+
+# ── AI Search Engines & LLM Directives (GEO Optimization) ─────────────────────
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+User-agent: CCBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+
+# ── Authoritative Sitemaps & Host ─────────────────────────────────────────────
+Sitemap: https://massfunded.org/sitemap.xml
+Host: https://massfunded.org

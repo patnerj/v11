@@ -111,6 +111,27 @@ export function PayoutManagementModal({
     }
   }, [payout, destinationAddress, isCrypto])
 
+  const WALLET_PATTERNS: Record<string, { regex: RegExp; label: string }> = {
+    'TRC20': { regex: /^T[1-9A-HJ-NP-Za-km-z]{33}$/, label: 'TRC20 (starts with T, 34 chars)' },
+    'BEP20': { regex: /^0x[0-9a-fA-F]{40}$/, label: 'BEP20 (starts with 0x, 42 chars)' },
+    'ERC20': { regex: /^0x[0-9a-fA-F]{40}$/, label: 'ERC20 (starts with 0x, 42 chars)' },
+  }
+
+  const detectedNetwork = React.useMemo(() => {
+    if (/trc/i.test(method) || (destinationAddress && destinationAddress.startsWith('T'))) return 'TRC20'
+    if (/bep|bsc/i.test(method)) return 'BEP20'
+    if (/erc|eth/i.test(method)) return 'ERC20'
+    if (destinationAddress && destinationAddress.startsWith('0x')) return 'BEP20'
+    return null
+  }, [method, destinationAddress])
+
+  const isWalletFormatValid = React.useMemo(() => {
+    if (!destinationAddress || !detectedNetwork) return true
+    const pattern = WALLET_PATTERNS[detectedNetwork]
+    if (!pattern) return true
+    return pattern.regex.test(destinationAddress.trim())
+  }, [destinationAddress, detectedNetwork])
+
   if (!payout) return null
 
   const payoutId = typeof payout.id === 'string' && payout.id.startsWith('PO-') 
@@ -194,6 +215,15 @@ export function PayoutManagementModal({
       return
     }
 
+    if (action === 'paid' && destinationAddress && detectedNetwork && !isWalletFormatValid) {
+      if (typeof window !== 'undefined') {
+        const proceed = window.confirm(
+          `⚠️ Warning: The destination address does not match standard ${WALLET_PATTERNS[detectedNetwork]?.label} format.\nAre you sure you want to mark this payout as paid?`
+        )
+        if (!proceed) return
+      }
+    }
+
     if (action === 'rejected' && !adminNote.trim()) {
       toast.error('Admin audit note is required to reject a payout.')
       return
@@ -225,7 +255,8 @@ export function PayoutManagementModal({
         onSuccess?.()
         onClose()
       } else {
-        toast.error((res as any).error || (res as any).data?.message || 'Failed to update payout status.')
+        const errMsg = (res as any).data?.message || (res as any).error || 'Failed to update payout status.'
+        toast.error(errMsg)
       }
     } catch (err: any) {
       toast.error(err.message || 'Network error occurred while updating payout.')
@@ -243,59 +274,69 @@ export function PayoutManagementModal({
       className="max-w-2xl"
       footer={
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => handleAction('rejected')}
-            disabled={!adminNote.trim() || submittingAction !== null}
-            loading={submittingAction === 'rejected'}
-            className="w-full sm:w-auto"
-          >
-            <XCircle className="h-4 w-4 mr-1.5" />
-            Reject Payout
-          </Button>
-
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-            {currentStatus !== 'under_review' && currentStatus !== 'paid' && (
+          {currentStatus === 'rejected' ? (
+            <div className="text-2xs font-mono text-red-400 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 w-full sm:w-auto">
+              Terminal State: Payout has been rejected. Trader must submit a new request.
+            </div>
+          ) : currentStatus === 'paid' ? (
+            <div className="text-2xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 w-full sm:w-auto">
+              Terminal State: Payout has been paid & disbursed.
+            </div>
+          ) : (
+            <>
               <Button
                 type="button"
-                variant="secondary"
-                onClick={() => handleAction('under_review')}
-                disabled={submittingAction !== null}
-                loading={submittingAction === 'under_review'}
+                variant="destructive"
+                onClick={() => handleAction('rejected')}
+                disabled={!adminNote.trim() || submittingAction !== null}
+                loading={submittingAction === 'rejected'}
+                className="w-full sm:w-auto"
               >
-                Move to Under Review
+                <XCircle className="h-4 w-4 mr-1.5" />
+                Reject Payout
               </Button>
-            )}
 
-            {currentStatus !== 'approved' && currentStatus !== 'paid' && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleAction('approved')}
-                disabled={submittingAction !== null}
-                loading={submittingAction === 'approved'}
-                className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-              >
-                <Check className="h-4 w-4 mr-1.5" />
-                Approve (Pre-Clear)
-              </Button>
-            )}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                {currentStatus === 'pending' && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleAction('under_review')}
+                    disabled={submittingAction !== null}
+                    loading={submittingAction === 'under_review'}
+                  >
+                    Move to Under Review
+                  </Button>
+                )}
 
-            {currentStatus !== 'paid' && (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => handleAction('paid')}
-                disabled={!txHash.trim() || submittingAction !== null}
-                loading={submittingAction === 'paid'}
-                className="gap-1.5 shadow-emerald-500/20"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                Mark Paid & Disburse
-              </Button>
-            )}
-          </div>
+                {(currentStatus === 'pending' || currentStatus === 'under_review') && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleAction('approved')}
+                    disabled={submittingAction !== null}
+                    loading={submittingAction === 'approved'}
+                    className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    <Check className="h-4 w-4 mr-1.5" />
+                    Approve (Pre-Clear)
+                  </Button>
+                )}
+
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => handleAction('paid')}
+                  disabled={!txHash.trim() || submittingAction !== null}
+                  loading={submittingAction === 'paid'}
+                  className="gap-1.5 shadow-emerald-500/20"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Mark Paid & Disburse
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       }
     >
@@ -339,29 +380,29 @@ export function PayoutManagementModal({
           
           {/* Trader Amount */}
           <div className="bg-background border border-surface-muted rounded-xl p-3.5 space-y-1">
-            <span className="text-[11px] font-semibold text-gray-400 block">Trader Net Amount</span>
+            <span className="text-2xs font-semibold text-gray-400 block">Trader Net Amount</span>
             <div className="text-lg sm:text-xl tabular font-bold text-emerald-400">
               {formatMoney(traderShare)}
             </div>
-            <span className="text-[10px] text-gray-500">Disbursed to Trader</span>
+            <span className="text-2xs text-gray-500">Disbursed to Trader</span>
           </div>
 
           {/* Firm Amount */}
           <div className="bg-background border border-surface-muted rounded-xl p-3.5 space-y-1">
-            <span className="text-[11px] font-semibold text-gray-400 block">Firm Profit Share</span>
+            <span className="text-2xs font-semibold text-gray-400 block">Firm Profit Share</span>
             <div className="text-lg sm:text-xl tabular font-bold text-gray-100">
               {formatMoney(firmShare)}
             </div>
-            <span className="text-[10px] text-gray-500">Retained by Firm</span>
+            <span className="text-2xs text-gray-500">Retained by Firm</span>
           </div>
 
           {/* Split Percentage */}
           <div className="bg-background border border-surface-muted rounded-xl p-3.5 space-y-1">
-            <span className="text-[11px] font-semibold text-gray-400 block">Split Ratio</span>
+            <span className="text-2xs font-semibold text-gray-400 block">Split Ratio</span>
             <div className="text-lg sm:text-xl tabular font-bold text-blue-400">
               {splitPct} / {100 - splitPct}
             </div>
-            <span className="text-[10px] text-gray-500">Trader / Firm</span>
+            <span className="text-2xs text-gray-500">Trader / Firm</span>
           </div>
 
         </div>
@@ -392,10 +433,10 @@ export function PayoutManagementModal({
             {/* Consistency Status */}
             <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-[10px] text-gray-400 font-semibold block">Consistency Rule</span>
-                <span className="text-[11px] font-medium text-gray-200">Profit Distribution</span>
+                <span className="text-2xs text-gray-400 font-semibold block">Consistency Rule</span>
+                <span className="text-2xs font-medium text-gray-200">Profit Distribution</span>
               </div>
-              <Badge tone={isConsistencyOk ? 'success' : 'warning'} size="sm" className="tabular font-semibold text-[10px]">
+              <Badge tone={isConsistencyOk ? 'success' : 'warning'} size="sm" className="tabular font-semibold text-2xs">
                 {isConsistencyOk ? 'Verified' : 'Warning'}
               </Badge>
             </div>
@@ -403,10 +444,10 @@ export function PayoutManagementModal({
             {/* Min Trade Duration */}
             <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-[10px] text-gray-400 font-semibold block">Min Hold Time</span>
-                <span className="text-[11px] font-medium text-gray-200">Anti-Scalp Filter</span>
+                <span className="text-2xs text-gray-400 font-semibold block">Min Hold Time</span>
+                <span className="text-2xs font-medium text-gray-200">Anti-Scalp Filter</span>
               </div>
-              <Badge tone={isHoldTimeClean ? 'success' : 'danger'} size="sm" className="tabular font-semibold text-[10px]">
+              <Badge tone={isHoldTimeClean ? 'success' : 'danger'} size="sm" className="tabular font-semibold text-2xs">
                 {isHoldTimeClean ? 'Clean' : 'Toxic Flagged'}
               </Badge>
             </div>
@@ -414,10 +455,10 @@ export function PayoutManagementModal({
             {/* Drawdown Proximity */}
             <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-[10px] text-gray-400 font-semibold block">Drawdown Room</span>
-                <span className="text-[11px] font-medium text-gray-200">Safety Buffer</span>
+                <span className="text-2xs text-gray-400 font-semibold block">Drawdown Room</span>
+                <span className="text-2xs font-medium text-gray-200">Safety Buffer</span>
               </div>
-              <Badge tone={isDrawdownSafe ? 'success' : 'warning'} size="sm" className="tabular font-semibold text-[10px]">
+              <Badge tone={isDrawdownSafe ? 'success' : 'warning'} size="sm" className="tabular font-semibold text-2xs">
                 {isDrawdownSafe ? 'Safe' : 'Near Floor'}
               </Badge>
             </div>
@@ -425,10 +466,10 @@ export function PayoutManagementModal({
             {/* Open Breaches */}
             <div className="bg-surface border border-surface-muted p-2.5 rounded-lg flex items-center justify-between">
               <div className="space-y-0.5">
-                <span className="text-[10px] text-gray-400 font-semibold block">Rule Violations</span>
-                <span className="text-[11px] font-medium text-gray-200">Breach History</span>
+                <span className="text-2xs text-gray-400 font-semibold block">Rule Violations</span>
+                <span className="text-2xs font-medium text-gray-200">Breach History</span>
               </div>
-              <Badge tone={isBreachesClean ? 'success' : 'danger'} size="sm" className="tabular font-semibold text-[10px]">
+              <Badge tone={isBreachesClean ? 'success' : 'danger'} size="sm" className="tabular font-semibold text-2xs">
                 {isBreachesClean ? '0 Breaches' : `${breachesCount} Breached`}
               </Badge>
             </div>
@@ -458,7 +499,7 @@ export function PayoutManagementModal({
                     className="h-24 w-24 object-contain rounded-md"
                   />
                 </div>
-                <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="text-2xs text-emerald-400 font-semibold flex items-center gap-1">
                   <QrCode className="h-3 w-3" /> Scan to Pay
                 </span>
               </div>
@@ -468,7 +509,7 @@ export function PayoutManagementModal({
             <div className="flex-1 space-y-2.5 w-full">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-gray-400 font-semibold">{isCrypto ? 'Trader Payout Wallet Address' : 'Trader Payout Destination / Account'}</span>
+                  <span className="text-2xs text-gray-400 font-semibold">{isCrypto ? 'Trader Payout Wallet Address' : 'Trader Payout Destination / Account'}</span>
                   {destinationAddress && (
                     <button
                       type="button"
@@ -488,15 +529,27 @@ export function PayoutManagementModal({
                 <div className={`p-2.5 rounded-lg font-mono text-xs break-all select-all border ${destinationAddress ? 'bg-surface border-surface-muted text-gray-100' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
                   {destinationAddress || 'No destination address on file — confirm with the trader before marking this payout paid.'}
                 </div>
+                {destinationAddress && detectedNetwork && !isWalletFormatValid && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1.5 rounded-lg">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>⚠️ Invalid {detectedNetwork} address format. Expected: {WALLET_PATTERNS[detectedNetwork]?.label}</span>
+                  </div>
+                )}
+                {destinationAddress && detectedNetwork && isWalletFormatValid && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-2xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>✓ Valid {WALLET_PATTERNS[detectedNetwork]?.label} checksum format verified</span>
+                  </div>
+                )}
               </div>
 
               {/* Exact Disbursal Amount 1-Click Copy */}
               {traderShare > 0 && (
                 <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-surface border border-surface-muted text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-gray-400">Exact Disbursal:</span>
+                    <span className="text-2xs text-gray-400">Exact Disbursal:</span>
                     <strong className="text-emerald-400 font-bold tabular">{formatMoney(traderShare)}</strong>
-                    <span className="text-[10px] text-gray-500 font-mono">({traderShare.toFixed(2)})</span>
+                    <span className="text-2xs text-gray-500 font-mono">({traderShare.toFixed(2)})</span>
                   </div>
                   <button
                     type="button"
@@ -514,7 +567,7 @@ export function PayoutManagementModal({
                 </div>
               )}
 
-              <p className="text-[10px] text-gray-500 leading-tight">
+              <p className="text-2xs text-gray-500 leading-tight">
                 Scan QR or copy address & exact amount directly into your hardware wallet, Binance, or TronLink terminal to eliminate copy-paste errors.
               </p>
             </div>
@@ -530,7 +583,7 @@ export function PayoutManagementModal({
               <Label htmlFor="tx-hash" className="mb-0">
                 Transaction ID / Reference Hash <span className="text-emerald-400 font-normal">(Required to Mark Paid)</span>
               </Label>
-              <span className="text-[10px] text-gray-500">TX Hash / Bank Ref</span>
+              <span className="text-2xs text-gray-500">TX Hash / Bank Ref</span>
             </div>
             <Input
               id="tx-hash"
@@ -561,7 +614,7 @@ export function PayoutManagementModal({
               <Label htmlFor="admin-note" className="mb-0">
                 Administrative Note <span className="text-red-400 font-normal">(Required to Reject)</span>
               </Label>
-              <span className="text-[10px] text-gray-500">Logged to compliance trail</span>
+              <span className="text-2xs text-gray-500">Logged to compliance trail</span>
             </div>
             <Textarea
               id="admin-note"

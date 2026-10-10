@@ -83,7 +83,7 @@ export function MobileBottomSheet({
             {/* Header */}
             {title && (
               <div className="shrink-0 flex items-center justify-between px-4 pb-2 border-b border-border-subtle">
-                <div className="font-semibold text-sm">{title}</div>
+                <div className="font-semibold text-terminal-title">{title}</div>
                 <button
                   onClick={onClose}
                   className="p-1.5 -mr-1.5 rounded-md text-text-muted hover:text-text hover:bg-surface-muted focus-ring"

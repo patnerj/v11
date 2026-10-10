@@ -5,25 +5,30 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/cn'
 
 export const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular tracking-tight transition-colors',
+  'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-2xs font-semibold tabular tracking-tight transition-colors',
   {
     variants: {
       tone: {
-        success: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
-        warning: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-        warn:    'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-        danger:  'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
-        info:    'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
-        accent:  'bg-accent/15 text-accent border-accent/30',
-        neutral: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        default:     'bg-primary/10 text-primary border-primary/20',
+        secondary:   'bg-surface-muted text-muted-foreground border-border',
+        success:     'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+        warning:     'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+        warn:        'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+        danger:      'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+        destructive: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+        info:        'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+        accent:      'bg-accent/15 text-accent border-accent/30',
+        neutral:     'bg-surface-muted text-muted-foreground border-border',
+        outline:     'bg-transparent text-foreground border-border',
       },
       size: {
-        sm: 'text-[10px] px-2 py-0.5',
-        md: 'text-xs px-2.5 py-0.5',
-        lg: 'text-sm px-3 py-1',
+        xs: 'text-3xs px-1.5 py-0.5',
+        sm: 'text-2xs px-2 py-0.5',
+        md: 'text-2xs px-2.5 py-0.5',
+        lg: 'text-xs px-3 py-1',
       }
     },
-    defaultVariants: { tone: 'neutral', size: 'md' },
+    defaultVariants: { tone: 'default', size: 'md' },
   },
 )
 
@@ -35,24 +40,29 @@ export interface BadgeProps
 }
 
 const PULSE_TONES: Record<string, string> = {
-  success: 'bg-emerald-400',
-  warning: 'bg-amber-400',
-  warn:    'bg-amber-400',
-  danger:  'bg-red-400',
-  info:    'bg-blue-400',
-  accent:  'bg-accent',
-  neutral: 'bg-slate-400',
+  default:     'bg-primary',
+  secondary:   'bg-muted-foreground',
+  success:     'bg-emerald-400',
+  warning:     'bg-amber-400',
+  warn:        'bg-amber-400',
+  danger:      'bg-rose-400',
+  destructive: 'bg-rose-400',
+  info:        'bg-blue-400',
+  accent:      'bg-accent',
+  neutral:     'bg-muted-foreground',
+  outline:     'bg-foreground',
 }
 
 export function Badge({ className, tone, variant, size, pulsing, children, ...props }: BadgeProps) {
-  const selectedTone = tone || variant || 'neutral'
+  const selectedTone = (tone || variant || 'default') as keyof typeof PULSE_TONES
+  const pulseClass = PULSE_TONES[selectedTone] || PULSE_TONES.default
 
   return (
-    <span className={cn(badgeVariants({ tone: selectedTone, size }), className)} {...props}>
+    <span className={cn(badgeVariants({ tone: selectedTone as any, size }), className)} {...props}>
       {pulsing && (
         <span className="relative flex h-1.5 w-1.5 shrink-0 mr-0.5">
-          <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", PULSE_TONES[selectedTone] || 'bg-slate-400')}></span>
-          <span className={cn("relative inline-flex rounded-full h-1.5 w-1.5", PULSE_TONES[selectedTone] || 'bg-slate-400')}></span>
+          <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", pulseClass)}></span>
+          <span className={cn("relative inline-flex rounded-full h-1.5 w-1.5", pulseClass)}></span>
         </span>
       )}
       {children}

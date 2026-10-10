@@ -45,18 +45,18 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
     : puckProps.steps
 
   return (
-    <section className="relative py-20 lg:py-28 overflow-hidden" id="how-it-works">
+    <section className="relative py-14 sm:py-20 lg:py-28 overflow-hidden" id="how-it-works">
       {/* Subtle backdrop grid */}
       <div className="absolute inset-0 bg-grid-overlay opacity-20 pointer-events-none" />
 
       <div className="container max-w-7xl mx-auto px-4 relative">
-        <div className="max-w-2xl mx-auto text-center mb-16">
+        <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-16">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 mb-4"
+            className="inline-flex items-center gap-2 mb-3 sm:mb-4"
           >
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400">
               <Sparkles className="h-3.5 w-3.5" />
@@ -69,7 +69,7 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.05 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text"
+            className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text"
           >
             {titleText1}{' '}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
@@ -82,7 +82,7 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mt-4 text-base sm:text-lg text-text-muted leading-relaxed"
+            className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-text-muted leading-relaxed"
           >
             {description}
           </motion.p>
@@ -92,7 +92,7 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
           {/* Connecting gradient line on desktop */}
           <div className="hidden lg:block absolute top-[56px] left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/40 to-emerald-500/10 pointer-events-none" />
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {steps.map((step: any, i: number) => {
               const Icon = step.icon || Rocket
               return (
@@ -104,29 +104,29 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
                   transition={{ duration: 0.5, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   className="relative group"
                 >
-                  <div className="relative h-full p-7 rounded-2xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 hover:shadow-card-lg overflow-hidden flex flex-col justify-between">
+                  <div className="relative h-full p-5 sm:p-7 rounded-2xl bg-surface/50 border border-border-subtle/80 hover:border-emerald-500/40 backdrop-blur-md transition-all duration-300 hover:shadow-card-lg overflow-hidden flex flex-col justify-between">
                     
                     {/* Background Step Number Watermark */}
-                    <div className="absolute -top-3 -right-2 text-8xl font-black tracking-tighter select-none opacity-[0.04] text-emerald-400">
+                    <div className="absolute -top-3 -right-2 text-7xl sm:text-8xl font-black tracking-tighter select-none opacity-[0.04] text-emerald-400">
                       {step.n}
                     </div>
 
                     <div>
                       {/* Step Header with Icon Badge */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-glow-sm">
-                          <Icon className="h-6 w-6" />
+                      <div className="flex items-center justify-between mb-4 sm:mb-6">
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-glow-sm">
+                          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
-                        <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-surface border border-border text-emerald-400">
+                        <span className="text-2xs sm:text-xs font-mono font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-surface border border-border text-emerald-400">
                           STEP {step.n}
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-bold tracking-tight text-text mb-3">
+                      <h3 className="text-lg sm:text-xl font-bold tracking-tight text-text mb-2 sm:mb-3">
                         {step.title}
                       </h3>
 
-                      <p className="text-sm text-text-muted leading-relaxed mb-6">
+                      <p className="text-xs sm:text-sm text-text-muted leading-relaxed mb-4 sm:mb-6">
                         {step.body}
                       </p>
                     </div>
@@ -138,7 +138,7 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
                           step.badges.map((badgeText: string, idx: number) => (
                             <span 
                               key={idx}
-                              className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-surface/80 border border-border-subtle text-text-muted flex items-center gap-1.5"
+                              className="text-2xs font-medium px-2.5 py-1 rounded-md bg-surface/80 border border-border-subtle text-text-muted flex items-center gap-1.5"
                             >
                               <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
                               <span>{badgeText}</span>
@@ -148,7 +148,7 @@ export function HowItWorks({ puckProps }: { puckProps?: any }) {
                           step.items.map((it: any, idx: number) => (
                             <span 
                               key={idx}
-                              className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-surface/80 border border-border-subtle text-text-muted flex items-center gap-1.5"
+                              className="text-2xs font-medium px-2.5 py-1 rounded-md bg-surface/80 border border-border-subtle text-text-muted flex items-center gap-1.5"
                             >
                               <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
                               <span>{it.itemText || it}</span>

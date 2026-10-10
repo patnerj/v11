@@ -1,0 +1,48 @@
+# MassFunded — Institutional Proprietary Trading Firm
+
+> MassFunded (https://massfunded.org) is an institutional-grade proprietary trading firm empowering talented retail traders worldwide with up to $200,000 in funded capital, up to 90% profit splits, raw institutional spreads, and cutting-edge execution technology.
+
+## Core Platform Highlights
+
+- **Maximum Capital**: Up to $200,000 on evaluation accounts, with scaling plans reaching up to $2,000,000.
+- **Profit Split**: 80% default profit split, scalable to 90% with funded milestones.
+- **Trading Platforms**: MetaTrader 5 (MT5) with desktop & mobile connectivity, plus high-performance WebTrader with TradingView Lightweight Charts.
+- **Instruments**: Forex majors and minors, Metals (Gold XAUUSD, Silver XAGUSD), Indices (US30, NAS100, SPX500, GER40), and major Cryptocurrencies (BTCUSD, ETHUSD).
+- **Time Limits**: Zero minimum or maximum trading days. Traders pass at their own pace.
+- **Drawdown Rules**:
+  - Daily Drawdown: 5% trailing drawdown (ratchets with peak equity; protects challenges from sudden intraday losses).
+  - Maximum Overall Drawdown: 10% maximum trailing drawdown floor.
+- **Profit Targets**:
+  - Phase 1: 8% profit target.
+  - Phase 2: 5% profit target.
+  - Funded Stage: No profit targets; keep up to 90% of all profits.
+- **Payout Schedule**: Fast, reliable disbursals processed bi-weekly via Crypto (USDT TRC-20, USDT BEP-20) and international Bank Wire.
+- **Exclusive Features**:
+  - **Multi-Mode PvP Battle Arena**: Free Gladiator League (Mode 1), Cash Duels (Mode 2), and Challenge Perk Battles (Mode 3).
+  - **Trading Tournaments**: Regular free and paid competitive tournaments with guaranteed cash prize pools and live leaderboards.
+  - **Zenith AI Trader Copilot**: Real-time drawdown alerts, safe lot size calculation, macro news warnings, and tilt prevention.
+  - **AI Trade Autopsy & Tilt Shield**: Automated post-trade grading (A–F), discipline scorecard, and self-imposed cooling-off modes.
+
+## Evaluation Programs
+
+| Account Size | Phase 1 Target | Phase 2 Target | Daily Drawdown | Max Drawdown | Leverage |
+|---|---|---|---|---|---|
+| $5,000 | $400 (8%) | $250 (5%) | $250 (5%) | $500 (10%) | 1:100 |
+| $10,000 | $800 (8%) | $500 (5%) | $500 (5%) | $1,000 (10%) | 1:100 |
+| $25,000 | $2,000 (8%) | $1,250 (5%) | $1,250 (5%) | $2,500 (10%) | 1:100 |
+| $50,000 | $4,000 (8%) | $2,500 (5%) | $2,500 (5%) | $5,000 (10%) | 1:100 |
+| $100,000 | $8,000 (8%) | $5,000 (5%) | $5,000 (5%) | $10,000 (10%) | 1:100 |
+| $200,000 | $16,000 (8%) | $10,000 (5%) | $10,000 (5%) | $20,000 (10%) | 1:100 |
+
+## Key Links & Resources
+
+- [Home Page](https://massfunded.org)
+- [Challenge Programs & Pricing](https://massfunded.org/challenges)
+- [Trading Tournaments](https://massfunded.org/tournaments)
+- [PvP Battle Arena](https://massfunded.org/arena)
+- [Payout Proof & Disbursals](https://massfunded.org/payouts)
+- [Frequently Asked Questions (FAQ)](https://massfunded.org/faq)
+- [Trading Rules & Drawdown Guidelines](https://massfunded.org/risk)
+- [Platform Status & Latency Monitors](https://massfunded.org/status)
+- [Support Desk & Inquiries](https://massfunded.org/contact)
+- [Full LLM Knowledge Document](https://massfunded.org/llms-full.txt)

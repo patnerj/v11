@@ -19,7 +19,7 @@ export const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 min-w-[12rem] overflow-hidden rounded-xl bg-surface border border-surface-muted p-1.5 text-sm text-gray-200 shadow-2xl backdrop-blur-md',
+        'z-50 min-w-[12rem] overflow-hidden rounded-xl bg-surface border border-border p-1.5 text-sm text-text shadow-2xl backdrop-blur-md',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
         'data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
@@ -39,10 +39,10 @@ export const DropdownMenuItem = React.forwardRef<
     ref={ref}
     className={cn(
       'relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium outline-none transition-colors',
-      'hover:bg-slate-800/80 focus:bg-slate-800/80 hover:text-white focus:text-white',
+      'hover:bg-surface-muted focus:bg-surface-muted hover:text-text focus:text-text',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       inset && 'pl-8',
-      danger && 'text-red-400 hover:bg-red-950/40 hover:text-red-300 focus:bg-red-950/40 focus:text-red-300',
+      danger && 'text-red-500 hover:bg-red-500/10 hover:text-red-600 focus:bg-red-500/10 focus:text-red-600',
       className,
     )}
     {...props}
@@ -56,7 +56,7 @@ export const DropdownMenuLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={cn('px-2.5 py-1.5 text-xs font-medium text-text-faint uppercase tracking-wider', className)}
+    className={cn('px-2.5 py-1.5 text-xs font-medium text-text-subtle uppercase tracking-wider', className)}
     {...props}
   />
 ))

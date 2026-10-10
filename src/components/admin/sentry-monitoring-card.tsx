@@ -109,7 +109,7 @@ export function SentryMonitoringCard() {
             <div className="text-lg font-bold text-text">
               Fail-Soft Guard
             </div>
-            <div className="text-[11px] text-text-muted mt-0.5">
+            <div className="text-2xs text-text-muted mt-0.5">
               Next.js 16 App Router
             </div>
           </div>
@@ -122,7 +122,7 @@ export function SentryMonitoringCard() {
             <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
               100% Guarded
             </div>
-            <div className="text-[11px] text-text-muted mt-0.5">
+            <div className="text-2xs text-text-muted mt-0.5">
               Section & Global Handlers
             </div>
           </div>
@@ -135,7 +135,7 @@ export function SentryMonitoringCard() {
             <div className="text-lg font-bold text-text">
               100% Capture
             </div>
-            <div className="text-[11px] text-text-muted mt-0.5">
+            <div className="text-2xs text-text-muted mt-0.5">
               Zero Performance Lag
             </div>
           </div>
@@ -148,7 +148,7 @@ export function SentryMonitoringCard() {
             <div className="text-lg font-bold text-text truncate">
               {isConfigured ? 'Configured' : 'Ready in .env'}
             </div>
-            <div className="text-[11px] text-text-muted mt-0.5">
+            <div className="text-2xs text-text-muted mt-0.5">
               {isConfigured ? 'Connected to Project' : 'Optional Cloud Sync'}
             </div>
           </div>
@@ -165,7 +165,7 @@ export function SentryMonitoringCard() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-text">Global Error Handler (src/app/global-error.tsx):</span>
-                <p className="text-text-muted text-[11px] mt-0.5">
+                <p className="text-text-muted text-2xs mt-0.5">
                   Catches fatal root unhandled exceptions and dispatches stack traces before graceful error page display.
                 </p>
               </div>
@@ -175,7 +175,7 @@ export function SentryMonitoringCard() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-text">Section Error Boundary (SectionErrorBoundary):</span>
-                <p className="text-text-muted text-[11px] mt-0.5">
+                <p className="text-text-muted text-2xs mt-0.5">
                   Protects WebTrader, Zenith AI Copilot, and Account Tables; isolates component failures without breaking the page.
                 </p>
               </div>
@@ -185,8 +185,8 @@ export function SentryMonitoringCard() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-text">CSP Whitelist (next.config.mjs):</span>
-                <p className="text-text-muted text-[11px] mt-0.5">
-                  Content Security Policy allows secure telemetry packets to <code className="text-accent font-mono text-[10px]">https://*.ingest.sentry.io</code>.
+                <p className="text-text-muted text-2xs mt-0.5">
+                  Content Security Policy allows secure telemetry packets to <code className="text-accent font-mono text-2xs">https://*.ingest.sentry.io</code>.
                 </p>
               </div>
             </div>
@@ -195,7 +195,7 @@ export function SentryMonitoringCard() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-text">Edge & Server Runtimes:</span>
-                <p className="text-text-muted text-[11px] mt-0.5">
+                <p className="text-text-muted text-2xs mt-0.5">
                   Full dual-environment coverage across Edge middleware and Node.js server routes.
                 </p>
               </div>
@@ -214,7 +214,7 @@ export function SentryMonitoringCard() {
               <p className="text-xs text-text-muted leading-relaxed">
                 To route all production crashes directly to your personal Sentry.io dashboard, add your DSN to Vercel or your VPS environment:
               </p>
-              <div className="mt-2 p-2 bg-surface-muted rounded border border-border-subtle font-mono text-[11px] text-accent select-all">
+              <div className="mt-2 p-2 bg-surface-muted rounded border border-border-subtle font-mono text-2xs text-accent select-all">
                 NEXT_PUBLIC_SENTRY_DSN=https://your-public-key@o0.ingest.sentry.io/your-project-id
               </div>
             </div>
@@ -238,7 +238,7 @@ export function SentryMonitoringCard() {
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           @sentry/nextjs v10.74.0 Active
         </span>
-        <span className="text-[11px] font-medium text-text-muted">
+        <span className="text-2xs font-medium text-text-muted">
           Target: Next.js 16 Turbopack
         </span>
       </CardFooter>

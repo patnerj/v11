@@ -25,6 +25,14 @@ const DEFAULTS: Record<string, string> = {
   accent_color: '#10B981',
   logo_url: '/branding/brand_logo_600x150.png', login_logo_url: '/branding/login_logo_400x100.png', sidebar_icon_url: '/branding/sidebar_icon_128x128.png', favicon_url: '/favicon.svg',
   ga_measurement_id: 'G-G5758RZV7E',
+  facebook_pixel_id: '',
+  google_site_verification: '',
+  youtube_url: 'https://www.youtube.com/@MassFunded',
+  instagram_url: 'https://www.instagram.com/massfundedorg/',
+  tiktok_url: 'https://www.tiktok.com/@massfunded.org',
+  facebook_url: 'https://www.facebook.com/profile.php?id=61591803448831',
+  discord_url: 'https://discord.com/channels/1555893909496799312/1555893997103484969',
+  developer_url: '',
 }
 
 export function BrandingCenter() {
@@ -59,6 +67,14 @@ export function BrandingCenter() {
       logo_url: vals.logo_url ?? '', login_logo_url: vals.login_logo_url ?? '',
       sidebar_icon_url: vals.sidebar_icon_url ?? '', favicon_url: vals.favicon_url ?? '',
       ga_measurement_id: vals.ga_measurement_id ?? 'G-G5758RZV7E',
+      facebook_pixel_id: vals.facebook_pixel_id ?? '',
+      google_site_verification: vals.google_site_verification ?? '',
+      youtube_url: vals.youtube_url ?? 'https://www.youtube.com/@MassFunded',
+      instagram_url: vals.instagram_url ?? 'https://www.instagram.com/massfundedorg/',
+      tiktok_url: vals.tiktok_url ?? 'https://www.tiktok.com/@massfunded.org',
+      facebook_url: vals.facebook_url ?? 'https://www.facebook.com/profile.php?id=61591803448831',
+      discord_url: vals.discord_url ?? 'https://discord.com/channels/1555893909496799312/1555893997103484969',
+      developer_url: vals.developer_url ?? '',
     }
     const res = await api.admin.whitelabelSave(payload)
     setSaving(false)
@@ -135,50 +151,256 @@ export function BrandingCenter() {
           </div>
         </div>
 
-        {/* Analytics & Tracking (GA4) */}
-        <div className="rounded-lg border border-border-subtle bg-surface-muted/20 p-4 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="text-sm font-semibold text-text flex items-center gap-2">
-                <span className="text-base">📊</span> Google Analytics 4 (GA4) Tracking
+        {/* Analytics & Tracking (GA4 & Meta Pixel) */}
+        <div className="rounded-lg border border-border-subtle bg-surface-muted/20 p-4 space-y-4">
+          {/* GA4 */}
+          <div className="space-y-3 pb-3 border-b border-border-subtle">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-text flex items-center gap-2">
+                  <span className="text-base">📊</span> Google Analytics 4 (GA4) Tracking
+                </div>
+                <p className="text-2xs text-text-muted mt-0.5">
+                  Configure your Google Analytics Measurement ID to track trader visits, page views, signups, and checkout conversions.
+                </p>
               </div>
-              <p className="text-2xs text-text-muted mt-0.5">
-                Configure your Google Analytics Measurement ID to track trader visits, page views, signups, and checkout conversions.
-              </p>
+              {vals.ga_measurement_id ? (
+                <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 w-fit">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active: {vals.ga_measurement_id}
+                </span>
+              ) : (
+                <span className="text-2xs font-mono px-2.5 py-1 rounded-full bg-surface-muted text-text-muted border border-border w-fit">
+                  Inactive
+                </span>
+              )}
             </div>
-            {vals.ga_measurement_id ? (
-              <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 w-fit">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Active: {vals.ga_measurement_id}
-              </span>
-            ) : (
-              <span className="text-2xs font-mono px-2.5 py-1 rounded-full bg-surface-muted text-text-muted border border-border w-fit">
-                Inactive
-              </span>
-            )}
+            <div className="grid sm:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="bc-ga-id">Measurement ID</Label>
+                <Input
+                  id="bc-ga-id"
+                  value={vals.ga_measurement_id ?? ''}
+                  onChange={(e) => set('ga_measurement_id', e.target.value.trim().toUpperCase())}
+                  placeholder="G-G5758RZV7E"
+                  className="font-mono text-xs uppercase tracking-wider"
+                />
+                <p className="text-2xs text-text-faint">
+                  Format: <code>G-XXXXXXXXXX</code> (Found in Google Analytics → Admin → Data Streams).
+                </p>
+              </div>
+              <div className="rounded-md bg-surface border border-border-subtle p-3 flex flex-col justify-center">
+                <div className="text-2xs font-semibold text-text-muted uppercase tracking-wider mb-1">Telemetry Status</div>
+                <div className="text-xs text-text font-mono flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${vals.ga_measurement_id ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  {vals.ga_measurement_id
+                    ? 'Injected via Next.js Layout Script'
+                    : 'Enter Measurement ID and click Save Branding'}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4 pt-1">
-            <div className="space-y-1.5">
-              <Label htmlFor="bc-ga-id">Measurement ID</Label>
-              <Input
-                id="bc-ga-id"
-                value={vals.ga_measurement_id ?? ''}
-                onChange={(e) => set('ga_measurement_id', e.target.value.trim().toUpperCase())}
-                placeholder="G-G5758RZV7E"
-                className="font-mono text-xs uppercase tracking-wider"
-              />
-              <p className="text-2xs text-text-faint">
-                Format: <code>G-XXXXXXXXXX</code> (Found in Google Analytics → Admin → Data Streams).
-              </p>
-            </div>
-            <div className="rounded-md bg-surface border border-border-subtle p-3 flex flex-col justify-center">
-              <div className="text-2xs font-semibold text-text-muted uppercase tracking-wider mb-1">Telemetry Status</div>
-              <div className="text-xs text-text font-mono flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${vals.ga_measurement_id ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                {vals.ga_measurement_id
-                  ? 'Injected via Next.js Layout Script'
-                  : 'Enter Measurement ID and click Save Branding'}
+
+          {/* Meta (Facebook) Pixel */}
+          <div className="space-y-3 pt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-text flex items-center gap-2">
+                  <span className="text-base">🎯</span> Meta (Facebook) Pixel Tracking
+                </div>
+                <p className="text-2xs text-text-muted mt-0.5">
+                  Track trader visits, page views, and ad campaign conversion optimization via Meta Events Manager.
+                </p>
               </div>
+              {vals.facebook_pixel_id ? (
+                <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 w-fit">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  Active: {vals.facebook_pixel_id}
+                </span>
+              ) : (
+                <span className="text-2xs font-mono px-2.5 py-1 rounded-full bg-surface-muted text-text-muted border border-border w-fit">
+                  Inactive
+                </span>
+              )}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="bc-fb-pixel">Pixel ID</Label>
+                <Input
+                  id="bc-fb-pixel"
+                  value={vals.facebook_pixel_id ?? ''}
+                  onChange={(e) => set('facebook_pixel_id', e.target.value.trim())}
+                  placeholder="1114425831025183"
+                  className="font-mono text-xs tracking-wider"
+                />
+                <p className="text-2xs text-text-faint">
+                  Numeric Pixel ID provided in Meta Ads Manager / Events Manager.
+                </p>
+              </div>
+              <div className="rounded-md bg-surface border border-border-subtle p-3 flex flex-col justify-center">
+                <div className="text-2xs font-semibold text-text-muted uppercase tracking-wider mb-1">Pixel Status</div>
+                <div className="text-xs text-text font-mono flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${vals.facebook_pixel_id ? 'bg-blue-400' : 'bg-amber-500'}`} />
+                  {vals.facebook_pixel_id
+                    ? 'Injected via Next.js Layout Script (connect.facebook.net)'
+                    : 'Enter Pixel ID and click Save Branding'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Google Search Console (GSC) Verification */}
+          <div className="space-y-3 pt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-text flex items-center gap-2">
+                  <span className="text-base">🔍</span> Google Search Console (GSC)
+                </div>
+                <p className="text-2xs text-text-muted mt-0.5">
+                  Verify domain ownership in Google Search Console to index pages, monitor impressions, and submit sitemaps.
+                </p>
+              </div>
+              {vals.google_site_verification ? (
+                <span className="inline-flex items-center gap-1.5 text-2xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Verified / Active
+                </span>
+              ) : (
+                <span className="text-2xs font-mono px-2.5 py-1 rounded-full bg-surface-muted text-text-muted border border-border w-fit">
+                  Not Configured
+                </span>
+              )}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="bc-gsc-code">Verification Token / HTML Tag</Label>
+                <Input
+                  id="bc-gsc-code"
+                  value={vals.google_site_verification ?? ''}
+                  onChange={(e) => set('google_site_verification', e.target.value.trim())}
+                  placeholder="e.g. google-site-verification token or code"
+                  className="font-mono text-xs tracking-wider"
+                />
+                <p className="text-2xs text-text-faint">
+                  Enter the verification string from Search Console (HTML tag method: content=&quot;...&quot;).
+                </p>
+                <p className="text-2xs text-amber-500/90 font-medium leading-relaxed mt-1">
+                  ⚠️ Google Search Console mein property add karte waqt &quot;URL prefix&quot; select karein (https://massfunded.org), NOT &quot;Domain&quot;. Meta tag verification sirf URL prefix ke sath kaam karti hai. Domain property ke liye DNS TXT record chahiye.
+                </p>
+              </div>
+              <div className="rounded-md bg-surface border border-border-subtle p-3 flex flex-col justify-center">
+                <div className="text-2xs font-semibold text-text-muted uppercase tracking-wider mb-1">Index &amp; Sitemap Status</div>
+                <div className="text-xs text-text font-mono flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${vals.google_site_verification ? 'bg-emerald-400' : 'bg-amber-500'}`} />
+                  {vals.google_site_verification
+                    ? 'Injected in Next.js layout metadata (<meta name="google-site-verification">)'
+                    : 'Paste token & click Save Branding to activate GSC verification'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Official Social Media & Developer Desks */}
+        <div className="rounded-lg border border-border-subtle bg-surface-muted/20 p-4 space-y-4">
+          <div>
+            <div className="text-sm font-semibold text-text flex items-center gap-2">
+              <span className="text-base">🌐</span> Official Social Media &amp; Developer Desks
+            </div>
+            <p className="text-2xs text-text-muted mt-0.5">
+              Live channels displayed across the public marketing footer, contact hub, and trader portals.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+            {/* YouTube */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-youtube" className="flex items-center gap-1.5">
+                <span className="text-red-500 font-bold">▶</span> YouTube Channel
+              </Label>
+              <Input
+                id="bc-youtube"
+                value={vals.youtube_url ?? ''}
+                onChange={(e) => set('youtube_url', e.target.value.trim())}
+                placeholder="https://www.youtube.com/@MassFunded"
+                className="font-mono text-xs"
+              />
+              <p className="text-2xs text-text-faint">Video walkthroughs &amp; payouts breakdown.</p>
+            </div>
+
+            {/* Instagram */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-instagram" className="flex items-center gap-1.5">
+                <span className="text-pink-500 font-bold">📸</span> Instagram Profile
+              </Label>
+              <Input
+                id="bc-instagram"
+                value={vals.instagram_url ?? ''}
+                onChange={(e) => set('instagram_url', e.target.value.trim())}
+                placeholder="https://www.instagram.com/massfundedorg/"
+                className="font-mono text-xs"
+              />
+              <p className="text-2xs text-text-faint">Stories, market alerts &amp; trader spotlights.</p>
+            </div>
+
+            {/* TikTok */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-tiktok" className="flex items-center gap-1.5">
+                <span className="text-cyan-400 font-bold">🎵</span> TikTok Account
+              </Label>
+              <Input
+                id="bc-tiktok"
+                value={vals.tiktok_url ?? ''}
+                onChange={(e) => set('tiktok_url', e.target.value.trim())}
+                placeholder="https://www.tiktok.com/@massfunded.org"
+                className="font-mono text-xs"
+              />
+              <p className="text-2xs text-text-faint">Short-form updates, tips &amp; trading highlights.</p>
+            </div>
+
+            {/* Facebook */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-facebook" className="flex items-center gap-1.5">
+                <span className="text-blue-500 font-bold">📘</span> Facebook Page
+              </Label>
+              <Input
+                id="bc-facebook"
+                value={vals.facebook_url ?? ''}
+                onChange={(e) => set('facebook_url', e.target.value.trim())}
+                placeholder="https://www.facebook.com/profile.php?id=..."
+                className="font-mono text-xs"
+              />
+              <p className="text-2xs text-text-faint">Official company updates &amp; community events.</p>
+            </div>
+
+            {/* Discord */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-discord" className="flex items-center gap-1.5">
+                <span className="text-indigo-400 font-bold">💬</span> Discord Community
+              </Label>
+              <Input
+                id="bc-discord"
+                value={vals.discord_url ?? ''}
+                onChange={(e) => set('discord_url', e.target.value.trim())}
+                placeholder="https://discord.com/channels/..."
+                className="font-mono text-xs"
+              />
+              <p className="text-2xs text-text-faint">Live trader lounge, floor chat &amp; announcements.</p>
+            </div>
+
+            {/* Platform Developer / Architecture Desk */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bc-developer" className="flex items-center gap-1.5 text-accent font-semibold">
+                <span className="text-emerald-400 font-bold">🛠️</span> Platform Developer
+              </Label>
+              <Input
+                id="bc-developer"
+                value={vals.developer_url ?? ''}
+                onChange={(e) => set('developer_url', e.target.value.trim())}
+                placeholder="https://launchapropfirm.com"
+                className="font-mono text-xs border-accent/40 focus:border-accent"
+              />
+              <p className="text-2xs text-text-faint">Contact Developer link in footer and support routes.</p>
             </div>
           </div>
         </div>

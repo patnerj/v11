@@ -3,11 +3,13 @@
 import { memo, useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Pencil, X, Check, ChevronDown, Trash2, Share2 } from 'lucide-react'
+import { Pencil, X, Check, ChevronDown, Trash2, Share2, MoreHorizontal } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
-import { fmtPrice, fmtUSD, fmtLots, toNum, timeAgo, pnlClass } from '@/lib/format'
-import { symbolDigits } from '@/lib/symbol-meta'
+import { fmtPrice, fmtUSD, fmtLots, toNum, timeAgo, fmtDate, pnlClass } from '@/lib/format'
+import { symbolDigits, pipSize } from '@/lib/symbol-meta'
+import { quoteToUsdRate } from '@/lib/order-math'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +18,7 @@ import type { Position } from '@/types/api'
 import { playOrderCloseSound } from '@/lib/sound'
 import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ClosePositionModal } from '@/components/dashboard/trading/close-position-modal'
 
 interface Props {
   positions: Position[] | null
@@ -30,9 +33,58 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   const [isCloseAllConfirmOpen, setIsCloseAllConfirmOpen] = useState(false)
   const [isClosingAll, setIsClosingAll] = useState(false)
 
+  // Binance-style single position close modal state
+  const [closingPosition, setClosingPosition] = useState<Position | null>(null)
+  const [isClosingSingle, setIsClosingSingle] = useState(false)
+
+  const handleConfirmSingleClose = useCallback(async () => {
+    if (!closingPosition || isClosingSingle) return
+    setIsClosingSingle(true)
+    try {
+      const res = await api.close(closingPosition.id)
+      if (res.ok && res.data.success) {
+        playOrderCloseSound()
+        const closePnl = toNum(res.data.pnl)
+        // Optimistic removal from store for instant UI feedback
+        usePrices.setState((state) => ({
+          positions: (state.positions || []).filter((p) => p.id !== closingPosition.id)
+        }))
+        const digits = symbolDigits(closingPosition.symbol)
+        toast.success(`Closed ${closingPosition.symbol} · ${fmtUSD(closePnl, { sign: true })}`, {
+          action: closePnl > 0 ? {
+            label: 'Flex Win 🚀',
+            onClick: () => setShareTrade({
+              symbol: closingPosition.symbol,
+              type: closingPosition.type,
+              lotSize: closingPosition.lot_size,
+              openPrice: fmtPrice(closingPosition.open_price, digits),
+              currentPrice: fmtPrice(toNum(closingPosition.current_price) || toNum(closingPosition.open_price), digits),
+              pnl: closePnl,
+              isClosed: true,
+              accountId: closingPosition.account_id ? `ACC-${closingPosition.account_id}` : undefined,
+              margin: closingPosition.margin,
+            })
+          } : undefined
+        })
+        invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
+        onChanged?.()
+        setClosingPosition(null)
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Close failed') : res.error)
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Close failed')
+    } finally {
+      setIsClosingSingle(false)
+    }
+  }, [closingPosition, isClosingSingle, onChanged])
+
   const totalPnL = useMemo(() => {
     if (!positions) return 0
-    return positions.reduce((acc, p) => acc + toNum(p.pnl) + toNum(p.swap) - toNum(p.commission), 0)
+    return positions.reduce((acc, p) => {
+      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 100000)
+      return acc + (isMt5 ? toNum(p.pnl) + toNum(p.swap) - toNum(p.commission) : toNum(p.pnl))
+    }, 0)
   }, [positions])
 
   const handleCloseAll = useCallback(async () => {
@@ -84,8 +136,8 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   if (positions.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-sm text-text-muted">No open positions</div>
-        <div className="text-2xs text-text-faint mt-1">
+        <div className="text-terminal-body text-text-muted">No open positions</div>
+        <div className="text-terminal-micro text-text-faint mt-1">
           Use the order ticket to open a trade.
         </div>
       </div>
@@ -94,15 +146,15 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   return (
     <>
       {/* Panic Bar / Summary Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 text-xs">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 text-terminal-label">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-text text-2xs uppercase tracking-wider">Open Positions</span>
-          <span className="px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-surface-muted text-text-muted border border-border-subtle">
+          <span className="font-semibold text-text text-terminal-micro uppercase tracking-wider">Open Positions</span>
+          <span className="px-1.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-surface-muted text-text-muted border border-border-subtle">
             {positions.length}
           </span>
           <span className="text-text-faint">·</span>
-          <span className="text-2xs text-text-muted">Net P&L:</span>
-          <span className={cn("text-2xs font-semibold tabular", pnlClass(totalPnL))}>
+          <span className="text-terminal-body text-text-muted">Net P&L:</span>
+          <span className={cn("text-terminal-body font-semibold terminal-num", pnlClass(totalPnL))}>
             {fmtUSD(totalPnL, { sign: true })}
           </span>
         </div>
@@ -110,7 +162,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
           type="button"
           onClick={() => setIsCloseAllConfirmOpen(true)}
           disabled={isClosingAll}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-2xs font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
           title="Emergency Close All open positions at live market price"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
@@ -118,7 +170,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-terminal-body">
           <thead>
             <tr className="border-b border-border-subtle bg-bg-subtle/40">
               <Th>Symbol</Th>
@@ -141,6 +193,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
                 onChanged={onChanged}
                 compact={compact}
                 onShare={setShareTrade}
+                onRequestClose={setClosingPosition}
               />
             ))}
           </tbody>
@@ -151,6 +204,14 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
         open={Boolean(shareTrade)}
         onClose={() => setShareTrade(null)}
         trade={shareTrade}
+      />
+
+      <ClosePositionModal
+        open={Boolean(closingPosition)}
+        position={closingPosition}
+        onClose={() => { if (!isClosingSingle) setClosingPosition(null) }}
+        onConfirm={handleConfirmSingleClose}
+        loading={isClosingSingle}
       />
 
       <ConfirmDialog
@@ -167,8 +228,8 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   )
 })
 
-function PositionRow({ pos, index, onChanged, compact, onShare }: {
-  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void
+function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }: {
+  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void; onRequestClose?: (pos: Position) => void
 }) {
   const getMeta = useTerminal((s) => s.getMeta)
   const meta    = getMeta(pos.symbol)
@@ -195,6 +256,31 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
       setTpDraft(pos.tp ? String(toNum(pos.tp)) : '')
     }
   }, [pos.sl, pos.tp, editSltp])
+
+  const slDraftNum = slDraft.trim() ? toNum(slDraft) : null
+  const tpDraftNum = tpDraft.trim() ? toNum(tpDraft) : null
+
+  const pSize = pipSize(pos.symbol, digits)
+  const contract = toNum(meta?.contract_size) || 100000
+  const openPx = toNum(pos.open_price)
+
+  const slDraftMetrics = useMemo(() => {
+    if (!slDraftNum || openPx <= 0) return null
+    const diff = Math.abs(slDraftNum - openPx)
+    if (diff <= 0) return null
+    const pips = pSize > 0 ? diff / pSize : diff
+    const loss = diff * contract * toNum(pos.lot_size)
+    return { diff, pips, loss }
+  }, [slDraftNum, openPx, pSize, contract, pos.lot_size])
+
+  const tpDraftMetrics = useMemo(() => {
+    if (!tpDraftNum || openPx <= 0) return null
+    const diff = Math.abs(tpDraftNum - openPx)
+    if (diff <= 0) return null
+    const pips = pSize > 0 ? diff / pSize : diff
+    const profit = diff * contract * toNum(pos.lot_size)
+    return { diff, pips, profit }
+  }, [tpDraftNum, openPx, pSize, contract, pos.lot_size])
 
   // Ref-managed 3s countdown hook for 2-tap close with visual countdown (3s... 2s... 1s)
   // and timeout cleanup on unmount/re-click.
@@ -250,6 +336,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
 
   // Live price tick subscription & real-time PnL calculation
   const tick = usePrices((s) => s.prices[pos.symbol])
+  const allPrices = usePrices((s) => s.prices)
   const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 100000)
 
   const currentPx = isMt5Synced && toNum(pos.current_price) > 0
@@ -352,10 +439,10 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
       const diff = pos.type === 'buy' ? currentPx - openPx : openPx - currentPx
       const contractSize = toNum(meta?.contract_size) || 100000
       const calcPnl = diff * contractSize * toNum(pos.lot_size)
-      return calcPnl + toNum(pos.swap) - toNum(pos.commission)
+      return calcPnl * quoteToUsdRate(pos.symbol, currentPx, allPrices) + toNum(pos.swap) - toNum(pos.commission)
     }
-    return toNum(pos.pnl) + toNum(pos.swap) - toNum(pos.commission)
-  }, [isMt5Synced, pos.pnl, tick, currentPx, pos.open_price, pos.type, meta?.contract_size, pos.lot_size, pos.swap, pos.commission])
+    return toNum(pos.pnl)
+  }, [isMt5Synced, pos.pnl, tick, currentPx, pos.open_price, pos.type, meta?.contract_size, pos.lot_size, pos.swap, pos.commission, pos.symbol, allPrices])
 
   return (
     <>
@@ -369,37 +456,49 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
         )}
       >
         <Td>
-          <span className="font-medium tabular">{pos.symbol}</span>
+          <span className="font-semibold">{pos.symbol}</span>
         </Td>
         <Td>
           <Badge tone={pos.type === 'buy' ? 'success' : 'danger'}>{pos.type.toUpperCase()}</Badge>
         </Td>
         <Td align="right" hideOn={compact ? 'sm' : undefined}>
-          <span className="tabular text-text-muted">{fmtLots(pos.lot_size)}</span>
+          <span className="terminal-num text-text-muted">{fmtLots(pos.lot_size)}</span>
         </Td>
         <Td align="right" hideOn="md">
-          <span className="tabular text-text-muted">{fmtPrice(pos.open_price, digits)}</span>
+          <span className="terminal-num text-text-muted">{fmtPrice(pos.open_price, digits)}</span>
         </Td>
         <Td align="right" hideOn="sm">
-          <span className="tabular">{fmtPrice(currentPx, digits)}</span>
+          <span className="terminal-num">{fmtPrice(currentPx, digits)}</span>
         </Td>
         <Td align="right" hideOn="md">
           {editSltp ? (
-            <div className="flex items-center gap-1 justify-end">
-              <input
-                value={slDraft}
-                onChange={(e) => setSlDraft(e.target.value.replace(/[^\d.]/g, ''))}
-                placeholder="SL"
-                inputMode="decimal"
-                className="w-16 h-7 px-1.5 text-2xs tabular bg-surface border border-border rounded focus-ring text-right"
-              />
-              <input
-                value={tpDraft}
-                onChange={(e) => setTpDraft(e.target.value.replace(/[^\d.]/g, ''))}
-                placeholder="TP"
-                inputMode="decimal"
-                className="w-16 h-7 px-1.5 text-2xs tabular bg-surface border border-border rounded focus-ring text-right"
-              />
+            <div className="flex items-center gap-1 justify-end relative">
+              <div className="relative group">
+                <input
+                  value={slDraft}
+                  onChange={(e) => setSlDraft(e.target.value.replace(/[^\d.]/g, ''))}
+                  placeholder="SL"
+                  inputMode="decimal"
+                  title={slDraftMetrics ? `Calculated Loss: -${fmtUSD(slDraftMetrics.loss)} (-${slDraftMetrics.pips.toFixed(1)}p)` : undefined}
+                  className={cn(
+                    "w-16 h-7 px-1.5 text-terminal-body terminal-num bg-surface border rounded focus-ring text-right transition-colors",
+                    slDraftMetrics ? "border-rose-500/50 text-rose-300 focus:border-rose-500" : "border-border text-foreground"
+                  )}
+                />
+              </div>
+              <div className="relative group">
+                <input
+                  value={tpDraft}
+                  onChange={(e) => setTpDraft(e.target.value.replace(/[^\d.]/g, ''))}
+                  placeholder="TP"
+                  inputMode="decimal"
+                  title={tpDraftMetrics ? `Calculated Profit: +${fmtUSD(tpDraftMetrics.profit)} (+${tpDraftMetrics.pips.toFixed(1)}p)` : undefined}
+                  className={cn(
+                    "w-16 h-7 px-1.5 text-terminal-body terminal-num bg-surface border rounded focus-ring text-right transition-colors",
+                    tpDraftMetrics ? "border-emerald-500/50 text-emerald-300 focus:border-emerald-500" : "border-border text-foreground"
+                  )}
+                />
+              </div>
               <button onClick={saveSltp} disabled={busy} className="p-1 rounded text-success hover:bg-success-muted focus-ring">
                 <Check className="h-3.5 w-3.5" />
               </button>
@@ -410,7 +509,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
           ) : (
             <button
               onClick={() => setEditSltp(true)}
-              className="text-2xs tabular text-text-muted hover:text-text inline-flex items-center gap-1.5 group"
+              className="text-terminal-body terminal-num text-text-muted hover:text-text inline-flex items-center gap-1.5 group"
             >
               <span>{pos.sl ? fmtPrice(pos.sl, digits) : '—'}</span>
               <span className="text-text-faint">/</span>
@@ -423,59 +522,80 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
           <PnLCell value={pnl} />
         </Td>
         <Td align="right" hideOn="lg">
-          <span className="text-2xs text-text-muted whitespace-nowrap">{timeAgo(pos.opened_at_iso || pos.opened_at)}</span>
+          <span
+            title={pos.opened_at_iso || pos.opened_at ? `${timeAgo(pos.opened_at_iso || pos.opened_at)} · ${fmtDate(pos.opened_at_iso || pos.opened_at, true)}` : undefined}
+            className="text-terminal-micro text-text-muted whitespace-nowrap cursor-default terminal-num"
+          >
+            {pos.opened_at_iso || pos.opened_at ? fmtDate(pos.opened_at_iso || pos.opened_at) : '—'}
+          </span>
         </Td>
         <Td align="right">
-          <div className="flex justify-end items-center gap-1">
+          <div className="flex justify-end items-center gap-1.5">
+            {/* Secondary actions consolidated inside kebab menu (TPOL-4) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  title="More actions"
+                  className="h-7 w-7 inline-flex items-center justify-center rounded text-terminal-body text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle focus-ring transition-colors"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                <DropdownMenuItem
+                  onClick={() => onShare?.({
+                    symbol: pos.symbol,
+                    type: pos.type,
+                    lotSize: pos.lot_size,
+                    openPrice: fmtPrice(pos.open_price, digits),
+                    currentPrice: fmtPrice(currentPx, digits),
+                    pnl: pnl,
+                    openedAt: pos.opened_at_iso || pos.opened_at,
+                    accountId: pos.account_id ? `ACC-${pos.account_id}` : undefined,
+                    margin: pos.margin,
+                  })}
+                  className="gap-2 text-terminal-body font-normal"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-accent" />
+                  <span>Flex Trade</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={busy || !canPartial}
+                  onClick={() => setShowPartial((v) => !v)}
+                  className="gap-2 text-terminal-body font-normal"
+                >
+                  <span className="font-semibold text-text-muted text-terminal-body">½</span>
+                  <span>Partial Close</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Primary Action: Direct Close Button */}
             <button
-              onClick={() => onShare?.({
-                symbol: pos.symbol,
-                type: pos.type,
-                lotSize: pos.lot_size,
-                openPrice: fmtPrice(pos.open_price, digits),
-                currentPrice: fmtPrice(currentPx, digits),
-                pnl: pnl,
-                openedAt: pos.opened_at_iso || pos.opened_at,
-                accountId: pos.account_id ? `ACC-${pos.account_id}` : undefined,
-                margin: pos.margin,
-              })}
-              title="Flex Trade / Share Profit Card"
-              className={cn(
-                "h-7 px-2 inline-flex items-center gap-1 rounded text-2xs font-medium transition-colors focus-ring",
-                pnl > 0
-                  ? "text-accent hover:bg-accent/10 border border-accent/30"
-                  : "text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle"
-              )}
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Flex</span>
-            </button>
-            <button
-              onClick={() => setShowPartial((v) => !v)}
-              disabled={busy || !canPartial}
-              title={!canPartial ? 'Micro-lot minimum (0.01) cannot be split' : 'Partial close (½)'}
-              className={cn(
-                "h-7 px-2 rounded text-2xs font-medium focus-ring",
-                !canPartial
-                  ? "text-text-muted/40 cursor-not-allowed opacity-50"
-                  : "text-text-muted hover:text-text hover:bg-surface-muted"
-              )}
-            >
-              ½
-            </button>
-            <button
-              onClick={() => { if (countdown !== null) closePos(); else armClose() }}
+              onClick={() => {
+                if (onRequestClose) {
+                  onRequestClose(pos)
+                } else if (countdown !== null) {
+                  closePos()
+                } else {
+                  armClose()
+                }
+              }}
               disabled={busy}
               title={countdown !== null ? `Click again to confirm close (${countdown}s)` : 'Close position'}
-              className="h-7 px-2 inline-flex items-center justify-center gap-1 rounded text-danger hover:bg-danger-muted focus-ring disabled:opacity-50"
+              className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded-md text-terminal-label font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-all focus-ring active:scale-95 disabled:opacity-50 cursor-pointer"
               aria-label={countdown !== null ? `Confirm close position ${pos.symbol} within ${countdown} seconds` : `Close position ${pos.symbol}`}
             >
               {busy ? (
-                <span className="h-3 w-3 rounded-full border-2 border-danger/40 border-t-danger animate-spin" />
-              ) : countdown !== null ? (
-                <span className="text-2xs font-bold">{countdown}s</span>
+                <span className="h-3 w-3 rounded-full border-2 border-rose-400/40 border-t-rose-400 animate-spin" />
               ) : (
-                <Trash2 className="h-3.5 w-3.5" />
+                <>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className={cn(countdown === null && "hidden sm:inline", "text-terminal-micro font-semibold")}>
+                    {countdown !== null ? `${countdown}s` : 'Close'}
+                  </span>
+                </>
               )}
             </button>
           </div>
@@ -492,22 +612,22 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
             className="border-b border-border-subtle/40"
           >
             <td colSpan={9} className="bg-bg-subtle/40 px-4 py-3">
-              <div className="flex flex-wrap items-center gap-2 text-2xs">
+              <div className="flex flex-wrap items-center gap-2 text-terminal-body">
                 <span className="text-text-muted">Close how many lots? (max {fmtLots(pos.lot_size)})</span>
                 <input
                   value={partialLots}
                   onChange={(e) => setPartialLots(e.target.value.replace(/[^\d.]/g, ''))}
                   inputMode="decimal"
-                  className="w-20 h-7 px-2 rounded border border-border bg-surface text-2xs tabular text-center focus-ring"
+                  className="w-20 h-7 px-2 rounded border border-border bg-surface text-terminal-body terminal-num text-center focus-ring"
                 />
                 <button
                   onClick={submitPartial}
                   disabled={busy}
-                  className="h-7 px-3 rounded bg-danger text-white text-2xs font-medium hover:bg-danger-hover disabled:opacity-50"
+                  className="h-7 px-3 rounded bg-danger text-white text-terminal-body font-semibold hover:bg-danger-hover disabled:opacity-50"
                 >
                   {busy ? 'Closing…' : 'Close partial'}
                 </button>
-                <button onClick={() => setShowPartial(false)} className="h-7 px-2 text-2xs text-text-muted hover:text-text">
+                <button onClick={() => setShowPartial(false)} className="h-7 px-2 text-terminal-body text-text-muted hover:text-text">
                   Cancel
                 </button>
               </div>
@@ -524,7 +644,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare }: {
 function Th({ children, align, hideOn }: { children: React.ReactNode; align?: 'right'; hideOn?: 'sm' | 'md' | 'lg' }) {
   return (
     <th className={cn(
-      'px-3 py-2 text-2xs uppercase tracking-wider text-text-faint font-medium',
+      'px-3 py-2 text-terminal-micro uppercase tracking-wider text-text-faint font-semibold',
       align === 'right' ? 'text-right' : 'text-left',
       hideOn === 'sm' && 'hidden sm:table-cell',
       hideOn === 'md' && 'hidden md:table-cell',
@@ -537,7 +657,7 @@ function Th({ children, align, hideOn }: { children: React.ReactNode; align?: 'r
 function Td({ children, align, hideOn }: { children: React.ReactNode; align?: 'right'; hideOn?: 'sm' | 'md' | 'lg' }) {
   return (
     <td className={cn(
-      'px-3 py-2.5',
+      'px-3 py-2.5 text-terminal-body',
       align === 'right' ? 'text-right' : 'text-left',
       hideOn === 'sm' && 'hidden sm:table-cell',
       hideOn === 'md' && 'hidden md:table-cell',
@@ -550,7 +670,7 @@ function Td({ children, align, hideOn }: { children: React.ReactNode; align?: 'r
 
 function PnLCell({ value }: { value: number }) {
   return (
-    <span className={cn('tabular font-medium', pnlClass(value))}>
+    <span className={cn('terminal-num font-semibold', pnlClass(value))}>
       {fmtUSD(value, { sign: true })}
     </span>
   )

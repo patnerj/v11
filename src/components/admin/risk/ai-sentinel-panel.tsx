@@ -109,7 +109,7 @@ export function AiSentinelPanel() {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Global Threat Score</span>
+            <span className="text-2xs font-semibold text-slate-500 dark:text-gray-400 block mb-1">Global Threat Score</span>
             <div className="flex items-baseline justify-between">
               <span className={`text-2xl font-black tabular ${threatScore > 50 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                 {threatScore} / 100
@@ -127,40 +127,40 @@ export function AiSentinelPanel() {
 
         <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Syndicate Copy Clusters</span>
+            <span className="text-2xs font-semibold text-slate-500 dark:text-gray-400 block mb-1">Syndicate Copy Clusters</span>
             <div className="flex items-baseline justify-between">
               <span className="text-2xl font-black tabular text-amber-500 dark:text-amber-400">
                 {report?.syndicate_clusters?.length ?? 0}
               </span>
               <Users className="w-4 h-4 text-amber-500/80 dark:text-amber-400/80" />
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-gray-500 block mt-2">Correlated executions &lt;1.5s</span>
+            <span className="text-2xs text-slate-500 dark:text-gray-500 block mt-2">Correlated executions &lt;1.5s</span>
           </CardContent>
         </Card>
 
         <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Toxic Latency Scalpers</span>
+            <span className="text-2xs font-semibold text-slate-500 dark:text-gray-400 block mb-1">Toxic Latency Scalpers</span>
             <div className="flex items-baseline justify-between">
               <span className="text-2xl font-black tabular text-rose-600 dark:text-rose-400">
                 {report?.toxic_scalpers?.length ?? 0}
               </span>
               <Flame className="w-4 h-4 text-rose-500/80 dark:text-rose-400/80" />
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-gray-500 block mt-2">HFT trades closed &lt;15s</span>
+            <span className="text-2xs text-slate-500 dark:text-gray-500 block mt-2">HFT trades closed &lt;15s</span>
           </CardContent>
         </Card>
 
         <Card className="bg-white dark:bg-surface border-slate-200 dark:border-surface-muted shadow-xs">
           <CardContent className="p-4">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400 block mb-1">Imminent Breach Risk</span>
+            <span className="text-2xs font-semibold text-slate-500 dark:text-gray-400 block mb-1">Imminent Breach Risk</span>
             <div className="flex items-baseline justify-between">
               <span className="text-2xl font-black tabular text-cyan-600 dark:text-cyan-400">
                 {report?.at_risk_breaches?.length ?? 0}
               </span>
               <TrendingDown className="w-4 h-4 text-cyan-600/80 dark:text-cyan-400/80" />
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-gray-500 block mt-2">Accounts within 15% of limit</span>
+            <span className="text-2xs text-slate-500 dark:text-gray-500 block mt-2">Accounts within 15% of limit</span>
           </CardContent>
         </Card>
       </div>
@@ -208,7 +208,7 @@ export function AiSentinelPanel() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-100/90 dark:bg-background text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-surface-muted">
+                  <thead className="bg-slate-100/90 dark:bg-background text-slate-600 dark:text-gray-400 uppercase text-2xs font-semibold border-b border-slate-200 dark:border-surface-muted">
                     <tr>
                       <th className="p-3">Trader / Email</th>
                       <th className="p-3 text-center">Fast Trades</th>
@@ -221,7 +221,7 @@ export function AiSentinelPanel() {
                       <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-gray-800/40">
                         <td className="p-3 font-medium text-slate-900 dark:text-white">
                           <div>{row.display_name || `Account #${row.account_id}`}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-gray-400">{row.user_email}</div>
+                          <div className="text-2xs text-slate-500 dark:text-gray-400">{row.user_email}</div>
                         </td>
                         <td className="p-3 text-center tabular font-bold text-rose-600 dark:text-rose-400">
                           {row.fast_trades_count}
@@ -233,7 +233,7 @@ export function AiSentinelPanel() {
                           <Button
                             variant="danger"
                             size="sm"
-                            className="h-7 text-[10px] px-2"
+                            className="h-7 text-2xs px-2"
                             onClick={() => toast.success(`Flagged Account #${row.account_id} for mandatory compliance audit.`)}
                           >
                             Flag / Audit
@@ -270,7 +270,7 @@ export function AiSentinelPanel() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-100/90 dark:bg-background text-slate-600 dark:text-gray-400 uppercase text-[10px] font-semibold border-b border-slate-200 dark:border-surface-muted">
+                  <thead className="bg-slate-100/90 dark:bg-background text-slate-600 dark:text-gray-400 uppercase text-2xs font-semibold border-b border-slate-200 dark:border-surface-muted">
                     <tr>
                       <th className="p-3">Trader</th>
                       <th className="p-3 text-center">Current DD</th>
@@ -283,12 +283,12 @@ export function AiSentinelPanel() {
                       <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-gray-800/40">
                         <td className="p-3 font-medium text-slate-900 dark:text-white">
                           <div>{row.display_name || `Account #${row.account_id}`}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-gray-400">{row.user_email}</div>
+                          <div className="text-2xs text-slate-500 dark:text-gray-400">{row.user_email}</div>
                         </td>
                         <td className="p-3 text-center tabular font-bold text-amber-600 dark:text-amber-400">
                           {parseFloat(String(row.drawdown_pct)).toFixed(2)}%
                         </td>
-                        <td className="p-3 text-right tabular text-[11px]">
+                        <td className="p-3 text-right tabular text-2xs">
                           <div className="text-slate-900 dark:text-white">${parseFloat(String(row.balance)).toFixed(0)}</div>
                           <div className="text-slate-500 dark:text-gray-400">${parseFloat(String(row.equity)).toFixed(0)}</div>
                         </td>
@@ -296,7 +296,7 @@ export function AiSentinelPanel() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-[10px] px-2 border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white"
+                            className="h-7 text-2xs px-2 border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white"
                             onClick={() => toast.info(`Risk alert dispatched to trader ${row.user_email}.`)}
                           >
                             Warn Trader

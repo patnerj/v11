@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
 import {
   User, Mail, ShieldCheck, Lock, LogOut, AtSign, MailWarning, BadgeCheck,
-  Bell, Volume2, AlertTriangle, KeyRound, Check, RefreshCw, Send
+  Bell, Volume2, AlertTriangle, KeyRound, Check, RefreshCw, Send, Smartphone
 } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -34,12 +34,23 @@ export default function SettingsPage() {
   const [showPwForm, setShowPwForm] = useState(false)
 
   // Preferences state
-  const [prefs, setPrefs] = useState<Record<string, boolean>>({
-    email_trade_closed:   true,
-    email_margin_warning: true,
-    email_payout_updates: true,
-    email_marketing:      false,
-    sound_effects:        true,
+  const [prefs, setPrefs] = useState<Record<string, boolean>>(() => {
+    let soundInit = true
+    let hapticInit = true
+    if (typeof window !== 'undefined') {
+      try {
+        if (localStorage.getItem('fxsim_sound_enabled') === 'false') soundInit = false
+        if (localStorage.getItem('fxsim_haptics_enabled') === 'false') hapticInit = false
+      } catch {}
+    }
+    return {
+      email_trade_closed:   true,
+      email_margin_warning: true,
+      email_payout_updates: true,
+      email_marketing:      false,
+      sound_effects:        soundInit,
+      haptic_feedback:      hapticInit,
+    }
   })
   const [loadingPrefs, setLoadingPrefs] = useState(true)
   const [savingPrefKey, setSavingPrefKey] = useState<string | null>(null)
@@ -53,7 +64,20 @@ export default function SettingsPage() {
     api.preferences.get().then((res) => {
       setLoadingPrefs(false)
       if (res.ok && res.data.preferences) {
-        setPrefs((p) => ({ ...p, ...res.data.preferences }))
+        setPrefs((p) => {
+          const next = { ...p, ...res.data.preferences }
+          if (typeof window !== 'undefined') {
+            try {
+              if (res.data.preferences.sound_effects !== undefined) {
+                localStorage.setItem('fxsim_sound_enabled', String(res.data.preferences.sound_effects))
+              }
+              if (res.data.preferences.haptic_feedback !== undefined) {
+                localStorage.setItem('fxsim_haptics_enabled', String(res.data.preferences.haptic_feedback))
+              }
+            } catch {}
+          }
+          return next
+        })
       }
     })
   }, [])
@@ -105,12 +129,34 @@ export default function SettingsPage() {
     const updated = { ...prefs, [key]: !prefs[key] }
     setPrefs(updated)
     setSavingPrefKey(key)
+
+    if (key === 'sound_effects') {
+      try {
+        localStorage.setItem('fxsim_sound_enabled', String(updated.sound_effects))
+      } catch {}
+    }
+    if (key === 'haptic_feedback') {
+      try {
+        localStorage.setItem('fxsim_haptics_enabled', String(updated.haptic_feedback))
+      } catch {}
+    }
+
     const res = await api.preferences.save(updated)
     setSavingPrefKey(null)
     if (res.ok && res.data.success) {
       toast.success('Preference updated')
     } else {
       setPrefs(prefs)
+      if (key === 'sound_effects') {
+        try {
+          localStorage.setItem('fxsim_sound_enabled', String(prefs.sound_effects))
+        } catch {}
+      }
+      if (key === 'haptic_feedback') {
+        try {
+          localStorage.setItem('fxsim_haptics_enabled', String(prefs.haptic_feedback))
+        } catch {}
+      }
       toast.error('Failed to save preference')
     }
   }
@@ -132,7 +178,7 @@ export default function SettingsPage() {
   if (!user) return null
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 w-full max-w-full min-w-0 overflow-hidden">
       <PageHeader
         variant="hero"
         title="Account Settings"
@@ -141,44 +187,44 @@ export default function SettingsPage() {
         badge={{ label: 'Preferences', tone: 'accent' }}
       />
 
-      <div className="grid lg:grid-cols-2 gap-6 w-full items-start">
+      <div className="grid lg:grid-cols-2 gap-6 w-full max-w-full min-w-0 items-start">
         {/* Left Column: Profile & Preferences */}
-        <div className="space-y-6">
+        <div className="space-y-6 w-full max-w-full min-w-0">
           <Card>
-            <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4 pb-4 border-b border-border-subtle">
-                <div className="h-14 w-14 rounded-full bg-accent/15 text-accent flex items-center justify-center text-lg font-bold border border-accent/20">
+            <CardHeader className="p-4 sm:p-6"><CardTitle>Profile</CardTitle></CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-4">
+              <div className="flex items-center gap-3 sm:gap-4 pb-4 border-b border-border-subtle min-w-0">
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-accent/15 text-accent flex items-center justify-center text-base sm:text-lg font-bold border border-accent/20 shrink-0">
                   {(user?.display_name || user?.username || 'TR').slice(0, 2).toUpperCase()}
                 </div>
-                <div>
-                  <div className="font-semibold text-text">{user?.display_name || user?.username || 'Trader'}</div>
-                  <div className="text-sm text-text-muted">@{user?.username || 'trader'}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-text truncate">{user?.display_name || user?.username || 'Trader'}</div>
+                  <div className="text-xs sm:text-sm text-text-muted truncate">@{user?.username || 'trader'}</div>
                 </div>
-                {user?.is_admin && <Badge tone="accent" className="ml-auto">Admin</Badge>}
+                {user?.is_admin && <Badge tone="accent" className="ml-auto shrink-0">Admin</Badge>}
               </div>
 
               <ReadOnlyField icon={User}  label="Username" value={user?.username || ''} />
               <ReadOnlyField icon={AtSign} label="Display name" value={user?.display_name || ''} />
-              <div>
+              <div className="min-w-0 w-full">
                 <Label>Email</Label>
-                <div className="mt-1.5 flex items-center gap-2 px-3 h-10 rounded-md border border-border-subtle bg-surface-muted/50 text-sm">
-                  <Mail className="h-4 w-4 text-text-muted" />
-                  <span className="flex-1 truncate text-text">{user.email}</span>
+                <div className="mt-1.5 flex items-center gap-2 px-3 h-10 rounded-md border border-border-subtle bg-surface-muted/50 text-sm min-w-0">
+                  <Mail className="h-4 w-4 text-text-muted shrink-0" />
+                  <span className="flex-1 truncate text-text min-w-0">{user.email}</span>
                   {user.email_verified ? (
-                    <Badge tone="success"><BadgeCheck className="h-3 w-3 mr-1" /> Verified</Badge>
+                    <Badge tone="success" className="shrink-0"><BadgeCheck className="h-3 w-3 mr-1" /> Verified</Badge>
                   ) : (
-                    <Badge tone="warn">Unverified</Badge>
+                    <Badge tone="warn" className="shrink-0">Unverified</Badge>
                   )}
                 </div>
                 {!user.email_verified && (
-                  <div className="mt-2 text-xs text-text-muted flex items-center gap-1.5 leading-relaxed">
+                  <div className="mt-2 text-xs text-text-muted flex flex-wrap items-center gap-1.5 leading-relaxed">
                     <MailWarning className="h-3.5 w-3.5 text-warn shrink-0" />
-                    Verify your email to enable payouts.
+                    <span>Verify your email to enable payouts.</span>
                     <button
                       onClick={resendVerify}
                       disabled={resending}
-                      className="text-accent hover:underline disabled:opacity-50 ml-1 font-medium"
+                      className="text-accent hover:underline disabled:opacity-50 font-medium"
                     >
                       {resending ? 'Sending…' : 'Resend verification'}
                     </button>
@@ -190,11 +236,11 @@ export default function SettingsPage() {
 
           {/* Preferences Card */}
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle>Notifications & Preferences</CardTitle>
               <CardDescription>Configure which automated alerts and platform events you receive.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 sm:p-6 space-y-4">
               {loadingPrefs ? (
                 <div className="space-y-3">
                   <Skeleton className="h-10 w-full" />
@@ -230,10 +276,18 @@ export default function SettingsPage() {
                   <PrefToggleRow
                     icon={Volume2}
                     title="Platform Sound Effects"
-                    subtitle="Play audio cues on order fills, SL/TP triggers, and stadium chat pings."
+                    subtitle="Play audio cues on order fills, SL/TP triggers, and victory fanfares."
                     checked={!!prefs.sound_effects}
                     busy={savingPrefKey === 'sound_effects'}
                     onToggle={() => togglePref('sound_effects')}
+                  />
+                  <PrefToggleRow
+                    icon={Smartphone}
+                    title="Haptic Vibration Feedback"
+                    subtitle="Vibrate mobile devices on trade fills, position exits, and milestone passes."
+                    checked={!!prefs.haptic_feedback}
+                    busy={savingPrefKey === 'haptic_feedback'}
+                    onToggle={() => togglePref('haptic_feedback')}
                   />
                   <PrefToggleRow
                     icon={Send}
@@ -250,24 +304,24 @@ export default function SettingsPage() {
         </div>
 
         {/* Right Column: Security & Actions */}
-        <div className="space-y-6">
+        <div className="space-y-6 w-full max-w-full min-w-0">
           <Card>
-            <CardHeader><CardTitle>Security</CardTitle></CardHeader>
-            <CardContent className="space-y-5">
+            <CardHeader className="p-4 sm:p-6"><CardTitle>Security</CardTitle></CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-5">
               {/* 2FA Toggle */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-start gap-3">
+              <div className="flex items-center justify-between gap-3 min-w-0 w-full">
+                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                   <div className="h-9 w-9 rounded-md bg-success/10 text-success flex items-center justify-center shrink-0">
                     <ShieldCheck className="h-4 w-4" />
                   </div>
-                  <div>
-                    <div className="text-sm font-medium text-text">Two-factor authentication</div>
-                    <div className="text-xs text-text-muted leading-relaxed">Get a 6-digit code by email on every sign-in — no authenticator app needed.</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs sm:text-sm font-semibold text-text">Two-factor authentication</div>
+                    <div className="text-2xs text-text-muted leading-relaxed break-words">Get a 6-digit code by email on every sign-in — no authenticator app needed.</div>
                   </div>
                 </div>
                 <div className="shrink-0">
                   {twoFA == null ? (
-                    <Skeleton className="h-9 w-24" />
+                    <Skeleton className="h-8 sm:h-9 w-20 sm:w-24" />
                   ) : (
                     <Button
                       variant={twoFA ? 'outline' : 'primary'}
@@ -284,18 +338,18 @@ export default function SettingsPage() {
               <hr className="border-border-subtle" />
 
               {/* Password Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-start gap-3">
+              <div className="space-y-3 min-w-0 w-full">
+                <div className="flex items-center justify-between gap-3 min-w-0 w-full">
+                  <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                     <div className="h-9 w-9 rounded-md bg-accent/10 text-accent flex items-center justify-center shrink-0">
                       <Lock className="h-4 w-4" />
                     </div>
-                    <div>
-                      <div className="text-sm font-medium text-text">Password</div>
-                      <div className="text-xs text-text-muted leading-relaxed">Change your login password directly or request a reset link.</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs sm:text-sm font-semibold text-text">Password</div>
+                      <div className="text-2xs text-text-muted leading-relaxed break-words">Change your login password directly or request a reset link.</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Button
                       variant={showPwForm ? 'secondary' : 'outline'}
                       size="sm"
@@ -313,7 +367,7 @@ export default function SettingsPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     onSubmit={handlePasswordChange}
-                    className="p-4 rounded-xl border border-border-subtle bg-surface-muted/40 space-y-3 mt-2"
+                    className="p-3 sm:p-4 rounded-xl border border-border-subtle bg-surface-muted/40 space-y-3 mt-2 min-w-0 w-full"
                   >
                     <div>
                       <label className="text-xs font-semibold text-text block mb-1">Current Password</label>
@@ -351,7 +405,7 @@ export default function SettingsPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
                       <button
                         type="button"
                         onClick={async () => {
@@ -359,7 +413,7 @@ export default function SettingsPage() {
                           if (res.ok) toast.success('Password reset link sent to your email')
                           else        toast.error(res.error)
                         }}
-                        className="text-2xs text-text-muted hover:text-accent underline"
+                        className="text-2xs text-text-muted hover:text-accent underline text-left"
                       >
                         Forgot password? Send email link
                       </button>
@@ -379,14 +433,14 @@ export default function SettingsPage() {
           </Card>
 
           <Card className="border-danger/30">
-            <CardHeader><CardTitle className="text-danger">Account actions</CardTitle></CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-medium text-text">Sign out</div>
-                  <div className="text-xs text-text-muted">End your session on this device.</div>
+            <CardHeader className="p-4 sm:p-6"><CardTitle className="text-danger">Account actions</CardTitle></CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0 w-full">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-semibold text-text">Sign out</div>
+                  <div className="text-2xs text-text-muted">End your session on this device.</div>
                 </div>
-                <Button variant="outline" onClick={handleSignout} size="sm">
+                <Button variant="outline" onClick={handleSignout} size="sm" className="shrink-0 w-full sm:w-auto">
                   <LogOut className="h-4 w-4 mr-1.5" /> Sign out
                 </Button>
               </div>
@@ -400,11 +454,11 @@ export default function SettingsPage() {
 
 function ReadOnlyField({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0 w-full">
       <Label>{label}</Label>
-      <div className="mt-1.5 flex items-center gap-2 px-3 h-10 rounded-md border border-border-subtle bg-surface-muted/50 text-sm">
-        <Icon className="h-4 w-4 text-text-muted" />
-        <span className="truncate text-text font-medium">{value}</span>
+      <div className="mt-1.5 flex items-center gap-2 px-3 h-10 rounded-md border border-border-subtle bg-surface-muted/50 text-sm min-w-0">
+        <Icon className="h-4 w-4 text-text-muted shrink-0" />
+        <span className="truncate text-text font-medium min-w-0 flex-1">{value}</span>
       </div>
     </div>
   )
@@ -426,14 +480,14 @@ function PrefToggleRow({
   onToggle: () => void
 }) {
   return (
-    <div className="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
-      <div className="flex items-start gap-3 min-w-0">
+    <div className="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0 min-w-0 w-full">
+      <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
         <div className="h-8 w-8 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 text-text-muted mt-0.5">
           <Icon className="h-4 w-4" />
         </div>
-        <div className="min-w-0">
-          <div className="text-xs font-semibold text-text">{title}</div>
-          <div className="text-2xs text-text-muted leading-relaxed line-clamp-1">{subtitle}</div>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs sm:text-sm font-semibold text-text truncate">{title}</div>
+          <div className="text-2xs text-text-muted leading-relaxed line-clamp-2 break-words">{subtitle}</div>
         </div>
       </div>
       <button

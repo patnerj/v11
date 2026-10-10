@@ -121,7 +121,7 @@ function SummaryCard({ tone, icon: Icon, label, value, hint }: {
           <div className={`h-9 w-9 rounded-lg inline-flex items-center justify-center ${bg}`}><Icon className="h-4 w-4" /></div>
           <span className="text-2xs uppercase tracking-wider text-text-muted">{label}</span>
         </div>
-        <div className="text-2xl font-bold tabular tracking-tight">{value}</div>
+        <div className="text-2xl font-bold terminal-num tracking-tight">{value}</div>
         <div className="text-2xs text-text-faint mt-1">{hint}</div>
       </Card>
     </motion.div>
@@ -168,7 +168,7 @@ function PayoutCard({ p }: { p: PayoutItem }) {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-lg font-bold tabular">{fmtUSD(p.trader_amount)}</span>
+            <span className="text-lg font-bold terminal-num">{fmtUSD(p.trader_amount)}</span>
             <Badge tone={TONE[p.status]}>{LABEL[p.status]}</Badge>
           </div>
           <div className="text-2xs text-text-muted mt-0.5">

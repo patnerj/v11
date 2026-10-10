@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Gauge, Shield, Wallet, 
   Settings, Megaphone, Trophy, BarChart3, LifeBuoy, 
   Bell, ChevronLeft, ChevronRight, UserCircle, LogOut,
-  Sparkles, UserCheck, CreditCard, Zap
+  Sparkles, UserCheck, CreditCard, Zap, ExternalLink, Search
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { SidebarBrand } from '@/components/logo'
@@ -31,6 +31,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: '/admin/risk?tab=sentinel', label: 'AI Sentinel', icon: Zap, badge: APP_DISPLAY_VERSION },
   { href: '/admin/payouts',     label: 'Payouts Hub',  icon: Wallet },
   { href: '/admin/marketing',   label: 'Marketing',    icon: Megaphone },
+  { href: '/admin/seo',         label: 'SEO & Webmaster', icon: Search },
   { href: '/admin/builder',     label: 'Page Builder', icon: Sparkles },
   { href: '/admin/tournaments', label: 'Tournaments',  icon: Trophy },
   { href: '/admin/analytics',   label: 'Analytics',    icon: BarChart3 },
@@ -140,7 +141,7 @@ export function Sidebar({
               )}
 
               {!collapsed && item.badge && (
-                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent">
+                <span className="ml-auto text-2xs font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent">
                   {item.badge}
                 </span>
               )}
@@ -160,10 +161,25 @@ export function Sidebar({
               <span className="text-xs font-semibold text-text truncate">
                 {user?.email || 'admin@firm.com'}
               </span>
-              <span className="text-[11px] text-accent font-medium">Enterprise Admin</span>
+              <span className="text-2xs text-accent font-medium">Enterprise Admin</span>
             </div>
           )}
         </div>
+        {!collapsed && (
+          <div className="mt-2.5 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-2xs text-text-faint px-2">
+            <span>Architecture</span>
+            <a
+              href="https://launchapropfirm.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline flex items-center gap-1 font-semibold transition-colors"
+              title="Platform Architecture & Engineering Desk"
+            >
+              <span>launchapropfirm.com</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        )}
       </div>
     </aside>
   )

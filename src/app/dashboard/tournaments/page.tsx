@@ -28,6 +28,17 @@ function cleanPrizeValue(val: string): string {
   return val.replace(/[\$€£]/g, '').trim()
 }
 
+function safeFormatDate(val?: string | null): string | null {
+  if (!val) return null
+  try {
+    const d = new Date(String(val).replace(' ', 'T'))
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleDateString()
+  } catch {
+    return null
+  }
+}
+
 function parsePrizes(raw: unknown): Record<string, string> {
   if (!raw) return {}
   if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) return raw as Record<string, string>
@@ -222,12 +233,27 @@ export default function DashboardTournamentsPage() {
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/50">
-            {t.end_date ? (
-              <div className="flex items-center gap-1.5 text-xs text-text-muted">
-                <Calendar className="h-3.5 w-3.5 text-text-faint" />
-                <span>Ends {new Date(String(t.end_date).replace(' ', 'T')).toLocaleDateString()}</span>
-              </div>
-            ) : <div />}
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-text-muted">
+              {safeFormatDate(t.start_date) && (
+                <div className="flex items-center gap-1.5 text-accent font-medium">
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    Starts <strong className="text-text font-bold">{safeFormatDate(t.start_date)}</strong>
+                  </span>
+                </div>
+              )}
+              {safeFormatDate(t.start_date) && safeFormatDate(t.end_date) && (
+                <span className="text-text-faint hidden sm:inline">·</span>
+              )}
+              {safeFormatDate(t.end_date) && (
+                <div className="flex items-center gap-1.5 text-text-muted">
+                  {!safeFormatDate(t.start_date) && <Calendar className="h-3.5 w-3.5 text-text-faint shrink-0" />}
+                  <span>
+                    Ends <strong className="text-text font-medium">{safeFormatDate(t.end_date)}</strong>
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Button
                 type="button"
@@ -310,10 +336,12 @@ export default function DashboardTournamentsPage() {
             <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
               <Trophy className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="text-2xs uppercase tracking-wider text-text-muted">Live tournaments</div>
-              {myLiveRank > 0 && <Badge tone="success" size="sm" className="ml-2">Live Rank: {myLiveRank}</Badge>}
-              <Badge tone="accent" size="sm" className="ml-2">{timeLeft}</Badge>
+              <div className="flex flex-wrap items-center gap-1.5 my-0.5">
+                {myLiveRank > 0 && <Badge tone="success" size="sm">Live Rank: {myLiveRank}</Badge>}
+                {timeLeft && <Badge tone="accent" size="sm">{timeLeft}</Badge>}
+              </div>
               <div className="text-lg font-bold tabular text-text">{live.length}</div>
             </div>
           </CardContent>
@@ -417,14 +445,16 @@ export default function DashboardTournamentsPage() {
             onClose={() => setViewingRules(null)}
             maxWidth="lg"
             title={
-              <div className="flex items-center gap-2 text-text font-bold text-base sm:text-lg">
-                <BookOpen className="h-5 w-5 text-accent" />
-                <span>Tournament Trading Rules</span>
+              <div className="flex items-center gap-2 text-text font-bold text-base sm:text-lg min-w-0">
+                <BookOpen className="h-5 w-5 text-accent shrink-0" />
+                <span className="truncate">Tournament Trading Rules</span>
               </div>
             }
             description={
-              <span className="text-xs text-text-muted">
-                {viewingRules.title || `Tournament #${viewingRules.id}`} · Official Risk Parameters & Fair Play
+              <span className="text-2xs sm:text-xs text-text-muted flex items-center flex-wrap gap-1.5">
+                <span className="font-semibold text-foreground">{viewingRules.title || `Tournament #${viewingRules.id}`}</span>
+                {safeFormatDate(viewingRules.start_date) && <span>· Starts {safeFormatDate(viewingRules.start_date)}</span>}
+                {safeFormatDate(viewingRules.end_date) && <span>· Ends {safeFormatDate(viewingRules.end_date)}</span>}
               </span>
             }
             footer={
@@ -433,15 +463,15 @@ export default function DashboardTournamentsPage() {
               </Button>
             }
           >
-            <div className="space-y-4 py-1">
+            <div className="space-y-3 sm:space-y-4 py-1">
               {/* Highlight Callout: Trailing Drawdown */}
-              <div className="p-3.5 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent relative overflow-hidden">
+              <div className="p-3 sm:p-3.5 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent relative overflow-hidden">
                 <div className="flex items-start gap-3">
                   <div className="h-8 w-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
                     <Zap className="h-4 w-4" />
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
                         {isTrailing ? '⚡ Trailing Drawdown Active' : 'Static Drawdown'}
                       </span>
@@ -463,26 +493,26 @@ export default function DashboardTournamentsPage() {
               </div>
 
               {/* 4 Core Parameter Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
-                  <div className="text-2xs uppercase tracking-wider text-text-muted">Daily Loss Limit</div>
-                  <div className="text-base font-bold text-warn tabular mt-1">{dailyDD}%</div>
-                  <div className="text-[10px] text-text-faint mt-0.5">From daily balance</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                <div className="p-2.5 sm:p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
+                  <div className="text-3xs sm:text-2xs uppercase tracking-wider text-text-muted">Daily Loss Limit</div>
+                  <div className="text-sm sm:text-base font-bold text-warn tabular mt-1">{dailyDD}%</div>
+                  <div className="text-3xs sm:text-2xs text-text-faint mt-0.5">From daily balance</div>
                 </div>
-                <div className="p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
-                  <div className="text-2xs uppercase tracking-wider text-text-muted">Max Drawdown</div>
-                  <div className="text-base font-bold text-amber-400 tabular mt-1">{trailingDD}%</div>
-                  <div className="text-[10px] text-text-faint mt-0.5">{isTrailing ? 'Trailing HWM' : 'Static limit'}</div>
+                <div className="p-2.5 sm:p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
+                  <div className="text-3xs sm:text-2xs uppercase tracking-wider text-text-muted">Max Drawdown</div>
+                  <div className="text-sm sm:text-base font-bold text-amber-400 tabular mt-1">{trailingDD}%</div>
+                  <div className="text-3xs sm:text-2xs text-text-faint mt-0.5">{isTrailing ? 'Trailing HWM' : 'Static limit'}</div>
                 </div>
-                <div className="p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
-                  <div className="text-2xs uppercase tracking-wider text-text-muted">Account Leverage</div>
-                  <div className="text-base font-bold text-accent tabular mt-1">1:{leverage}</div>
-                  <div className="text-[10px] text-text-faint mt-0.5">Fixed margin</div>
+                <div className="p-2.5 sm:p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
+                  <div className="text-3xs sm:text-2xs uppercase tracking-wider text-text-muted">Account Leverage</div>
+                  <div className="text-sm sm:text-base font-bold text-accent tabular mt-1">1:{leverage}</div>
+                  <div className="text-3xs sm:text-2xs text-text-faint mt-0.5">Fixed margin</div>
                 </div>
-                <div className="p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
-                  <div className="text-2xs uppercase tracking-wider text-text-muted">Min Trading Days</div>
-                  <div className="text-base font-bold text-success tabular mt-1">{minDays > 0 ? `${minDays}d` : 'None'}</div>
-                  <div className="text-[10px] text-text-faint mt-0.5">{minDays > 0 ? 'Required' : 'No restriction'}</div>
+                <div className="p-2.5 sm:p-3 rounded-lg bg-bg-subtle border border-border-subtle text-center">
+                  <div className="text-3xs sm:text-2xs uppercase tracking-wider text-text-muted">Min Trading Days</div>
+                  <div className="text-sm sm:text-base font-bold text-success tabular mt-1">{minDays > 0 ? `${minDays}d` : 'None'}</div>
+                  <div className="text-3xs sm:text-2xs text-text-faint mt-0.5">{minDays > 0 ? 'Required' : 'No restriction'}</div>
                 </div>
               </div>
 
@@ -577,14 +607,16 @@ export default function DashboardTournamentsPage() {
             onClose={() => setViewingPrizes(null)}
             maxWidth="lg"
             title={
-              <div className="flex items-center gap-2 text-text font-bold text-base sm:text-lg">
-                <Trophy className="h-5 w-5 text-amber-400" />
-                <span>Tournament Prize Pool & Tiers</span>
+              <div className="flex items-center gap-2 text-text font-bold text-base sm:text-lg min-w-0">
+                <Trophy className="h-5 w-5 text-amber-400 shrink-0" />
+                <span className="truncate">Tournament Prize Pool & Tiers</span>
               </div>
             }
             description={
-              <span className="text-xs text-text-muted">
-                {viewingPrizes.title || `Tournament #${viewingPrizes.id}`} · Guaranteed Prize Distribution
+              <span className="text-2xs sm:text-xs text-text-muted flex items-center flex-wrap gap-1.5">
+                <span className="font-semibold text-foreground">{viewingPrizes.title || `Tournament #${viewingPrizes.id}`}</span>
+                {safeFormatDate(viewingPrizes.start_date) && <span>· Starts {safeFormatDate(viewingPrizes.start_date)}</span>}
+                {safeFormatDate(viewingPrizes.end_date) && <span>· Ends {safeFormatDate(viewingPrizes.end_date)}</span>}
               </span>
             }
             footer={
@@ -626,7 +658,7 @@ export default function DashboardTournamentsPage() {
                           {tier.badge}
                         </span>
                         {tier.highlight && (
-                          <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wide">
+                          <span className="text-2xs uppercase font-bold text-amber-400 tracking-wide">
                             Top Reward
                           </span>
                         )}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import Image from 'next/image'
 import { cn } from '@/lib/cn'
 import { useBranding } from '@/store/branding'
 
@@ -76,6 +77,31 @@ export function Logo({
               <stop offset="50%" stopColor="#10B981" />
               <stop offset="100%" stopColor="#34D399" />
             </linearGradient>
+            <style>{`
+              .mf-brand-title {
+                fill: #0F172A;
+              }
+              .dark .mf-brand-title,
+              [data-theme="midnight-obsidian"] .mf-brand-title,
+              [data-theme="vscode-dark"] .mf-brand-title,
+              [data-theme="cyberpunk-neon"] .mf-brand-title,
+              [data-theme="tokyo-night"] .mf-brand-title {
+                fill: #FFFFFF;
+              }
+              .mf-brand-sub {
+                fill: #475569;
+              }
+              .dark .mf-brand-sub,
+              [data-theme="midnight-obsidian"] .mf-brand-sub,
+              [data-theme="vscode-dark"] .mf-brand-sub,
+              [data-theme="cyberpunk-neon"] .mf-brand-sub,
+              [data-theme="tokyo-night"] .mf-brand-sub {
+                fill: #94A3B8;
+              }
+              .mf-emblem-bg {
+                fill: #070C1B;
+              }
+            `}</style>
           </defs>
 
           {/* MassFunded M Emblem */}
@@ -87,6 +113,7 @@ export function Logo({
               fill="#070C1B"
               stroke={`url(#${gradId})`}
               strokeWidth="3"
+              className="mf-emblem-bg"
             />
             <g transform="translate(14, 14) scale(0.16)">
               <path
@@ -107,7 +134,7 @@ export function Logo({
                 fontSize="54"
                 fontWeight="800"
                 letterSpacing="-1"
-                className="fill-slate-900 dark:fill-white transition-colors duration-200"
+                className="mf-brand-title transition-colors duration-200"
               >
                 Mass<tspan fill={`url(#${textGradId})`}>Funded</tspan>
               </text>
@@ -118,7 +145,7 @@ export function Logo({
                 fontSize="12.5"
                 fontWeight="700"
                 letterSpacing="3.2"
-                className="fill-slate-500 dark:fill-slate-400 transition-colors duration-200"
+                className="mf-brand-sub transition-colors duration-200"
               >
                 PROPRIETARY TRADING INFRASTRUCTURE
               </text>
@@ -139,10 +166,18 @@ export function Logo({
   }
 
   if (imageUrl) {
+    const isSvg = imageUrl.endsWith('.svg') || imageUrl.includes('.svg?')
     return (
       <div className={cn('flex items-center', className)}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt={name} className="h-9 md:h-10 w-auto max-w-[220px] object-contain rounded-lg" />
+        <Image 
+          src={imageUrl} 
+          alt={name} 
+          width={220} 
+          height={40} 
+          priority
+          unoptimized={isSvg}
+          className="h-9 md:h-10 w-auto max-w-[220px] object-contain rounded-lg" 
+        />
       </div>
     )
   }
@@ -178,8 +213,14 @@ export function SidebarBrand({ collapsed = false, className }: { collapsed?: boo
   return (
     <div className={cn('flex items-center gap-2.5 min-w-0', className)}>
       {icon ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={icon} alt={name} className="h-8 w-8 rounded-lg object-contain shrink-0 bg-surface-muted/40" />
+        <Image 
+          src={icon} 
+          alt={name} 
+          width={32} 
+          height={32} 
+          unoptimized={icon.endsWith('.svg') || icon.includes('.svg?')}
+          className="h-8 w-8 rounded-lg object-contain shrink-0 bg-surface-muted/40" 
+        />
       ) : loaded ? (
         <BrandInitialMark name={name} className="h-8 w-8" />
       ) : (

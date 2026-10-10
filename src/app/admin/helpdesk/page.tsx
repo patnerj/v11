@@ -56,6 +56,7 @@ export default function AdminHelpdeskPage() {
   const brandName = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
   const { user, ready } = useAuth()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('')
@@ -64,9 +65,10 @@ export default function AdminHelpdeskPage() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [quickQueueFilter, setQuickQueueFilter] = useState<'needs_reply' | 'open' | 'resolved' | 'all'>('all')
 
-  // Selected Ticket State
+  // Selected Ticket State & AI Draft Store (ADMINUI-25)
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [replyMessage, setReplyMessage] = useState('')
+  const [aiDrafts, setAiDrafts] = useState<Record<number, string>>({})
   const [isSendingAndResolving, setIsSendingAndResolving] = useState(false)
 
   // Fetch AI settings to bind AI Auto-Pilot toggle with the backend
@@ -169,6 +171,7 @@ export default function AdminHelpdeskPage() {
       const draftText = (res as any)?.data?.draft || (res as any)?.draft
       if (res.ok && draftText) {
         setReplyMessage(draftText)
+        setAiDrafts((prev) => ({ ...prev, [selectedTicketId]: draftText }))
         toast.success('✨ AI resolution draft generated successfully!')
         return
       }
@@ -180,6 +183,7 @@ export default function AdminHelpdeskPage() {
     try {
       const fallbackDraft = generateAutonomousDraft(activeTicket, brandName)
       setReplyMessage(fallbackDraft)
+      setAiDrafts((prev) => ({ ...prev, [selectedTicketId]: fallbackDraft }))
       toast.info('📝 Template-based draft generated (AI unavailable)')
     } catch (err: any) {
       toast.error(err?.message || 'Could not generate AI draft.')
@@ -197,38 +201,18 @@ export default function AdminHelpdeskPage() {
         const resolved = res.data.resolved_count ?? (res.data as any).resolved ?? 0
         if (scanned > 0) {
           toast.success(`Autonomous Support Desk processed ${scanned} tickets and resolved ${resolved}!`)
-        } else if (selectedTicketId) {
-          await updateStatusMutation.mutateAsync({ id: selectedTicketId, status: 'resolved' })
-          toast.success(`Autonomous Desk auto-resolved active ticket #${activeTicket?.ticket_number || selectedTicketId}!`)
         } else {
-          toast.info('All support tickets are already resolved!')
+          toast.info('No open tickets matched auto-resolve criteria.')
         }
         queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
         if (selectedTicketId) {
           queryClient.invalidateQueries({ queryKey: ['admin-ticket-detail', selectedTicketId] })
         }
       } else {
-        if (selectedTicketId) {
-          await updateStatusMutation.mutateAsync({ id: selectedTicketId, status: 'resolved' })
-          toast.success(`Autonomous Desk auto-resolved ticket #${activeTicket?.ticket_number || selectedTicketId}!`)
-          queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
-          queryClient.invalidateQueries({ queryKey: ['admin-ticket-detail', selectedTicketId] })
-        } else {
-          toast.error('Auto-resolve batch failed.')
-        }
+        toast.error((!res.ok ? res.error : undefined) || 'Auto-resolve batch failed.')
       }
-    } catch {
-      if (selectedTicketId) {
-        try {
-          await updateStatusMutation.mutateAsync({ id: selectedTicketId, status: 'resolved' })
-          toast.success(`Autonomous Desk auto-resolved ticket #${activeTicket?.ticket_number || selectedTicketId}!`)
-          queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
-        } catch {
-          toast.error('Failed to trigger auto-resolver.')
-        }
-      } else {
-        toast.error('Failed to trigger auto-resolver.')
-      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to trigger auto-resolver.')
     } finally {
       setIsAutoResolvingBatch(false)
     }
@@ -331,9 +315,17 @@ export default function AdminHelpdeskPage() {
   const activeTicket = activeTicketData?.ticket || allTickets.find(t => t.id === selectedTicketId) || null
   const activeMessages = activeTicketData?.messages || []
 
-  // Scroll to bottom when messages update
+  // Scroll to bottom when messages update — only auto-scroll if agent is near bottom (ADMINUI-27)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesContainerRef.current
+    if (!container) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+    if (isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [activeMessages])
 
   // ─────────────────────────────────────────────────────────────
@@ -348,6 +340,13 @@ export default function AdminHelpdeskPage() {
     onSuccess: () => {
       toast.success('Response delivered to trader!')
       setReplyMessage('')
+      if (selectedTicketId) {
+        setAiDrafts(prev => {
+          const next = { ...prev }
+          delete next[selectedTicketId]
+          return next
+        })
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-ticket-detail', selectedTicketId] })
       queryClient.invalidateQueries({ queryKey: ['admin-tickets'] })
     },
@@ -443,7 +442,7 @@ export default function AdminHelpdeskPage() {
               type="button"
               onClick={handleToggleAutopilot}
               disabled={toggleAutopilotMutation.isPending}
-              className={`text-[11px] font-bold px-2 py-0.5 rounded cursor-pointer transition-all ${
+              className={`text-2xs font-bold px-2 py-0.5 rounded cursor-pointer transition-all ${
                 aiAutopilotActive ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-surface-muted text-text-muted'
               }`}
             >
@@ -537,7 +536,7 @@ export default function AdminHelpdeskPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-8 px-2 rounded-lg bg-surface border border-border text-[11px] text-text focus:outline-none focus:border-emerald-500 font-mono shrink-0"
+              className="h-8 px-2 rounded-lg bg-surface border border-border text-2xs text-text focus:outline-none focus:border-emerald-500 font-mono shrink-0"
             >
               <option value="all">All Categories</option>
               <option value="billing">Billing</option>
@@ -560,8 +559,8 @@ export default function AdminHelpdeskPage() {
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${queueCounts.needsReply > 0 ? 'bg-amber-500 dark:bg-amber-400 animate-pulse' : 'bg-gray-400'}`} />
-              <span className="text-[11px] font-medium truncate">Needs Reply</span>
-              <span className="text-[10px] font-mono px-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">
+              <span className="text-2xs font-medium truncate">Needs Reply</span>
+              <span className="text-2xs font-mono px-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">
                 {queueCounts.needsReply}
               </span>
             </button>
@@ -575,8 +574,8 @@ export default function AdminHelpdeskPage() {
                   : 'text-text-muted hover:text-text hover:bg-surface'
               }`}
             >
-              <span className="text-[11px] font-medium truncate">Active</span>
-              <span className="text-[10px] font-mono px-1 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold">
+              <span className="text-2xs font-medium truncate">Active</span>
+              <span className="text-2xs font-mono px-1 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold">
                 {queueCounts.inProgress}
               </span>
             </button>
@@ -590,8 +589,8 @@ export default function AdminHelpdeskPage() {
                   : 'text-text-muted hover:text-text hover:bg-surface'
               }`}
             >
-              <span className="text-[11px] font-medium truncate">Resolved</span>
-              <span className="text-[10px] font-mono px-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">
+              <span className="text-2xs font-medium truncate">Resolved</span>
+              <span className="text-2xs font-mono px-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">
                 {queueCounts.resolved}
               </span>
             </button>
@@ -605,8 +604,8 @@ export default function AdminHelpdeskPage() {
                   : 'text-text-muted hover:text-text hover:bg-surface'
               }`}
             >
-              <span className="text-[11px] font-medium truncate">All</span>
-              <span className="text-[10px] font-mono px-1 rounded-full bg-surface text-text font-bold border border-border">
+              <span className="text-2xs font-medium truncate">All</span>
+              <span className="text-2xs font-mono px-1 rounded-full bg-surface text-text font-bold border border-border">
                 {queueCounts.total}
               </span>
             </button>
@@ -619,7 +618,7 @@ export default function AdminHelpdeskPage() {
                 <CardContent className="py-12 text-center text-text-muted space-y-2">
                   <RefreshCw className="h-6 w-6 mx-auto animate-spin text-emerald-500 mb-1" />
                   <p className="font-semibold text-text text-xs">Loading support tickets...</p>
-                  <p className="text-[10px] text-text-muted">Synchronizing with helpdesk queue</p>
+                  <p className="text-2xs text-text-muted">Synchronizing with helpdesk queue</p>
                 </CardContent>
               </Card>
             ) : displayedTickets.length === 0 ? (
@@ -631,7 +630,7 @@ export default function AdminHelpdeskPage() {
                       ? '🎉 All caught up! No tickets waiting for reply.' 
                       : 'No tickets match active filter'}
                   </p>
-                  <p className="text-[10px] text-text-muted">
+                  <p className="text-2xs text-text-muted">
                     {quickQueueFilter === 'needs_reply'
                       ? 'All incoming trader inquiries have been answered or resolved.'
                       : 'Clear filters or switch tabs to view conversations.'}
@@ -656,7 +655,10 @@ export default function AdminHelpdeskPage() {
                 return (
                   <div
                     key={t.id}
-                    onClick={() => setSelectedTicketId(t.id)}
+                    onClick={() => {
+                      setSelectedTicketId(t.id)
+                      setReplyMessage(aiDrafts[t.id] || '')
+                    }}
                     className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-2 ${
                       isSelected
                         ? 'bg-surface border-emerald-500 shadow-md ring-1 ring-emerald-500/20'
@@ -677,7 +679,7 @@ export default function AdminHelpdeskPage() {
                             t.priority === 'medium' ? 'neutral' : 'neutral'
                           } 
                           size="sm" 
-                          className="text-[10px] capitalize font-mono"
+                          className="text-2xs capitalize font-mono"
                           pulsing={t.priority === 'urgent'}
                         >
                           {t.priority}
@@ -686,12 +688,12 @@ export default function AdminHelpdeskPage() {
 
                       <div className="flex items-center gap-1.5">
                         {needsReply ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
+                          <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
                             Needs Reply
                           </span>
                         ) : isResolved ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400/80 border border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400/80 border border-emerald-500/20">
                             <CheckCircle2 className="w-2.5 h-2.5" />
                             Resolved
                           </span>
@@ -702,7 +704,7 @@ export default function AdminHelpdeskPage() {
                               t.status === 'in_progress' ? 'accent' : 'neutral'
                             } 
                             size="sm" 
-                            className="text-[10px] capitalize"
+                            className="text-2xs capitalize"
                           >
                             {t.status.replace('_', ' ')}
                           </Badge>
@@ -714,12 +716,12 @@ export default function AdminHelpdeskPage() {
                       <h4 className="text-xs font-semibold text-text line-clamp-1">
                         {t.subject}
                       </h4>
-                      <p className="text-[11px] text-text-muted mt-0.5 line-clamp-1 font-sans">
+                      <p className="text-2xs text-text-muted mt-0.5 line-clamp-1 font-sans">
                         {t.latest_message || 'No messages'}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50 text-[10px] font-mono">
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50 text-2xs font-mono">
                       <span className="text-text-muted flex items-center gap-1">
                         <User className="w-2.5 h-2.5 text-text-muted" />
                         {t.display_name || t.user_login || `User #${t.trader_id}`}
@@ -836,16 +838,16 @@ export default function AdminHelpdeskPage() {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                     </span>
                     <span className="font-semibold">Trader is waiting for your reply</span>
-                    <span className="text-amber-600 dark:text-amber-400/70 text-[11px] hidden sm:inline">— Last inquiry by {activeTicket.display_name || activeTicket.user_login || 'Trader'}</span>
+                    <span className="text-amber-600 dark:text-amber-400/70 text-2xs hidden sm:inline">— Last inquiry by {activeTicket.display_name || activeTicket.user_login || 'Trader'}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400/80">
+                  <span className="text-2xs font-mono text-amber-600 dark:text-amber-400/80">
                     {new Date(activeTicket.latest_message_at || activeTicket.updated_at || activeTicket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               )}
 
               {/* Scrollable Message Thread */}
-              <CardContent className="p-5 flex-1 overflow-y-auto space-y-4 font-sans bg-surface-muted/20">
+              <CardContent ref={messagesContainerRef} className="p-5 flex-1 overflow-y-auto space-y-4 font-sans bg-surface-muted/20">
                 {activeMessages.length === 0 ? (
                   <div className="py-16 text-center text-text-muted text-xs">
                     No message history loaded for this ticket.
@@ -878,7 +880,7 @@ export default function AdminHelpdeskPage() {
                         key={msg.id} 
                         className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
                       >
-                        <div className="flex items-center gap-2 mb-1 text-[11px] font-mono text-text-muted">
+                        <div className="flex items-center gap-2 mb-1 text-2xs font-mono text-text-muted">
                           <span className={isAdmin ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-text font-medium'}>
                             {isAdmin ? (msg.sender_id === 1 || msg.message?.includes('AI') ? `${brandName} AI Copilot` : `${brandName} Support Agent`) : (msg.sender_name || activeTicket.display_name || 'Trader')}
                           </span>
@@ -919,7 +921,7 @@ export default function AdminHelpdeskPage() {
                       <Sparkles className={`h-3.5 w-3.5 ${isAutoDrafting ? 'animate-spin' : ''}`} />
                       {isAutoDrafting ? 'Drafting with AI...' : '✨ AI Auto-Draft'}
                     </button>
-                    <span className="text-[11px] text-text-muted font-mono hidden md:inline">| Presets:</span>
+                    <span className="text-2xs text-text-muted font-mono hidden md:inline">| Presets:</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 overflow-x-auto">
@@ -931,7 +933,7 @@ export default function AdminHelpdeskPage() {
                           setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${cr.text}` : cr.text))
                           toast.info(`Inserted "${cr.title}" template into reply!`)
                         }}
-                        className="px-2.5 py-1 rounded-md bg-surface hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-[11px] text-text hover:text-emerald-600 dark:hover:text-emerald-300 transition-all shrink-0 cursor-pointer"
+                        className="px-2.5 py-1 rounded-md bg-surface hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-2xs text-text hover:text-emerald-600 dark:hover:text-emerald-300 transition-all shrink-0 cursor-pointer"
                         title={cr.text}
                       >
                         {cr.title}
@@ -959,7 +961,7 @@ export default function AdminHelpdeskPage() {
                   {/* Dedicated Action Row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span>Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border font-mono text-[10px] text-text">Ctrl + Enter</kbd> to quickly send</span>
+                      <span>Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border font-mono text-2xs text-text">Ctrl + Enter</kbd> to quickly send</span>
                     </div>
 
                     <div className="flex items-center gap-2.5 self-end sm:self-center">

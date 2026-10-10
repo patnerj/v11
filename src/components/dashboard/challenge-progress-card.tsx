@@ -81,33 +81,86 @@ export function ChallengeProgressCard({ metrics: m }: Props) {
           </div>
 
           
-        {m.challenge.drawdown_type === 'trailing' && (
-          <div className="mt-4 p-3 rounded-xl bg-surface-muted/30 border border-border-subtle col-span-2">
-            <div className="text-2xs text-text-muted mb-2 flex justify-between uppercase tracking-wider">
-               <span>Trailing Drawdown Ruler</span>
-               <span className="text-3xs text-text-faint">Floor / Current / Peak</span>
+        {m.challenge.drawdown_type === 'trailing' && (() => {
+          const floor = toNum((m.challenge as any).trailing_dd_floor)
+          const peak = toNum((m.challenge as any).equity_hwm || m.challenge.current_balance)
+          const curr = toNum((m.challenge as any).equity ?? m.challenge.current_balance)
+          const span = peak > floor ? (peak - floor) : 1
+          const posPct = Math.max(0, Math.min(100, ((curr - floor) / span) * 100))
+          const cushion = Math.max(0, curr - floor)
+          return (
+            <div className="mt-4 p-3.5 rounded-xl bg-surface-muted/30 border border-border-subtle col-span-2 space-y-3">
+              <div className="flex items-center justify-between text-2xs uppercase tracking-wider text-text-muted">
+                <span className="font-semibold text-text flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  Trailing Drawdown Ruler
+                </span>
+                <span className="text-2xs text-text-muted font-mono">
+                  Buffer: <strong className="text-profit font-semibold">{fmtUSD(cushion)}</strong>
+                </span>
+              </div>
+
+              {/* Progress Track */}
+              <div className="relative py-2.5 px-2">
+                <div className="h-2.5 bg-border/70 rounded-full w-full relative overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500/70 via-emerald-500/80 to-emerald-400 rounded-full transition-all duration-300"
+                    style={{ width: `${posPct}%` }}
+                  />
+                </div>
+
+                {/* Marker Pins */}
+                <div className="relative w-full pointer-events-none">
+                  {/* Floor pin at 0% */}
+                  <div
+                    className="absolute -top-3.5 left-0 w-3.5 h-3.5 rounded-full bg-danger border-2 border-surface shadow-sm"
+                    title={`Trailing Floor: ${fmtUSD(floor)}`}
+                  />
+                  {/* Current Equity pin */}
+                  <div
+                    className="absolute -top-4 -translate-x-1/2 w-4.5 h-4.5 rounded-full bg-surface border-2 border-amber-400 shadow-md z-10 flex items-center justify-center"
+                    style={{ left: `clamp(10px, ${posPct}%, calc(100% - 10px))` }}
+                    title={`Current Equity: ${fmtUSD(curr)}`}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  </div>
+                  {/* Peak HWM pin at 100% */}
+                  <div
+                    className="absolute -top-3.5 right-0 w-3.5 h-3.5 rounded-full bg-profit border-2 border-surface shadow-sm"
+                    title={`Peak HWM: ${fmtUSD(peak)}`}
+                  />
+                </div>
+              </div>
+
+              {/* Robust 3-Column Non-Overlapping Values Row */}
+              <div className="grid grid-cols-3 gap-1 sm:gap-2 pt-1 text-2xs min-w-0">
+                {/* Left: Floor */}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-text-muted font-medium truncate">Floor (Breach)</span>
+                  <span className="text-loss font-semibold terminal-num truncate">{fmtUSD(floor)}</span>
+                </div>
+                {/* Center: Current Equity */}
+                <div className="flex flex-col items-center text-center min-w-0">
+                  <span className="text-text-muted font-medium truncate">Current Equity</span>
+                  <span className="text-amber-400 font-semibold terminal-num truncate">{fmtUSD(curr)}</span>
+                </div>
+                {/* Right: Peak HWM */}
+                <div className="flex flex-col items-end text-right min-w-0">
+                  <span className="text-text-muted font-medium truncate">Peak HWM</span>
+                  <span className="text-profit font-semibold terminal-num truncate">{fmtUSD(peak)}</span>
+                </div>
+              </div>
+
+              {/* Explanatory Callout */}
+              <div className="text-xs text-text-muted border-t border-border-subtle pt-2 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <p className="leading-snug">
+                  Your trailing floor rises with your peak equity (HWM) and locks in when you hit the max threshold.
+                </p>
+              </div>
             </div>
-            <div className="relative h-2 bg-border rounded-full w-full mt-2 mb-6">
-               {/* Trailing Floor marker (0%) */}
-               <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-danger rounded-full shadow z-10" style={{ left: '0%' }} title="Trailing Floor" />
-               <div className="absolute top-4 text-[10px] text-danger font-medium -translate-x-0" style={{ left: '0%' }}>{fmtUSD(toNum((m.challenge as any).trailing_dd_floor))}</div>
-               
-               {/* Current Equity marker */}
-               <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-warn rounded-full shadow z-20" style={{ left: `${Math.min(100, m.max_dd_progress)}%` }} title="Current Equity" />
-               <div className="absolute top-4 text-[10px] text-warn font-medium -translate-x-1/2" style={{ left: `${Math.min(100, m.max_dd_progress)}%` }}>{fmtUSD(toNum((m.challenge as any).equity ?? m.challenge.current_balance))}</div>
-               
-               {/* Peak HWM marker (100%) */}
-               <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-success rounded-full shadow z-10" style={{ right: '0%' }} title="Peak HWM" />
-               <div className="absolute top-4 text-[10px] text-success font-medium -translate-x-full" style={{ right: '0%' }}>{fmtUSD(toNum((m.challenge as any).equity_hwm))}</div>
-               
-               <div className="absolute top-0 left-0 h-full bg-warn/30 rounded-full" style={{ width: `${Math.min(100, m.max_dd_progress)}%` }} />
-            </div>
-            <div className="mt-4 text-xs text-text-muted border-t border-border-subtle pt-2 flex items-start gap-2">
-               <AlertCircle className="w-4 h-4 text-accent shrink-0" />
-               <p>Your trailing floor rises with your peak equity (HWM) and locks in when you hit the max threshold.</p>
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
           {/* Daily DD */}
           <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-muted/30 border border-border-subtle">
@@ -123,7 +176,7 @@ export function ChallengeProgressCard({ metrics: m }: Props) {
             <div className="text-2xs text-text-muted mt-2 tabular">
               limit {fmtPct(m.daily_dd_pct)}
             </div>
-            <DailyDdTimer compact className="mt-2 text-[10px] py-0.5 px-2" />
+            <DailyDdTimer compact className="mt-2 text-2xs py-0.5 px-2" />
           </div>
 
           {/* Max DD */}

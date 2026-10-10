@@ -252,7 +252,7 @@ export default function AdminActivityPage() {
               <span>Unread Only</span>
               {unreadCount > 0 && (
                 <span className={cn(
-                  "h-4 px-1.5 rounded-full text-[10px] font-bold font-mono",
+                  "h-4 px-1.5 rounded-full text-2xs font-bold font-mono",
                   unreadOnly ? "bg-black text-emerald-400" : "bg-emerald-500/20 text-emerald-400"
                 )}>
                   {unreadCount}
@@ -290,7 +290,7 @@ export default function AdminActivityPage() {
             )}
           >
             <span>🌐 All Activity</span>
-            <span className="text-[10px] opacity-75 font-mono">({rawList.length})</span>
+            <span className="text-2xs opacity-75 font-mono">({rawList.length})</span>
           </button>
 
           <button
@@ -439,14 +439,14 @@ export default function AdminActivityPage() {
                           {n.title}
                         </h4>
                         {!n.is_read && (
-                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-3xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                             UNREAD
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <span className="text-[11px] font-mono text-gray-500 shrink-0">
+                    <span className="text-2xs font-mono text-gray-500 shrink-0">
                       {timeAgo(n.created_at_iso || n.created_at)}
                     </span>
                   </div>
@@ -460,12 +460,12 @@ export default function AdminActivityPage() {
                 {/* Bottom Row: User Tag Pill & Action Button */}
                 <div className="pt-3 border-t border-surface-muted/70 flex items-center justify-between gap-2">
                   {n.ref_user_label ? (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-background border border-surface-muted text-[11px] font-mono text-gray-300 truncate max-w-[75%]">
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-background border border-surface-muted text-2xs font-mono text-gray-300 truncate max-w-[75%]">
                       <User className="h-3 w-3 text-emerald-400 shrink-0" />
                       <span className="truncate">{n.ref_user_label}</span>
                     </div>
                   ) : (
-                    <div className="text-[11px] font-mono text-gray-500">System Event</div>
+                    <div className="text-2xs font-mono text-gray-500">System Event</div>
                   )}
 
                   {!n.is_read ? (

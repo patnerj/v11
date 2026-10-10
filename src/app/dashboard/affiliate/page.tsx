@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles, QrCode, Zap } from 'lucide-react'
+import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles, QrCode, Zap, Percent, Download } from 'lucide-react'
 import QRCode from 'qrcode'
 import { api } from '@/lib/api'
 import type { Commission, AffiliatePayout } from '@/types/api'
@@ -27,11 +27,11 @@ const payoutTone = (s: AffiliatePayout['status']) =>
   s === 'paid' ? 'success' : s === 'rejected' ? 'danger' : s === 'approved' ? 'info' : 'warn'
 const METHOD_LABEL: Record<string, string> = { usdt_trc20: 'USDT (TRC20)', usdt_bep20: 'USDT (BEP20)', wise: 'Wise' }
 
-function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
+function downloadBanner(type: '16:9' | '1:1' | '9:16', code: string, refLink: string, brandName: string = 'MassFunded') {
   if (typeof window === 'undefined') return
   const canvas = document.createElement('canvas')
   const width = type === '16:9' ? 1920 : 1080
-  const height = 1080
+  const height = type === '9:16' ? 1920 : 1080
   canvas.width = width
   canvas.height = height
   const ctx = canvas.getContext('2d')
@@ -46,49 +46,59 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
   const activeAccent = localStorage.getItem('fxsim:theme-accent') || '#10B981'
   const { r, g, b } = hexToRgb(activeAccent)
 
-  // Dark background gradient
+  // Dark background gradient (Fixed: Valid hex colors, no invalid var(--background) syntax)
   const bgGrad = ctx.createLinearGradient(0, 0, width, height)
   bgGrad.addColorStop(0, '#06080F')
-  bgGrad.addColorStop(0.5, 'var(--background)')
+  bgGrad.addColorStop(0.4, '#0B0F19')
   bgGrad.addColorStop(1, '#0F172A')
   ctx.fillStyle = bgGrad
   ctx.fillRect(0, 0, width, height)
 
-  // Glow
-  const glowGrad = ctx.createRadialGradient(width / 2, height / 3, 50, width / 2, height / 3, 500)
-  glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.25)`)
+  // Glowing radial aura
+  const glowCenterY = type === '9:16' ? height * 0.4 : height * 0.45
+  const glowGrad = ctx.createRadialGradient(width / 2, glowCenterY, 50, width / 2, glowCenterY, width * 0.6)
+  glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.22)`)
   glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
   ctx.fillStyle = glowGrad
   ctx.fillRect(0, 0, width, height)
 
-  // Border frame
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+  // Outer border frame
+  ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.3)`
   ctx.lineWidth = 4
-  ctx.strokeRect(40, 40, width - 80, height - 80)
+  ctx.strokeRect(36, 36, width - 72, height - 72)
 
-  // Brand Name
+  // Inner subtle border
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+  ctx.lineWidth = 2
+  ctx.strokeRect(48, 48, width - 96, height - 96)
+
   ctx.textAlign = 'center'
+
+  // Brand Name & Tagline
+  const brandY = type === '9:16' ? 320 : type === '16:9' ? 220 : 250
   ctx.fillStyle = activeAccent
-  ctx.font = `bold 36px ${brandFont}`
-  ctx.fillText('NEXT-GEN PROPFIRM', width / 2, type === '16:9' ? 240 : 280)
+  ctx.font = `bold ${type === '9:16' ? '40px' : '36px'} ${brandFont}`
+  ctx.fillText(`★ ${brandName.toUpperCase()} · OFFICIAL PARTNER`, width / 2, brandY)
 
-  // Heading
+  // Main Heading
+  const headingY = type === '9:16' ? 520 : type === '16:9' ? 360 : 410
   ctx.fillStyle = '#FFFFFF'
-  ctx.font = `900 64px ${brandFont}`
-  ctx.fillText('TRADE CAPITAL UP TO $200,000', width / 2, type === '16:9' ? 360 : 420)
+  ctx.font = `900 ${type === '9:16' ? '70px' : type === '16:9' ? '64px' : '60px'} ${brandFont}`
+  ctx.fillText('TRADE CAPITAL UP TO $200,000', width / 2, headingY)
 
-  // Subtitle
+  // Subtitle / Features
+  const subY = type === '9:16' ? 640 : type === '16:9' ? 450 : 510
   ctx.fillStyle = '#94A3B8'
-  ctx.font = `500 32px ${brandFont}`
-  ctx.fillText('Keep up to 90% profit split • Instant Payouts • Low Spreads', width / 2, type === '16:9' ? 450 : 520)
+  ctx.font = `500 ${type === '9:16' ? '36px' : type === '16:9' ? '30px' : '28px'} ${brandFont}`
+  ctx.fillText('Keep up to 90% profit split • Instant Payouts • Low Spreads', width / 2, subY)
 
-  // Pill
-  const pillW = 560
-  const pillH = 120
+  // Referral Code Pill
+  const pillW = type === '9:16' ? 700 : 620
+  const pillH = type === '9:16' ? 220 : 130
   const pillX = (width - pillW) / 2
-  const pillY = type === '16:9' ? 560 : 660
+  const pillY = type === '9:16' ? 820 : type === '16:9' ? 560 : 630
 
-  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.15)`
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.12)`
   ctx.strokeStyle = activeAccent
   ctx.lineWidth = 3
   if (typeof ctx.roundRect === 'function') {
@@ -101,26 +111,35 @@ function downloadBanner(type: '16:9' | '1:1', code: string, refLink: string) {
     ctx.strokeRect(pillX, pillY, pillW, pillH)
   }
 
+  // Pill Title
   ctx.fillStyle = activeAccent
-  ctx.font = `bold 22px ${brandFont}`
-  ctx.fillText('USE REFERRAL CODE', width / 2, pillY + 45)
+  ctx.font = `bold ${type === '9:16' ? '28px' : '22px'} ${brandFont}`
+  ctx.fillText('⚡ USE PARTNER CODE AT CHECKOUT', width / 2, pillY + (type === '9:16' ? 65 : 45))
 
+  // Promo Code
   ctx.fillStyle = '#FFFFFF'
-  ctx.font = `900 40px ${brandFont}`
-  ctx.fillText((code || 'PROPFIRM').toUpperCase(), width / 2, pillY + 95)
+  ctx.font = `900 ${type === '9:16' ? '62px' : '46px'} ${brandFont}`
+  ctx.fillText((code || 'PARTNER').toUpperCase(), width / 2, pillY + (type === '9:16' ? 140 : 96))
+
+  if (type === '9:16') {
+    ctx.fillStyle = activeAccent
+    ctx.font = `600 24px ${brandFont}`
+    ctx.fillText('GET 25% DISCOUNT ON EVALUATION', width / 2, pillY + 185)
+  }
 
   // Footer Link
+  const footY = type === '9:16' ? 1650 : type === '16:9' ? 950 : 960
   ctx.fillStyle = '#64748B'
-  ctx.font = `500 24px ${brandFont}`
-  ctx.fillText(refLink || 'yourbrand.com', width / 2, type === '16:9' ? 950 : 980)
+  ctx.font = `500 ${type === '9:16' ? '32px' : '24px'} ${brandFont}`
+  ctx.fillText(refLink || 'massfunded.org', width / 2, footY)
 
   // Trigger download
   const dataUrl = canvas.toDataURL('image/png')
   const a = document.createElement('a')
   a.href = dataUrl
-  a.download = `propfirm-banner-${type === '16:9' ? '16x9' : '1x1'}-${code || 'partner'}.png`
+  a.download = `${brandName.toLowerCase()}-banner-${type.replace(':', 'x')}-${code || 'partner'}.png`
   a.click()
-  toast.success('Marketing asset PNG downloaded!')
+  toast.success(`Marketing asset (${type}) downloaded!`)
 }
 
 export default function AffiliatePage() {
@@ -214,7 +233,13 @@ export default function AffiliatePage() {
     else toast.error(r.ok ? (r.data.message || 'Could not save.') : r.error)
   }
 
+  const minPayout = (typeof me?.min_payout === 'number' && me.min_payout > 0) ? me.min_payout : 100
+
   const requestPayout = async () => {
+    if ((me?.available_balance ?? 0) < minPayout) {
+      toast.error(`Minimum withdrawal amount is $${minPayout.toFixed(2)}. Your balance is $${(me?.available_balance ?? 0).toFixed(2)}.`)
+      return
+    }
     setRequesting(true)
     const r = await api.affiliateRequestPayout()
     setRequesting(false)
@@ -267,8 +292,8 @@ export default function AffiliatePage() {
               Get a unique link, share it, and earn a commission on every challenge your referrals purchase.
             </p>
             <div className="mt-4 flex items-center justify-center">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold shadow-xs select-none">
-                <Zap className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-profit/10 border border-profit/25 text-profit text-xs font-semibold shadow-xs select-none">
+                <Zap className="h-3.5 w-3.5 text-profit shrink-0" />
                 <span>⚡ Payouts processed every Tuesday &amp; Friday via USDT TRC-20</span>
               </div>
             </div>
@@ -368,17 +393,17 @@ export default function AffiliatePage() {
       <Card>
         <CardHeader><CardTitle>Your referral link</CardTitle></CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <input readOnly value={link} className="flex-1 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text font-mono" />
+          <div className="flex gap-2 min-w-0">
+            <input readOnly value={link} className="flex-1 min-w-0 h-10 rounded-md bg-bg-subtle border border-border-subtle px-3 text-sm text-text font-mono truncate" />
             <Button
               variant="outline"
               onClick={copy}
               className={cn(
                 "transition-all active:scale-95 font-semibold shrink-0 gap-1.5",
-                copied && "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25 shadow-xs"
+                copied && "bg-profit/20 text-profit border-profit/40 hover:bg-profit/25 shadow-xs"
               )}
             >
-              {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-profit" /> : <Copy className="h-4 w-4" />}
               {copied ? '✓ Copied!' : 'Copy'}
             </Button>
             <Button
@@ -413,7 +438,7 @@ export default function AffiliatePage() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="h-8 text-xs gap-1.5 border-slate-500/40 text-slate-300 hover:bg-slate-700/20"
+              className="h-8 text-xs gap-1.5 border-border text-text-muted hover:text-text hover:bg-surface-muted"
               onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Get funded up to $200,000 with ${brandName}! Use code ` + (me?.code || '') + ' for maximum discounts: ' + link)}`, '_blank')}
             >
               <Share2 className="h-3.5 w-3.5" /> Post on X / Twitter
@@ -423,51 +448,323 @@ export default function AffiliatePage() {
         </CardContent>
       </Card>
 
-      <StatGrid columns={4}>
+      <StatGrid columns={5}>
         <StatCard label="Referrals" value={String(s.referrals)} icon={Users2} tone="accent" />
         <StatCard label="Conversions" value={String(s.conversions)} icon={TrendingUp} tone="info" />
+        <StatCard 
+          label="Conversion Rate" 
+          value={s.referrals > 0 ? `${((s.conversions / s.referrals) * 100).toFixed(1)}%` : '0%'} 
+          icon={Percent} 
+          tone="accent" 
+        />
         <StatCard label="Unpaid earnings" value={fmtUSD(s.unpaid)} icon={Wallet} tone="warn" />
         <StatCard label="Paid out" value={fmtUSD(s.paid)} icon={DollarSign} tone="success" />
       </StatGrid>
 
+      {/* ── MARKETING ASSETS & PROMOTIONAL MEDIA KIT ────────────────────────────── */}
       <Card>
         <CardHeader>
-          <CardTitle>Marketing Assets</CardTitle>
-          <p className="text-xs text-text-muted mt-0.5">Use these official banners and graphics on your social media, blog, or videos to boost your conversions.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-accent" /> Official Marketing Media Kit
+              </CardTitle>
+              <p className="text-xs text-text-muted mt-0.5">
+                High-conversion promotional assets, social media banners, and copy templates tailored with your unique referral code.
+              </p>
+            </div>
+            <Badge tone="accent" size="sm" className="self-start sm:self-center">
+              Ultra-HD Graphics
+            </Badge>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="rounded-lg border border-border-subtle p-3 flex flex-col gap-3">
-              <div className="aspect-video bg-surface-muted rounded border border-border flex items-center justify-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-bg flex flex-col items-center justify-center p-4 text-center">
-                  <span className="font-sans text-xs uppercase tracking-wider text-accent mb-1 font-bold">16:9 Promo Banner</span>
-                  <span className="font-black text-lg tracking-tight text-text">TRADE UP TO $200K</span>
-                  <span className="text-2xs text-text-muted font-sans font-medium mt-1">Code: {me?.code}</span>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            {/* ── 1. 16:9 Landscape Banner ── */}
+            <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
+              <div>
+                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                  {/* Subtle Grid & Glow Background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#10b98115_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Mini Mockup Canvas */}
+                  <div className="w-full aspect-[16/9] rounded-lg border border-accent/50 bg-gradient-to-br from-[#06080F] via-[#0C1220] to-[#0A1628] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-accent/25 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-[10px] font-extrabold text-accent tracking-wider flex items-center gap-1">
+                        ★ {brandName.toUpperCase()}
+                      </span>
+                      <span className="bg-accent/25 text-accent text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-accent/40">
+                        90% PROFIT SPLIT
+                      </span>
+                    </div>
+                    <div className="text-center my-auto py-1 relative z-10">
+                      <div className="text-base sm:text-lg font-black text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        TRADE UP TO $200,000
+                      </div>
+                      <div className="text-[8px] text-slate-300 font-medium mt-0.5">
+                        Instant Disbursals · Lowest Spreads · Zero Time Limit
+                      </div>
+                    </div>
+                    <div className="bg-accent/20 border border-accent/50 rounded-md px-2 py-1 flex items-center justify-between relative z-10">
+                      <span className="text-[8px] text-accent font-bold tracking-wider">AFFILIATE CODE:</span>
+                      <span className="text-[11px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
+                      <span className="text-[8px] text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 p-4 text-center backdrop-blur-xs">
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 bg-accent hover:bg-accent-hover text-primary-foreground shadow-sm"
+                      onClick={() => downloadBanner('16:9', me?.code || '', link || '', brandName)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download 1920×1080
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 border-white/20 text-white hover:bg-white/10"
+                      onClick={copy}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy Partner Link
+                    </Button>
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-bg/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button variant="outline" size="sm" onClick={() => downloadBanner('16:9', me?.code || '', link || '')}>Download PNG</Button>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-text">16:9 Landscape Banner</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                      1920 × 1080
+                    </span>
+                  </div>
+                  <p className="text-2xs text-text-muted mt-1 leading-relaxed">
+                    Optimized for Twitter/X headers, YouTube banners, and website reviews.
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-medium text-text">16:9 Youtube / Twitter Banner</div>
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-accent" onClick={() => downloadBanner('16:9', me?.code || '', link || '')}>Download</Button>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs gap-1.5 font-medium"
+                  onClick={() => downloadBanner('16:9', me?.code || '', link || '', brandName)}
+                >
+                  <Download className="h-3.5 w-3.5 text-accent" /> Download PNG
+                </Button>
               </div>
             </div>
-            
-            <div className="rounded-lg border border-border-subtle p-3 flex flex-col gap-3">
-              <div className="aspect-square bg-surface-muted rounded border border-border flex items-center justify-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-info/20 to-bg flex flex-col items-center justify-center p-4 text-center">
-                  <span className="font-sans text-xs uppercase tracking-wider text-info mb-1 font-bold">1:1 Square Post</span>
-                  <span className="font-black text-base tracking-tight text-text">KEEP 90% PROFITS</span>
-                  <span className="text-2xs text-text-muted font-sans font-medium mt-1">Code: {me?.code}</span>
+
+            {/* ── 2. 1:1 Square Feed Post ── */}
+            <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
+              <div>
+                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                  {/* Subtle Grid & Glow Background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#38bdf815_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                  <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-info/20 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Mini Mockup Canvas */}
+                  <div className="h-full aspect-square max-h-52 rounded-lg border border-info/50 bg-gradient-to-tr from-[#06080F] via-[#0A1326] to-[#0D1B36] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-info/25 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-[10px] font-extrabold text-info tracking-wider flex items-center gap-1">
+                        ★ {brandName.toUpperCase()}
+                      </span>
+                      <span className="bg-info/25 text-info text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-info/40">
+                        INSTANT PASS
+                      </span>
+                    </div>
+                    <div className="text-center my-auto py-1 relative z-10">
+                      <div className="text-[8px] uppercase tracking-widest text-slate-300 font-bold">PROP FIRM CAPITAL</div>
+                      <div className="text-lg font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        KEEP 90% PROFITS
+                      </div>
+                      <div className="text-xs font-mono font-extrabold text-accent mt-0.5">$200K ACCOUNT</div>
+                    </div>
+                    <div className="bg-info/20 border border-info/50 rounded-md px-2 py-1 flex items-center justify-between relative z-10">
+                      <span className="text-[8px] text-info font-bold">CODE:</span>
+                      <span className="text-[11px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
+                      <span className="text-[8px] text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 p-4 text-center backdrop-blur-xs">
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 bg-info hover:bg-info/90 text-white shadow-sm"
+                      onClick={() => downloadBanner('1:1', me?.code || '', link || '', brandName)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download 1080×1080
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 border-white/20 text-white hover:bg-white/10"
+                      onClick={copy}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy Partner Link
+                    </Button>
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-bg/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button variant="outline" size="sm" onClick={() => downloadBanner('1:1', me?.code || '', link || '')}>Download PNG</Button>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-text">1:1 Square Feed Post</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                      1080 × 1080
+                    </span>
+                  </div>
+                  <p className="text-2xs text-text-muted mt-1 leading-relaxed">
+                    Designed for Instagram feed posts, Discord community sharing, and Telegram broadcasts.
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-medium text-text">1:1 Instagram / Feed Post</div>
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-info" onClick={() => downloadBanner('1:1', me?.code || '', link || '')}>Download</Button>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs gap-1.5 font-medium"
+                  onClick={() => downloadBanner('1:1', me?.code || '', link || '', brandName)}
+                >
+                  <Download className="h-3.5 w-3.5 text-info" /> Download PNG
+                </Button>
+              </div>
+            </div>
+
+            {/* ── 3. 9:16 Vertical Story & Reel ── */}
+            <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
+              <div>
+                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                  {/* Subtle Grid & Glow Background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#a855f715_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                  <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Mini Mockup Canvas */}
+                  <div className="h-full aspect-[9/16] max-h-52 rounded-lg border border-purple-500/50 bg-gradient-to-b from-[#06080F] via-[#100C1F] to-[#1A1033] p-2.5 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-20 h-20 bg-purple-500/25 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-[9px] font-extrabold text-purple-300 tracking-wider">
+                        ★ {brandName.toUpperCase()}
+                      </span>
+                      <span className="bg-purple-500/25 text-purple-300 text-[7px] font-bold px-1 py-0.2 rounded-full border border-purple-500/40">
+                        VIP
+                      </span>
+                    </div>
+                    <div className="text-center my-auto py-1 relative z-10">
+                      <div className="text-[7px] uppercase tracking-widest text-slate-300 font-bold">EVALUATION PASS</div>
+                      <div className="text-sm font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        GET FUNDED
+                      </div>
+                      <div className="text-lg font-mono font-black text-accent mt-0.5 leading-none">$200K</div>
+                      <div className="text-[7px] text-slate-300 mt-1">Keep 90% Profits</div>
+                    </div>
+                    <div className="bg-purple-500/20 border border-purple-500/50 rounded-md px-1.5 py-1 text-center relative z-10">
+                      <div className="text-[7px] text-purple-300 font-bold">PARTNER CODE:</div>
+                      <div className="text-[10px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</div>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 p-4 text-center backdrop-blur-xs">
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 bg-purple-600 hover:bg-purple-500 text-white shadow-sm"
+                      onClick={() => downloadBanner('9:16', me?.code || '', link || '', brandName)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download 1080×1920
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 border-white/20 text-white hover:bg-white/10"
+                      onClick={copy}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy Partner Link
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-text">9:16 Mobile Story & Reel</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                      1080 × 1920
+                    </span>
+                  </div>
+                  <p className="text-2xs text-text-muted mt-1 leading-relaxed">
+                    Full-screen vertical story template for Instagram Stories, TikTok, and YouTube Shorts.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs gap-1.5 font-medium"
+                  onClick={() => downloadBanner('9:16', me?.code || '', link || '', brandName)}
+                >
+                  <Download className="h-3.5 w-3.5 text-purple-400" /> Download PNG
+                </Button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── Ready-to-Post Copy Templates ── */}
+          <div className="pt-4 border-t border-border-subtle">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-text flex items-center gap-1.5">
+                <Send className="h-3.5 w-3.5 text-accent" /> Ready-to-Post Promotional Captions
+              </span>
+              <span className="text-2xs text-text-muted">1-Click Copy &amp; Share</span>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg border border-border-subtle bg-surface-muted/40 flex flex-col justify-between gap-2.5">
+                <p className="text-xs text-text-muted leading-relaxed font-sans">
+                  &ldquo;Looking for serious funding? Trade up to $200,000 in simulated capital with <span className="text-text font-semibold">{brandName}</span>. Keep up to 90% profit split, enjoy instant crypto payouts and zero time limits. Use my code <span className="font-mono text-accent font-bold">{me?.code || 'PARTNER'}</span> for 25% off! 🚀&rdquo;
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 text-xs self-start gap-1.5"
+                  onClick={() => {
+                    const text = `Looking for serious funding? Trade up to $200,000 with ${brandName}. Keep up to 90% profit split and instant crypto payouts. Use code ${me?.code || ''} for 25% off: ${link}`
+                    navigator.clipboard.writeText(text)
+                    toast.success('Social caption copied to clipboard!')
+                  }}
+                >
+                  <Copy className="h-3 w-3" /> Copy Caption &amp; Link
+                </Button>
+              </div>
+
+              <div className="p-3 rounded-lg border border-border-subtle bg-surface-muted/40 flex flex-col justify-between gap-2.5">
+                <p className="text-xs text-text-muted leading-relaxed font-sans">
+                  &ldquo;Stop risking personal savings. Pass the <span className="text-text font-semibold">{brandName}</span> evaluation and get access to up to $200K capital. Fast execution, institutional spreads, no hidden rules. Use partner code <span className="font-mono text-accent font-bold">{me?.code || 'PARTNER'}</span> at checkout: 📈&rdquo;
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 text-xs self-start gap-1.5"
+                  onClick={() => {
+                    const text = `Stop risking personal savings. Pass the ${brandName} evaluation and get access to up to $200K capital. Fast execution, institutional spreads. Use code ${me?.code || ''} for 25% off: ${link}`
+                    navigator.clipboard.writeText(text)
+                    toast.success('Social caption copied to clipboard!')
+                  }}
+                >
+                  <Copy className="h-3 w-3" /> Copy Caption &amp; Link
+                </Button>
               </div>
             </div>
           </div>
@@ -507,37 +804,40 @@ export default function AffiliatePage() {
             <div className="text-sm">
               <div>
                 <span className="text-text-muted">Available to withdraw: </span>
-                <span className="font-bold tabular text-success">{fmtUSD(me.available_balance ?? 0)}</span>
+                <span className="font-semibold terminal-num text-profit">{fmtUSD(me.available_balance ?? 0)}</span>
               </div>
               <div className="mt-2 space-y-1">
                 <div className="flex justify-between text-2xs text-text-muted font-mono">
-                  <span>Minimum Payout Floor ($100.00)</span>
-                  <span className={((me.available_balance ?? 0) >= 100) ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                    {fmtUSD(me.available_balance ?? 0)} / $100.00
+                  <span>Minimum Payout Floor (${minPayout.toFixed(2)})</span>
+                  <span className={cn("terminal-num font-semibold", ((me.available_balance ?? 0) >= minPayout) ? 'text-profit' : 'text-warn')}>
+                    {fmtUSD(me.available_balance ?? 0)} / ${minPayout.toFixed(2)}
                   </span>
                 </div>
                 <div className="h-2 w-52 bg-surface-muted rounded-full overflow-hidden border border-border-subtle">
                   <div 
-                    className={`h-full rounded-full transition-all duration-500 ${((me.available_balance ?? 0) >= 100) ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                    style={{ width: `${Math.min(((me.available_balance ?? 0) / 100) * 100, 100)}%` }}
+                    className={cn("h-full rounded-full transition-all duration-500", ((me.available_balance ?? 0) >= minPayout) ? 'bg-profit' : 'bg-warn')}
+                    style={{ width: `${Math.min(((me.available_balance ?? 0) / minPayout) * 100, 100)}%` }}
                   />
                 </div>
-                {((me.available_balance ?? 0) < 100) && (
-                  <p className="text-[11px] text-text-muted">Requires minimum $100.00 accumulated earnings to request disbursal.</p>
+                {((me.available_balance ?? 0) < minPayout) && (
+                  <p className="text-xs text-text-muted">Requires minimum ${minPayout.toFixed(2)} accumulated earnings to request disbursal.</p>
                 )}
               </div>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full border-t border-border-subtle pt-3">
               {/* Affiliate Payout Release Schedule Notice */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold shadow-xs select-none">
-                <Zap className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-profit/10 border border-profit/25 text-profit text-xs font-semibold shadow-xs select-none">
+                <Zap className="h-3.5 w-3.5 text-profit shrink-0" />
                 <span>⚡ Payouts processed every Tuesday &amp; Friday via USDT TRC-20</span>
               </div>
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                <Button variant="outline" onClick={saveMethod} disabled={savingMethod}>Save method</Button>
-                <Button onClick={requestPayout} disabled={requesting || (me.available_balance ?? 0) <= 0}>
-                  <ArrowUpRight className="h-4 w-4 mr-1" /> Request withdrawal
-                </Button>
+              <div className="flex flex-col items-end gap-1 self-end sm:self-center">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={saveMethod} disabled={savingMethod}>Save method</Button>
+                  <Button onClick={requestPayout} disabled={requesting || (me.available_balance ?? 0) < minPayout}>
+                    <ArrowUpRight className="h-4 w-4 mr-1" /> Request withdrawal
+                  </Button>
+                </div>
+                <p className="text-2xs text-text-muted">Minimum withdrawal: ${minPayout.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -548,7 +848,7 @@ export default function AffiliatePage() {
                 <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm tabular text-text">{fmtUSD(Number(p.amount))}</span>
+                      <span className="font-semibold text-sm terminal-num text-text">{fmtUSD(Number(p.amount))}</span>
                       <Badge tone={payoutTone(p.status)}>{p.status}</Badge>
                     </div>
                     <div className="text-2xs text-text-muted mt-0.5">
@@ -587,13 +887,13 @@ export default function AffiliatePage() {
           ) : (
             <div className="divide-y divide-border-subtle">
               {commissions.map((c) => (
-                <div key={c.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-sm tabular text-text">{fmtUSD(c.amount)}</div>
-                    <div className="text-2xs text-text-muted">{c.rate_percent}% of {fmtUSD(c.base_amount)} · {timeAgo(c.created_at_iso || c.created_at)}</div>
-                  </div>
-                  <Badge tone={tone(c.status)}>{c.status}</Badge>
-                </div>
+                 <div key={c.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
+                   <div className="min-w-0">
+                     <div className="font-semibold text-sm terminal-num text-text">{fmtUSD(c.amount)}</div>
+                     <div className="text-2xs text-text-muted">{c.rate_percent}% of <span className="terminal-num">{fmtUSD(c.base_amount)}</span> · {timeAgo(c.created_at_iso || c.created_at)}</div>
+                   </div>
+                   <Badge tone={tone(c.status)}>{c.status}</Badge>
+                 </div>
               ))}
             </div>
           )}
@@ -615,7 +915,7 @@ export default function AffiliatePage() {
                 <span className="font-bold text-sm text-[#cd7f32]">🥉 Bronze Partner</span>
                 <Badge tone="neutral" size="sm">0 – 9 Sales</Badge>
               </div>
-              <div className="text-xl font-mono font-bold text-white mb-2">10% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <div className="text-xl font-bold terminal-num text-white mb-2">10% <span className="text-xs font-normal text-text-muted font-sans">Commission</span></div>
               <ul className="text-xs text-text-muted space-y-1">
                 <li>• 60-Day Cookie Tracking Window</li>
                 <li>• Real-Time Dashboard Analytics</li>
@@ -628,7 +928,7 @@ export default function AffiliatePage() {
                 <span className="font-bold text-sm text-slate-300">🥈 Silver Partner</span>
                 <Badge tone="info" size="sm">10 – 49 Sales</Badge>
               </div>
-              <div className="text-xl font-mono font-bold text-white mb-2">12% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <div className="text-xl font-bold terminal-num text-white mb-2">12% <span className="text-xs font-normal text-text-muted font-sans">Commission</span></div>
               <ul className="text-xs text-text-muted space-y-1">
                 <li>• 60-Day Cookie Tracking Window</li>
                 <li>• Custom Marketing Asset Watermarks</li>
@@ -641,7 +941,7 @@ export default function AffiliatePage() {
                 <span className="font-bold text-sm text-yellow-400">🥇 Gold Partner</span>
                 <Badge tone="warn" size="sm">50 – 99 Sales</Badge>
               </div>
-              <div className="text-xl font-mono font-bold text-white mb-2">15% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <div className="text-xl font-bold terminal-num text-white mb-2">15% <span className="text-xs font-normal text-text-muted font-sans">Commission</span></div>
               <ul className="text-xs text-text-muted space-y-1">
                 <li>• 90-Day Extended Cookie Window</li>
                 <li>• Priority 24-Hour Payout Approvals</li>
@@ -649,12 +949,12 @@ export default function AffiliatePage() {
               </ul>
             </div>
 
-            <div className="p-3.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
+            <div className="p-3.5 rounded-lg border border-profit/20 bg-profit/5">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="font-bold text-sm text-emerald-400">💎 Platinum VIP</span>
+                <span className="font-bold text-sm text-profit">💎 Platinum VIP</span>
                 <Badge tone="success" size="sm">100+ Sales</Badge>
               </div>
-              <div className="text-xl font-mono font-bold text-white mb-2">20% <span className="text-xs font-normal text-text-muted">Commission</span></div>
+              <div className="text-xl font-bold terminal-num text-white mb-2">20% <span className="text-xs font-normal text-text-muted font-sans">Commission</span></div>
               <ul className="text-xs text-text-muted space-y-1">
                 <li>• Lifetime Cookie Attribution</li>
                 <li>• Dedicated VIP Affiliate Manager</li>
@@ -718,7 +1018,7 @@ export default function AffiliatePage() {
               size="sm"
               className={cn(
                 "flex-1 font-semibold transition-all",
-                copied && "bg-emerald-600 hover:bg-emerald-500 text-white"
+                copied && "bg-profit hover:bg-profit/90 text-white"
               )}
               onClick={copy}
             >

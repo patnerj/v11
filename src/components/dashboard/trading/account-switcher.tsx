@@ -47,11 +47,13 @@ export function AccountSwitcher({
   metrics,
   showTimer = true,
   bannerSlot,
+  compact = false,
 }: {
   entries: SwitchEntry[]
   metrics?: ChallengeMetrics | null
   showTimer?: boolean
   bannerSlot?: React.ReactNode
+  compact?: boolean
 }) {
   const ctx = usePrices((s) => s.tradingContext)
   const switching = usePrices((s) => s.contextSwitching)
@@ -205,11 +207,11 @@ export function AccountSwitcher({
           <div className="min-w-0 flex-1">
             {/* Row 1: Plan Name + Live Balance */}
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-xs text-text truncate max-w-[180px] sm:max-w-[240px]">
+              <span className="font-semibold text-terminal-label text-text truncate max-w-[180px] sm:max-w-[240px]">
                 {e.planName || e.label}
               </span>
               {e.balance !== undefined && (
-                <span className="text-xs font-bold tabular text-emerald-400 shrink-0">
+                <span className="text-terminal-label font-semibold tabular terminal-num text-emerald-400 shrink-0">
                   {fmtUSD(e.balance, { decimals: 0 })}
                 </span>
               )}
@@ -218,32 +220,32 @@ export function AccountSwitcher({
             {/* Row 2: Metadata Pills & Starting info */}
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {e.accountId && (
-                <span className="text-3xs font-medium tabular text-text-muted">
+                <span className="text-terminal-micro font-normal tabular terminal-num text-text-muted">
                   #{e.accountId}
                 </span>
               )}
               {e.mt5Login && (
-                <span className="px-1 py-0.2 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                <span className="px-1 py-0.2 rounded text-terminal-micro font-semibold tabular terminal-num bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                   MT5: #{e.mt5Login}
                 </span>
               )}
               {isFunded && (
-                <span className="px-1 py-0.2 rounded text-3xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="px-1 py-0.2 rounded text-terminal-micro font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
                   Funded
                 </span>
               )}
               {isFailed && (
-                <span className="px-1 py-0.2 rounded text-3xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                <span className="px-1 py-0.2 rounded text-terminal-micro font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
                   Failed
                 </span>
               )}
               {isPassed && (
-                <span className="px-1 py-0.2 rounded text-3xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span className="px-1 py-0.2 rounded text-terminal-micro font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   Passed
                 </span>
               )}
               {e.startingBalance && (
-                <span className="text-3xs text-text-muted font-medium tabular ml-auto hidden xs:inline">
+                <span className="text-terminal-micro text-text-muted font-normal tabular terminal-num ml-auto hidden xs:inline">
                   Start {fmtUSD(e.startingBalance, { decimals: 0 })}
                 </span>
               )}
@@ -269,23 +271,23 @@ export function AccountSwitcher({
     <div ref={dropdownRef} className="relative z-40 w-full">
       {/* Sleek institutional trigger bar with zero overflow on any viewport */}
       <div className={cn(
-        "flex items-center justify-between gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-lg border shadow-xs backdrop-blur-md w-full transition-all flex-wrap lg:flex-nowrap",
+        "flex items-center justify-between gap-1.5 rounded-lg border shadow-xs backdrop-blur-md w-full transition-all",
+        compact ? "px-2 py-1 text-terminal-micro flex-nowrap" : "px-2.5 sm:px-3 py-1.5 text-xs flex-wrap lg:flex-nowrap gap-2 sm:gap-3",
         activeEntry?.kind === 'tournament'
           ? "bg-gradient-to-r from-amber-500/10 dark:from-amber-950/30 via-surface/95 to-surface/95 border-amber-500/50 ring-2 ring-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.12)]"
           : "bg-surface/90 border-border/80"
       )}>
         {/* Left: Account trigger button */}
-        <div className={cn("flex items-center gap-2 min-w-0", bannerSlot ? "shrink-0" : "flex-1")}>
-          <span className="text-3xs text-text-muted font-semibold uppercase tracking-wider shrink-0 hidden xl:inline">
-            Active Account
-          </span>
-
+        <div className={cn("flex items-center gap-1.5 min-w-0", bannerSlot ? "shrink-0" : "flex-1")}>
           <button
             type="button"
             disabled={pendingKey !== null || switching}
             onClick={() => setIsOpen((prev) => !prev)}
             className={cn(
-              "group flex-1 sm:flex-initial min-w-0 inline-flex items-center justify-between sm:justify-start gap-2 px-2 sm:px-2.5 py-1 rounded-md border text-xs font-semibold transition-all focus-ring select-none cursor-pointer",
+              "group min-w-0 inline-flex items-center gap-1.5 rounded-md border font-semibold transition-all focus-ring select-none cursor-pointer",
+              compact
+                ? "py-0.5 px-1.5 text-terminal-micro flex-1 justify-between"
+                : "flex-1 sm:flex-initial justify-between sm:justify-start px-2 sm:px-2.5 py-1 text-xs",
               isOpen
                 ? "bg-accent/15 border-accent/60 text-accent shadow-xs"
                 : activeEntry?.kind === 'tournament'
@@ -299,7 +301,7 @@ export function AccountSwitcher({
               {activeEntry?.status === 'funded' ? (
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
               ) : activeEntry?.kind === 'tournament' ? (
-                <Trophy className="w-3 h-3 text-amber-500 dark:text-amber-400 shrink-0" />
+                <Trophy className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400 shrink-0" />
               ) : (
                 <>
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -309,20 +311,23 @@ export function AccountSwitcher({
             </span>
 
             {/* Account Title */}
-            <span className="font-semibold text-text truncate min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[240px]">
+            <span className={cn(
+              "font-semibold text-text truncate min-w-0",
+              compact ? "max-w-[130px] text-terminal-micro" : "text-terminal-body max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[240px]"
+            )}>
               {activeEntry?.planName || activeEntry?.label || 'Select Account'}
             </span>
 
             {/* Account ID */}
-            {activeEntry?.accountId && (
-              <span className="text-3xs font-medium tabular text-text-muted shrink-0 hidden xs:inline">
+            {activeEntry?.accountId && !compact && (
+              <span className="text-terminal-micro font-normal tabular terminal-num text-text-muted shrink-0 hidden xs:inline">
                 #{activeEntry.accountId}
               </span>
             )}
 
             {/* MT5 Badge if connected */}
-            {activeEntry?.mt5Login && (
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-bold tabular bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 shrink-0">
+            {activeEntry?.mt5Login && !compact && (
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-terminal-micro font-semibold tabular terminal-num bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 shrink-0">
                 MT5: #{activeEntry.mt5Login}
               </span>
             )}
@@ -330,7 +335,8 @@ export function AccountSwitcher({
             {/* Live Balance */}
             {activeEntry?.balance !== undefined && (
               <span className={cn(
-                "text-xs font-bold tabular shrink-0 ml-auto sm:ml-0",
+                "font-semibold tabular terminal-num shrink-0 ml-auto",
+                compact ? "text-terminal-micro" : "text-terminal-label sm:ml-0",
                 activeEntry?.kind === 'tournament' ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
               )}>
                 {fmtUSD(activeEntry.balance, { decimals: 0 })}
@@ -340,15 +346,15 @@ export function AccountSwitcher({
             {/* Dropdown Chevron */}
             <ChevronDown
               className={cn(
-                "w-3.5 h-3.5 text-text-muted transition-transform duration-200 shrink-0",
+                "w-3 h-3 text-text-muted transition-transform duration-200 shrink-0",
                 isOpen && "rotate-180 text-accent"
               )}
             />
           </button>
 
           {/* Tournament Mode visual pill badge (only when standalone without bannerSlot) */}
-          {activeEntry?.kind === 'tournament' && !bannerSlot && (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-xs shrink-0">
+          {activeEntry?.kind === 'tournament' && !bannerSlot && !compact && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-terminal-micro font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-xs shrink-0">
               <Trophy className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400" />
               <span className="hidden xs:inline">Tournament</span>
               <span className="hidden sm:inline">Trades Only</span>
@@ -356,8 +362,8 @@ export function AccountSwitcher({
           )}
 
           {/* Accounts Count Badge */}
-          {entries.length > 1 && !bannerSlot && (
-            <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-medium tabular text-text-muted bg-surface-muted border border-border/50 shrink-0">
+          {entries.length > 1 && !bannerSlot && !compact && (
+            <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-terminal-micro font-normal tabular terminal-num text-text-muted bg-surface-muted border border-border/50 shrink-0">
               {entries.length} Accounts
             </span>
           )}
@@ -372,7 +378,7 @@ export function AccountSwitcher({
         )}
 
         {/* Right side: Drawdown Danger Alert, Midnight DD Timer, & 1-Click MT5 Credentials */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Danger zone pulsating alert */}
           {metrics && <DrawdownAlertBadge metrics={metrics} className="hidden md:inline-flex" />}
 
@@ -380,12 +386,12 @@ export function AccountSwitcher({
           {showTimer && <DailyDdTimer compact className="hidden md:inline-flex" />}
 
           {(switching || pendingKey !== null) ? (
-            <div className="flex items-center gap-1.5 text-xs text-accent font-medium animate-pulse">
+            <div className="flex items-center gap-1.5 text-terminal-body text-accent font-normal animate-pulse">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span className="hidden sm:inline">Switching…</span>
             </div>
           ) : (
-            activeEntry?.kind !== 'tournament' && (
+            activeEntry?.kind !== 'tournament' && !compact && (
               /* 1-Click MT5 Credentials button (shown on <xl viewports where Topbar hides its button) */
               <button
                 type="button"
@@ -436,9 +442,9 @@ export function AccountSwitcher({
             {/* Active Challenges */}
             {activeChallenges.length > 0 && (
               <div className="space-y-1">
-                <div className="px-2 py-1 text-3xs uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
+                <div className="px-2 py-1 text-terminal-micro uppercase tracking-wider text-text-muted font-semibold flex items-center justify-between">
                   <span>Active Challenges</span>
-                  <span className="tabular font-bold">{activeChallenges.length}</span>
+                  <span className="tabular terminal-num font-semibold">{activeChallenges.length}</span>
                 </div>
                 {activeChallenges.map(renderItem)}
               </div>
@@ -447,9 +453,9 @@ export function AccountSwitcher({
             {/* Tournaments */}
             {tournaments.length > 0 && (
               <div className="pt-2 space-y-1">
-                <div className="px-2 py-1 text-3xs uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
+                <div className="px-2 py-1 text-terminal-micro uppercase tracking-wider text-text-muted font-semibold flex items-center justify-between">
                   <span>Tournaments</span>
-                  <span className="tabular font-bold">{tournaments.length}</span>
+                  <span className="tabular terminal-num font-semibold">{tournaments.length}</span>
                 </div>
                 {tournaments.map(renderItem)}
               </div>
@@ -458,9 +464,9 @@ export function AccountSwitcher({
             {/* Past / Review Challenges */}
             {reviewChallenges.length > 0 && (
               <div className="pt-2 space-y-1">
-                <div className="px-2 py-1 text-3xs uppercase tracking-wider text-text-muted font-bold flex items-center justify-between">
+                <div className="px-2 py-1 text-terminal-micro uppercase tracking-wider text-text-muted font-semibold flex items-center justify-between">
                   <span>Past / Review Accounts</span>
-                  <span className="tabular font-bold">{reviewChallenges.length}</span>
+                  <span className="tabular terminal-num font-semibold">{reviewChallenges.length}</span>
                 </div>
                 {reviewChallenges.map(renderItem)}
               </div>

@@ -54,7 +54,7 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search symbol…"
-            className="w-full h-8 pl-8 pr-7 rounded-md bg-surface-muted/60 border border-border text-xs focus:outline-none focus:ring-2 focus:ring-accent/40 placeholder:text-text-faint"
+            className="w-full h-8 pl-8 pr-7 rounded-md bg-surface-muted/60 border border-border text-terminal-label focus:outline-none focus:ring-2 focus:ring-accent/40 placeholder:text-text-faint"
           />
           {query && (
             <button
@@ -67,13 +67,13 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
           )}
         </div>
         {/* Tabs */}
-        <div className="flex gap-1 p-0.5 rounded-md bg-surface-muted/60 text-2xs">
+        <div className="flex gap-1 p-0.5 rounded-md bg-surface-muted/60 text-terminal-body">
           {(['all', 'watch'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'flex-1 h-6 rounded transition-colors font-medium',
+                'flex-1 h-6 rounded transition-colors font-normal',
                 tab === t ? 'bg-bg-subtle text-text shadow-card' : 'text-text-muted hover:text-text'
               )}
             >
@@ -86,11 +86,11 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
       {/* Symbol list */}
       <div className="flex-1 overflow-y-auto px-1 pb-2 min-h-0">
         {Object.entries(grouped).length === 0 ? (
-          <div className="text-center py-8 text-xs text-text-muted">No symbols found</div>
+          <div className="text-center py-8 text-terminal-label text-text-muted">No symbols found</div>
         ) : (
           CATEGORY_ORDER.filter((c) => grouped[c]?.length).map((cat) => (
             <div key={cat} className="mb-1.5">
-              <div className="px-2 py-1 text-2xs uppercase tracking-wider text-text-faint font-medium sticky top-0 bg-bg/95 backdrop-blur-sm z-[1]">
+              <div className="px-2 py-1 text-terminal-micro uppercase tracking-wider text-text-faint font-semibold sticky top-0 bg-bg/95 backdrop-blur-sm z-[1]">
                 {CATEGORY_LABEL[cat]}
               </div>
               <div>
@@ -197,21 +197,21 @@ const WatchRow = memo(function WatchRow({
         >
           <Star className={cn('h-3 w-3', isWatched && 'fill-current')} />
         </button>
-        <span className="text-xs font-medium truncate tabular">{sym}</span>
+        <span className="text-terminal-label font-semibold truncate terminal-num">{sym}</span>
       </div>
 
       {/* Bid + direction glyph (non-color cue) */}
       <span className={cn(
-        'relative z-10 pointer-events-none text-xs tabular whitespace-nowrap inline-flex items-center gap-0.5 justify-end',
+        'relative z-10 pointer-events-none text-terminal-label terminal-num font-semibold whitespace-nowrap inline-flex items-center gap-0.5 justify-end',
         flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text',
       )}>
-        {flash && <span aria-hidden className="text-2xs">{flash === 'up' ? '▲' : '▼'}</span>}
+        {flash && <span aria-hidden className="text-terminal-micro">{flash === 'up' ? '▲' : '▼'}</span>}
         {bid ? fmtPrice(bid, digits) : <span className="text-text-faint">—</span>}
       </span>
 
       {/* Spread (only in non-compact) */}
       {!compact && (
-        <span className="relative z-10 pointer-events-none text-2xs tabular text-text-muted whitespace-nowrap min-w-[42px] text-right">
+        <span className="relative z-10 pointer-events-none text-terminal-micro terminal-num text-text-muted whitespace-nowrap min-w-[42px] text-right">
           {bid && ask ? `${Math.round(spread / pipSize(sym) * 10) / 10}p` : ''}
         </span>
       )}

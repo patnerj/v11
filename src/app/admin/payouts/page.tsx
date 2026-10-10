@@ -19,6 +19,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTable, ColumnDef } from '@/components/ui/DataTable'
+import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PayoutManagementModal, PayoutItemTarget } from '@/components/admin/PayoutManagementModal'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
@@ -94,17 +96,17 @@ function AddressCopyCell({ address, method }: { address: string; method: string 
             {method}
           </span>
           {isTrc && (
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+            <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
               TRC20
             </span>
           )}
           {isBep && (
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
               BEP20
             </span>
           )}
           {isWise && (
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
               WISE
             </span>
           )}
@@ -113,7 +115,7 @@ function AddressCopyCell({ address, method }: { address: string; method: string 
           <button
             type="button"
             onClick={handleCopy}
-            className="text-[10px] text-text-muted hover:text-emerald-400 flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer select-none"
+            className="text-2xs text-text-muted hover:text-emerald-400 flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer select-none"
             title="Copy Destination Wallet"
           >
             {copied ? (
@@ -130,7 +132,7 @@ function AddressCopyCell({ address, method }: { address: string; method: string 
           </button>
         )}
       </div>
-      <p className="text-[11px] text-text-muted tabular truncate max-w-[220px] font-mono" title={address}>
+      <p className="text-2xs text-text-muted tabular truncate max-w-[220px] font-mono" title={address}>
         {previewAddr}
       </p>
     </div>
@@ -146,7 +148,13 @@ function PayoutsHubContent() {
   const [activeTab, setActiveTab] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [selectedPayoutIds, setSelectedPayoutIds] = useState<(string | number)[]>([])
-  const [isBulkApproving, setIsBulkApproving] = useState(false)
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+  const [bulkActionType, setBulkActionType] = useState<'approved' | 'paid' | null>(null)
+  const [bulkTxReference, setBulkTxReference] = useState('')
+  const [bulkNote, setBulkNote] = useState('')
+  const [bulkErrors, setBulkErrors] = useState<{ id: number; message: string }[]>([])
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false)
+  const [showBulkResultModal, setShowBulkResultModal] = useState(false)
 
   // Sync search query from URL parameter if present
   React.useEffect(() => {
@@ -334,43 +342,80 @@ function PayoutsHubContent() {
     toast.success(`Exported ${recordsToExport.length} payout records to CSV`)
   }
 
-  // Bulk Approve Handler
-  const handleBulkApprove = async () => {
-    const targetPayouts = allPayouts.filter(
+  // Memoized selection totals for bulk operations (POLISH-1, POLISH-5, PAY-4)
+  const pendingSelectedPayouts = useMemo(() => {
+    return allPayouts.filter(
       p => selectedPayoutIds.includes(p.id) && (p.status === 'requested' || p.status === 'under_review')
     )
+  }, [allPayouts, selectedPayoutIds])
+
+  const approvedSelectedPayouts = useMemo(() => {
+    return allPayouts.filter(
+      p => selectedPayoutIds.includes(p.id) && p.status === 'approved'
+    )
+  }, [allPayouts, selectedPayoutIds])
+
+  const selectedTotalAmount = useMemo(() => {
+    return allPayouts
+      .filter(p => selectedPayoutIds.includes(p.id))
+      .reduce((sum, p) => sum + (Number(p.amount_requested) || 0), 0)
+  }, [allPayouts, selectedPayoutIds])
+
+  const pendingSelectedTotalAmount = useMemo(() => {
+    return pendingSelectedPayouts
+      .reduce((sum, p) => sum + (Number(p.amount_requested) || 0), 0)
+  }, [pendingSelectedPayouts])
+
+  const approvedSelectedTotalAmount = useMemo(() => {
+    return approvedSelectedPayouts
+      .reduce((sum, p) => sum + (Number(p.amount_requested) || 0), 0)
+  }, [approvedSelectedPayouts])
+
+  // Bulk Action Handler (PAY-4)
+  const handleBulkExecute = async () => {
+    if (!bulkActionType) return
+    const targetPayouts = bulkActionType === 'approved' ? pendingSelectedPayouts : approvedSelectedPayouts
     if (targetPayouts.length === 0) {
-      toast.info('None of the selected payouts are pending approval.')
+      toast.info(`None of the selected payouts are in a valid status for "${bulkActionType}".`)
+      setShowBulkConfirm(false)
       return
     }
-    setIsBulkApproving(true)
+
+    if (bulkActionType === 'paid' && !bulkTxReference.trim()) {
+      toast.error('Transaction reference (batch hash/ref) is required to mark payouts as paid.')
+      return
+    }
+
+    setIsBulkProcessing(true)
     const targetIds = targetPayouts.map(p => p.raw_id)
     try {
-      const res = await api.admin.bulkPayouts(targetIds, 'approved', 'Bulk approved via admin toolbar')
-      if (res.ok && res.data?.success) {
-        toast.success(`Successfully approved ${res.data.processed} of ${targetPayouts.length} payout(s)!`)
-      } else {
-        let successCount = 0
-        for (const p of targetPayouts) {
-          try {
-            const singleRes = await api.admin.payoutStatus(p.raw_id, 'approved', 'Bulk approved via admin toolbar')
-            if (singleRes.ok) successCount++
-          } catch {}
+      const res = await api.admin.bulkPayouts(
+        targetIds,
+        bulkActionType,
+        bulkNote.trim() || `Bulk ${bulkActionType} via admin toolbar`,
+        bulkActionType === 'paid' ? bulkTxReference.trim() : undefined
+      )
+      if (res.ok && res.data) {
+        const { processed, failed, errors } = res.data
+        if (failed > 0 && errors && errors.length > 0) {
+          setBulkErrors(errors)
+          setShowBulkResultModal(true)
+          toast.warning(`Processed ${processed} payout(s), but ${failed} failed. See error report.`)
+        } else {
+          toast.success(`Successfully ${bulkActionType === 'paid' ? 'marked paid' : 'approved'} ${processed} payout(s)!`)
         }
-        toast.success(`Successfully approved ${successCount} of ${targetPayouts.length} payout(s)!`)
+      } else {
+        toast.error((res as any)?.error || 'Bulk operation failed')
       }
-    } catch {
-      let successCount = 0
-      for (const p of targetPayouts) {
-        try {
-          const singleRes = await api.admin.payoutStatus(p.raw_id, 'approved', 'Bulk approved via admin toolbar')
-          if (singleRes.ok) successCount++
-        } catch {}
-      }
-      toast.success(`Successfully approved ${successCount} of ${targetPayouts.length} payout(s)!`)
+    } catch (err: any) {
+      toast.error(err?.message || 'Bulk operation failed')
     } finally {
-      setIsBulkApproving(false)
+      setIsBulkProcessing(false)
+      setShowBulkConfirm(false)
       setSelectedPayoutIds([])
+      setBulkTxReference('')
+      setBulkNote('')
+      setBulkActionType(null)
       refetch()
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
     }
@@ -419,7 +464,7 @@ function PayoutsHubContent() {
           <div className="text-sm font-bold text-accent">
             {formatMoney(row.amount_requested)}
           </div>
-          <div className="text-[11px] text-gray-400">
+          <div className="text-2xs text-gray-400">
             Split: <span className="text-gray-200 font-semibold">{row.profit_split_pct}%</span> ({formatMoney(row.trader_amount)})
           </div>
         </div>
@@ -557,10 +602,10 @@ function PayoutsHubContent() {
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-2xs text-text-muted leading-tight block flex-1">
                   Awaiting audit approval
                 </span>
-                <Badge tone={metrics.pendingCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone={metrics.pendingCount > 0 ? "warning" : "neutral"} size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   {metrics.pendingCount} Requests
                 </Badge>
               </div>
@@ -585,10 +630,10 @@ function PayoutsHubContent() {
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-2xs text-text-muted leading-tight block flex-1">
                   Disbursed on-chain
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   {metrics.approvedCount} Completed
                 </Badge>
               </div>
@@ -613,10 +658,10 @@ function PayoutsHubContent() {
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-2xs text-text-muted leading-tight block flex-1">
                   Failed compliance check
                 </span>
-                <Badge tone={metrics.rejectedCount > 0 ? "danger" : "neutral"} size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone={metrics.rejectedCount > 0 ? "danger" : "neutral"} size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   {metrics.rejectedCount > 0 ? "Breach Logged" : "0 Breaches"}
                 </Badge>
               </div>
@@ -641,10 +686,10 @@ function PayoutsHubContent() {
                 </h3>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-                <span className="text-[11px] text-text-muted leading-tight block flex-1">
+                <span className="text-2xs text-text-muted leading-tight block flex-1">
                   Target SLA &lt; {toNum(SLA_TARGET_HOURS).toFixed(1)} hrs {metrics.slaSampleSize > 0 && `(${metrics.slaSampleSize} resolved)`}
                 </span>
-                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-[10px] px-2 py-0.5">
+                <Badge tone="accent" size="sm" className="shrink-0 font-semibold tabular text-2xs px-2 py-0.5">
                   {metrics.slaPct !== null ? `${toNum(metrics.slaPct).toFixed(1)}% SLA` : 'No data yet'}
                 </Badge>
               </div>
@@ -672,7 +717,7 @@ function PayoutsHubContent() {
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className={`text-[10px] tabular px-1.5 py-0.2 rounded-full font-bold ${
+                <span className={`text-2xs tabular px-1.5 py-0.2 rounded-full font-bold ${
                   isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-surface-muted text-text-muted'
                 }`}>
                   {tab.count}
@@ -757,29 +802,164 @@ function PayoutsHubContent() {
         }}
       />
 
-      {/* ── 5. Floating Bulk Action Toolbar ──────────────────────────────── */}
+      {/* ── Bulk Action Modal (PAY-4) ────────────────────────────────────── */}
+      <Modal
+        isOpen={showBulkConfirm}
+        onClose={() => {
+          if (!isBulkProcessing) {
+            setShowBulkConfirm(false)
+            setBulkActionType(null)
+          }
+        }}
+        title={bulkActionType === 'paid' ? 'Confirm Bulk Disbursement (Mark Paid)' : 'Confirm Bulk Payout Approval'}
+        description={
+          bulkActionType === 'paid' ? (
+            <span>
+              You are about to mark <strong>{approvedSelectedPayouts.length}</strong> payout(s) totaling{' '}
+              <strong className="text-emerald-400">{formatMoney(approvedSelectedTotalAmount)}</strong> as <strong>PAID</strong>. This permanently updates challenge accounts and records disbursement.
+            </span>
+          ) : (
+            <span>
+              You are about to approve <strong>{pendingSelectedPayouts.length}</strong> payout request(s) totaling{' '}
+              <strong className="text-emerald-400">{formatMoney(pendingSelectedTotalAmount)}</strong>.
+            </span>
+          )
+        }
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button
+              variant="outline"
+              disabled={isBulkProcessing}
+              onClick={() => {
+                setShowBulkConfirm(false)
+                setBulkActionType(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              loading={isBulkProcessing}
+              disabled={bulkActionType === 'paid' && !bulkTxReference.trim()}
+              onClick={handleBulkExecute}
+            >
+              {bulkActionType === 'paid'
+                ? `Confirm Disbursement (${approvedSelectedPayouts.length})`
+                : `Approve (${pendingSelectedPayouts.length})`}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 pt-2">
+          {bulkActionType === 'paid' && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-text flex items-center justify-between">
+                <span>Batch / Transaction Reference <span className="text-rose-400">*</span></span>
+                <span className="text-2xs text-text-muted">Required</span>
+              </label>
+              <Input
+                placeholder="e.g. TX-BATCH-20261007-01 or Bank Wire Ref"
+                value={bulkTxReference}
+                onChange={(e) => setBulkTxReference(e.target.value)}
+                autoFocus
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-text flex items-center justify-between">
+              <span>Admin Note</span>
+              <span className="text-2xs text-text-muted">Optional</span>
+            </label>
+            <Input
+              placeholder={bulkActionType === 'paid' ? 'Disbursed via batch transfer' : 'Bulk approved via admin toolbar'}
+              value={bulkNote}
+              onChange={(e) => setBulkNote(e.target.value)}
+            />
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Bulk Errors Report Modal (PAY-4) ─────────────────────────────── */}
+      <Modal
+        isOpen={showBulkResultModal}
+        onClose={() => {
+          setShowBulkResultModal(false)
+          setBulkErrors([])
+        }}
+        title={
+          <div className="flex items-center gap-2 text-rose-400">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Bulk Payout Processing Issues</span>
+          </div>
+        }
+        description="The following payout requests could not be updated due to validation or safety guards."
+        footer={
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowBulkResultModal(false)
+              setBulkErrors([])
+            }}
+          >
+            Close
+          </Button>
+        }
+      >
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+          {bulkErrors.map((err, i) => (
+            <div key={i} className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs space-y-1">
+              <div className="font-semibold text-rose-300">Payout #{err.id}</div>
+              <div className="text-text-muted">{err.message}</div>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      {/* ── 5. Floating Bulk Action Toolbar (POLISH-1, POLISH-5, PAY-4) ───── */}
       {selectedPayoutIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
             <span className="text-xs font-bold text-text">
-              {selectedPayoutIds.length} payout{selectedPayoutIds.length > 1 ? 's' : ''} selected
+              {selectedPayoutIds.length} payout{selectedPayoutIds.length > 1 ? 's' : ''} selected • {formatMoney(selectedTotalAmount)} total
             </span>
           </div>
 
           <div className="h-4 w-[1px] bg-border" />
 
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="primary"
-              loading={isBulkApproving}
-              onClick={handleBulkApprove}
-              className="h-8 text-xs font-semibold gap-1.5 shadow-accent/20"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Approve Selected ({allPayouts.filter(p => selectedPayoutIds.includes(p.id) && (p.status === 'requested' || p.status === 'under_review')).length})
-            </Button>
+            {pendingSelectedPayouts.length > 0 && (
+              <Button
+                size="sm"
+                variant="primary"
+                loading={isBulkProcessing && bulkActionType === 'approved'}
+                onClick={() => {
+                  setBulkActionType('approved')
+                  setShowBulkConfirm(true)
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 shadow-accent/20"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Approve Selected ({pendingSelectedPayouts.length})
+              </Button>
+            )}
+
+            {approvedSelectedPayouts.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                loading={isBulkProcessing && bulkActionType === 'paid'}
+                onClick={() => {
+                  setBulkActionType('paid')
+                  setShowBulkConfirm(true)
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+              >
+                <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
+                Mark Paid ({approvedSelectedPayouts.length})
+              </Button>
+            )}
 
             <Button
               size="sm"

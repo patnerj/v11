@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, AlertCircle, ArrowRight, Clock, Loader2 } from 'lucide-react'
 import type { PaymentOrder } from '@/types/api'
+import { trackPurchase } from '@/lib/meta-pixel'
 
 export default function CheckoutSuccessPage() {
   return (
@@ -74,7 +75,18 @@ function CheckoutSuccessInner() {
             const latestT = latest ? parseOrderTime(latest.created_at) : -Infinity
             return t > latestT ? o : latest
           }, null)
-          if (mostRecent?.status === 'approved') { setPhase('success'); return }
+          if (mostRecent?.status === 'approved') {
+            try {
+              trackPurchase({
+                order_id: mostRecent.id,
+                content_name: (mostRecent as any).plan_name || 'Challenge Account',
+                value: Number(mostRecent.amount || 0),
+                currency: mostRecent.currency || 'USD',
+              })
+            } catch {}
+            setPhase('success')
+            return
+          }
           const cutoff = Date.now() - RECENT_WINDOW_MS
           const recentAwaiting = orders.some((o) => {
             if (o.status !== 'pending' && o.status !== 'submitted') return false

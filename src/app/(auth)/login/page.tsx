@@ -143,8 +143,8 @@ function LoginForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Card className="p-8 glass-strong border-border-strong card-glow">
-        <div className="text-center mb-6">
+      <Card className="p-5 sm:p-8 glass-strong border-border-strong card-glow">
+        <div className="text-center mb-4 sm:mb-6">
           <div className="brand-emblem">
             <span className="text-lg font-black text-slate-950">{brandInitial}</span>
           </div>
@@ -174,7 +174,7 @@ function LoginForm() {
             </button>
             <div className="flex items-center gap-3 my-4">
               <div className="flex-1 h-px bg-border-subtle" />
-              <span className="text-[10px] text-text-muted uppercase font-bold tracking-wider">or with password</span>
+              <span className="text-2xs text-text-muted uppercase font-bold tracking-wider">or with password</span>
               <div className="flex-1 h-px bg-border-subtle" />
             </div>
           </div>

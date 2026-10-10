@@ -133,12 +133,12 @@ export default function FAQPage() {
           <div className="space-y-12">
             {SECTIONS.map((sec, secIdx) => (
               <div key={secIdx} className="space-y-4">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   {sec.title}
                 </h2>
                 
-                <div className="rounded-2xl border border-border-subtle/80 bg-surface/40 overflow-hidden divide-y divide-border-subtle/60 backdrop-blur-md">
+                <div className="rounded-2xl border border-border bg-surface overflow-hidden divide-y divide-border backdrop-blur-md shadow-card">
                   {sec.items.map((qa, i) => (
                     <QARow key={i} qa={qa} />
                   ))}
@@ -148,7 +148,7 @@ export default function FAQPage() {
           </div>
 
           {/* Bottom Help Desk Card */}
-          <div className="mt-16 rounded-3xl border border-emerald-500/30 bg-surface/50 p-8 sm:p-10 text-center backdrop-blur-xl shadow-card">
+          <div className="mt-16 rounded-3xl border border-emerald-500/30 bg-surface p-8 sm:p-10 text-center backdrop-blur-xl shadow-card">
             <h3 className="text-xl sm:text-2xl font-bold text-text mb-2">Still Have Questions?</h3>
             <p className="text-sm text-text-muted max-w-md mx-auto mb-6">
               Our 24/7 technical desk and executive management are here to help.
@@ -160,7 +160,7 @@ export default function FAQPage() {
                   <span>support@massfunded.org</span>
                 </a>
               </Button>
-              <Button asChild variant="outline" className="h-11 px-6 rounded-xl border-border-subtle hover:border-emerald-500/40 text-text hover:text-emerald-500 text-xs font-semibold">
+              <Button asChild variant="outline" className="h-11 px-6 rounded-xl border-border hover:border-emerald-500/40 text-text hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold">
                 <Link href="/contact">Open Contact Form</Link>
               </Button>
             </div>

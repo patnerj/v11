@@ -273,22 +273,22 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
         {/* Step Progress Tracker */}
         <div className="grid grid-cols-4 gap-2 border-b border-surface-muted/80 pb-4 text-xs font-semibold">
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 1 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 1 ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">1</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xs tabular font-bold">1</span>
             <span className="hidden sm:inline">Firm Info</span>
           </div>
 
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 2 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 2 ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">2</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xs tabular font-bold">2</span>
             <span className="hidden sm:inline">Brand Theme</span>
           </div>
 
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 3 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : currentStep > 3 ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">3</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xs tabular font-bold">3</span>
             <span className="hidden sm:inline">Plan Catalog</span>
           </div>
 
           <div className={`flex items-center gap-2 pb-1 transition-colors ${currentStep === 4 ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : 'text-gray-600'}`}>
-            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] tabular font-bold">4</span>
+            <span className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xs tabular font-bold">4</span>
             <span className="hidden sm:inline">Launch!</span>
           </div>
         </div>
@@ -345,7 +345,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 <UploadCloud className="h-5 w-5" />
               </div>
               <p className="text-xs font-semibold text-gray-200">Upload Firm Logo & Favicon</p>
-              <p className="text-[11px] text-gray-500">PNG, SVG, or WebP with transparent background (Recommended 512x512)</p>
+              <p className="text-2xs text-gray-500">PNG, SVG, or WebP with transparent background (Recommended 512x512)</p>
             </div>
           </div>
         )}
@@ -389,7 +389,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                       <div className="h-5 w-5 rounded-full bg-surface border border-slate-700" />
                       <div className="h-5 w-5 rounded-full bg-background border border-slate-700" />
                     </div>
-                    <span className="text-[10px] block font-semibold" style={{ color: preset.primary }}>
+                    <span className="text-2xs block font-semibold" style={{ color: preset.primary }}>
                       {preset.label}
                     </span>
                   </div>
@@ -420,7 +420,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 >
                   <div className="space-y-0.5">
                     <span className="text-xs font-bold text-white block">{plan.name}</span>
-                    <span className="text-[11px] text-emerald-400 tabular font-medium">
+                    <span className="text-2xs text-emerald-400 tabular font-medium">
                       Target: 8% / 5% • Max DD: 10%
                     </span>
                   </div>
@@ -487,15 +487,15 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
 
             <div className="grid grid-cols-3 gap-3 max-w-md mx-auto pt-2">
               <div className="bg-background border border-surface-muted p-2.5 rounded-lg">
-                <span className="text-[10px] text-gray-500 font-medium block">Status</span>
+                <span className="text-2xs text-gray-500 font-medium block">Status</span>
                 <span className="text-xs font-bold text-emerald-400">Live & Open</span>
               </div>
               <div className="bg-background border border-surface-muted p-2.5 rounded-lg">
-                <span className="text-[10px] text-gray-500 font-medium block">Checkout</span>
+                <span className="text-2xs text-gray-500 font-medium block">Checkout</span>
                 <span className="text-xs font-bold text-blue-400">Integrated</span>
               </div>
               <div className="bg-background border border-surface-muted p-2.5 rounded-lg">
-                <span className="text-[10px] text-gray-500 font-medium block">Risk Engine</span>
+                <span className="text-2xs text-gray-500 font-medium block">Risk Engine</span>
                 <span className="text-xs font-bold text-amber-400">Active</span>
               </div>
             </div>

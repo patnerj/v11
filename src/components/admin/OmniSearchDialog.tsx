@@ -217,36 +217,36 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         onKeyDown={handleKeyDown}
-        className="dark w-[calc(100vw-1.5rem)] sm:max-w-2xl bg-[#070C14] text-slate-100 border border-emerald-500/30 shadow-[0_0_50px_-10px_rgba(16,185,129,0.2)] backdrop-blur-2xl rounded-2xl p-0 overflow-hidden z-50 flex flex-col max-h-[82vh] ring-1 ring-emerald-500/20"
+        className="w-[calc(100vw-1.5rem)] sm:max-w-2xl bg-surface text-foreground border border-border shadow-2xl backdrop-blur-2xl rounded-2xl p-0 overflow-hidden z-50 flex flex-col max-h-[82vh] ring-1 ring-primary/20"
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 pl-4 pr-14 py-3.5 border-b border-emerald-500/20 bg-[#0D1522] shrink-0">
-          <Search className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-3 pl-4 pr-14 py-3.5 border-b border-border bg-surface-muted shrink-0">
+          <Search className="w-5 h-5 text-primary shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search trader email, MT5 login, ticket #, payout, or admin page..."
-            className="flex-1 bg-transparent border-none outline-none text-sm text-slate-100 placeholder:text-slate-400 font-medium"
+            className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground font-medium"
           />
-          {loading && <Loader2 className="w-4 h-4 animate-spin text-emerald-400 shrink-0" />}
+          {loading && <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />}
           {query && !loading && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="text-slate-400 hover:text-slate-100 p-1 rounded-md hover:bg-slate-800/60 transition-colors cursor-pointer"
+              className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-surface transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-mono bg-slate-800 text-slate-300 border border-slate-700">
+          <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-mono bg-surface text-muted-foreground border border-border">
             ESC
           </span>
         </div>
 
         {/* Scrollable Results */}
-        <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar bg-[#070C14]">
+        <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar bg-surface">
           {allItems.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
               <Search className="w-7 h-7 text-slate-600" />
@@ -285,7 +285,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
                         </span>
                         {item.badge && (
                           <span className={cn(
-                            "px-1.5 py-0.2 rounded text-3xs font-bold tabular border shrink-0",
+                            "px-1.5 py-0.2 rounded text-2xs font-bold tabular border shrink-0",
                             item.category === 'trader' ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
                             : item.category === 'payout' ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                             : item.category === 'ticket' ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
@@ -301,14 +301,14 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0 text-slate-400">
+                  <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground">
                     {active ? (
-                      <span className="text-3xs font-mono flex items-center gap-1 text-emerald-400 font-medium">
+                      <span className="text-2xs font-mono flex items-center gap-1 text-primary font-medium">
                         <span>Navigate</span>
                         <CornerDownLeft className="w-3 h-3" />
                       </span>
                     ) : (
-                      <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 group-hover:text-slate-200" />
+                      <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground group-hover:text-foreground" />
                     )}
                   </div>
                 </button>
@@ -318,13 +318,13 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
         </div>
 
         {/* Footer shortcuts hint */}
-        <div className="px-4 py-2.5 bg-[#0D1522] border-t border-emerald-500/20 flex items-center justify-between text-3xs text-slate-400 shrink-0 font-mono">
+        <div className="px-4 py-2.5 bg-surface-muted border-t border-border flex items-center justify-between text-2xs text-muted-foreground shrink-0 font-mono">
           <div className="flex items-center gap-3">
-            <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">↑↓</kbd> Navigate</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">↵</kbd> Select</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">ESC</kbd> Close</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">↑↓</kbd> Navigate</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">↵</kbd> Select</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">ESC</kbd> Close</span>
           </div>
-          <span className="text-emerald-400 font-semibold">{branding.brand_name || 'MassFunded'} Omni-Search</span>
+          <span className="text-primary font-semibold">{branding.brand_name || 'MassFunded'} Omni-Search</span>
         </div>
       </DialogContent>
     </Dialog>

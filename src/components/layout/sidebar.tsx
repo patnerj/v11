@@ -51,6 +51,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/payments',   label: 'Payments',   icon: CreditCard, queryKey: ['admin', 'payments'] },
   { href: '/admin/kyc',        label: 'KYC Hub',    icon: UserCheck, queryKey: ['admin', 'kyc'] },
   { href: '/admin/marketing',  label: 'Marketing',  icon: Megaphone, queryKey: ['admin', 'marketing'] },
+  { href: '/admin/affiliates', label: 'Affiliates', icon: Users2, queryKey: ['admin', 'affiliates'] },
   { href: '/admin/branding',   label: 'Branding',   icon: Palette, queryKey: ['admin', 'branding'] },
   { href: '/admin/tournaments',label: 'Tournaments',icon: Trophy, queryKey: ['admin', 'tournaments'] },
   { href: '/admin/operations', label: 'Operations', icon: Gauge, queryKey: ['admin', 'operations'] },
@@ -304,7 +305,7 @@ function SidebarBody({
               <Icon className={cn("h-4 w-4 shrink-0 transition-transform duration-150", active ? "scale-110" : "group-hover:scale-110")} />
               {!collapsed && <span className="flex-1">{it.label}</span>}
               {it.badge && !collapsed && (
-                <span className="text-[0.6rem] tracking-wider font-semibold px-1.5 py-0.5 rounded bg-success/15 text-success inline-flex items-center gap-1">
+                <span className="text-2xs tracking-wider font-semibold px-1.5 py-0.5 rounded bg-success/15 text-success inline-flex items-center gap-1">
                   <span className="h-1 w-1 rounded-full bg-success animate-pulse" />
                   {it.badge}
                 </span>

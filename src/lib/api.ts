@@ -3,7 +3,7 @@
  * Each function returns ApiResult<T>; callers branch on `.ok`.
  */
 
-import { fxsim, getApiBaseUrl, FXSIM_BASE } from './fxsim'
+import { fxsim, getApiBaseUrl, FXSIM_BASE, invalidateFxsim } from './fxsim'
 import type {
   Account, AdminStats, AdminUserRow, AdminUserDetail, AdminRisk, AdminRiskAlerts, AdvancedStats, AnalyticsChallenges,
   AnalyticsGrowth, AnalyticsRevenue, AuthUser, BasicStats, Certificate,
@@ -19,7 +19,7 @@ import type {
   ScalingRules, ScalingQueueItem, ScalingEvent,
   SyndicateRadarSettings, SyndicateCluster,
   PvpMatch, PvpLobbyResponse, PvpLiveStateResponse, PvpAnalyticsResponse,
-  PvpArenaWallet, TraderPerk, PvpLeaguePodiumResponse,
+  PvpArenaWallet, PvpArenaWalletResponse, TraderPerk, PvpLeaguePodiumResponse,
   TournamentMine,
   AiCopilotChatResponse, AiSafeLotResponse, AiHeadroomResponse, AiNewsWarning,
   AiSettings, AiSentinelReport, SystemDoctorStatus,
@@ -206,7 +206,7 @@ export const api = {
     get: () => fxsim<{ balance: number }>('/wallet', { cache: 15_000 }),
   },
   profile: (id: number) => fxsim<{ id: number; name: string; is_funded: boolean; has_passed: boolean; badges: string[]; total_payouts: number }>(`/profile/${id}`, { public: true, cache: 30_000 }),
-  affiliateLeaderboard: () => fxsim<Array<{ name: string; earned: number }>>('/stats/affiliate-leaderboard', { public: true, cache: 60_000 }),
+  affiliateLeaderboard: () => fxsim<Array<{ name: string; earned: number }> | { success: boolean; leaderboard: Array<{ name: string; earned: number }> }>('/stats/affiliate-leaderboard', { public: true, cache: 60_000 }),
   // ── Payments ──────────────────────────────────────────────────────────
   paymentConfig:    ()           => fxsim<PaymentConfig>('/payment/config', { cache: 60_000 }),
   paymentCreate:    (planId: number, gateway: string, couponCode?: string, tournamentId?: number) =>
@@ -228,9 +228,11 @@ export const api = {
   affiliatePayouts: () => fxsim<AffiliatePayout[]>('/affiliate/payouts', { cache: 5_000 }),
 
   // ── Notifications ─────────────────────────────────────────────────────
-  notifications:    (page = 1, per_page = 30) => fxsim<NotificationsResp>(`/notifications?page=${page}&per_page=${per_page}`, { cache: 10_000 }),
-  notificationsRead: (ids?: number[]) =>
-    fxsim<{ success: true }>('/notifications/read', { body: { ids: ids ?? [] } }),
+  notifications:    (page = 1, per_page = 30) => fxsim<NotificationsResp>(`/notifications?page=${page}&per_page=${per_page}`, { cache: 0 }),
+  notificationsRead: (ids?: number[]) => {
+    invalidateFxsim('/notifications')
+    return fxsim<{ success: true }>('/notifications/read', { body: { ids: ids ?? [] } })
+  },
 
   // ── API keys ──────────────────────────────────────────────────────────
   apiKeysList:   ()              => fxsim<unknown[]>('/api-keys', { cache: 15_000 }),
@@ -334,8 +336,8 @@ export const api = {
       fxsim<{ success: boolean; message: string; closed_count?: number }>('/admin/risk/force-close', { body: userIdOrAccount }),
     riskFlagTrader: (data: { user_id: number; reason?: string }) =>
       fxsim<{ success: boolean; message: string }>('/admin/risk/flag', { body: data }),
-    bulkPayouts:  (ids: number[], status: string, note?: string) =>
-      fxsim<{ success: boolean; processed: number; failed: number }>('/admin/bulk/payouts', { body: { ids, status, note }, retries: 0 }),
+    bulkPayouts:  (ids: number[], status: string, note?: string, tx_reference?: string) =>
+      fxsim<{ success: boolean; processed: number; failed: number; errors?: { id: number; message: string }[] }>('/admin/bulk/payouts', { body: { ids, status, note, tx_reference }, retries: 0 }),
     bulkKyc:      (ids: number[], action: 'approve' | 'reject', note?: string) =>
       fxsim<{ success: boolean; processed: number; failed: number }>('/admin/bulk/kyc', { body: { ids, action, note } }),
     saveUserNote: (userId: number, note: string) =>
@@ -454,7 +456,7 @@ export const api = {
     affiliatesList: () => fxsim<AdminAffiliate[]>('/admin/affiliates', { cache: 5_000 }),
     affiliateRate:  (id: number, rate: number) => fxsim<{ success: boolean }>(`/admin/affiliates/${id}/rate`, { body: { rate_percent: rate } }),
     affiliateStatus:(id: number, status: 'active' | 'suspended') => fxsim<{ success: boolean }>(`/admin/affiliates/${id}/status`, { body: { status } }),
-    affiliateConfigGet: () => fxsim<{ tier_1_pct: number; tier_2_pct: number; cookie_days: number; min_payout: number }>('/admin/affiliates/config', { cache: 0 }),
+    affiliateConfigGet: () => fxsim<{ tier_1_pct: number; tier_2_pct?: number; cookie_days: number; min_payout: number }>('/admin/affiliates/config', { cache: 0 }),
     affiliateConfigSave: (data: Record<string, any>) => fxsim<{ success: boolean; message?: string }>('/admin/affiliates/config', { body: data }),
     affiliatePayoutCreate: (data: { affiliate_id: number; amount: number; method?: string; destination?: string; note?: string; tx_reference?: string }) =>
       fxsim<{ success: boolean; message?: string }>('/admin/affiliates/payout', { body: data }),
@@ -479,13 +481,30 @@ export const api = {
       fxsim<{ success: boolean; message?: string }>('/admin/smtp/test', { body: { to, ...(config || {}) } }),
     priceFeedSave: (data: Record<string, any>) => fxsim<{ success: true }>('/admin/price-feed/save', { body: data }),
     priceFeedHealth: () => fxsim<{
+      success?: boolean;
       mode: 'auto' | 'mt5' | 'yahoo'; active_source: string; status: string;
       mt5_last_push_ts: number | null; mt5_age_sec: number | null; mt5_fresh: boolean;
       stale_threshold: number; yahoo_last_ts: number | null; feed_failed: boolean;
       symbol_count: number; secret_set: boolean; market_open: boolean;
       ingest_secret?: string; ingest_url?: string;
       auto_failover?: boolean; auto_freeze?: boolean;
+      last_update_ts?: number | null;
+      seconds_ago?: number | null;
+      source?: string;
+      is_stale?: boolean;
+      wp_cron_disabled?: boolean;
+      positions_with_sltp?: number;
     }>('/admin/price-feed/health'),
+    priceFeedCronSetup: () => fxsim<{
+      success: boolean;
+      wp_cron_disabled: boolean;
+      wp_config_line: string;
+      crontab_line: string;
+      wp_cli_line: string;
+      cron_url: string;
+      status: string;
+      explanation: string;
+    }>('/admin/price-feed/cron-setup'),
     forcePrices:  () => fxsim<{ success: true; message: string }>('/admin/force-prices', { method: 'POST' }),
     newsLockGet:  () => fxsim<{ success?: boolean; locked: boolean }>('/admin/news-lock', { cache: 0 }),
     newsLock:     (locked: boolean, reason?: string) => fxsim<{ success: true; locked: boolean }>('/admin/news-lock', { body: { locked, reason } }),
@@ -595,9 +614,19 @@ export const api = {
     syndicateFreeze: (id: number) =>
       fxsim<{ success: boolean; message: string }>(`/admin/risk/syndicate/${id}/freeze`, { body: {} }),
 
-    // ── 1v1 PvP Arena Admin Analytics ───────────────────────────────────────
+    // ── 1v1 PvP Arena Admin Analytics & Operations ─────────────────────────
     pvpAnalytics: () =>
       fxsim<PvpAnalyticsResponse>('/admin/pvp/analytics', { cache: 5_000 }),
+    pvpSettingsGet: () =>
+      fxsim<{ success: boolean; arena_wallet_mode: 'demo' | 'live' }>('/admin/pvp/settings', { cache: 0 }),
+    pvpSettingsSave: (data: { arena_wallet_mode: 'demo' | 'live' }) =>
+      fxsim<{ success: boolean; message: string; arena_wallet_mode?: string }>('/admin/pvp/settings', { body: data }),
+    pvpWithdrawalsList: (status?: string) =>
+      fxsim<{ success: boolean; withdrawals: any[] }>(`/admin/pvp/withdrawals?status=${status || 'pending'}`, { cache: 0 }),
+    pvpWithdrawalAction: (id: number, data: { action: 'paid' | 'rejected'; tx_reference?: string }) =>
+      fxsim<{ success: boolean; message: string }>(`/admin/pvp/withdrawals/${id}`, { body: data }),
+    pvpWalletCredit: (data: { user_id: number; amount: number; ref?: string; note?: string }) =>
+      fxsim<{ success: boolean; message?: string }>('/admin/pvp/wallet/credit', { body: data }),
 
   },
 
@@ -620,11 +649,11 @@ export const api = {
     chat: (id: number, message: string) =>
       fxsim<{ success: boolean; message: string }>(`/pvp/match/${id}/chat`, { body: { message } }),
     wallet: () =>
-      fxsim<PvpArenaWallet>('/pvp/wallet', { cache: 0 }),
+      fxsim<PvpArenaWalletResponse>('/pvp/wallet', { cache: 0 }),
     deposit: (amount: number, method?: string) =>
       fxsim<{ success: boolean; balance: number; message: string }>('/pvp/wallet/deposit', { body: { amount, method } }),
     withdraw: (amount: number, destination: string) =>
-      fxsim<{ success: boolean; balance: number; message: string }>('/pvp/wallet/withdraw', { body: { amount, destination } }),
+      fxsim<{ success: boolean; balance: number; message: string; pending?: boolean }>('/pvp/wallet/withdraw', { body: { amount, destination } }),
     perks: () =>
       fxsim<{ success: boolean; perks: TraderPerk[] }>('/pvp/perks', { cache: 0 }),
     applyPerk: (id: number, account_id?: number) =>

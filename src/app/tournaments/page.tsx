@@ -59,6 +59,11 @@ export default function PublicTournamentsPage() {
     return raw.replace(/^[\s🏆]+/u, '').trim() || raw
   }
 
+  const cleanDescription = (val?: string | null) => {
+    const raw = String(val || 'Global trading tournament.').trim()
+    return raw.replace(/\*\*/g, '').replace(/###?/g, '').trim() || raw
+  }
+
   const renderCard = (t: Competition, isActive: boolean) => {
     const tid = Number(t.id)
     const pendingOrder = pendingOrders.get(tid)
@@ -99,30 +104,30 @@ export default function PublicTournamentsPage() {
         <h3 className="text-lg font-bold text-text group-hover:text-accent transition-colors line-clamp-1">
           {cleanTitle(t.name || t.title)}
         </h3>
-        <p className="text-sm text-text-muted mt-1 line-clamp-2">{t.description || 'Global trading tournament.'}</p>
+        <p className="text-sm text-text-muted mt-1 line-clamp-2">{cleanDescription(t.description)}</p>
       </div>
 
       {/* Stats Grid: 2x2 layout so Enrolled/Cap and Starting Equity never wrap awkwardly */}
       <div className="grid grid-cols-2 gap-2.5 my-5">
         <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
-          <div className="text-[11px] text-text-muted mb-0.5">Prize Pool</div>
+          <div className="text-2xs text-text-muted mb-0.5">Prize Pool</div>
           <div className="text-sm font-bold text-accent truncate">{formatPrizePool(t.prize_pool)}</div>
         </div>
         <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
-          <div className="text-[11px] text-text-muted mb-0.5">Entry Fee</div>
+          <div className="text-2xs text-text-muted mb-0.5">Entry Fee</div>
           <div className="text-sm font-bold text-text">
             {Number(t.entry_fee) > 0 ? `$${Number(t.entry_fee).toFixed(0)}` : 'FREE'}
           </div>
         </div>
         <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
-          <div className="text-[11px] text-text-muted mb-0.5">Enrolled / Cap</div>
+          <div className="text-2xs text-text-muted mb-0.5">Enrolled / Cap</div>
           <div className="text-sm font-bold text-text flex items-center gap-1.5 font-mono whitespace-nowrap">
             <Users className="h-3.5 w-3.5 text-info shrink-0" />
             <span>{t.participants_count ?? t.current_participants ?? 0} / {t.max_participants || 1000}</span>
           </div>
         </div>
         <div className="bg-surface-muted/50 p-2.5 rounded-lg border border-border/50">
-          <div className="text-[11px] text-text-muted mb-0.5">Starting Equity</div>
+          <div className="text-2xs text-text-muted mb-0.5">Starting Equity</div>
           <div className="text-sm font-bold text-text font-mono whitespace-nowrap">
             ${Number(t.starting_balance || 10000).toLocaleString()}
           </div>
@@ -130,8 +135,14 @@ export default function PublicTournamentsPage() {
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-border/50">
-        <div className="text-xs text-text-muted">
-          Ends: {new Date(t.end_date).toLocaleDateString()}
+        <div className="text-xs text-text-muted flex items-center flex-wrap gap-x-2 gap-y-1">
+          {t.start_date && (
+            <span>Starts: <strong className="text-text font-semibold">{new Date(String(t.start_date).replace(' ', 'T')).toLocaleDateString()}</strong></span>
+          )}
+          {t.start_date && t.end_date && <span className="text-text-faint">·</span>}
+          {t.end_date && (
+            <span>Ends: <strong className="text-text font-semibold">{new Date(String(t.end_date).replace(' ', 'T')).toLocaleDateString()}</strong></span>
+          )}
         </div>
         {pendingOrder ? (
           <Link 

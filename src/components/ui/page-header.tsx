@@ -83,20 +83,20 @@ export function PageHeader({
         </nav>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 min-w-0">
+        <div className="space-y-1 min-w-0 sm:min-w-[280px] flex-1">
+          <div className="flex items-center gap-2.5 min-w-0">
             {Icon && (
               <div className="h-9 w-9 rounded-lg bg-surface-muted border border-border-subtle flex items-center justify-center text-accent shrink-0">
                 <Icon className="h-5 w-5" />
               </div>
             )}
-            <h1 className="text-2xl font-bold tracking-tight text-text flex items-center gap-2">
-              {title}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text flex flex-wrap items-center gap-2 min-w-0">
+              <span>{title}</span>
               {badge && (
                 <span
                   className={cn(
-                    'text-2xs font-semibold px-2 py-0.5 rounded-full border',
+                    'text-2xs font-semibold px-2 py-0.5 rounded-full border shrink-0',
                     BADGE_TONES[badge.tone || 'accent']
                   )}
                 >
@@ -112,7 +112,7 @@ export function PageHeader({
           )}
         </div>
 
-        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
       </div>
 
       {children && <div>{children}</div>}
@@ -136,7 +136,7 @@ export function PageHeader({
                 {tab.count !== undefined && (
                   <span
                     className={cn(
-                      'px-1.5 py-0.5 rounded-full text-[10px] font-medium',
+                      'px-1.5 py-0.5 rounded-full text-2xs font-medium',
                       active ? 'bg-accent/20 text-accent' : 'bg-surface-muted text-text-subtle'
                     )}
                   >
@@ -168,44 +168,44 @@ export function PageHero({
   return (
     <div
       className={cn(
-        'relative isolate overflow-hidden bg-surface rounded-2xl border border-border/60 p-6 sm:p-8 mb-6 shadow-sm',
+        'relative isolate overflow-hidden bg-surface rounded-2xl border border-border/60 p-4 sm:p-6 lg:p-8 mb-6 shadow-sm min-w-0 max-w-full',
         className
       )}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/5 pointer-events-none" />
       
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" className="relative z-10 flex items-center gap-1.5 text-xs text-text-muted mb-3">
+        <nav aria-label="Breadcrumb" className="relative z-10 flex items-center gap-1.5 text-xs text-text-muted mb-3 overflow-x-auto scrollbar-none">
           {breadcrumbs.map((b, i) => (
             <React.Fragment key={i}>
               {i > 0 && <span className="text-text-faint">/</span>}
               {b.href ? (
-                <Link href={b.href} className="hover:text-text transition-colors">
+                <Link href={b.href} className="hover:text-text transition-colors whitespace-nowrap">
                   {b.label}
                 </Link>
               ) : (
-                <span className="text-text font-medium">{b.label}</span>
+                <span className="text-text font-medium whitespace-nowrap">{b.label}</span>
               )}
             </React.Fragment>
           ))}
         </nav>
       )}
 
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 min-w-0">
+        <div className="space-y-1.5 min-w-0 sm:min-w-[280px] flex-1">
+          <div className="flex items-center gap-3 min-w-0">
             {Icon && (
               <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
                 <Icon className="h-5 w-5" />
               </div>
             )}
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text flex items-center gap-2.5">
-                {title}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-text flex flex-wrap items-center gap-2.5 min-w-0">
+                <span>{title}</span>
                 {badge && (
                   <span
                     className={cn(
-                      'text-xs font-semibold px-2.5 py-0.5 rounded-full border',
+                      'text-xs font-semibold px-2.5 py-0.5 rounded-full border shrink-0',
                       BADGE_TONES[badge.tone || 'accent']
                     )}
                   >
@@ -222,7 +222,7 @@ export function PageHero({
           )}
         </div>
 
-        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
       </div>
 
       {children && <div className="relative z-10 mt-4">{children}</div>}
@@ -246,7 +246,7 @@ export function PageHero({
                 {tab.count !== undefined && (
                   <span
                     className={cn(
-                      'px-1.5 py-0.5 rounded-full text-[10px] font-medium',
+                      'px-1.5 py-0.5 rounded-full text-2xs font-medium',
                       active ? 'bg-white/20 text-white' : 'bg-surface text-text-subtle'
                     )}
                   >

@@ -141,22 +141,22 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
   }, [activePlan, calculatedGain]);
 
   return (
-    <section className="relative py-20 lg:py-28 bg-transparent text-text overflow-hidden" id="challenges">
+    <section className="relative py-14 sm:py-20 lg:py-28 bg-transparent text-text overflow-hidden" id="challenges">
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 blur-[160px] pointer-events-none" />
 
       <div className="container max-w-7xl mx-auto px-4 relative">
         
         {/* Section Header */}
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 mb-4">
+        <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 mb-3 sm:mb-4">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Institutional Evaluation Plans</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
             {title}
           </h2>
-          <p className="mt-4 text-text-muted text-base sm:text-lg">
+          <p className="mt-3 sm:mt-4 text-text-muted text-sm sm:text-base lg:text-lg">
             Choose your model and account size. Zero hidden rules, transparent drawdown criteria, and full fee refund on your first payout.
           </p>
         </div>
@@ -177,27 +177,27 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
             <Skeleton className="h-96 w-full rounded-2xl bg-surface/50" />
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 sm:gap-6">
             
             {/* Model Selection Tabs */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 ${models.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4`}>
+            <div className={`grid grid-cols-2 sm:grid-cols-2 ${models.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-2 sm:gap-4`}>
               {models.map((m) => {
                 const isActive = selectedModel === m;
                 return (
                   <button
                     key={m}
                     onClick={() => setSelectedModel(m)}
-                    className={`relative text-left p-5 rounded-2xl border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+                    className={`relative text-left p-3 sm:p-5 rounded-xl sm:rounded-2xl border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                       isActive
                         ? "bg-surface/90 border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.18)]"
                         : "bg-surface/30 border-border-subtle/80 hover:border-border hover:bg-surface/50"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-base font-extrabold ${isActive ? "text-text" : "text-text-muted"}`}>
+                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 mb-1.5 sm:mb-2">
+                      <span className={`text-sm sm:text-base font-extrabold ${isActive ? "text-text" : "text-text-muted"}`}>
                         {m}
                       </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      <span className={`text-3xs sm:text-2xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full border self-start xs:self-auto ${
                         isActive 
                           ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
                           : "bg-surface border-border-subtle text-text-muted"
@@ -205,7 +205,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                         {getModelBadge(m)}
                       </span>
                     </div>
-                    <p className={`text-xs leading-relaxed ${isActive ? "text-text-muted" : "text-text-muted/60"}`}>
+                    <p className={`text-2xs sm:text-xs leading-relaxed line-clamp-2 xs:line-clamp-none ${isActive ? "text-text-muted" : "text-text-muted/60"}`}>
                       {getModelSubtext(m)}
                     </p>
                   </button>
@@ -214,27 +214,27 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
             </div>
 
             {/* Account Size Selection Buttons */}
-            <div className={`grid grid-cols-2 sm:grid-cols-3 ${
-              accountSizes.length === 7 ? "lg:grid-cols-7" :
-              accountSizes.length === 6 ? "lg:grid-cols-6" :
-              "lg:grid-cols-5"
-            } gap-2.5 sm:gap-3`}>
+            <div className={`grid grid-cols-3 sm:grid-cols-3 ${
+              accountSizes.length === 7 ? "md:grid-cols-4 lg:grid-cols-7" :
+              accountSizes.length === 6 ? "md:grid-cols-3 lg:grid-cols-6" :
+              "md:grid-cols-5"
+            } gap-1.5 sm:gap-3`}>
               {accountSizes.map((size) => {
                 const isActive = selectedSize === size;
                 return (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`relative text-left p-3.5 sm:p-4 rounded-xl border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+                    className={`relative text-left p-2 sm:p-3.5 sm:p-4 rounded-lg sm:rounded-xl border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                       isActive
                         ? "bg-gradient-to-b from-emerald-500/15 to-surface/90 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
                         : "bg-surface/30 border-border-subtle/80 hover:border-border hover:bg-surface/50"
                     }`}
                   >
-                    <div className="text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1">
-                      Account Size
+                    <div className="text-3xs sm:text-2xs font-medium text-text-muted uppercase tracking-wider mb-0.5 sm:mb-1 truncate">
+                      Size
                     </div>
-                    <div className={`text-lg xl:text-xl font-black font-mono tracking-tight ${isActive ? "text-emerald-400" : "text-text"}`}>
+                    <div className={`text-sm sm:text-lg xl:text-xl font-black font-mono tracking-tight ${isActive ? "text-emerald-400" : "text-text"}`}>
                       {fmtUSD(size, { decimals: 0 })}
                     </div>
                   </button>
@@ -251,27 +251,27 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-surface/50 border border-border/70 rounded-3xl p-6 lg:p-8 backdrop-blur-xl shadow-card-lg"
+                  className="bg-surface/50 border border-border/70 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 lg:p-8 backdrop-blur-xl shadow-card-lg"
                 >
-                  <div className="grid lg:grid-cols-12 gap-8 items-start">
+                  <div className="grid lg:grid-cols-12 gap-5 sm:gap-8 items-start">
                     
                     {/* Left & Center: Rules Breakdown + Interactive Profit Calculator */}
-                    <div className="lg:col-span-8 space-y-6">
+                    <div className="lg:col-span-8 space-y-4 sm:space-y-6">
                       
                       {/* Rules Columns */}
-                      <div className="grid md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-6">
                         
                         {/* Column 1: Evaluation Rules */}
-                        <div className="bg-bg/40 rounded-2xl p-5 border border-border-subtle/60">
-                          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border-subtle">
-                            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                            <h4 className="text-sm font-bold text-text">
+                        <div className="bg-bg/40 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-border-subtle/60">
+                          <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-2 border-b border-border-subtle">
+                            <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+                            <h4 className="text-xs sm:text-sm font-bold text-text truncate">
                               {Number(activePlan.is_instant_funding) === 1 || Number(activePlan.phases) === 0
                                 ? "Instant Funding Parameters"
                                 : "Evaluation Parameters"}
                             </h4>
                           </div>
-                          <ul className="space-y-3.5">
+                          <ul className="space-y-2.5 sm:space-y-3.5">
                             {(Number(activePlan.is_instant_funding) === 1 || Number(activePlan.phases) === 0) && (
                               <RuleRow
                                 label="Profit Target"
@@ -331,14 +331,14 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                         </div>
 
                         {/* Column 2: Funded & Reward Rules */}
-                        <div className="bg-bg/40 rounded-2xl p-5 border border-border-subtle/60">
-                          <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border-subtle">
-                            <Coins className="h-4 w-4 text-emerald-400" />
-                            <h4 className="text-sm font-bold text-text">
+                        <div className="bg-bg/40 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-border-subtle/60">
+                          <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-2 border-b border-border-subtle">
+                            <Coins className="h-4 w-4 text-emerald-400 shrink-0" />
+                            <h4 className="text-xs sm:text-sm font-bold text-text truncate">
                               Funded Phase & Rewards
                             </h4>
                           </div>
-                          <ul className="space-y-3.5">
+                          <ul className="space-y-2.5 sm:space-y-3.5">
                             <RuleRow
                               label="Trader Profit Share"
                               value={`Up to ${toNum(activePlan.funded_profit_split) || 80}%`}
@@ -376,22 +376,22 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                       </div>
 
                       {/* Interactive Live Profit Calculator */}
-                      <div className="bg-gradient-to-r from-emerald-500/10 via-surface/60 to-surface/40 rounded-2xl p-5 border border-emerald-500/30">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                      <div className="bg-gradient-to-r from-emerald-500/10 via-surface/60 to-surface/40 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-emerald-500/30">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 sm:mb-4">
                           <div className="flex items-center gap-2">
-                            <Calculator className="h-4 w-4 text-emerald-400" />
-                            <h4 className="text-sm font-bold text-text">
+                            <Calculator className="h-4 w-4 text-emerald-400 shrink-0" />
+                            <h4 className="text-xs sm:text-sm font-bold text-text">
                               Interactive Payout Simulator
                             </h4>
                           </div>
                           
                           {/* Target Presets */}
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                             {[5, 8, 10, 12, 15].map((preset) => (
                               <button
                                 key={preset}
                                 onClick={() => setProfitEstimatePct(preset)}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-2xs sm:text-xs font-mono font-bold transition-all ${
                                   profitEstimatePct === preset
                                     ? "bg-emerald-500 text-bg shadow-glow-sm"
                                     : "bg-surface hover:bg-surface-muted text-text-muted border border-border-subtle"
@@ -404,41 +404,45 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                         </div>
 
                         {/* Slider Control */}
-                        <div className="space-y-2 mb-4">
+                        <div className="space-y-1.5 mb-3 sm:mb-4">
+                          <label htmlFor="profit-estimate-range" className="sr-only">Simulated Monthly Return</label>
                           <div className="flex justify-between text-xs text-text-muted">
                             <span>Simulated Monthly Return</span>
                             <span className="font-mono font-bold text-emerald-400">+{profitEstimatePct}% Profit</span>
                           </div>
                           <input
+                            id="profit-estimate-range"
+                            name="profit_estimate_range"
                             type="range"
                             min="3"
                             max="20"
                             step="1"
                             value={profitEstimatePct}
+                            aria-label="Simulated Monthly Return"
                             onChange={(e) => setProfitEstimatePct(Number(e.target.value))}
                             className="w-full accent-emerald-500 cursor-pointer h-2 bg-surface rounded-lg appearance-none"
                           />
                         </div>
 
                         {/* Calculation Summary Bar */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-border-subtle/60 text-xs">
-                          <div className="p-2.5 rounded-xl bg-surface/60 border border-border-subtle">
-                            <div className="text-text-muted text-[11px]">Total Trading Profit</div>
-                            <div className="text-base font-bold font-mono text-text mt-0.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-3 border-t border-border-subtle/60 text-xs">
+                          <div className="p-2 sm:p-2.5 rounded-xl bg-surface/60 border border-border-subtle">
+                            <div className="text-text-muted text-2xs sm:text-2xs">Total Trading Profit</div>
+                            <div className="text-sm sm:text-base font-bold font-mono text-text mt-0.5">
                               {fmtUSD(calculatedGain)}
                             </div>
                           </div>
                           
-                          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                            <div className="text-emerald-400 font-semibold text-[11px]">Your Bi-Weekly Share ({toNum(activePlan.funded_profit_split) || 80}%)</div>
-                            <div className="text-base font-bold font-mono text-emerald-400 mt-0.5">
+                          <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                            <div className="text-emerald-400 font-semibold text-2xs sm:text-2xs">Your Bi-Weekly Share ({toNum(activePlan.funded_profit_split) || 80}%)</div>
+                            <div className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5">
                               {fmtUSD(calculatedTraderSplit)}
                             </div>
                           </div>
 
-                          <div className="p-2.5 rounded-xl bg-surface/60 border border-border-subtle">
-                            <div className="text-text-muted text-[11px]">100% Fee Refund Added</div>
-                            <div className="text-base font-bold font-mono text-text mt-0.5">
+                          <div className="p-2 sm:p-2.5 rounded-xl bg-surface/60 border border-border-subtle">
+                            <div className="text-text-muted text-2xs sm:text-2xs">100% Fee Refund Added</div>
+                            <div className="text-sm sm:text-base font-bold font-mono text-text mt-0.5">
                               +{fmtUSD(activePlan.price)}
                             </div>
                           </div>
@@ -448,28 +452,28 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                     </div>
 
                     {/* Right Column: Pricing & Instant Checkout Card */}
-                    <div className="lg:col-span-4 bg-surface/80 rounded-2xl p-6 border border-border-subtle/80 flex flex-col justify-between shadow-card">
+                    <div className="lg:col-span-4 bg-surface/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border-subtle/80 flex flex-col justify-between shadow-card mt-2 lg:mt-0">
                       <div>
-                        <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">
+                        <div className="text-2xs sm:text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">
                           Ready to trade
                         </div>
-                        <h3 className="text-2xl font-black text-text tracking-tight">
+                        <h3 className="text-xl sm:text-2xl font-black text-text tracking-tight">
                           {brandName} {selectedModel}
                         </h3>
-                        <div className="text-sm text-text-muted mt-1">
+                        <div className="text-xs sm:text-sm text-text-muted mt-0.5 sm:mt-1">
                           {fmtUSD(activePlan.account_size, { decimals: 0 })} Trading Capital
                         </div>
 
-                        <div className="my-6 pb-6 border-b border-border-subtle">
-                          <div className="text-xs text-text-muted mb-1">One-time Evaluation Fee (Refundable)</div>
+                        <div className="my-4 sm:my-6 pb-4 sm:pb-6 border-b border-border-subtle">
+                          <div className="text-2xs sm:text-xs text-text-muted mb-1">One-time Evaluation Fee (Refundable)</div>
                           <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-black text-emerald-400 font-mono tracking-tight">
+                            <span className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight">
                               {fmtUSD(activePlan.price)}
                             </span>
                           </div>
                         </div>
 
-                        <ul className="space-y-2.5 mb-6 text-xs text-text-muted">
+                        <ul className="space-y-2 sm:space-y-2.5 mb-5 sm:mb-6 text-xs text-text-muted">
                           <li className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                             <span>Instant account credential dispatch</span>
@@ -492,7 +496,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                       <Button
                         asChild={!onSelectPlan}
                         onClick={() => onSelectPlan && onSelectPlan(activePlan.id)}
-                        className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold py-6 rounded-xl shadow-glow hover:shadow-glow-success transition-all duration-300 btn-shine"
+                        className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold py-4 sm:py-6 rounded-xl shadow-glow hover:shadow-glow-success transition-all duration-300 btn-shine"
                       >
                         {onSelectPlan ? (
                           "Start Challenge"

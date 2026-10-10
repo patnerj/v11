@@ -90,16 +90,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className={isTerminal ? "h-dvh max-h-dvh overflow-hidden flex flex-col bg-bg min-w-0 max-w-full" : "min-h-screen bg-bg min-w-0 max-w-full overflow-x-hidden"}>
       <ImpersonationBanner />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={collapsed} onToggleCollapse={toggleCollapse} />
-      <div className={`${collapsed ? 'lg:pl-16' : 'lg:pl-64'} min-h-screen flex flex-col transition-[padding] duration-200`}>
+      <div className={`${collapsed ? 'lg:pl-16' : 'lg:pl-64'} ${isTerminal ? 'h-full max-h-full overflow-hidden' : 'min-h-screen'} flex flex-col min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-200`}>
         <BannerBar placement="dashboard" />
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <main className={
-          isTerminal ? 'flex-1 min-w-0 w-full p-3 md:p-4 pb-0 md:pb-4' :
-          isSupport ? 'flex-1 p-3 md:p-4 max-w-[1400px] w-full mx-auto pb-28 lg:pb-4' :
-          'flex-1 p-4 md:p-8 max-w-[1400px] w-full mx-auto pb-28 md:pb-8'
+          isTerminal ? 'flex-1 min-h-0 min-w-0 max-w-full overflow-hidden w-full p-1.5 sm:p-2 md:p-2.5 flex flex-col' :
+          isSupport ? 'flex-1 min-w-0 max-w-full overflow-x-hidden p-3 md:p-4 max-w-[1400px] w-full mx-auto pb-28 lg:pb-4' :
+          'flex-1 min-w-0 max-w-full overflow-x-hidden p-3 sm:p-4 md:p-8 max-w-[1400px] w-full mx-auto pb-28 md:pb-8'
         }>
           {children}
         </main>
