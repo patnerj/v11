@@ -86,11 +86,11 @@ const COMPARISONS = [
 ]
 
 const PLANS = [
-  { size: '$10,000', target1: '$800 (8%)', target2: '$500 (5%)', maxDd: '$1,000 (10%)', dailyDd: '$500 (5%)', price: '$89', popular: false },
-  { size: '$25,000', target1: '$2,000 (8%)', target2: '$1,250 (5%)', maxDd: '$2,500 (10%)', dailyDd: '$1,250 (5%)', price: '$189', popular: false },
-  { size: '$50,000', target1: '$4,000 (8%)', target2: '$2,500 (5%)', maxDd: '$5,000 (10%)', dailyDd: '$2,500 (5%)', price: '$299', popular: false },
-  { size: '$100,000', target1: '$8,000 (8%)', target2: '$5,000 (5%)', maxDd: '$10,000 (10%)', dailyDd: '$5,000 (5%)', price: '$499', popular: true },
-  { size: '$200,000', target1: '$16,000 (8%)', target2: '$10,000 (5%)', maxDd: '$20,000 (10%)', dailyDd: '$10,000 (5%)', price: '$949', popular: false },
+  { size: '$10,000', target1: '$800 (8%)', target2: '$500 (5%)', maxDd: '$600 (6%)', maxDdPct: '6%', dailyDd: '$300 (3%)', dailyDdPct: '3%', price: '$89', popular: false },
+  { size: '$25,000', target1: '$2,000 (8%)', target2: '$1,250 (5%)', maxDd: '$1,500 (6%)', maxDdPct: '6%', dailyDd: '$750 (3%)', dailyDdPct: '3%', price: '$189', popular: false },
+  { size: '$50,000', target1: '$4,000 (8%)', target2: '$2,500 (5%)', maxDd: '$3,000 (6%)', maxDdPct: '6%', dailyDd: '$1,500 (3%)', dailyDdPct: '3%', price: '$299', popular: false },
+  { size: '$100,000', target1: '$8,000 (8%)', target2: '$5,000 (5%)', maxDd: '$6,000 (6%)', maxDdPct: '6%', dailyDd: '$3,000 (3%)', dailyDdPct: '3%', price: '$499', popular: true },
+  { size: '$200,000', target1: '$16,000 (8%)', target2: '$10,000 (5%)', maxDd: '$12,000 (6%)', maxDdPct: '6%', dailyDd: '$6,000 (3%)', dailyDdPct: '3%', price: '$949', popular: false },
 ]
 
 export function TemplateTerminal() {
@@ -443,11 +443,11 @@ export function TemplateTerminal() {
                       <span className="font-semibold text-text terminal-num">{p.target2}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-text-muted">Max DD (10%):</span>
+                      <span className="text-text-muted">Max DD ({p.maxDdPct || '6%'}):</span>
                       <span className="font-semibold text-emerald-500 terminal-num">{p.maxDd}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-text-muted">Daily DD (5%):</span>
+                      <span className="text-text-muted">Daily DD ({p.dailyDdPct || '3%'}):</span>
                       <span className="font-semibold text-text terminal-num">{p.dailyDd}</span>
                     </div>
                     <div className="flex justify-between">

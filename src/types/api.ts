@@ -969,15 +969,20 @@ export interface PaymentGatewaysConfig {
   stripe_enabled: boolean;
   stripe_public_key: string;
   stripe_secret_key: string;
+  stripe_secret_key_set?: boolean;
   stripe_webhook_secret: string;
+  stripe_webhook_secret_set?: boolean;
   cryptomus_enabled: boolean;
   cryptomus_merchant_id: string;
   cryptomus_api_key: string;
+  cryptomus_api_key_set?: boolean;
   nowpayments_enabled: boolean;
   nowpayments_api_key: string;
+  nowpayments_api_key_set?: boolean;
   paypal_enabled: boolean;
   paypal_client_id: string;
   paypal_secret: string;
+  paypal_secret_set?: boolean;
   manual_crypto_enabled: boolean;
   manual_bank_enabled: boolean;
 }

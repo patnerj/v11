@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge'
 interface ActionCenterProps {
   pendingPayoutsCount: number
   pendingPayoutsAmount: number
+  pendingPayoutsGross?: number
+  pendingPayoutsNet?: number
   riskBreachesCount: number
+  totalRiskAlerts?: number
   urgentTicketsCount: number
   onOpenPayoutReview?: () => void
 }
@@ -16,10 +19,16 @@ interface ActionCenterProps {
 export function FounderActionCenter({
   pendingPayoutsCount = 0,
   pendingPayoutsAmount = 0,
+  pendingPayoutsGross,
+  pendingPayoutsNet,
   riskBreachesCount = 0,
+  totalRiskAlerts,
   urgentTicketsCount = 0,
   onOpenPayoutReview,
 }: ActionCenterProps) {
+  const displayGross = pendingPayoutsGross ?? pendingPayoutsAmount
+  const displayNet = pendingPayoutsNet ?? (displayGross * 0.8)
+  const displayAlerts = totalRiskAlerts ?? riskBreachesCount
   const allClear = pendingPayoutsCount === 0 && riskBreachesCount === 0 && urgentTicketsCount === 0
 
   if (allClear) {
@@ -34,7 +43,7 @@ export function FounderActionCenter({
               <h4 className="text-sm font-semibold text-text">All Systems Operational</h4>
               <Badge tone="success" size="sm">100% Caught Up</Badge>
             </div>
-            <p className="text-xs text-text-muted mt-0.5">0 pending payouts • 0 unhandled risk alerts • Support queue cleared</p>
+            <p className="text-xs text-text-muted mt-0.5">0 pending payouts • 0 unhandled risk alerts across 0 accounts • Support queue cleared</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -91,10 +100,14 @@ export function FounderActionCenter({
               </div>
             </div>
             <p className="text-xl font-extrabold text-text mt-1.5 tabular">
-              ${pendingPayoutsAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${displayGross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gross
             </p>
             <p className="text-xs text-text-muted mt-0.5">
-              {pendingPayoutsCount > 0 ? `${pendingPayoutsCount} payout withdrawal${pendingPayoutsCount > 1 ? 's' : ''} awaiting sign-off` : 'No pending payout requests'}
+              {pendingPayoutsCount > 0 ? (
+                <span>
+                  ${displayNet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Net (@ 80%) • {pendingPayoutsCount} withdrawal{pendingPayoutsCount > 1 ? 's' : ''} in queue
+                </span>
+              ) : 'No pending payout requests'}
             </p>
           </div>
           <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500">
@@ -116,10 +129,10 @@ export function FounderActionCenter({
               </div>
             </div>
             <p className="text-xl font-extrabold text-text mt-1.5 tabular">
-              {riskBreachesCount} Flagged Account{riskBreachesCount === 1 ? '' : 's'}
+              {displayAlerts} Active Alert{displayAlerts === 1 ? '' : 's'}
             </p>
             <p className="text-xs text-text-muted mt-0.5">
-              {riskBreachesCount > 0 ? 'HFT scalping, lot stacking, or drawdown warnings' : 'Zero active risk breaches detected'}
+              {displayAlerts > 0 ? `${displayAlerts} active alerts across ${riskBreachesCount} flagged account${riskBreachesCount === 1 ? '' : 's'}` : 'Zero active risk breaches detected'}
             </p>
           </div>
           <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400 group-hover:text-amber-500">

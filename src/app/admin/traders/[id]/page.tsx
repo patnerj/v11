@@ -702,7 +702,7 @@ export default function Trader360ProfilePage() {
         title={trader.name}
         description={`${trader.email || 'No email registered'} • Joined ${trader.joined_date} • ${trader.plan_name}`}
         badge={{
-          label: `#TRD-${trader.account_id} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
+          label: `#USR-${trader.user_id || userId}${trader.account_id ? ` · #ACC-${trader.account_id}` : ''} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
           tone: isBanned ? 'danger' : 'accent',
         }}
         actions={
@@ -1191,8 +1191,8 @@ export default function Trader360ProfilePage() {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2.5">
-                <Badge tone={trader.kyc_status === 'verified' ? 'success' : trader.kyc_status === 'pending' ? 'warning' : 'neutral'} size="sm">
-                  {trader.kyc_status === 'verified' ? 'Verified' : trader.kyc_status === 'pending' ? 'Pending Review' : 'Unverified'}
+                <Badge tone={trader.kyc_status === 'verified' || trader.kyc_status === 'approved' ? 'success' : trader.kyc_status === 'pending' ? 'warning' : 'neutral'} size="sm">
+                  {trader.kyc_status === 'verified' || trader.kyc_status === 'approved' ? 'Verified' : trader.kyc_status === 'pending' ? 'Pending Review' : 'Unverified'}
                 </Badge>
                 <Button size="sm" asChild variant="outline" className="border-border text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 gap-1.5 h-7 text-xs">
                   <Link href="/admin/kyc">

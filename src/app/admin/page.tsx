@@ -218,11 +218,39 @@ export default function AdminCommandCenter() {
   // Founder Action Center calculated values (defensively normalized)
   const safePayoutsList = useMemo(() => Array.isArray(payoutsList) ? payoutsList : [], [payoutsList])
   const pendingPayoutsCount = safePayoutsList.length
-  const pendingPayoutsAmount = useMemo(() => {
+  const pendingPayoutsGross = useMemo(() => {
     return safePayoutsList.reduce((acc: number, p: any) => acc + Number(p.amount_requested || p.amount || 0), 0)
   }, [safePayoutsList])
+  const pendingPayoutsNet = useMemo(() => {
+    return safePayoutsList.reduce((acc: number, p: any) => {
+      const gross = Number(p.amount_requested || p.amount || 0)
+      const split = Number(p.profit_split_pct || p.split_pct || 80) / 100
+      const net = Number(p.net_amount || p.amount_approved || (gross * split))
+      return acc + net
+    }, 0)
+  }, [safePayoutsList])
+  const pendingPayoutsAmount = pendingPayoutsGross
 
-  const riskBreachesCount = riskAlertsData ? (riskAlertsData.open_flags ?? (((Array.isArray(riskAlertsData.hft_risks) ? riskAlertsData.hft_risks.length : 0)) + ((Array.isArray(riskAlertsData.gambling_risks) ? riskAlertsData.gambling_risks.length : 0)))) : 0
+  const totalRiskAlerts = useMemo(() => {
+    if (!riskAlertsData) return 0
+    if (Array.isArray(riskAlertsData.alerts)) return riskAlertsData.alerts.length
+    if (Array.isArray(riskAlertsData)) return riskAlertsData.length
+    return Number(riskAlertsData.open_flags || 0)
+  }, [riskAlertsData])
+
+  const flaggedAccountsCount = useMemo(() => {
+    if (!riskAlertsData) return 0
+    if (typeof riskAlertsData.open_flags === 'number' && riskAlertsData.open_flags > 0) return riskAlertsData.open_flags
+    const uniqueAccs = new Set<string>()
+    const alerts = Array.isArray(riskAlertsData.alerts) ? riskAlertsData.alerts : []
+    alerts.forEach((a: any) => {
+      if (a.account_id) uniqueAccs.add(String(a.account_id))
+      else if (a.user_id) uniqueAccs.add(`u_${a.user_id}`)
+    })
+    return uniqueAccs.size || alerts.length
+  }, [riskAlertsData])
+
+  const riskBreachesCount = flaggedAccountsCount
   const urgentTicketsCount = Array.isArray(ticketsList) ? ticketsList.length : 0
 
   // 1. Metric Grid Calculation
@@ -318,8 +346,8 @@ export default function AdminCommandCenter() {
     },
     {
       title: 'Pending Payout Requests',
-      value: formatCurrency(pendingPayoutVal),
-      subtitle: 'Withdrawals in review queue',
+      value: `${formatCurrency(pendingPayoutsGross)} Gross`,
+      subtitle: `${formatCurrency(pendingPayoutsNet)} Net Trader Share (@ 80%)`,
       trend: `${pendingPayoutsCount} Pending`,
       tone: pendingPayoutsCount > 0 ? ('warning' as const) : ('neutral' as const),
       icon: CreditCard,
@@ -795,7 +823,7 @@ export default function AdminCommandCenter() {
             <span className={cn("h-2 w-2 rounded-full", pendingPayoutsCount > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
             <span className="text-text-muted group-hover:text-text">Pending Payouts:</span>
             <span className={cn("font-semibold terminal-num", pendingPayoutsCount > 0 ? "text-amber-500" : "text-emerald-500")}>
-              {pendingPayoutsCount} in queue ({formatCurrency(pendingPayoutsAmount)})
+              {pendingPayoutsCount} in queue ({formatCurrency(pendingPayoutsGross)} Gross · {formatCurrency(pendingPayoutsNet)} Net)
             </span>
           </Link>
 
@@ -836,7 +864,10 @@ export default function AdminCommandCenter() {
         <FounderActionCenter
           pendingPayoutsCount={pendingPayoutsCount}
           pendingPayoutsAmount={pendingPayoutsAmount}
+          pendingPayoutsGross={pendingPayoutsGross}
+          pendingPayoutsNet={pendingPayoutsNet}
           riskBreachesCount={riskBreachesCount}
+          totalRiskAlerts={totalRiskAlerts}
           urgentTicketsCount={urgentTicketsCount}
           onOpenPayoutReview={() => {
             if (displayedPayouts.length > 0) {

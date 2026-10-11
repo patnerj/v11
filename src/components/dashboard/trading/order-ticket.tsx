@@ -94,6 +94,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }, [plan, newsEvents, active])
 
   const isIpRestricted = !!((plan as any)?.ip_match_required && ((account as any)?.ip_restricted || (account as any)?.is_ip_restricted))
+  const isSlRequired = Boolean(plan?.stop_loss_required || (plan as any)?.require_stop_loss)
 
   // Market hours gate (Forex/Metals closed Fri 22:00 UTC - Sun 22:00 UTC; Crypto open 24/7)
   const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(active))
@@ -318,10 +319,21 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       toast.error(`Lot size cannot exceed ${maxLot}`); return
     }
     if (rejectIfNoMargin()) return
-    if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
+    if (isSlRequired && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
     }
     const entryPrice = side === 'buy' ? ask : bid
+    if (slN !== null && slN > 0) {
+      const priceDiff = Math.abs(entryPrice - slN)
+      if (priceDiff > entryPrice * 0.5) {
+        toast.error(`Invalid Stop Loss price: distance is over 50% from market price (${fmtPrice(entryPrice, digits)}). Please enter an absolute price level, not pips.`)
+        return
+      }
+      if (slMetrics && slMetrics.lossPct > 100) {
+        toast.error(`Invalid Stop Loss: projected loss exceeds 100% of account equity.`)
+        return
+      }
+    }
     if (side === 'buy') {
       if (slN !== null && slN >= entryPrice) {
         toast.error('Stop Loss must be below current ask price for BUY'); return
@@ -422,8 +434,19 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       toast.error(`Lot size cannot exceed ${maxLot}`); return
     }
     if (rejectIfNoMargin()) return
-    if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
+    if (isSlRequired && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
+    }
+    if (slN !== null && slN > 0 && targetN && targetN > 0) {
+      const priceDiff = Math.abs(targetN - slN)
+      if (priceDiff > targetN * 0.5) {
+        toast.error(`Invalid Stop Loss price: distance is over 50% from trigger price (${fmtPrice(targetN, digits)}). Please enter an absolute price level, not pips.`)
+        return
+      }
+      if (slMetrics && slMetrics.lossPct > 100) {
+        toast.error(`Invalid Stop Loss: projected loss exceeds 100% of account equity.`)
+        return
+      }
     }
     if (pendingType.startsWith('buy')) {
       if (slN !== null && slN >= targetN) {
@@ -649,20 +672,36 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         )}
 
         {/* SL */}
-        <Field label="Stop loss" hint={
-          slPnL !== null && Number.isFinite(slPnL)
-            ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-danger' : pnlClassOrNull(slPnL))}>
-                {mode === 'market' ? '−' : ''}{fmtUSD(Math.abs(slPnL))} {mode === 'market' && <span className="text-text-faint font-normal">risk</span>}
-              </span>
-            : null
-        }>
+        <Field
+          label={
+            <span className="flex items-center gap-1.5">
+              <span>Stop loss</span>
+              {isSlRequired ? (
+                <span className="text-terminal-micro px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-500 font-semibold border border-rose-500/30">
+                  Required
+                </span>
+              ) : (
+                <span className="text-terminal-micro text-text-faint font-normal">
+                  (Optional)
+                </span>
+              )}
+            </span>
+          }
+          hint={
+            slPnL !== null && Number.isFinite(slPnL)
+              ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-danger' : pnlClassOrNull(slPnL))}>
+                  {mode === 'market' ? '−' : ''}{fmtUSD(Math.abs(slPnL))} {mode === 'market' && <span className="text-text-faint font-normal">risk</span>}
+                </span>
+              : null
+          }
+        >
           <div className="relative group">
             <input
               type="text"
               inputMode="decimal"
               value={sl}
               onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder="Optional"
+              placeholder={isSlRequired ? `Price e.g. ${ask ? fmtPrice(ask * 0.995, digits) : '1.0825'}` : "Price (Optional)"}
               title={slMetrics ? `Max Loss: -${fmtUSD(slMetrics.lossVal)} (-${slMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
                 "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
@@ -671,6 +710,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                   : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
               )}
             />
+          </div>
+          <div className="flex items-center justify-between text-terminal-micro text-text-muted mt-1 px-0.5">
+            <span>Unit: <strong>Price Level</strong> (not pips)</span>
+            {ask && <span className="terminal-num">Market: {fmtPrice(ask, digits)}</span>}
           </div>
           {/* Prominent Live Calculated Loss Badge */}
           {slMetrics && (
@@ -684,23 +727,40 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               </span>
             </div>
           )}
+          {/* Sane bounds warning if SL distance > 50% or loss > 50% */}
+          {slMetrics && (slMetrics.lossPct > 50 || Math.abs(slMetrics.entryPx - (slN || 0)) > slMetrics.entryPx * 0.5) && (
+            <div className="mt-1.5 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-terminal-micro text-amber-500 flex items-start gap-1.5 leading-snug">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
+              <span>
+                <strong>Warning:</strong> Large SL distance ({((Math.abs(slMetrics.entryPx - (slN || 0)) / slMetrics.entryPx) * 100).toFixed(0)}% from market). Enter an absolute price level (e.g. {fmtPrice(mode === 'market' ? (ask || 1) * 0.995 : (targetN || ask || 1) * 0.995, digits)}), not pips.
+              </span>
+            </div>
+          )}
         </Field>
 
         {/* TP */}
-        <Field label="Take profit" hint={
-          tpPnL !== null && Number.isFinite(tpPnL)
-            ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-success' : pnlClassOrNull(tpPnL))}>
-                {mode === 'market' ? '+' : ''}{fmtUSD(Math.abs(tpPnL))} {mode === 'market' && <span className="text-text-faint font-normal">target</span>}
-              </span>
-            : null
-        }>
+        <Field
+          label={
+            <span className="flex items-center gap-1.5">
+              <span>Take profit</span>
+              <span className="text-terminal-micro text-text-faint font-normal">(Optional)</span>
+            </span>
+          }
+          hint={
+            tpPnL !== null && Number.isFinite(tpPnL)
+              ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-success' : pnlClassOrNull(tpPnL))}>
+                  {mode === 'market' ? '+' : ''}{fmtUSD(Math.abs(tpPnL))} {mode === 'market' && <span className="text-text-faint font-normal">target</span>}
+                </span>
+              : null
+          }
+        >
           <div className="relative group">
             <input
               type="text"
               inputMode="decimal"
               value={tp}
               onChange={(e) => setTp(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder="Optional"
+              placeholder={`Price e.g. ${ask ? fmtPrice(ask * 1.005, digits) : '1.0925'}`}
               title={tpMetrics ? `Target Profit: +${fmtUSD(tpMetrics.profitVal)} (+${tpMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
                 "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
@@ -709,6 +769,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                   : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
               )}
             />
+          </div>
+          <div className="flex items-center justify-between text-terminal-micro text-text-muted mt-1 px-0.5">
+            <span>Unit: <strong>Price Level</strong></span>
+            {bid && <span className="terminal-num">Market: {fmtPrice(bid, digits)}</span>}
           </div>
           {/* Prominent Live Calculated Profit Badge */}
           {tpMetrics && (
@@ -950,7 +1014,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
 function Field({
   label, hint, children,
-}: { label: string; hint?: React.ReactNode; children: React.ReactNode }) {
+}: { label: React.ReactNode; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">

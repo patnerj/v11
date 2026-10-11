@@ -451,11 +451,18 @@ export default function PaymentsHubPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="stripe-whk">Stripe Webhook Signing Secret</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="stripe-whk">Stripe Webhook Signing Secret</Label>
+                  {gatewayForm.stripe_webhook_secret_set && !gatewayForm.stripe_webhook_secret && (
+                    <Badge tone="success" size="sm" className="text-2xs py-0 px-2 font-mono">
+                      Configured
+                    </Badge>
+                  )}
+                </div>
                 <Input
                   id="stripe-whk"
                   type="password"
-                  placeholder="whsec_..."
+                  placeholder={gatewayForm.stripe_webhook_secret_set ? "•••••••••••• (Configured on server)" : "whsec_..."}
                   value={gatewayForm.stripe_webhook_secret}
                   onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_webhook_secret: e.target.value })}
                   className="font-mono text-xs"
@@ -463,7 +470,7 @@ export default function PaymentsHubPage() {
                 <p className="text-2xs text-gray-500 font-mono">
                   Webhook URL to register in Stripe Dashboard: <code className="text-emerald-400">/wp-json/fxsim/v1/stripe/webhook</code>
                 </p>
-                {gatewayForm.stripe_enabled && !gatewayForm.stripe_webhook_secret && (
+                {gatewayForm.stripe_enabled && !gatewayForm.stripe_webhook_secret && !gatewayForm.stripe_webhook_secret_set && (
                   <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
                     <span>Stripe webhook secret not configured — Stripe checkouts will not auto-activate accounts.</span>
