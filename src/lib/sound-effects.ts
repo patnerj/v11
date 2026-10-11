@@ -38,14 +38,26 @@ function initUserGestureUnlock() {
 
   const unlock = () => {
     try {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext
+        if (AudioCtxClass) {
+          audioCtx = new AudioCtxClass()
+        }
+      }
       if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume().catch(() => {})
+      }
+      if (audioCtx && audioCtx.state === 'running') {
+        window.removeEventListener('pointerdown', unlock)
+        window.removeEventListener('keydown', unlock)
+        window.removeEventListener('touchstart', unlock)
       }
     } catch {}
   }
 
-  window.addEventListener('pointerdown', unlock, { once: true, passive: true })
-  window.addEventListener('keydown', unlock, { once: true, passive: true })
+  window.addEventListener('pointerdown', unlock, { passive: true })
+  window.addEventListener('keydown', unlock, { passive: true })
+  window.addEventListener('touchstart', unlock, { passive: true })
 }
 
 function getAudioContext(): AudioContext | null {

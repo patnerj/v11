@@ -146,12 +146,16 @@ export function AdminCommandPalette({ open: controlledOpen, onOpenChange }: Admi
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex((prev) => (prev + 1) % Math.max(1, filteredItems.length))
-      scrollActiveIntoView((selectedIndex + 1) % Math.max(1, filteredItems.length))
+      const total = Math.max(1, filteredItems.length)
+      const nextIndex = (selectedIndex + 1) % total
+      setSelectedIndex(nextIndex)
+      scrollActiveIntoView(nextIndex)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % Math.max(1, filteredItems.length))
-      scrollActiveIntoView((selectedIndex - 1 + filteredItems.length) % Math.max(1, filteredItems.length))
+      const total = Math.max(1, filteredItems.length)
+      const nextIndex = (selectedIndex - 1 + total) % total
+      setSelectedIndex(nextIndex)
+      scrollActiveIntoView(nextIndex)
     } else if (e.key === 'Enter') {
       e.preventDefault()
       const target = filteredItems[selectedIndex]

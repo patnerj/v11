@@ -72,7 +72,7 @@ export function AccountRulesDrawer({
   return (
     <AnimatePresence>
       {isOpen && challenge && (
-        <div className="fixed inset-0 z-50 overflow-hidden select-none">
+        <motion.div className="fixed inset-0 z-50 overflow-hidden select-none">
           {/* Backdrop with click-to-dismiss */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -258,7 +258,7 @@ export function AccountRulesDrawer({
               </div>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   )

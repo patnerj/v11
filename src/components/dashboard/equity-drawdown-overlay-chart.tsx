@@ -171,7 +171,7 @@ export function EquityDrawdownOverlayChart({
     })
 
     // Append latest live point if available
-    if (currentEquity !== undefined && currentBalance !== undefined && points.length > 1) {
+    if (currentEquity !== undefined && currentBalance !== undefined && points.length > 0) {
       const liveBal = toNum(currentBalance)
       const liveEq = toNum(currentEquity)
       if (liveBal > hwm) hwm = liveBal

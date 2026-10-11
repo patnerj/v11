@@ -34,15 +34,35 @@ export function PayoutReadinessCard({
     totalSecs: number
   }>({ days: 0, hours: 0, minutes: 0, seconds: 0, totalSecs: 0 })
 
+  // Defensive normalization per Rule 1.2
+  const safeFundedChallenges = useMemo<ChallengeAccount[]>(() => {
+    if (Array.isArray(fundedChallenges)) return fundedChallenges
+    if (fundedChallenges && typeof fundedChallenges === 'object' && Array.isArray((fundedChallenges as any).challenges)) {
+      return (fundedChallenges as any).challenges
+    }
+    return []
+  }, [fundedChallenges])
+
   // Calculate target payout timestamp
   const targetTs = useMemo(() => {
     if (nextPayoutAt) {
       const parsed = new Date(nextPayoutAt).getTime()
       if (!isNaN(parsed) && parsed > 0) return parsed
     }
+    // Inspect earliest funded account to establish 14-day cycle
+    const earliestFunded = safeFundedChallenges.find(
+      (c) => c.funded_at || c.phase_started_at || c.created_at
+    )
+    if (earliestFunded) {
+      const startStr = earliestFunded.funded_at || earliestFunded.phase_started_at || earliestFunded.created_at
+      const startMs = new Date(startStr).getTime()
+      if (!isNaN(startMs) && startMs > 0) {
+        return startMs + 14 * 24 * 60 * 60 * 1000
+      }
+    }
     // Default fallback: 14-day cycle from earliest funded creation or 7 days from now
     return Date.now() + 7 * 24 * 60 * 60 * 1000
-  }, [nextPayoutAt])
+  }, [nextPayoutAt, safeFundedChallenges])
 
   // Live 1-second countdown interval
   useEffect(() => {
@@ -61,15 +81,6 @@ export function PayoutReadinessCard({
     const timer = setInterval(updateCountdown, 1000)
     return () => clearInterval(timer)
   }, [targetTs])
-
-  // Defensive normalization per Rule 1.2
-  const safeFundedChallenges = useMemo<ChallengeAccount[]>(() => {
-    if (Array.isArray(fundedChallenges)) return fundedChallenges
-    if (fundedChallenges && typeof fundedChallenges === 'object' && Array.isArray((fundedChallenges as any).challenges)) {
-      return (fundedChallenges as any).challenges
-    }
-    return []
-  }, [fundedChallenges])
 
   // Total eligible profit across funded accounts
   const totalFundedStats = useMemo(() => {

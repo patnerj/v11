@@ -152,6 +152,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
           toast.success(
             `Executed ${side.toUpperCase()} ${lotNum} ${symbol} @ ${fmtPrice(execPrice, digits)}`
           )
+          await usePrices.getState().refresh()
           usePrices.getState().removeOptimisticPosition(optId)
           invalidateFxsim('/positions')
           invalidateFxsim('/account')
@@ -237,6 +238,11 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
             disabled={busy !== null}
             onChange={(e) => setLot(e.target.value.replace(/[^\d.]/g, ''))}
             onBlur={handleLotBlur}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
             className="w-12 sm:w-14 text-center bg-transparent border-none outline-none font-mono font-bold text-terminal-body text-text terminal-num"
             title="Type custom lot size (0.01 - 100.00)"
             placeholder="1.00"
