@@ -8,7 +8,7 @@ async function capture() {
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
   });
   const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 }
+    viewport: { width: 1440, height: 1100 }
   });
   const page = await context.newPage();
 
@@ -16,19 +16,52 @@ async function capture() {
   await page.goto('https://demo.launchapropfirm.com/?template=ftmo', { waitUntil: 'networkidle', timeout: 30000 });
   await page.waitForTimeout(2000);
 
-  // Find the Trading Objectives section at #pricing
-  const section = await page.$('section#pricing');
-  if (section) {
-    await section.scrollIntoViewIfNeeded();
+  // 1. Capture Pricing Matrix Section directly
+  const pricingSection = await page.$('#pricing');
+  if (pricingSection) {
+    await pricingSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(1000);
-    await section.screenshot({
-      path: path.join(artifactDir, 'template1_ftmo_objectives_matrix.png')
+    await pricingSection.screenshot({
+      path: path.join(artifactDir, 'template1_ftmo_matrix_exact.png')
     });
-    console.log('Captured template1_ftmo_objectives_matrix.png');
+    console.log('Captured template1_ftmo_matrix_exact.png');
+  }
+
+  // 2. Capture Why Choose Section
+  const whySection = await page.$('section:has-text("Why People Choose")');
+  if (whySection) {
+    await whySection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1000);
+    await whySection.screenshot({
+      path: path.join(artifactDir, 'template1_ftmo_why_choose_exact.png')
+    });
+    console.log('Captured template1_ftmo_why_choose_exact.png');
+  }
+
+  // 3. Capture How It Works Section
+  const howSection = await page.$('section:has-text("How It Works")');
+  if (howSection) {
+    await howSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1000);
+    await howSection.screenshot({
+      path: path.join(artifactDir, 'template1_ftmo_how_it_works_exact.png')
+    });
+    console.log('Captured template1_ftmo_how_it_works_exact.png');
+  }
+
+  // 4. Capture Bottom CTA Banner
+  const ctaSection = await page.$('section:has-text("Start Your")');
+  if (ctaSection) {
+    await ctaSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1000);
+    await ctaSection.screenshot({
+      path: path.join(artifactDir, 'template1_ftmo_cta_exact.png')
+    });
+    console.log('Captured template1_ftmo_cta_exact.png');
   }
 
   await browser.close();
-  console.log('Done!');
+  console.log('All sections captured successfully!');
 }
 
 capture().catch(err => {
