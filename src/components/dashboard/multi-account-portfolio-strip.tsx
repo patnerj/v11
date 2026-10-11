@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Trophy, Sparkles, TrendingUp, TrendingDown, CheckCircle2,
@@ -11,6 +11,7 @@ import { fmtUSD, fmtPct, toNum, statusTone, statusLabel } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePrices } from '@/store/prices'
+import { playOrderOpenClickSound } from '@/lib/sound-effects'
 import { cn } from '@/lib/cn'
 import type { ChallengeAccount, TournamentMine } from '@/types/api'
 
@@ -30,6 +31,7 @@ export function MultiAccountPortfolioStrip({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const tradingCtx = usePrices((s) => s.tradingContext)
   const isSwitching = usePrices((s) => s.contextSwitching)
+  const [scrollProgress, setScrollProgress] = useState(0)
 
   // Defensive normalization per Rule 1.2
   const safeChallenges = useMemo<ChallengeAccount[]>(() => {
@@ -45,13 +47,23 @@ export function MultiAccountPortfolioStrip({
     return []
   }, [tournaments])
 
+  // Track scroll position for mobile indicators
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
+    const maxScroll = scrollWidth - clientWidth
+    if (maxScroll > 0) {
+      setScrollProgress(Math.min(1, Math.max(0, scrollLeft / maxScroll)))
+    }
+  }
+
   if (!safeChallenges || (safeChallenges.length <= 1 && safeTournaments.length === 0)) {
     return null
   }
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return
-    const offset = direction === 'left' ? -320 : 320
+    const offset = direction === 'left' ? -300 : 300
     scrollContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' })
   }
 
@@ -59,6 +71,8 @@ export function MultiAccountPortfolioStrip({
     if (isSwitching) return
     const accId = ch.fxsim_account_id || ch.id
     if (tradingCtx?.kind === 'challenge' && tradingCtx.accountId === accId) return
+
+    playOrderOpenClickSound()
 
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
@@ -73,7 +87,7 @@ export function MultiAccountPortfolioStrip({
   }
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-2.5 select-none", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
@@ -86,32 +100,37 @@ export function MultiAccountPortfolioStrip({
             </span>
           </h3>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5">
+
+        {/* Stepper controls */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => scroll('left')}
-            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer"
+            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shadow-xs"
             aria-label="Scroll left"
+            title="Scroll left"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={() => scroll('right')}
-            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer"
+            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shadow-xs"
             aria-label="Scroll right"
+            title="Scroll right"
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Horizontal Carousel Strip */}
+      {/* Horizontal Carousel Strip with Smooth Touch Pan */}
       <div
         ref={scrollContainerRef}
-        className="flex items-stretch gap-3.5 overflow-x-auto pb-2 pt-1 -mx-1 px-1 custom-scrollbar snap-x snap-mandatory"
+        onScroll={handleScroll}
+        className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 -mx-1 px-1 custom-scrollbar snap-x snap-mandatory touch-pan-x overscroll-x-contain scroll-smooth"
       >
-        {safeChallenges.map((ch) => {
+        {safeChallenges.map((ch, idx) => {
           const accId = ch.fxsim_account_id || ch.id
           const isActive = tradingCtx?.kind === 'challenge'
             ? tradingCtx.accountId === accId
@@ -129,10 +148,10 @@ export function MultiAccountPortfolioStrip({
             <motion.div
               key={`strip-ch-${ch.id}`}
               whileHover={{ scale: 1.015 }}
-              whileTap={{ scale: 0.99 }}
+              whileTap={{ scale: 0.985 }}
               onClick={() => handleSelectChallenge(ch)}
               className={cn(
-                "w-72 sm:w-80 shrink-0 snap-start rounded-2xl border p-4.5 cursor-pointer transition-all duration-200 select-none flex flex-col justify-between shadow-xs",
+                "w-[270px] sm:w-[310px] shrink-0 snap-start rounded-2xl border p-4 cursor-pointer transition-all duration-200 select-none flex flex-col justify-between shadow-xs",
                 isActive
                   ? "bg-surface border-accent shadow-md ring-2 ring-accent/30 dark:ring-accent/40"
                   : "bg-surface/80 hover:bg-surface border-border hover:border-accent/40"
@@ -165,7 +184,7 @@ export function MultiAccountPortfolioStrip({
                     <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-medium">
                       Live Equity
                     </span>
-                    <span className="text-lg font-bold terminal-num text-text">
+                    <span className="text-lg font-bold terminal-num font-mono tabular-nums text-text">
                       {fmtUSD(equity)}
                     </span>
                   </div>
@@ -173,7 +192,7 @@ export function MultiAccountPortfolioStrip({
                     <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-medium">
                       Net Gain
                     </span>
-                    <span className={cn("text-xs font-semibold terminal-num", netPnl >= 0 ? "text-profit" : "text-loss")}>
+                    <span className={cn("text-xs font-semibold terminal-num font-mono tabular-nums", netPnl >= 0 ? "text-profit" : "text-loss")}>
                       {netPnl >= 0 ? '+' : ''}{fmtUSD(netPnl)} ({netPnlPct >= 0 ? '+' : ''}{netPnlPct.toFixed(2)}%)
                     </span>
                   </div>
@@ -201,6 +220,21 @@ export function MultiAccountPortfolioStrip({
           )
         })}
       </div>
+
+      {/* Mobile scroll progress touch indicator */}
+      {safeChallenges.length > 1 && (
+        <div className="flex sm:hidden items-center justify-center pt-1">
+          <div className="w-20 h-1 bg-surface-muted rounded-full overflow-hidden border border-border/40">
+            <div
+              className="h-full bg-accent rounded-full transition-all duration-150"
+              style={{
+                width: `${Math.max(25, 100 / safeChallenges.length)}%`,
+                transform: `translateX(${scrollProgress * (100 * (safeChallenges.length - 1) / safeChallenges.length)}%)`,
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

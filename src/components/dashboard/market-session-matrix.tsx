@@ -142,23 +142,33 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
               className={cn(
                 "p-3.5 rounded-xl border transition-all duration-200 select-none",
                 s.isOpen
-                  ? "bg-emerald-500/10 border-emerald-500/40 shadow-xs ring-1 ring-emerald-500/20"
+                  ? "bg-emerald-500/10 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30"
                   : "bg-surface-muted/30 border-border text-text-muted"
               )}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-sm text-text flex items-center gap-1.5">
                   {s.isOpen ? (
-                    <Sun className="w-3.5 h-3.5 text-emerald-400" />
+                    <Sun className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Moon className="w-3.5 h-3.5 text-text-muted" />
                   )}
                   {s.name}
                 </span>
 
-                <Badge tone={s.isOpen ? "success" : "neutral"} size="sm" className="font-mono text-3xs uppercase">
-                  {s.isOpen ? "Open" : "Closed"}
-                </Badge>
+                {s.isOpen ? (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Active Now
+                  </span>
+                ) : (
+                  <Badge tone="neutral" size="sm" className="font-mono text-3xs uppercase">
+                    Closed
+                  </Badge>
+                )}
               </div>
 
               <div className="text-2xs text-text-muted space-y-1">
@@ -170,7 +180,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span>{s.isOpen ? 'Closes In:' : 'Opens In:'}</span>
-                  <span className={cn("font-mono font-bold", s.isOpen ? "text-emerald-500 dark:text-emerald-400" : "text-text")}>
+                  <span className={cn("font-mono font-bold", s.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-text")}>
                     {s.countdownStr}
                   </span>
                 </div>

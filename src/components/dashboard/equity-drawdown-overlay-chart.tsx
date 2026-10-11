@@ -27,6 +27,81 @@ interface EquityDrawdownOverlayChartProps {
   className?: string
 }
 
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: any[]
+  label?: string
+}
+
+function HighContrastChartTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload || !payload.length) return null
+
+  const data = payload[0]?.payload
+  if (!data) return null
+
+  const cushionVal = toNum(data.cushion)
+  const isCushionSafe = cushionVal >= 0
+
+  return (
+    <div className="bg-surface text-text border border-border shadow-2xl rounded-xl p-3 text-xs space-y-2 min-w-[210px] select-none backdrop-blur-md">
+      <div className="font-bold text-text border-b border-border/80 pb-1 flex items-center justify-between">
+        <span className="text-2xs text-text-muted uppercase font-mono">Date / Milestone</span>
+        <span className="font-mono font-semibold text-text">{label}</span>
+      </div>
+
+      <div className="space-y-1.5 font-mono text-2xs">
+        {/* Realized Balance */}
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-text-muted">
+            <span className="w-2 h-2 rounded-full bg-[#06B6D4] shrink-0" />
+            Realized Balance:
+          </span>
+          <span className="font-bold terminal-num tabular-nums text-text">
+            {fmtUSD(data.balance)}
+          </span>
+        </div>
+
+        {/* Live Equity */}
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-text-muted">
+            <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0" />
+            Live Equity:
+          </span>
+          <span className="font-bold terminal-num tabular-nums text-profit">
+            {fmtUSD(data.equity)}
+          </span>
+        </div>
+
+        {/* Trailing Drawdown Floor */}
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-text-muted">
+            <span className="w-2 h-2 rounded-full bg-[#EF4444] shrink-0" />
+            Drawdown Floor:
+          </span>
+          <span className="font-bold terminal-num tabular-nums text-loss">
+            {fmtUSD(data.floor)}
+          </span>
+        </div>
+
+        {/* Distance to Floor (Buffer / Cushion) */}
+        <div className="border-t border-border/80 pt-1.5 flex items-center justify-between">
+          <span className="text-3xs uppercase tracking-wider text-text-muted font-bold">
+            Floor Buffer:
+          </span>
+          <span
+            className={cn(
+              "font-bold terminal-num tabular-nums",
+              isCushionSafe ? "text-profit" : "text-loss"
+            )}
+          >
+            {isCushionSafe ? '+' : ''}{fmtUSD(cushionVal)}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function EquityDrawdownOverlayChart({
   trades = [],
   startingBalance = 100000,
@@ -116,7 +191,7 @@ export function EquityDrawdownOverlayChart({
     return points
   }, [trades, startingBalance, maxDdPct, currentEquity, currentBalance, isTrailing])
 
-  const chartTextColor = theme === 'dark' ? '#94a3b8' : '#64748b'
+  const chartTextColor = theme === 'dark' ? '#94a3b8' : '#475569'
   const gridColor = theme === 'dark' ? '#1e293b' : '#e2e8f0'
 
   return (
@@ -137,7 +212,7 @@ export function EquityDrawdownOverlayChart({
         <div className="h-80 w-full">
           {seriesData.length <= 1 ? (
             <div className="h-full flex items-center justify-center text-text-muted text-xs">
-              Execute trades to generate the multi-layer equity & drawdown floor trajectory.
+              Execute trades to generate the multi-layer equity &amp; drawdown floor trajectory.
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -157,24 +232,7 @@ export function EquityDrawdownOverlayChart({
                   tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
                   domain={['auto', 'auto']}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--surface))',
-                    borderColor: 'hsl(var(--border))',
-                    borderRadius: '10px',
-                    color: 'hsl(var(--text))',
-                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-                    fontSize: '12px',
-                  }}
-                  formatter={(val: number, name: string) => [
-                    fmtUSD(val),
-                    name === 'balance'
-                      ? 'Realized Balance'
-                      : name === 'equity'
-                        ? 'Live Equity'
-                        : 'Drawdown Floor',
-                  ]}
-                />
+                <Tooltip content={<HighContrastChartTooltip />} />
                 <Legend
                   verticalAlign="top"
                   align="right"
@@ -186,12 +244,12 @@ export function EquityDrawdownOverlayChart({
                         ? 'Balance'
                         : val === 'equity'
                           ? 'Live Equity'
-                          : 'Drawdown Floor (Breach line)'}
+                          : 'Drawdown Floor'}
                     </span>
                   )}
                 />
 
-                {/* 1. Realized Balance Line (Cyan/Blue) */}
+                {/* 1. Realized Balance Line (Cyan) */}
                 <Line
                   type="monotone"
                   dataKey="balance"

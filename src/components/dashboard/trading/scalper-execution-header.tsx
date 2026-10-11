@@ -7,7 +7,11 @@ import { fmtPrice, toNum } from '@/lib/format'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
-import { playOrderOpenClickSound } from '@/lib/sound'
+import {
+  playOrderOpenClickSound,
+  playOrderSuccessSound,
+  playOrderLossThumpSound,
+} from '@/lib/sound-effects'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { SoundToggle } from './sound-toggle'
 import { cn } from '@/lib/cn'
@@ -35,7 +39,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
   onChanged,
   className,
 }: ScalperExecutionHeaderProps) {
-  const [lot, setLot] = useState('1.0')
+  const [lot, setLot] = useState('1.00')
   const [slPips, setSlPips] = useState('30')
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
 
@@ -51,11 +55,35 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
     setLot(next.toFixed(2))
   }
 
+  const handleLotBlur = () => {
+    const val = parseFloat(lot)
+    if (isNaN(val) || val < 0.01) {
+      setLot('0.01')
+    } else if (val > 100) {
+      setLot('100.00')
+    } else {
+      setLot(val.toFixed(2))
+    }
+  }
+
   const handleExecute = useCallback(
     async (side: 'buy' | 'sell') => {
       const lotNum = parseFloat(lot)
       if (isNaN(lotNum) || lotNum <= 0) {
-        toast.error('Invalid lot size')
+        toast.error('Invalid lot size entered')
+        playOrderLossThumpSound()
+        return
+      }
+
+      if (lotNum < 0.01) {
+        toast.error('Minimum allowed lot size is 0.01')
+        playOrderLossThumpSound()
+        return
+      }
+
+      if (lotNum > 100) {
+        toast.error('Maximum allowed lot size is 100.00')
+        playOrderLossThumpSound()
         return
       }
 
@@ -65,6 +93,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
       if (isSlRequired) {
         if (isNaN(slPipsNum) || slPipsNum <= 0) {
           toast.error('Mandatory Stop Loss required by plan (enter pips)')
+          playOrderLossThumpSound()
           return
         }
         const refPrice = side === 'buy' ? ask : bid
@@ -119,6 +148,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
           ...ctxParams,
         })
         if (res.ok && res.data.success) {
+          playOrderSuccessSound()
           toast.success(
             `Executed ${side.toUpperCase()} ${lotNum} ${symbol} @ ${fmtPrice(execPrice, digits)}`
           )
@@ -128,10 +158,15 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
           onChanged?.()
         } else {
           usePrices.getState().removeOptimisticPosition(optId)
-          toast.error(res.ok ? res.data.message || 'Execution rejected' : res.error)
+          playOrderLossThumpSound()
+          const errMsg = res.ok
+            ? (res.data?.message || 'Execution rejected by risk manager')
+            : (res.error || 'Network error during execution')
+          toast.error(errMsg)
         }
       } catch (err: any) {
         usePrices.getState().removeOptimisticPosition(optId)
+        playOrderLossThumpSound()
         toast.error(err?.message || 'Network execution error')
       } finally {
         setBusy(null)
@@ -158,7 +193,10 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
         )}
       >
         {busy === 'sell' ? (
-          <span className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          <span className="flex items-center gap-1.5">
+            <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+            <span className="uppercase tracking-wider font-semibold text-3xs">Submitting</span>
+          </span>
         ) : (
           <>
             <span className="uppercase tracking-wider">Sell</span>
@@ -181,12 +219,13 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
           </span>
         </div>
 
-        {/* Lot Stepper Controls */}
+        {/* Lot Stepper & Custom Input Controls */}
         <div className="flex items-center border border-border bg-surface rounded-lg overflow-hidden h-8 sm:h-9">
           <button
             type="button"
             onClick={() => adjustLot(-0.1)}
-            className="px-1.5 sm:px-2 h-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors flex items-center justify-center cursor-pointer"
+            disabled={busy !== null}
+            className="px-1.5 sm:px-2 h-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors flex items-center justify-center cursor-pointer disabled:opacity-40"
             title="-0.1 Lot"
           >
             <Minus className="w-3 h-3" />
@@ -195,15 +234,19 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
           <input
             type="text"
             value={lot}
+            disabled={busy !== null}
             onChange={(e) => setLot(e.target.value.replace(/[^\d.]/g, ''))}
-            className="w-11 sm:w-13 text-center bg-transparent border-none outline-none font-mono font-bold text-terminal-body text-text terminal-num"
-            title="Lot size"
+            onBlur={handleLotBlur}
+            className="w-12 sm:w-14 text-center bg-transparent border-none outline-none font-mono font-bold text-terminal-body text-text terminal-num"
+            title="Type custom lot size (0.01 - 100.00)"
+            placeholder="1.00"
           />
 
           <button
             type="button"
             onClick={() => adjustLot(0.1)}
-            className="px-1.5 sm:px-2 h-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors flex items-center justify-center cursor-pointer"
+            disabled={busy !== null}
+            className="px-1.5 sm:px-2 h-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors flex items-center justify-center cursor-pointer disabled:opacity-40"
             title="+0.1 Lot"
           >
             <Plus className="w-3 h-3" />
@@ -216,21 +259,24 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
             <button
               type="button"
               onClick={() => setLot('0.10')}
-              className="px-1.5 py-0.5 rounded text-3xs font-mono font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer"
+              disabled={busy !== null}
+              className="px-1.5 py-0.5 rounded text-3xs font-mono font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40"
             >
               0.1
             </button>
             <button
               type="button"
               onClick={() => setLot('0.50')}
-              className="px-1.5 py-0.5 rounded text-3xs font-mono font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer"
+              disabled={busy !== null}
+              className="px-1.5 py-0.5 rounded text-3xs font-mono font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40"
             >
               0.5
             </button>
             <button
               type="button"
               onClick={() => setLot('1.00')}
-              className="px-1.5 py-0.5 rounded text-3xs font-mono font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer"
+              disabled={busy !== null}
+              className="px-1.5 py-0.5 rounded text-3xs font-mono font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40"
             >
               1.0
             </button>
@@ -244,6 +290,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
               <input
                 type="text"
                 value={slPips}
+                disabled={busy !== null}
                 onChange={(e) => setSlPips(e.target.value.replace(/[^\d.]/g, ''))}
                 className="w-10 sm:w-11 h-8 sm:h-9 text-center bg-surface border border-rose-500/50 rounded-lg font-mono font-bold text-terminal-body text-rose-500 dark:text-rose-400 terminal-num"
                 placeholder="30"
@@ -268,7 +315,10 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
         )}
       >
         {busy === 'buy' ? (
-          <span className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          <span className="flex items-center gap-1.5">
+            <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+            <span className="uppercase tracking-wider font-semibold text-3xs">Submitting</span>
+          </span>
         ) : (
           <>
             <span className="uppercase tracking-wider">Buy</span>
