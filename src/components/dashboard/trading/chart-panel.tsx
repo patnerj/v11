@@ -5,7 +5,7 @@ import { motion, useDragControls } from 'framer-motion'
 import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair, Info, Volume2, VolumeX } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
-import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
+import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize, isMarketOpen } from '@/lib/symbol-meta'
 import { useBranding } from '@/store/branding'
 import { fmtPrice, fmtUSD, toNum, pnlClass } from '@/lib/format'
 import type { Position } from '@/types/api'
@@ -147,6 +147,16 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const [showOneClick, setShowOneClick] = useState(true)
   const [soundActive, setSoundActive] = useState(true)
 
+  // Market hours gate (Forex/Metals closed Fri 22:00 UTC - Sun 22:00 UTC; Crypto open 24/7)
+  const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(active))
+  useEffect(() => {
+    setMarketOpen(isMarketOpen(active))
+    const interval = setInterval(() => {
+      setMarketOpen(isMarketOpen(active))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [active])
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fxsim:term:oneclick')
@@ -172,6 +182,12 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   
   const handleOneClick = async (type: 'buy' | 'sell') => {
     playOrderOpenClickSound()
+
+    if (!isMarketOpen(active)) {
+      playOrderLossThumpSound()
+      toast.error(`Market is closed. ${active} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
+      return
+    }
 
     const account = usePrices.getState().account
     if (account?.status === 'frozen' || account?.status === 'breached' || (account as any)?.is_ip_restricted || (account as any)?.read_only) {
@@ -231,16 +247,23 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
     setBusy(type)
 
     const optId = nextOptimisticId()
-    const optPos: any = {
+    const optPos: Position = {
       id: optId,
+      account_id: account?.id || 0,
       symbol: active,
       type,
       lot_size: lotSize,
       open_price: type === 'buy' ? (ask || bid || 0) : (bid || ask || 0),
-      open_time: new Date().toISOString(),
+      current_price: type === 'buy' ? (ask || bid || 0) : (bid || ask || 0),
       sl: calculatedSl,
       tp: null,
-      status: 'simulated'
+      pnl: 0,
+      swap: 0,
+      commission: 0,
+      margin: 0,
+      opened_at: new Date().toISOString(),
+      opened_at_iso: new Date().toISOString(),
+      isOptimistic: true,
     }
     usePrices.getState().injectOptimisticPosition(optPos)
 
@@ -610,8 +633,9 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 <button 
                   type="button"
                   onClick={() => handleOneClick('sell')}
-                  disabled={busy !== null || !bid}
-                  className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+                  disabled={busy !== null || !bid || !marketOpen}
+                  title={!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : undefined}
+                  className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-40 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
                 >
                   {busy === 'sell' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (bid ? fmtPrice(bid, digits) : 'SELL')}
                 </button>
@@ -677,8 +701,9 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 <button 
                   type="button"
                   onClick={() => handleOneClick('buy')}
-                  disabled={busy !== null || !ask}
-                  className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+                  disabled={busy !== null || !ask || !marketOpen}
+                  title={!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : undefined}
+                  className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-40 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
                 >
                   {busy === 'buy' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (ask ? fmtPrice(ask, digits) : 'BUY')}
                 </button>
@@ -702,6 +727,15 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 </button>
                 <div className="text-terminal-micro font-semibold text-text-muted tracking-wider uppercase">Audio</div>
               </div>
+
+              {!marketOpen && (
+                <div 
+                  className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-500 text-terminal-micro font-semibold whitespace-nowrap ml-0.5"
+                  title="Market Closed (Reopens Sun 22:00 UTC)"
+                >
+                  Closed
+                </div>
+              )}
             </motion.div>
           </div>
         )}

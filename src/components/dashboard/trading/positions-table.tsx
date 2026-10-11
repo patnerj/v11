@@ -772,6 +772,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
             {/* Primary Action: Direct Close Button */}
             <button
               onClick={() => {
+                if (pos.isOptimistic || pos.id <= 0) return
                 if (onRequestClose) {
                   onRequestClose(pos)
                 } else if (countdown !== null) {
@@ -780,9 +781,9 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
                   armClose()
                 }
               }}
-              disabled={busy}
-              title={countdown !== null ? `Click again to confirm close (${countdown}s)` : 'Close position'}
-              className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded-md text-terminal-label font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-all focus-ring active:scale-95 disabled:opacity-50 cursor-pointer"
+              disabled={busy || pos.isOptimistic || pos.id <= 0}
+              title={pos.isOptimistic ? 'Order in-flight...' : countdown !== null ? `Click again to confirm close (${countdown}s)` : 'Close position'}
+              className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded-md text-terminal-label font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-all focus-ring active:scale-95 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
               aria-label={countdown !== null ? `Confirm close position ${pos.symbol} within ${countdown} seconds` : `Close position ${pos.symbol}`}
             >
               {busy ? (

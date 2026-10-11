@@ -14,45 +14,13 @@ import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { cn } from '@/lib/cn'
 import { fmtPrice, fmtUSD, toNum, fmtLots } from '@/lib/format'
-import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies } from '@/lib/symbol-meta'
+import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies, isMarketOpen } from '@/lib/symbol-meta'
 import { quoteToUsdRate } from '@/lib/order-math'
 import { useQuery } from '@tanstack/react-query'
 import type { Account, ChallengePlan, Position } from '@/types/api'
 import { playOrderSuccessSound } from '@/lib/sound'
 
-/**
- * Clean market hours gate matching server rules in class-trading-engine.php:
- * - Crypto symbols (BTCUSD, ETHUSD, SOLUSD, BTCUSDT, ETHUSDT, SOLUSDT, etc.) are open 24/7.
- * - Forex & Metals (EURUSD, GBPUSD, USDJPY, XAUUSD, XAGUSD, etc.) are CLOSED from Friday 22:00 UTC to Sunday 22:00 UTC.
- */
-export function isMarketOpen(symbol: string): boolean {
-  if (!symbol) return true
-  const symUpper = symbol.toUpperCase()
-
-  // Crypto symbols trade 24/7
-  const cryptoList = ['BTCUSD', 'ETHUSD', 'SOLUSD', 'BTCUSDT', 'ETHUSDT', 'SOLUSDT']
-  if (
-    cryptoList.includes(symUpper) ||
-    symUpper.includes('BTC') ||
-    symUpper.includes('ETH') ||
-    symUpper.includes('SOL')
-  ) {
-    return true
-  }
-
-  // Forex & Metals: Opens Sunday 22:00 UTC, Closes Friday 22:00 UTC
-  const now = new Date()
-  const dow = now.getUTCDay() // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
-  const h = now.getUTCHours()
-  const m = now.getUTCMinutes()
-  const nowMins = h * 60 + m // minutes since midnight UTC
-
-  if (dow === 6) return false // Saturday closed all day
-  if (dow === 0 && nowMins < 22 * 60) return false // Sunday closed before 22:00 UTC
-  if (dow === 5 && nowMins >= 22 * 60) return false // Friday after 22:00 UTC
-
-  return true
-}
+export { isMarketOpen }
 
 type Mode = 'market' | 'pending'
 type PendingType = 'buy_limit' | 'sell_limit' | 'buy_stop' | 'sell_stop'

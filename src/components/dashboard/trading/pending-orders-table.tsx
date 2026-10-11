@@ -128,9 +128,13 @@ function Row({ order, index, onChanged }: { order: PendingOrder; index: number; 
       </Td>
       <Td align="right">
         <button
-          onClick={cancel}
-          disabled={busy}
-          className="h-7 w-7 inline-flex items-center justify-center rounded text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 focus-ring disabled:opacity-50 transition-all cursor-pointer"
+          onClick={() => {
+            if (order.isOptimistic || order.id <= 0) return
+            cancel()
+          }}
+          disabled={busy || order.isOptimistic || order.id <= 0}
+          title={order.isOptimistic ? 'Order in-flight...' : 'Cancel pending order'}
+          className="h-7 w-7 inline-flex items-center justify-center rounded text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 focus-ring disabled:opacity-50 transition-all cursor-pointer disabled:cursor-not-allowed"
           aria-label="Cancel pending order"
         >
           {busy ? (
