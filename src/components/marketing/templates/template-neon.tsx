@@ -50,7 +50,9 @@ import {
   Bot,
   SlidersHorizontal,
   Minus,
-  Plus
+  Plus,
+  Calculator,
+  Heart
 } from 'lucide-react'
 
 // ── Currency definitions & rates ──────────────────────────────────────────────
@@ -549,7 +551,7 @@ export function TemplateNeon() {
                 <span className="text-white/80">79k+ reviews</span>
                 <span className="h-3 w-px bg-white/20" />
                 <span className="flex items-center gap-1.5 text-white/90">
-                  <span className="w-2 h-2 rounded-full bg-[#635BFF] animate-pulse" />
+                  <Heart className="w-3 h-3 fill-[#635BFF] text-[#635BFF]" />
                   <span>loved by 82k+</span>
                 </span>
               </motion.div>
@@ -572,10 +574,11 @@ export function TemplateNeon() {
                 transition={{ delay: 0.2, duration: 0.4 }}
                 className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-3xl mx-auto mt-10"
               >
-                {/* Pill 1: Rewards in 24h */}
+                {/* Pill 1: Rewards in 24h (with clock/24 badge) */}
                 <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-[#635BFF]/40 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0 border border-[#635BFF]/30">
+                  <div className="w-10 h-10 rounded-xl bg-[#635BFF]/20 text-[#635BFF] flex items-center justify-center shrink-0 border border-[#635BFF]/30 relative">
                     <Clock className="w-5 h-5 text-violet-400" />
+                    <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-xs bg-[#635BFF] text-white font-mono text-[9px] font-black leading-none">24</span>
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">Rewards in 24h</div>
@@ -583,10 +586,11 @@ export function TemplateNeon() {
                   </div>
                 </div>
 
-                {/* Pill 2: One-time fee */}
+                {/* Pill 2: One-time fee (with credit card badge) */}
                 <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-emerald-500/40 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 relative">
                     <CreditCard className="w-5 h-5 text-emerald-400" />
+                    <Check className="absolute -bottom-1 -right-1 w-3.5 h-3.5 p-0.5 rounded-full bg-emerald-500 text-white" />
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">One-time fee</div>
@@ -594,10 +598,11 @@ export function TemplateNeon() {
                   </div>
                 </div>
 
-                {/* Pill 3: 24/7 support */}
+                {/* Pill 3: 24/7 support (with message bubble badge) */}
                 <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-cyan-500/40 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30">
-                    <Headphones className="w-5 h-5 text-cyan-400" />
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30 relative">
+                    <MessageSquare className="w-5 h-5 text-cyan-400" />
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#14131f]" />
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">24/7 support</div>
@@ -716,6 +721,7 @@ export function TemplateNeon() {
 
       {/* ── 3. EXACT FUNDEDNEXT MODEL SELECTOR & OBJECTIVES SECTION ──────── */}
       <section id="challenge-models" className="scroll-mt-28 sm:scroll-mt-36 py-20 sm:py-28 relative">
+        <span id="pricing" className="block relative -top-32 invisible pointer-events-none" />
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
 
           {/* Heading */}
@@ -758,7 +764,7 @@ export function TemplateNeon() {
               </button>
             </div>
 
-            {/* Quick Helper Buttons: Compare, Ask AI, Help me choose */}
+            {/* Quick Helper Buttons: Compare, Ask AI, Help me choose, Calculator */}
             <div className="flex flex-wrap items-center gap-2.5">
               <a
                 href="#rules-comparison"
@@ -771,7 +777,7 @@ export function TemplateNeon() {
                 href="/dashboard/ai"
                 className="px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-xs font-semibold text-text transition-colors flex items-center gap-2 cursor-pointer"
               >
-                <Bot className="w-3.5 h-3.5 text-[#00E676]" />
+                <Bot className="w-3.5 h-3.5 text-emerald-600 dark:text-[#00E676]" />
                 <span>Ask {brandName === 'LaunchAPropFirm' ? 'Fundee' : 'AI'}</span>
               </a>
 
@@ -781,6 +787,18 @@ export function TemplateNeon() {
               >
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#635BFF]" />
                 <span>Help me choose</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const el = document.getElementById('rules-comparison')
+                  if (el) el.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="p-2.5 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-text transition-colors flex items-center justify-center cursor-pointer"
+                title="Calculator & Rules Breakdown"
+                aria-label="Calculator and Rules Breakdown"
+              >
+                <Calculator className="w-4 h-4 text-text-muted hover:text-text" />
               </button>
             </div>
 
@@ -842,7 +860,12 @@ export function TemplateNeon() {
                   <div className="text-xl sm:text-2xl font-black tracking-tight mt-0.5">
                     {formatKSize(size)}
                   </div>
-                  <div className="text-xs font-bold text-[#00E676] mt-1 tabular-nums">
+                  <div
+                    className={cn(
+                      'text-xs font-bold mt-1 tabular-nums',
+                      isSelected ? 'text-[#00E676]' : 'text-emerald-600 dark:text-[#00E676]'
+                    )}
+                  >
                     {formatCurrencyVal(displayPrice)}
                   </div>
                 </button>
@@ -1056,19 +1079,21 @@ export function TemplateNeon() {
                     <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
                     <span>First Withdrawal</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#635BFF]/20 border border-[#635BFF]/40 text-[#635BFF] font-mono text-2xs font-bold">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#635BFF] text-white font-mono text-2xs font-bold shadow-xs">
                     <button
                       onClick={() => setWithdrawalDays((prev) => Math.max(5, prev - 7))}
-                      className="hover:text-white transition-colors cursor-pointer"
+                      className="hover:opacity-80 transition-opacity cursor-pointer text-white"
+                      aria-label="Decrease withdrawal days"
                     >
-                      <ChevronLeft className="w-3 h-3" />
+                      <ChevronLeft className="w-3 h-3 text-white" />
                     </button>
-                    <span>{withdrawalDays} Days</span>
+                    <span className="text-white px-0.5">{withdrawalDays} Days</span>
                     <button
                       onClick={() => setWithdrawalDays((prev) => Math.min(28, prev + 7))}
-                      className="hover:text-white transition-colors cursor-pointer"
+                      className="hover:opacity-80 transition-opacity cursor-pointer text-white"
+                      aria-label="Increase withdrawal days"
                     >
-                      <ChevronRight className="w-3 h-3" />
+                      <ChevronRight className="w-3 h-3 text-white" />
                     </button>
                   </div>
                 </div>
@@ -1117,6 +1142,17 @@ export function TemplateNeon() {
                   </div>
                 </div>
 
+                {/* Reward Condition */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Reward Condition</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.rewardCondition}
+                  </div>
+                </div>
+
                 {/* Consistency */}
                 <div className="flex items-center justify-between text-xs py-1.5">
                   <div className="flex items-center gap-2 text-white/80">
@@ -1156,13 +1192,13 @@ export function TemplateNeon() {
                       onClick={() => setQuantity(1)}
                       className={cn(
                         'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
-                        quantity === 1
+                        quantity >= 1
                           ? 'bg-[#635BFF]/15 border-[#635BFF] text-white'
                           : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
                       )}
                     >
                       <div className="flex items-center gap-2">
-                        <Check className={cn('w-3.5 h-3.5', quantity === 1 ? 'text-[#00E676]' : 'opacity-0')} />
+                        <Check className={cn('w-3.5 h-3.5', quantity >= 1 ? 'text-[#00E676]' : 'text-white/20')} />
                         <span>1st account</span>
                       </div>
                       <span className="font-mono font-bold tabular-nums">
@@ -1175,13 +1211,13 @@ export function TemplateNeon() {
                       onClick={() => setQuantity(2)}
                       className={cn(
                         'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
-                        quantity === 2
+                        quantity >= 2
                           ? 'bg-[#635BFF]/15 border-[#635BFF] text-white'
                           : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
                       )}
                     >
                       <div className="flex items-center gap-2">
-                        <Check className={cn('w-3.5 h-3.5', quantity === 2 ? 'text-[#00E676]' : 'opacity-0')} />
+                        <Check className={cn('w-3.5 h-3.5', quantity >= 2 ? 'text-[#00E676]' : 'text-white/20')} />
                         <span>2nd account</span>
                         <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-3xs font-mono font-bold">
                           10% OFF
@@ -1197,13 +1233,13 @@ export function TemplateNeon() {
                       onClick={() => setQuantity(3)}
                       className={cn(
                         'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
-                        quantity === 3
+                        quantity >= 3
                           ? 'bg-[#635BFF]/15 border-[#635BFF] text-white'
                           : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
                       )}
                     >
                       <div className="flex items-center gap-2">
-                        <Check className={cn('w-3.5 h-3.5', quantity === 3 ? 'text-[#00E676]' : 'opacity-0')} />
+                        <Check className={cn('w-3.5 h-3.5', quantity >= 3 ? 'text-[#00E676]' : 'text-white/20')} />
                         <span>3rd account</span>
                         <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-3xs font-mono font-bold">
                           15% OFF
@@ -1301,9 +1337,13 @@ export function TemplateNeon() {
                       AMEX
                     </span>
                     {/* Apple Pay */}
-                    <span className="text-3xs font-bold text-white">Pay</span>
+                    <span className="text-3xs font-bold text-white">Pay</span>
                     {/* Google Pay */}
                     <span className="text-3xs font-bold text-white/80">GPay</span>
+                    {/* PayPal */}
+                    <span className="text-3xs font-black tracking-tight flex items-center leading-none">
+                      <span className="italic text-[#0079C1]">Pay</span><span className="italic text-[#00457C]">Pal</span>
+                    </span>
                     {/* Crypto */}
                     <span className="w-3.5 h-3.5 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center text-3xs leading-none">
                       ₿
