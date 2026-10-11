@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BannerBar } from '@/components/banner-bar'
+import { FloatingPromoPopup } from '@/components/marketing/floating-promo-popup'
 import { Logo } from '@/components/logo'
 import { useBranding } from '@/store/branding'
 import { Button } from '@/components/ui/button'
@@ -55,6 +55,7 @@ export function MarketingHeader() {
   }, [open])
 
   return (
+    <>
     <motion.header
       initial={{ y: -8, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -65,7 +66,6 @@ export function MarketingHeader() {
         scrolled && 'shadow-[0_4px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.5)] border-emerald-500/20'
       )}
     >
-      <BannerBar placement="top" />
       <div className="container max-w-7xl mx-auto flex h-14 md:h-16 items-center justify-between px-4">
         <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'LaunchAPropFirm'} home`}>
           <Logo />
@@ -185,5 +185,7 @@ export function MarketingHeader() {
         )}
       </AnimatePresence>
     </motion.header>
+    <FloatingPromoPopup />
+    </>
   )
 }

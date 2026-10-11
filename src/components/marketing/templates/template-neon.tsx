@@ -741,7 +741,7 @@ export function TemplateNeon() {
                 className={cn(
                   'px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
                   selectedMarket === 'CFDs'
-                    ? 'bg-[#18162e] border-2 border-[#635BFF] text-white shadow-md'
+                    ? 'bg-[#635BFF]/15 border-2 border-[#635BFF] text-text dark:bg-[#18162e] dark:text-white shadow-md'
                     : 'text-text-muted hover:text-text'
                 )}
               >
@@ -753,7 +753,7 @@ export function TemplateNeon() {
                 className={cn(
                   'px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer',
                   selectedMarket === 'Futures'
-                    ? 'bg-[#18162e] border-2 border-[#635BFF] text-white shadow-md'
+                    ? 'bg-[#635BFF]/15 border-2 border-[#635BFF] text-text dark:bg-[#18162e] dark:text-white shadow-md'
                     : 'text-text-muted hover:text-text'
                 )}
               >
@@ -817,7 +817,7 @@ export function TemplateNeon() {
                   className={cn(
                     'p-5 rounded-2xl text-left transition-all cursor-pointer relative',
                     isSelected
-                      ? 'bg-[#141226] border-2 border-[#635BFF] text-white shadow-lg shadow-[#635BFF]/20 ring-1 ring-[#635BFF]/30'
+                      ? 'bg-[#635BFF]/15 border-2 border-[#635BFF] text-text dark:bg-[#141226] dark:text-white shadow-lg shadow-[#635BFF]/20 ring-1 ring-[#635BFF]/30'
                       : 'bg-surface border border-border hover:border-[#635BFF]/40 text-text'
                   )}
                 >
@@ -827,7 +827,7 @@ export function TemplateNeon() {
                   <div
                     className={cn(
                       'text-xs mt-1.5 leading-snug line-clamp-2',
-                      isSelected ? 'text-white/70' : 'text-text-muted'
+                      isSelected ? 'text-text-muted dark:text-white/70' : 'text-text-muted'
                     )}
                   >
                     {model.subtitle}
@@ -850,11 +850,11 @@ export function TemplateNeon() {
                   className={cn(
                     'p-4 rounded-2xl text-left transition-all cursor-pointer font-mono',
                     isSelected
-                      ? 'bg-[#141226] border-2 border-[#635BFF] text-white shadow-lg shadow-[#635BFF]/20 ring-1 ring-[#635BFF]/30'
+                      ? 'bg-[#635BFF]/15 border-2 border-[#635BFF] text-text dark:bg-[#141226] dark:text-white shadow-lg shadow-[#635BFF]/20 ring-1 ring-[#635BFF]/30'
                       : 'bg-surface border border-border hover:border-[#635BFF]/40 text-text'
                   )}
                 >
-                  <div className={cn('text-2xs font-medium uppercase font-sans', isSelected ? 'text-white/60' : 'text-text-muted')}>
+                  <div className={cn('text-2xs font-medium uppercase font-sans', isSelected ? 'text-text-muted dark:text-white/60' : 'text-text-muted')}>
                     Account
                   </div>
                   <div className="text-xl sm:text-2xl font-black tracking-tight mt-0.5">
@@ -863,7 +863,7 @@ export function TemplateNeon() {
                   <div
                     className={cn(
                       'text-xs font-bold mt-1 tabular-nums',
-                      isSelected ? 'text-[#00E676]' : 'text-emerald-600 dark:text-[#00E676]'
+                      isSelected ? 'text-emerald-600 dark:text-[#00E676]' : 'text-emerald-600 dark:text-[#00E676]'
                     )}
                   >
                     {formatCurrencyVal(displayPrice)}

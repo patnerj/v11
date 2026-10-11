@@ -508,6 +508,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 theme = 'clean-light';
               }
               document.documentElement.setAttribute('data-theme', theme);
+              if (theme === 'clean-light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+              } else {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+              }
 
               var fontMap = {
                 'poppins': "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
