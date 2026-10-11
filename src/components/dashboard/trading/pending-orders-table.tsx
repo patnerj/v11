@@ -96,7 +96,16 @@ function Row({ order, index, onChanged }: { order: PendingOrder; index: number; 
         order.isOptimistic && "animate-pulse pointer-events-none"
       )}
     >
-      <Td><span className="font-semibold terminal-num">{order.symbol}</span></Td>
+      <Td>
+        <div className="flex items-center gap-1.5">
+          <span className="font-semibold terminal-num">{order.symbol}</span>
+          {order.isOptimistic && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+              In-Flight
+            </span>
+          )}
+        </div>
+      </Td>
       <Td>
         <Badge tone={isBuy ? 'success' : 'danger'}>
           {order.order_type.replace('_', ' ').toUpperCase()}

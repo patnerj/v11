@@ -17,8 +17,42 @@ import { fmtPrice, fmtUSD, toNum, fmtLots } from '@/lib/format'
 import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies } from '@/lib/symbol-meta'
 import { quoteToUsdRate } from '@/lib/order-math'
 import { useQuery } from '@tanstack/react-query'
-import type { Account, ChallengePlan } from '@/types/api'
+import type { Account, ChallengePlan, Position } from '@/types/api'
 import { playOrderSuccessSound } from '@/lib/sound'
+
+/**
+ * Clean market hours gate matching server rules in class-trading-engine.php:
+ * - Crypto symbols (BTCUSD, ETHUSD, SOLUSD, BTCUSDT, ETHUSDT, SOLUSDT, etc.) are open 24/7.
+ * - Forex & Metals (EURUSD, GBPUSD, USDJPY, XAUUSD, XAGUSD, etc.) are CLOSED from Friday 22:00 UTC to Sunday 22:00 UTC.
+ */
+export function isMarketOpen(symbol: string): boolean {
+  if (!symbol) return true
+  const symUpper = symbol.toUpperCase()
+
+  // Crypto symbols trade 24/7
+  const cryptoList = ['BTCUSD', 'ETHUSD', 'SOLUSD', 'BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+  if (
+    cryptoList.includes(symUpper) ||
+    symUpper.includes('BTC') ||
+    symUpper.includes('ETH') ||
+    symUpper.includes('SOL')
+  ) {
+    return true
+  }
+
+  // Forex & Metals: Opens Sunday 22:00 UTC, Closes Friday 22:00 UTC
+  const now = new Date()
+  const dow = now.getUTCDay() // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
+  const h = now.getUTCHours()
+  const m = now.getUTCMinutes()
+  const nowMins = h * 60 + m // minutes since midnight UTC
+
+  if (dow === 6) return false // Saturday closed all day
+  if (dow === 0 && nowMins < 22 * 60) return false // Sunday closed before 22:00 UTC
+  if (dow === 5 && nowMins >= 22 * 60) return false // Friday after 22:00 UTC
+
+  return true
+}
 
 type Mode = 'market' | 'pending'
 type PendingType = 'buy_limit' | 'sell_limit' | 'buy_stop' | 'sell_stop'
@@ -92,6 +126,16 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }, [plan, newsEvents, active])
 
   const isIpRestricted = !!((plan as any)?.ip_match_required && ((account as any)?.ip_restricted || (account as any)?.is_ip_restricted))
+
+  // Market hours gate (Forex/Metals closed Fri 22:00 UTC - Sun 22:00 UTC; Crypto open 24/7)
+  const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(active))
+  useEffect(() => {
+    setMarketOpen(isMarketOpen(active))
+    const interval = setInterval(() => {
+      setMarketOpen(isMarketOpen(active))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [active])
 
   const digits = meta?.digits || symbolDigits(active)
   const minLot = toNum(meta?.min_lot)  || 0.01
@@ -292,6 +336,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   const submitMarket = async (side: 'buy' | 'sell') => {
+    if (!isMarketOpen(active)) {
+      toast.error(`Market is closed. ${active} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
+      return
+    }
     if (!ask || !bid || ask <= 0 || bid <= 0) {
       toast.error('Market price is not available yet'); return
     }
@@ -330,16 +378,23 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     setBusy(side)
 
     const optId = nextOptimisticId()
-    const optPos: any = {
+    const optPos: Position = {
       id: optId,
+      account_id: 0,
       symbol: active,
       type: side,
       lot_size: lotN,
       open_price: side === 'buy' ? ask : bid,
-      open_time: new Date().toISOString(),
+      current_price: side === 'buy' ? ask : bid,
       sl: slN ?? null,
       tp: tpN ?? null,
-      status: 'simulated'
+      pnl: 0,
+      swap: 0,
+      commission: 0,
+      margin: 0,
+      opened_at: new Date().toISOString(),
+      opened_at_iso: new Date().toISOString(),
+      isOptimistic: true,
     }
     injectOptimisticPosition(optPos)
 
@@ -387,6 +442,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   const submitPending = async () => {
+    if (!isMarketOpen(active)) {
+      toast.error(`Market is closed. ${active} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
+      return
+    }
     if (!targetN || targetN <= 0) { toast.error('Enter a valid trigger price'); return }
     if (!Number.isFinite(lotN) || lotN < minLot) {
       toast.error(`Lot size must be at least ${minLot}`); return
@@ -855,13 +914,26 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             </span>
           </div>
         )}
+        {!marketOpen && (
+          <div className="flex items-center gap-2 rounded-md bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 p-2.5 text-terminal-body shadow-sm border border-amber-500/30">
+            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-amber-900 dark:text-amber-200">
+                Market Closed (Reopens Sun 22:00 UTC)
+              </span>
+              <span className="text-terminal-micro text-amber-700/80 dark:text-amber-300/80">
+                {active} does not trade on weekends. Crypto pairs trade 24/7.
+              </span>
+            </div>
+          </div>
+        )}
 
         {mode === 'market' ? (
           <div className="grid grid-cols-2 gap-1.5">
             <ActionButton
               tone="sell"
               busy={busy === 'sell'}
-              disabled={busy !== null || !bid || isNewsRestricted || isIpRestricted}
+              disabled={busy !== null || !bid || isNewsRestricted || isIpRestricted || !marketOpen}
               onClick={() => submitMarket('sell')}
             >
               <ArrowDownRight className="h-4 w-4 shrink-0" />
@@ -873,7 +945,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             <ActionButton
               tone="buy"
               busy={busy === 'buy'}
-              disabled={busy !== null || !ask || isNewsRestricted || isIpRestricted}
+              disabled={busy !== null || !ask || isNewsRestricted || isIpRestricted || !marketOpen}
               onClick={() => submitMarket('buy')}
             >
               <div className="flex flex-col items-end leading-tight min-w-0">
@@ -885,7 +957,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           </div>
         ) : (
           <button
-            disabled={busy !== null || !targetN || isNewsRestricted || isIpRestricted}
+            disabled={busy !== null || !targetN || isNewsRestricted || isIpRestricted || !marketOpen}
             onClick={submitPending}
             className={cn(
               'w-full h-11 rounded-md font-semibold text-terminal-title flex items-center justify-center gap-2 transition-all focus-ring',
