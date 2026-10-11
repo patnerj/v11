@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { motion, useDragControls } from 'framer-motion'
-import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair, Info } from 'lucide-react'
+import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair, Info, Volume2, VolumeX } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
@@ -13,9 +13,15 @@ import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
-import { playOrderSuccessSound, playSltpUpdatedSound } from '@/lib/sound'
+import {
+  playOrderSuccessSound,
+  playOrderOpenClickSound,
+  playOrderLossThumpSound,
+  playSltpUpdatedSound,
+  isSoundEnabled,
+  setSoundEnabled
+} from '@/lib/sound'
 import { ChartTpSlOverlay } from './chart-tp-sl-overlay'
-import { ScalperExecutionHeader } from './scalper-execution-header'
 
 interface Props {
   compact?: boolean
@@ -139,13 +145,22 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const [oneClickSlPips, setOneClickSlPips] = useState('30')
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
   const [showOneClick, setShowOneClick] = useState(true)
+  const [soundActive, setSoundActive] = useState(true)
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fxsim:term:oneclick')
       if (saved === '0') setShowOneClick(false)
     } catch {}
+    setSoundActive(isSoundEnabled())
   }, [])
+
+  const toggleSound = useCallback(() => {
+    const next = !soundActive
+    setSoundEnabled(next)
+    setSoundActive(next)
+    if (next) playOrderOpenClickSound()
+  }, [soundActive])
 
   const toggleOneClick = () => {
     setShowOneClick((prev) => {
@@ -156,14 +171,18 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   }
   
   const handleOneClick = async (type: 'buy' | 'sell') => {
+    playOrderOpenClickSound()
+
     const account = usePrices.getState().account
     if (account?.status === 'frozen' || account?.status === 'breached' || (account as any)?.is_ip_restricted || (account as any)?.read_only) {
+      playOrderLossThumpSound()
       toast.error('Account is not allowed to trade (account status: ' + (account?.status || 'restricted') + ')')
       return
     }
 
     const lotSize = toNum(oneClickLot)
     if (lotSize <= 0) {
+      playOrderLossThumpSound()
       toast.error('Invalid lot size')
       return
     }
@@ -171,16 +190,19 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
     const minLot = toNum(plan?.min_lot_size) || 0.01
     const maxLot = toNum(plan?.max_lot_size) || 100
     if (lotSize < minLot) {
+      playOrderLossThumpSound()
       toast.error(`Minimum lot size is ${minLot}`)
       return
     }
     if (maxLot > 0 && lotSize > maxLot) {
+      playOrderLossThumpSound()
       toast.error(`Maximum lot size is ${maxLot}`)
       return
     }
 
     const slPipsNum = toNum(oneClickSlPips)
     if (isSlRequired && (!slPipsNum || slPipsNum <= 0)) {
+      playOrderLossThumpSound()
       toast.error('Stop Loss is required by this plan (enter SL distance in pips)')
       return
     }
@@ -189,6 +211,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
     const bid = toNum(tick?.bid)
     const ask = toNum(tick?.ask)
     if (!ask || !bid || ask <= 0 || bid <= 0) {
+      playOrderLossThumpSound()
       toast.error('Market price is not available yet')
       return
     }
@@ -245,6 +268,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
       invalidateFxsim('/account')
       usePrices.getState().refresh()
     } else {
+      playOrderLossThumpSound()
       usePrices.getState().removeOptimisticPosition(optId)
       toast.error(res.ok ? (res.data.message || 'Order rejected') : res.error)
     }
@@ -561,24 +585,6 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         )}
         <div ref={containerRef} className="absolute inset-0" />
 
-        {/* Floating One-Click Execution Header directly over the chart */}
-        {ready && (
-          <div className="absolute top-2 inset-x-0 flex justify-center pointer-events-none z-[20] px-2">
-            <div className="pointer-events-auto max-w-full">
-              <ScalperExecutionHeader
-                symbol={active}
-                bid={bid || 0}
-                ask={ask || 0}
-                digits={digits}
-                pipSize={pipSize(active, digits)}
-                isSlRequired={isSlRequired}
-                compact={compact}
-                onChanged={onChanged}
-              />
-            </div>
-          </div>
-        )}
-
         {/* 1-Click Trade Box (Draggable, default bottom-center) */}
         {!compact && ready && showOneClick && (
           <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-[25]">
@@ -599,6 +605,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 <GripVertical className="h-4 w-4" />
               </div>
 
+              {/* Sell Button */}
               <div className="flex flex-col gap-0.5 items-center justify-center">
                 <button 
                   type="button"
@@ -611,16 +618,46 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 <div className="text-terminal-micro font-semibold text-danger tracking-wider uppercase">Sell</div>
               </div>
               
-              <div className="flex flex-col justify-center px-1">
-                <input 
-                  type="text"
-                  value={oneClickLot}
-                  onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
-                  className="w-12 h-7 text-center bg-surface border border-border rounded-md text-terminal-body terminal-num font-semibold text-text focus-ring focus:border-accent"
-                />
+              {/* Lots Input with - / + Steppers */}
+              <div className="flex flex-col justify-center px-1 items-center">
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = toNum(oneClickLot) || 0.1
+                      const minLot = toNum(plan?.min_lot_size) || 0.01
+                      const next = Math.max(minLot, Number((cur - 0.01).toFixed(2)))
+                      setOneClickLot(next.toFixed(2))
+                    }}
+                    className="h-7 w-5 rounded bg-surface border border-border text-terminal-micro text-text-muted hover:text-text hover:bg-surface-muted flex items-center justify-center cursor-pointer transition-colors"
+                    title="Decrease lot (-0.01)"
+                  >
+                    -
+                  </button>
+                  <input 
+                    type="text"
+                    value={oneClickLot}
+                    onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
+                    className="w-12 h-7 text-center bg-surface border border-border rounded-md text-terminal-body terminal-num font-semibold text-text focus-ring focus:border-accent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = toNum(oneClickLot) || 0.1
+                      const maxLot = toNum(plan?.max_lot_size) || 100
+                      const next = Math.min(maxLot, Number((cur + 0.01).toFixed(2)))
+                      setOneClickLot(next.toFixed(2))
+                    }}
+                    className="h-7 w-5 rounded bg-surface border border-border text-terminal-micro text-text-muted hover:text-text hover:bg-surface-muted flex items-center justify-center cursor-pointer transition-colors"
+                    title="Increase lot (+0.01)"
+                  >
+                    +
+                  </button>
+                </div>
                 <span className="text-terminal-micro text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
               </div>
 
+              {/* SL (Pips) Input */}
               {isSlRequired && (
                 <div className="flex flex-col justify-center px-1 border-l border-border-subtle pl-1.5">
                   <input 
@@ -635,6 +672,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 </div>
               )}
 
+              {/* Buy Button */}
               <div className="flex flex-col gap-0.5 items-center justify-center">
                 <button 
                   type="button"
@@ -645,6 +683,24 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                   {busy === 'buy' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (ask ? fmtPrice(ask, digits) : 'BUY')}
                 </button>
                 <div className="text-terminal-micro font-semibold text-success tracking-wider uppercase">Buy</div>
+              </div>
+
+              {/* Audio Chime Mute/Unmute Toggle */}
+              <div className="flex flex-col gap-0.5 items-center justify-center pl-1 border-l border-border-subtle">
+                <button
+                  type="button"
+                  onClick={toggleSound}
+                  className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors cursor-pointer ${
+                    soundActive
+                      ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20'
+                      : 'text-text-muted border-border bg-surface-muted/40 hover:bg-surface-muted'
+                  }`}
+                  title={soundActive ? 'Trade Chimes Active (Click to mute)' : 'Trade Chimes Muted (Click to enable)'}
+                  aria-label="Toggle trade sounds"
+                >
+                  {soundActive ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5 text-text-muted" />}
+                </button>
+                <div className="text-terminal-micro font-semibold text-text-muted tracking-wider uppercase">Audio</div>
               </div>
             </motion.div>
           </div>
