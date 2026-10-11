@@ -6,6 +6,7 @@ import { MarketingFooter } from "@/components/marketing/footer";
 import { TemplateClassic } from "@/components/marketing/templates/template-classic";
 import { TemplateTerminal } from "@/components/marketing/templates/template-terminal";
 import { TemplateFtmo } from "@/components/marketing/templates/template-ftmo";
+import { TemplateNeon } from "@/components/marketing/templates/template-neon";
 import { TemplateSwitcher, type LandingTemplateId } from "@/components/marketing/templates/template-switcher";
 import { getApiBaseUrl } from "@/lib/fxsim";
 
@@ -79,12 +80,16 @@ export default async function HomePage(props: PageProps) {
   let activeTemplate: LandingTemplateId = 'classic';
   if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
     activeTemplate = 'ftmo';
+  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(queryTemplate)) {
+    activeTemplate = 'neon';
   } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
     activeTemplate = 'terminal';
   } else if (queryTemplate === 'classic') {
     activeTemplate = 'classic';
   } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
     activeTemplate = 'ftmo';
+  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(cookieTemplate)) {
+    activeTemplate = 'neon';
   } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
     activeTemplate = 'terminal';
   } else if (cookieTemplate === 'classic') {
@@ -100,6 +105,8 @@ export default async function HomePage(props: PageProps) {
       <main className="relative pb-20 lg:pb-0">
         {activeTemplate === 'ftmo' ? (
           <TemplateFtmo />
+        ) : activeTemplate === 'neon' ? (
+          <TemplateNeon />
         ) : activeTemplate === 'terminal' ? (
           <TemplateTerminal />
         ) : (

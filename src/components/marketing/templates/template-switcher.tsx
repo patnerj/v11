@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Layers, Check, ChevronDown, Monitor, LayoutTemplate, Award } from 'lucide-react'
+import { Layers, Check, ChevronDown, Monitor, LayoutTemplate, Award, Zap } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
-export type LandingTemplateId = 'classic' | 'terminal' | 'ftmo'
+export type LandingTemplateId = 'classic' | 'terminal' | 'ftmo' | 'neon'
 
 interface TemplateSwitcherProps {
   currentTemplate: LandingTemplateId
@@ -30,6 +30,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
 
   const getTemplateLabel = (id: LandingTemplateId) => {
     if (id === 'ftmo') return 'Industry Titan (FTMO Style)'
+    if (id === 'neon') return 'Cyber Neon (FundedNext Style)'
     if (id === 'terminal') return 'Institutional Pro (MassFunded)'
     return 'Classic Builder'
   }
@@ -89,7 +90,32 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 </div>
               </button>
 
-              {/* Template 2: Pro Terminal (MassFunded Style) */}
+              {/* Template 2: Cyber Neon Challenger (FundedNext Style) */}
+              <button
+                onClick={() => handleSelect('neon')}
+                className={cn(
+                  'w-full flex items-start gap-2.5 p-2.5 rounded-xl text-left transition-colors cursor-pointer',
+                  currentTemplate === 'neon'
+                    ? 'bg-violet-500/15 border border-violet-500/30 text-text'
+                    : 'hover:bg-surface-secondary text-text-muted hover:text-text'
+                )}
+              >
+                <Zap className="h-4 w-4 text-violet-500 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-text">Template 2: Cyber Neon</span>
+                    {currentTemplate === 'neon' && <Check className="h-3.5 w-3.5 text-violet-500" />}
+                  </div>
+                  <div className="inline-block px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-600 dark:text-violet-400 font-mono text-3xs font-semibold my-0.5">
+                    FundedNext Style • Cyber Violet
+                  </div>
+                  <p className="text-2xs text-text-muted mt-0.5 leading-relaxed">
+                    Stellar 2-Step &amp; 1-Step models, 15% challenge profit bonus, balance-based DD, &amp; live payouts ticker.
+                  </p>
+                </div>
+              </button>
+
+              {/* Template 3: Pro Terminal (MassFunded Style) */}
               <button
                 onClick={() => handleSelect('terminal')}
                 className={cn(
@@ -102,7 +128,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 <Monitor className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-text">Template 2: Pro Terminal</span>
+                    <span className="font-bold text-text">Template 3: Pro Terminal</span>
                     {currentTemplate === 'terminal' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
                   </div>
                   <div className="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-3xs font-semibold my-0.5">
@@ -114,7 +140,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 </div>
               </button>
 
-              {/* Template 3: Classic Builder */}
+              {/* Template 4: Classic Builder */}
               <button
                 onClick={() => handleSelect('classic')}
                 className={cn(
@@ -127,7 +153,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 <LayoutTemplate className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-text">Template 3: Classic Builder</span>
+                    <span className="font-bold text-text">Template 4: Classic Builder</span>
                     {currentTemplate === 'classic' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
                   </div>
                   <p className="text-2xs text-text-muted mt-0.5 leading-relaxed">
