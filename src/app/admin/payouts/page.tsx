@@ -8,7 +8,7 @@ import {
   Wallet, DollarSign, ArrowUpRight, ArrowDownRight, Clock, 
   CheckCircle2, XCircle, Search, Filter, Download, RefreshCw,
   ExternalLink, Eye, Sliders, AlertTriangle, ShieldCheck,
-  Building, CreditCard, Check, Copy, QrCode
+  Building, CreditCard, Check, Copy
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -22,7 +22,6 @@ import { DataTable, ColumnDef } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PayoutManagementModal, PayoutItemTarget } from '@/components/admin/PayoutManagementModal'
-import { PayoutQrModal } from '@/components/admin/payout-qr-modal'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
 import { APP_DISPLAY_VERSION } from '@/lib/version'
@@ -167,8 +166,6 @@ function PayoutsHubContent() {
   // Modal State
   const [selectedPayout, setSelectedPayout] = useState<PayoutItemTarget | null>(null)
   const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false)
-  const [qrPayout, setQrPayout] = useState<PayoutTableRow | null>(null)
-  const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false)
 
   // API Query
   const { data: rawPayouts, isLoading: payoutsLoading, refetch } = useQuery({
@@ -177,16 +174,10 @@ function PayoutsHubContent() {
     staleTime: 10000,
   })
 
-  // Normalize API data or return authentic empty array (AGENTS.md Rule 1.2)
+  // Normalize API data or return authentic empty array
   const allPayouts: PayoutTableRow[] = useMemo(() => {
-    const list = Array.isArray(rawPayouts)
-      ? rawPayouts
-      : (rawPayouts && typeof rawPayouts === 'object' && Array.isArray((rawPayouts as any).payouts))
-      ? (rawPayouts as any).payouts
-      : []
-
-    if (list.length > 0) {
-      return list.map((p: any, idx: number) => {
+    if (rawPayouts && Array.isArray(rawPayouts) && rawPayouts.length > 0) {
+      return rawPayouts.map((p: any, idx: number) => {
         const rawId = p.id || (idx + 1)
         const amt = Number(p.amount_requested || p.amount || 0)
         const split = Number(p.profit_split_pct || 80)
@@ -227,15 +218,10 @@ function PayoutsHubContent() {
   const SLA_TARGET_HOURS = 6.0
   const metrics = useMemo(() => {
     const pendingList = allPayouts.filter(p => p.status === 'requested' || p.status === 'pending')
-    const pendingGross = pendingList.reduce((acc, p) => acc + (toNum(p.amount_requested) || toNum((p as any).amount) || 0), 0)
-    const pendingNet = pendingList.reduce((acc, p) => acc + (toNum(p.trader_amount) || ((toNum(p.amount_requested) || toNum((p as any).amount) || 0) * ((toNum(p.profit_split_pct) || 80) / 100))), 0)
-    const avgSplitPct = pendingList.length > 0
-      ? Math.round(pendingList.reduce((acc, p) => acc + (toNum(p.profit_split_pct) || 80), 0) / pendingList.length)
-      : 80
+    const pendingSum = pendingList.reduce((acc, p) => acc + p.amount_requested, 0)
 
     const approvedList = allPayouts.filter(p => p.status === 'approved' || p.status === 'paid')
-    const approvedGross = approvedList.reduce((acc, p) => acc + (toNum(p.amount_requested) || toNum((p as any).amount) || 0), 0)
-    const approvedNet = approvedList.reduce((acc, p) => acc + (toNum(p.trader_amount) || ((toNum(p.amount_requested) || toNum((p as any).amount) || 0) * ((toNum(p.profit_split_pct) || 80) / 100))), 0)
+    const approvedSum = approvedList.reduce((acc, p) => acc + p.amount_requested, 0)
 
     const rejectedList = allPayouts.filter(p => p.status === 'rejected')
 
@@ -262,14 +248,9 @@ function PayoutsHubContent() {
 
     return {
       pendingCount: pendingList.length,
-      pendingTotal: pendingGross,
-      pendingGross,
-      pendingNet,
-      avgSplitPct,
+      pendingTotal: pendingSum,
       approvedCount: approvedList.length,
-      approvedTotal: approvedGross,
-      approvedGross,
-      approvedNet,
+      approvedTotal: approvedSum,
       rejectedCount: rejectedList.length,
       avgTimeHours: avgTimeHours !== null ? `${toNum(avgTimeHours).toFixed(1)} Hours` : '--',
       slaSampleSize: resolvedWithTimes.length,
@@ -530,35 +511,18 @@ function PayoutsHubContent() {
       header: '',
       align: 'right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-1.5">
-          {row.payment_address && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setQrPayout(row)
-                setIsQrModalOpen(true)
-              }}
-              className="h-8 px-2 text-xs border-border text-text-muted hover:text-accent hover:border-accent gap-1"
-              title="Open QR Code Disbursal Helper"
-            >
-              <QrCode className="h-3.5 w-3.5" />
-              <span className="hidden xl:inline">QR</span>
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setSelectedPayout(row)
-              setIsManageModalOpen(true)
-            }}
-            className="h-8 text-xs border-accent/40 text-accent hover:bg-accent/10 hover:border-accent gap-1.5"
-          >
-            <Sliders className="h-3.5 w-3.5" />
-            Manage Payout
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setSelectedPayout(row)
+            setIsManageModalOpen(true)
+          }}
+          className="h-8 text-xs border-accent/40 text-accent hover:bg-accent/10 hover:border-accent gap-1.5"
+        >
+          <Sliders className="h-3.5 w-3.5" />
+          Manage Payout
+        </Button>
       )
     }
   ]
@@ -632,16 +596,12 @@ function PayoutsHubContent() {
                   <Clock className="h-4 w-4" />
                 </div>
               </div>
-              <div className="mt-3">
-                <h3 className="text-2xl font-bold tabular text-text tracking-tight flex items-baseline gap-1.5">
-                  {formatMoney(metrics.pendingGross)}
-                  <span className="text-xs font-semibold uppercase text-text-muted">Gross</span>
+              <div className="mt-3 flex items-baseline justify-between">
+                <h3 className="text-2xl font-bold tabular text-text tracking-tight">
+                  {formatMoney(metrics.pendingTotal)}
                 </h3>
-                <p className="text-xs font-semibold text-accent mt-0.5 tabular">
-                  {formatMoney(metrics.pendingNet)} Net (@ {metrics.avgSplitPct}% Share)
-                </p>
               </div>
-              <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+              <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
                 <span className="text-2xs text-text-muted leading-tight block flex-1">
                   Awaiting audit approval
                 </span>
@@ -664,14 +624,10 @@ function PayoutsHubContent() {
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
               </div>
-              <div className="mt-3">
-                <h3 className="text-2xl font-bold tabular text-accent tracking-tight flex items-baseline gap-1.5">
-                  {formatMoney(metrics.approvedGross)}
-                  <span className="text-xs font-semibold uppercase text-text-muted">Gross</span>
+              <div className="mt-3 flex items-baseline justify-between">
+                <h3 className="text-2xl font-bold tabular text-accent tracking-tight">
+                  {formatMoney(metrics.approvedTotal)}
                 </h3>
-                <p className="text-xs font-semibold text-emerald-400 mt-0.5 tabular">
-                  {formatMoney(metrics.approvedNet)} Net Disbursed
-                </p>
               </div>
               <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
                 <span className="text-2xs text-text-muted leading-tight block flex-1">
@@ -844,16 +800,6 @@ function PayoutsHubContent() {
           refetch()
           queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
         }}
-      />
-
-      {/* ── 4.5 Interactive Crypto Disbursal Helper with Dynamic QR (Phase 2) ── */}
-      <PayoutQrModal
-        isOpen={isQrModalOpen}
-        onClose={() => {
-          setIsQrModalOpen(false)
-          setQrPayout(null)
-        }}
-        payout={qrPayout}
       />
 
       {/* ── Bulk Action Modal (PAY-4) ────────────────────────────────────── */}

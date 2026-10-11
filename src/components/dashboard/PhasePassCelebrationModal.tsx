@@ -185,22 +185,10 @@ export const PhasePassCelebrationModal = memo(function PhasePassCelebrationModal
           </Button>
 
           <Button
-            asChild
-            variant="outline"
-            className="w-full sm:flex-1 h-10 font-bold border-amber-500/40 text-amber-400 hover:bg-amber-500/10 gap-1.5"
-            onClick={handleClose}
-          >
-            <Link href="/dashboard/certificates">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Claim Certificate</span>
-            </Link>
-          </Button>
-
-          <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={handleClose}
-            className="w-full sm:w-auto h-10 text-xs font-semibold text-text-muted hover:text-text"
+            className="w-full sm:w-auto h-10 text-xs font-semibold"
           >
             Dismiss
           </Button>

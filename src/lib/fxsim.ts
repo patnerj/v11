@@ -59,7 +59,7 @@ export function getApiBaseUrl(req?: any): string {
     return trimmed.endsWith('/wp-json/fxsim/v1') ? trimmed : `${trimmed}/wp-json/fxsim/v1`
   }
 
-  return process.env.NEXT_PUBLIC_API_FALLBACK || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  return process.env.NEXT_PUBLIC_API_FALLBACK || 'https://api.massfunded.org/wp-json/fxsim/v1'
 }
 
 export const FXSIM_BASE = getApiBaseUrl()

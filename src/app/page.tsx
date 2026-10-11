@@ -1,13 +1,8 @@
 import { Suspense, cache } from "react";
-import { cookies } from "next/headers";
+import { PuckRenderer } from "@/components/puck/puck-renderer";
 import { MarketingHeader } from "@/components/marketing/header";
 import { PayoutTicker } from "@/components/payout-ticker";
 import { MarketingFooter } from "@/components/marketing/footer";
-import { TemplateClassic } from "@/components/marketing/templates/template-classic";
-import { TemplateTerminal } from "@/components/marketing/templates/template-terminal";
-import { TemplateFtmo } from "@/components/marketing/templates/template-ftmo";
-import { TemplateNeon } from "@/components/marketing/templates/template-neon";
-import { TemplateSwitcher, type LandingTemplateId } from "@/components/marketing/templates/template-switcher";
 import { getApiBaseUrl } from "@/lib/fxsim";
 
 export const revalidate = 60;
@@ -60,41 +55,8 @@ const getCachedPageSchema = cache(async () => {
   return defaultData;
 });
 
-interface PageProps {
-  searchParams?: Promise<{ template?: string }> | { template?: string };
-}
-
-export default async function HomePage(props: PageProps) {
+export default async function HomePage() {
   const data = await getCachedPageSchema();
-  const rawParams = props.searchParams ? await Promise.resolve(props.searchParams) : {};
-  const queryTemplate = (rawParams?.template || '').toLowerCase().trim();
-
-  let cookieTemplate = '';
-  try {
-    const cookieStore = await cookies();
-    cookieTemplate = cookieStore.get('fxsim_landing_template')?.value || '';
-  } catch {}
-
-  // Determine active template:
-  // Priority: URL query (?template=ftmo, titan, terminal, massfunded, classic) -> cookie -> default ('classic')
-  let activeTemplate: LandingTemplateId = 'classic';
-  if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
-    activeTemplate = 'ftmo';
-  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(queryTemplate)) {
-    activeTemplate = 'neon';
-  } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
-    activeTemplate = 'terminal';
-  } else if (queryTemplate === 'classic') {
-    activeTemplate = 'classic';
-  } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
-    activeTemplate = 'ftmo';
-  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(cookieTemplate)) {
-    activeTemplate = 'neon';
-  } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
-    activeTemplate = 'terminal';
-  } else if (cookieTemplate === 'classic') {
-    activeTemplate = 'classic';
-  }
 
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-emerald-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
@@ -103,22 +65,11 @@ export default async function HomePage(props: PageProps) {
         <PayoutTicker />
       </Suspense>
       <main className="relative pb-20 lg:pb-0">
-        {activeTemplate === 'ftmo' ? (
-          <TemplateFtmo />
-        ) : activeTemplate === 'neon' ? (
-          <TemplateNeon />
-        ) : activeTemplate === 'terminal' ? (
-          <TemplateTerminal />
-        ) : (
-          <TemplateClassic data={data} />
-        )}
+        <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" /></div>}>
+          <PuckRenderer data={data} />
+        </Suspense>
       </main>
       <MarketingFooter />
-
-      {/* Floating 1-Click Template Switcher */}
-      <Suspense fallback={null}>
-        <TemplateSwitcher currentTemplate={activeTemplate} />
-      </Suspense>
     </div>
   );
 }

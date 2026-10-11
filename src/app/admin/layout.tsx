@@ -7,7 +7,7 @@ import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { Header } from '@/components/admin/Header'
-import { AdminCommandPalette } from '@/components/admin/command-palette'
+import { OmniSearchDialog } from '@/components/admin/OmniSearchDialog'
 import { TradingScreenLoader } from '@/components/ui/trading-loader'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { useThemeContext } from '@/context/ThemeContext'
@@ -153,10 +153,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
 
-      {/* Admin Global Command Palette (Cmd + K / Ctrl + K) */}
-      <AdminCommandPalette 
-        open={isOmniSearchOpen} 
-        onOpenChange={setIsOmniSearchOpen} 
+      {/* Admin Global Omni-Search Dialog (Cmd + K / Ctrl + K) */}
+      <OmniSearchDialog 
+        isOpen={isOmniSearchOpen} 
+        onClose={() => setIsOmniSearchOpen(false)} 
       />
 
     </div>

@@ -1,6 +1,6 @@
-# LaunchAPropFirm — Institutional Proprietary Trading Firm
+# MassFunded — Institutional Proprietary Trading Firm
 
-> LaunchAPropFirm (https://launchapropfirm.com) is an institutional-grade proprietary trading firm empowering talented retail traders worldwide with up to $200,000 in funded capital, up to 90% profit splits, raw institutional spreads, and cutting-edge execution technology.
+> MassFunded (https://massfunded.org) is an institutional-grade proprietary trading firm empowering talented retail traders worldwide with up to $200,000 in funded capital, up to 90% profit splits, raw institutional spreads, and cutting-edge execution technology.
 
 ## Core Platform Highlights
 
@@ -36,13 +36,13 @@
 
 ## Key Links & Resources
 
-- [Home Page](https://launchapropfirm.com)
-- [Challenge Programs & Pricing](https://launchapropfirm.com/challenges)
-- [Trading Tournaments](https://launchapropfirm.com/tournaments)
-- [PvP Battle Arena](https://launchapropfirm.com/arena)
-- [Payout Proof & Disbursals](https://launchapropfirm.com/payouts)
-- [Frequently Asked Questions (FAQ)](https://launchapropfirm.com/faq)
-- [Trading Rules & Drawdown Guidelines](https://launchapropfirm.com/risk)
-- [Platform Status & Latency Monitors](https://launchapropfirm.com/status)
-- [Support Desk & Inquiries](https://launchapropfirm.com/contact)
-- [Full LLM Knowledge Document](https://launchapropfirm.com/llms-full.txt)
+- [Home Page](https://massfunded.org)
+- [Challenge Programs & Pricing](https://massfunded.org/challenges)
+- [Trading Tournaments](https://massfunded.org/tournaments)
+- [PvP Battle Arena](https://massfunded.org/arena)
+- [Payout Proof & Disbursals](https://massfunded.org/payouts)
+- [Frequently Asked Questions (FAQ)](https://massfunded.org/faq)
+- [Trading Rules & Drawdown Guidelines](https://massfunded.org/risk)
+- [Platform Status & Latency Monitors](https://massfunded.org/status)
+- [Support Desk & Inquiries](https://massfunded.org/contact)
+- [Full LLM Knowledge Document](https://massfunded.org/llms-full.txt)

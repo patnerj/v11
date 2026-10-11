@@ -22,7 +22,7 @@ interface NavItem {
   id: string
   title: string
   subtitle: string
-  category: 'hub' | 'trader' | 'ticket' | 'payout' | 'challenge'
+  category: 'hub' | 'trader' | 'ticket' | 'payout'
   href: string
   icon: React.ElementType
   badge?: string
@@ -38,14 +38,6 @@ const ADMIN_HUBS: NavItem[] = [
   { id: 'hub-marketing', title: 'Marketing & Promos', subtitle: 'Banners, coupons, broadcasts, and affiliate partners', category: 'hub', href: '/admin/marketing', icon: Tag },
   { id: 'hub-analytics', title: 'Platform Analytics', subtitle: 'Revenues, user growth, challenge pass/fail ratios', category: 'hub', href: '/admin/analytics', icon: BarChart3 },
   { id: 'hub-config', title: 'Configuration Hub', subtitle: 'Challenge plans, branding, MT5 bridge, and gateways', category: 'hub', href: '/admin/config', icon: Sliders },
-  // ── Quick Sub-Page Direct Shortcuts ─────────────────────────────────
-  { id: 'hub-config-branding', title: 'Branding & Appearance', subtitle: 'Themes, dark/light contrast, logos, typography presets', category: 'hub', href: '/admin/config?tab=branding', icon: Sliders, badge: 'CONFIG' },
-  { id: 'hub-config-mt5', title: 'MT5 Gateway Bridge', subtitle: 'Server host, manager credentials, reverse copier & telemetry', category: 'hub', href: '/admin/config?tab=mt5', icon: Sliders, badge: 'CONFIG' },
-  { id: 'hub-config-rules', title: 'Challenge Rules Engine', subtitle: 'Daily DD, trailing floor, IP security, news & weekend rules', category: 'hub', href: '/admin/config?tab=rules', icon: Sliders, badge: 'CONFIG' },
-  { id: 'hub-config-plans', title: 'Evaluation Plans Catalog', subtitle: '1-Step, 2-Step, and Direct Instant Funding plan presets', category: 'hub', href: '/admin/config?tab=plans', icon: Sliders, badge: 'CONFIG' },
-  { id: 'hub-config-payments', title: 'Payment Gateways & Crypto', subtitle: 'Stripe, USDT TRC-20, ERC-20 deposit addresses & QR codes', category: 'hub', href: '/admin/config?tab=payments', icon: Sliders, badge: 'CONFIG' },
-  { id: 'hub-config-ai', title: 'AI Copilot & Auto-Pilot Settings', subtitle: 'Gemini, DeepSeek, auto-resolve & trading sentinel', category: 'hub', href: '/admin/config?tab=ai_engine', icon: Sliders, badge: 'CONFIG' },
-  { id: 'hub-config-smtp', title: 'Email SMTP & Notifications', subtitle: 'Mail host credentials, welcome & breach warning templates', category: 'hub', href: '/admin/config?tab=smtp', icon: Sliders, badge: 'CONFIG' },
 ]
 
 export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
@@ -56,7 +48,6 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
   const [traders, setTraders] = useState<any[]>([])
   const [tickets, setTickets] = useState<any[]>([])
   const [payouts, setPayouts] = useState<any[]>([])
-  const [challenges, setChallenges] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -75,23 +66,20 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
       setTraders([])
       setTickets([])
       setPayouts([])
-      setChallenges([])
       setLoading(false)
       return
     }
 
     const q = query.trim().toLowerCase()
-    const cleanChallengeQ = q.replace(/^[#c\-chal]+/i, '').trim()
     let isCancelled = false
     setLoading(true)
 
     const timer = setTimeout(async () => {
       try {
-        const [usersRes, payoutsRes, ticketsRes, challengesRes] = await Promise.all([
+        const [usersRes, payoutsRes, ticketsRes] = await Promise.all([
           api.admin.users(q, 1, 8).catch(() => ({ ok: false, data: null })),
           api.admin.payoutsList().catch(() => ({ ok: false, data: [] })),
           api.tickets.list().catch(() => ({ ok: false, data: [] })),
-          api.admin.challenges({ search: cleanChallengeQ || q, limit: 6 }).catch(() => ({ ok: false, data: null })),
         ])
 
         if (isCancelled) return
@@ -130,21 +118,6 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
         } else {
           setTickets([])
         }
-
-        // 4. Filter Challenges
-        if (challengesRes.ok && challengesRes.data?.challenges && Array.isArray(challengesRes.data.challenges)) {
-          const matchedChallenges = challengesRes.data.challenges.filter((c: any) => {
-            const cid = String(c.id)
-            const accId = String(c.account_id || '')
-            const plan = (c.plan_name || '').toLowerCase()
-            const login = String(c.mt5_login || c.login || '')
-            const st = (c.status || '').toLowerCase()
-            return cid.includes(cleanChallengeQ || q) || accId.includes(cleanChallengeQ || q) || login.includes(q) || plan.includes(q) || st.includes(q)
-          }).slice(0, 5)
-          setChallenges(matchedChallenges)
-        } else {
-          setChallenges([])
-        }
       } finally {
         if (!isCancelled) setLoading(false)
       }
@@ -167,23 +140,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
     )
     items.push(...matchedHubs)
 
-    // 2. Challenge matches
-    for (const c of challenges) {
-      const plan = c.plan_name || 'Challenge Account'
-      const bal = Number(c.starting_balance || c.balance || 0)
-      const st = (c.status || 'active').toUpperCase()
-      items.push({
-        id: `challenge-${c.id}`,
-        title: `Challenge #${c.id}: ${plan} (${fmtUSD(bal)})`,
-        subtitle: `Trader ID #${c.user_id} · MT5 #${c.mt5_login || c.login || 'N/A'} · Status: ${st}`,
-        category: 'challenge',
-        href: `/admin/traders/${c.user_id}?challenge=${c.id}`,
-        icon: Trophy,
-        badge: st,
-      })
-    }
-
-    // 3. Trader matches
+    // 2. Trader matches
     for (const t of traders) {
       const email = t.user_email || t.email || ''
       const name = t.display_name || t.user_login || t.name || `Trader #${t.user_id}`
@@ -199,7 +156,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
       })
     }
 
-    // 4. Ticket matches
+    // 3. Ticket matches
     for (const tk of tickets) {
       items.push({
         id: `ticket-${tk.id}`,
@@ -212,7 +169,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
       })
     }
 
-    // 5. Payout matches
+    // 4. Payout matches
     for (const po of payouts) {
       const amt = Number(po.amount_requested || po.amount || 0)
       items.push({
@@ -227,7 +184,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
     }
 
     return items
-  }, [query, traders, tickets, payouts, challenges])
+  }, [query, traders, tickets, payouts])
 
   // Reset index when items change
   useEffect(() => {
@@ -270,7 +227,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search trader email, MT5 login, challenge #, ticket, payout, or admin hub..."
+            placeholder="Search trader email, MT5 login, ticket #, payout, or admin page..."
             className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground font-medium"
           />
           {loading && <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />}
@@ -291,9 +248,9 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
         {/* Scrollable Results */}
         <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar bg-surface">
           {allItems.length === 0 ? (
-            <div className="py-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
-              <Search className="w-7 h-7 text-muted-foreground opacity-60" />
-              <span>No matching traders, challenges, tickets, payouts, or admin hubs found.</span>
+            <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
+              <Search className="w-7 h-7 text-slate-600" />
+              <span>No matching traders, tickets, payouts, or admin hubs found.</span>
             </div>
           ) : (
             allItems.map((item, idx) => {
@@ -308,38 +265,37 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
                   className={cn(
                     "w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between gap-3 group cursor-pointer select-none border",
                     active
-                      ? "bg-primary/10 border-primary/30 text-foreground shadow-xs"
-                      : "bg-transparent border-transparent hover:bg-surface-muted text-foreground"
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-white shadow-xs"
+                      : "bg-transparent border-transparent hover:bg-slate-800/50 text-slate-300 hover:text-white"
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className={cn(
                       "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors",
                       active
-                        ? "bg-primary/20 border-primary/40 text-primary"
-                        : "bg-surface-muted border-border text-muted-foreground group-hover:text-foreground"
+                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                        : "bg-slate-800/80 border-slate-700/60 text-slate-300 group-hover:text-white"
                     )}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-foreground truncate">
+                        <span className="text-xs font-semibold text-slate-100 group-hover:text-white truncate">
                           {item.title}
                         </span>
                         {item.badge && (
                           <span className={cn(
-                            "px-1.5 py-0.5 rounded text-2xs font-bold tabular border shrink-0",
-                            item.category === 'trader' ? "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
-                            : item.category === 'payout' ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-                            : item.category === 'ticket' ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                            : item.category === 'challenge' ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30"
-                            : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                            "px-1.5 py-0.2 rounded text-2xs font-bold tabular border shrink-0",
+                            item.category === 'trader' ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
+                            : item.category === 'payout' ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                            : item.category === 'ticket' ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                            : "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
                           )}>
                             {item.badge}
                           </span>
                         )}
                       </div>
-                      <span className="text-2xs text-muted-foreground truncate block mt-0.5">
+                      <span className="text-2xs text-slate-400 group-hover:text-slate-300 truncate block mt-0.5">
                         {item.subtitle}
                       </span>
                     </div>
@@ -368,7 +324,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
             <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">↵</kbd> Select</span>
             <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">ESC</kbd> Close</span>
           </div>
-          <span className="text-primary font-semibold">{branding.brand_name || 'LaunchAPropFirm'} Omni-Search</span>
+          <span className="text-primary font-semibold">{branding.brand_name || 'MassFunded'} Omni-Search</span>
         </div>
       </DialogContent>
     </Dialog>

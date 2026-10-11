@@ -179,7 +179,7 @@ export default function PayoutsPage() {
 
             <div className="mt-6 pt-4 border-t border-border text-center">
               <span className="text-xs text-text-muted">
-                All payouts are confirmed on-chain or via banking gateway settlement. Treasury inquiries: <a href="mailto:support@launchapropfirm.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">support@launchapropfirm.com</a>
+                All payouts are confirmed on-chain or via banking gateway settlement. Treasury inquiries: <a href="mailto:support@massfunded.org" className="text-emerald-600 dark:text-emerald-400 hover:underline">support@massfunded.org</a>
               </span>
             </div>
           </div>

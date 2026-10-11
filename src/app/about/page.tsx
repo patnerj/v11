@@ -50,39 +50,39 @@ export default function AboutPage() {
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Institutional Capital</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
-              LaunchAPropFirm was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
+              MassFunded was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
             </p>
           </div>
 
           {/* Key Metrics Bar */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-20">
-            <div className="p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-500 dark:text-emerald-400 font-mono mb-1">$50,000,000+</div>
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 tracking-tight whitespace-nowrap mb-1">$50,000,000+</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Capital Allocation Pool</div>
               <div className="text-2xs text-text-muted mt-1">Institutional risk reserves</div>
             </div>
-            <div className="p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-teal-500 dark:text-teal-400 font-mono mb-1">14ms</div>
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
+              <div className="text-2xl sm:text-3xl font-black text-teal-500 dark:text-teal-400 tracking-tight whitespace-nowrap mb-1">14ms</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Bridge Latency</div>
               <div className="text-2xs text-text-muted mt-1">Equinix LD4 direct fiber</div>
             </div>
-            <div className="p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-500 dark:text-emerald-400 font-mono mb-1">100%</div>
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 tracking-tight whitespace-nowrap mb-1">100%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Payout SLA Fulfillment</div>
               <div className="text-2xs text-text-muted mt-1">Guaranteed under 24 hours</div>
             </div>
-            <div className="p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-cyan-500 dark:text-cyan-400 font-mono mb-1">120+</div>
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
+              <div className="text-2xl sm:text-3xl font-black text-cyan-500 dark:text-cyan-400 tracking-tight whitespace-nowrap mb-1">120+</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Countries Supported</div>
               <div className="text-2xs text-text-muted mt-1">Worldwide trader network</div>
             </div>
           </div>
 
-          {/* The LaunchAPropFirm Philosophy vs Traditional Prop Firms */}
+          {/* The MassFunded Philosophy vs Traditional Prop Firms */}
           <div className="max-w-5xl mx-auto mb-20">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-text">The LaunchAPropFirm Advantage</h2>
-              <p className="mt-2 text-text-muted text-sm">Why serious traders migrate from legacy prop firms to LaunchAPropFirm.</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-text">The MassFunded Advantage</h2>
+              <p className="mt-2 text-text-muted text-sm">Why serious traders migrate from legacy prop firms to MassFunded.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -130,7 +130,7 @@ export default function AboutPage() {
                   Led by Traders, Built for Performance
                 </h2>
                 <p className="text-sm sm:text-base text-text-muted leading-relaxed">
-                  Under the leadership of <strong className="text-text">Platform Leadership &amp; Institutional Governance</strong>, LaunchAPropFirm operates with strict fiduciary standards. We treat our funded traders as long-term portfolio partners rather than statistics.
+                  Under the leadership of <strong className="text-text">Bahadur (Managing Director &amp; Platform Owner)</strong>, MassFunded operates with strict fiduciary standards. We treat our funded traders as long-term portfolio partners rather than statistics.
                 </p>
                 <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-text-muted">
                   <span className="flex items-center gap-1.5">
@@ -147,9 +147,9 @@ export default function AboutPage() {
                   B
                 </div>
                 <div>
-                  <div className="text-base font-bold text-text">Managing Director</div>
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Managing Desk &amp; Capital Governance</div>
-                  <div className="text-2xs font-mono text-text-muted mt-1 select-all">vip@launchapropfirm.com</div>
+                  <div className="text-base font-bold text-text">Bahadur</div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Managing Director &amp; Owner</div>
+                  <div className="text-2xs font-mono text-text-muted mt-1 select-all">bahadur@massfunded.org</div>
                 </div>
                 <Link
                   href="/contact"

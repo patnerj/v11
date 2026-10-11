@@ -45,7 +45,7 @@ export default function HowItWorksPage() {
               <span>Institutional Evaluation Protocol</span>
             </motion.div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tightest leading-[1.08] text-text">
-              How LaunchAPropFirm <br />
+              How MassFunded <br />
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Evaluation Works</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
@@ -177,7 +177,7 @@ export default function HowItWorksPage() {
                 Static Drawdown Floor Explained
               </h2>
               <p className="mt-2 text-sm sm:text-base text-text-muted leading-relaxed">
-                Why does LaunchAPropFirm enforce static drawdown? Because traditional prop firms use <em>trailing drawdown</em> to artificially breach profitable traders during natural market retracements.
+                Why does MassFunded enforce static drawdown? Because traditional prop firms use <em>trailing drawdown</em> to artificially breach profitable traders during natural market retracements.
               </p>
             </div>
 
@@ -185,7 +185,7 @@ export default function HowItWorksPage() {
               <div className="p-6 rounded-2xl bg-surface border border-emerald-500/30 space-y-3 shadow-card">
                 <div className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>LaunchAPropFirm Static Drawdown Rule</span>
+                  <span>MassFunded Static Drawdown Rule</span>
                 </div>
                 <p className="text-xs text-text leading-relaxed">
                   On a <strong>$100,000</strong> account with a 10% maximum drawdown, your breach floor is fixed permanently at <strong>$90,000</strong>.

@@ -22,7 +22,6 @@ import { Modal } from '@/components/ui/Modal'
 import { fmtUSD, toNum } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { Competition, PaymentOrder } from '@/types/api'
-import { TournamentPodium } from '@/components/tournaments/tournament-podium'
 
 function cleanPrizeValue(val: string): string {
   if (!val) return ''
@@ -367,14 +366,6 @@ export default function DashboardTournamentsPage() {
         </div>
       ) : (
         <>
-          {/* 3D Metallic Tournament Podium Showcase */}
-          <TournamentPodium
-            title="Tournament Leaderboard Podium & Top Contenders"
-            firstPrize="$10,000 + $100K Account"
-            secondPrize="$5,000 + $50K Account"
-            thirdPrize="$2,500 + $25K Account"
-          />
-
           {live.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-text uppercase tracking-wider flex items-center gap-2">

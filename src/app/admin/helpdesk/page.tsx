@@ -6,7 +6,7 @@ import {
   Headphones, MessageSquare, Clock, AlertCircle, CheckCircle2, 
   Send, User, Hash, Tag, Filter, Search, RefreshCw, Paperclip,
   Sparkles, ShieldCheck, ChevronRight, X, ArrowLeft, ExternalLink,
-  Flame, CheckCircle, AlertTriangle, LifeBuoy, FileText, Zap, Lock
+  Flame, CheckCircle, AlertTriangle, LifeBuoy, FileText, Zap
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button'
 import { Input, Textarea, Label } from '@/components/ui/input'
 import { DataTable } from '@/components/ui/DataTable'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { TraderContextDossier } from '@/components/admin/trader-context-dossier'
 import { toast } from 'sonner'
 import { useBranding } from '@/store/branding'
 import { useAuth } from '@/store/auth'
@@ -71,8 +70,6 @@ export default function AdminHelpdeskPage() {
   const [replyMessage, setReplyMessage] = useState('')
   const [aiDrafts, setAiDrafts] = useState<Record<number, string>>({})
   const [isSendingAndResolving, setIsSendingAndResolving] = useState(false)
-  const [isInternalNote, setIsInternalNote] = useState(false)
-  const [mobileDossierOpen, setMobileDossierOpen] = useState(false)
 
   // Fetch AI settings to bind AI Auto-Pilot toggle with the backend
   const { data: aiSettings, refetch: refetchAiSettings } = useQuery({
@@ -380,10 +377,7 @@ export default function AdminHelpdeskPage() {
       toast.error('Please enter a response message.')
       return
     }
-    const finalMsg = isInternalNote
-      ? `🔒 [INTERNAL NOTE - STAFF ONLY]:\n${replyMessage.trim()}`
-      : replyMessage.trim()
-    sendReplyMutation.mutate({ id: selectedTicketId, message: finalMsg })
+    sendReplyMutation.mutate({ id: selectedTicketId, message: replyMessage.trim() })
   }
 
   const handleSendAndResolve = async () => {
@@ -393,10 +387,7 @@ export default function AdminHelpdeskPage() {
     }
     setIsSendingAndResolving(true)
     try {
-      const finalMsg = isInternalNote
-        ? `🔒 [INTERNAL NOTE - STAFF ONLY]:\n${replyMessage.trim()}`
-        : replyMessage.trim()
-      await sendReplyMutation.mutateAsync({ id: selectedTicketId, message: finalMsg })
+      await sendReplyMutation.mutateAsync({ id: selectedTicketId, message: replyMessage.trim() })
       await updateStatusMutation.mutateAsync({ id: selectedTicketId, status: 'resolved' })
       toast.success('Response delivered and ticket marked as resolved!')
     } catch (err: any) {
@@ -526,11 +517,11 @@ export default function AdminHelpdeskPage() {
         </div>
       </div>
 
-      {/* ── Main Workspace: 3-Column Modern Helpdesk Workspace (Zendesk / Linear style) ─────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full items-start">
+      {/* ── Main Workspace: 4-Col Queue + 8-Col Spacious Chat & Reply ─────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start">
         
-        {/* ── Column 1: Ticket Queue (3 Cols on xl, 4 Cols on lg) ─────────────────────────── */}
-        <div className={`lg:col-span-4 xl:col-span-3 space-y-2.5 ${selectedTicketId ? 'hidden lg:block' : ''}`}>
+        {/* ── Left Column: Ticket Queue (4 Cols) ─────────────────────────── */}
+        <div className={`lg:col-span-4 space-y-2.5 ${selectedTicketId ? 'hidden lg:block' : ''}`}>
           {/* Search & Category Filter */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -753,8 +744,8 @@ export default function AdminHelpdeskPage() {
           </div>
         </div>
 
-        {/* ── Center Column: Conversation & Response Panel (6 Cols on xl, 8 Cols on lg) ── */}
-        <div className={`lg:col-span-8 xl:col-span-6 ${!selectedTicketId ? 'hidden lg:block' : ''}`}>
+        {/* ── Right Column: Conversation & Response Panel (8 Cols - Highly Spacious) ── */}
+        <div className={`lg:col-span-8 ${!selectedTicketId ? 'hidden lg:block' : ''}`}>
           {activeTicket ? (
             <Card className="bg-surface border-border flex flex-col h-[calc(100vh-210px)] min-h-[580px] justify-between overflow-hidden shadow-sm">
               
@@ -791,15 +782,6 @@ export default function AdminHelpdeskPage() {
 
                   {/* Status & Priority Modifiers + Quick Actions */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setMobileDossierOpen(!mobileDossierOpen)}
-                      className="xl:hidden h-8 text-xs gap-1.5 border-border text-text hover:bg-surface-muted"
-                    >
-                      <User className="w-3.5 h-3.5 text-accent" />
-                      {mobileDossierOpen ? 'Hide Dossier' : 'Trader Dossier'}
-                    </Button>
                     {activeTicket.status !== 'resolved' ? (
                       <Button
                         size="sm"
@@ -846,19 +828,6 @@ export default function AdminHelpdeskPage() {
                   </div>
                 </div>
               </CardHeader>
-
-              {/* Mobile / Tablet Collapsible Dossier */}
-              {mobileDossierOpen && activeTicket && (
-                <div className="xl:hidden border-b border-border p-4 bg-surface-muted/60 max-h-[420px] overflow-y-auto">
-                  <TraderContextDossier
-                    traderId={activeTicket.trader_id || activeTicket.user_id}
-                    traderName={activeTicket.display_name || activeTicket.user_login}
-                    traderEmail={activeTicket.user_email}
-                    ticketNumber={activeTicket.ticket_number}
-                    onClose={() => setMobileDossierOpen(false)}
-                  />
-                </div>
-              )}
 
               {/* Trader Waiting Alert Banner */}
               {isTicketNeedingReply(activeTicket) && (
@@ -973,49 +942,10 @@ export default function AdminHelpdeskPage() {
                   </div>
                 </div>
 
-                {/* Mode Selector Tabs: Reply to Trader vs Internal Note */}
-                <div className="w-full flex items-center justify-between border-b border-border pb-2 pt-1">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsInternalNote(false)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                        !isInternalNote
-                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-xs'
-                          : 'text-text-muted hover:text-text'
-                      }`}
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      Reply to Trader
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsInternalNote(true)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                        isInternalNote
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-xs'
-                          : 'text-text-muted hover:text-text'
-                      }`}
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      Internal Compliance Note
-                    </button>
-                  </div>
-                  {isInternalNote && (
-                    <span className="text-2xs text-amber-600 dark:text-amber-400/80 font-mono italic hidden sm:inline">
-                      🔒 Only visible to staff
-                    </span>
-                  )}
-                </div>
-
                 {/* Reply Form (Spacious Canvas, NO overlapping buttons) */}
                 <form onSubmit={handleSendReplySubmit} className="w-full space-y-2.5">
                   <Textarea
-                    placeholder={
-                      isInternalNote
-                        ? "Enter internal staff note (audits, risk investigation, handover note)..."
-                        : "Type your official admin response here... (Markdown supported, Press Ctrl+Enter to send)"
-                    }
+                    placeholder="Type your official admin response here... (Markdown supported, Press Ctrl+Enter to send)"
                     value={replyMessage}
                     onChange={(e) => setReplyMessage(e.target.value)}
                     onKeyDown={(e) => {
@@ -1025,11 +955,7 @@ export default function AdminHelpdeskPage() {
                       }
                     }}
                     rows={4}
-                    className={`w-full text-xs sm:text-sm bg-surface border-border p-3.5 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[95px] ${
-                      isInternalNote
-                        ? 'border-amber-500/40 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 bg-amber-500/5'
-                        : 'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30'
-                    }`}
+                    className="w-full text-xs sm:text-sm bg-surface border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 p-3.5 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[95px]"
                   />
 
                   {/* Dedicated Action Row */}
@@ -1056,14 +982,10 @@ export default function AdminHelpdeskPage() {
                         variant="primary"
                         size="sm"
                         loading={sendReplyMutation.isPending && !isSendingAndResolving}
-                        className={`gap-2 h-9 px-5 text-xs font-semibold ${
-                          isInternalNote
-                            ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20 text-white'
-                            : 'shadow-emerald-500/20'
-                        }`}
+                        className="gap-2 shadow-emerald-500/20 h-9 px-5 text-xs font-semibold"
                       >
                         <Send className="h-3.5 w-3.5" />
-                        {isInternalNote ? 'Save Internal Note' : 'Send Reply'}
+                        Send Reply
                       </Button>
                     </div>
                   </div>
@@ -1083,24 +1005,6 @@ export default function AdminHelpdeskPage() {
                   Choose an open inquiry from the left queue to view user details, full conversation threads, and send admin resolutions.
                 </p>
               </div>
-            </Card>
-          )}
-        </div>
-
-        {/* ── Right Column: Trader 360 Context Dossier (3 Cols on xl, Hidden on lg/md) ── */}
-        <div className="hidden xl:block xl:col-span-3">
-          {activeTicket ? (
-            <div className="sticky top-20">
-              <TraderContextDossier
-                traderId={activeTicket.trader_id || activeTicket.user_id}
-                traderName={activeTicket.display_name || activeTicket.user_login}
-                traderEmail={activeTicket.user_email}
-                ticketNumber={activeTicket.ticket_number}
-              />
-            </div>
-          ) : (
-            <Card className="bg-surface border-border p-6 text-center text-xs text-text-muted">
-              Select a ticket to inspect live trader risk telemetry.
             </Card>
           )}
         </div>

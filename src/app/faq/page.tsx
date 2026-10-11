@@ -18,7 +18,7 @@ const SECTIONS: Section[] = [
     title: 'Evaluation Models & Stage Rules',
     items: [
       { 
-        q: 'How does the LaunchAPropFirm two-phase evaluation work?',
+        q: 'How does the MassFunded two-phase evaluation work?',
         a: 'You select your desired capital size from $10,000 up to $200,000. In Phase 1, you target an 8% profit with zero calendar time pressure, while adhering to daily and maximum static drawdown limits. Once met, you transition automatically to Phase 2, which requires a 5% target. Upon completion, your funded trading credentials are automatically issued.' 
       },
       { 
@@ -40,7 +40,7 @@ const SECTIONS: Section[] = [
       },
       { 
         q: 'What is the Static Maximum Drawdown, and how does it prevent trailing traps?',
-        a: 'Unlike predatory prop firms that trail your maximum loss floor upwards as your unrealized floating profit grows, LaunchAPropFirm enforces a fixed, static 10% maximum drawdown calculated solely from your initial account size. Your floor NEVER moves up to lock you into a synthetic failure during natural market pullbacks.' 
+        a: 'Unlike predatory prop firms that trail your maximum loss floor upwards as your unrealized floating profit grows, MassFunded enforces a fixed, static 10% maximum drawdown calculated solely from your initial account size. Your floor NEVER moves up to lock you into a synthetic failure during natural market pullbacks.' 
       },
       { 
         q: 'Can I trade during high-impact news events?',
@@ -91,7 +91,7 @@ const SECTIONS: Section[] = [
     items: [
       { 
         q: 'How do I contact customer support or executive management?',
-        a: 'Our operations team is available 24/7 at support@launchapropfirm.com (average response time under 15 minutes). For institutional partnerships and large capital allocations ($100K–$2M), contact the Managing Desk directly at vip@launchapropfirm.com.' 
+        a: 'Our operations team is available 24/7 at support@massfunded.org (average response time under 15 minutes). For institutional partnerships and large capital allocations ($100K–$2M), contact Managing Director Bahadur directly at bahadur@massfunded.org.' 
       },
     ],
   },
@@ -155,9 +155,9 @@ export default function FAQPage() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button asChild className="h-11 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-glow-sm">
-                <a href="mailto:support@launchapropfirm.com">
+                <a href="mailto:support@massfunded.org">
                   <Mail className="h-3.5 w-3.5 mr-2" />
-                  <span>support@launchapropfirm.com</span>
+                  <span>support@massfunded.org</span>
                 </a>
               </Button>
               <Button asChild variant="outline" className="h-11 px-6 rounded-xl border-border hover:border-emerald-500/40 text-text hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-semibold">

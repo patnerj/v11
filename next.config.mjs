@@ -34,14 +34,9 @@ const connectSrc = [
   "'self'",
   apiHost,
   wsHost,
-  'https://api.launchapropfirm.com',
-  'https://*.launchapropfirm.com',
-  'wss://*.launchapropfirm.com',
   'https://*.ingest.sentry.io',
   'https://*.ingest.us.sentry.io',
   'https://*.sentry.io',
-  'https://*.google-analytics.com',
-  'https://*.analytics.google.com',
 ].filter(Boolean).join(' ');
 
 // frame-src: explicitly whitelists TradingView chart widgets & embeds (no broad wildcards)
@@ -88,7 +83,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://*.tradingview.com https://client.crisp.chat https://*.tawk.to https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://*.tradingview.com https://client.crisp.chat https://*.tawk.to",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://rsms.me",
               "img-src 'self' https: data: blob:",
               "font-src 'self' https://fonts.gstatic.com https://rsms.me data:",
@@ -126,6 +121,7 @@ const nextConfig = {
       { source: '/dashboard/competitions', destination: '/dashboard/tournaments', permanent: true },
       { source: '/admin/settings', destination: '/admin/config', permanent: true },
       { source: '/admin/audit-log', destination: '/admin/activity', permanent: true },
+      { source: '/admin/challenges', destination: '/admin/operations?tab=challenges', permanent: false },
     ]
   },
 };

@@ -272,7 +272,7 @@ export function AccountSwitcher({
       {/* Sleek institutional trigger bar with zero overflow on any viewport */}
       <div className={cn(
         "flex items-center justify-between gap-1.5 rounded-lg border shadow-xs backdrop-blur-md w-full transition-all",
-        compact ? "px-2 py-1 text-terminal-micro flex-nowrap" : "px-2.5 sm:px-3 py-1.5 text-terminal-label flex-wrap lg:flex-nowrap gap-2 sm:gap-3",
+        compact ? "px-2 py-1 text-terminal-micro flex-nowrap" : "px-2.5 sm:px-3 py-1.5 text-xs flex-wrap lg:flex-nowrap gap-2 sm:gap-3",
         activeEntry?.kind === 'tournament'
           ? "bg-gradient-to-r from-amber-500/10 dark:from-amber-950/30 via-surface/95 to-surface/95 border-amber-500/50 ring-2 ring-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.12)]"
           : "bg-surface/90 border-border/80"
@@ -287,7 +287,7 @@ export function AccountSwitcher({
               "group min-w-0 inline-flex items-center gap-1.5 rounded-md border font-semibold transition-all focus-ring select-none cursor-pointer",
               compact
                 ? "py-0.5 px-1.5 text-terminal-micro flex-1 justify-between"
-                : "flex-1 sm:flex-initial justify-between sm:justify-start px-2 sm:px-2.5 py-1 text-terminal-label",
+                : "flex-1 sm:flex-initial justify-between sm:justify-start px-2 sm:px-2.5 py-1 text-xs",
               isOpen
                 ? "bg-accent/15 border-accent/60 text-accent shadow-xs"
                 : activeEntry?.kind === 'tournament'
@@ -399,7 +399,7 @@ export function AccountSwitcher({
                   setIsOpen(false)
                   setIsCredentialsOpen(true)
                 }}
-                className="xl:hidden inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-terminal-label font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
+                className="xl:hidden inline-flex items-center justify-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 shadow-xs focus-ring transition-all select-none cursor-pointer"
                 title="Open MetaTrader 5 Credentials"
               >
                 <KeyRound className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
@@ -422,7 +422,7 @@ export function AccountSwitcher({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search accounts (plan, ID, or MT5 login)..."
-                className="w-full h-8 pl-8 pr-7 text-terminal-body bg-surface-muted/80 border border-border/60 rounded-lg text-text placeholder:text-text-muted/60 focus:outline-none focus:border-accent"
+                className="w-full h-8 pl-8 pr-7 text-xs bg-surface-muted/80 border border-border/60 rounded-lg text-text placeholder:text-text-muted/60 focus:outline-none focus:border-accent"
                 autoFocus
               />
               {search && (
@@ -473,7 +473,7 @@ export function AccountSwitcher({
             )}
 
             {filteredEntries.length === 0 && (
-              <div className="py-6 text-center text-terminal-body text-text-muted">
+              <div className="py-6 text-center text-xs text-text-muted">
                 No accounts match &ldquo;{search}&rdquo;
               </div>
             )}
