@@ -20,6 +20,7 @@ import {
   Clock,
   Target,
   ChevronRight,
+  ChevronLeft,
   Star,
   Users,
   Globe,
@@ -43,7 +44,13 @@ import {
   PieChart,
   Cpu,
   Wallet,
-  Percent
+  Percent,
+  CreditCard,
+  MessageSquare,
+  Bot,
+  SlidersHorizontal,
+  Minus,
+  Plus
 } from 'lucide-react'
 
 // ── Currency definitions & rates ──────────────────────────────────────────────
@@ -55,7 +62,185 @@ const CURRENCIES: { key: CurrencyKey; symbol: string; rate: number }[] = [
   { key: 'GBP', symbol: '£', rate: 0.79 },
 ]
 
-// ── Top Verified Payouts (Real-Time Leaderboard Stream) ────────────────────────
+// ── FundedNext Challenge Models Definition ────────────────────────────────────
+export type ChallengeModelId =
+  | 'Stellar 2-Step'
+  | 'Stellar 1-Step'
+  | 'Stellar Lite'
+  | 'Stellar Instant'
+
+interface ModelConfig {
+  id: ChallengeModelId
+  title: string
+  subtitle: string
+  badge?: string
+  phases: number
+  // Challenge Rules
+  p1TargetPct: number | null
+  p2TargetPct: number | null
+  dailyLossPct: number | null
+  maxLossPct: number
+  drawdownType: string
+  minTradingDays: string
+  newsTrading: string
+  performanceRewardPct: number | null
+  resetApplicable: string
+  // Funded & Reward Rules
+  fundedDailyLossPct: number | null
+  fundedMaxLossPct: number
+  rewardShare: string
+  firstWithdrawalDefault: number
+  firstWithdrawalLabel: string
+  subsequentWithdrawal: string
+  refundableFee: string
+  newsTradingProfit: string
+  maxRisk: string
+  rewardCondition: string
+  consistency: string
+  // Benchmark pricing map
+  prices: Record<number, number>
+}
+
+const CHALLENGE_MODELS: Record<ChallengeModelId, ModelConfig> = {
+  'Stellar 2-Step': {
+    id: 'Stellar 2-Step',
+    title: 'Stellar 2-Step',
+    subtitle: 'News Trading Allowed | Refund on 1st Reward',
+    phases: 2,
+    p1TargetPct: 8,
+    p2TargetPct: 5,
+    dailyLossPct: 5,
+    maxLossPct: 10,
+    drawdownType: 'Static',
+    minTradingDays: '5 Days',
+    newsTrading: 'Allowed',
+    performanceRewardPct: 15,
+    resetApplicable: 'Yes',
+    fundedDailyLossPct: 5,
+    fundedMaxLossPct: 10,
+    rewardShare: '80%',
+    firstWithdrawalDefault: 21,
+    firstWithdrawalLabel: '21 Days',
+    subsequentWithdrawal: '14 Days',
+    refundableFee: 'With 1st Reward',
+    newsTradingProfit: '40%',
+    maxRisk: '3% At any time',
+    rewardCondition: 'N/A',
+    consistency: 'N/A',
+    prices: {
+      6000: 59.99,
+      15000: 119.99,
+      25000: 199.99,
+      50000: 299.99,
+      100000: 549.99,
+      200000: 1099.99,
+    },
+  },
+  'Stellar 1-Step': {
+    id: 'Stellar 1-Step',
+    title: 'Stellar 1-Step',
+    subtitle: 'News Trading Allowed | Reward Every 5 Business Days',
+    phases: 1,
+    p1TargetPct: 10,
+    p2TargetPct: null,
+    dailyLossPct: 3,
+    maxLossPct: 6,
+    drawdownType: 'Static',
+    minTradingDays: '2 Days',
+    newsTrading: 'Allowed',
+    performanceRewardPct: 15,
+    resetApplicable: 'Yes',
+    fundedDailyLossPct: 3,
+    fundedMaxLossPct: 6,
+    rewardShare: '80%',
+    firstWithdrawalDefault: 5,
+    firstWithdrawalLabel: '5 Business Days',
+    subsequentWithdrawal: '5 Business Days',
+    refundableFee: 'With 1st Reward',
+    newsTradingProfit: '40%',
+    maxRisk: '3% At any time',
+    rewardCondition: 'N/A',
+    consistency: 'N/A',
+    prices: {
+      6000: 65.0,
+      15000: 129.0,
+      25000: 219.0,
+      50000: 329.0,
+      100000: 589.0,
+      200000: 1149.0,
+    },
+  },
+  'Stellar Lite': {
+    id: 'Stellar Lite',
+    title: 'Stellar Lite',
+    subtitle: 'Most Affordable 2 Step | News Trading Allowed',
+    phases: 2,
+    p1TargetPct: 8,
+    p2TargetPct: 4,
+    dailyLossPct: 4,
+    maxLossPct: 8,
+    drawdownType: 'Static',
+    minTradingDays: '5 Days',
+    newsTrading: 'Allowed',
+    performanceRewardPct: 15,
+    resetApplicable: 'Yes',
+    fundedDailyLossPct: 4,
+    fundedMaxLossPct: 8,
+    rewardShare: '80%',
+    firstWithdrawalDefault: 21,
+    firstWithdrawalLabel: '21 Days',
+    subsequentWithdrawal: '14 Days',
+    refundableFee: 'With 1st Reward',
+    newsTradingProfit: '40%',
+    maxRisk: '3% At any time',
+    rewardCondition: 'N/A',
+    consistency: 'N/A',
+    prices: {
+      6000: 32.0,
+      15000: 65.0,
+      25000: 109.0,
+      50000: 189.0,
+      100000: 329.0,
+      200000: 629.0,
+    },
+  },
+  'Stellar Instant': {
+    id: 'Stellar Instant',
+    title: 'Stellar Instant',
+    subtitle: 'No Daily Loss Limit | No Consistency Rule',
+    phases: 0,
+    p1TargetPct: null,
+    p2TargetPct: null,
+    dailyLossPct: null,
+    maxLossPct: 10,
+    drawdownType: 'Static',
+    minTradingDays: '0 Days',
+    newsTrading: 'Allowed',
+    performanceRewardPct: null,
+    resetApplicable: 'No',
+    fundedDailyLossPct: null,
+    fundedMaxLossPct: 10,
+    rewardShare: '80%',
+    firstWithdrawalDefault: 14,
+    firstWithdrawalLabel: '14 Days',
+    subsequentWithdrawal: '14 Days',
+    refundableFee: 'N/A',
+    newsTradingProfit: 'Allowed',
+    maxRisk: '3% At any time',
+    rewardCondition: 'N/A',
+    consistency: 'N/A',
+    prices: {
+      6000: 199.0,
+      15000: 399.0,
+      25000: 599.0,
+      50000: 1099.0,
+      100000: 1999.0,
+      200000: 3899.0,
+    },
+  },
+}
+
+// ── Top Verified Payouts (Real-Time Stream) ───────────────────────────────────
 const RECENT_PAYOUTS = [
   {
     trader: 'Tariq A.',
@@ -89,7 +274,7 @@ const RECENT_PAYOUTS = [
     country: 'United Kingdom',
     flag: '🇬🇧',
     amount: 19800,
-    model: 'Express Model',
+    model: 'Stellar Lite',
     method: 'Bank Wire',
     timeAgo: '1h ago',
   },
@@ -121,7 +306,8 @@ const TESTIMONIALS = [
     flag: '🇦🇪',
     payout: '$52,180',
     model: 'Stellar 2-Step ($200K)',
-    quote: 'The 15% profit bonus during Phase 1 and 2 was credited directly to my wallet on my first withdrawal. No other firm in the world gives you a bonus from your demo phase!',
+    quote:
+      'The 15% profit bonus during Phase 1 and 2 was credited directly to my wallet on my first withdrawal. No other firm in the world gives you a bonus from your demo phase!',
     rating: 5,
   },
   {
@@ -130,7 +316,8 @@ const TESTIMONIALS = [
     flag: '🇩🇪',
     payout: '$38,940',
     model: 'Stellar 1-Step ($100K)',
-    quote: 'Balance-Based daily drawdown is a lifesaver. On other firms I lost accounts because of trailing equity spikes. Here, 00:00 balance is fixed. 100% fair and transparent.',
+    quote:
+      'Balance-Based daily drawdown is a lifesaver. On other firms I lost accounts because of trailing equity spikes. Here, 00:00 balance is fixed. 100% fair and transparent.',
     rating: 5,
   },
   {
@@ -139,7 +326,8 @@ const TESTIMONIALS = [
     flag: '🇪🇸',
     payout: '$29,400',
     model: 'Stellar 2-Step ($100K)',
-    quote: 'No time limit allowed me to wait for high-probability swing setups during CPI news. Passed Phase 1 in 14 days and Phase 2 in 8 days. Payout received in 4 hours.',
+    quote:
+      'No time limit allowed me to wait for high-probability swing setups during CPI news. Passed Phase 1 in 14 days and Phase 2 in 8 days. Payout received in 4 hours.',
     rating: 5,
   },
 ]
@@ -177,12 +365,15 @@ export function TemplateNeon() {
   const brandTagline = useBranding((s) => s.branding.brand_tagline) || 'Next-Gen Cyber Proprietary Firm'
   const supportEmail = useBranding((s) => s.branding.support_email) || 'support@launchapropfirm.com'
 
-  // Model & Account Selection
-  const [selectedModel, setSelectedModel] = useState<'Stellar 2-Step' | 'Stellar 1-Step' | 'Express'>('Stellar 2-Step')
+  // Model & Selection States
+  const [selectedMarket, setSelectedMarket] = useState<'CFDs' | 'Futures'>('CFDs')
+  const [selectedModel, setSelectedModel] = useState<ChallengeModelId>('Stellar 2-Step')
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyKey>('USD')
-  const [selectedSize, setSelectedSize] = useState<number>(100000)
-  const [selectedPlatform, setSelectedPlatform] = useState<'MT5' | 'WebTrader'>('MT5')
-  const [showNumbers, setShowNumbers] = useState<boolean>(true)
+  const [selectedSize, setSelectedSize] = useState<number>(6000)
+  const [showPercentage, setShowPercentage] = useState<boolean>(true)
+  const [quantity, setQuantity] = useState<number>(1)
+  const [withdrawalDays, setWithdrawalDays] = useState<number>(21)
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
 
   // API Plans
@@ -205,7 +396,7 @@ export function TemplateNeon() {
 
   const effectivePlans = plans || FALLBACK_CHALLENGE_PLANS
 
-  // Account size options
+  // Account size options: 6K, 15K, 25K, 50K, 100K, 200K
   const accountSizes = [6000, 15000, 25000, 50000, 100000, 200000]
 
   // Currency helper
@@ -214,253 +405,240 @@ export function TemplateNeon() {
   }, [selectedCurrency])
 
   const formatCurrencyVal = (amountInUSD: number) => {
-    const converted = Math.round(amountInUSD * currencyMeta.rate)
-    return `${currencyMeta.symbol}${converted.toLocaleString()}`
+    const converted = amountInUSD * currencyMeta.rate
+    if (converted >= 1000) {
+      return `${currencyMeta.symbol}${converted.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    }
+    return `${currencyMeta.symbol}${converted.toFixed(2)}`
   }
 
-  // Model specific parameters
-  const modelSpecs = useMemo(() => {
-    if (selectedModel === 'Stellar 1-Step') {
-      return {
-        phases: 1,
-        p1TargetPct: 10,
-        p2TargetPct: 0,
-        dailyLossPct: 3,
-        overallLossPct: 6,
-        minTradingDays: 2,
-        timeLimit: 'Unlimited',
-        leverage: '1:100',
-        profitSplit: '90%',
-        challengeBonus: '15%',
-      }
-    }
-    if (selectedModel === 'Express') {
-      return {
-        phases: 1,
-        p1TargetPct: 25,
-        p2TargetPct: 0,
-        dailyLossPct: 5,
-        overallLossPct: 10,
-        minTradingDays: 10,
-        timeLimit: 'Unlimited',
-        leverage: '1:100',
-        profitSplit: '90%',
-        challengeBonus: '15%',
-      }
-    }
-    // Stellar 2-Step (Default)
-    return {
-      phases: 2,
-      p1TargetPct: 8,
-      p2TargetPct: 5,
-      dailyLossPct: 5,
-      overallLossPct: 10,
-      minTradingDays: 5,
-      timeLimit: 'Unlimited',
-      leverage: '1:100',
-      profitSplit: '90%',
-      challengeBonus: '15%',
-    }
-  }, [selectedModel])
+  const formatKSize = (size: number) => {
+    return `$${Math.round(size / 1000)}K`
+  }
 
-  // Pricing calculation matching prop industry standards
-  const calculatedFeeUSD = useMemo(() => {
-    // Attempt to find matching plan in loaded API data
+  // Active Model Configuration
+  const currentModelConfig = CHALLENGE_MODELS[selectedModel]
+
+  // Sync withdrawal default when model changes
+  useEffect(() => {
+    setWithdrawalDays(currentModelConfig.firstWithdrawalDefault)
+  }, [selectedModel, currentModelConfig.firstWithdrawalDefault])
+
+  // Average reward calculation (FundedNext benchmark: $296.55 for $6K, scaling up)
+  const avgReward = useMemo(() => {
+    const scaleFactor = selectedSize / 6000
+    const baseReward = 296.55
+    return (baseReward * scaleFactor).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }, [selectedSize])
+
+  // 15% Performance Reward Dollar Calculation
+  const performanceRewardDollar = useMemo(() => {
+    if (!currentModelConfig.performanceRewardPct) return 'N/A'
+    const p1 = (currentModelConfig.p1TargetPct || 0) / 100
+    const p2 = (currentModelConfig.p2TargetPct || 0) / 100
+    const totalProfit = selectedSize * (p1 + p2)
+    const bonus = Math.round(totalProfit * (currentModelConfig.performanceRewardPct / 100))
+    return `$${bonus.toLocaleString()}`
+  }, [selectedSize, currentModelConfig])
+
+  // Base fee calculation with API matching or benchmark map
+  const baseFeeUSD = useMemo(() => {
+    // Check if live API provides an exact plan match
     const match = effectivePlans.find((p) => {
       const matchSize = toNum(p.account_size) === selectedSize
-      const matchPhases = selectedModel === 'Stellar 2-Step' ? Number(p.phases) === 2 : Number(p.phases) === 1
+      const matchPhases = Number(p.phases) === currentModelConfig.phases
       return matchSize && matchPhases
     })
+
     if (match && toNum(match.price) > 0) {
       return toNum(match.price)
     }
 
-    // Standard competitive fee matrix
-    const baseMap: Record<number, number> = {
-      6000: 59,
-      15000: 119,
-      25000: 199,
-      50000: 299,
-      100000: 519,
-      200000: 999,
-    }
-    const base = baseMap[selectedSize] || 519
-    if (selectedModel === 'Stellar 1-Step') return Math.round(base * 0.95)
-    if (selectedModel === 'Express') return Math.round(base * 0.9)
-    return base
-  }, [effectivePlans, selectedSize, selectedModel])
+    return currentModelConfig.prices[selectedSize] || 59.99
+  }, [effectivePlans, selectedSize, currentModelConfig])
 
-  // Matching plan id for direct checkout
+  // Multi-account tiered discount pricing
+  const tieredPrices = useMemo(() => {
+    const p1 = baseFeeUSD
+    const p2 = baseFeeUSD * 0.9 // 10% OFF
+    const p3 = baseFeeUSD * 0.85 // 15% OFF
+    return { p1, p2, p3 }
+  }, [baseFeeUSD])
+
+  // Total checkout cost based on quantity
+  const totalCostUSD = useMemo(() => {
+    if (quantity === 1) return tieredPrices.p1
+    if (quantity === 2) return tieredPrices.p1 + tieredPrices.p2
+    if (quantity === 3) return tieredPrices.p1 + tieredPrices.p2 + tieredPrices.p3
+    // 4 or more accounts: all subsequent get 15% OFF
+    return tieredPrices.p1 + tieredPrices.p2 + tieredPrices.p3 + (quantity - 3) * tieredPrices.p3
+  }, [quantity, tieredPrices])
+
+  // Matching plan for checkout URL
   const matchedPlan = useMemo(() => {
-    return effectivePlans.find((p) => {
+    const exact = effectivePlans.find((p) => {
       const matchSize = toNum(p.account_size) === selectedSize
-      const matchPhases = selectedModel === 'Stellar 2-Step' ? Number(p.phases) === 2 : Number(p.phases) === 1
+      const matchPhases = Number(p.phases) === currentModelConfig.phases
       return matchSize && matchPhases
-    }) || effectivePlans[0]
-  }, [effectivePlans, selectedSize, selectedModel])
+    })
+    if (exact) return exact
 
-  const checkoutUrl = `/checkout?plan=${matchedPlan?.id || ''}&plan_id=${matchedPlan?.id || ''}&size=${selectedSize}&model=${encodeURIComponent(selectedModel)}`
+    const bySize = effectivePlans.find((p) => toNum(p.account_size) === selectedSize)
+    return bySize || effectivePlans[0]
+  }, [effectivePlans, selectedSize, currentModelConfig])
+
+  const checkoutUrl = `/checkout?plan=${matchedPlan?.id || 1}&plan_id=${matchedPlan?.id || 1}&size=${selectedSize}&model=${encodeURIComponent(selectedModel)}&qty=${quantity}`
+
+  const toggleAddOn = (addon: string) => {
+    setSelectedAddOns((prev) =>
+      prev.includes(addon) ? prev.filter((a) => a !== addon) : [...prev, addon]
+    )
+  }
 
   return (
-    <div className="w-full min-h-screen bg-bg text-text transition-colors duration-200 overflow-x-hidden font-sans selection:bg-violet-500 selection:text-white">
+    <div className="w-full min-h-screen bg-bg text-text transition-colors duration-200 overflow-x-hidden font-sans selection:bg-[#635BFF] selection:text-white">
 
-      {/* ── 1. CYBER HERO SECTION ────────────────────────────────────────── */}
-      <section className="relative pt-28 sm:pt-36 pb-20 sm:pb-28 overflow-hidden border-b border-border/80 dark:border-violet-500/20">
-        {/* Cyber Neon ambient backdrop lighting */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-violet-600/20 via-cyan-500/10 to-transparent blur-[130px] pointer-events-none" />
-        <div className="absolute top-1/3 -left-32 w-96 h-96 bg-violet-600/15 rounded-full blur-[110px] pointer-events-none" />
-        <div className="absolute top-1/4 -right-32 w-96 h-96 bg-cyan-500/15 rounded-full blur-[110px] pointer-events-none" />
+      {/* ── 1. EXACT FUNDEDNEXT HERO SECTION ─────────────────────────────── */}
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 overflow-hidden">
+        
+        {/* Ambient background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-[#635BFF]/15 via-violet-600/5 to-transparent blur-[140px] pointer-events-none" />
 
-        {/* Cyber Grid Lines */}
-        <div
-          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
-            backgroundSize: '36px 36px',
-          }}
-        />
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
 
-        <div className="container max-w-7xl mx-auto px-4 relative z-10">
-          
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Top Glowing Pill Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface border border-violet-500/40 shadow-sm text-xs font-semibold text-violet-600 dark:text-violet-300 mb-6 backdrop-blur-md"
-            >
-              <Zap className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 animate-pulse" />
-              <span>Next-Gen Cyber Prop Firm • Capital Up to $2,000,000</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-            </motion.div>
+          {/* FundedNext Onyx Rounded Canvas Card */}
+          <div className="dark relative rounded-3xl sm:rounded-[2.5rem] bg-[#07070a] border border-white/10 shadow-2xl overflow-hidden py-14 sm:py-20 px-4 sm:px-12 text-center text-white">
 
-            {/* Hero Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tightest leading-[1.08] text-text"
-            >
-              Trade Like A Pro. <br />
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-cyan-500 bg-clip-text text-transparent">
-                Earn 15% In The Challenge.
-              </span>
-            </motion.h1>
+            {/* Subtle top spotlight flare */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(ellipse_at_center,rgba(99,91,255,0.22),transparent_70%)] blur-2xl pointer-events-none" />
 
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-6 text-base sm:text-xl text-text-muted max-w-2xl mx-auto leading-relaxed"
-            >
-              Pass our transparent simulated evaluation and receive up to $200,000 initial capital. 
-              Enjoy <strong className="text-text">Balance-Based Drawdown</strong>, <strong className="text-text">No Time Limits</strong>, and get rewarded from Day 1.
-            </motion.p>
+            {/* Subtle grid backdrop inside canvas */}
+            <div
+              className="absolute inset-0 opacity-[0.035] pointer-events-none"
+              style={{
+                backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
+                backgroundSize: '32px 32px',
+              }}
+            />
 
-            {/* Action Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-8 flex flex-wrap items-center justify-center gap-4"
-            >
-              <Button
-                asChild
-                size="lg"
-                className="h-12 px-8 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-violet-600/25 border-0 cursor-pointer"
+            <div className="relative z-10 max-w-4xl mx-auto">
+
+              {/* 1. Trustpilot Pill Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#14131d] border border-white/10 text-xs font-medium text-white mb-8 shadow-sm backdrop-blur-md"
               >
-                <Link href="#challenge-models" className="flex items-center gap-2">
-                  <span>Start Stellar Evaluation</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="h-12 px-7 rounded-xl border-border text-text hover:bg-surface-secondary text-sm font-semibold cursor-pointer"
-              >
-                <Link href="#rules-comparison">Why Traders Choose Us</Link>
-              </Button>
-            </motion.div>
-
-            {/* Social Trust Badges */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-text-muted"
-            >
-              <div className="flex items-center gap-2 bg-surface/80 backdrop-blur-md px-4 py-2 rounded-xl border border-border shadow-xs">
-                <div className="flex items-center text-amber-500">
+                {/* 5 Green Trustpilot Stars */}
+                <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                    <span
+                      key={i}
+                      className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-2xs bg-[#00B67A] text-white"
+                    >
+                      <Star className="w-2.5 h-2.5 fill-white text-white" />
+                    </span>
                   ))}
                 </div>
-                <span className="font-bold text-text">4.8 / 5.0 Rating</span>
-                <span>• 12,500+ Verified Traders</span>
-              </div>
-              <div className="flex items-center gap-2 bg-surface/80 backdrop-blur-md px-4 py-2 rounded-xl border border-border shadow-xs">
-                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span className="font-semibold text-text">24H Automated Payout SLA</span>
-              </div>
-            </motion.div>
-          </div>
+                <span className="font-semibold text-white">Trustpilot</span>
+                <span className="text-white/40">•</span>
+                <span className="text-white/80">79k+ reviews</span>
+                <span className="h-3 w-px bg-white/20" />
+                <span className="flex items-center gap-1.5 text-white/90">
+                  <span className="w-2 h-2 rounded-full bg-[#635BFF] animate-pulse" />
+                  <span>loved by 82k+</span>
+                </span>
+              </motion.div>
 
-          {/* 4 Feature Pillar Cards */}
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            
-            {/* Pillar 1 */}
-            <div className="p-6 rounded-2xl bg-surface border border-border hover:border-violet-500/50 shadow-lg shadow-slate-900/5 transition-all group">
-              <div className="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-                <Percent className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-bold text-text mb-1.5">
-                15% Challenge Profit Bonus
-              </h3>
-              <p className="text-xs text-text-muted leading-relaxed">
-                Earn 15% reward on profits generated during Phase 1 &amp; Phase 2 upon your very first funded withdrawal.
-              </p>
+              {/* 2. Giant Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+                className="text-4xl sm:text-6xl md:text-7xl lg:text-[4.75rem] font-extrabold tracking-tight text-white leading-[1.06]"
+              >
+                We sponsor your <br />
+                <span className="text-white">trading journey</span>
+              </motion.h1>
+
+              {/* 3. Three Value Pills */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-3xl mx-auto mt-10"
+              >
+                {/* Pill 1: Rewards in 24h */}
+                <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-[#635BFF]/40 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0 border border-[#635BFF]/30">
+                    <Clock className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">Rewards in 24h</div>
+                    <div className="text-xs text-white/60">or get $1,000 extra</div>
+                  </div>
+                </div>
+
+                {/* Pill 2: One-time fee */}
+                <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-emerald-500/40 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                    <CreditCard className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">One-time fee</div>
+                    <div className="text-xs text-white/60">No recurring costs</div>
+                  </div>
+                </div>
+
+                {/* Pill 3: 24/7 support */}
+                <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-cyan-500/40 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30">
+                    <Headphones className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">24/7 support</div>
+                    <div className="text-xs text-white/60">in 44 languages</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* 4. Action Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+                className="mt-10 flex flex-wrap items-center justify-center gap-4"
+              >
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-12 px-8 rounded-xl bg-[#635BFF] hover:bg-[#5248EE] text-white font-bold text-sm shadow-xl shadow-[#635BFF]/30 border-0 cursor-pointer transition-all"
+                >
+                  <Link href="#challenge-models" className="flex items-center gap-2">
+                    <span>Get Started</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="h-12 px-8 rounded-xl bg-[#161522] hover:bg-[#1E1D2D] text-white border-white/15 text-sm font-semibold cursor-pointer transition-all"
+                >
+                  <Link href="#rules-comparison">How It Works</Link>
+                </Button>
+              </motion.div>
+
             </div>
 
-            {/* Pillar 2 */}
-            <div className="p-6 rounded-2xl bg-surface border border-border hover:border-cyan-500/50 shadow-lg shadow-slate-900/5 transition-all group">
-              <div className="w-11 h-11 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-                <Clock className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-bold text-text mb-1.5">
-                No Time Pressure
-              </h3>
-              <p className="text-xs text-text-muted leading-relaxed">
-                Trade at your natural rhythm. Zero calendar deadlines, zero expiration stress. Take all the time you need.
-              </p>
-            </div>
-
-            {/* Pillar 3 */}
-            <div className="p-6 rounded-2xl bg-surface border border-border hover:border-emerald-500/50 shadow-lg shadow-slate-900/5 transition-all group">
-              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-                <Target className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-bold text-text mb-1.5">
-                Balance-Based Drawdown
-              </h3>
-              <p className="text-xs text-text-muted leading-relaxed">
-                Calculated strictly from 00:00 server balance. Intra-day high water mark spikes will never breach your account.
-              </p>
-            </div>
-
-            {/* Pillar 4 */}
-            <div className="p-6 rounded-2xl bg-surface border border-border hover:border-fuchsia-500/50 shadow-lg shadow-slate-900/5 transition-all group">
-              <div className="w-11 h-11 rounded-xl bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-                <Zap className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-bold text-text mb-1.5">
-                Up to 95% Profit Split
-              </h3>
-              <p className="text-xs text-text-muted leading-relaxed">
-                Start with a guaranteed 90% split from Day 1 and unlock up to 95% lifetime profit share with our scaling plan.
-              </p>
+            {/* Bottom 3D fan decorative graphic */}
+            <div className="mt-14 -mb-8 flex justify-center opacity-60">
+              <div className="w-64 h-8 bg-gradient-to-t from-[#635BFF]/30 to-transparent rounded-t-full blur-md" />
             </div>
 
           </div>
@@ -468,12 +646,12 @@ export function TemplateNeon() {
         </div>
       </section>
 
-      {/* ── 2. REAL-TIME PAYOUT TICKER & LIVE STREAM ─────────────────────── */}
-      <section className="py-8 bg-surface-secondary/40 border-b border-border/80 dark:border-violet-500/20">
+      {/* ── 2. REAL-TIME PAYOUT TICKER & LIVE DISBURSAL STREAM ───────────── */}
+      <section className="py-8 bg-surface-secondary/40 border-y border-border/80">
         <div className="container max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            
-            {/* Stats Counter Strip */}
+
+            {/* Statistics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center sm:text-left w-full md:w-auto">
               <div>
                 <div className="text-2xs font-mono uppercase tracking-wider text-text-muted">Total Paid Out</div>
@@ -494,14 +672,14 @@ export function TemplateNeon() {
                 </div>
               </div>
               <div>
-                <div className="text-2xs font-mono uppercase tracking-wider text-text-muted">Global Coverage</div>
+                <div className="text-2xs font-mono uppercase tracking-wider text-text-muted">Global Reach</div>
                 <div className="text-lg sm:text-xl font-black font-mono text-text mt-0.5 tabular-nums">
                   145+ Countries
                 </div>
               </div>
             </div>
 
-            {/* Live Ticker Tag */}
+            {/* Live streaming status badge */}
             <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shrink-0">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
               <span>Live Disbursals Streaming</span>
@@ -536,317 +714,606 @@ export function TemplateNeon() {
         </div>
       </section>
 
-      {/* ── 3. INTERACTIVE MULTI-MODEL CHALLENGE SELECTOR ───────────────── */}
-      <section id="challenge-models" className="py-20 sm:py-28 relative">
-        <div className="container max-w-7xl mx-auto px-4">
-          
-          {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-2xs font-mono uppercase tracking-wider font-bold text-violet-600 dark:text-violet-300 mb-3">
-              Institutional Evaluation Models
-            </div>
+      {/* ── 3. EXACT FUNDEDNEXT MODEL SELECTOR & OBJECTIVES SECTION ──────── */}
+      <section id="challenge-models" className="scroll-mt-28 sm:scroll-mt-36 py-20 sm:py-28 relative">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6">
+
+          {/* Heading */}
+          <div className="text-center sm:text-left max-w-3xl mb-8">
             <h2 className="text-3xl sm:text-5xl font-black text-text tracking-tight">
-              Choose Your Stellar Evaluation
+              Choose your next challenge
             </h2>
-            <p className="mt-4 text-sm sm:text-base text-text-muted leading-relaxed">
-              Tailored for every trading style. Select between 2-Step, 1-Step, or Express, configure your account size, and unlock institutional simulated capital.
-            </p>
           </div>
 
-          {/* Model Switcher Tabs (Stellar 2-Step vs 1-Step vs Express) */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex p-1.5 rounded-2xl bg-surface-secondary border border-border gap-1.5 shadow-sm">
-              {(['Stellar 2-Step', 'Stellar 1-Step', 'Express'] as const).map((model) => (
-                <button
-                  key={model}
-                  onClick={() => setSelectedModel(model)}
-                  className={cn(
-                    'px-5 sm:px-7 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
-                    selectedModel === model
-                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20'
-                      : 'text-text-muted hover:text-text hover:bg-surface'
-                  )}
-                >
-                  {model}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Secondary Controls: Currency, Platform, Numbers/Percentage */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-surface p-4 rounded-2xl border border-border shadow-xs">
+          {/* Market Selector & Action Helpers Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
             
-            {/* Currency selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-text-muted font-medium">Currency:</span>
-              <div className="inline-flex p-1 rounded-xl bg-surface-secondary border border-border">
-                {CURRENCIES.map((c) => (
-                  <button
-                    key={c.key}
-                    onClick={() => setSelectedCurrency(c.key)}
-                    className={cn(
-                      'px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer',
-                      selectedCurrency === c.key
-                        ? 'bg-violet-600 text-white'
-                        : 'text-text-muted hover:text-text'
-                    )}
-                  >
-                    {c.key} ({c.symbol})
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Platform Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-text-muted font-medium">Platform:</span>
-              <div className="inline-flex p-1 rounded-xl bg-surface-secondary border border-border">
-                {(['MT5', 'WebTrader'] as const).map((plat) => (
-                  <button
-                    key={plat}
-                    onClick={() => setSelectedPlatform(plat)}
-                    className={cn(
-                      'px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer',
-                      selectedPlatform === plat
-                        ? 'bg-violet-600 text-white'
-                        : 'text-text-muted hover:text-text'
-                    )}
-                  >
-                    {plat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* View Mode Toggle: $ vs % */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-text-muted font-medium">Metrics:</span>
+            {/* Market Selector: CFDs (active) vs Futures [50% OFF] */}
+            <div className="inline-flex p-1 rounded-2xl bg-surface-secondary border border-border gap-1 shadow-xs">
               <button
-                onClick={() => setShowNumbers(!showNumbers)}
-                className="px-3 py-1 rounded-xl bg-surface-secondary border border-border text-xs font-bold text-violet-600 dark:text-violet-400 hover:bg-surface transition-colors cursor-pointer"
-              >
-                {showNumbers ? 'Show Percentages (%)' : 'Show Dollar Values ($)'}
-              </button>
-            </div>
-
-          </div>
-
-          {/* Account Size Selector Pills */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 sm:gap-3 mb-10">
-            {accountSizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
+                onClick={() => setSelectedMarket('CFDs')}
                 className={cn(
-                  'py-3 sm:py-4 px-2 rounded-2xl border text-center transition-all cursor-pointer font-mono font-bold',
-                  selectedSize === size
-                    ? 'bg-gradient-to-b from-violet-600 to-indigo-600 text-white border-violet-400 shadow-lg shadow-violet-500/25 scale-[1.02]'
-                    : 'bg-surface border-border text-text hover:border-violet-500/50 hover:bg-surface-secondary'
+                  'px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
+                  selectedMarket === 'CFDs'
+                    ? 'bg-[#18162e] border-2 border-[#635BFF] text-white shadow-md'
+                    : 'text-text-muted hover:text-text'
                 )}
               >
-                <div className="text-2xs opacity-80 uppercase tracking-wider font-sans font-semibold">Account</div>
-                <div className="text-sm sm:text-base mt-0.5 tabular-nums font-black">
-                  {formatCurrencyVal(size)}
-                </div>
+                CFDs
               </button>
-            ))}
+
+              <button
+                onClick={() => setSelectedMarket('Futures')}
+                className={cn(
+                  'px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer',
+                  selectedMarket === 'Futures'
+                    ? 'bg-[#18162e] border-2 border-[#635BFF] text-white shadow-md'
+                    : 'text-text-muted hover:text-text'
+                )}
+              >
+                <span>Futures</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 text-3xs font-mono font-black uppercase">
+                  50% OFF
+                </span>
+              </button>
+            </div>
+
+            {/* Quick Helper Buttons: Compare, Ask AI, Help me choose */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <a
+                href="#rules-comparison"
+                className="px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-xs font-semibold text-text transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Compare</span>
+              </a>
+
+              <a
+                href="/dashboard/ai"
+                className="px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-xs font-semibold text-text transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                <Bot className="w-3.5 h-3.5 text-[#00E676]" />
+                <span>Ask {brandName === 'LaunchAPropFirm' ? 'Fundee' : 'AI'}</span>
+              </a>
+
+              <button
+                onClick={() => setSelectedModel('Stellar 2-Step')}
+                className="px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-xs font-semibold text-text transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#635BFF]" />
+                <span>Help me choose</span>
+              </button>
+            </div>
+
           </div>
 
-          {/* The Objectives Matrix Card */}
-          <div className="rounded-3xl bg-surface border border-border dark:border-violet-500/30 shadow-2xl overflow-hidden">
-            
-            {/* Top Matrix Title Strip */}
-            <div className="p-6 sm:p-8 bg-gradient-to-r from-violet-600/10 via-indigo-600/10 to-transparent border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-violet-600 text-white text-3xs font-mono font-bold uppercase">
-                    {selectedModel}
-                  </span>
-                  <span className="text-xs text-text-muted font-mono">
-                    Target Capital: {formatCurrencyVal(selectedSize)}
-                  </span>
+          {/* 4 Model Selection Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
+            {(Object.keys(CHALLENGE_MODELS) as ChallengeModelId[]).map((modelKey) => {
+              const model = CHALLENGE_MODELS[modelKey]
+              const isSelected = selectedModel === modelKey
+
+              return (
+                <button
+                  key={modelKey}
+                  onClick={() => setSelectedModel(modelKey)}
+                  className={cn(
+                    'p-5 rounded-2xl text-left transition-all cursor-pointer relative',
+                    isSelected
+                      ? 'bg-[#141226] border-2 border-[#635BFF] text-white shadow-lg shadow-[#635BFF]/20 ring-1 ring-[#635BFF]/30'
+                      : 'bg-surface border border-border hover:border-[#635BFF]/40 text-text'
+                  )}
+                >
+                  <div className="text-base sm:text-lg font-bold tracking-tight">
+                    {model.title}
+                  </div>
+                  <div
+                    className={cn(
+                      'text-xs mt-1.5 leading-snug line-clamp-2',
+                      isSelected ? 'text-white/70' : 'text-text-muted'
+                    )}
+                  >
+                    {model.subtitle}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Account Sizes Row: Account $6K ($59.99) ... Account $200K ($1,099.99) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+            {accountSizes.map((size) => {
+              const isSelected = selectedSize === size
+              const displayPrice = currentModelConfig.prices[size] || 59.99
+
+              return (
+                <button
+                  key={size}
+                  onClick={() => setSelectedSize(size)}
+                  className={cn(
+                    'p-4 rounded-2xl text-left transition-all cursor-pointer font-mono',
+                    isSelected
+                      ? 'bg-[#141226] border-2 border-[#635BFF] text-white shadow-lg shadow-[#635BFF]/20 ring-1 ring-[#635BFF]/30'
+                      : 'bg-surface border border-border hover:border-[#635BFF]/40 text-text'
+                  )}
+                >
+                  <div className={cn('text-2xs font-medium uppercase font-sans', isSelected ? 'text-white/60' : 'text-text-muted')}>
+                    Account
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black tracking-tight mt-0.5">
+                    {formatKSize(size)}
+                  </div>
+                  <div className="text-xs font-bold text-[#00E676] mt-1 tabular-nums">
+                    {formatCurrencyVal(displayPrice)}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* ── THE 3-COLUMN CARD CONTAINER ──────────────────────────────── */}
+          <div className="dark rounded-3xl bg-[#090812] border border-white/10 p-6 sm:p-8 text-white relative shadow-2xl overflow-hidden">
+
+            {/* Top Bar: Show Percentage switch + Avg. Reward */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/10">
+              
+              {/* Show Percentage toggle switch */}
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <div className="relative inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={showPercentage}
+                    onChange={(e) => setShowPercentage(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#635BFF]" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black text-text mt-1">
-                  Trading Objectives &amp; Specifications
-                </h3>
+                <span className="text-sm font-semibold text-white">Show Percentage</span>
+              </label>
+
+              {/* Avg Reward Callout */}
+              <div className="flex items-center gap-2 text-xs text-white/80">
+                <Info className="w-4 h-4 text-white/50" />
+                <span>Avg. Reward : </span>
+                <span className="font-bold font-mono text-[#00E676] text-sm tabular-nums">
+                  ${avgReward}
+                </span>
               </div>
 
-              {/* 15% Bonus Callout Badge */}
-              <div className="px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center gap-2.5 text-xs font-bold">
-                <Sparkles className="h-4 w-4 shrink-0" />
-                <span>Includes 15% Profit Bonus from Challenge Phase</span>
-              </div>
             </div>
 
-            {/* Matrix Table */}
-            <div className="divide-y divide-border/60 text-xs sm:text-sm">
-              
-              {/* Row: Trading Period */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <Clock className="h-4 w-4 text-violet-500 shrink-0" />
-                  <span className="font-semibold text-text">Trading Period</span>
+            {/* 3-Column Grid Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+
+              {/* ── COLUMN 1: Challenge Rules (col-span-4) ─────────────────── */}
+              <div className="lg:col-span-4 space-y-3.5">
+                <div className="text-xs font-bold uppercase tracking-wider text-white/60 pb-1">
+                  Challenge Rules
                 </div>
-                <div className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-mono">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Unlimited (No Time Limit)</span>
+
+                {/* Phase 1 Target */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Phase 1 Profit Target</span>
+                  </div>
+                  <div className="font-mono font-bold text-white tabular-nums">
+                    {currentModelConfig.p1TargetPct === null
+                      ? 'N/A'
+                      : showPercentage
+                      ? `${currentModelConfig.p1TargetPct}%`
+                      : formatCurrencyVal((selectedSize * currentModelConfig.p1TargetPct) / 100)}
+                  </div>
                 </div>
+
+                {/* Phase 2 Target */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Phase 2 Profit Target</span>
+                  </div>
+                  <div className="font-mono font-bold text-white tabular-nums">
+                    {currentModelConfig.p2TargetPct === null
+                      ? 'N/A'
+                      : showPercentage
+                      ? `${currentModelConfig.p2TargetPct}%`
+                      : formatCurrencyVal((selectedSize * currentModelConfig.p2TargetPct) / 100)}
+                  </div>
+                </div>
+
+                {/* Daily Loss Limit */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Daily Loss Limit</span>
+                  </div>
+                  <div className="font-mono font-bold text-white tabular-nums">
+                    {currentModelConfig.dailyLossPct === null
+                      ? 'N/A'
+                      : showPercentage
+                      ? `${currentModelConfig.dailyLossPct}%`
+                      : formatCurrencyVal((selectedSize * currentModelConfig.dailyLossPct) / 100)}
+                  </div>
+                </div>
+
+                {/* Maximum Loss Limit */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Maximum Loss Limit</span>
+                  </div>
+                  <div className="font-mono font-bold text-white tabular-nums">
+                    {showPercentage
+                      ? `${currentModelConfig.maxLossPct}%`
+                      : formatCurrencyVal((selectedSize * currentModelConfig.maxLossPct) / 100)}
+                  </div>
+                </div>
+
+                {/* Drawdown Type */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Drawdown Type</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.drawdownType}
+                  </div>
+                </div>
+
+                {/* Minimum Trading Days */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Minimum Trading Days</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.minTradingDays}
+                  </div>
+                </div>
+
+                {/* News Trading */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>News Trading</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.newsTrading}
+                  </div>
+                </div>
+
+                {/* 15% Performance Reward */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>15% Performance Reward</span>
+                  </div>
+                  <div className="font-mono font-bold text-[#00E676] tabular-nums">
+                    {performanceRewardDollar}
+                  </div>
+                </div>
+
+                {/* Reset Applicable */}
+                <div className="flex items-center justify-between text-xs py-1.5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Reset Applicable</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.resetApplicable}
+                  </div>
+                </div>
+
               </div>
 
-              {/* Row: Minimum Trading Days */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <Activity className="h-4 w-4 text-violet-500 shrink-0" />
-                  <span className="font-semibold text-text">Minimum Trading Days</span>
+              {/* ── COLUMN 2: Funded & Reward Rules (col-span-4) ───────────── */}
+              <div className="lg:col-span-4 space-y-3.5">
+                <div className="text-xs font-bold uppercase tracking-wider text-white/60 pb-1">
+                  Funded &amp; Reward Rules
                 </div>
-                <div className="font-bold text-text font-mono tabular-nums">
-                  {modelSpecs.minTradingDays} Days
+
+                {/* Daily Loss Limit */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Daily Loss Limit</span>
+                  </div>
+                  <div className="font-mono font-bold text-white tabular-nums">
+                    {currentModelConfig.fundedDailyLossPct === null
+                      ? 'N/A'
+                      : showPercentage
+                      ? `${currentModelConfig.fundedDailyLossPct}%`
+                      : formatCurrencyVal((selectedSize * currentModelConfig.fundedDailyLossPct) / 100)}
+                  </div>
                 </div>
+
+                {/* Maximum Loss Limit */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Maximum Loss Limit</span>
+                  </div>
+                  <div className="font-mono font-bold text-white tabular-nums">
+                    {showPercentage
+                      ? `${currentModelConfig.fundedMaxLossPct}%`
+                      : formatCurrencyVal((selectedSize * currentModelConfig.fundedMaxLossPct) / 100)}
+                  </div>
+                </div>
+
+                {/* Reward Share */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Reward Share</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.rewardShare}
+                  </div>
+                </div>
+
+                {/* First Withdrawal (Interactive stepper) */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>First Withdrawal</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#635BFF]/20 border border-[#635BFF]/40 text-[#635BFF] font-mono text-2xs font-bold">
+                    <button
+                      onClick={() => setWithdrawalDays((prev) => Math.max(5, prev - 7))}
+                      className="hover:text-white transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                    </button>
+                    <span>{withdrawalDays} Days</span>
+                    <button
+                      onClick={() => setWithdrawalDays((prev) => Math.min(28, prev + 7))}
+                      className="hover:text-white transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subsequent Withdrawal */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Subsequent Withdrawal</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.subsequentWithdrawal}
+                  </div>
+                </div>
+
+                {/* Refundable Fee */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Refundable Fee</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.refundableFee}
+                  </div>
+                </div>
+
+                {/* News Trading Profit */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>News Trading Profit</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.newsTradingProfit}
+                  </div>
+                </div>
+
+                {/* Max Risk */}
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Max Risk</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.maxRisk}
+                  </div>
+                </div>
+
+                {/* Consistency */}
+                <div className="flex items-center justify-between text-xs py-1.5">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Info className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                    <span>Consistency</span>
+                  </div>
+                  <div className="font-mono font-bold text-white">
+                    {currentModelConfig.consistency}
+                  </div>
+                </div>
+
               </div>
 
-              {/* Row: Maximum Daily Loss (Balance-Based) */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="h-4 w-4 text-cyan-500 shrink-0" />
-                  <div>
-                    <span className="font-semibold text-text">Maximum Daily Loss</span>
-                    <span className="ml-2 text-3xs font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded">
-                      Balance-Based
+              {/* ── COLUMN 3: Checkout Summary Box (col-span-4) ─────────────── */}
+              <div className="lg:col-span-4 rounded-2xl bg-[#141322] border border-white/10 p-5 sm:p-6 flex flex-col justify-between shadow-xl">
+                <div>
+                  
+                  {/* Title: SelectedModel + Size */}
+                  <div className="text-base sm:text-lg font-bold text-white tracking-tight">
+                    {selectedModel} {formatKSize(selectedSize)}
+                  </div>
+
+                  {/* Large Green Price Display */}
+                  <div className="text-3xl sm:text-4xl font-black font-mono text-[#00E676] my-2 tabular-nums">
+                    {formatCurrencyVal(totalCostUSD)}
+                  </div>
+
+                  {/* Quantity Header */}
+                  <div className="text-2xs font-bold uppercase tracking-wider text-white/50 mt-4 mb-2">
+                    Quantity
+                  </div>
+
+                  {/* 3 Tiered Account Selections */}
+                  <div className="space-y-2">
+                    {/* 1st Account */}
+                    <button
+                      onClick={() => setQuantity(1)}
+                      className={cn(
+                        'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
+                        quantity === 1
+                          ? 'bg-[#635BFF]/15 border-[#635BFF] text-white'
+                          : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Check className={cn('w-3.5 h-3.5', quantity === 1 ? 'text-[#00E676]' : 'opacity-0')} />
+                        <span>1st account</span>
+                      </div>
+                      <span className="font-mono font-bold tabular-nums">
+                        {formatCurrencyVal(tieredPrices.p1)}
+                      </span>
+                    </button>
+
+                    {/* 2nd Account 10% OFF */}
+                    <button
+                      onClick={() => setQuantity(2)}
+                      className={cn(
+                        'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
+                        quantity === 2
+                          ? 'bg-[#635BFF]/15 border-[#635BFF] text-white'
+                          : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Check className={cn('w-3.5 h-3.5', quantity === 2 ? 'text-[#00E676]' : 'opacity-0')} />
+                        <span>2nd account</span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-3xs font-mono font-bold">
+                          10% OFF
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold tabular-nums">
+                        {formatCurrencyVal(tieredPrices.p2)}
+                      </span>
+                    </button>
+
+                    {/* 3rd Account 15% OFF */}
+                    <button
+                      onClick={() => setQuantity(3)}
+                      className={cn(
+                        'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
+                        quantity === 3
+                          ? 'bg-[#635BFF]/15 border-[#635BFF] text-white'
+                          : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Check className={cn('w-3.5 h-3.5', quantity === 3 ? 'text-[#00E676]' : 'opacity-0')} />
+                        <span>3rd account</span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-3xs font-mono font-bold">
+                          15% OFF
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold tabular-nums">
+                        {formatCurrencyVal(tieredPrices.p3)}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Quantity Stepper & Start Challenge CTA */}
+                  <div className="flex items-center gap-3 mt-4">
+                    {/* Stepper [ -  qty  + ] */}
+                    <div className="inline-flex items-center rounded-xl bg-white/5 border border-white/10 p-1 text-xs font-mono">
+                      <button
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/80 hover:text-white"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="w-7 text-center font-bold text-white tabular-nums">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => setQuantity((q) => Math.min(5, q + 1))}
+                        className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/80 hover:text-white"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Primary CTA: Start Challenge */}
+                    <Button
+                      asChild
+                      size="lg"
+                      className="flex-1 h-11 rounded-xl bg-[#635BFF] hover:bg-[#5248EE] text-white font-bold text-sm shadow-xl shadow-[#635BFF]/30 border-0 cursor-pointer transition-all"
+                    >
+                      <Link href={checkoutUrl} className="flex items-center justify-center gap-2">
+                        <span>Start Challenge</span>
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* Add-Ons Available */}
+                  <div className="mt-5">
+                    <div className="text-2xs font-semibold text-white/60 mb-2">
+                      Add-Ons Available:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        'Lifetime Reward 95%',
+                        'No Minimum Trading Days',
+                        '150% Reward',
+                        'Bi-Weekly Reward',
+                      ].map((addon) => {
+                        const active = selectedAddOns.includes(addon)
+                        return (
+                          <button
+                            key={addon}
+                            onClick={() => toggleAddOn(addon)}
+                            className={cn(
+                              'px-2.5 py-1 rounded-lg text-3xs font-semibold transition-all cursor-pointer border',
+                              active
+                                ? 'bg-[#635BFF]/20 border-[#635BFF] text-white'
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                            )}
+                          >
+                            {addon}
+                          </button>
+                        )
+                      })}
+                      <span className="px-2 py-1 rounded-lg bg-white/5 text-white/40 text-3xs font-mono">
+                        +3 more
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Payment Methods Row */}
+                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-white/60">
+                  <div className="flex items-center gap-2">
+                    {/* Mastercard icon */}
+                    <span className="flex -space-x-1">
+                      <span className="w-3.5 h-3.5 rounded-full bg-rose-500 opacity-90 inline-block" />
+                      <span className="w-3.5 h-3.5 rounded-full bg-amber-400 opacity-90 inline-block" />
+                    </span>
+                    {/* Visa text */}
+                    <span className="font-extrabold text-2xs tracking-tighter text-white">VISA</span>
+                    {/* AMEX */}
+                    <span className="text-3xs font-black px-1 py-0.5 rounded bg-blue-600 text-white leading-none">
+                      AMEX
+                    </span>
+                    {/* Apple Pay */}
+                    <span className="text-3xs font-bold text-white">Pay</span>
+                    {/* Google Pay */}
+                    <span className="text-3xs font-bold text-white/80">GPay</span>
+                    {/* Crypto */}
+                    <span className="w-3.5 h-3.5 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center text-3xs leading-none">
+                      ₿
                     </span>
                   </div>
+                  <span className="text-3xs text-white/50 font-mono">+13 more</span>
                 </div>
-                <div className="text-right font-mono font-bold text-text tabular-nums">
-                  {showNumbers
-                    ? formatCurrencyVal((selectedSize * modelSpecs.dailyLossPct) / 100)
-                    : `${modelSpecs.dailyLossPct}%`}
-                </div>
+
               </div>
 
-              {/* Row: Maximum Overall Loss */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <Shield className="h-4 w-4 text-rose-500 shrink-0" />
-                  <span className="font-semibold text-text">Maximum Overall Loss</span>
-                </div>
-                <div className="text-right font-mono font-bold text-text tabular-nums">
-                  {showNumbers
-                    ? formatCurrencyVal((selectedSize * modelSpecs.overallLossPct) / 100)
-                    : `${modelSpecs.overallLossPct}%`}
-                </div>
-              </div>
-
-              {/* Row: Phase 1 Profit Target */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <Target className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span className="font-semibold text-text">Phase 1 Profit Target</span>
-                </div>
-                <div className="text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                  {showNumbers
-                    ? formatCurrencyVal((selectedSize * modelSpecs.p1TargetPct) / 100)
-                    : `${modelSpecs.p1TargetPct}%`}
-                </div>
-              </div>
-
-              {/* Row: Phase 2 Profit Target (if applicable) */}
-              {modelSpecs.phases > 1 && (
-                <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                  <div className="flex items-center gap-2.5">
-                    <Target className="h-4 w-4 text-teal-500 shrink-0" />
-                    <span className="font-semibold text-text">Phase 2 Profit Target</span>
-                  </div>
-                  <div className="text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {showNumbers
-                      ? formatCurrencyVal((selectedSize * modelSpecs.p2TargetPct) / 100)
-                      : `${modelSpecs.p2TargetPct}%`}
-                  </div>
-                </div>
-              )}
-
-              {/* Row: Challenge Phase Profit Share Bonus */}
-              <div className="p-4 sm:p-5 flex items-center justify-between bg-violet-500/10">
-                <div className="flex items-center gap-2.5">
-                  <Award className="h-4 w-4 text-violet-500 shrink-0" />
-                  <span className="font-bold text-violet-700 dark:text-violet-300">
-                    Challenge Phase Bonus Reward
-                  </span>
-                </div>
-                <div className="text-right font-mono font-bold text-violet-600 dark:text-violet-400">
-                  15% of Evaluation Profits
-                </div>
-              </div>
-
-              {/* Row: Funded Profit Split */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <BadgePercent className="h-4 w-4 text-indigo-500 shrink-0" />
-                  <span className="font-semibold text-text">Funded Account Profit Split</span>
-                </div>
-                <div className="font-mono font-bold text-text tabular-nums">
-                  Up to {modelSpecs.profitSplit} (Scales to 95%)
-                </div>
-              </div>
-
-              {/* Row: Leverage */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <Zap className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span className="font-semibold text-text">Maximum Leverage</span>
-                </div>
-                <div className="font-mono font-bold text-text">
-                  {modelSpecs.leverage}
-                </div>
-              </div>
-
-              {/* Row: News & Weekend Trading */}
-              <div className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-secondary/40 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span className="font-semibold text-text">News Trading &amp; Weekend Holding</span>
-                </div>
-                <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                  Fully Allowed
-                </div>
-              </div>
-
-              {/* Row: Refundable Registration Fee */}
-              <div className="p-4 sm:p-5 flex items-center justify-between bg-surface-secondary/80">
-                <div>
-                  <div className="font-bold text-text">Registration Fee</div>
-                  <div className="text-3xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                    100% Refundable with first payout
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-black font-mono text-text tabular-nums">
-                    {formatCurrencyVal(calculatedFeeUSD)}
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Matrix Action CTA Box */}
-            <div className="p-6 sm:p-8 bg-surface-secondary/90 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-center sm:text-left">
-                <div className="text-xs text-text-muted">
-                  Ready to trade with <strong className="text-text">{brandName}</strong>?
-                </div>
-                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                  Instant account setup • MT5 Bridge credentials delivered immediately
-                </div>
-              </div>
-
-              <Button
-                asChild
-                size="lg"
-                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-violet-600/30 cursor-pointer"
-              >
-                <Link href={checkoutUrl} className="flex items-center justify-center gap-2">
-                  <span>Start {selectedModel} ({formatCurrencyVal(selectedSize)})</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
             </div>
 
           </div>
@@ -855,11 +1322,11 @@ export function TemplateNeon() {
       </section>
 
       {/* ── 4. THE 3 SIGNATURE BREAKTHROUGHS ────────────────────────────── */}
-      <section id="breakthroughs" className="py-20 bg-surface-secondary/40 border-y border-border/80 dark:border-violet-500/20 relative">
+      <section id="breakthroughs" className="py-20 bg-surface-secondary/40 border-y border-border/80 relative">
         <div className="container max-w-7xl mx-auto px-4">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-2xs font-mono uppercase tracking-wider font-bold text-violet-600 dark:text-violet-300 mb-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs font-mono uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
               Market-First Innovations
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text tracking-tight">
@@ -871,14 +1338,13 @@ export function TemplateNeon() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            
+
             {/* Card 1: 15% Bonus */}
-            <div className="p-8 rounded-3xl bg-surface border border-border hover:border-violet-500/60 shadow-xl relative overflow-hidden group transition-all">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 mb-6">
+            <div className="p-8 rounded-3xl bg-surface border border-border hover:border-[#635BFF]/60 shadow-xl relative overflow-hidden group transition-all">
+              <div className="w-14 h-14 rounded-2xl bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center text-[#635BFF] dark:text-violet-400 mb-6">
                 <Percent className="h-7 w-7" />
               </div>
-              <div className="inline-block px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 font-mono text-3xs font-bold mb-3 uppercase">
+              <div className="inline-block px-2.5 py-0.5 rounded-full bg-[#635BFF]/10 text-[#635BFF] dark:text-violet-400 font-mono text-3xs font-bold mb-3 uppercase">
                 Signature Feature
               </div>
               <h3 className="text-xl font-black text-text mb-3">
@@ -891,7 +1357,6 @@ export function TemplateNeon() {
 
             {/* Card 2: Balance-Based DD */}
             <div className="p-8 rounded-3xl bg-surface border border-border hover:border-cyan-500/60 shadow-xl relative overflow-hidden group transition-all">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-600/10 rounded-full blur-2xl pointer-events-none" />
               <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mb-6">
                 <ShieldCheck className="h-7 w-7" />
               </div>
@@ -908,7 +1373,6 @@ export function TemplateNeon() {
 
             {/* Card 3: No Time Limit */}
             <div className="p-8 rounded-3xl bg-surface border border-border hover:border-emerald-500/60 shadow-xl relative overflow-hidden group transition-all">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none" />
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6">
                 <Clock className="h-7 w-7" />
               </div>
@@ -931,9 +1395,9 @@ export function TemplateNeon() {
       {/* ── 5. HEAD-TO-HEAD COMPARISON MATRIX ────────────────────────────── */}
       <section id="rules-comparison" className="py-20 sm:py-28">
         <div className="container max-w-5xl mx-auto px-4">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-2xs font-mono uppercase tracking-wider font-bold text-violet-600 dark:text-violet-300 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs font-mono uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
               The Transparent Choice
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text tracking-tight">
@@ -944,25 +1408,25 @@ export function TemplateNeon() {
             </p>
           </div>
 
-          <div className="rounded-3xl bg-surface border border-border dark:border-violet-500/30 shadow-2xl overflow-hidden">
+          <div className="rounded-3xl bg-surface border border-border shadow-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-border bg-surface-secondary/80">
                     <th className="p-4 sm:p-5 font-bold text-text">Key Feature</th>
-                    <th className="p-4 sm:p-5 font-black text-violet-600 dark:text-violet-400 bg-violet-500/10">
+                    <th className="p-4 sm:p-5 font-black text-[#635BFF] dark:text-violet-400 bg-[#635BFF]/10">
                       {brandName}
                     </th>
                     <th className="p-4 sm:p-5 font-bold text-text-muted">Traditional Firms</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  
+
                   <tr>
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       15% Challenge Phase Profit Share
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-violet-500/5">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
                       <span className="flex items-center gap-1.5 font-mono">
                         <Check className="h-4 w-4" /> YES (15% Bonus)
                       </span>
@@ -974,7 +1438,7 @@ export function TemplateNeon() {
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Daily Drawdown Calculation
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-violet-500/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
                       Balance-Based (Fixed at 00:00)
                     </td>
                     <td className="p-4 sm:p-5 text-rose-500 font-mono">Equity High Trailing Trap</td>
@@ -984,7 +1448,7 @@ export function TemplateNeon() {
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Evaluation Time Limit
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-violet-500/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
                       No Limit (Unlimited Days)
                     </td>
                     <td className="p-4 sm:p-5 text-text-muted font-mono">30 - 60 Days Deadline</td>
@@ -994,7 +1458,7 @@ export function TemplateNeon() {
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       News Trading &amp; Weekend Holding
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-violet-500/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
                       Fully Permitted
                     </td>
                     <td className="p-4 sm:p-5 text-rose-500 font-mono">Restricted or Prohibited</td>
@@ -1004,7 +1468,7 @@ export function TemplateNeon() {
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Automated Payout Guarantee
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-violet-500/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
                       Under 24 Hours
                     </td>
                     <td className="p-4 sm:p-5 text-text-muted font-mono">7 - 14 Days Approval</td>
@@ -1014,7 +1478,7 @@ export function TemplateNeon() {
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Maximum Scaling Capital
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-violet-500/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
                       Up to $2,000,000
                     </td>
                     <td className="p-4 sm:p-5 text-text-muted font-mono">Capped at $400,000</td>
@@ -1029,9 +1493,9 @@ export function TemplateNeon() {
       </section>
 
       {/* ── 6. VERIFIED TESTIMONIALS & PAYOUT PROOF ──────────────────────── */}
-      <section className="py-20 bg-surface-secondary/40 border-y border-border/80 dark:border-violet-500/20">
+      <section className="py-20 bg-surface-secondary/40 border-y border-border/80">
         <div className="container max-w-7xl mx-auto px-4">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-2xs font-mono uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400 mb-3">
               Verified Trader Stories
@@ -1048,7 +1512,7 @@ export function TemplateNeon() {
             {TESTIMONIALS.map((t, idx) => (
               <div
                 key={idx}
-                className="p-6 sm:p-8 rounded-3xl bg-surface border border-border hover:border-violet-500/30 shadow-xl flex flex-col justify-between"
+                className="p-6 sm:p-8 rounded-3xl bg-surface border border-border hover:border-[#635BFF]/30 shadow-xl flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -1067,7 +1531,7 @@ export function TemplateNeon() {
                   </div>
 
                   <p className="text-xs sm:text-sm text-text-muted leading-relaxed italic mb-6">
-                    "{t.quote}"
+                    &ldquo;{t.quote}&rdquo;
                   </p>
                 </div>
 
@@ -1087,9 +1551,9 @@ export function TemplateNeon() {
       {/* ── 7. FAQ ACCORDION ─────────────────────────────────────────────── */}
       <section className="py-20 sm:py-28">
         <div className="container max-w-4xl mx-auto px-4">
-          
+
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-2xs font-mono uppercase tracking-wider font-bold text-violet-600 dark:text-violet-300 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs font-mono uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
               Clear Guidelines
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-text tracking-tight">
@@ -1115,7 +1579,7 @@ export function TemplateNeon() {
                     <span>{item.q}</span>
                     <ChevronDown
                       className={cn(
-                        'h-4 w-4 text-violet-500 transition-transform duration-200 shrink-0',
+                        'h-4 w-4 text-[#635BFF] transition-transform duration-200 shrink-0',
                         isOpen && 'rotate-180'
                       )}
                     />
@@ -1144,13 +1608,9 @@ export function TemplateNeon() {
       </section>
 
       {/* ── 8. HIGH-IMPACT CLOSING CYBER CTA ─────────────────────────────── */}
-      <section className="py-20 relative overflow-hidden bg-gradient-to-b from-transparent via-violet-600/5 to-violet-600/10 dark:via-violet-950/20 dark:to-[#0A061E]">
+      <section className="py-20 relative overflow-hidden bg-gradient-to-b from-transparent via-[#635BFF]/5 to-[#635BFF]/10">
         <div className="container max-w-5xl mx-auto px-4 relative z-10">
-          <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 text-white text-center shadow-2xl relative overflow-hidden">
-            
-            {/* Cyber Neon decorative light flares */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-300/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-fuchsia-400/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-[#635BFF] via-indigo-600 to-cyan-600 text-white text-center shadow-2xl relative overflow-hidden">
 
             <div className="relative z-10 max-w-2xl mx-auto">
               <span className="px-3 py-1 rounded-full bg-white/20 text-white text-2xs font-mono font-bold uppercase tracking-wider backdrop-blur-md">
