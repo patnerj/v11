@@ -33,12 +33,13 @@ export default function PayoutsPage() {
   const { data, refetch: refresh, isPending } = useQuery({
     queryKey: ['payoutsData'],
     queryFn: async () => {
-      const [ch, pm, po] = await Promise.all([api.challengeMy(), api.payoutMethodGet(), api.payouts()])
+      const [ch, pm, po, kyc] = await Promise.all([api.challengeMy(), api.payoutMethodGet(), api.payouts(), api.kycGet()])
       return {
         funded: ch.ok && Array.isArray(ch.data) ? ch.data.filter((c) => c.status === 'funded') : [],
         savedMethod: pm.ok ? pm.data : null,
         pdata: po.ok ? po.data : null,
-        kycApproved: po.ok ? po.data.kyc_approved : null
+        kycApproved: po.ok ? po.data.kyc_approved : null,
+        kycStatus: kyc.ok ? (kyc.data as any)?.status : null,
       }
     },
     refetchInterval: 30_000,
@@ -49,6 +50,7 @@ export default function PayoutsPage() {
   const funded = data?.funded ?? []
   const savedMethod = data?.savedMethod ?? null
   const kycApproved = data?.kycApproved ?? null
+  const kycStatus = data?.kycStatus ?? null
   const pdata = data?.pdata ?? null
 
   const totalPaid = (Array.isArray(pdata?.history) ? pdata.history : [])
@@ -87,23 +89,43 @@ export default function PayoutsPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* KYC gate */}
           {kycApproved === false && (
-            <Card className="border-warn/40 bg-warn/5">
-              <CardContent className="flex items-start gap-3 p-5">
-                <ShieldAlert className="h-5 w-5 text-warn shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-sm text-text">KYC Required</span>
-                    <Badge tone="warn">Verification needed</Badge>
+            kycStatus === 'pending' ? (
+              <Card className="border-amber-500/40 bg-amber-500/5">
+                <CardContent className="flex items-start gap-3 p-5">
+                  <Clock className="h-5 w-5 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm text-text">Identity Verification Under Review</span>
+                      <Badge tone="warning" pulsing>Audit in Progress</Badge>
+                    </div>
+                    <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                      Your KYC documents are currently being audited by our compliance desk. Payout requests will unlock automatically upon approval.
+                    </p>
+                    <Button asChild size="sm" variant="outline" className="mt-3 border-amber-500/30 text-amber-300 hover:bg-amber-500/10">
+                      <Link href="/dashboard/kyc">View submission status <ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link>
+                    </Button>
                   </div>
-                  <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                    Complete identity verification before requesting your first payout.
-                  </p>
-                  <Button asChild size="sm" className="mt-3">
-                    <Link href="/dashboard/kyc">Complete verification <ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-warn/40 bg-warn/5">
+                <CardContent className="flex items-start gap-3 p-5">
+                  <ShieldAlert className="h-5 w-5 text-warn shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm text-text">KYC Required</span>
+                      <Badge tone="warn">Verification needed</Badge>
+                    </div>
+                    <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                      Complete identity verification before requesting your first payout.
+                    </p>
+                    <Button asChild size="sm" className="mt-3">
+                      <Link href="/dashboard/kyc">Complete verification <ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
           )}
 
           <Card>

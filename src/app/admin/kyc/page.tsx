@@ -21,6 +21,7 @@ import { DataTable } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/Textarea'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { toast } from 'sonner'
 
 function KycDocViewer({ 
@@ -327,10 +328,11 @@ export default function KycHubPage() {
   // Review Modal State
   const [selectedKyc, setSelectedKyc] = useState<KycSubmission | null>(null)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
-  const [activeDocTab, setActiveDocTab] = useState<'front' | 'back' | 'selfie'>('front')
+  const [activeDocTab, setActiveDocTab] = useState<'front' | 'back' | 'selfie' | 'address'>('front')
   const [rejectionNote, setRejectionNote] = useState('')
   const [allowForceOverride, setAllowForceOverride] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; action: 'approve' | 'reject'; id: number } | null>(null)
 
   // Fetch KYC Submissions
   const { data: kycData = [], isLoading, refetch } = useQuery({
@@ -379,12 +381,13 @@ export default function KycHubPage() {
     },
   })
 
-  // Helper functions for document extraction (3 synchronized KYC files: Front ID, Back ID, Selfie)
-  const getDocUrl = (kyc: KycSubmission | null, tab: 'front' | 'back' | 'selfie'): string | null => {
+  // Helper functions for document extraction (4 synchronized KYC files: Front ID, Back ID, Selfie, POA)
+  const getDocUrl = (kyc: KycSubmission | null, tab: 'front' | 'back' | 'selfie' | 'address'): string | null => {
     if (!kyc) return null
     if (tab === 'front') return kyc.id_doc || kyc.docs?.id_doc || null
     if (tab === 'back') return kyc.id_doc_back || kyc.docs?.id_doc_back || null
     if (tab === 'selfie') return kyc.selfie || kyc.docs?.selfie || null
+    if (tab === 'address') return (kyc as any).address_doc || (kyc as any).docs?.address_doc || null
     return null
   }
 
@@ -393,6 +396,7 @@ export default function KycHubPage() {
     if (kyc.id_doc || kyc.docs?.id_doc) count++
     if (kyc.id_doc_back || kyc.docs?.id_doc_back) count++
     if (kyc.selfie || kyc.docs?.selfie) count++
+    if ((kyc as any).address_doc || (kyc as any).docs?.address_doc) count++
     return count
   }
 
@@ -401,36 +405,41 @@ export default function KycHubPage() {
     return getDocCount(kyc) > 0
   }
 
-  const handleApprove = async (id: number) => {
+  const promptApprove = (id: number) => {
     if (!selectedKyc) return
     const hasDocs = hasAnyDocuments(selectedKyc)
-    
     if (!hasDocs && !allowForceOverride) {
       toast.error('Compliance Policy: Cannot verify trader without submitted identity documents.')
       return
     }
-
-    setIsActionLoading(true)
-    try {
-      await reviewMutation.mutateAsync({ 
-        id, 
-        action: 'approve', 
-        note: rejectionNote.trim() || (allowForceOverride ? 'Manual administrative override' : ''), 
-        force_override: !hasDocs && allowForceOverride 
-      })
-    } finally {
-      setIsActionLoading(false)
-    }
+    setConfirmDialog({ open: true, action: 'approve', id })
   }
 
-  const handleReject = async (id: number) => {
+  const promptReject = (id: number) => {
     if (!rejectionNote.trim()) {
       toast.error('Please provide a reason for rejecting this KYC verification.')
       return
     }
+    setConfirmDialog({ open: true, action: 'reject', id })
+  }
+
+  const executeConfirmAction = async () => {
+    if (!confirmDialog || !selectedKyc) return
+    const { action, id } = confirmDialog
+    setConfirmDialog(null)
     setIsActionLoading(true)
     try {
-      await reviewMutation.mutateAsync({ id, action: 'reject', note: rejectionNote })
+      const hasDocs = hasAnyDocuments(selectedKyc)
+      if (action === 'approve') {
+        await reviewMutation.mutateAsync({ 
+          id, 
+          action: 'approve', 
+          note: rejectionNote.trim() || (allowForceOverride ? 'Manual administrative override' : ''), 
+          force_override: !hasDocs && allowForceOverride 
+        })
+      } else {
+        await reviewMutation.mutateAsync({ id, action: 'reject', note: rejectionNote })
+      }
     } finally {
       setIsActionLoading(false)
     }
@@ -667,7 +676,7 @@ export default function KycHubPage() {
               header: 'Submitted Date',
               render: (k: KycSubmission) => (
                 <span className="text-xs text-text-muted tabular font-medium">
-                  {k.submitted_at ? new Date(k.submitted_at).toLocaleDateString() : 'Recent'}
+                  {k.submitted_at ? `${new Date(k.submitted_at).toLocaleDateString()} (UTC)` : 'Recent'}
                 </span>
               ),
             },
@@ -809,6 +818,24 @@ export default function KycHubPage() {
                         <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
                       )}
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveDocTab('address')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                        activeDocTab === 'address'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
+                          : 'text-text-muted hover:text-text'
+                      }`}
+                    >
+                      <MapPin className="h-3.5 w-3.5" /> 
+                      4. Proof of Address (POA)
+                      {getDocUrl(selectedKyc, 'address') ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      ) : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400" title="Optional/Unattached" />
+                      )}
+                    </button>
                   </div>
                 </>
               )
@@ -880,7 +907,7 @@ export default function KycHubPage() {
                 <Button
                   variant="danger"
                   size="sm"
-                  onClick={() => handleReject(selectedKyc.id)}
+                  onClick={() => promptReject(selectedKyc.id)}
                   loading={isActionLoading}
                   className="bg-red-600 hover:bg-red-500 text-white gap-1.5"
                 >
@@ -891,7 +918,7 @@ export default function KycHubPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => handleApprove(selectedKyc.id)}
+                  onClick={() => promptApprove(selectedKyc.id)}
                   loading={isActionLoading}
                   disabled={!selectedHasDocs && !allowForceOverride}
                   className={`gap-1.5 shadow-emerald-500/20 ${
@@ -925,6 +952,22 @@ export default function KycHubPage() {
           </div>
         )}
       </Modal>
+
+      {/* Confirmation Dialog for KYC Audit Actions */}
+      <ConfirmDialog
+        isOpen={Boolean(confirmDialog?.open)}
+        title={confirmDialog?.action === 'approve' ? 'Confirm KYC Approval' : 'Reject KYC Verification'}
+        description={
+          confirmDialog?.action === 'approve'
+            ? `Are you sure you want to verify Trader #${selectedKyc?.user_id} (${selectedKyc?.name || selectedKyc?.username})? This will unlock instantaneous profit payouts on funded accounts.`
+            : `Are you sure you want to reject this KYC submission? The reason "${rejectionNote}" will be recorded and emailed to the trader.`
+        }
+        confirmText={confirmDialog?.action === 'approve' ? 'Approve & Verify' : 'Reject Verification'}
+        isDestructive={confirmDialog?.action === 'reject'}
+        loading={isActionLoading}
+        onConfirm={executeConfirmAction}
+        onCancel={() => setConfirmDialog(null)}
+      />
 
     </div>
   )

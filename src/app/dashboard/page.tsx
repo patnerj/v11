@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { api } from '@/lib/api'
 import { useAuth } from '@/store/auth'
+import { useImpersonation } from '@/store/impersonation'
 import { useAccountQuery, useChallengeMyQuery, useChallengeMetricsQuery, useHistoryQuery, useKycQuery } from '@/hooks/useApi'
 import { AccountSwitcher, buildSwitchEntries } from '@/components/dashboard/trading/account-switcher'
 import { useQuery } from '@tanstack/react-query'
@@ -49,11 +50,16 @@ function isAccount(x: Account | NoChallengeResp): x is Account {
 
 export default function DashboardOverview() {
   const user = useAuth((s) => s.user)
+  const isImpersonating = useImpersonation((s) => Boolean(s.record))
   const router = useRouter()
 
   useEffect(() => {
-    if (user?.is_admin) router.replace('/admin')
-  }, [user?.is_admin, router])
+    if (user?.is_admin && !isImpersonating) router.replace('/admin')
+  }, [user?.is_admin, isImpersonating, router])
+
+  if (user?.is_admin && !isImpersonating) {
+    return <Skeleton className="h-96 w-full" />
+  }
 
   const { data: account, isPending: isPendingAccount } = useAccountQuery()
   const { data: rawChallenges, isPending: isPendingChallenges } = useChallengeMyQuery()

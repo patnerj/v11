@@ -22,6 +22,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Switch } from '@/components/ui/switch'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Label } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PriceFeedCard } from '@/components/admin/price-feed-card'
 import { RedisCacheCard } from '@/components/admin/redis-cache-card'
@@ -615,57 +616,73 @@ export default function OperationsHubPage() {
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="py-6 flex items-center justify-center gap-8">
-                {/* SVG Radial Gauge */}
-                <div className="relative flex items-center justify-center">
-                  <svg className="w-36 h-36 transform -rotate-90">
-                    <circle
-                      cx="72"
-                      cy="72"
-                      r={radius}
-                      stroke="currentColor"
-                      strokeWidth="10"
-                      className="text-slate-800"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="72"
-                      cy="72"
-                      r={radius}
-                      stroke="currentColor"
-                      strokeWidth="10"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      className="text-emerald-500 transition-all duration-1000 ease-out"
-                      fill="transparent"
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center justify-center text-center">
-                    <span className={`text-3xl font-bold font-mono tracking-tight ${healthUnknown ? 'text-warn' : 'text-white'}`}>
-                      {healthUnknown ? '—' : healthScore}
-                    </span>
-                    <span className={`text-2xs uppercase font-bold font-mono tracking-wider ${healthUnknown ? 'text-warn' : 'text-emerald-400'}`}>
-                      {healthUnknown ? 'Data unavailable' : 'Operational'}
-                    </span>
+              {isHealthLoading && !healthReport ? (
+                <CardContent className="py-8 flex items-center justify-center gap-8">
+                  <Skeleton className="h-32 w-32 rounded-full shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-6 w-20" />
                   </div>
-                </div>
+                </CardContent>
+              ) : (
+                <CardContent className="py-6 flex items-center justify-center gap-8">
+                  {/* SVG Radial Gauge */}
+                  <div className="relative flex items-center justify-center">
+                    <svg className="w-36 h-36 transform -rotate-90">
+                      <circle
+                        cx="72"
+                        cy="72"
+                        r={radius}
+                        stroke="currentColor"
+                        strokeWidth="10"
+                        className="text-slate-800"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="72"
+                        cy="72"
+                        r={radius}
+                        stroke="currentColor"
+                        strokeWidth="10"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        className="text-emerald-500 transition-all duration-1000 ease-out"
+                        fill="transparent"
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center text-center">
+                      <span className={`text-3xl font-bold font-mono tracking-tight ${healthUnknown ? 'text-warn' : 'text-white'}`}>
+                        {healthUnknown ? '—' : healthScore}
+                      </span>
+                      <span className={`text-2xs uppercase font-bold font-mono tracking-wider ${healthUnknown ? 'text-warn' : 'text-emerald-400'}`}>
+                        {healthUnknown ? 'Data unavailable' : 'Operational'}
+                      </span>
+                    </div>
+                  </div>
 
-                {/* Health Specs */}
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <span className="text-gray-500 block">Checks Passing</span>
-                    <span className="font-mono font-bold text-white text-base">{healthUnknown ? '—' : `${totalChecks - degradedChecks} / ${totalChecks}`}</span>
+                  {/* Health Specs */}
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <span className="text-gray-500 block">Checks Passing</span>
+                      <span className="font-mono font-bold text-white text-base">{healthUnknown ? '—' : `${totalChecks - degradedChecks} / ${totalChecks}`}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Degraded / Warning</span>
+                      <span className={`font-mono font-bold text-sm ${degradedChecks > 0 ? 'text-amber-400' : 'text-gray-300'}`}>{healthUnknown ? '—' : `${degradedChecks} Service${degradedChecks === 1 ? '' : 's'}`}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-gray-500 block">Degraded / Warning</span>
-                    <span className={`font-mono font-bold text-sm ${degradedChecks > 0 ? 'text-amber-400' : 'text-gray-300'}`}>{healthUnknown ? '—' : `${degradedChecks} Service${degradedChecks === 1 ? '' : 's'}`}</span>
-                  </div>
-                </div>
-              </CardContent>
+                </CardContent>
+              )}
 
               <CardFooter className="pt-0 border-t border-surface-muted/50 text-xs text-gray-400">
-                {healthUnknown ? (
+                {isHealthLoading && !healthReport ? (
+                  <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" /> Auditing operational endpoints...
+                  </span>
+                ) : healthUnknown ? (
                   <span className="flex items-center gap-1.5 text-amber-400 font-medium">
                     <AlertCircle className="h-3.5 w-3.5" /> Health API unreachable — status unknown
                   </span>

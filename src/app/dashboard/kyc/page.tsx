@@ -18,7 +18,7 @@ import {
   Sparkles, Check, ArrowRight, ShieldAlert, FileX, Info, ExternalLink
 } from 'lucide-react'
 
-type DocKey = 'id_doc' | 'id_doc_back' | 'selfie'
+type DocKey = 'id_doc' | 'id_doc_back' | 'selfie' | 'address_doc'
 interface DocSpec { 
   key: DocKey
   title: string
@@ -46,8 +46,15 @@ const DOCS: DocSpec[] = [
     key: 'selfie',      
     title: 'Biometric Facial Selfie', 
     subtitle: 'Live photo of your face holding ID',
-    hint: 'Good lighting, facing camera directly, no sunglasses or headwear.',       
+    hint: 'Good lighting, center face directly in frame, eyes clearly visible, no sunglasses or headwear.',       
     icon: ScanFace 
+  },
+  { 
+    key: 'address_doc',      
+    title: 'Proof of Address (POA)', 
+    subtitle: 'Utility bill, bank statement, or tax letter (issued within 90 days)',
+    hint: 'Must clearly show your full legal name, residential address, and issue date.',       
+    icon: FileText 
   },
 ]
 
@@ -301,11 +308,13 @@ export default function KycPage() {
     id_doc: null,
     id_doc_back: null,
     selfie: null,
+    address_doc: null,
   })
   const [previews, setPreviews] = useState<Record<DocKey, string | null>>({
     id_doc: null,
     id_doc_back: null,
     selfie: null,
+    address_doc: null,
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -348,7 +357,7 @@ export default function KycPage() {
       return
     }
     if (!allReady) {
-      toast.error(isBackDocRequired ? 'Please select all 3 required identity documents.' : 'Please select your passport photo page and biometric selfie.')
+      toast.error(isBackDocRequired ? 'Please select all required identity documents.' : 'Please select your passport photo page and biometric selfie.')
       return
     }
     setSubmitting(true)
@@ -360,12 +369,15 @@ export default function KycPage() {
       form.append('id_doc_back', files.id_doc_back)
     }
     form.append('selfie', files.selfie!)
+    if (files.address_doc) {
+      form.append('address_doc', files.address_doc)
+    }
     const res = await api.kycSubmit(form)
     setSubmitting(false)
     if (res.ok && res.data.success) {
       toast.success('KYC documents submitted successfully for compliance review!')
-      setFiles({ id_doc: null, id_doc_back: null, selfie: null })
-      setPreviews({ id_doc: null, id_doc_back: null, selfie: null })
+      setFiles({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
+      setPreviews({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
       refetch()
     } else {
       toast.error(res.ok ? res.data.message || 'Submission failed' : res.error)

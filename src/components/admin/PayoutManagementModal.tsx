@@ -17,6 +17,7 @@ import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 import { PayoutReconciliationCard, ReconciliationStatus } from './payout-reconciliation-card'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 export interface PayoutItemTarget {
   id: number | string
@@ -77,6 +78,7 @@ export function PayoutManagementModal({
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [submittingAction, setSubmittingAction] = useState<string | null>(null)
   const [reconStatus, setReconStatus] = useState<ReconciliationStatus | null>(null)
+  const [confirmAction, setConfirmAction] = useState<'paid' | 'rejected' | null>(null)
 
   // Initialize modal state on payout selection
   useEffect(() => {
@@ -273,6 +275,7 @@ export function PayoutManagementModal({
   }
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -294,7 +297,7 @@ export function PayoutManagementModal({
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => handleAction('rejected')}
+                onClick={() => setConfirmAction('rejected')}
                 disabled={!adminNote.trim() || submittingAction !== null}
                 loading={submittingAction === 'rejected'}
                 className="w-full sm:w-auto"
@@ -334,7 +337,7 @@ export function PayoutManagementModal({
                 <Button
                   type="button"
                   variant="primary"
-                  onClick={() => handleAction('paid')}
+                  onClick={() => setConfirmAction('paid')}
                   disabled={!txHash.trim() || submittingAction !== null || (reconStatus ? reconStatus.openPositionsCount > 0 : false)}
                   loading={submittingAction === 'paid'}
                   className="gap-1.5 shadow-emerald-500/20"
@@ -642,5 +645,27 @@ export function PayoutManagementModal({
 
       </div>
     </Modal>
+
+    <ConfirmDialog
+      isOpen={Boolean(confirmAction)}
+      title={confirmAction === 'paid' ? `Confirm Payout Disbursal (${formatMoney(traderShare)})` : `Reject Payout Request #${payout?.id}`}
+      description={
+        confirmAction === 'paid'
+          ? `Are you sure you want to mark Payout #${payout?.id} as PAID? This will record transaction hash "${txHash}" and notify the trader via email.`
+          : `Are you sure you want to REJECT Payout #${payout?.id}? The note "${adminNote}" will be recorded in the audit trail and emailed to the trader.`
+      }
+      confirmText={confirmAction === 'paid' ? 'Confirm & Disburse' : 'Reject Payout'}
+      isDestructive={confirmAction === 'rejected'}
+      loading={submittingAction !== null}
+      onConfirm={() => {
+        if (confirmAction) {
+          const act = confirmAction
+          setConfirmAction(null)
+          handleAction(act)
+        }
+      }}
+      onCancel={() => setConfirmAction(null)}
+    />
+    </>
   )
 }

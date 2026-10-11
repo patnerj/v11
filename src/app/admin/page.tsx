@@ -891,6 +891,20 @@ export default function AdminCommandCenter() {
           <Badge tone="accent" size="sm" className="font-semibold text-2xs">Real-Time Treasury</Badge>
         </div>
 
+        {statsLoading && !stats ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="bg-surface border-border p-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="h-3 w-36" />
+              </Card>
+            ))}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Gross Inflow */}
@@ -1014,6 +1028,7 @@ export default function AdminCommandCenter() {
           </Card>
 
         </div>
+        )}
       </section>
       </SectionErrorBoundary>
 
@@ -1028,6 +1043,20 @@ export default function AdminCommandCenter() {
           <span className="text-xs text-text-subtle">Updated real-time</span>
         </div>
 
+        {statsLoading && !stats ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className="bg-surface border-border p-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </Card>
+            ))}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {SUMMARY_METRICS.map((metric, idx) => {
             const Icon = metric.icon
@@ -1066,6 +1095,7 @@ export default function AdminCommandCenter() {
             )
           })}
         </div>
+        )}
       </section>
       </SectionErrorBoundary>
 

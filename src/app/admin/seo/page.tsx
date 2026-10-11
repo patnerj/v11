@@ -34,7 +34,7 @@ interface SeoFormState {
 
 const DEFAULT_SEO_STATE: SeoFormState = {
   meta_title: 'LaunchAPropFirm — Trade Up to $200,000 in Funded Capital',
-  meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with LaunchAPropFirm.',
+  meta_description: 'Pass the proprietary evaluation, trade live institutional liquidity up to $200,000, and keep up to 90% of your trading profits with LaunchAPropFirm.',
   meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, LaunchAPropFirm',
   robots_indexing: true,
   google_site_verification: '',

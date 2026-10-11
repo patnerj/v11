@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
   const signin = useAuth((s) => s.signin)
   const verifyTwoFactor = useAuth((s) => s.verifyTwoFactor)
 
-  const [username, setUsername] = useState('admin')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -197,7 +197,7 @@ export default function AdminLoginPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-slate-300" style={{ color: '#cbd5e1' }}>Staff Username or Email</Label>
                 <div className="relative">
@@ -207,10 +207,10 @@ export default function AdminLoginPage() {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="admin"
+                    placeholder="Staff username or email"
                     className="pl-9 bg-black/40 border-white/10 text-white placeholder:text-slate-600 focus:border-accent focus:ring-accent/20 h-11 rounded-xl transition-all"
                     style={{ color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.4)' }}
-                    autoComplete="username"
+                    autoComplete="off"
                     autoFocus
                   />
                 </div>
@@ -228,7 +228,7 @@ export default function AdminLoginPage() {
                     placeholder="••••••••••••"
                     className="pl-9 bg-black/40 border-white/10 text-white placeholder:text-slate-600 focus:border-accent focus:ring-accent/20 h-11 font-mono rounded-xl transition-all"
                     style={{ color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.4)' }}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                   />
                 </div>
               </div>

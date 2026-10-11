@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 
 export interface MT5CredentialsModalProps {
   isOpen: boolean
@@ -218,6 +219,34 @@ export function MT5CredentialsModal({
 
         {/* Scrollable body content */}
         <div className="relative z-10 space-y-3 py-3 overflow-y-auto custom-scrollbar flex-1 pr-0.5">
+          {/* MT5 Provisioning In Progress Banner */}
+          {(liveData.notAssigned || login === 'Pending Assignment') && (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 sm:p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-start gap-2.5">
+                <div className="h-7 w-7 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                </div>
+                <div>
+                  <div className="font-bold text-amber-300">MT5 Provisioning in Progress</div>
+                  <div className="text-2xs text-text-muted mt-0.5">
+                    Your institutional account is generating on the bridge (~60s). You can trade immediately in WebTrader.
+                  </div>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                asChild
+                className="shrink-0 h-8 text-xs border-amber-500/40 text-amber-300 hover:bg-amber-500/15"
+                onClick={onClose}
+              >
+                <a href="/dashboard/trading">
+                  Trade in WebTrader
+                </a>
+              </Button>
+            </div>
+          )}
+
           {/* Live Parity & Latency Status Banner */}
           <div className="rounded-xl bg-surface-muted/60 border border-border p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
