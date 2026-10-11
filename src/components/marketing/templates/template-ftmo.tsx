@@ -439,7 +439,7 @@ export function TemplateFtmo() {
       </section>
 
       {/* ── 2. The Iconic FTMO Trading Objectives Matrix (ftmo_ref_matrix.png) ─ */}
-      <section id="pricing" className="py-16 sm:py-24 border-b border-slate-800/60 relative overflow-hidden">
+      <section id="pricing" className="py-20 sm:py-28 border-b border-slate-800/60 relative overflow-hidden scroll-mt-24">
         {/* Top Radial Ambient Cyan Back-Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-b from-cyan-500/20 via-blue-500/10 to-transparent blur-3xl pointer-events-none" />
 
@@ -1165,17 +1165,17 @@ export function TemplateFtmo() {
                   Challenge Today
                 </h2>
 
-                <div className="mt-6 space-y-2.5 text-sm sm:text-base font-semibold text-blue-100">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-cyan-300" />
+                <div className="mt-6 space-y-3 text-sm sm:text-base font-bold text-white">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-5 w-5 text-cyan-300 shrink-0" />
                     <span>As many Free Trials as you need</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-cyan-300" />
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-5 w-5 text-cyan-300 shrink-0" />
                     <span>Up to $200,000 account</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-cyan-300" />
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-5 w-5 text-cyan-300 shrink-0" />
                     <span>No time limit</span>
                   </div>
                 </div>
