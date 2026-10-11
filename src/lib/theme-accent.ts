@@ -362,16 +362,14 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
       --font-poppins: ${found.cssVar} !important;
     }
     html, body {
-      font-family: ${found.cssVar} !important;
+      font-family: ${found.cssVar};
     }
-    *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
-      font-family: ${found.cssVar} !important;
+    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) {
+      font-family: ${found.cssVar};
     }
-    code, pre, kbd, code *, pre *, kbd * {
+    .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd,
+    .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-    }
-    .tabular-nums, .tabular, .terminal-num {
-      font-variant-numeric: tabular-nums;
     }
   `
 

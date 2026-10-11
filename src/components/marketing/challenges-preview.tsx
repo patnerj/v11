@@ -24,7 +24,7 @@ import { useBranding } from "@/store/branding";
 
 export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: (planId: number) => void, puckProps?: any }) {
   const title = puckProps?.title || "Choose Your Capital Tier";
-  const brandName = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm";
+  const brandName = useBranding((s) => s.branding.brand_name) || "MassFunded";
   const loadBranding = useBranding((s) => s.load);
 
   useEffect(() => { loadBranding(); }, [loadBranding]);
@@ -142,7 +142,6 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
 
   return (
     <section className="relative py-14 sm:py-20 lg:py-28 bg-transparent text-text overflow-hidden" id="challenges">
-      <span id="pricing" className="block relative -top-32 invisible pointer-events-none" />
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 blur-[160px] pointer-events-none" />
 
@@ -235,7 +234,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                     <div className="text-3xs sm:text-2xs font-medium text-text-muted uppercase tracking-wider mb-0.5 sm:mb-1 truncate">
                       Size
                     </div>
-                    <div className={`text-sm sm:text-lg xl:text-xl font-black terminal-num tracking-tight ${isActive ? "text-emerald-400" : "text-text"}`}>
+                    <div className={`text-sm sm:text-lg xl:text-xl font-black font-mono tracking-tight ${isActive ? "text-emerald-400" : "text-text"}`}>
                       {fmtUSD(size, { decimals: 0 })}
                     </div>
                   </button>
@@ -409,7 +408,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                           <label htmlFor="profit-estimate-range" className="sr-only">Simulated Monthly Return</label>
                           <div className="flex justify-between text-xs text-text-muted">
                             <span>Simulated Monthly Return</span>
-                            <span className="terminal-num font-bold text-emerald-400">+{profitEstimatePct}% Profit</span>
+                            <span className="font-mono font-bold text-emerald-400">+{profitEstimatePct}% Profit</span>
                           </div>
                           <input
                             id="profit-estimate-range"
@@ -429,21 +428,21 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-3 border-t border-border-subtle/60 text-xs">
                           <div className="p-2 sm:p-2.5 rounded-xl bg-surface/60 border border-border-subtle">
                             <div className="text-text-muted text-2xs sm:text-2xs">Total Trading Profit</div>
-                            <div className="text-sm sm:text-base font-bold terminal-num text-text mt-0.5">
+                            <div className="text-sm sm:text-base font-bold font-mono text-text mt-0.5">
                               {fmtUSD(calculatedGain)}
                             </div>
                           </div>
                           
                           <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
                             <div className="text-emerald-400 font-semibold text-2xs sm:text-2xs">Your Bi-Weekly Share ({toNum(activePlan.funded_profit_split) || 80}%)</div>
-                            <div className="text-sm sm:text-base font-bold terminal-num text-emerald-400 mt-0.5">
+                            <div className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5">
                               {fmtUSD(calculatedTraderSplit)}
                             </div>
                           </div>
 
                           <div className="p-2 sm:p-2.5 rounded-xl bg-surface/60 border border-border-subtle">
                             <div className="text-text-muted text-2xs sm:text-2xs">100% Fee Refund Added</div>
-                            <div className="text-sm sm:text-base font-bold terminal-num text-text mt-0.5">
+                            <div className="text-sm sm:text-base font-bold font-mono text-text mt-0.5">
                               +{fmtUSD(activePlan.price)}
                             </div>
                           </div>
@@ -468,7 +467,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                         <div className="my-4 sm:my-6 pb-4 sm:pb-6 border-b border-border-subtle">
                           <div className="text-2xs sm:text-xs text-text-muted mb-1">One-time Evaluation Fee (Refundable)</div>
                           <div className="flex items-baseline gap-2">
-                            <span className="text-3xl sm:text-4xl font-black text-emerald-400 terminal-num tracking-tight">
+                            <span className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight">
                               {fmtUSD(activePlan.price)}
                             </span>
                           </div>

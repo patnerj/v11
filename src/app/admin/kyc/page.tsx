@@ -415,7 +415,7 @@ export default function KycHubPage() {
       await reviewMutation.mutateAsync({ 
         id, 
         action: 'approve', 
-        note: rejectionNote.trim() || (allowForceOverride ? 'Manual administrative override' : ''), 
+        note: allowForceOverride ? (rejectionNote.trim() || 'Manual administrative override') : '', 
         force_override: !hasDocs && allowForceOverride 
       })
     } finally {

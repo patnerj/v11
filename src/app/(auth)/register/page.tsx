@@ -29,7 +29,7 @@ function RegisterForm() {
   const router = useRouter()
   const params = useSearchParams()
   const { signup, user, ready } = useAuth()
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
   const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'M'
   // Same-origin-only guard against open-redirect (mirrors login/page.tsx) —
   // checkout links here as /register?next=/checkout?plan=N so a new customer

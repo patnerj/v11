@@ -16,7 +16,6 @@ import QRCode from 'qrcode'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
-import { PayoutReconciliationCard, ReconciliationStatus } from './payout-reconciliation-card'
 
 export interface PayoutItemTarget {
   id: number | string
@@ -76,7 +75,6 @@ export function PayoutManagementModal({
   const [copiedAmount, setCopiedAmount] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [submittingAction, setSubmittingAction] = useState<string | null>(null)
-  const [reconStatus, setReconStatus] = useState<ReconciliationStatus | null>(null)
 
   // Initialize modal state on payout selection
   useEffect(() => {
@@ -202,11 +200,6 @@ export function PayoutManagementModal({
   }
 
   const handleAction = async (action: 'under_review' | 'approved' | 'rejected' | 'paid') => {
-    if ((action === 'approved' || action === 'paid') && reconStatus && reconStatus.openPositionsCount > 0) {
-      toast.error(`Cannot ${action} payout: Trader has ${reconStatus.openPositionsCount} active open market position(s). All positions must be closed before approval or disbursal.`)
-      return
-    }
-
     if (action === 'paid' && !txHash.trim()) {
       toast.error('Transaction ID / Tx Hash is required to mark this payout as paid and disburse.')
       return
@@ -321,10 +314,9 @@ export function PayoutManagementModal({
                     type="button"
                     variant="outline"
                     onClick={() => handleAction('approved')}
-                    disabled={submittingAction !== null || (reconStatus ? reconStatus.openPositionsCount > 0 : false)}
+                    disabled={submittingAction !== null}
                     loading={submittingAction === 'approved'}
                     className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                    title={reconStatus && reconStatus.openPositionsCount > 0 ? "Blocked: All open market positions must be closed before approval" : undefined}
                   >
                     <Check className="h-4 w-4 mr-1.5" />
                     Approve (Pre-Clear)
@@ -335,10 +327,9 @@ export function PayoutManagementModal({
                   type="button"
                   variant="primary"
                   onClick={() => handleAction('paid')}
-                  disabled={!txHash.trim() || submittingAction !== null || (reconStatus ? reconStatus.openPositionsCount > 0 : false)}
+                  disabled={!txHash.trim() || submittingAction !== null}
                   loading={submittingAction === 'paid'}
                   className="gap-1.5 shadow-emerald-500/20"
-                  title={reconStatus && reconStatus.openPositionsCount > 0 ? "Blocked: All open market positions must be closed before disbursal" : undefined}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Mark Paid & Disburse
@@ -415,9 +406,6 @@ export function PayoutManagementModal({
           </div>
 
         </div>
-
-        {/* 2.4 Pre-Flight Automated Ledger Reconciliation Card (Phase 2) */}
-        <PayoutReconciliationCard payout={payout} onStatusCalculated={setReconStatus} />
 
         {/* 2.5 Founder Safety Audit & AI Compliance Verdict */}
         <div className="bg-background border border-surface-muted rounded-xl p-4 space-y-3">

@@ -14,19 +14,15 @@ import { Input, Label, Textarea } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
 import { PayoutSummary, PayoutHistory } from '@/components/dashboard/payout-history'
-import { PayoutReadinessCard } from '@/components/dashboard/payout-readiness-card'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Banknote, ArrowUpRight, AlertCircle, Wallet, CheckCircle2, ShieldAlert, Clock, Share2, Printer, ShieldCheck, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { ViralPayoutCardModal } from '@/components/dashboard/payouts/viral-payout-card-modal'
-import { useAuth } from '@/store/auth'
 
 type PayoutMethod = 'crypto' | 'wise'
 
 export default function PayoutsPage() {
-  const user = useAuth((s) => s.user)
   const [requestFor, setRequestFor]   = useState<ChallengeAccount | null>(null)
   const [showCertificate, setShowCertificate] = useState(false)
 
@@ -65,15 +61,6 @@ export default function PayoutsPage() {
         badge={{ label: 'Withdrawals', tone: 'accent' }}
       />
 
-      {/* Next Payout Readiness Countdown Timer Card */}
-      {funded.length > 0 && (
-        <PayoutReadinessCard
-          fundedChallenges={funded}
-          nextPayoutAt={pdata?.next_payout_at}
-          savedMethod={savedMethod}
-        />
-      )}
-
       {/* Summary */}
       <PayoutSummary
         available={pdata?.available ?? 0}
@@ -109,8 +96,8 @@ export default function PayoutsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3 flex-wrap gap-2">
               <CardTitle>Funded accounts</CardTitle>
-              <Button size="sm" variant="outline" className="gap-1.5 shrink-0 border-accent/40 text-accent hover:bg-accent/10" onClick={() => setShowCertificate(true)}>
-                <Sparkles className="h-4 w-4 text-accent" /> 1-Click Viral Social Card
+              <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => setShowCertificate(true)}>
+                ✨ Payout Certificate
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -277,14 +264,11 @@ export default function PayoutsPage() {
       )}
 
       {showCertificate && (
-        <ViralPayoutCardModal 
-          isOpen={true}
+        <PayoutCertificateModal 
           onClose={() => setShowCertificate(false)}
           amount={totalPaid > 0 ? totalPaid : (funded[0] ? Math.max(500, toNum(funded[0].current_balance) - toNum(funded[0].starting_balance)) : 1450)}
-          date={funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : new Date().toLocaleDateString()}
+          date={funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : 'Active Season'}
           method={savedMethod?.method ?? 'USDT - TRC20'}
-          traderName={user?.display_name || user?.username || 'Pro Trader'}
-          payoutId={pdata?.history?.[0]?.id || 101}
         />
       )}
     </div>
@@ -752,7 +736,7 @@ export function PayoutCertificateModal({
   date?: string
   method?: string
 }) {
-  const shareText = `Just secured ${fmtUSD(amount)} payout with @LaunchAPropFirm! Seamless ${method} withdrawal. 🚀 Prop firm trading made real. #LaunchAPropFirm #Payout #Forex`
+  const shareText = `Just secured ${fmtUSD(amount)} payout with @MassFunded! Seamless ${method} withdrawal. 🚀 Prop firm trading made real. #MassFunded #Payout #Forex`
 
   const handleCopyShare = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -776,7 +760,7 @@ export function PayoutCertificateModal({
     printWindow.document.write(`<!DOCTYPE html>
 <html>
 <head>
-  <title>LaunchAPropFirm Payout Certificate - ${traderName}</title>
+  <title>MassFunded Payout Certificate - ${traderName}</title>
   <style>
     @media print {
       body { margin: 0; padding: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -819,7 +803,7 @@ export function PayoutCertificateModal({
 <body>
   <div class="cert-wrapper">
     <div class="cert-header">
-      <span class="brand-name">LaunchAPropFirm Enterprise</span>
+      <span class="brand-name">MassFunded Enterprise</span>
       <span class="badge">&#128737;&#65039; Verified Disbursal</span>
     </div>
     <div class="title">Official Certificate of Payout</div>
@@ -867,7 +851,7 @@ export function PayoutCertificateModal({
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-emerald-400 to-accent" />
           
           <div className="flex justify-between items-center mb-6">
-            <span className="text-2xs font-mono uppercase tracking-widest text-amber-500 font-bold">LaunchAPropFirm Enterprise</span>
+            <span className="text-2xs font-mono uppercase tracking-widest text-amber-500 font-bold">MassFunded Enterprise</span>
             <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-2xs font-semibold text-emerald-400">
               <ShieldCheck className="h-3.5 w-3.5" /> Verified Disbursal
             </div>

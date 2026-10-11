@@ -82,7 +82,7 @@ export function PlatformFeatures({ puckProps }: { puckProps?: any }) {
               <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-1.5 sm:mb-2">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  <span>LaunchAPropFirm Static Rules</span>
+                  <span>MassFunded Static Rules</span>
                 </div>
                 <div className="text-2xs sm:text-xs text-text-muted leading-relaxed">
                   Account $100,000 → Max DD Floor is fixed at $90,000. When your balance reaches $108,000, your floor stays at $90,000. You have an $18,000 safety cushion.

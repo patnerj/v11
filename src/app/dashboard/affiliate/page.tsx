@@ -18,7 +18,6 @@ import { AffiliateLeaderboard } from '@/components/affiliate-leaderboard'
 import { Modal } from '@/components/ui/Modal'
 import { useQuery } from '@tanstack/react-query'
 import { useBranding } from '@/store/branding'
-import { MarketingMediaKit } from '@/components/dashboard/marketing/marketing-media-kit'
 
 import { FONT_PRESETS, hexToRgb } from '@/lib/theme-accent'
 
@@ -27,6 +26,121 @@ const tone = (s: Commission['status']) =>
 const payoutTone = (s: AffiliatePayout['status']) =>
   s === 'paid' ? 'success' : s === 'rejected' ? 'danger' : s === 'approved' ? 'info' : 'warn'
 const METHOD_LABEL: Record<string, string> = { usdt_trc20: 'USDT (TRC20)', usdt_bep20: 'USDT (BEP20)', wise: 'Wise' }
+
+function downloadBanner(type: '16:9' | '1:1' | '9:16', code: string, refLink: string, brandName: string = 'MassFunded') {
+  if (typeof window === 'undefined') return
+  const canvas = document.createElement('canvas')
+  const width = type === '16:9' ? 1920 : 1080
+  const height = type === '9:16' ? 1920 : 1080
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  // Dynamic Whitelabel Font Resolution
+  const activeFontId = localStorage.getItem('fxsim:theme-font') || 'poppins'
+  const activePreset = FONT_PRESETS.find((f) => f.id === activeFontId) || FONT_PRESETS[0]
+  const brandFont = `"${activePreset.name}", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
+
+  // Dynamic Whitelabel Accent Resolution
+  const activeAccent = localStorage.getItem('fxsim:theme-accent') || '#10B981'
+  const { r, g, b } = hexToRgb(activeAccent)
+
+  // Dark background gradient (Fixed: Valid hex colors, no invalid var(--background) syntax)
+  const bgGrad = ctx.createLinearGradient(0, 0, width, height)
+  bgGrad.addColorStop(0, '#06080F')
+  bgGrad.addColorStop(0.4, '#0B0F19')
+  bgGrad.addColorStop(1, '#0F172A')
+  ctx.fillStyle = bgGrad
+  ctx.fillRect(0, 0, width, height)
+
+  // Glowing radial aura
+  const glowCenterY = type === '9:16' ? height * 0.4 : height * 0.45
+  const glowGrad = ctx.createRadialGradient(width / 2, glowCenterY, 50, width / 2, glowCenterY, width * 0.6)
+  glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.22)`)
+  glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = glowGrad
+  ctx.fillRect(0, 0, width, height)
+
+  // Outer border frame
+  ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.3)`
+  ctx.lineWidth = 4
+  ctx.strokeRect(36, 36, width - 72, height - 72)
+
+  // Inner subtle border
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+  ctx.lineWidth = 2
+  ctx.strokeRect(48, 48, width - 96, height - 96)
+
+  ctx.textAlign = 'center'
+
+  // Brand Name & Tagline
+  const brandY = type === '9:16' ? 320 : type === '16:9' ? 220 : 250
+  ctx.fillStyle = activeAccent
+  ctx.font = `bold ${type === '9:16' ? '40px' : '36px'} ${brandFont}`
+  ctx.fillText(`★ ${brandName.toUpperCase()} · OFFICIAL PARTNER`, width / 2, brandY)
+
+  // Main Heading
+  const headingY = type === '9:16' ? 520 : type === '16:9' ? 360 : 410
+  ctx.fillStyle = '#FFFFFF'
+  ctx.font = `900 ${type === '9:16' ? '70px' : type === '16:9' ? '64px' : '60px'} ${brandFont}`
+  ctx.fillText('TRADE CAPITAL UP TO $200,000', width / 2, headingY)
+
+  // Subtitle / Features
+  const subY = type === '9:16' ? 640 : type === '16:9' ? 450 : 510
+  ctx.fillStyle = '#94A3B8'
+  ctx.font = `500 ${type === '9:16' ? '36px' : type === '16:9' ? '30px' : '28px'} ${brandFont}`
+  ctx.fillText('Keep up to 90% profit split • Instant Payouts • Low Spreads', width / 2, subY)
+
+  // Referral Code Pill
+  const pillW = type === '9:16' ? 700 : 620
+  const pillH = type === '9:16' ? 220 : 130
+  const pillX = (width - pillW) / 2
+  const pillY = type === '9:16' ? 820 : type === '16:9' ? 560 : 630
+
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.12)`
+  ctx.strokeStyle = activeAccent
+  ctx.lineWidth = 3
+  if (typeof ctx.roundRect === 'function') {
+    ctx.beginPath()
+    ctx.roundRect(pillX, pillY, pillW, pillH, 20)
+    ctx.fill()
+    ctx.stroke()
+  } else {
+    ctx.fillRect(pillX, pillY, pillW, pillH)
+    ctx.strokeRect(pillX, pillY, pillW, pillH)
+  }
+
+  // Pill Title
+  ctx.fillStyle = activeAccent
+  ctx.font = `bold ${type === '9:16' ? '28px' : '22px'} ${brandFont}`
+  ctx.fillText('⚡ USE PARTNER CODE AT CHECKOUT', width / 2, pillY + (type === '9:16' ? 65 : 45))
+
+  // Promo Code
+  ctx.fillStyle = '#FFFFFF'
+  ctx.font = `900 ${type === '9:16' ? '62px' : '46px'} ${brandFont}`
+  ctx.fillText((code || 'PARTNER').toUpperCase(), width / 2, pillY + (type === '9:16' ? 140 : 96))
+
+  if (type === '9:16') {
+    ctx.fillStyle = activeAccent
+    ctx.font = `600 24px ${brandFont}`
+    ctx.fillText('GET 25% DISCOUNT ON EVALUATION', width / 2, pillY + 185)
+  }
+
+  // Footer Link
+  const footY = type === '9:16' ? 1650 : type === '16:9' ? 950 : 960
+  ctx.fillStyle = '#64748B'
+  ctx.font = `500 ${type === '9:16' ? '32px' : '24px'} ${brandFont}`
+  ctx.fillText(refLink || 'massfunded.org', width / 2, footY)
+
+  // Trigger download
+  const dataUrl = canvas.toDataURL('image/png')
+  const a = document.createElement('a')
+  a.href = dataUrl
+  a.download = `${brandName.toLowerCase()}-banner-${type.replace(':', 'x')}-${code || 'partner'}.png`
+  a.click()
+  toast.success(`Marketing asset (${type}) downloaded!`)
+}
 
 export default function AffiliatePage() {
   const { data, refetch: load, isPending } = useQuery({
@@ -63,7 +177,7 @@ export default function AffiliatePage() {
   const [isTiersModalOpen, setIsTiersModalOpen] = useState(false)
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
 
   const [origin, setOrigin] = useState('')
 
@@ -347,11 +461,315 @@ export default function AffiliatePage() {
         <StatCard label="Paid out" value={fmtUSD(s.paid)} icon={DollarSign} tone="success" />
       </StatGrid>
 
-      {/* ── ENHANCED ULTRA-HD MARKETING MEDIA KIT ────────────────────────────── */}
-      <MarketingMediaKit
-        affiliateCode={me?.code || 'PARTNER'}
-        partnerLink={link || ''}
-      />
+      {/* ── MARKETING ASSETS & PROMOTIONAL MEDIA KIT ────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-accent" /> Official Marketing Media Kit
+              </CardTitle>
+              <p className="text-xs text-text-muted mt-0.5">
+                High-conversion promotional assets, social media banners, and copy templates tailored with your unique referral code.
+              </p>
+            </div>
+            <Badge tone="accent" size="sm" className="self-start sm:self-center">
+              Ultra-HD Graphics
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            {/* ── 1. 16:9 Landscape Banner ── */}
+            <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
+              <div>
+                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                  {/* Subtle Grid & Glow Background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#10b98115_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Mini Mockup Canvas */}
+                  <div className="w-full aspect-[16/9] rounded-lg border border-accent/50 bg-gradient-to-br from-[#06080F] via-[#0C1220] to-[#0A1628] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-accent/25 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-[10px] font-extrabold text-accent tracking-wider flex items-center gap-1">
+                        ★ {brandName.toUpperCase()}
+                      </span>
+                      <span className="bg-accent/25 text-accent text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-accent/40">
+                        90% PROFIT SPLIT
+                      </span>
+                    </div>
+                    <div className="text-center my-auto py-1 relative z-10">
+                      <div className="text-base sm:text-lg font-black text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        TRADE UP TO $200,000
+                      </div>
+                      <div className="text-[8px] text-slate-300 font-medium mt-0.5">
+                        Instant Disbursals · Lowest Spreads · Zero Time Limit
+                      </div>
+                    </div>
+                    <div className="bg-accent/20 border border-accent/50 rounded-md px-2 py-1 flex items-center justify-between relative z-10">
+                      <span className="text-[8px] text-accent font-bold tracking-wider">AFFILIATE CODE:</span>
+                      <span className="text-[11px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
+                      <span className="text-[8px] text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 p-4 text-center backdrop-blur-xs">
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 bg-accent hover:bg-accent-hover text-primary-foreground shadow-sm"
+                      onClick={() => downloadBanner('16:9', me?.code || '', link || '', brandName)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download 1920×1080
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 border-white/20 text-white hover:bg-white/10"
+                      onClick={copy}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy Partner Link
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-text">16:9 Landscape Banner</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                      1920 × 1080
+                    </span>
+                  </div>
+                  <p className="text-2xs text-text-muted mt-1 leading-relaxed">
+                    Optimized for Twitter/X headers, YouTube banners, and website reviews.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs gap-1.5 font-medium"
+                  onClick={() => downloadBanner('16:9', me?.code || '', link || '', brandName)}
+                >
+                  <Download className="h-3.5 w-3.5 text-accent" /> Download PNG
+                </Button>
+              </div>
+            </div>
+
+            {/* ── 2. 1:1 Square Feed Post ── */}
+            <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
+              <div>
+                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                  {/* Subtle Grid & Glow Background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#38bdf815_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                  <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-info/20 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Mini Mockup Canvas */}
+                  <div className="h-full aspect-square max-h-52 rounded-lg border border-info/50 bg-gradient-to-tr from-[#06080F] via-[#0A1326] to-[#0D1B36] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-info/25 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-[10px] font-extrabold text-info tracking-wider flex items-center gap-1">
+                        ★ {brandName.toUpperCase()}
+                      </span>
+                      <span className="bg-info/25 text-info text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-info/40">
+                        INSTANT PASS
+                      </span>
+                    </div>
+                    <div className="text-center my-auto py-1 relative z-10">
+                      <div className="text-[8px] uppercase tracking-widest text-slate-300 font-bold">PROP FIRM CAPITAL</div>
+                      <div className="text-lg font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        KEEP 90% PROFITS
+                      </div>
+                      <div className="text-xs font-mono font-extrabold text-accent mt-0.5">$200K ACCOUNT</div>
+                    </div>
+                    <div className="bg-info/20 border border-info/50 rounded-md px-2 py-1 flex items-center justify-between relative z-10">
+                      <span className="text-[8px] text-info font-bold">CODE:</span>
+                      <span className="text-[11px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
+                      <span className="text-[8px] text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 p-4 text-center backdrop-blur-xs">
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 bg-info hover:bg-info/90 text-white shadow-sm"
+                      onClick={() => downloadBanner('1:1', me?.code || '', link || '', brandName)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download 1080×1080
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 border-white/20 text-white hover:bg-white/10"
+                      onClick={copy}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy Partner Link
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-text">1:1 Square Feed Post</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                      1080 × 1080
+                    </span>
+                  </div>
+                  <p className="text-2xs text-text-muted mt-1 leading-relaxed">
+                    Designed for Instagram feed posts, Discord community sharing, and Telegram broadcasts.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs gap-1.5 font-medium"
+                  onClick={() => downloadBanner('1:1', me?.code || '', link || '', brandName)}
+                >
+                  <Download className="h-3.5 w-3.5 text-info" /> Download PNG
+                </Button>
+              </div>
+            </div>
+
+            {/* ── 3. 9:16 Vertical Story & Reel ── */}
+            <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
+              <div>
+                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                  {/* Subtle Grid & Glow Background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#a855f715_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                  <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Mini Mockup Canvas */}
+                  <div className="h-full aspect-[9/16] max-h-52 rounded-lg border border-purple-500/50 bg-gradient-to-b from-[#06080F] via-[#100C1F] to-[#1A1033] p-2.5 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-20 h-20 bg-purple-500/25 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-[9px] font-extrabold text-purple-300 tracking-wider">
+                        ★ {brandName.toUpperCase()}
+                      </span>
+                      <span className="bg-purple-500/25 text-purple-300 text-[7px] font-bold px-1 py-0.2 rounded-full border border-purple-500/40">
+                        VIP
+                      </span>
+                    </div>
+                    <div className="text-center my-auto py-1 relative z-10">
+                      <div className="text-[7px] uppercase tracking-widest text-slate-300 font-bold">EVALUATION PASS</div>
+                      <div className="text-sm font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                        GET FUNDED
+                      </div>
+                      <div className="text-lg font-mono font-black text-accent mt-0.5 leading-none">$200K</div>
+                      <div className="text-[7px] text-slate-300 mt-1">Keep 90% Profits</div>
+                    </div>
+                    <div className="bg-purple-500/20 border border-purple-500/50 rounded-md px-1.5 py-1 text-center relative z-10">
+                      <div className="text-[7px] text-purple-300 font-bold">PARTNER CODE:</div>
+                      <div className="text-[10px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</div>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 p-4 text-center backdrop-blur-xs">
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 bg-purple-600 hover:bg-purple-500 text-white shadow-sm"
+                      onClick={() => downloadBanner('9:16', me?.code || '', link || '', brandName)}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download 1080×1920
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-8 text-xs font-semibold gap-1.5 border-white/20 text-white hover:bg-white/10"
+                      onClick={copy}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy Partner Link
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-text">9:16 Mobile Story & Reel</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                      1080 × 1920
+                    </span>
+                  </div>
+                  <p className="text-2xs text-text-muted mt-1 leading-relaxed">
+                    Full-screen vertical story template for Instagram Stories, TikTok, and YouTube Shorts.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs gap-1.5 font-medium"
+                  onClick={() => downloadBanner('9:16', me?.code || '', link || '', brandName)}
+                >
+                  <Download className="h-3.5 w-3.5 text-purple-400" /> Download PNG
+                </Button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── Ready-to-Post Copy Templates ── */}
+          <div className="pt-4 border-t border-border-subtle">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-text flex items-center gap-1.5">
+                <Send className="h-3.5 w-3.5 text-accent" /> Ready-to-Post Promotional Captions
+              </span>
+              <span className="text-2xs text-text-muted">1-Click Copy &amp; Share</span>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg border border-border-subtle bg-surface-muted/40 flex flex-col justify-between gap-2.5">
+                <p className="text-xs text-text-muted leading-relaxed font-sans">
+                  &ldquo;Looking for serious funding? Trade up to $200,000 in simulated capital with <span className="text-text font-semibold">{brandName}</span>. Keep up to 90% profit split, enjoy instant crypto payouts and zero time limits. Use my code <span className="font-mono text-accent font-bold">{me?.code || 'PARTNER'}</span> for 25% off! 🚀&rdquo;
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 text-xs self-start gap-1.5"
+                  onClick={() => {
+                    const text = `Looking for serious funding? Trade up to $200,000 with ${brandName}. Keep up to 90% profit split and instant crypto payouts. Use code ${me?.code || ''} for 25% off: ${link}`
+                    navigator.clipboard.writeText(text)
+                    toast.success('Social caption copied to clipboard!')
+                  }}
+                >
+                  <Copy className="h-3 w-3" /> Copy Caption &amp; Link
+                </Button>
+              </div>
+
+              <div className="p-3 rounded-lg border border-border-subtle bg-surface-muted/40 flex flex-col justify-between gap-2.5">
+                <p className="text-xs text-text-muted leading-relaxed font-sans">
+                  &ldquo;Stop risking personal savings. Pass the <span className="text-text font-semibold">{brandName}</span> evaluation and get access to up to $200K capital. Fast execution, institutional spreads, no hidden rules. Use partner code <span className="font-mono text-accent font-bold">{me?.code || 'PARTNER'}</span> at checkout: 📈&rdquo;
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 text-xs self-start gap-1.5"
+                  onClick={() => {
+                    const text = `Stop risking personal savings. Pass the ${brandName} evaluation and get access to up to $200K capital. Fast execution, institutional spreads. Use code ${me?.code || ''} for 25% off: ${link}`
+                    navigator.clipboard.writeText(text)
+                    toast.success('Social caption copied to clipboard!')
+                  }}
+                >
+                  <Copy className="h-3 w-3" /> Copy Caption &amp; Link
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -587,10 +1005,8 @@ export default function AffiliatePage() {
                 if (qrDataUrl) {
                   const a = document.createElement('a')
                   a.href = qrDataUrl
-                  a.download = `launchapropfirm-ref-${me?.code || 'qr'}.png`
-                  document.body.appendChild(a)
+                  a.download = `massfunded-ref-${me?.code || 'qr'}.png`
                   a.click()
-                  document.body.removeChild(a)
                   toast.success('QR Code downloaded!')
                 }
               }}

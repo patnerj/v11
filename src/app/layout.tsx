@@ -50,8 +50,8 @@ const getCachedBranding = cache(async (apiPath: string) => {
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  let brandName = 'LaunchAPropFirm'
-  let brandTagline = 'Institutional High-Frequency Prop Trading'
+  let brandName = 'MassFunded'
+  let brandTagline = 'Trade Our Capital'
   let googleSiteVerification = ''
   let bingSiteVerification = ''
   let customMetaTitle = ''
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
   let robotsIndexing = 'index_follow'
 
   // P3: never fetch from a half-built URL.
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.massfunded.org/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath) return {
     title:       { default: `${brandName} — Trade Up to $200,000 in Funded Capital`, template: `%s | ${brandName}` },
@@ -338,15 +338,13 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
     .focus-within\\:ring-\\[\\#10B981\\]:focus-within {
       --tw-ring-color: ${cleanHex} !important;
     }
-    body, html { font-family: ${safeFont} !important; }
-    *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
-      font-family: ${safeFont} !important;
+    body, html { font-family: ${safeFont}; }
+    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) {
+      font-family: ${safeFont};
     }
-    code, pre, kbd, code *, pre *, kbd * {
+    .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd,
+    .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-    }
-    .tabular-nums, .tabular, .terminal-num {
-      font-variant-numeric: tabular-nums;
     }
     .bg-primary { color: ${safeFg} !important; }
   `;
@@ -408,7 +406,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // silent fail
   }
 
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.massfunded.org/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   const settings = await getCachedBranding(apiPath)
 
@@ -438,12 +436,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         url: siteUrl,
         logo: logoUrl,
         sameAs: [
-          (settings as any)?.youtube_url,
-          (settings as any)?.instagram_url,
-          (settings as any)?.tiktok_url,
-          (settings as any)?.facebook_url,
-          (settings as any)?.discord_url,
-        ].filter(Boolean),
+          (settings as any)?.youtube_url || 'https://www.youtube.com/@MassFunded',
+          (settings as any)?.instagram_url || 'https://www.instagram.com/massfundedorg/',
+          (settings as any)?.tiktok_url || 'https://www.tiktok.com/@massfunded.org',
+          (settings as any)?.facebook_url || 'https://www.facebook.com/profile.php?id=61591803448831',
+          (settings as any)?.discord_url || 'https://discord.com/channels/1555893909496799312/1555893997103484969',
+        ],
         contactPoint: {
           '@type': 'ContactPoint',
           email: supportEmail,
@@ -487,7 +485,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap"
+          media="print"
+          // @ts-expect-error onLoad is valid on link in modern HTML
+          onLoad="this.media='all'"
         />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap"
+          />
+        </noscript>
         <meta
           httpEquiv="Content-Security-Policy"
           content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://s3.tradingview.com https://*.tradingview.com https://www.googletagmanager.com https://connect.facebook.net; frame-src 'self' https://tradingview-widget.com https://*.tradingview.com; img-src 'self' data: blob: https: https://www.facebook.com; connect-src 'self' https: wss:;"
@@ -508,13 +515,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 theme = 'clean-light';
               }
               document.documentElement.setAttribute('data-theme', theme);
-              if (theme === 'clean-light') {
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.add('light');
-              } else {
-                document.documentElement.classList.remove('light');
-                document.documentElement.classList.add('dark');
-              }
 
               var fontMap = {
                 'poppins': "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -587,7 +587,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 fontTag.id = 'fxsim-live-theme-font';
                 document.head.appendChild(fontTag);
               }
-              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + ' !important; } *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + ' !important; } code, pre, kbd, code *, pre *, kbd * { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; } .tabular-nums, .tabular, .terminal-num { font-variant-numeric: tabular-nums; }';
+              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + '; } *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + '; } .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd, .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }';
 
               var accent = null;
               try {
@@ -702,9 +702,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
                   '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +
                   'body, html { font-family: ' + safeFont + '; }' +
-                  '*:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]), html, body { font-family: ' + safeFont + ' !important; }' +
-                  'code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
-                  '.tabular-nums, .tabular, .terminal-num { font-variant-numeric: tabular-nums; }' +
+                  '*:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num), html, body { font-family: ' + safeFont + ' !important; }' +
+                  '.font-mono, [class*="font-mono"], .tabular, .terminal-num, code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
                   '.bg-primary { color: ' + safeFgVal + ' !important; }';
 
                   var ssrEl = document.getElementById('fxsim-dynamic-theme-ssr');

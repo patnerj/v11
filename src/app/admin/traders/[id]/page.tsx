@@ -505,7 +505,7 @@ export default function Trader360ProfilePage() {
       header: 'Date',
       align: 'right',
       render: (row) => (
-        <span className="text-xs text-text-muted tabular">
+        <span className="text-xs text-gray-400 tabular">
           {row.date}
         </span>
       )
@@ -542,7 +542,7 @@ export default function Trader360ProfilePage() {
 
   // Timeline events definition
   const timelineEvents = useMemo(() => {
-    if (traderApiData?.timeline && Array.isArray(traderApiData.timeline) && traderApiData.timeline.length > 0) {
+    if (traderApiData?.timeline?.length) {
       return traderApiData.timeline.map((item: any) => {
         let icon = Activity
         let tone: 'success' | 'accent' | 'info' | 'neutral' = 'neutral'
@@ -562,97 +562,7 @@ export default function Trader360ProfilePage() {
         }
       })
     }
-
-    // Defensive fallback synthesis when backend timeline is empty or not yet aggregated
-    const synthesized: Array<{
-      title: string
-      description: string
-      date: string
-      timestamp: number
-      icon: any
-      tone: 'success' | 'accent' | 'info' | 'neutral'
-    }> = []
-
-    // 1. Account registration milestone
-    const regDate = traderApiData?.user?.registered || traderApiData?.trader?.joined_date || traderApiData?.created_at
-    if (regDate) {
-      const ts = new Date(regDate).getTime()
-      synthesized.push({
-        title: 'Trader Account Registered',
-        description: `Verified email onboarding completed (${traderApiData?.user?.email || 'Portal User'})`,
-        date: isNaN(ts) ? String(regDate) : new Date(ts).toLocaleString(),
-        timestamp: isNaN(ts) ? 0 : ts,
-        icon: User,
-        tone: 'neutral',
-      })
-    }
-
-    // 2. Challenge evaluations milestones
-    if (Array.isArray(traderApiData?.challenges)) {
-      traderApiData.challenges.forEach((ch: any) => {
-        const cDate = ch.created_at || ch.phase_started_at
-        const ts = cDate ? new Date(cDate).getTime() : 0
-        synthesized.push({
-          title: `Challenge Enrolled: ${ch.plan_name || 'Standard Account'} #${ch.id}`,
-          description: `Stage: Phase ${ch.phase || 1} • Status: ${(ch.status || 'active').toUpperCase()} • Balance: ${formatCurrency(toNum(ch.starting_balance || 100000))}`,
-          date: ts ? new Date(ts).toLocaleString() : 'Recent',
-          timestamp: ts,
-          icon: Target,
-          tone: ch.status === 'funded' ? 'success' : 'accent',
-        })
-      })
-    }
-
-    // 3. Payments milestones
-    if (Array.isArray(traderApiData?.payments)) {
-      traderApiData.payments.forEach((pm: any) => {
-        const pDate = pm.created_at
-        const ts = pDate ? new Date(pDate).getTime() : 0
-        synthesized.push({
-          title: `Order Payment ${pm.status === 'completed' || pm.status === 'paid' ? 'Completed' : 'Initiated'} (${pm.gateway || 'Gateway'})`,
-          description: `Amount: ${formatCurrency(toNum(pm.amount))} • Status: ${pm.status}`,
-          date: ts ? new Date(ts).toLocaleString() : 'Recent',
-          timestamp: ts,
-          icon: CreditCard,
-          tone: 'info',
-        })
-      })
-    }
-
-    // 4. KYC compliance milestones
-    if (traderApiData?.kyc) {
-      const k = traderApiData.kyc
-      const kDate = k.reviewed_at || k.created_at
-      const ts = kDate ? new Date(kDate).getTime() : 0
-      synthesized.push({
-        title: `KYC Compliance Status: ${(k.status || 'under_review').toUpperCase()}`,
-        description: k.admin_note ? `Note: ${k.admin_note}` : 'Identity verification audit record',
-        date: ts ? new Date(ts).toLocaleString() : 'Recent',
-        timestamp: ts,
-        icon: ShieldCheck,
-        tone: k.status === 'approved' ? 'success' : 'neutral',
-      })
-    }
-
-    // 5. Payout disbursements milestones
-    if (Array.isArray(traderApiData?.payouts)) {
-      traderApiData.payouts.forEach((po: any) => {
-        const poDate = po.requested_at || po.created_at
-        const ts = poDate ? new Date(poDate).getTime() : 0
-        synthesized.push({
-          title: `Profit Split Payout ${po.status === 'paid' ? 'Disbursed' : 'Requested'}: ${formatCurrency(toNum(po.amount_requested))}`,
-          description: `Trader share: ${formatCurrency(toNum(po.trader_amount || po.amount_requested))} • Status: ${po.status}`,
-          date: ts ? new Date(ts).toLocaleString() : 'Recent',
-          timestamp: ts,
-          icon: Wallet,
-          tone: po.status === 'paid' ? 'success' : 'accent',
-        })
-      })
-    }
-
-    // Sort descending by timestamp (newest first)
-    synthesized.sort((a, b) => b.timestamp - a.timestamp)
-    return synthesized
+    return []
   }, [traderApiData])
 
   if (isLoading) {
@@ -702,7 +612,7 @@ export default function Trader360ProfilePage() {
         title={trader.name}
         description={`${trader.email || 'No email registered'} • Joined ${trader.joined_date} • ${trader.plan_name}`}
         badge={{
-          label: `#USR-${trader.user_id || userId}${trader.account_id ? ` · #ACC-${trader.account_id}` : ''} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
+          label: `#TRD-${trader.account_id} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
           tone: isBanned ? 'danger' : 'accent',
         }}
         actions={
@@ -724,10 +634,10 @@ export default function Trader360ProfilePage() {
                 }
                 setImpersonateConfirmOpen(true)
               }}
-              className="border-cyan-500/30 text-cyan-600 dark:text-cyan-300 hover:text-cyan-700 dark:hover:text-white hover:bg-cyan-500/20 gap-2 h-9 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="border-cyan-500/30 text-cyan-300 hover:text-white hover:bg-cyan-500/20 gap-2 h-9 disabled:opacity-40 disabled:cursor-not-allowed"
               title={adminUser?.id && (adminUser.id === userId || adminUser.id === trader.user_id) ? 'Cannot impersonate own admin account' : undefined}
             >
-              <Eye className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
+              <Eye className="h-3.5 w-3.5 text-cyan-400" />
               View as Trader
             </Button>
 
@@ -735,9 +645,9 @@ export default function Trader360ProfilePage() {
               variant="outline"
               size="sm"
               onClick={() => setResetPasswordModalOpen(true)}
-              className="border-amber-500/30 text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-white hover:bg-amber-500/20 gap-2 h-9"
+              className="border-amber-500/30 text-amber-300 hover:text-white hover:bg-amber-500/20 gap-2 h-9"
             >
-              <KeyRound className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
+              <KeyRound className="h-3.5 w-3.5 text-amber-400" />
               Direct Password Reset
             </Button>
 
@@ -1191,8 +1101,8 @@ export default function Trader360ProfilePage() {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2.5">
-                <Badge tone={trader.kyc_status === 'verified' || trader.kyc_status === 'approved' ? 'success' : trader.kyc_status === 'pending' ? 'warning' : 'neutral'} size="sm">
-                  {trader.kyc_status === 'verified' || trader.kyc_status === 'approved' ? 'Verified' : trader.kyc_status === 'pending' ? 'Pending Review' : 'Unverified'}
+                <Badge tone={trader.kyc_status === 'verified' ? 'success' : trader.kyc_status === 'pending' ? 'warning' : 'neutral'} size="sm">
+                  {trader.kyc_status === 'verified' ? 'Verified' : trader.kyc_status === 'pending' ? 'Pending Review' : 'Unverified'}
                 </Badge>
                 <Button size="sm" asChild variant="outline" className="border-border text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 gap-1.5 h-7 text-xs">
                   <Link href="/admin/kyc">
@@ -1426,9 +1336,9 @@ export default function Trader360ProfilePage() {
 
                         {/* Timeline event content */}
                         <div>
-                          <p className="text-xs font-semibold text-text">{event.title}</p>
-                          <p className="text-2xs text-text-muted mt-0.5">{event.description}</p>
-                          <span className="text-2xs text-text-muted/80 tabular font-medium mt-1 block">
+                          <p className="text-xs font-semibold text-gray-100">{event.title}</p>
+                          <p className="text-2xs text-gray-400 mt-0.5">{event.description}</p>
+                          <span className="text-2xs text-gray-500 tabular font-medium mt-1 block">
                             {event.date}
                           </span>
                         </div>

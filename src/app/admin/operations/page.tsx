@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Server, Activity, CheckCircle2, AlertTriangle, ShieldAlert,
   Database, Globe, Mail, Lock, Clock, FileCode2, Loader2, XCircle,
@@ -59,14 +59,6 @@ export default function OperationsHubPage() {
     queryFn: () => api.admin.testToolsChallenges().then(res => res.ok ? res.data : []),
     staleTime: 5000,
   })
-
-  const safeTestChallengesList: TestToolChallenge[] = useMemo(() => {
-    if (Array.isArray(testChallengesList)) return testChallengesList
-    if (testChallengesList && typeof testChallengesList === 'object' && Array.isArray((testChallengesList as any).challenges)) {
-      return (testChallengesList as any).challenges
-    }
-    return []
-  }, [testChallengesList])
 
   const executeChallengeAction = async (c: TestToolChallenge, action: 'phase1' | 'phase2' | 'funded' | 'payout_ready' | 'reset') => {
     setBusyChallengeId(c.id)
@@ -1485,7 +1477,7 @@ export default function OperationsHubPage() {
                   <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
                   Loading challenge accounts...
                 </div>
-              ) : safeTestChallengesList.length === 0 ? (
+              ) : !testChallengesList || testChallengesList.length === 0 ? (
                 <div className="p-12 text-center text-xs text-gray-500 font-mono">
                   No challenge accounts found in database.
                 </div>
@@ -1503,7 +1495,7 @@ export default function OperationsHubPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-muted/60">
-                      {safeTestChallengesList
+                      {(testChallengesList || [])
                         .filter((c: TestToolChallenge) => {
                           const q = challengeSearch.trim().toLowerCase()
                           if (!q) return true

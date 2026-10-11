@@ -621,9 +621,7 @@ export default function RiskManagementHubPage() {
 
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
                   <span className="text-2xs text-text-muted leading-tight block flex-1">
-                    {activeAlertsCount > 0 
-                      ? `${activeAlertsCount} active violations across ${(alertsData as any)?.open_flags || highRiskCount || 1} accounts`
-                      : 'HFT, martingale & spike detection'}
+                    HFT, martingale & spike detection
                   </span>
                   <Badge tone={activeAlertsCount > 0 ? "danger" : "accent"} size="sm" className="shrink-0 terminal-num text-2xs px-2 py-0.5">
                     {activeAlertsCount > 0 ? "Immediate Review" : "System Safe"}

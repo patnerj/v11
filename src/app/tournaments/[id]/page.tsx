@@ -6,10 +6,6 @@ import { Trophy, Users, ArrowLeft, ArrowRight, TrendingUp, Activity } from 'luci
 import { api } from '@/lib/api'
 import type { Competition, TournamentParticipant, PaymentOrder } from '@/types/api'
 import { toast } from 'sonner'
-import Link from 'next/link'
-import { MarketingHeader } from '@/components/marketing/header'
-import { MarketingFooter } from '@/components/marketing/footer'
-import { TournamentPodium } from '@/components/tournaments/tournament-podium'
 
 export default function PublicTournamentArena() {
   const params = useParams()
@@ -107,28 +103,25 @@ export default function PublicTournamentArena() {
   const entryFee = Number(tournament.entry_fee) || 0
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <MarketingHeader />
-      
-      {/* Immersive Arena Header with Rule 86.2 Top Clearance for Fixed Navigation */}
-      <main className="flex-1 pb-24">
-        <div className="relative isolate overflow-hidden bg-surface border-b border-border pt-28 sm:pt-36 pb-12">
-          {/* Arena Lighting Effects */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[600px] w-[800px] bg-accent/10 rounded-full blur-[120px] opacity-70 mix-blend-screen animate-pulse" />
-            <div className="absolute top-0 right-0 h-96 w-96 bg-info/10 rounded-full blur-[100px] opacity-50 mix-blend-screen" />
-            <div className="absolute top-0 left-0 h-96 w-96 bg-success/10 rounded-full blur-[100px] opacity-50 mix-blend-screen" />
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
-          </div>
+    <div className="min-h-screen bg-background pb-24">
+      {/* Immersive Arena Header */}
+      <div className="relative isolate overflow-hidden bg-surface border-b border-border">
+        {/* Arena Lighting Effects */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[600px] w-[800px] bg-accent/10 rounded-full blur-[120px] opacity-70 mix-blend-screen animate-pulse" />
+          <div className="absolute top-0 right-0 h-96 w-96 bg-info/10 rounded-full blur-[100px] opacity-50 mix-blend-screen" />
+          <div className="absolute top-0 left-0 h-96 w-96 bg-success/10 rounded-full blur-[100px] opacity-50 mix-blend-screen" />
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+        </div>
 
-          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Link 
-              href="/tournaments"
-              className="inline-flex items-center text-sm font-medium text-text-muted hover:text-text transition-colors mb-6 bg-surface-muted/50 px-3.5 py-1.5 rounded-full border border-border/50 backdrop-blur-sm shadow-xs"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tournaments
-            </Link>
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+          <button 
+            onClick={() => router.push('/tournaments')}
+            className="inline-flex items-center text-sm font-medium text-text-muted hover:text-text transition-colors mb-8 bg-surface-muted/50 px-3 py-1.5 rounded-full border border-border/50 backdrop-blur-sm"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Tournaments
+          </button>
 
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <div className="max-w-3xl">
@@ -213,20 +206,8 @@ export default function PublicTournamentArena() {
         </div>
       </div>
 
-      {/* Leaderboard & Podium Section */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 relative z-20 space-y-10">
-        {/* 3D Metallic Tournament Podium */}
-        <TournamentPodium
-          title="Current Arena Leaders"
-          participants={leaderboard.slice(0, 3).map((p, idx) => ({
-            rank: p.rank || idx + 1,
-            name: p.display_name || p.user_login || `Trader #${p.user_id || idx + 1}`,
-            returnPct: Number(p.roi_pct ?? 0),
-            equity: Number(p.current_equity ?? 0),
-          }))}
-          firstPrize={tournament.prize_pool || '$10,000 + $100K Account'}
-        />
-
+      {/* Leaderboard Section */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Main Leaderboard Table */}
@@ -339,8 +320,6 @@ export default function PublicTournamentArena() {
 
         </div>
       </div>
-      </main>
-      <MarketingFooter />
     </div>
   )
 }

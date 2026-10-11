@@ -7,7 +7,7 @@ import { CertificateDocument } from '@/components/certificate-document'
 import { Button } from '@/components/ui/button'
 import { Download, Link as LinkIcon, AlertCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { downloadCertificatePdf, downloadCertificatePng } from '@/lib/certificate-pdf'
+import { downloadCertificatePdf } from '@/lib/certificate-pdf'
 
 export default function PublicCertificatePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
@@ -45,19 +45,11 @@ export default function PublicCertificatePage({ params }: { params: Promise<{ co
     try { navigator.clipboard.writeText(window.location.href); toast.success('Link copied') } catch { /* no clipboard */ }
   }
 
-  const downloadPdf = async () => {
+  const download = async () => {
     if (!cert) return
     setDownloading(true)
     try { await downloadCertificatePdf(cert) }
     catch { toast.error('Could not generate the PDF. Please try again.') }
-    finally { setDownloading(false) }
-  }
-
-  const downloadPng = async () => {
-    if (!cert) return
-    setDownloading(true)
-    try { await downloadCertificatePng(cert) }
-    catch { toast.error('Could not generate the PNG. Please try again.') }
     finally { setDownloading(false) }
   }
 
@@ -66,8 +58,7 @@ export default function PublicCertificatePage({ params }: { params: Promise<{ co
       {/* Action bar — hidden when printing */}
       <div className="max-w-3xl mx-auto mb-5 flex items-center justify-end gap-2 print:hidden">
         <Button variant="outline" size="sm" onClick={copyLink}><LinkIcon className="h-4 w-4" /> Copy link</Button>
-        <Button variant="outline" size="sm" onClick={downloadPng} loading={downloading}><Download className="h-4 w-4 text-accent" /> Download PNG</Button>
-        <Button size="sm" onClick={downloadPdf} loading={downloading}><Download className="h-4 w-4" /> Download PDF</Button>
+        <Button size="sm" onClick={download} loading={downloading}><Download className="h-4 w-4" /> Download Certificate</Button>
       </div>
 
       {/* The certificate is the only printable content on this route */}

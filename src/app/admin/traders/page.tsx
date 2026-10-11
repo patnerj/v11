@@ -76,7 +76,7 @@ export interface TraderRowItem {
   balance: number
   equity: number
   starting_balance: number
-  kyc_status: 'verified' | 'approved' | 'pending' | 'unverified' | string
+  kyc_status: 'verified' | 'pending' | 'unverified'
   created_at: string
   profit_split?: number
   max_daily_loss?: number
@@ -346,7 +346,7 @@ export default function TradersHubPage() {
       t.user_id,
       `"${t.name.replace(/"/g, '""')}"`,
       `"${t.email}"`,
-      `"#USR-${t.user_id}${t.id ? ' #CH-' + t.id : ''}${t.account_id ? ' #ACC-' + t.account_id : ''}"`,
+      `"#TRD-${t.account_id}"`,
       `"${t.plan_name}"`,
       t.phase_name || `Phase ${t.phase}`,
       t.status,
@@ -396,25 +396,11 @@ export default function TradersHubPage() {
     },
     {
       key: 'account_id',
-      header: 'Identifiers',
+      header: 'Account ID',
       render: (row) => (
-        <div className="flex flex-col gap-1 items-start font-mono">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="terminal-num text-xs font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-md border border-accent/20" title="Trader / User ID">
-              #USR-{row.user_id}
-            </span>
-            {row.id > 0 && (
-              <span className="terminal-num text-xs font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20" title="Challenge Account ID">
-                #CH-{row.id}
-              </span>
-            )}
-          </div>
-          {row.account_id && row.account_id !== '0' && row.account_id !== String(row.user_id) && (
-            <span className="terminal-num text-2xs text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border" title="Trading Account ID">
-              #ACC-{row.account_id}
-            </span>
-          )}
-        </div>
+        <span className="font-mono terminal-num text-xs font-semibold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
+          #TRD-{row.account_id}
+        </span>
       )
     },
     {
@@ -479,7 +465,7 @@ export default function TradersHubPage() {
       header: 'KYC Status',
       align: 'center',
       render: (row) => {
-        if (row.kyc_status === 'approved' || row.kyc_status === 'verified') {
+        if (row.kyc_status === 'verified') {
           return <Badge tone="success" size="sm">Verified</Badge>
         }
         if (row.kyc_status === 'pending') {
@@ -654,7 +640,7 @@ export default function TradersHubPage() {
             <div className="relative w-full md:max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
               <Input
-                placeholder="Search by name, email, #USR-12, #CH-88, or #ACC-99..."
+                placeholder="Search by trader name, email, or #TRD-88219..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-surface border-border text-text text-sm"

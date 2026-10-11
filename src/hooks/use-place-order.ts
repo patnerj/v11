@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices, nextOptimisticId } from '@/store/prices'
-import { isMarketOpen } from '@/lib/symbol-meta'
 import type { Position } from '@/types/api'
 
 export interface PlaceMarketParams {
@@ -31,12 +30,6 @@ export function usePlaceOrder() {
 
   const placeMarket = useCallback(async (params: PlaceMarketParams): Promise<boolean> => {
     const { symbol, side, lots, sl = null, tp = null, minLot = 0.01 } = params
-
-    if (!isMarketOpen(symbol)) {
-      toast.error(`Market is closed. ${symbol} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
-      return false
-    }
-
     if (!Number.isFinite(lots) || lots < minLot) {
       toast.error(`Lot size must be at least ${minLot}`)
       return false
@@ -61,8 +54,6 @@ export function usePlaceOrder() {
       commission: 0,
       margin: 0,
       opened_at: new Date().toISOString(),
-      opened_at_iso: new Date().toISOString(),
-      isOptimistic: true,
     }
     
     // Inject optimistic row

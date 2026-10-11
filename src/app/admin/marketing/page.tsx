@@ -349,17 +349,7 @@ export default function MarketingHubPage() {
     queryKey: ['admin-plans-for-coupons'],
     queryFn: async () => {
       const res = await api.admin.plansList()
-      if (!res.ok || !Array.isArray(res.data)) return []
-      const seen = new Set<string>()
-      const activePlans: any[] = []
-      for (const p of res.data) {
-        if (!p.is_active || Number(p.is_active) === 0) continue
-        const key = `${p.name || ''}_${p.account_size || ''}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        activePlans.push(p)
-      }
-      return activePlans
+      return res.ok && Array.isArray(res.data) ? res.data : []
     }
   })
 
@@ -425,7 +415,7 @@ export default function MarketingHubPage() {
       usage_limit: Number(c.usage_limit || 0),
       per_user_limit: Number(c.per_user_limit || 1),
       plan_ids: c.plan_ids || '',
-      expires_at: c.expires_at ? (c.expires_at.includes('T') ? c.expires_at.split('T')[0] : c.expires_at.split(' ')[0]) : '',
+      expires_at: c.expires_at ? c.expires_at.split('T')[0] : '',
       active: c.active ? 1 : 0,
     })
     setIsCouponModalOpen(true)
@@ -719,7 +709,7 @@ export default function MarketingHubPage() {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `launchapropfirm_affiliates_${new Date().toISOString().slice(0, 10)}.csv`)
+    link.setAttribute('download', `massfunded_affiliates_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -747,7 +737,7 @@ export default function MarketingHubPage() {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `launchapropfirm_commissions_${new Date().toISOString().slice(0, 10)}.csv`)
+    link.setAttribute('download', `massfunded_commissions_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -1077,37 +1067,26 @@ export default function MarketingHubPage() {
               {
                 key: 'expires',
                 header: 'Expiration Date',
-                render: (c: Coupon) => {
-                  const isExpired = !!(c.expires_at && new Date(c.expires_at.replace(' ', 'T')).getTime() < Date.now())
-                  return (
-                    <div className={`text-xs font-mono ${isExpired ? 'text-red-400 font-medium' : 'text-gray-400'}`}>
-                      {c.expires_at ? new Date(c.expires_at.replace(' ', 'T')).toLocaleDateString() : 'Never (Perpetual)'}
-                      {isExpired && <span className="ml-1.5 text-2xs uppercase tracking-wider text-red-400 font-semibold">(Expired)</span>}
-                    </div>
-                  )
-                },
+                render: (c: Coupon) => (
+                  <div className="text-xs text-gray-400 font-mono">
+                    {c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'Never (Perpetual)'}
+                  </div>
+                ),
               },
               {
                 key: 'status',
                 header: 'Status',
-                render: (c: Coupon) => {
-                  const isExpired = !!(c.expires_at && new Date(c.expires_at.replace(' ', 'T')).getTime() < Date.now())
-                  return (
-                    <button
-                      onClick={() => handleToggleCouponActive(c)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      title={isExpired ? "Coupon has expired based on expiration date" : "Click to toggle status"}
-                    >
-                      {isExpired ? (
-                        <Badge tone="neutral" size="sm">Expired</Badge>
-                      ) : (
-                        <Badge tone={c.active ? 'success' : 'neutral'} size="sm">
-                          {c.active ? 'Active' : 'Disabled'}
-                        </Badge>
-                      )}
-                    </button>
-                  )
-                },
+                render: (c: Coupon) => (
+                  <button
+                    onClick={() => handleToggleCouponActive(c)}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    title="Click to toggle status"
+                  >
+                    <Badge tone={c.active ? 'success' : 'neutral'} size="sm">
+                      {c.active ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </button>
+                ),
               },
               {
                 key: 'actions',

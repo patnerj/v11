@@ -36,31 +36,31 @@ export interface Branding {
 }
 
 const DEFAULTS: Branding = {
-  brand_name: 'LaunchAPropFirm',
-  brand_tagline: 'Institutional High-Frequency Prop Trading',
+  brand_name: 'MassFunded',
+  brand_tagline: 'Trade Our Capital',
   logo_url: '/branding/brand_logo.svg',
   sidebar_icon_url: '/branding/sidebar_icon.svg',
   login_logo_url: '/branding/login_logo.svg',
   favicon_url: '/favicon.svg',
-  support_email: 'support@launchapropfirm.com',
+  support_email: 'support@massfunded.org',
   primary_color: '#10B981',
-  secondary_color: '#059669',
-  footer_text: '© 2026 LaunchAPropFirm. All rights reserved.',
+  secondary_color: '#00e5a0',
+  footer_text: '© 2026 MassFunded. All rights reserved.',
   tv_symbol_map: '',
-  youtube_url: '#',
-  instagram_url: 'https://www.instagram.com/yourswebsitemaker/',
-  tiktok_url: '#',
-  facebook_url: '#',
-  discord_url: '#',
+  youtube_url: 'https://www.youtube.com/@MassFunded',
+  instagram_url: 'https://www.instagram.com/massfundedorg/',
+  tiktok_url: 'https://www.tiktok.com/@massfunded.org',
+  facebook_url: 'https://www.facebook.com/profile.php?id=61591803448831',
+  discord_url: 'https://discord.com/channels/1555893909496799312/1555893997103484969',
   developer_url: '',
-  meta_title: 'LaunchAPropFirm — Trade Up to $200,000 in Funded Capital',
+  meta_title: 'MassFunded — Trade Up to $200,000 in Funded Capital',
   meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.',
-  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, LaunchAPropFirm',
+  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, MassFunded',
   google_site_verification: '',
   bing_site_verification: '',
   robots_indexing: 'index_follow',
   og_image_url: '/og-image.png',
-  ga_measurement_id: '',
+  ga_measurement_id: 'G-G5758RZV7E',
   facebook_pixel_id: '',
   custom_head_code: '',
 }
@@ -124,7 +124,7 @@ export const useBranding = create<BrandingState>((set, get) => ({
 /** Apply title + favicon at runtime (true white-label without rebuild). */
 function applyDocumentBranding(b: Branding) {
   if (typeof document === 'undefined') return
-  const title = b.brand_name || 'LaunchAPropFirm'
+  const title = b.brand_name || 'MassFunded'
   if (document.title !== title) {
     document.title = title
   }

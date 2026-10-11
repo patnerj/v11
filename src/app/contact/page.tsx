@@ -67,11 +67,12 @@ function DiscordIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function ContactPage() {
-  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || '#'
-  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/yourswebsitemaker/'
-  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || '#'
-  const facebookUrl = useBranding((s) => s.branding.facebook_url) || '#'
-  const discordUrl = useBranding((s) => s.branding.discord_url) || '#'
+  const brand = useBranding((s) => s.branding.brand_name) || "MassFunded"
+  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || 'https://www.youtube.com/@MassFunded'
+  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/massfundedorg/'
+  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || 'https://www.tiktok.com/@massfunded.org'
+  const facebookUrl = useBranding((s) => s.branding.facebook_url) || 'https://www.facebook.com/profile.php?id=61591803448831'
+  const discordUrl = useBranding((s) => s.branding.discord_url) || 'https://discord.com/channels/1555893909496799312/1555893997103484969'
   const developerUrl = useBranding((s) => s.branding.developer_url) || ''
 
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
@@ -102,7 +103,7 @@ export default function ContactPage() {
       toast.success('Opening Platform Architecture Portal (launchapropfirm.com)...')
       return
     }
-    const targetEmail = formState.category === 'executive' || formState.category === 'vip' ? 'vip@launchapropfirm.com' : 'support@launchapropfirm.com'
+    const targetEmail = formState.category === 'executive' || formState.category === 'vip' ? 'bahadur@massfunded.org' : 'support@massfunded.org'
     const mailtoUrl = `mailto:${targetEmail}?subject=${encodeURIComponent(`[${formState.category.toUpperCase()}] Inquiry from ${formState.name || 'Trader'}`)}&body=${encodeURIComponent(
       `Name: ${formState.name}\nEmail: ${formState.email}\nOrder/Account Ref: ${formState.orderRef || 'N/A'}\n\nMessage:\n${formState.message}`
     )}`
@@ -136,7 +137,7 @@ export default function ContactPage() {
               <span>Institutional Support & Direct Escalations</span>
             </motion.div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tightest leading-[1.08] text-text">
-              Connect With <span className="bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">LaunchAPropFirm</span>
+              Connect With <span className="bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">MassFunded</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
               Direct communication lines to our 24/7 technical desk and executive management. Zero synthetic bots — talk directly to prop firm decision makers.
@@ -166,7 +167,7 @@ export default function ContactPage() {
                   </span>
                 </div>
 
-                <h3 className="text-2xl font-bold text-text mb-2">Managing Director & VIP Capital Desk</h3>
+                <h3 className="text-2xl font-bold text-text mb-2">Bahadur — Managing Director</h3>
                 <p className="text-sm text-text-muted leading-relaxed mb-6">
                   Direct escalation channel to the platform owner. Reserved for institutional partnerships, large capital scaling requests ($100,000 to $2,000,000), and critical compliance reviews.
                 </p>
@@ -178,16 +179,16 @@ export default function ContactPage() {
                       <Mail className="h-4 w-4" />
                     </div>
                     <span className="font-mono text-sm sm:text-base font-bold text-text truncate select-all">
-                      vip@launchapropfirm.com
+                      bahadur@massfunded.org
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard('vip@launchapropfirm.com', 'Executive Email')}
+                    onClick={() => copyToClipboard('bahadur@massfunded.org', 'Executive Email')}
                     className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-muted border border-border shadow-xs hover:border-emerald-500/40 text-xs font-semibold text-text hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                     title="Copy Email"
                   >
-                    {copiedEmail === 'vip@launchapropfirm.com' ? (
+                    {copiedEmail === 'bahadur@massfunded.org' ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied</span>
@@ -203,7 +204,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:vip@launchapropfirm.com?subject=Executive%20Escalation%20Inquiry%20-%20LaunchAPropFirm"
+                href="mailto:bahadur@massfunded.org?subject=Executive%20Escalation%20Inquiry%20-%20MassFunded"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-sm font-bold transition-all"
               >
                 <span>Email Executive Desk Directly</span>
@@ -243,16 +244,16 @@ export default function ContactPage() {
                       <LifeBuoy className="h-4 w-4" />
                     </div>
                     <span className="font-mono text-sm sm:text-base font-bold text-text truncate select-all">
-                      support@launchapropfirm.com
+                      support@massfunded.org
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support Email')}
+                    onClick={() => copyToClipboard('support@massfunded.org', 'Support Email')}
                     className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-muted border border-border shadow-xs hover:border-teal-500/40 text-xs font-semibold text-text hover:text-teal-600 dark:hover:text-teal-400 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                     title="Copy Email"
                   >
-                    {copiedEmail === 'support@launchapropfirm.com' ? (
+                    {copiedEmail === 'support@massfunded.org' ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                         <span className="text-teal-600 dark:text-teal-400 font-bold">Copied</span>
@@ -268,7 +269,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:support@launchapropfirm.com?subject=Trader%20Support%20Request%20-%20LaunchAPropFirm"
+                href="mailto:support@massfunded.org?subject=Trader%20Support%20Request%20-%20MassFunded"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm transition-all"
               >
                 <span>Launch Direct Support Ticket</span>
@@ -308,16 +309,16 @@ export default function ContactPage() {
                       <Mail className="h-4 w-4" />
                     </div>
                     <span className="font-mono text-sm sm:text-base font-bold text-text truncate select-all">
-                      support@launchapropfirm.com
+                      support@massfunded.org
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard('support@launchapropfirm.com', 'Institutional Desk Email')}
+                    onClick={() => copyToClipboard('support@massfunded.org', 'Institutional Desk Email')}
                     className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-muted border border-border shadow-xs hover:border-blue-500/40 text-xs font-semibold text-text hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                     title="Copy Email"
                   >
-                    {copiedEmail === 'support@launchapropfirm.com' ? (
+                    {copiedEmail === 'support@massfunded.org' ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         <span className="text-blue-600 dark:text-blue-400 font-bold">Copied</span>
@@ -333,7 +334,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:support@launchapropfirm.com?subject=Institutional%20Desk%20Inquiry%20-%20LaunchAPropFirm"
+                href="mailto:support@massfunded.org?subject=Institutional%20Desk%20Inquiry%20-%20MassFunded"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-sm font-bold transition-all"
               >
                 <span>Contact Institutional Desk</span>
@@ -356,8 +357,8 @@ export default function ContactPage() {
               {/* YouTube */}
               <a
                 href={youtubeUrl}
-                target={youtubeUrl !== '#' ? '_blank' : undefined}
-                rel={youtubeUrl !== '#' ? 'noopener noreferrer' : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-red-500/50 hover:bg-red-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -368,7 +369,7 @@ export default function ContactPage() {
                   <div className="text-2xs text-text-muted mt-1 leading-snug">Podcasts, trading guides &amp; masterclasses</div>
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-2xs font-mono text-red-500 font-semibold">
-                  <span>@LaunchAPropFirm</span>
+                  <span>@MassFunded</span>
                   <ExternalLink className="h-3 w-3" />
                 </div>
               </a>
@@ -376,8 +377,8 @@ export default function ContactPage() {
               {/* Instagram */}
               <a
                 href={instagramUrl}
-                target={instagramUrl !== '#' ? '_blank' : undefined}
-                rel={instagramUrl !== '#' ? 'noopener noreferrer' : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-pink-500/50 hover:bg-pink-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -388,7 +389,7 @@ export default function ContactPage() {
                   <div className="text-2xs text-text-muted mt-1 leading-snug">Payout certificates &amp; daily updates</div>
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-2xs font-mono text-pink-500 font-semibold">
-                  <span>@yourswebsitemaker</span>
+                  <span>@massfundedorg</span>
                   <ExternalLink className="h-3 w-3" />
                 </div>
               </a>
@@ -396,8 +397,8 @@ export default function ContactPage() {
               {/* TikTok */}
               <a
                 href={tiktokUrl}
-                target={tiktokUrl !== '#' ? '_blank' : undefined}
-                rel={tiktokUrl !== '#' ? 'noopener noreferrer' : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -408,7 +409,7 @@ export default function ContactPage() {
                   <div className="text-2xs text-text-muted mt-1 leading-snug">Quick rules, strategies &amp; insights</div>
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-2xs font-mono text-cyan-400 font-semibold">
-                  <span>@launchapropfirm.com</span>
+                  <span>@massfunded.org</span>
                   <ExternalLink className="h-3 w-3" />
                 </div>
               </a>
@@ -416,8 +417,8 @@ export default function ContactPage() {
               {/* Facebook */}
               <a
                 href={facebookUrl}
-                target={facebookUrl !== '#' ? '_blank' : undefined}
-                rel={facebookUrl !== '#' ? 'noopener noreferrer' : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -428,7 +429,7 @@ export default function ContactPage() {
                   <div className="text-2xs text-text-muted mt-1 leading-snug">Community hub &amp; announcements</div>
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-2xs font-mono text-blue-500 font-semibold">
-                  <span>LaunchAPropFirm</span>
+                  <span>MassFunded</span>
                   <ExternalLink className="h-3 w-3" />
                 </div>
               </a>
@@ -436,8 +437,8 @@ export default function ContactPage() {
               {/* Discord */}
               <a
                 href={discordUrl}
-                target={discordUrl !== '#' ? '_blank' : undefined}
-                rel={discordUrl !== '#' ? 'noopener noreferrer' : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -498,11 +499,11 @@ export default function ContactPage() {
                       onChange={(e) => setFormState({ ...formState, category: e.target.value })}
                       className="w-full h-11 px-3.5 rounded-xl bg-surface border border-border focus:border-emerald-500 text-sm text-text outline-none transition-colors shadow-xs"
                     >
-                      <option value="support" className="bg-surface text-text">Client Support (support@launchapropfirm.com)</option>
-                      <option value="payouts" className="bg-surface text-text">Payout Treasury (support@launchapropfirm.com)</option>
-                      <option value="mt5" className="bg-surface text-text">MT5 Bridge &amp; Feeds (support@launchapropfirm.com)</option>
-                      <option value="executive" className="bg-surface text-text">Executive Desk (vip@launchapropfirm.com)</option>
-                      <option value="vip" className="bg-surface text-text">VIP Capital Allocation (vip@launchapropfirm.com)</option>
+                      <option value="support" className="bg-surface text-text">Client Support (support@massfunded.org)</option>
+                      <option value="payouts" className="bg-surface text-text">Payout Treasury (support@massfunded.org)</option>
+                      <option value="mt5" className="bg-surface text-text">MT5 Bridge &amp; Feeds (support@massfunded.org)</option>
+                      <option value="executive" className="bg-surface text-text">Executive Desk (bahadur@massfunded.org)</option>
+                      <option value="vip" className="bg-surface text-text">VIP Capital Allocation (bahadur@massfunded.org)</option>
                       <option value="developer" className="bg-surface text-text">Platform Architecture / Developer (launchapropfirm.com)</option>
                     </select>
                   </div>
@@ -535,7 +536,7 @@ export default function ContactPage() {
                   className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl shadow-glow-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
-                  <span>Send Ticket to {formState.category === 'executive' || formState.category === 'vip' ? 'Executive Desk' : 'Support Desk'}</span>
+                  <span>Send Ticket to {formState.category === 'executive' || formState.category === 'vip' ? 'Bahadur (Executive Desk)' : 'Support Desk'}</span>
                 </Button>
               </form>
             </div>
