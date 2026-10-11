@@ -15,7 +15,7 @@ import { usePrices } from '@/store/prices'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/cn'
 import type { Position } from '@/types/api'
-import { playOrderCloseSound } from '@/lib/sound'
+import { playOrderCloseSound, playOrderProfitChimeSound, playOrderLossThumpSound } from '@/lib/sound'
 import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ClosePositionModal } from '@/components/dashboard/trading/close-position-modal'
@@ -43,8 +43,12 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
     try {
       const res = await api.close(closingPosition.id)
       if (res.ok && res.data.success) {
-        playOrderCloseSound()
         const closePnl = toNum(res.data.pnl)
+        if (closePnl >= 0) {
+          playOrderProfitChimeSound()
+        } else {
+          playOrderLossThumpSound()
+        }
         // Optimistic removal from store for instant UI feedback
         usePrices.setState((state) => ({
           positions: (state.positions || []).filter((p) => p.id !== closingPosition.id)
@@ -95,7 +99,11 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
       const accId = positions[0]?.account_id
       const batchRes = await api.closeAll(accId ? { account_id: accId } : undefined)
       if (batchRes.ok && batchRes.data.success) {
-        playOrderCloseSound()
+        if (totalPnL >= 0) {
+          playOrderProfitChimeSound()
+        } else {
+          playOrderLossThumpSound()
+        }
         toast.success(`Closed all ${batchRes.data.closed_count || positions.length} position(s)!`, { id: toastId })
         invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
         onChanged?.()

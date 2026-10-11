@@ -505,7 +505,7 @@ export default function Trader360ProfilePage() {
       header: 'Date',
       align: 'right',
       render: (row) => (
-        <span className="text-xs text-gray-400 tabular">
+        <span className="text-xs text-text-muted tabular">
           {row.date}
         </span>
       )
@@ -634,10 +634,10 @@ export default function Trader360ProfilePage() {
                 }
                 setImpersonateConfirmOpen(true)
               }}
-              className="border-cyan-500/30 text-cyan-300 hover:text-white hover:bg-cyan-500/20 gap-2 h-9 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="border-cyan-500/30 text-cyan-600 dark:text-cyan-300 hover:text-cyan-700 dark:hover:text-white hover:bg-cyan-500/20 gap-2 h-9 disabled:opacity-40 disabled:cursor-not-allowed"
               title={adminUser?.id && (adminUser.id === userId || adminUser.id === trader.user_id) ? 'Cannot impersonate own admin account' : undefined}
             >
-              <Eye className="h-3.5 w-3.5 text-cyan-400" />
+              <Eye className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
               View as Trader
             </Button>
 
@@ -645,9 +645,9 @@ export default function Trader360ProfilePage() {
               variant="outline"
               size="sm"
               onClick={() => setResetPasswordModalOpen(true)}
-              className="border-amber-500/30 text-amber-300 hover:text-white hover:bg-amber-500/20 gap-2 h-9"
+              className="border-amber-500/30 text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-white hover:bg-amber-500/20 gap-2 h-9"
             >
-              <KeyRound className="h-3.5 w-3.5 text-amber-400" />
+              <KeyRound className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
               Direct Password Reset
             </Button>
 
@@ -1336,9 +1336,9 @@ export default function Trader360ProfilePage() {
 
                         {/* Timeline event content */}
                         <div>
-                          <p className="text-xs font-semibold text-gray-100">{event.title}</p>
-                          <p className="text-2xs text-gray-400 mt-0.5">{event.description}</p>
-                          <span className="text-2xs text-gray-500 tabular font-medium mt-1 block">
+                          <p className="text-xs font-semibold text-text">{event.title}</p>
+                          <p className="text-2xs text-text-muted mt-0.5">{event.description}</p>
+                          <span className="text-2xs text-text-muted/80 tabular font-medium mt-1 block">
                             {event.date}
                           </span>
                         </div>

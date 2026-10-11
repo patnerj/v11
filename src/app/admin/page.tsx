@@ -29,6 +29,7 @@ import { Input, Label } from '@/components/ui/input'
 import { FounderActionCenter } from '@/components/admin/founder-action-center'
 import { Mt5GatewayMonitorCard } from '@/components/admin/mt5-gateway-monitor-card'
 import { PriceFeedHealthCard } from '@/components/admin/price-feed-health-card'
+import { AdminCapitalPulseBar } from '@/components/admin/admin-capital-pulse-bar'
 import { cn } from '@/lib/cn'
 import { toast } from 'sonner'
 import { toNum } from '@/lib/format'
@@ -759,6 +760,9 @@ export default function AdminCommandCenter() {
           </div>
         }
       />
+
+      {/* Real-Time Risk & Capital Pulse Bar in Admin Command Center */}
+      <AdminCapitalPulseBar isEmergencyPaused={isEmergencyPaused} />
 
       {/* ── Executive Infrastructure Telemetry Strip (Phase 2) ───────────── */}
       <div className="bg-surface border border-border rounded-xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">

@@ -274,6 +274,21 @@ export default function ConfigurationHubPage() {
   const [isSmtpDirty, setIsSmtpDirty] = useState(false)
   const [isMt5Dirty, setIsMt5Dirty] = useState(false)
 
+  // Synchronize tab state with URL query parameter (e.g. ?tab=branding, ?tab=mt5)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab')
+    if (tab) {
+      const validTabs = ['plans', 'branding', 'payments', 'rules', 'trading', 'smtp', 'sandbox', 'mt5', 'integrations', 'scaling', 'license', 'ai_engine']
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab as any)
+      } else if (tab === 'ai') {
+        setActiveTab('ai_engine')
+      }
+    }
+  }, [])
+
   // ─────────────────────────────────────────────────────────────────
   // AI POWERHOUSE (GEMINI 2.0 FLASH & DEEPSEEK) ENGINE STATE
   // ─────────────────────────────────────────────────────────────────

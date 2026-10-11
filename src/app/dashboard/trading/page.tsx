@@ -23,6 +23,8 @@ import { PositionsTable }     from '@/components/dashboard/trading/positions-tab
 import { PendingOrdersTable } from '@/components/dashboard/trading/pending-orders-table'
 import { AccountSwitcher, buildSwitchEntries, type SwitchEntry } from '@/components/dashboard/trading/account-switcher'
 import { TournamentWarningBanner } from '@/components/dashboard/trading/tournament-banner'
+import { NewsRestrictBanner } from '@/components/dashboard/trading/news-restrict-banner'
+import { SoundToggle } from '@/components/dashboard/trading/sound-toggle'
 import { MobileBottomSheet }  from '@/components/dashboard/trading/mobile-bottom-sheet'
 import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
 import { ConfirmDialog }     from '@/components/ui/ConfirmDialog'
@@ -420,6 +422,11 @@ function DesktopLayout({
 
   return (
     <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0 w-full overflow-hidden">
+      {/* High-Impact News Restrict Warning Banner */}
+      <div className="shrink-0">
+        <NewsRestrictBanner plan={plan} />
+      </div>
+
       {/* Tournament Warning Banner */}
       {isTournamentMode && tournamentId && (
         <div className="shrink-0">
@@ -432,9 +439,12 @@ function DesktopLayout({
           />
         </div>
       )}
-      {/* Account switcher — Challenge ↔ Tournament trading context */}
-      <div className="shrink-0">
-        <AccountSwitcher entries={switchEntries} metrics={metrics} />
+      {/* Account switcher & Sound Toggle bar */}
+      <div className="shrink-0 flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <AccountSwitcher entries={switchEntries} metrics={metrics} />
+        </div>
+        <SoundToggle compact className="shrink-0" />
       </div>
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
         {/* Left: market watch */}

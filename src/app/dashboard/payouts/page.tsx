@@ -14,6 +14,7 @@ import { Input, Label, Textarea } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
 import { PayoutSummary, PayoutHistory } from '@/components/dashboard/payout-history'
+import { PayoutReadinessCard } from '@/components/dashboard/payout-readiness-card'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
@@ -63,6 +64,15 @@ export default function PayoutsPage() {
         icon={Banknote}
         badge={{ label: 'Withdrawals', tone: 'accent' }}
       />
+
+      {/* Next Payout Readiness Countdown Timer Card */}
+      {funded.length > 0 && (
+        <PayoutReadinessCard
+          fundedChallenges={funded}
+          nextPayoutAt={pdata?.next_payout_at}
+          savedMethod={savedMethod}
+        />
+      )}
 
       {/* Summary */}
       <PayoutSummary
