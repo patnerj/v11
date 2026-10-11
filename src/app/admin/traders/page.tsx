@@ -63,6 +63,7 @@ function formatExactMoney(val: number | string | undefined | null) {
 export interface TraderRowItem {
   id: number
   user_id: number
+  challenge_id?: number
   name: string
   username: string
   user_login?: string
@@ -203,11 +204,12 @@ export default function TradersHubPage() {
 
           rows.push({
             id: Number(c.id),
+            challenge_id: Number(c.id),
             user_id: uid,
             name: u.user_login || c.username || `Trader #${uid}`,
             username: u.user_login || c.username || `trader_${uid}`,
             email: u.user_email || c.user_email || `trader_${uid}@propfirm.com`,
-            account_id: c.account_id ? String(c.account_id) : String(c.id),
+            account_id: c.fxsim_account_id ? String(c.fxsim_account_id) : (c.account_id && String(c.account_id) !== String(c.id) ? String(c.account_id) : ''),
             plan_name: c.plan_name || '$100K Stellar 2-Step',
             phase: phaseNum,
             phase_name: isFunded ? 'Funded Pro' : `Phase ${phaseNum}`,
@@ -230,15 +232,17 @@ export default function TradersHubPage() {
         const startingBal = Number(u.starting_balance || 0)
         const currentBal = Number(u.balance || 0)
         const currentEq = Number(u.equity || 0)
+        const hasChallengeId = Boolean(u.challenge_id && Number(u.challenge_id) > 0)
 
         rows.push({
-          id: uid,
+          id: hasChallengeId ? Number(u.challenge_id) : uid,
+          challenge_id: hasChallengeId ? Number(u.challenge_id) : undefined,
           user_id: uid,
           name: u.user_login || `Trader #${uid}`,
           username: u.user_login || `trader_${uid}`,
           email: u.user_email || `trader_${uid}@example.com`,
-          account_id: u.account_id ? String(u.account_id) : String(uid),
-          plan_name: u.plan_name || 'No Active Challenge',
+          account_id: u.account_id && String(u.account_id) !== '0' && String(u.account_id) !== String(uid) ? String(u.account_id) : '',
+          plan_name: u.plan_name || (hasChallengeId ? 'Active Challenge' : 'No Active Challenge'),
           phase: 0,
           phase_name: 'Registered',
           status: u.status === 'banned' ? 'banned' : (u.status === 'no_account' ? 'registered' : (u.status || 'active')),
@@ -397,25 +401,34 @@ export default function TradersHubPage() {
     {
       key: 'account_id',
       header: 'Identifiers',
-      render: (row) => (
-        <div className="flex flex-col gap-1 items-start font-mono">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="terminal-num text-xs font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-md border border-accent/20" title="Trader / User ID">
-              #USR-{row.user_id}
-            </span>
-            {row.id > 0 && (
-              <span className="terminal-num text-xs font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20" title="Challenge Account ID">
-                #CH-{row.id}
+      render: (row) => {
+        const hasChallenge = Boolean(row.challenge_id && row.challenge_id > 0)
+        const hasAccount = Boolean(
+          row.account_id &&
+          row.account_id !== '0' &&
+          String(row.account_id) !== String(row.user_id) &&
+          (!row.challenge_id || String(row.account_id) !== String(row.challenge_id))
+        )
+        return (
+          <div className="flex flex-col gap-1 items-start font-mono">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="terminal-num text-xs font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-md border border-accent/20" title="Trader / User ID">
+                #USR-{row.user_id}
+              </span>
+              {hasChallenge && (
+                <span className="terminal-num text-xs font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20" title="Challenge Account ID">
+                  #CH-{row.challenge_id}
+                </span>
+              )}
+            </div>
+            {hasAccount && (
+              <span className="terminal-num text-2xs text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border" title="Trading Account ID">
+                #ACC-{row.account_id}
               </span>
             )}
           </div>
-          {row.account_id && row.account_id !== '0' && row.account_id !== String(row.user_id) && (
-            <span className="terminal-num text-2xs text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border" title="Trading Account ID">
-              #ACC-{row.account_id}
-            </span>
-          )}
-        </div>
-      )
+        )
+      }
     },
     {
       key: 'plan_phase',

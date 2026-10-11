@@ -1091,19 +1091,20 @@ export default function MarketingHubPage() {
                 key: 'status',
                 header: 'Status',
                 render: (c: Coupon) => {
-                  const isExpired = !!(c.expires_at && new Date(c.expires_at.replace(' ', 'T')).getTime() < Date.now())
+                  const isExpired = Boolean(c.expires_at && new Date(c.expires_at.replace(' ', 'T')).getTime() < Date.now())
+                  const isActiveAndValid = Boolean(c.active && (!c.expires_at || new Date(c.expires_at.replace(' ', 'T')).getTime() > Date.now()))
                   return (
                     <button
                       onClick={() => handleToggleCouponActive(c)}
                       className="cursor-pointer hover:opacity-80 transition-opacity"
                       title={isExpired ? "Coupon has expired based on expiration date" : "Click to toggle status"}
                     >
-                      {isExpired ? (
+                      {isActiveAndValid ? (
+                        <Badge tone="success" size="sm">Active</Badge>
+                      ) : isExpired ? (
                         <Badge tone="neutral" size="sm">Expired</Badge>
                       ) : (
-                        <Badge tone={c.active ? 'success' : 'neutral'} size="sm">
-                          {c.active ? 'Active' : 'Disabled'}
-                        </Badge>
+                        <Badge tone="neutral" size="sm">Disabled</Badge>
                       )}
                     </button>
                   )

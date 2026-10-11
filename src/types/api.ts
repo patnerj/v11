@@ -765,6 +765,7 @@ export interface AdminUserRow {
   margin_used:       number | string
   status:            string
   account_id:        number | null
+  challenge_id?:     number | null
   active_challenges: number
   funded_challenges: number
   kyc_status?:       string

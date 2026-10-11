@@ -225,7 +225,8 @@ export default function Trader360ProfilePage() {
       name: apiUser?.display_name || apiUser?.name || apiUser?.username || `Trader #${userId}`,
       email: apiUser?.email || apiUser?.user_email || '',
       username: apiUser?.username || apiUser?.user_login || `user_${userId}`,
-      account_id: challenge?.fxsim_account_id || challenge?.id || traderApiData?.account?.account_id || `${userId}`,
+      challenge_id: challenge?.id ? Number(challenge.id) : undefined,
+      account_id: challenge?.fxsim_account_id ? String(challenge.fxsim_account_id) : (traderApiData?.account?.account_id ? String(traderApiData.account.account_id) : undefined),
       plan_name: challenge?.plan_name || 'Standard Evaluation',
       phase: Number(challenge?.phase || 1),
       phase_label: challenge?.status === 'funded' ? 'Funded Live' : (challenge?.phase ? `Phase ${challenge.phase}` : (challenge?.status || 'Active')),
@@ -702,7 +703,7 @@ export default function Trader360ProfilePage() {
         title={trader.name}
         description={`${trader.email || 'No email registered'} • Joined ${trader.joined_date} • ${trader.plan_name}`}
         badge={{
-          label: `#USR-${trader.user_id || userId}${trader.account_id ? ` · #ACC-${trader.account_id}` : ''} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
+          label: `#USR-${trader.user_id || userId}${trader.challenge_id ? ` · #CH-${trader.challenge_id}` : ''}${trader.account_id && String(trader.account_id) !== String(trader.user_id) && String(trader.account_id) !== String(trader.challenge_id) ? ` · #ACC-${trader.account_id}` : ''} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
           tone: isBanned ? 'danger' : 'accent',
         }}
         actions={
