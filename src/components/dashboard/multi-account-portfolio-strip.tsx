@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Trophy, Sparkles, TrendingUp, TrendingDown, CheckCircle2,
@@ -31,7 +31,21 @@ export function MultiAccountPortfolioStrip({
   const tradingCtx = usePrices((s) => s.tradingContext)
   const isSwitching = usePrices((s) => s.contextSwitching)
 
-  if (!challenges || challenges.length <= 1 && tournaments.length === 0) {
+  // Defensive normalization per Rule 1.2
+  const safeChallenges = useMemo<ChallengeAccount[]>(() => {
+    if (Array.isArray(challenges)) return challenges
+    if (challenges && typeof challenges === 'object' && Array.isArray((challenges as any).challenges)) {
+      return (challenges as any).challenges
+    }
+    return []
+  }, [challenges])
+
+  const safeTournaments = useMemo<TournamentMine[]>(() => {
+    if (Array.isArray(tournaments)) return tournaments
+    return []
+  }, [tournaments])
+
+  if (!safeChallenges || (safeChallenges.length <= 1 && safeTournaments.length === 0)) {
     return null
   }
 
@@ -68,7 +82,7 @@ export function MultiAccountPortfolioStrip({
           <h3 className="text-xs font-bold uppercase tracking-wider text-text flex items-center gap-2">
             Multi-Account Portfolio Strip
             <span className="text-2xs font-normal text-text-muted">
-              ({challenges.length} Accounts Active)
+              ({safeChallenges.length} Accounts Active)
             </span>
           </h3>
         </div>
@@ -97,7 +111,7 @@ export function MultiAccountPortfolioStrip({
         ref={scrollContainerRef}
         className="flex items-stretch gap-3.5 overflow-x-auto pb-2 pt-1 -mx-1 px-1 custom-scrollbar snap-x snap-mandatory"
       >
-        {challenges.map((ch) => {
+        {safeChallenges.map((ch) => {
           const accId = ch.fxsim_account_id || ch.id
           const isActive = tradingCtx?.kind === 'challenge'
             ? tradingCtx.accountId === accId

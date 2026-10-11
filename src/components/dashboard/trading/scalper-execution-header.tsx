@@ -80,10 +80,14 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
       const optId = nextOptimisticId()
       const execPrice = side === 'buy' ? ask : bid
 
+      const tCtx = usePrices.getState().tradingContext
+      const currentAcc = usePrices.getState().account
+      const activeAccId = tCtx?.kind === 'challenge' ? tCtx.accountId : (currentAcc && 'id' in currentAcc ? (currentAcc as any).id : 0)
+
       // Optimistic position addition
       usePrices.getState().addOptimisticPosition({
         id: optId,
-        account_id: usePrices.getState().account && 'id' in usePrices.getState().account! ? (usePrices.getState().account as any).id : 0,
+        account_id: activeAccId,
         margin: 0,
         symbol,
         type: side,

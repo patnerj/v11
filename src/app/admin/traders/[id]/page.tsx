@@ -542,7 +542,7 @@ export default function Trader360ProfilePage() {
 
   // Timeline events definition
   const timelineEvents = useMemo(() => {
-    if (traderApiData?.timeline?.length) {
+    if (traderApiData?.timeline && Array.isArray(traderApiData.timeline) && traderApiData.timeline.length > 0) {
       return traderApiData.timeline.map((item: any) => {
         let icon = Activity
         let tone: 'success' | 'accent' | 'info' | 'neutral' = 'neutral'
@@ -562,7 +562,97 @@ export default function Trader360ProfilePage() {
         }
       })
     }
-    return []
+
+    // Defensive fallback synthesis when backend timeline is empty or not yet aggregated
+    const synthesized: Array<{
+      title: string
+      description: string
+      date: string
+      timestamp: number
+      icon: any
+      tone: 'success' | 'accent' | 'info' | 'neutral'
+    }> = []
+
+    // 1. Account registration milestone
+    const regDate = traderApiData?.user?.registered || traderApiData?.trader?.joined_date || traderApiData?.created_at
+    if (regDate) {
+      const ts = new Date(regDate).getTime()
+      synthesized.push({
+        title: 'Trader Account Registered',
+        description: `Verified email onboarding completed (${traderApiData?.user?.email || 'Portal User'})`,
+        date: isNaN(ts) ? String(regDate) : new Date(ts).toLocaleString(),
+        timestamp: isNaN(ts) ? 0 : ts,
+        icon: User,
+        tone: 'neutral',
+      })
+    }
+
+    // 2. Challenge evaluations milestones
+    if (Array.isArray(traderApiData?.challenges)) {
+      traderApiData.challenges.forEach((ch: any) => {
+        const cDate = ch.created_at || ch.phase_started_at
+        const ts = cDate ? new Date(cDate).getTime() : 0
+        synthesized.push({
+          title: `Challenge Enrolled: ${ch.plan_name || 'Standard Account'} #${ch.id}`,
+          description: `Stage: Phase ${ch.phase || 1} • Status: ${(ch.status || 'active').toUpperCase()} • Balance: ${formatCurrency(toNum(ch.starting_balance || 100000))}`,
+          date: ts ? new Date(ts).toLocaleString() : 'Recent',
+          timestamp: ts,
+          icon: Target,
+          tone: ch.status === 'funded' ? 'success' : 'accent',
+        })
+      })
+    }
+
+    // 3. Payments milestones
+    if (Array.isArray(traderApiData?.payments)) {
+      traderApiData.payments.forEach((pm: any) => {
+        const pDate = pm.created_at
+        const ts = pDate ? new Date(pDate).getTime() : 0
+        synthesized.push({
+          title: `Order Payment ${pm.status === 'completed' || pm.status === 'paid' ? 'Completed' : 'Initiated'} (${pm.gateway || 'Gateway'})`,
+          description: `Amount: ${formatCurrency(toNum(pm.amount))} • Status: ${pm.status}`,
+          date: ts ? new Date(ts).toLocaleString() : 'Recent',
+          timestamp: ts,
+          icon: CreditCard,
+          tone: 'info',
+        })
+      })
+    }
+
+    // 4. KYC compliance milestones
+    if (traderApiData?.kyc) {
+      const k = traderApiData.kyc
+      const kDate = k.reviewed_at || k.created_at
+      const ts = kDate ? new Date(kDate).getTime() : 0
+      synthesized.push({
+        title: `KYC Compliance Status: ${(k.status || 'under_review').toUpperCase()}`,
+        description: k.admin_note ? `Note: ${k.admin_note}` : 'Identity verification audit record',
+        date: ts ? new Date(ts).toLocaleString() : 'Recent',
+        timestamp: ts,
+        icon: ShieldCheck,
+        tone: k.status === 'approved' ? 'success' : 'neutral',
+      })
+    }
+
+    // 5. Payout disbursements milestones
+    if (Array.isArray(traderApiData?.payouts)) {
+      traderApiData.payouts.forEach((po: any) => {
+        const poDate = po.requested_at || po.created_at
+        const ts = poDate ? new Date(poDate).getTime() : 0
+        synthesized.push({
+          title: `Profit Split Payout ${po.status === 'paid' ? 'Disbursed' : 'Requested'}: ${formatCurrency(toNum(po.amount_requested))}`,
+          description: `Trader share: ${formatCurrency(toNum(po.trader_amount || po.amount_requested))} • Status: ${po.status}`,
+          date: ts ? new Date(ts).toLocaleString() : 'Recent',
+          timestamp: ts,
+          icon: Wallet,
+          tone: po.status === 'paid' ? 'success' : 'accent',
+        })
+      })
+    }
+
+    // Sort descending by timestamp (newest first)
+    synthesized.sort((a, b) => b.timestamp - a.timestamp)
+    return synthesized
   }, [traderApiData])
 
   if (isLoading) {

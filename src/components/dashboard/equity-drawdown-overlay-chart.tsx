@@ -62,7 +62,13 @@ export function EquityDrawdownOverlayChart({
       },
     ]
 
-    const sortedTrades = [...(Array.isArray(trades) ? trades : [])].sort(
+    const rawTrades = Array.isArray(trades)
+      ? trades
+      : (trades && typeof trades === 'object' && Array.isArray((trades as any).trades))
+        ? (trades as any).trades
+        : []
+
+    const sortedTrades = [...rawTrades].sort(
       (a, b) => new Date(a.closed_at || 0).getTime() - new Date(b.closed_at || 0).getTime()
     )
 

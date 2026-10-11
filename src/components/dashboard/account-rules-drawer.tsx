@@ -26,8 +26,6 @@ export function AccountRulesDrawer({
   challenge,
   metrics,
 }: AccountRulesDrawerProps) {
-  if (!isOpen || !challenge) return null
-
   const startingBalance = toNum(
     metrics?.starting_balance ||
     challenge?.starting_balance ||
@@ -44,16 +42,17 @@ export function AccountRulesDrawer({
   const profitTargetVal = startingBalance * (profitTargetPct / 100)
 
   const minDays = Number(metrics?.min_trading_days ?? (challenge as any)?.custom_min_days ?? 5)
-  const tradingDays = Number(challenge.trading_days || 0)
+  const tradingDays = Number(challenge?.trading_days || 0)
 
-  const isTrailing = challenge.drawdown_type === 'trailing' || challenge.drawdown_type === 'eod_trailing'
+  const isTrailing = challenge?.drawdown_type === 'trailing' || challenge?.drawdown_type === 'eod_trailing'
   const newsTradingAllowed = (challenge as any)?.custom_news_trading !== 0
   const weekendHoldingAllowed = (challenge as any)?.custom_weekend_holding !== 0
-  const isFunded = challenge.status === 'funded'
+  const isFunded = challenge?.status === 'funded'
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-hidden select-none">
+      {isOpen && challenge && (
+        <div className="fixed inset-0 z-50 overflow-hidden select-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -235,6 +234,7 @@ export function AccountRulesDrawer({
           </motion.div>
         </div>
       </div>
-    </AnimatePresence>
-  )
+    )}
+  </AnimatePresence>
+)
 }

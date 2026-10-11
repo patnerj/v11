@@ -62,13 +62,22 @@ export function PayoutReadinessCard({
     return () => clearInterval(timer)
   }, [targetTs])
 
+  // Defensive normalization per Rule 1.2
+  const safeFundedChallenges = useMemo(() => {
+    if (Array.isArray(fundedChallenges)) return fundedChallenges
+    if (fundedChallenges && typeof fundedChallenges === 'object' && Array.isArray((fundedChallenges as any).challenges)) {
+      return (fundedChallenges as any).challenges
+    }
+    return []
+  }, [fundedChallenges])
+
   // Total eligible profit across funded accounts
   const totalFundedStats = useMemo(() => {
     let eligibleProfit = 0
     let totalFundedBal = 0
     let totalStartingBal = 0
 
-    fundedChallenges.forEach((c) => {
+    safeFundedChallenges.forEach((c: ChallengeAccount) => {
       const curr = toNum(c.current_balance || c.starting_balance)
       const start = toNum(c.starting_balance || 100000)
       totalFundedBal += curr
@@ -84,9 +93,9 @@ export function PayoutReadinessCard({
       totalStartingBal,
       hasProfit: eligibleProfit > 0,
     }
-  }, [fundedChallenges])
+  }, [safeFundedChallenges])
 
-  if (!fundedChallenges || fundedChallenges.length === 0) {
+  if (!safeFundedChallenges || safeFundedChallenges.length === 0) {
     return null
   }
 
@@ -162,7 +171,7 @@ export function PayoutReadinessCard({
               {fmtUSD(totalFundedStats.eligibleProfit)}
             </div>
             <span className="text-2xs text-text-muted block mt-0.5">
-              Across {fundedChallenges.length} funded {fundedChallenges.length === 1 ? 'account' : 'accounts'}
+              Across {safeFundedChallenges.length} funded {safeFundedChallenges.length === 1 ? 'account' : 'accounts'}
             </span>
           </div>
 

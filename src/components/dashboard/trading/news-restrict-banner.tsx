@@ -49,16 +49,18 @@ export function NewsRestrictBanner({ plan, className }: NewsRestrictBannerProps)
 
   const isRestrictedByPlan = plan ? (plan.custom_news_trading === 0 || plan.news_trading === 0) : true
   const isImminent = diffSecs <= 45 * 60 // Alert when within 45 minutes
-
-  if (dismissed || !isImminent) return null
+  const showBanner = !dismissed && isImminent
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        className={cn(
+      {showBanner && (
+        <motion.div
+          key="news-restrict-banner"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+          className={cn(
           "relative overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-surface to-surface p-3 text-xs shadow-md select-none",
           className
         )}
@@ -99,6 +101,7 @@ export function NewsRestrictBanner({ plan, className }: NewsRestrictBannerProps)
           </button>
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   )
 }

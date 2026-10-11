@@ -58,14 +58,16 @@ const SESSIONS: MarketSession[] = [
 
 export function MarketSessionMatrix({ className }: { className?: string }) {
   const [utcNow, setUtcNow] = useState<Date>(new Date())
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const timer = setInterval(() => setUtcNow(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const currentUtcHours = utcNow.getUTCHours() + utcNow.getUTCMinutes() / 60
-  const currentUtcString = utcNow.toISOString().substring(11, 19) + ' UTC'
+  const currentUtcHours = mounted ? (utcNow.getUTCHours() + utcNow.getUTCMinutes() / 60) : 12
+  const currentUtcString = mounted ? (utcNow.toISOString().substring(11, 19) + ' UTC') : '--:--:-- UTC'
 
   // Session state calculation
   const sessionStates = useMemo(() => {
@@ -125,7 +127,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
               🔥 London / NY Overlap Active
             </Badge>
           )}
-          <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-surface-muted text-accent border border-border">
+          <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-surface-muted text-accent border border-border" suppressHydrationWarning>
             {currentUtcString}
           </span>
         </div>
