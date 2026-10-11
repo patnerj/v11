@@ -574,7 +574,7 @@ export function TemplateFtmo() {
       </section>
 
       {/* ── 3. The Iconic FTMO Trading Objectives Matrix (ftmo_ref_matrix.png) ─ */}
-      <section id="pricing" className="py-20 sm:py-28 border-b border-slate-800/60 relative overflow-hidden scroll-mt-28 bg-[#000000]">
+      <section id="pricing" className="pt-16 pb-28 sm:pt-28 sm:pb-28 border-b border-slate-800/60 relative overflow-hidden scroll-mt-28 bg-[#000000]">
         
         {/* Top Spotlight Light Slit & Trapezoid Cone Beam (ftmo_ref_matrix.png) */}
         <div className="flex flex-col items-center justify-center relative pointer-events-none mb-4">
@@ -735,8 +735,8 @@ export function TemplateFtmo() {
 
           </div>
 
-          {/* Account Sizes Row: Descending FTMO Order (200K, 100K with orange dot, 50K, 25K, 10K) */}
-          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
+          {/* Account Sizes Row: Sleek scrollable row on mobile, centered flex on desktop */}
+          <div className="max-w-5xl mx-auto flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-1 px-1 justify-start sm:justify-center mb-8">
             {accountSizes.map((size) => {
               const isSelected = selectedSize === size
               const is100K = size === 100000
@@ -746,14 +746,14 @@ export function TemplateFtmo() {
                   key={size}
                   onClick={() => setSelectedSize(size)}
                   className={cn(
-                    'px-6 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer relative',
+                    'px-5 sm:px-6 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer relative shrink-0',
                     isSelected
                       ? 'bg-white text-slate-950 shadow-lg shadow-white/10'
                       : 'bg-slate-900 border border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
                   )}
                 >
                   {is100K && (
-                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-orange-500 ring-2 ring-[#000000]" />
+                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 ring-2 ring-[#000000]" />
                   )}
                   <span>{label}</span>
                 </button>
@@ -761,206 +761,344 @@ export function TemplateFtmo() {
             })}
           </div>
 
-          {/* 4-Column Table Matrix (ftmo_ref_matrix.png) */}
-          <div className="max-w-5xl mx-auto rounded-3xl border border-slate-800 bg-[#070b14] shadow-2xl overflow-hidden backdrop-blur-xl">
-            
-            {/* Table Header */}
-            <div className="grid grid-cols-12 bg-[#05080f] py-4 px-4 sm:px-6 border-b border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-400">
-              <div className="col-span-5 sm:col-span-4 flex items-center">
-                <span>TRADING OBJECTIVES</span>
-              </div>
-              <div className="col-span-2 sm:col-span-2 text-center">
-                <div className="text-2xs text-slate-500 font-bold flex items-center justify-center gap-1">
-                  <Zap className="h-3 w-3 text-cyan-400" /> PHASE 1
-                </div>
-                <div className="text-xs font-black text-white mt-0.5">
-                  {selectedModel === '1-Step' ? 'Challenge' : `${brandName} Challenge`}
-                </div>
-              </div>
-              {selectedModel === '2-Step' && !hidePhases ? (
-                <div className="col-span-2 sm:col-span-3 text-center">
-                  <div className="text-2xs text-slate-500 font-bold flex items-center justify-center gap-1">
-                    <CheckCircle2 className="h-3 w-3 text-blue-400" /> PHASE 2
-                  </div>
-                  <div className="text-xs font-black text-white mt-0.5">
-                    Verification
-                  </div>
-                </div>
-              ) : (
-                <div className="col-span-2 sm:col-span-3 text-center text-slate-600">
-                  —
-                </div>
-              )}
-              {/* Account Column with subtle blue highlight */}
-              <div className="col-span-3 sm:col-span-3 text-right sm:text-center bg-blue-950/20 -my-4 py-4 px-2 border-l border-blue-900/30">
-                <div className="text-2xs text-cyan-400 font-bold flex items-center justify-center gap-1">
-                  <Award className="h-3 w-3 text-cyan-400" /> ACCOUNT
-                </div>
-                <div className="text-xs font-black text-white mt-0.5">
+          {/* ── MOBILE VIEW: Dedicated FTMO Mobile Objectives Card (ftmo_mobile_matrix.png) ── */}
+          <div className="block md:hidden max-w-md mx-auto mb-8">
+            <div className="rounded-3xl border border-slate-800 bg-[#070b14] p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+              {/* Subtle blue corner ambient glow */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Top Account Header & Giant Size */}
+              <div className="text-center pb-4 border-b border-slate-800/80">
+                <span className="text-2xs uppercase tracking-wider text-slate-400 font-bold">
                   {brandName} Account
-                </div>
-              </div>
-            </div>
-
-            {/* Matrix Rows: EXACT FTMO SEQUENCE (ftmo_ref_matrix.png) */}
-            <div className="divide-y divide-slate-800/80 text-xs sm:text-sm font-medium">
-              
-              {/* Row 1: Profit Target (Row 1 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-bold text-white flex items-center gap-2">
-                  <Target className="h-4 w-4 text-cyan-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Profit Target</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-white terminal-num">
-                  {showNumbers ? formatCurrencyVal(sizeUSD * (p1TargetPct / 100)) : `${p1TargetPct}%`}
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-white terminal-num">
-                  {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (p2TargetPct / 100)) : `${p2TargetPct}%`)}
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold text-white bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  Unlimited
-                </div>
-              </div>
-
-              {/* Row 2: Maximum Daily Loss (Row 2 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-semibold text-slate-200 flex items-center gap-2">
-                  <ArrowDown className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Max Daily Loss</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-white terminal-num">
-                  {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-white terminal-num">
-                  {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`)}
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold text-white terminal-num bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
-                </div>
-              </div>
-
-              {/* Row 3: Maximum Loss (Row 3 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-semibold text-slate-200 flex items-center gap-2">
-                  <ArrowDown className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Max Loss</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-white terminal-num">
-                  {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-white terminal-num">
-                  {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`)}
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold text-white terminal-num bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
-                </div>
-              </div>
-
-              {/* Row 4: Minimum Trading Days (Row 4 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-semibold text-slate-200 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Min Trading days</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-white">
-                  {minTradingDays} days
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-white">
-                  {selectedModel === '1-Step' ? '—' : `${minTradingDays} days`}
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold text-white bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  Unlimited
-                </div>
-              </div>
-
-              {/* Row 5: Trading Period (Row 5 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-semibold text-slate-200 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Trading Period</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-white">
-                  Unlimited
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-white">
-                  {selectedModel === '1-Step' ? '—' : 'Unlimited'}
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold text-white bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  Unlimited
-                </div>
-              </div>
-
-              {/* Row 6: Refund (Row 6 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-semibold text-slate-200 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Refund</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-slate-500">
-                  -
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-slate-500">
-                  -
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  <span className="text-white font-semibold">Yes </span>
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold text-2xs uppercase">
-                    100%
-                  </span>
-                </div>
-              </div>
-
-              {/* Row 7: Rewards (Row 7 on FTMO!) */}
-              <div className="grid grid-cols-12 py-3.5 px-4 sm:px-6 items-center hover:bg-slate-900/40 transition-colors">
-                <div className="col-span-5 sm:col-span-4 font-semibold text-slate-200 flex items-center gap-2">
-                  <Award className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="border-b border-dotted border-slate-600">Rewards</span>
-                </div>
-                <div className="col-span-2 sm:col-span-2 text-center font-bold text-slate-500">
-                  -
-                </div>
-                <div className="col-span-2 sm:col-span-3 text-center font-bold text-slate-500">
-                  -
-                </div>
-                <div className="col-span-3 sm:col-span-3 text-right sm:text-center font-bold bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
-                  <span className="text-white">Up to </span>
-                  <span className="text-emerald-400 font-black">90%</span>
-                  <span className="text-white"> of the profit</span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Bottom Checkout Bar (ftmo_ref_matrix.png) */}
-            <div className="p-4 sm:p-6 bg-[#05080f] border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-center sm:text-left">
-                <div className="text-xs uppercase tracking-wider text-slate-400">
-                  {brandName} Account
-                </div>
-                <div className="text-2xl sm:text-3xl font-black text-white terminal-num mt-0.5">
+                </span>
+                <div className="text-3xl sm:text-4xl font-black text-white terminal-num mt-1">
                   {formatCurrencyVal(sizeUSD)}
                 </div>
-              </div>
 
-              <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                <div className="text-right">
-                  <div className="text-2xs uppercase tracking-wider text-slate-400">Price</div>
-                  <div className="text-xl sm:text-2xl font-black text-white terminal-num">
-                    {currencyMeta.symbol}{convertedPrice}
-                  </div>
-                </div>
-
+                {/* Primary Start Now Button (Full Width Mobile) */}
                 <Button
                   asChild
-                  className="h-12 px-10 rounded-xl bg-[#0084FF] hover:bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-500/25 cursor-pointer"
+                  className="w-full mt-4 h-12 rounded-xl bg-[#0084FF] hover:bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-500/25 cursor-pointer"
                 >
                   <Link href={`/checkout?plan=${activePlan?.id || 1}&size=${sizeUSD}`}>
                     Start now
                   </Link>
                 </Button>
+
+                <div className="text-2xs text-slate-400 mt-2.5">
+                  One-time refundable fee from{' '}
+                  <span className="font-bold text-white terminal-num">
+                    {currencyMeta.symbol}{convertedPrice}
+                  </span>
+                </div>
+              </div>
+
+              {/* Clean Key-Value Objective Rows (divide-y, zero collision) */}
+              <div className="divide-y divide-slate-800/80 text-xs mt-2">
+                
+                {/* Profit Target */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-white flex items-center gap-1.5">
+                    <Target className="h-3.5 w-3.5 text-cyan-400" />
+                    <span className="border-b border-dotted border-slate-600">Profit Target</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-white terminal-num">
+                      <span className="text-3xs text-slate-400 font-normal mr-1">Phase 1:</span>
+                      {showNumbers ? formatCurrencyVal(sizeUSD * (p1TargetPct / 100)) : `${p1TargetPct}%`}
+                    </div>
+                    {selectedModel === '2-Step' && !hidePhases && (
+                      <div className="text-2xs text-slate-400 terminal-num mt-0.5">
+                        <span className="text-3xs text-slate-500 mr-1">Phase 2:</span>
+                        {showNumbers ? formatCurrencyVal(sizeUSD * (p2TargetPct / 100)) : `${p2TargetPct}%`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Max Daily Loss */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <ArrowDown className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="border-b border-dotted border-slate-600">Max Daily Loss</span>
+                  </div>
+                  <div className="font-bold text-white terminal-num">
+                    {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
+                  </div>
+                </div>
+
+                {/* Max Loss */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <ArrowDown className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="border-b border-dotted border-slate-600">Max Loss</span>
+                  </div>
+                  <div className="font-bold text-white terminal-num">
+                    {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
+                  </div>
+                </div>
+
+                {/* Min Trading days */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="border-b border-dotted border-slate-600">Min Trading days</span>
+                  </div>
+                  <div className="font-bold text-white">
+                    {minTradingDays} days
+                  </div>
+                </div>
+
+                {/* Trading Period */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="border-b border-dotted border-slate-600">Trading Period</span>
+                  </div>
+                  <div className="font-bold text-white">
+                    Unlimited
+                  </div>
+                </div>
+
+                {/* Refund */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="border-b border-dotted border-slate-600">Refund</span>
+                  </div>
+                  <div>
+                    <span className="text-white font-semibold text-xs">Yes </span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold text-2xs uppercase">
+                      100%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Rewards */}
+                <div className="py-3 flex items-center justify-between">
+                  <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Award className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="border-b border-dotted border-slate-600">Rewards</span>
+                  </div>
+                  <div className="text-emerald-400 font-bold">
+                    Up to 90% of the profit
+                  </div>
+                </div>
+
+              </div>
+
+              {/* FTMO Style Average Reward Pill (ftmo_mobile_matrix.png) */}
+              <div className="mt-4 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center text-xs text-slate-400 font-medium">
+                {currencyMeta.symbol}{Math.round(sizeUSD * 0.07 * currencyMeta.rate).toLocaleString()} Avg. Reward ⓘ
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── DESKTOP/TABLET VIEW: 4-Column Table Matrix (ftmo_ref_matrix.png) ── */}
+          <div className="hidden md:block max-w-5xl mx-auto rounded-3xl border border-slate-800 bg-[#070b14] shadow-2xl overflow-hidden backdrop-blur-xl">
+            <div className="overflow-x-auto">
+              <div className="min-w-[660px]">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 bg-[#05080f] py-4 px-6 border-b border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <div className="col-span-4 flex items-center">
+                    <span>TRADING OBJECTIVES</span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <div className="text-2xs text-slate-500 font-bold flex items-center justify-center gap-1">
+                      <Zap className="h-3 w-3 text-cyan-400" /> PHASE 1
+                    </div>
+                    <div className="text-xs font-black text-white mt-0.5">
+                      Challenge
+                    </div>
+                  </div>
+                  {selectedModel === '2-Step' && !hidePhases ? (
+                    <div className="col-span-3 text-center">
+                      <div className="text-2xs text-slate-500 font-bold flex items-center justify-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-blue-400" /> PHASE 2
+                      </div>
+                      <div className="text-xs font-black text-white mt-0.5">
+                        Verification
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="col-span-3 text-center text-slate-600">
+                      —
+                    </div>
+                  )}
+                  {/* Account Column with subtle blue highlight */}
+                  <div className="col-span-3 text-center bg-blue-950/20 -my-4 py-4 px-2 border-l border-blue-900/30">
+                    <div className="text-2xs text-cyan-400 font-bold flex items-center justify-center gap-1">
+                      <Award className="h-3 w-3 text-cyan-400" /> ACCOUNT
+                    </div>
+                    <div className="text-xs font-black text-white mt-0.5">
+                      {brandName} Account
+                    </div>
+                  </div>
+                </div>
+
+                {/* Matrix Rows: EXACT FTMO SEQUENCE (ftmo_ref_matrix.png) */}
+                <div className="divide-y divide-slate-800/80 text-xs sm:text-sm font-medium">
+                  
+                  {/* Row 1: Profit Target (Row 1 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-bold text-white flex items-center gap-2">
+                      <Target className="h-4 w-4 text-cyan-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Profit Target</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-white terminal-num">
+                      {showNumbers ? formatCurrencyVal(sizeUSD * (p1TargetPct / 100)) : `${p1TargetPct}%`}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white terminal-num">
+                      {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (p2TargetPct / 100)) : `${p2TargetPct}%`)}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      Unlimited
+                    </div>
+                  </div>
+
+                  {/* Row 2: Maximum Daily Loss (Row 2 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-semibold text-slate-200 flex items-center gap-2">
+                      <ArrowDown className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Max Daily Loss</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-white terminal-num">
+                      {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white terminal-num">
+                      {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`)}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white terminal-num bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
+                    </div>
+                  </div>
+
+                  {/* Row 3: Maximum Loss (Row 3 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-semibold text-slate-200 flex items-center gap-2">
+                      <ArrowDown className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Max Loss</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-white terminal-num">
+                      {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white terminal-num">
+                      {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`)}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white terminal-num bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
+                    </div>
+                  </div>
+
+                  {/* Row 4: Minimum Trading Days (Row 4 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-semibold text-slate-200 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Min Trading days</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-white">
+                      {minTradingDays} days
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white">
+                      {selectedModel === '1-Step' ? '—' : `${minTradingDays} days`}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      Unlimited
+                    </div>
+                  </div>
+
+                  {/* Row 5: Trading Period (Row 5 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-semibold text-slate-200 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Trading Period</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-white">
+                      Unlimited
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white">
+                      {selectedModel === '1-Step' ? '—' : 'Unlimited'}
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-white bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      Unlimited
+                    </div>
+                  </div>
+
+                  {/* Row 6: Refund (Row 6 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-semibold text-slate-200 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Refund</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-slate-500">
+                      -
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-slate-500">
+                      -
+                    </div>
+                    <div className="col-span-3 text-center font-bold bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      <span className="text-white font-semibold">Yes </span>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold text-2xs uppercase">
+                        100%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Row 7: Rewards (Row 7 on FTMO!) */}
+                  <div className="grid grid-cols-12 py-3.5 px-6 items-center hover:bg-slate-900/40 transition-colors">
+                    <div className="col-span-4 font-semibold text-slate-200 flex items-center gap-2">
+                      <Award className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="border-b border-dotted border-slate-600">Rewards</span>
+                    </div>
+                    <div className="col-span-2 text-center font-bold text-slate-500">
+                      -
+                    </div>
+                    <div className="col-span-3 text-center font-bold text-slate-500">
+                      -
+                    </div>
+                    <div className="col-span-3 text-center font-bold bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-900/30">
+                      <span className="text-white">Up to </span>
+                      <span className="text-emerald-400 font-black">90%</span>
+                      <span className="text-white"> of the profit</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom Checkout Bar (ftmo_ref_matrix.png) */}
+                <div className="p-6 bg-[#05080f] border-t border-slate-800 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-slate-400">
+                      {brandName} Account
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-black text-white terminal-num mt-0.5">
+                      {formatCurrencyVal(sizeUSD)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <div className="text-2xs uppercase tracking-wider text-slate-400">Price</div>
+                      <div className="text-xl sm:text-2xl font-black text-white terminal-num">
+                        {currencyMeta.symbol}{convertedPrice}
+                      </div>
+                    </div>
+
+                    <Button
+                      asChild
+                      className="h-12 px-10 rounded-xl bg-[#0084FF] hover:bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-500/25 cursor-pointer"
+                    >
+                      <Link href={`/checkout?plan=${activePlan?.id || 1}&size=${sizeUSD}`}>
+                        Start now
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
               </div>
             </div>
-
           </div>
 
           {/* Value Pills Bar Below Matrix (ftmo_ref_matrix.png) */}
