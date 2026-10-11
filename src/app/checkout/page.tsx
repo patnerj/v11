@@ -46,7 +46,7 @@ export default function CheckoutPage() {
 function CheckoutInner() {
   const router = useRouter()
   const params = useSearchParams()
-  const planId = Number(params.get('plan') ?? 0)
+  const planId = Number(params.get('plan') ?? params.get('plan_id') ?? 0)
   const tournamentId = Number(params.get('tournament') ?? 0)
   
   const { user, ready } = useAuth()

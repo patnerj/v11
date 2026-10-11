@@ -299,7 +299,7 @@ export function TemplateNeon() {
     }) || effectivePlans[0]
   }, [effectivePlans, selectedSize, selectedModel])
 
-  const checkoutUrl = `/checkout?plan_id=${matchedPlan?.id || ''}&size=${selectedSize}&model=${encodeURIComponent(selectedModel)}`
+  const checkoutUrl = `/checkout?plan=${matchedPlan?.id || ''}&plan_id=${matchedPlan?.id || ''}&size=${selectedSize}&model=${encodeURIComponent(selectedModel)}`
 
   return (
     <div className="w-full min-h-screen bg-bg text-text transition-colors duration-200 overflow-x-hidden font-sans selection:bg-violet-500 selection:text-white">
@@ -368,7 +368,7 @@ export function TemplateNeon() {
               <Button
                 asChild
                 size="lg"
-                className="h-13 px-8 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-violet-600/25 border-0 cursor-pointer"
+                className="h-12 px-8 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-violet-600/25 border-0 cursor-pointer"
               >
                 <Link href="#challenge-models" className="flex items-center gap-2">
                   <span>Start Stellar Evaluation</span>
@@ -379,7 +379,7 @@ export function TemplateNeon() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="h-13 px-7 rounded-xl border-border text-text hover:bg-surface-secondary text-sm font-semibold cursor-pointer"
+                className="h-12 px-7 rounded-xl border-border text-text hover:bg-surface-secondary text-sm font-semibold cursor-pointer"
               >
                 <Link href="#rules-comparison">Why Traders Choose Us</Link>
               </Button>
@@ -840,7 +840,7 @@ export function TemplateNeon() {
               <Button
                 asChild
                 size="lg"
-                className="w-full sm:w-auto h-13 px-8 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-violet-600/30 cursor-pointer"
+                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-violet-600/30 cursor-pointer"
               >
                 <Link href={checkoutUrl} className="flex items-center justify-center gap-2">
                   <span>Start {selectedModel} ({formatCurrencyVal(selectedSize)})</span>
@@ -1167,7 +1167,7 @@ export function TemplateNeon() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-13 px-8 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-sm shadow-xl cursor-pointer"
+                  className="h-12 px-8 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-sm shadow-xl cursor-pointer"
                 >
                   <Link href="#challenge-models">
                     <span>Choose Evaluation Size</span>
@@ -1178,7 +1178,7 @@ export function TemplateNeon() {
                   asChild
                   variant="outline"
                   size="lg"
-                  className="h-13 px-8 rounded-xl border-white/30 text-white hover:bg-white/10 text-sm font-semibold cursor-pointer"
+                  className="h-12 px-8 rounded-xl border-white/30 text-white hover:bg-white/10 text-sm font-semibold cursor-pointer"
                 >
                   <Link href={`mailto:${supportEmail}`}>Contact Desk</Link>
                 </Button>

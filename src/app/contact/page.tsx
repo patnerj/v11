@@ -67,12 +67,11 @@ function DiscordIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function ContactPage() {
-  const brand = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
-  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || 'https://www.youtube.com/@LaunchAPropFirm'
-  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/launchapropfirm/'
-  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || 'https://www.tiktok.com/@launchapropfirm.com'
-  const facebookUrl = useBranding((s) => s.branding.facebook_url) || 'https://www.facebook.com/profile.php?id=61591803448831'
-  const discordUrl = useBranding((s) => s.branding.discord_url) || 'https://discord.com/channels/1555893909496799312/1555893997103484969'
+  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || '#'
+  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/yourswebsitemaker/'
+  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || '#'
+  const facebookUrl = useBranding((s) => s.branding.facebook_url) || '#'
+  const discordUrl = useBranding((s) => s.branding.discord_url) || '#'
   const developerUrl = useBranding((s) => s.branding.developer_url) || ''
 
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
@@ -357,8 +356,8 @@ export default function ContactPage() {
               {/* YouTube */}
               <a
                 href={youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={youtubeUrl !== '#' ? '_blank' : undefined}
+                rel={youtubeUrl !== '#' ? 'noopener noreferrer' : undefined}
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-red-500/50 hover:bg-red-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -377,8 +376,8 @@ export default function ContactPage() {
               {/* Instagram */}
               <a
                 href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={instagramUrl !== '#' ? '_blank' : undefined}
+                rel={instagramUrl !== '#' ? 'noopener noreferrer' : undefined}
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-pink-500/50 hover:bg-pink-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -389,7 +388,7 @@ export default function ContactPage() {
                   <div className="text-2xs text-text-muted mt-1 leading-snug">Payout certificates &amp; daily updates</div>
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-2xs font-mono text-pink-500 font-semibold">
-                  <span>@launchapropfirmorg</span>
+                  <span>@yourswebsitemaker</span>
                   <ExternalLink className="h-3 w-3" />
                 </div>
               </a>
@@ -397,8 +396,8 @@ export default function ContactPage() {
               {/* TikTok */}
               <a
                 href={tiktokUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={tiktokUrl !== '#' ? '_blank' : undefined}
+                rel={tiktokUrl !== '#' ? 'noopener noreferrer' : undefined}
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -417,8 +416,8 @@ export default function ContactPage() {
               {/* Facebook */}
               <a
                 href={facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={facebookUrl !== '#' ? '_blank' : undefined}
+                rel={facebookUrl !== '#' ? 'noopener noreferrer' : undefined}
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>
@@ -437,8 +436,8 @@ export default function ContactPage() {
               {/* Discord */}
               <a
                 href={discordUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={discordUrl !== '#' ? '_blank' : undefined}
+                rel={discordUrl !== '#' ? 'noopener noreferrer' : undefined}
                 className="p-5 rounded-2xl bg-surface/80 dark:bg-surface/40 border border-border hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group flex flex-col justify-between"
               >
                 <div>

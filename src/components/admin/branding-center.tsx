@@ -85,11 +85,11 @@ const DEFAULTS: Record<string, string> = {
   ga_measurement_id: '',
   facebook_pixel_id: '',
   google_site_verification: '',
-  youtube_url: 'https://www.youtube.com/@LaunchAPropFirm',
-  instagram_url: 'https://www.instagram.com/launchapropfirm/',
-  tiktok_url: 'https://www.tiktok.com/@launchapropfirm.com',
-  facebook_url: 'https://www.facebook.com/profile.php?id=61591803448831',
-  discord_url: 'https://discord.com/channels/1555893909496799312/1555893997103484969',
+  youtube_url: '#',
+  instagram_url: 'https://www.instagram.com/yourswebsitemaker/',
+  tiktok_url: '#',
+  facebook_url: '#',
+  discord_url: '#',
   developer_url: '',
 }
 
@@ -144,11 +144,11 @@ export function BrandingCenter() {
       ga_measurement_id: vals.ga_measurement_id ?? '',
       facebook_pixel_id: vals.facebook_pixel_id ?? '',
       google_site_verification: vals.google_site_verification ?? '',
-      youtube_url: vals.youtube_url ?? 'https://www.youtube.com/@LaunchAPropFirm',
-      instagram_url: vals.instagram_url ?? 'https://www.instagram.com/launchapropfirm/',
-      tiktok_url: vals.tiktok_url ?? 'https://www.tiktok.com/@launchapropfirm.com',
-      facebook_url: vals.facebook_url ?? 'https://www.facebook.com/profile.php?id=61591803448831',
-      discord_url: vals.discord_url ?? 'https://discord.com/channels/1555893909496799312/1555893997103484969',
+      youtube_url: vals.youtube_url ?? '#',
+      instagram_url: vals.instagram_url ?? 'https://www.instagram.com/yourswebsitemaker/',
+      tiktok_url: vals.tiktok_url ?? '#',
+      facebook_url: vals.facebook_url ?? '#',
+      discord_url: vals.discord_url ?? '#',
       developer_url: vals.developer_url ?? '',
     }
     const res = await api.admin.whitelabelSave(payload)

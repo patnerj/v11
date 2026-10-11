@@ -84,11 +84,11 @@ const LINKS: { title: string; items: { href: string; label: string }[] }[] = [
 export function MarketingFooter() {
   const brand = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
   const footerText = useBranding((s) => s.branding.footer_text)
-  const youtubeUrl = '#'
-  const instagramUrl = 'https://www.instagram.com/yourswebsitemaker/'
-  const tiktokUrl = '#'
-  const facebookUrl = '#'
-  const discordUrl = '#'
+  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || '#'
+  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/yourswebsitemaker/'
+  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || '#'
+  const facebookUrl = useBranding((s) => s.branding.facebook_url) || '#'
+  const discordUrl = useBranding((s) => s.branding.discord_url) || '#'
   const developerUrl = useBranding((s) => s.branding.developer_url) || ''
 
   return (
@@ -166,7 +166,9 @@ export function MarketingFooter() {
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-0.5">
                 <a
-                  href="#"
+                  href={youtubeUrl}
+                  target={youtubeUrl !== '#' ? '_blank' : undefined}
+                  rel={youtubeUrl !== '#' ? 'noopener noreferrer' : undefined}
                   aria-label="YouTube Channel"
                   title="YouTube"
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-red-500/50 hover:bg-red-500/10 text-text-muted hover:text-red-500 flex items-center gap-1.5 text-xs font-semibold transition-all group"
@@ -175,9 +177,9 @@ export function MarketingFooter() {
                   <span>YouTube</span>
                 </a>
                 <a
-                  href="https://www.instagram.com/yourswebsitemaker/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={instagramUrl}
+                  target={instagramUrl !== '#' ? '_blank' : undefined}
+                  rel={instagramUrl !== '#' ? 'noopener noreferrer' : undefined}
                   aria-label="Instagram Profile"
                   title="Instagram"
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-pink-500/50 hover:bg-pink-500/10 text-text-muted hover:text-pink-500 flex items-center gap-1.5 text-xs font-semibold transition-all group"
@@ -186,7 +188,9 @@ export function MarketingFooter() {
                   <span>Instagram</span>
                 </a>
                 <a
-                  href="#"
+                  href={tiktokUrl}
+                  target={tiktokUrl !== '#' ? '_blank' : undefined}
+                  rel={tiktokUrl !== '#' ? 'noopener noreferrer' : undefined}
                   aria-label="TikTok Channel"
                   title="TikTok"
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-cyan-500/50 hover:bg-cyan-500/10 text-text-muted hover:text-cyan-400 flex items-center gap-1.5 text-xs font-semibold transition-all group"
@@ -195,7 +199,9 @@ export function MarketingFooter() {
                   <span>TikTok</span>
                 </a>
                 <a
-                  href="#"
+                  href={facebookUrl}
+                  target={facebookUrl !== '#' ? '_blank' : undefined}
+                  rel={facebookUrl !== '#' ? 'noopener noreferrer' : undefined}
                   aria-label="Facebook Page"
                   title="Facebook"
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-blue-500/50 hover:bg-blue-500/10 text-text-muted hover:text-blue-500 flex items-center gap-1.5 text-xs font-semibold transition-all group"
@@ -204,7 +210,9 @@ export function MarketingFooter() {
                   <span>Facebook</span>
                 </a>
                 <a
-                  href="#"
+                  href={discordUrl}
+                  target={discordUrl !== '#' ? '_blank' : undefined}
+                  rel={discordUrl !== '#' ? 'noopener noreferrer' : undefined}
                   aria-label="Discord Server"
                   title="Discord"
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-indigo-500/50 hover:bg-indigo-500/10 text-text-muted hover:text-indigo-400 flex items-center gap-1.5 text-xs font-semibold transition-all group"
