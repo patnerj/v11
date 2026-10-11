@@ -142,6 +142,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
 
   return (
     <section className="relative py-14 sm:py-20 lg:py-28 bg-transparent text-text overflow-hidden" id="challenges">
+      <span id="pricing" className="block relative -top-32 invisible pointer-events-none" />
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 blur-[160px] pointer-events-none" />
 

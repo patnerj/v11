@@ -401,7 +401,7 @@ export function TemplateTerminal() {
       </section>
 
       {/* ── 4. Challenge Plans & Pricing Tier Cards ──────────────────── */}
-      <section className="py-16 sm:py-24 bg-surface-secondary/40 border-b border-border/60">
+      <section id="pricing" className="scroll-mt-28 sm:scroll-mt-36 py-16 sm:py-24 bg-surface-secondary/40 border-b border-border/60">
         <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text">

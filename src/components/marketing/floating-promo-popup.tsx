@@ -70,9 +70,9 @@ export function FloatingPromoPopup() {
         role="complementary"
         className={cn(
           'fixed z-50 transition-all duration-300',
-          // Mobile: sits above MobileBottomNav (bottom-20), on left-3 with max width to avoid template switcher
+          // Mobile: sits cleanly above TemplateSwitcher and MobileBottomNav (bottom-32) with zero collision
           // Desktop: bottom-6 left-6 with max-w-sm
-          'bottom-20 sm:bottom-6 left-3 sm:left-6 max-w-[calc(100vw-110px)] sm:max-w-sm'
+          'bottom-32 sm:bottom-6 left-3 sm:left-6 max-w-[calc(100vw-24px)] sm:max-w-sm'
         )}
       >
         <div
