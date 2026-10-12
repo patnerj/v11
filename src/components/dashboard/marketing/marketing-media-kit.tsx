@@ -207,7 +207,7 @@ Trade with ${brandName} and access up to $200K in trading balance with 90% profi
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge tone="accent" size="sm" className="font-mono">4K Ultra-HD</Badge>
+            <Badge tone="accent" size="sm" className="font-bold">4K Ultra-HD</Badge>
             <Button
               variant="outline"
               size="sm"
@@ -252,7 +252,7 @@ Trade with ${brandName} and access up to $200K in trading balance with 90% profi
 
                 <div className="bg-accent/15 border border-accent/40 rounded-md px-2.5 py-1 flex items-center justify-between relative z-10">
                   <span className="text-3xs text-accent font-bold">CODE:</span>
-                  <span className="text-2xs font-mono font-black text-white tracking-widest">{affiliateCode}</span>
+                  <span className="text-2xs font-black text-white tracking-widest">{affiliateCode}</span>
                   <span className="text-3xs text-profit font-black bg-profit/20 px-1 py-0.5 rounded">20% OFF</span>
                 </div>
               </div>
@@ -260,7 +260,7 @@ Trade with ${brandName} and access up to $200K in trading balance with 90% profi
               <div className="mt-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-text">16:9 Landscape Banner</h4>
-                  <span className="text-2xs font-mono text-text-muted bg-surface px-1.5 py-0.5 rounded border border-border">
+                  <span className="text-2xs terminal-num tabular-nums font-semibold text-text-muted bg-surface px-1.5 py-0.5 rounded border border-border">
                     1920 × 1080
                   </span>
                 </div>
@@ -313,12 +313,12 @@ Trade with ${brandName} and access up to $200K in trading balance with 90% profi
                   <div className="text-base font-black text-white tracking-tight drop-shadow-sm mt-0.5">
                     KEEP 90% PROFITS
                   </div>
-                  <div className="text-2xs font-mono font-black text-accent mt-0.5">$200K ACCOUNT</div>
+                  <div className="text-2xs font-black text-accent mt-0.5">$200K ACCOUNT</div>
                 </div>
 
                 <div className="bg-info/15 border border-info/40 rounded-md px-2.5 py-1 flex items-center justify-between relative z-10">
                   <span className="text-3xs text-info font-bold">CODE:</span>
-                  <span className="text-2xs font-mono font-black text-white tracking-widest">{affiliateCode}</span>
+                  <span className="text-2xs font-black text-white tracking-widest">{affiliateCode}</span>
                   <span className="text-3xs text-profit font-black bg-profit/20 px-1 py-0.5 rounded">20% OFF</span>
                 </div>
               </div>
@@ -326,7 +326,7 @@ Trade with ${brandName} and access up to $200K in trading balance with 90% profi
               <div className="mt-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-text">1:1 Square Feed Post</h4>
-                  <span className="text-2xs font-mono text-text-muted bg-surface px-1.5 py-0.5 rounded border border-border">
+                  <span className="text-2xs terminal-num tabular-nums font-semibold text-text-muted bg-surface px-1.5 py-0.5 rounded border border-border">
                     1080 × 1080
                   </span>
                 </div>
@@ -379,20 +379,20 @@ Trade with ${brandName} and access up to $200K in trading balance with 90% profi
                   <div className="text-xs font-black text-white tracking-tight drop-shadow-sm mt-0.5">
                     GET FUNDED
                   </div>
-                  <div className="text-sm font-mono font-black text-accent mt-0.5 leading-none">$200K</div>
+                  <div className="text-sm font-black text-accent mt-0.5 leading-none">$200K</div>
                   <div className="text-3xs text-slate-300 mt-1">Keep 90% Profits</div>
                 </div>
 
                 <div className="bg-purple-500/20 border border-purple-500/40 rounded-md px-2 py-1 text-center relative z-10">
                   <div className="text-3xs text-purple-300 font-bold">PARTNER CODE:</div>
-                  <div className="text-2xs font-mono font-black text-white tracking-widest">{affiliateCode}</div>
+                  <div className="text-2xs font-black text-white tracking-widest">{affiliateCode}</div>
                 </div>
               </div>
 
               <div className="mt-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-text">9:16 Story &amp; Reel</h4>
-                  <span className="text-2xs font-mono text-text-muted bg-surface px-1.5 py-0.5 rounded border border-border">
+                  <span className="text-2xs terminal-num tabular-nums font-semibold text-text-muted bg-surface px-1.5 py-0.5 rounded border border-border">
                     1080 × 1920
                   </span>
                 </div>

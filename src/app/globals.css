@@ -121,20 +121,20 @@
     --surface: 0 0% 100%;
     --surface-muted: 210 40% 96%;
     --surface-strong: 214 32% 91%;
-    --border: 214 32% 91%;
-    --border-strong: 215 16% 47%;
-    --border-subtle: 210 40% 96%;
+    --border: 214 32% 88%;
+    --border-strong: 215 20% 40%;
+    --border-subtle: 210 40% 93%;
     --text: 222 47% 11%;
-    --text-muted: 215 19% 40%;
-    --text-subtle: 215 25% 27%;
-    --text-faint: 215 16% 47%;
-    --success: 160 84% 35%;
-    --success-hover: 158 64% 45%;
-    --danger: 0 84% 55%;
-    --danger-hover: 0 84% 48%;
-    --warn: 35 92% 42%;
-    --info: 199 89% 40%;
-    --accent: 160 84% 35%;
+    --text-muted: 215 25% 30%;
+    --text-subtle: 215 30% 20%;
+    --text-faint: 215 20% 36%;
+    --success: 160 84% 30%;
+    --success-hover: 158 64% 38%;
+    --danger: 0 84% 48%;
+    --danger-hover: 0 84% 40%;
+    --warn: 35 92% 36%;
+    --info: 199 89% 34%;
+    --accent: 160 84% 30%;
   }
 
   /* ── Universal Daylight / Clean-Light Contrast & Visibility Protections ── */
@@ -169,28 +169,43 @@
   }
 
   :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
-    .text-emerald-300, .text-emerald-400
+    .text-emerald-300, .text-emerald-400, .text-emerald-500
   ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #047857 !important;
   }
 
   :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
-    .text-rose-300, .text-rose-400
+    .text-rose-300, .text-rose-400, .text-rose-500,
+    .text-red-300, .text-red-400, .text-red-500
   ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #DC2626 !important;
   }
 
-  /* Subtitles and muted text must be crisp, legible slate in daylight mode */
+  /* Subtitles and muted text must be crisp, legible slate in daylight mode (WCAG AA >= 5.5:1) */
   :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
     .text-gray-400, .text-slate-400, .text-zinc-400
   ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
-    color: #475569 !important;
+    color: #3B4B61 !important;
   }
 
   :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
-    .text-gray-500, .text-slate-500
+    .text-gray-500, .text-slate-500, .text-zinc-500,
+    .text-text-muted, .text-muted-foreground
   ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
     color: #334155 !important;
+  }
+
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-gray-600, .text-slate-600, .text-zinc-600
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
+    color: #1E293B !important;
+  }
+
+  /* Prevent transparent white text from being washed out on light surfaces */
+  :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
+    .text-white\/90, .text-white\/80, .text-white\/70, .text-white\/60, .text-white\/50, .text-white\/40
+  ):not(.dark *):not([data-theme="midnight-obsidian"] *):not(button *):not(.btn *):not(.badge *):not([class*="badge"] *) {
+    color: #1E293B !important;
   }
 
   /* SVG text contrast protections for Daylight mode (Rule 85.2) */

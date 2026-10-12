@@ -144,7 +144,7 @@ export function AccountRulesDrawer({
                     <div className="p-3.5 rounded-xl border border-border bg-surface-muted/40 space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-text">Daily Drawdown Limit</span>
-                        <span className="font-mono font-bold text-danger">{dailyDdPct}% ({fmtUSD(dailyDdVal)})</span>
+                        <span className="terminal-num tabular-nums font-bold text-danger">{dailyDdPct}% ({fmtUSD(dailyDdVal)})</span>
                       </div>
                       <p className="text-2xs text-text-muted leading-relaxed">
                         Resets every day at 00:00 UTC server midnight based on midnight equity or balance baseline.
@@ -155,7 +155,7 @@ export function AccountRulesDrawer({
                     <div className="p-3.5 rounded-xl border border-border bg-surface-muted/40 space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-text">Max Total Drawdown</span>
-                        <span className="font-mono font-bold text-danger">{maxDdPct}% ({fmtUSD(maxDdVal)})</span>
+                        <span className="terminal-num tabular-nums font-bold text-danger">{maxDdPct}% ({fmtUSD(maxDdVal)})</span>
                       </div>
                       <p className="text-2xs text-text-muted leading-relaxed">
                         {isTrailing
@@ -169,7 +169,7 @@ export function AccountRulesDrawer({
                       <div className="p-3.5 rounded-xl border border-border bg-surface-muted/40 space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-semibold text-text">Profit Target</span>
-                          <span className="font-mono font-bold text-profit">{profitTargetPct}% ({fmtUSD(profitTargetVal)})</span>
+                          <span className="terminal-num tabular-nums font-bold text-profit">{profitTargetPct}% ({fmtUSD(profitTargetVal)})</span>
                         </div>
                         <p className="text-2xs text-text-muted leading-relaxed">
                           Achieve target with closed &amp; open trades to unlock advancement to next phase or funding.
@@ -192,7 +192,7 @@ export function AccountRulesDrawer({
                       <span className="text-text font-medium flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-text-muted" /> Minimum Trading Days
                       </span>
-                      <span className="font-mono font-semibold text-text">
+                      <span className="terminal-num tabular-nums font-semibold text-text">
                         {tradingDays} / {minDays} Days
                       </span>
                     </div>
@@ -222,7 +222,7 @@ export function AccountRulesDrawer({
                       <span className="text-text font-medium flex items-center gap-2">
                         <Zap className="w-4 h-4 text-text-muted" /> Account Leverage
                       </span>
-                      <span className="font-mono font-semibold text-accent">
+                      <span className="font-semibold text-accent">
                         1:100 FX · 1:30 Metals · 1:5 Crypto
                       </span>
                     </div>

@@ -94,7 +94,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <ImpersonationBanner />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={collapsed} onToggleCollapse={toggleCollapse} />
       <div className={`${collapsed ? 'lg:pl-16' : 'lg:pl-64'} ${isTerminal ? 'h-full max-h-full overflow-hidden' : 'min-h-screen'} flex flex-col min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-200`}>
-        <BannerBar placement="dashboard" />
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <main className={
           isTerminal ? 'flex-1 min-h-0 min-w-0 max-w-full overflow-hidden w-full p-1.5 sm:p-2 md:p-2.5 flex flex-col' :

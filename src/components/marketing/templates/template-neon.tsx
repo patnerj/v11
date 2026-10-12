@@ -1366,7 +1366,7 @@ export function TemplateNeon() {
         <div className="container max-w-7xl mx-auto px-4">
 
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs font-mono uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
               Market-First Innovations
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text tracking-tight">
@@ -1384,7 +1384,7 @@ export function TemplateNeon() {
               <div className="w-14 h-14 rounded-2xl bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center text-[#635BFF] dark:text-violet-400 mb-6">
                 <Percent className="h-7 w-7" />
               </div>
-              <div className="inline-block px-2.5 py-0.5 rounded-full bg-[#635BFF]/10 text-[#635BFF] dark:text-violet-400 font-mono text-3xs font-bold mb-3 uppercase">
+              <div className="inline-block px-2.5 py-0.5 rounded-full bg-[#635BFF]/10 text-[#635BFF] dark:text-violet-400 text-3xs font-bold mb-3 uppercase">
                 Signature Feature
               </div>
               <h3 className="text-xl font-black text-text mb-3">
@@ -1400,7 +1400,7 @@ export function TemplateNeon() {
               <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mb-6">
                 <ShieldCheck className="h-7 w-7" />
               </div>
-              <div className="inline-block px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-3xs font-bold mb-3 uppercase">
+              <div className="inline-block px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-3xs font-bold mb-3 uppercase">
                 Zero Trailing Traps
               </div>
               <h3 className="text-xl font-black text-text mb-3">
@@ -1416,7 +1416,7 @@ export function TemplateNeon() {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6">
                 <Clock className="h-7 w-7" />
               </div>
-              <div className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-3xs font-bold mb-3 uppercase">
+              <div className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-3xs font-bold mb-3 uppercase">
                 Stress-Free Trading
               </div>
               <h3 className="text-xl font-black text-text mb-3">
@@ -1437,7 +1437,7 @@ export function TemplateNeon() {
         <div className="container max-w-5xl mx-auto px-4">
 
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs font-mono uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/30 text-2xs uppercase tracking-wider font-bold text-[#635BFF] dark:text-violet-300 mb-3">
               The Transparent Choice
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-text tracking-tight">
@@ -1467,61 +1467,61 @@ export function TemplateNeon() {
                       15% Challenge Phase Profit Share
                     </td>
                     <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
-                      <span className="flex items-center gap-1.5 font-mono">
+                      <span className="flex items-center gap-1.5">
                         <Check className="h-4 w-4" /> YES (15% Bonus)
                       </span>
                     </td>
-                    <td className="p-4 sm:p-5 text-rose-500 font-mono">NO (0%)</td>
+                    <td className="p-4 sm:p-5 text-rose-600 dark:text-rose-400 font-semibold">NO (0%)</td>
                   </tr>
 
                   <tr>
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Daily Drawdown Calculation
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
                       Balance-Based (Fixed at 00:00)
                     </td>
-                    <td className="p-4 sm:p-5 text-rose-500 font-mono">Equity High Trailing Trap</td>
+                    <td className="p-4 sm:p-5 text-rose-600 dark:text-rose-400 font-semibold">Equity High Trailing Trap</td>
                   </tr>
 
                   <tr>
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Evaluation Time Limit
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
                       No Limit (Unlimited Days)
                     </td>
-                    <td className="p-4 sm:p-5 text-text-muted font-mono">30 - 60 Days Deadline</td>
+                    <td className="p-4 sm:p-5 text-text-muted font-medium">30 - 60 Days Deadline</td>
                   </tr>
 
                   <tr>
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       News Trading &amp; Weekend Holding
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
                       Fully Permitted
                     </td>
-                    <td className="p-4 sm:p-5 text-rose-500 font-mono">Restricted or Prohibited</td>
+                    <td className="p-4 sm:p-5 text-rose-600 dark:text-rose-400 font-semibold">Restricted or Prohibited</td>
                   </tr>
 
                   <tr>
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Automated Payout Guarantee
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
                       Under 24 Hours
                     </td>
-                    <td className="p-4 sm:p-5 text-text-muted font-mono">7 - 14 Days Approval</td>
+                    <td className="p-4 sm:p-5 text-text-muted font-medium">7 - 14 Days Approval</td>
                   </tr>
 
                   <tr>
                     <td className="p-4 sm:p-5 font-semibold text-text">
                       Maximum Scaling Capital
                     </td>
-                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5 font-mono">
+                    <td className="p-4 sm:p-5 font-bold text-emerald-600 dark:text-emerald-400 bg-[#635BFF]/5">
                       Up to $2,000,000
                     </td>
-                    <td className="p-4 sm:p-5 text-text-muted font-mono">Capped at $400,000</td>
+                    <td className="p-4 sm:p-5 text-text-muted font-medium">Capped at $400,000</td>
                   </tr>
 
                 </tbody>
@@ -1684,7 +1684,7 @@ export function TemplateNeon() {
                 </Button>
               </div>
 
-              <div className="mt-8 flex items-center justify-center gap-6 text-2xs text-violet-100/80 font-mono">
+              <div className="mt-8 flex items-center justify-center gap-6 text-2xs text-violet-100/90 font-semibold">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300" /> 100% Refundable Fee
                 </span>

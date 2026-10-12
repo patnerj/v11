@@ -152,7 +152,7 @@ export default function DashboardOverview() {
       : `Phase ${active.phase}`)
     : ''
 
-  if (user?.is_admin) return null
+  if (user?.is_admin && !isImpersonating) return null
 
   return (
     <div className="space-y-8">

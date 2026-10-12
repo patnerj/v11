@@ -900,14 +900,14 @@ export default function OperationsHubPage() {
 
       {/* ── TAB 2: PRICE FEED ENGINE & FAILOVER ────────────────────────────── */}
       {activeTab === 'feed' && (
-        <div className="space-y-6 max-w-4xl">
+        <div className="space-y-6 w-full max-w-6xl">
           <PriceFeedCard />
         </div>
       )}
 
       {/* ── TAB 3: MT5 BRIDGE GATEWAY ──────────────────────────────────────── */}
       {activeTab === 'mt5' && (
-        <div className="space-y-6 max-w-4xl">
+        <div className="space-y-6 w-full max-w-6xl">
           <Mt5GatewayMonitorCard />
 
           <Card className="bg-surface border-border text-text shadow-card">

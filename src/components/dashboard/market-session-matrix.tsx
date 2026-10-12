@@ -157,7 +157,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
                 </span>
 
                 {s.isOpen ? (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -165,7 +165,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
                     Active Now
                   </span>
                 ) : (
-                  <Badge tone="neutral" size="sm" className="font-mono text-3xs uppercase">
+                  <Badge tone="neutral" size="sm" className="text-3xs uppercase font-medium">
                     Closed
                   </Badge>
                 )}
@@ -174,19 +174,19 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
               <div className="text-2xs text-text-muted space-y-1">
                 <div className="flex items-center justify-between">
                   <span>Hours (UTC):</span>
-                  <span className="font-mono text-text font-medium">
+                  <span className="terminal-num tabular-nums text-text font-medium">
                     {String(s.openUtcHour).padStart(2, '0')}:00 - {String(s.closeUtcHour).padStart(2, '0')}:00
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>{s.isOpen ? 'Closes In:' : 'Opens In:'}</span>
-                  <span className={cn("font-mono font-bold", s.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-text")}>
+                  <span className={cn("terminal-num tabular-nums font-bold", s.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-text")}>
                     {s.countdownStr}
                   </span>
                 </div>
               </div>
 
-              <div className="mt-2.5 pt-2 border-t border-border/50 flex items-center justify-between text-3xs font-mono">
+              <div className="mt-2.5 pt-2 border-t border-border/50 flex items-center justify-between text-3xs">
                 <span className="text-text-muted uppercase">Pairs</span>
                 <span className="text-text font-semibold">{s.keyAssets.join(', ')}</span>
               </div>
@@ -196,7 +196,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
 
         {/* 24-Hour Visual Cycle Bar */}
         <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between text-3xs uppercase font-mono text-text-muted font-bold">
+          <div className="flex items-center justify-between text-3xs uppercase text-text-muted font-bold">
             <span>00:00 UTC (Asia)</span>
             <span>08:00 UTC (London)</span>
             <span>13:00 UTC (NY Open)</span>

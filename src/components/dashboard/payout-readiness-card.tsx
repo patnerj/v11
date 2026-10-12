@@ -163,7 +163,7 @@ export function PayoutReadinessCard({
               tone={isReady ? "success" : "warn"}
               size="sm"
               pulsing={isReady}
-              className="text-2xs font-semibold uppercase tracking-wider font-mono shadow-xs"
+              className="text-2xs font-semibold uppercase tracking-wider shadow-xs"
             >
               {isReady ? "🎉 Eligible Now" : "Cycle In Progress"}
             </Badge>

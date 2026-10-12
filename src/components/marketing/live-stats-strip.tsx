@@ -66,7 +66,7 @@ export function LiveStatsStrip({ puckProps }: { puckProps?: { items?: StatItem[]
                     <Award className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-xl sm:text-2xl font-extrabold tracking-tight font-mono text-text">
+                    <div className="text-xl sm:text-2xl font-extrabold tracking-tight terminal-num tabular-nums text-text">
                       {stat.value}
                     </div>
                     <div className="text-2xs sm:text-xs font-semibold text-text mt-0.5 truncate">{stat.label}</div>
@@ -94,7 +94,7 @@ export function LiveStatsStrip({ puckProps }: { puckProps?: { items?: StatItem[]
                       <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${item.tone}`} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight font-mono text-text">
+                      <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight terminal-num tabular-nums text-text">
                         {item.value}
                       </div>
                       <div className="text-2xs sm:text-xs font-bold text-text mt-0.5 truncate">{item.label}</div>

@@ -125,13 +125,13 @@ function PayoutLedgerVisual() {
       {/* Header bar */}
       <div className="relative flex flex-wrap items-center justify-between gap-2 pb-3 sm:pb-4 border-b border-border-subtle/80 mb-3.5 sm:mb-5">
         <div>
-          <span className="text-2xs font-mono font-bold tracking-wider uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+          <span className="text-2xs font-bold tracking-wider uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
             Treasury Ledger
           </span>
           <h3 className="text-sm sm:text-base font-bold text-text mt-1">Verified Trader Disbursals</h3>
         </div>
-        <div className="flex items-center gap-1.5 text-2xs sm:text-xs text-emerald-400 font-mono">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+        <div className="flex items-center gap-1.5 text-2xs sm:text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <span className="truncate">Automated Queue Active</span>
         </div>
       </div>
@@ -140,7 +140,7 @@ function PayoutLedgerVisual() {
       <div className="relative p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500/10 via-surface/80 to-surface/40 border border-emerald-500/20 mb-3.5 sm:mb-5 flex items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="text-2xs sm:text-xs text-text-muted truncate">Total Capital Disbursed to Date</div>
-          <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-emerald-400 mt-0.5">
+          <div className="text-xl sm:text-2xl md:text-3xl font-black terminal-num tabular-nums text-emerald-600 dark:text-emerald-400 mt-0.5">
             $4,250,000+
           </div>
         </div>
@@ -158,15 +158,15 @@ function PayoutLedgerVisual() {
             className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-surface/40 hover:bg-surface/70 border border-border-subtle/60 text-xs transition-colors gap-2"
           >
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
                 <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <div className="min-w-0">
-                <div className="font-mono font-bold text-text flex items-center gap-1.5 truncate">
-                  <span>{tx.amount}</span>
+                <div className="font-bold text-text flex items-center gap-1.5 truncate">
+                  <span className="terminal-num tabular-nums">{tx.amount}</span>
                   <span className="text-2xs font-normal text-text-muted hidden xs:inline truncate">({tx.account})</span>
                 </div>
-                <div className="text-2xs sm:text-2xs text-text-muted font-mono truncate max-w-[130px] xs:max-w-none">
+                <div className="text-2xs sm:text-2xs text-text-muted truncate max-w-[130px] xs:max-w-none">
                   {tx.method} · {tx.address}
                 </div>
               </div>

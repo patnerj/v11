@@ -161,7 +161,7 @@ export function MultiAccountPortfolioStrip({
                 {/* Header row: ID, Plan, Phase Badge */}
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-2xs font-mono font-bold px-2 py-0.5 rounded-md bg-surface-muted text-text border border-border">
+                    <span className="text-2xs font-bold px-2 py-0.5 rounded-md bg-surface-muted text-text border border-border">
                       #{ch.id}
                     </span>
                     <span className="text-xs font-semibold text-text truncate">
@@ -181,18 +181,18 @@ export function MultiAccountPortfolioStrip({
                 {/* Equity & PnL row */}
                 <div className="mt-3 flex items-baseline justify-between">
                   <div>
-                    <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-medium">
+                    <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-semibold">
                       Live Equity
                     </span>
-                    <span className="text-lg font-bold terminal-num font-mono tabular-nums text-text">
+                    <span className="text-lg font-bold terminal-num tabular-nums text-text">
                       {fmtUSD(equity)}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-medium">
+                    <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-semibold">
                       Net Gain
                     </span>
-                    <span className={cn("text-xs font-semibold terminal-num font-mono tabular-nums", netPnl >= 0 ? "text-profit" : "text-loss")}>
+                    <span className={cn("text-xs font-semibold terminal-num tabular-nums", netPnl >= 0 ? "text-profit" : "text-loss")}>
                       {netPnl >= 0 ? '+' : ''}{fmtUSD(netPnl)} ({netPnlPct >= 0 ? '+' : ''}{netPnlPct.toFixed(2)}%)
                     </span>
                   </div>
@@ -201,7 +201,7 @@ export function MultiAccountPortfolioStrip({
 
               {/* Bottom footer: status / 1-click active state */}
               <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-2xs">
-                <span className="text-text-muted flex items-center gap-1 font-mono">
+                <span className="text-text-muted flex items-center gap-1">
                   Day {ch.trading_days || 1} • Start {fmtUSD(startBal)}
                 </span>
 

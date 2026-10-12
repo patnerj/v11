@@ -73,10 +73,10 @@ export function NewsRestrictBanner({ plan, className }: NewsRestrictBannerProps)
 
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider text-3xs font-mono">
+                <span className="font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider text-3xs">
                   ⚡ High-Impact News Window
                 </span>
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 font-mono font-bold text-3xs border border-amber-500/30">
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 terminal-num tabular-nums font-bold text-3xs border border-amber-500/30">
                   {currentEvent.currency} · In {minutes}m {seconds < 10 ? `0${seconds}` : seconds}s
                 </span>
               </div>

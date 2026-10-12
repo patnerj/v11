@@ -83,7 +83,6 @@ export default function ArenaLayout({ children }: { children: React.ReactNode })
         currentPath={pathname}
       />
       <div className={`${collapsed ? 'lg:pl-16' : 'lg:pl-64'} min-h-screen flex flex-col transition-[padding] duration-200`}>
-        <BannerBar placement="dashboard" />
         <Topbar onMenuClick={() => setSidebarOpen(true)} role={role} user={user} />
         <main className="flex-1 min-w-0 w-full">
           {children}

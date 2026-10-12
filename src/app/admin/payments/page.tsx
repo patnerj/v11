@@ -393,234 +393,406 @@ export default function PaymentsHubPage() {
 
       {/* ── TAB 1: GATEWAY CONFIGURATION ──────────────────────────────────── */}
       {activeTab === 'gateways' && (
-        <div className="space-y-6 max-w-4xl">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 w-full items-start">
+          
+          {/* Main Column: Gateway Configuration Cards (8 cols) */}
+          <div className="xl:col-span-8 space-y-6 w-full">
 
-          {isGatewaysError && (
-            <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300 flex items-center justify-between gap-4">
-              <span>Couldn't load the current gateway settings. Saving is disabled until this loads — submitting the form below could overwrite your live keys with blanks.</span>
-              <Button variant="outline" size="sm" onClick={() => refetchGateways()} className="h-8 text-xs shrink-0">Retry</Button>
-            </div>
-          )}
-
-          {/* Stripe Card */}
-          <Card className="bg-surface border-border">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
-                    <CreditCard className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base text-text">Stripe Credit & Debit Cards</CardTitle>
-                    <CardDescription className="text-xs text-text-muted">
-                      Direct credit/debit card checkout via Stripe Elements and Checkout sessions.
-                    </CardDescription>
-                  </div>
-                </div>
-                <Switch
-                  checked={gatewayForm.stripe_enabled}
-                  onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, stripe_enabled: checked })}
-                />
+            {isGatewaysError && (
+              <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300 flex items-center justify-between gap-4">
+                <span>Couldn't load the current gateway settings. Saving is disabled until this loads — submitting the form below could overwrite your live keys with blanks.</span>
+                <Button variant="outline" size="sm" onClick={() => refetchGateways()} className="h-8 text-xs shrink-0">Retry</Button>
               </div>
-            </CardHeader>
+            )}
 
-            <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="stripe-pk">Stripe Publishable Key</Label>
-                  <Input
-                    id="stripe-pk"
-                    placeholder="pk_live_..."
-                    value={gatewayForm.stripe_public_key}
-                    onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_public_key: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="stripe-sk">Stripe Secret Key</Label>
-                  <Input
-                    id="stripe-sk"
-                    type="password"
-                    placeholder="sk_live_..."
-                    value={gatewayForm.stripe_secret_key}
-                    onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_secret_key: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
+            {/* Stripe Card */}
+            <Card className="bg-surface border-border">
+              <CardHeader className="border-b border-border/60 pb-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="stripe-whk">Stripe Webhook Signing Secret</Label>
-                  {gatewayForm.stripe_webhook_secret_set && !gatewayForm.stripe_webhook_secret && (
-                    <Badge tone="success" size="sm" className="text-2xs py-0 px-2 font-mono">
-                      Configured
-                    </Badge>
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-text">Stripe Credit & Debit Cards</CardTitle>
+                      <CardDescription className="text-xs text-text-muted">
+                        Direct credit/debit card checkout via Stripe Elements and Checkout sessions.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={gatewayForm.stripe_enabled}
+                    onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, stripe_enabled: checked })}
+                  />
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="stripe-pk">Stripe Publishable Key</Label>
+                    <Input
+                      id="stripe-pk"
+                      placeholder="pk_live_..."
+                      value={gatewayForm.stripe_public_key}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_public_key: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="stripe-sk">Stripe Secret Key</Label>
+                    <Input
+                      id="stripe-sk"
+                      type="password"
+                      placeholder="sk_live_..."
+                      value={gatewayForm.stripe_secret_key}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_secret_key: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="stripe-whk">Stripe Webhook Signing Secret</Label>
+                    {gatewayForm.stripe_webhook_secret_set && !gatewayForm.stripe_webhook_secret && (
+                      <Badge tone="success" size="sm" className="text-2xs py-0 px-2 font-mono">
+                        Configured
+                      </Badge>
+                    )}
+                  </div>
+                  <Input
+                    id="stripe-whk"
+                    type="password"
+                    placeholder={gatewayForm.stripe_webhook_secret_set ? "•••••••••••• (Configured on server)" : "whsec_..."}
+                    value={gatewayForm.stripe_webhook_secret}
+                    onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_webhook_secret: e.target.value })}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-2xs text-text-muted font-mono">
+                    Webhook URL to register in Stripe Dashboard: <code className="text-emerald-500 font-bold">/wp-json/fxsim/v1/stripe/webhook</code>
+                  </p>
+                  {gatewayForm.stripe_enabled && !gatewayForm.stripe_webhook_secret && !gatewayForm.stripe_webhook_secret_set && (
+                    <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span>Stripe webhook secret not configured — Stripe checkouts will not auto-activate accounts.</span>
+                    </div>
                   )}
                 </div>
-                <Input
-                  id="stripe-whk"
-                  type="password"
-                  placeholder={gatewayForm.stripe_webhook_secret_set ? "•••••••••••• (Configured on server)" : "whsec_..."}
-                  value={gatewayForm.stripe_webhook_secret}
-                  onChange={(e) => setGatewayForm({ ...gatewayForm, stripe_webhook_secret: e.target.value })}
-                  className="font-mono text-xs"
-                />
-                <p className="text-2xs text-gray-500 font-mono">
-                  Webhook URL to register in Stripe Dashboard: <code className="text-emerald-400">/wp-json/fxsim/v1/stripe/webhook</code>
-                </p>
-                {gatewayForm.stripe_enabled && !gatewayForm.stripe_webhook_secret && !gatewayForm.stripe_webhook_secret_set && (
-                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>Stripe webhook secret not configured — Stripe checkouts will not auto-activate accounts.</span>
-                  </div>
-                )}
-              </div>
 
-              <div className="pt-2 flex items-center justify-between">
+                <div className="pt-2 flex items-center justify-between">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const res = await refetchStripeStatus()
+                      if (res.data?.connected) {
+                        toast.success(res.data.message || 'Stripe connection verified!')
+                      } else {
+                        toast.error('Stripe connection check failed')
+                      }
+                    }}
+                    loading={isCheckingStripe}
+                    className="text-xs gap-1.5 border-surface-muted"
+                  >
+                    <Zap className="h-3.5 w-3.5 text-blue-400" />
+                    Test Stripe Connection
+                  </Button>
+
+                  {stripeStatusData && (
+                    <span className="text-xs font-semibold text-emerald-500">
+                      {stripeStatusData.message}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cryptomus Crypto Gateway */}
+            <Card className="bg-surface border-border">
+              <CardHeader className="border-b border-border/60 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                      <Cpu className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-text">Cryptomus & Crypto Settlement</CardTitle>
+                      <CardDescription className="text-xs text-text-muted">
+                        Automated cryptocurrency checkout with instant blockchain confirmations (USDT, BTC, ETH).
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={gatewayForm.cryptomus_enabled}
+                    onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, cryptomus_enabled: checked })}
+                  />
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cryptomus-mid">Cryptomus Merchant ID</Label>
+                    <Input
+                      id="cryptomus-mid"
+                      placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                      value={gatewayForm.cryptomus_merchant_id}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, cryptomus_merchant_id: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cryptomus-key">Cryptomus Payment API Key</Label>
+                    <Input
+                      id="cryptomus-key"
+                      type="password"
+                      placeholder="••••••••••••••••"
+                      value={gatewayForm.cryptomus_api_key}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, cryptomus_api_key: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* PayPal Commerce */}
+            <Card className="bg-surface border-border">
+              <CardHeader className="border-b border-border/60 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-400 flex items-center justify-center">
+                      <Globe className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-text">PayPal Gateway</CardTitle>
+                      <CardDescription className="text-xs text-text-muted">
+                        Standard PayPal wallet and alternative card payments.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={gatewayForm.paypal_enabled}
+                    onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, paypal_enabled: checked })}
+                  />
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="paypal-cid">PayPal Client ID</Label>
+                    <Input
+                      id="paypal-cid"
+                      placeholder="A..."
+                      value={gatewayForm.paypal_client_id}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, paypal_client_id: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="paypal-sec">PayPal Secret</Label>
+                    <Input
+                      id="paypal-sec"
+                      type="password"
+                      placeholder="E..."
+                      value={gatewayForm.paypal_secret}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, paypal_secret: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Manual Crypto & Offline Wire Transfers Card */}
+            <Card className="bg-surface border-border">
+              <CardHeader className="border-b border-border/60 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-text">Manual Crypto &amp; Wire Transfers</CardTitle>
+                      <CardDescription className="text-xs text-text-muted">
+                        Allow traders to upload transaction hashes, screenshots, or bank receipts during checkout.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface-muted border border-border">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-semibold text-text">Direct Crypto Receipts</div>
+                      <div className="text-2xs text-text-muted">USDT TRC-20, ERC-20, BTC manual proof</div>
+                    </div>
+                    <Switch
+                      checked={gatewayForm.manual_crypto_enabled}
+                      onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, manual_crypto_enabled: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface-muted border border-border">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-semibold text-text">Offline Wire Transfers</div>
+                      <div className="text-2xs text-text-muted">Direct SWIFT/SEPA bank deposits</div>
+                    </div>
+                    <Switch
+                      checked={gatewayForm.manual_bank_enabled}
+                      onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, manual_bank_enabled: checked })}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => saveGatewaysMutation.mutate(gatewayForm)}
+                loading={saveGatewaysMutation.isPending}
+                disabled={isGatewaysError || isGatewaysLoading}
+                title={isGatewaysError ? 'Settings failed to load — saving now would overwrite live values with defaults.' : undefined}
+                className="gap-2 shadow-emerald-500/20"
+              >
+                <Save className="h-4 w-4" />
+                Save Gateway Configuration
+              </Button>
+            </div>
+
+          </div>
+
+          {/* Sidecar Column: Treasury Health, Webhook Reference & Quick Queue (4 cols) */}
+          <div className="xl:col-span-4 space-y-6 w-full xl:sticky xl:top-6">
+            
+            {/* Live Gateway Telemetry */}
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-sm font-bold text-text flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-emerald-500" />
+                    Treasury Gateway Status
+                  </span>
+                  <Badge tone="accent" size="sm">Live</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <CreditCard className="h-3.5 w-3.5 text-blue-400" /> Stripe Credit Cards
+                  </span>
+                  <Badge tone={gatewayForm.stripe_enabled ? 'success' : 'neutral'} size="sm">
+                    {gatewayForm.stripe_enabled ? 'Active' : 'Disabled'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Cpu className="h-3.5 w-3.5 text-amber-400" /> Cryptomus (Crypto)
+                  </span>
+                  <Badge tone={gatewayForm.cryptomus_enabled ? 'success' : 'neutral'} size="sm">
+                    {gatewayForm.cryptomus_enabled ? 'Active' : 'Disabled'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Globe className="h-3.5 w-3.5 text-blue-500" /> PayPal Commerce
+                  </span>
+                  <Badge tone={gatewayForm.paypal_enabled ? 'success' : 'neutral'} size="sm">
+                    {gatewayForm.paypal_enabled ? 'Active' : 'Disabled'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <DollarSign className="h-3.5 w-3.5 text-emerald-500" /> Manual Payment Proofs
+                  </span>
+                  <Badge tone={gatewayForm.manual_crypto_enabled || gatewayForm.manual_bank_enabled ? 'success' : 'neutral'} size="sm">
+                    {gatewayForm.manual_crypto_enabled || gatewayForm.manual_bank_enabled ? 'Active' : 'Disabled'}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Manual Proofs Tray */}
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-sm font-bold text-text flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                  Manual Proofs Queue
+                </CardTitle>
+                <CardDescription className="text-xs text-text-muted">
+                  Traders awaiting manual payment verification.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-muted">Awaiting Review:</span>
+                  <span className="text-sm font-bold terminal-num tabular-nums text-text">
+                    {pendingManualOrders.length} order{pendingManualOrders.length === 1 ? '' : 's'}
+                  </span>
+                </div>
                 <Button
-                  type="button"
                   variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    const res = await refetchStripeStatus()
-                    if (res.data?.connected) {
-                      toast.success(res.data.message || 'Stripe connection verified!')
-                    } else {
-                      toast.error('Stripe connection check failed')
-                    }
-                  }}
-                  loading={isCheckingStripe}
-                  className="text-xs gap-1.5 border-surface-muted"
+                  onClick={() => setActiveTab('queue')}
+                  className="w-full text-xs gap-1.5 justify-center"
                 >
-                  <Zap className="h-3.5 w-3.5 text-blue-400" />
-                  Test Stripe Connection
+                  <Eye className="h-3.5 w-3.5" />
+                  Review Manual Proofs ({pendingManualOrders.length})
                 </Button>
+              </CardContent>
+            </Card>
 
-                {stripeStatusData && (
-                  <span className="text-xs font-mono text-emerald-400">
-                    {stripeStatusData.message}
-                  </span>
-                )}
+            {/* Official Webhook Endpoints Reference Card */}
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-sm font-bold text-text flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-accent" />
+                  Webhook &amp; IPN Endpoints
+                </CardTitle>
+                <CardDescription className="text-xs text-text-muted">
+                  Register these URLs in your gateway developer dashboards.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 text-xs">
+                <div className="space-y-1">
+                  <span className="text-2xs font-semibold text-text uppercase tracking-wider block">Stripe Webhook</span>
+                  <code className="text-2xs font-mono text-emerald-600 dark:text-emerald-400 bg-surface-muted px-2 py-1 rounded block border border-border break-all select-all">
+                    /wp-json/fxsim/v1/stripe/webhook
+                  </code>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-2xs font-semibold text-text uppercase tracking-wider block">Cryptomus IPN</span>
+                  <code className="text-2xs font-mono text-amber-600 dark:text-amber-400 bg-surface-muted px-2 py-1 rounded block border border-border break-all select-all">
+                    /wp-json/fxsim/v1/payment/cryptomus-callback
+                  </code>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-2xs font-semibold text-text uppercase tracking-wider block">Confirmo IPN</span>
+                  <code className="text-2xs font-mono text-blue-600 dark:text-blue-400 bg-surface-muted px-2 py-1 rounded block border border-border break-all select-all">
+                    /wp-json/fxsim/v1/payment/confirmo-callback
+                  </code>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* PCI-DSS Security & Audit Card */}
+            <div className="p-4 rounded-xl bg-surface-muted border border-border/80 flex items-start gap-3 text-xs text-text-muted">
+              <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-text block">PCI-DSS Tokenized Checkout</span>
+                <span>All credit card data is securely tokenized via Stripe Elements. Zero raw card numbers or CVV codes ever touch the platform database.</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Cryptomus Crypto Gateway */}
-          <Card className="bg-surface border-border">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                    <Cpu className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base text-text">Cryptomus & Crypto Settlement</CardTitle>
-                    <CardDescription className="text-xs text-text-muted">
-                      Automated cryptocurrency checkout with instant blockchain confirmations (USDT, BTC, ETH).
-                    </CardDescription>
-                  </div>
-                </div>
-                <Switch
-                  checked={gatewayForm.cryptomus_enabled}
-                  onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, cryptomus_enabled: checked })}
-                />
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cryptomus-mid">Cryptomus Merchant ID</Label>
-                  <Input
-                    id="cryptomus-mid"
-                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    value={gatewayForm.cryptomus_merchant_id}
-                    onChange={(e) => setGatewayForm({ ...gatewayForm, cryptomus_merchant_id: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="cryptomus-key">Cryptomus Payment API Key</Label>
-                  <Input
-                    id="cryptomus-key"
-                    type="password"
-                    placeholder="••••••••••••••••"
-                    value={gatewayForm.cryptomus_api_key}
-                    onChange={(e) => setGatewayForm({ ...gatewayForm, cryptomus_api_key: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* PayPal Commerce */}
-          <Card className="bg-surface border-border">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-400 flex items-center justify-center">
-                    <Globe className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base text-text">PayPal Gateway</CardTitle>
-                    <CardDescription className="text-xs text-text-muted">
-                      Standard PayPal wallet and alternative card payments.
-                    </CardDescription>
-                  </div>
-                </div>
-                <Switch
-                  checked={gatewayForm.paypal_enabled}
-                  onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, paypal_enabled: checked })}
-                />
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="paypal-cid">PayPal Client ID</Label>
-                  <Input
-                    id="paypal-cid"
-                    placeholder="A..."
-                    value={gatewayForm.paypal_client_id}
-                    onChange={(e) => setGatewayForm({ ...gatewayForm, paypal_client_id: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="paypal-sec">PayPal Secret</Label>
-                  <Input
-                    id="paypal-sec"
-                    type="password"
-                    placeholder="E..."
-                    value={gatewayForm.paypal_secret}
-                    onChange={(e) => setGatewayForm({ ...gatewayForm, paypal_secret: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Save Button */}
-          <div className="flex justify-end pt-2">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => saveGatewaysMutation.mutate(gatewayForm)}
-              loading={saveGatewaysMutation.isPending}
-              disabled={isGatewaysError || isGatewaysLoading}
-              title={isGatewaysError ? 'Settings failed to load — saving now would overwrite live values with defaults.' : undefined}
-              className="gap-2 shadow-emerald-500/20"
-            >
-              <Save className="h-4 w-4" />
-              Save Gateway Configuration
-            </Button>
           </div>
 
         </div>

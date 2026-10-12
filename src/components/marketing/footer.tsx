@@ -99,26 +99,26 @@ export function MarketingFooter() {
         <div className="container max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-wrap items-center justify-between gap-6 text-xs text-text-muted">
             <div className="flex items-center gap-2 font-medium">
-              <span className="text-2xs uppercase tracking-wider font-bold text-emerald-400 font-mono">
+              <span className="text-2xs uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400">
                 Institutional Infrastructure
               </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-6 sm:gap-8">
               <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-emerald-400" />
+                <Terminal className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <span>MetaTrader 5 Bridge</span>
               </div>
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-teal-400" />
+                <BarChart3 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                 <span>TradingView Advanced Charts</span>
               </div>
               <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-emerald-400" />
+                <Coins className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <span>USDT TRC-20 / ERC-20 / Wire</span>
               </div>
               <div className="flex items-center gap-2">
-                <Lock className="h-4 w-4 text-cyan-400" />
+                <Lock className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                 <span>256-bit Encrypted Banking SLA</span>
               </div>
             </div>
@@ -137,21 +137,21 @@ export function MarketingFooter() {
             </p>
             
             <div className="flex items-center gap-2 pt-1">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="text-xs text-text-muted font-mono">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-xs text-text-muted font-medium">
                 All Systems Operational · 14ms MT5 Server Ping
               </span>
             </div>
 
             {/* Direct Contact Pills */}
             <div className="pt-3 space-y-2 border-t border-border-subtle max-w-sm">
-              <div className="text-2xs font-mono uppercase tracking-wider text-text-muted font-bold">
+              <div className="text-2xs uppercase tracking-wider text-text-muted font-bold">
                 Direct Support Desk:
               </div>
-              <div className="flex flex-col gap-1.5 text-xs font-mono">
+              <div className="flex flex-col gap-1.5 text-xs">
                 <div className="flex flex-wrap items-center justify-between p-2 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-emerald-500/20 gap-1">
-                  <span className="text-emerald-500 dark:text-emerald-400 font-semibold shrink-0">24/7 Helpdesk:</span>
-                  <a href="mailto:support@launchapropfirm.com" className="text-text hover:text-emerald-500 transition-colors truncate">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">24/7 Helpdesk:</span>
+                  <a href="mailto:support@launchapropfirm.com" className="text-text hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate">
                     support@launchapropfirm.com
                   </a>
                 </div>
@@ -160,7 +160,7 @@ export function MarketingFooter() {
 
             {/* Official Community & Social Media Channels */}
             <div className="pt-3 space-y-2 border-t border-border-subtle max-w-sm">
-              <div className="text-2xs font-mono uppercase tracking-wider text-text-muted font-bold">
+              <div className="text-2xs uppercase tracking-wider text-text-muted font-bold">
                 Official Community & Channels:
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-0.5">

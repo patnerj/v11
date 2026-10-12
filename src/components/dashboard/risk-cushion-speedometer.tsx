@@ -86,10 +86,10 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
         </div>
 
         <span className={cn(
-          "text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border font-mono",
-          tone === 'safe' && "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-          tone === 'warn' && "bg-amber-500/15 text-amber-400 border-amber-500/30",
-          tone === 'danger' && "bg-rose-500/15 text-rose-400 border-rose-500/30 animate-pulse"
+          "text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border",
+          tone === 'safe' && "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+          tone === 'warn' && "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+          tone === 'danger' && "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 animate-pulse"
         )}>
           {statusLabel}
         </span>
