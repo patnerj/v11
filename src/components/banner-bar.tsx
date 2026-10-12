@@ -41,8 +41,15 @@ export function BannerBar({ placement }: { placement: 'top' | 'dashboard' }) {
 
   useEffect(() => {
     let cancel = false
-    // Skip banner loading entirely on admin command center routes.
-    if ((pathname || '').startsWith('/admin') || (pathname || '').startsWith('/dashboard/admin')) {
+    // Skip banner loading entirely on admin command center routes and high-focus trading/checkout journeys (Rule 86.1).
+    if (
+      (pathname || '').startsWith('/admin') ||
+      (pathname || '').startsWith('/dashboard/admin') ||
+      (pathname || '').startsWith('/dashboard/trading') ||
+      (pathname || '').startsWith('/checkout') ||
+      pathname === '/login' ||
+      pathname === '/register'
+    ) {
       setBanner(null)
       return
     }

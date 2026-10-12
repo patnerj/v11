@@ -21,7 +21,16 @@ export default function PublicTournamentsPage() {
           api.tournaments.list(),
           api.paymentMyOrders(true).catch(() => ({ ok: false as const, data: [] as PaymentOrder[] }))
         ])
-        if (res.ok) setTournaments(res.data)
+        if (res.ok) {
+          const list = Array.isArray(res.data)
+            ? res.data
+            : (res.data && typeof res.data === 'object' && Array.isArray((res.data as any).competitions))
+              ? (res.data as any).competitions
+              : (res.data && typeof res.data === 'object' && Array.isArray((res.data as any).tournaments))
+                ? (res.data as any).tournaments
+                : []
+          setTournaments(list)
+        }
         if (ord.ok && Array.isArray(ord.data)) {
           const map = new Map<number, PaymentOrder>()
           for (const o of ord.data) {
@@ -41,9 +50,10 @@ export default function PublicTournamentsPage() {
     fetchTournaments()
   }, [])
 
-  const activeTournaments = tournaments.filter(t => t.status === 'active')
-  const upcomingTournaments = tournaments.filter(t => t.status === 'upcoming')
-  const completedTournaments = tournaments.filter(t => t.status === 'completed')
+  const safeTournaments = Array.isArray(tournaments) ? tournaments : []
+  const activeTournaments = safeTournaments.filter(t => t.status === 'active')
+  const upcomingTournaments = safeTournaments.filter(t => t.status === 'upcoming')
+  const completedTournaments = safeTournaments.filter(t => t.status === 'completed')
 
   const formatPrizePool = (val: unknown) => {
     const raw = String(val ?? '').trim()
@@ -218,7 +228,7 @@ export default function PublicTournamentsPage() {
 
         {loading ? (
           <div className="text-center py-20 text-text-muted animate-pulse">Loading arenas...</div>
-        ) : tournaments.length === 0 ? (
+        ) : safeTournaments.length === 0 ? (
           <div className="text-center py-20 text-text-muted">
             No tournaments are open right now — check back soon.
           </div>
