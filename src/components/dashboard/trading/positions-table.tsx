@@ -3,7 +3,7 @@
 import { memo, useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Pencil, X, Check, ChevronDown, Trash2, Share2, MoreHorizontal } from 'lucide-react'
+import { Pencil, X, Check, ChevronDown, Trash2, Share2, MoreHorizontal, ShieldCheck } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
@@ -15,7 +15,7 @@ import { usePrices } from '@/store/prices'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/cn'
 import type { Position } from '@/types/api'
-import { playOrderCloseSound } from '@/lib/sound'
+import { playOrderCloseSound, playOrderProfitChimeSound, playOrderLossThumpSound } from '@/lib/sound'
 import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ClosePositionModal } from '@/components/dashboard/trading/close-position-modal'
@@ -43,8 +43,12 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
     try {
       const res = await api.close(closingPosition.id)
       if (res.ok && res.data.success) {
-        playOrderCloseSound()
         const closePnl = toNum(res.data.pnl)
+        if (closePnl >= 0) {
+          playOrderProfitChimeSound()
+        } else {
+          playOrderLossThumpSound()
+        }
         // Optimistic removal from store for instant UI feedback
         usePrices.setState((state) => ({
           positions: (state.positions || []).filter((p) => p.id !== closingPosition.id)
@@ -95,7 +99,11 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
       const accId = positions[0]?.account_id
       const batchRes = await api.closeAll(accId ? { account_id: accId } : undefined)
       if (batchRes.ok && batchRes.data.success) {
-        playOrderCloseSound()
+        if (totalPnL >= 0) {
+          playOrderProfitChimeSound()
+        } else {
+          playOrderLossThumpSound()
+        }
         toast.success(`Closed all ${batchRes.data.closed_count || positions.length} position(s)!`, { id: toastId })
         invalidateFxsim('/positions'); invalidateFxsim('/account'); invalidateFxsim('/history')
         onChanged?.()
@@ -122,13 +130,134 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
           toast.warning(`Closed ${succeeded} position(s), ${failed.length} failed.`, { id: toastId })
         }
       }
-    } catch (err: any) {
-      toast.error(err?.message || 'Emergency close failed', { id: toastId })
     } finally {
       setIsClosingAll(false)
       setIsCloseAllConfirmOpen(false)
     }
   }, [positions, isClosingAll, onChanged])
+
+  const [isSettingBreakeven, setIsSettingBreakeven] = useState(false)
+  const [isPartialClosingAll, setIsPartialClosingAll] = useState(false)
+
+  const handleBreakevenAll = useCallback(async () => {
+    if (!positions || positions.length === 0 || isSettingBreakeven) return
+    setIsSettingBreakeven(true)
+    const toastId = toast.loading('Securing winning positions at breakeven...')
+    try {
+      let secured = 0
+      let skipped = 0
+      const errors: string[] = []
+      const livePrices = usePrices.getState().prices
+
+      for (const p of positions) {
+        if (!p.id || p.id <= 0) continue
+        const isBuy = p.type === 'buy'
+        const openPrice = toNum(p.open_price)
+        const tick = livePrices[p.symbol]
+        const currentPrice = isBuy
+          ? (toNum(tick?.bid) || toNum(p.current_price))
+          : (toNum(tick?.ask) || toNum(p.current_price))
+        const sl = p.sl ? toNum(p.sl) : null
+
+        const inProfit = isBuy ? (currentPrice > openPrice) : (currentPrice < openPrice)
+        if (!inProfit) {
+          skipped++
+          continue
+        }
+
+        // Already at breakeven or better
+        if (sl !== null) {
+          if (isBuy && sl >= openPrice) {
+            skipped++
+            continue
+          }
+          if (!isBuy && sl <= openPrice) {
+            skipped++
+            continue
+          }
+        }
+
+        const res = await api.sltp(p.id, openPrice, p.tp ? toNum(p.tp) : null)
+        if (res.ok && res.data.success) {
+          secured++
+        } else {
+          errors.push(`${p.symbol}: ${res.ok ? res.data.message : res.error}`)
+        }
+      }
+
+      invalidateFxsim('/positions')
+      invalidateFxsim('/account')
+      await usePrices.getState().refresh()
+      onChanged?.()
+
+      if (secured > 0) {
+        toast.success(`Secured ${secured} position(s) at Breakeven! ${skipped > 0 ? `(${skipped} in loss/already secured)` : ''}`, { id: toastId })
+      } else if (skipped > 0 && errors.length === 0) {
+        toast.info(`No winning positions currently eligible to set to breakeven (${skipped} skipped).`, { id: toastId })
+      } else if (errors.length > 0) {
+        toast.error(`Could not set breakeven: ${errors.join(', ')}`, { id: toastId })
+      } else {
+        toast.info('No eligible positions found.', { id: toastId })
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to set breakeven', { id: toastId })
+    } finally {
+      setIsSettingBreakeven(false)
+    }
+  }, [positions, isSettingBreakeven, onChanged])
+
+  const handlePartialCloseAll50 = useCallback(async () => {
+    if (!positions || positions.length === 0 || isPartialClosingAll) return
+    setIsPartialClosingAll(true)
+    const toastId = toast.loading('Closing 50% volume across eligible positions...')
+    try {
+      let closedCount = 0
+      let skippedCount = 0
+      const errors: string[] = []
+
+      for (const p of positions) {
+        if (!p.id || p.id <= 0) continue
+        const totalLots = toNum(p.lot_size)
+        // Can only partially close if volume is at least 0.02 lots
+        if (totalLots < 0.02) {
+          skippedCount++
+          continue
+        }
+        const halfLots = Math.round((totalLots / 2) * 100) / 100
+        if (halfLots < 0.01) {
+          skippedCount++
+          continue
+        }
+
+        const res = await api.partialClose(p.id, halfLots)
+        if (res.ok && res.data.success) {
+          closedCount++
+        } else {
+          errors.push(`${p.symbol}: ${res.ok ? res.data.message : res.error}`)
+        }
+      }
+
+      invalidateFxsim('/positions')
+      invalidateFxsim('/account')
+      await usePrices.getState().refresh()
+      onChanged?.()
+
+      if (closedCount > 0) {
+        playOrderCloseSound()
+        toast.success(`Partially closed 50% on ${closedCount} position(s)! ${skippedCount > 0 ? `(${skippedCount} too small to split)` : ''}`, { id: toastId })
+      } else if (skippedCount > 0 && errors.length === 0) {
+        toast.info(`Positions have volume under 0.02 lots; cannot split 50%.`, { id: toastId })
+      } else if (errors.length > 0) {
+        toast.error(`Partial close issues: ${errors.join(', ')}`, { id: toastId })
+      } else {
+        toast.info('No eligible positions found.', { id: toastId })
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to partial close 50%', { id: toastId })
+    } finally {
+      setIsPartialClosingAll(false)
+    }
+  }, [positions, isPartialClosingAll, onChanged])
 
   if (positions === null) {
     return <SkeletonRows />
@@ -145,11 +274,11 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   }
   return (
     <>
-      {/* Panic Bar / Summary Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 text-terminal-label">
+      {/* Rapid Actions Toolbar / Panic Bar */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 text-terminal-label flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-text text-terminal-micro uppercase tracking-wider">Open Positions</span>
-          <span className="px-1.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-surface-muted text-text-muted border border-border-subtle">
+          <span className="px-1.5 py-0.5 rounded-full text-terminal-micro font-semibold bg-surface-muted text-text-muted border border-border-subtle terminal-num">
             {positions.length}
           </span>
           <span className="text-text-faint">·</span>
@@ -158,16 +287,38 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
             {fmtUSD(totalPnL, { sign: true })}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsCloseAllConfirmOpen(true)}
-          disabled={isClosingAll}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
-          title="Emergency Close All open positions at live market price"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-          <span>{isClosingAll ? 'Closing All...' : `Close All (${positions.length})`}</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleBreakevenAll}
+            disabled={isSettingBreakeven || isClosingAll || isPartialClosingAll}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
+            title="Set Stop Loss of all winning positions to entry price (breakeven)"
+          >
+            <span>🛡️</span>
+            <span>{isSettingBreakeven ? 'Securing...' : 'Set All Breakeven'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handlePartialCloseAll50}
+            disabled={isSettingBreakeven || isClosingAll || isPartialClosingAll}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-surface-muted hover:bg-surface-strong text-text-muted hover:text-text border border-border transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
+            title="Close 50% of position size across all open positions"
+          >
+            <span>½</span>
+            <span>{isPartialClosingAll ? 'Closing 50%...' : 'Partial Close 50%'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCloseAllConfirmOpen(true)}
+            disabled={isClosingAll || isSettingBreakeven || isPartialClosingAll}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Emergency Close All open positions at live market price"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+            <span>{isClosingAll ? 'Closing All...' : `Close All (${positions.length})`}</span>
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-terminal-body">
@@ -345,6 +496,38 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
       ? (toNum(tick?.bid) || toNum(pos.current_price))
       : (toNum(tick?.ask) || toNum(pos.current_price))
 
+  const handleRowBreakeven = useCallback(async () => {
+    const isBuy = pos.type === 'buy'
+    const openPrice = toNum(pos.open_price)
+    const inProfit = isBuy ? (currentPx > openPrice) : (currentPx < openPrice)
+    if (!inProfit) {
+      toast.warning(`${pos.symbol} is not in profit. Stop Loss cannot be moved to entry price.`)
+      return
+    }
+    const sl = pos.sl ? toNum(pos.sl) : null
+    if (sl !== null) {
+      if ((isBuy && sl >= openPrice) || (!isBuy && sl <= openPrice)) {
+        toast.info(`${pos.symbol} Stop Loss is already at or better than breakeven (${sl}).`)
+        return
+      }
+    }
+    const toastId = toast.loading(`Securing ${pos.symbol} Stop Loss at Breakeven...`)
+    try {
+      const res = await api.sltp(pos.id, openPrice, pos.tp ? toNum(pos.tp) : null)
+      if (res.ok && res.data.success) {
+        invalidateFxsim('/positions')
+        invalidateFxsim('/account')
+        await usePrices.getState().refresh()
+        onChanged?.()
+        toast.success(`Secured ${pos.symbol} SL at Breakeven (${openPrice})!`, { id: toastId })
+      } else {
+        toast.error(res.ok ? (res.data.message || 'Breakeven failed') : res.error, { id: toastId })
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to set breakeven', { id: toastId })
+    }
+  }, [pos, currentPx, onChanged])
+
   const closePos = useCallback(async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
@@ -456,7 +639,14 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
         )}
       >
         <Td>
-          <span className="font-semibold">{pos.symbol}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold terminal-num">{pos.symbol}</span>
+            {pos.isOptimistic && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                In-Flight
+              </span>
+            )}
+          </div>
         </Td>
         <Td>
           <Badge tone={pos.type === 'buy' ? 'success' : 'danger'}>{pos.type.toUpperCase()}</Badge>
@@ -561,6 +751,14 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
                   <span>Flex Trade</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  disabled={busy}
+                  onClick={handleRowBreakeven}
+                  className="gap-2 text-terminal-body font-normal"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Set Breakeven</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   disabled={busy || !canPartial}
                   onClick={() => setShowPartial((v) => !v)}
                   className="gap-2 text-terminal-body font-normal"
@@ -574,6 +772,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
             {/* Primary Action: Direct Close Button */}
             <button
               onClick={() => {
+                if (pos.isOptimistic || pos.id <= 0) return
                 if (onRequestClose) {
                   onRequestClose(pos)
                 } else if (countdown !== null) {
@@ -582,9 +781,9 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
                   armClose()
                 }
               }}
-              disabled={busy}
-              title={countdown !== null ? `Click again to confirm close (${countdown}s)` : 'Close position'}
-              className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded-md text-terminal-label font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-all focus-ring active:scale-95 disabled:opacity-50 cursor-pointer"
+              disabled={busy || pos.isOptimistic || pos.id <= 0}
+              title={pos.isOptimistic ? 'Order in-flight...' : countdown !== null ? `Click again to confirm close (${countdown}s)` : 'Close position'}
+              className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded-md text-terminal-label font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-all focus-ring active:scale-95 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
               aria-label={countdown !== null ? `Confirm close position ${pos.symbol} within ${countdown} seconds` : `Close position ${pos.symbol}`}
             >
               {busy ? (

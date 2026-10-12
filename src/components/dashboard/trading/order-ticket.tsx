@@ -14,10 +14,13 @@ import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { cn } from '@/lib/cn'
 import { fmtPrice, fmtUSD, toNum, fmtLots } from '@/lib/format'
-import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies } from '@/lib/symbol-meta'
+import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies, isMarketOpen } from '@/lib/symbol-meta'
+import { quoteToUsdRate } from '@/lib/order-math'
 import { useQuery } from '@tanstack/react-query'
-import type { Account, ChallengePlan } from '@/types/api'
+import type { Account, ChallengePlan, Position } from '@/types/api'
 import { playOrderSuccessSound } from '@/lib/sound'
+
+export { isMarketOpen }
 
 type Mode = 'market' | 'pending'
 type PendingType = 'buy_limit' | 'sell_limit' | 'buy_stop' | 'sell_stop'
@@ -91,6 +94,17 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }, [plan, newsEvents, active])
 
   const isIpRestricted = !!((plan as any)?.ip_match_required && ((account as any)?.ip_restricted || (account as any)?.is_ip_restricted))
+  const isSlRequired = Boolean(plan?.stop_loss_required || (plan as any)?.require_stop_loss)
+
+  // Market hours gate (Forex/Metals closed Fri 22:00 UTC - Sun 22:00 UTC; Crypto open 24/7)
+  const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(active))
+  useEffect(() => {
+    setMarketOpen(isMarketOpen(active))
+    const interval = setInterval(() => {
+      setMarketOpen(isMarketOpen(active))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [active])
 
   const digits = meta?.digits || symbolDigits(active)
   const minLot = toNum(meta?.min_lot)  || 0.01
@@ -123,7 +137,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     setLot(next.toFixed(2))
   }, [lotN, minLot, maxLot])
 
-  // Risk calculator: lot sized to risk X% of balance per the SL distance
+  const allPrices = usePrices((s) => s.prices)
+
+  // Risk calculator: lot sized to risk X% of balance per the SL distance with exact quote currency conversion
   const recommendedLot = useMemo(() => {
     if (!account || !slN || !ask) return null
     const balance = toNum(account.balance)
@@ -132,16 +148,31 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const entry   = mode === 'market' ? ask : (targetN || ask)
     const priceDiff = Math.abs(entry - slN)
     if (priceDiff <= 0) return null
-    const perLotRisk = priceDiff * contractSize
+    const qRate = quoteToUsdRate(active, entry, allPrices)
+    const perLotRisk = priceDiff * contractSize * qRate
     if (perLotRisk <= 0) return null
     const rec = riskAmt / perLotRisk
     return Math.min(maxLot, Math.max(minLot, Math.round(rec * 100) / 100))
-  }, [account, slN, ask, risk, mode, targetN, contractSize, minLot, maxLot])
+  }, [account, slN, ask, risk, mode, targetN, contractSize, minLot, maxLot, active, allPrices])
 
   // 1-Click Direct Risk % Calculator Pills: sets required lot size automatically based on current equity, SL distance, and tick value
   const calculateLotForRisk = useCallback((riskPercent: number) => {
     const eq = toNum(account?.equity) || toNum(account?.balance) || 10000
-    if (!slN || (!ask && !bid)) {
+    const pSize = pipSize(active, digits)
+    const currentPrice = ask || bid || 0
+
+    let activeSl = slN
+    if (!activeSl && currentPrice > 0) {
+      // Auto-propose standard 25-pip Stop Loss if trader hasn't entered one yet
+      const defaultDistance = 25 * pSize
+      const proposed = mode === 'market'
+        ? Math.max(0, currentPrice - defaultDistance)
+        : (targetN ? Math.max(0, targetN - defaultDistance) : Math.max(0, currentPrice - defaultDistance))
+      setSl(proposed.toFixed(digits))
+      activeSl = proposed
+    }
+
+    if (!activeSl || currentPrice <= 0) {
       setRisk(String(riskPercent))
       setShowCalc(true)
       toast.info(`Please enter a Stop Loss price first to calculate exact ${riskPercent}% risk lot size.`)
@@ -149,19 +180,17 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     }
 
     // Directional entry price: if SL is below market it's BUY (ask), if SL is above market it's SELL (bid)
-    const defaultEntry = slN < (ask || bid) ? (ask || bid) : (bid || ask)
+    const defaultEntry = activeSl < (ask || bid) ? (ask || bid) : (bid || ask)
     const entry = mode === 'market' ? defaultEntry : (targetN || defaultEntry)
-    const priceDiff = Math.abs(entry - slN)
+    const priceDiff = Math.abs(entry - activeSl)
     if (priceDiff <= 0) {
       toast.error('Stop Loss price cannot equal entry price')
       return
     }
 
+    const qRate = quoteToUsdRate(active, entry, allPrices)
     const riskAmt = eq * (riskPercent / 100)
-    const pSize = pipSize(active, digits)
-    const pips = pSize > 0 ? priceDiff / pSize : priceDiff
-    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
-    const perLotRisk = pipValPer1Lot > 0 ? (pips * pipValPer1Lot) : (priceDiff * contractSize)
+    const perLotRisk = priceDiff * contractSize * qRate
 
     if (perLotRisk <= 0) {
       toast.error('Cannot calculate risk for this Stop Loss distance.')
@@ -172,10 +201,8 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const clamped = Math.min(maxLot, Math.max(minLot, Math.round(rawLot * 100) / 100))
     setLot(clamped.toFixed(2))
     setRisk(String(riskPercent))
-    toast.success(`Lot sized to ${clamped.toFixed(2)} lots (${riskPercent}% risk of ${fmtUSD(eq, { decimals: 0 })})`)
-  }, [account, slN, ask, bid, mode, targetN, active, contractSize, digits, minLot, maxLot])
-
-  const allPrices = usePrices((s) => s.prices)
+    toast.success(`Lot sized to ${clamped.toFixed(2)} lots (${riskPercent}% risk = -${fmtUSD(riskAmt)})`)
+  }, [account, slN, ask, bid, mode, targetN, active, contractSize, digits, minLot, maxLot, allPrices])
 
   // Approximate margin for the order (mirrors backend calc_margin_usd)
   const accountLev = toNum(account?.leverage) || 100
@@ -208,27 +235,29 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
   // SL/TP preview — in market mode we don't know buy/sell yet so we show the
   // absolute risk/reward magnitude. In pending mode we know the side and can
-  // show a signed P&L.
+  // show a signed P&L with quoteToUsdRate.
   const slPnL = useMemo(() => {
     if (!slN || !ask) return null
+    const qRate = quoteToUsdRate(active, ask, allPrices)
     if (mode === 'market') {
       // Magnitude only — sign will resolve when user picks BUY or SELL
-      return Math.abs(slN - ask) * contractSize * lotN
+      return Math.abs(slN - ask) * contractSize * lotN * qRate
     }
     const direction = pendingType.startsWith('buy') ? 1 : -1
     const px = targetN || ask
-    return (slN - px) * direction * contractSize * lotN
-  }, [slN, ask, lotN, contractSize, mode, pendingType, targetN])
+    return (slN - px) * direction * contractSize * lotN * qRate
+  }, [slN, ask, lotN, contractSize, mode, pendingType, targetN, active, allPrices])
 
   const tpPnL = useMemo(() => {
     if (!tpN || !ask) return null
+    const qRate = quoteToUsdRate(active, ask, allPrices)
     if (mode === 'market') {
-      return Math.abs(tpN - ask) * contractSize * lotN
+      return Math.abs(tpN - ask) * contractSize * lotN * qRate
     }
     const direction = pendingType.startsWith('buy') ? 1 : -1
     const px = targetN || ask
-    return (tpN - px) * direction * contractSize * lotN
-  }, [tpN, ask, lotN, contractSize, mode, pendingType, targetN])
+    return (tpN - px) * direction * contractSize * lotN * qRate
+  }, [tpN, ask, lotN, contractSize, mode, pendingType, targetN, active, allPrices])
 
   // Detailed SL/TP Metrics with Pips, Dollar amounts, and Equity % for live hover & preview
   const slMetrics = useMemo(() => {
@@ -238,12 +267,12 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const priceDiff = Math.abs(entryPx - slN)
     if (priceDiff <= 0) return null
     const pips = pSize > 0 ? priceDiff / pSize : priceDiff
-    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
-    const lossVal = pipValPer1Lot > 0 ? (pips * pipValPer1Lot * lotN) : (priceDiff * contractSize * lotN)
+    const qRate = quoteToUsdRate(active, entryPx, allPrices)
+    const lossVal = priceDiff * contractSize * lotN * qRate
     const eq = toNum(account?.equity) || toNum(account?.balance) || 0
     const lossPct = eq > 0 ? (lossVal / eq) * 100 : 0
     return { pips, lossVal, lossPct, entryPx }
-  }, [slN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account])
+  }, [slN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account, allPrices])
 
   const tpMetrics = useMemo(() => {
     if (!tpN || !ask || lotN <= 0) return null
@@ -252,12 +281,12 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     const priceDiff = Math.abs(tpN - entryPx)
     if (priceDiff <= 0) return null
     const pips = pSize > 0 ? priceDiff / pSize : priceDiff
-    const pipValPer1Lot = estimatedPipValue(active, contractSize, 1)
-    const profitVal = pipValPer1Lot > 0 ? (pips * pipValPer1Lot * lotN) : (priceDiff * contractSize * lotN)
+    const qRate = quoteToUsdRate(active, entryPx, allPrices)
+    const profitVal = priceDiff * contractSize * lotN * qRate
     const eq = toNum(account?.equity) || toNum(account?.balance) || 0
     const profitPct = eq > 0 ? (profitVal / eq) * 100 : 0
     return { pips, profitVal, profitPct, entryPx }
-  }, [tpN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account])
+  }, [tpN, ask, bid, lotN, mode, targetN, active, digits, contractSize, account, allPrices])
 
   // ── Submit ────────────────────────────────────────────────────────────
   // Client-side free-margin gate — mirrors the server check so traders get an
@@ -276,6 +305,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   const submitMarket = async (side: 'buy' | 'sell') => {
+    if (!isMarketOpen(active)) {
+      toast.error(`Market is closed. ${active} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
+      return
+    }
     if (!ask || !bid || ask <= 0 || bid <= 0) {
       toast.error('Market price is not available yet'); return
     }
@@ -286,10 +319,21 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       toast.error(`Lot size cannot exceed ${maxLot}`); return
     }
     if (rejectIfNoMargin()) return
-    if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
+    if (isSlRequired && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
     }
     const entryPrice = side === 'buy' ? ask : bid
+    if (slN !== null && slN > 0) {
+      const priceDiff = Math.abs(entryPrice - slN)
+      if (priceDiff > entryPrice * 0.5) {
+        toast.error(`Invalid Stop Loss price: distance is over 50% from market price (${fmtPrice(entryPrice, digits)}). Please enter an absolute price level, not pips.`)
+        return
+      }
+      if (slMetrics && slMetrics.lossPct > 100) {
+        toast.error(`Invalid Stop Loss: projected loss exceeds 100% of account equity.`)
+        return
+      }
+    }
     if (side === 'buy') {
       if (slN !== null && slN >= entryPrice) {
         toast.error('Stop Loss must be below current ask price for BUY'); return
@@ -314,16 +358,23 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
     setBusy(side)
 
     const optId = nextOptimisticId()
-    const optPos: any = {
+    const optPos: Position = {
       id: optId,
+      account_id: 0,
       symbol: active,
       type: side,
       lot_size: lotN,
       open_price: side === 'buy' ? ask : bid,
-      open_time: new Date().toISOString(),
+      current_price: side === 'buy' ? ask : bid,
       sl: slN ?? null,
       tp: tpN ?? null,
-      status: 'simulated'
+      pnl: 0,
+      swap: 0,
+      commission: 0,
+      margin: 0,
+      opened_at: new Date().toISOString(),
+      opened_at_iso: new Date().toISOString(),
+      isOptimistic: true,
     }
     injectOptimisticPosition(optPos)
 
@@ -371,6 +422,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   }
 
   const submitPending = async () => {
+    if (!isMarketOpen(active)) {
+      toast.error(`Market is closed. ${active} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
+      return
+    }
     if (!targetN || targetN <= 0) { toast.error('Enter a valid trigger price'); return }
     if (!Number.isFinite(lotN) || lotN < minLot) {
       toast.error(`Lot size must be at least ${minLot}`); return
@@ -379,8 +434,19 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
       toast.error(`Lot size cannot exceed ${maxLot}`); return
     }
     if (rejectIfNoMargin()) return
-    if (plan?.stop_loss_required && (slN === null || slN <= 0)) {
+    if (isSlRequired && (slN === null || slN <= 0)) {
       toast.error('Stop Loss is required by your plan rules.'); return
+    }
+    if (slN !== null && slN > 0 && targetN && targetN > 0) {
+      const priceDiff = Math.abs(targetN - slN)
+      if (priceDiff > targetN * 0.5) {
+        toast.error(`Invalid Stop Loss price: distance is over 50% from trigger price (${fmtPrice(targetN, digits)}). Please enter an absolute price level, not pips.`)
+        return
+      }
+      if (slMetrics && slMetrics.lossPct > 100) {
+        toast.error(`Invalid Stop Loss: projected loss exceeds 100% of account equity.`)
+        return
+      }
     }
     if (pendingType.startsWith('buy')) {
       if (slN !== null && slN >= targetN) {
@@ -606,32 +672,54 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
         )}
 
         {/* SL */}
-        <Field label="Stop loss" hint={
-          slPnL !== null && Number.isFinite(slPnL)
-            ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-danger' : pnlClassOrNull(slPnL))}>
-                {mode === 'market' ? '−' : ''}{fmtUSD(Math.abs(slPnL))} {mode === 'market' && <span className="text-text-faint font-normal">risk</span>}
-              </span>
-            : null
-        }>
+        <Field
+          label={
+            <span className="flex items-center gap-1.5">
+              <span>Stop loss</span>
+              {isSlRequired ? (
+                <span className="text-terminal-micro px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-500 font-semibold border border-rose-500/30">
+                  Required
+                </span>
+              ) : (
+                <span className="text-terminal-micro text-text-faint font-normal">
+                  (Optional)
+                </span>
+              )}
+            </span>
+          }
+          hint={
+            slPnL !== null && Number.isFinite(slPnL)
+              ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-danger' : pnlClassOrNull(slPnL))}>
+                  {mode === 'market' ? '−' : ''}{fmtUSD(Math.abs(slPnL))} {mode === 'market' && <span className="text-text-faint font-normal">risk</span>}
+                </span>
+              : null
+          }
+        >
           <div className="relative group">
             <input
               type="text"
               inputMode="decimal"
               value={sl}
               onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder="Optional"
+              placeholder={isSlRequired ? `Price e.g. ${ask ? fmtPrice(ask * 0.995, digits) : '1.0825'}` : "Price (Optional)"}
               title={slMetrics ? `Max Loss: -${fmtUSD(slMetrics.lossVal)} (-${slMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
-                "w-full h-9 px-3 rounded-md bg-bg-subtle border shadow-inner text-terminal-title terminal-num focus-ring focus:bg-surface transition-colors",
-                slMetrics ? "border-rose-500/50 text-rose-300 focus:border-rose-500" : "border-border-subtle focus:border-accent"
+                "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
+                slMetrics
+                  ? "border-rose-500/60 bg-rose-500/5 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 focus:border-rose-500"
+                  : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
               )}
             />
           </div>
+          <div className="flex items-center justify-between text-terminal-micro text-text-muted mt-1 px-0.5">
+            <span>Unit: <strong>Price Level</strong> (not pips)</span>
+            {ask && <span className="terminal-num">Market: {fmtPrice(ask, digits)}</span>}
+          </div>
           {/* Prominent Live Calculated Loss Badge */}
           {slMetrics && (
-            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-terminal-body text-rose-400 terminal-num transition-all hover:bg-rose-500/15 hover:border-rose-500/50 shadow-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-rose-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-terminal-body text-rose-600 dark:text-rose-400 terminal-num transition-all hover:bg-rose-500/15 hover:border-rose-500/50 shadow-xs">
+              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-rose-600 dark:text-rose-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                 Est. Loss:
               </span>
               <span className="font-semibold terminal-num tracking-tight">
@@ -639,35 +727,58 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               </span>
             </div>
           )}
+          {/* Sane bounds warning if SL distance > 50% or loss > 50% */}
+          {slMetrics && (slMetrics.lossPct > 50 || Math.abs(slMetrics.entryPx - (slN || 0)) > slMetrics.entryPx * 0.5) && (
+            <div className="mt-1.5 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-terminal-micro text-amber-500 flex items-start gap-1.5 leading-snug">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
+              <span>
+                <strong>Warning:</strong> Large SL distance ({((Math.abs(slMetrics.entryPx - (slN || 0)) / slMetrics.entryPx) * 100).toFixed(0)}% from market). Enter an absolute price level (e.g. {fmtPrice(mode === 'market' ? (ask || 1) * 0.995 : (targetN || ask || 1) * 0.995, digits)}), not pips.
+              </span>
+            </div>
+          )}
         </Field>
 
         {/* TP */}
-        <Field label="Take profit" hint={
-          tpPnL !== null && Number.isFinite(tpPnL)
-            ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-success' : pnlClassOrNull(tpPnL))}>
-                {mode === 'market' ? '+' : ''}{fmtUSD(Math.abs(tpPnL))} {mode === 'market' && <span className="text-text-faint font-normal">target</span>}
-              </span>
-            : null
-        }>
+        <Field
+          label={
+            <span className="flex items-center gap-1.5">
+              <span>Take profit</span>
+              <span className="text-terminal-micro text-text-faint font-normal">(Optional)</span>
+            </span>
+          }
+          hint={
+            tpPnL !== null && Number.isFinite(tpPnL)
+              ? <span className={cn("terminal-num font-semibold", mode === 'market' ? 'text-success' : pnlClassOrNull(tpPnL))}>
+                  {mode === 'market' ? '+' : ''}{fmtUSD(Math.abs(tpPnL))} {mode === 'market' && <span className="text-text-faint font-normal">target</span>}
+                </span>
+              : null
+          }
+        >
           <div className="relative group">
             <input
               type="text"
               inputMode="decimal"
               value={tp}
               onChange={(e) => setTp(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder="Optional"
+              placeholder={`Price e.g. ${ask ? fmtPrice(ask * 1.005, digits) : '1.0925'}`}
               title={tpMetrics ? `Target Profit: +${fmtUSD(tpMetrics.profitVal)} (+${tpMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
-                "w-full h-9 px-3 rounded-md bg-bg-subtle border shadow-inner text-terminal-title terminal-num focus-ring focus:bg-surface transition-colors",
-                tpMetrics ? "border-emerald-500/50 text-emerald-300 focus:border-emerald-500" : "border-border-subtle focus:border-accent"
+                "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
+                tpMetrics
+                  ? "border-emerald-500/60 bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 focus:border-emerald-500"
+                  : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
               )}
             />
           </div>
+          <div className="flex items-center justify-between text-terminal-micro text-text-muted mt-1 px-0.5">
+            <span>Unit: <strong>Price Level</strong></span>
+            {bid && <span className="terminal-num">Market: {fmtPrice(bid, digits)}</span>}
+          </div>
           {/* Prominent Live Calculated Profit Badge */}
           {tpMetrics && (
-            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-terminal-body text-emerald-400 terminal-num transition-all hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-terminal-body text-emerald-600 dark:text-emerald-400 terminal-num transition-all hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-xs">
+              <span className="flex items-center gap-1.5 font-semibold text-terminal-body text-emerald-600 dark:text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Est. Profit:
               </span>
               <span className="font-semibold terminal-num tracking-tight">
@@ -677,15 +788,58 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           )}
         </Field>
 
-        {/* Combined Risk : Reward Ratio Pill */}
-        {slMetrics && tpMetrics && (
-          <div className="px-2.5 py-1.5 rounded-md bg-surface-muted/60 border border-border/80 flex items-center justify-between text-terminal-body terminal-num text-text-muted">
-            <span className="font-semibold text-terminal-body text-text-muted flex items-center gap-1.5">
-              <span>⚖️</span> Risk : Reward Ratio
-            </span>
-            <span className="font-semibold terminal-num text-accent text-terminal-body">
-              1 : {(tpMetrics.profitVal / (slMetrics.lossVal || 1)).toFixed(2)}
-            </span>
+        {/* Dynamic Risk & Reward Sentinel Card */}
+        {slMetrics && (
+          <div className="rounded-xl border border-border/80 bg-surface-muted/60 p-3 shadow-xs space-y-2 select-none">
+            <div className="flex items-center justify-between text-terminal-body">
+              <span className="font-semibold text-text flex items-center gap-1.5">
+                <span>🛡️</span> Risk / Reward Dynamics
+              </span>
+              {tpMetrics ? (
+                <span className="px-2 py-0.5 rounded-full text-terminal-micro font-semibold bg-accent/15 text-accent border border-accent/30 terminal-num">
+                  1 : {(tpMetrics.profitVal / (slMetrics.lossVal || 1)).toFixed(2)} R:R
+                </span>
+              ) : (
+                <span className="text-terminal-micro text-text-muted">
+                  Open Target
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-subtle/80">
+              <div className="flex flex-col">
+                <span className="text-terminal-micro text-text-muted uppercase font-medium">Risk (Max Loss)</span>
+                <span className="text-terminal-body font-bold text-rose-400 terminal-num tracking-tight">
+                  -{fmtUSD(slMetrics.lossVal)}
+                </span>
+                <span className="text-terminal-micro text-rose-400/80 terminal-num">
+                  {slMetrics.pips.toFixed(1)}p · {slMetrics.lossPct.toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="flex flex-col text-right">
+                <span className="text-terminal-micro text-text-muted uppercase font-medium">Reward (Target)</span>
+                {tpMetrics ? (
+                  <>
+                    <span className="text-terminal-body font-bold text-emerald-400 terminal-num tracking-tight">
+                      +{fmtUSD(tpMetrics.profitVal)}
+                    </span>
+                    <span className="text-terminal-micro text-emerald-400/80 terminal-num">
+                      +{tpMetrics.pips.toFixed(1)}p · +{tpMetrics.profitPct.toFixed(2)}%
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-terminal-body font-normal text-text-faint italic">
+                      —
+                    </span>
+                    <span className="text-terminal-micro text-text-faint">
+                      No TP set
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -792,13 +946,26 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             </span>
           </div>
         )}
+        {!marketOpen && (
+          <div className="flex items-center gap-2 rounded-md bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 p-2.5 text-terminal-body shadow-sm border border-amber-500/30">
+            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-amber-900 dark:text-amber-200">
+                Market Closed (Reopens Sun 22:00 UTC)
+              </span>
+              <span className="text-terminal-micro text-amber-700/80 dark:text-amber-300/80">
+                {active} does not trade on weekends. Crypto pairs trade 24/7.
+              </span>
+            </div>
+          </div>
+        )}
 
         {mode === 'market' ? (
           <div className="grid grid-cols-2 gap-1.5">
             <ActionButton
               tone="sell"
               busy={busy === 'sell'}
-              disabled={busy !== null || !bid || isNewsRestricted || isIpRestricted}
+              disabled={busy !== null || !bid || isNewsRestricted || isIpRestricted || !marketOpen}
               onClick={() => submitMarket('sell')}
             >
               <ArrowDownRight className="h-4 w-4 shrink-0" />
@@ -810,7 +977,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             <ActionButton
               tone="buy"
               busy={busy === 'buy'}
-              disabled={busy !== null || !ask || isNewsRestricted || isIpRestricted}
+              disabled={busy !== null || !ask || isNewsRestricted || isIpRestricted || !marketOpen}
               onClick={() => submitMarket('buy')}
             >
               <div className="flex flex-col items-end leading-tight min-w-0">
@@ -822,7 +989,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           </div>
         ) : (
           <button
-            disabled={busy !== null || !targetN || isNewsRestricted || isIpRestricted}
+            disabled={busy !== null || !targetN || isNewsRestricted || isIpRestricted || !marketOpen}
             onClick={submitPending}
             className={cn(
               'w-full h-11 rounded-md font-semibold text-terminal-title flex items-center justify-center gap-2 transition-all focus-ring',
@@ -847,7 +1014,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
 function Field({
   label, hint, children,
-}: { label: string; hint?: React.ReactNode; children: React.ReactNode }) {
+}: { label: React.ReactNode; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">

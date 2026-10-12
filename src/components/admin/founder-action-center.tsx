@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge'
 interface ActionCenterProps {
   pendingPayoutsCount: number
   pendingPayoutsAmount: number
+  pendingPayoutsGross?: number
+  pendingPayoutsNet?: number
   riskBreachesCount: number
+  totalRiskAlerts?: number
   urgentTicketsCount: number
   onOpenPayoutReview?: () => void
 }
@@ -16,7 +19,10 @@ interface ActionCenterProps {
 export function FounderActionCenter({
   pendingPayoutsCount = 0,
   pendingPayoutsAmount = 0,
+  pendingPayoutsGross,
+  pendingPayoutsNet,
   riskBreachesCount = 0,
+  totalRiskAlerts,
   urgentTicketsCount = 0,
   onOpenPayoutReview,
 }: ActionCenterProps) {
@@ -93,6 +99,11 @@ export function FounderActionCenter({
             <p className="text-xl font-extrabold text-text mt-1.5 tabular">
               ${pendingPayoutsAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
+            {pendingPayoutsGross !== undefined && pendingPayoutsNet !== undefined && pendingPayoutsCount > 0 ? (
+              <p className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 tabular">
+                ${pendingPayoutsGross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gross (${pendingPayoutsNet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Net)
+              </p>
+            ) : null}
             <p className="text-xs text-text-muted mt-0.5">
               {pendingPayoutsCount > 0 ? `${pendingPayoutsCount} payout withdrawal${pendingPayoutsCount > 1 ? 's' : ''} awaiting sign-off` : 'No pending payout requests'}
             </p>
@@ -118,6 +129,11 @@ export function FounderActionCenter({
             <p className="text-xl font-extrabold text-text mt-1.5 tabular">
               {riskBreachesCount} Flagged Account{riskBreachesCount === 1 ? '' : 's'}
             </p>
+            {totalRiskAlerts !== undefined && totalRiskAlerts > 0 ? (
+              <p className="text-2xs font-semibold text-amber-600 dark:text-amber-400 mt-0.5 tabular">
+                {totalRiskAlerts} active violation{totalRiskAlerts === 1 ? '' : 's'}
+              </p>
+            ) : null}
             <p className="text-xs text-text-muted mt-0.5">
               {riskBreachesCount > 0 ? 'HFT scalping, lot stacking, or drawdown warnings' : 'Zero active risk breaches detected'}
             </p>

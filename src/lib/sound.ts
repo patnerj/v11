@@ -176,11 +176,13 @@ export function playCelebrationVictorySound() {
 
     osc1.start(now)
     osc2.start(now)
-    osc3.start(now)
-    osc1.stop(now + 1.2)
-    osc2.stop(now + 1.2)
     osc3.stop(now + 1.2)
   } catch {
     /* Audio disabled or blocked by browser policy */
   }
 }
+
+export const playOrderOpenClickSound = playOrderSuccessSound
+export const playOrderProfitChimeSound = playCelebrationVictorySound
+export const playOrderLossThumpSound = playOrderCloseSound
+
