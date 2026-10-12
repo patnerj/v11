@@ -100,7 +100,7 @@ function Row({ order, index, onChanged }: { order: PendingOrder; index: number; 
         <div className="flex items-center gap-1.5">
           <span className="font-semibold terminal-num">{order.symbol}</span>
           {order.isOptimistic && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
               In-Flight
             </span>
           )}
@@ -134,7 +134,7 @@ function Row({ order, index, onChanged }: { order: PendingOrder; index: number; 
           }}
           disabled={busy || order.isOptimistic || order.id <= 0}
           title={order.isOptimistic ? 'Order in-flight...' : 'Cancel pending order'}
-          className="h-7 w-7 inline-flex items-center justify-center rounded text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 focus-ring disabled:opacity-50 transition-all cursor-pointer disabled:cursor-not-allowed"
+          className="h-7 w-7 inline-flex items-center justify-center rounded text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 focus-ring disabled:opacity-50 transition-all cursor-pointer disabled:cursor-not-allowed"
           aria-label="Cancel pending order"
         >
           {busy ? (

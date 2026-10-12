@@ -4,8 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
-  Banknote, Clock, Sparkles, ArrowRight, Wallet, CheckCircle2,
-  ShieldCheck, AlertCircle, ArrowUpRight
+  Banknote, Clock, Sparkles, ArrowRight, Wallet
 } from 'lucide-react'
 import { fmtUSD, toNum } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -128,16 +127,19 @@ export function PayoutReadinessCard({
 
   // Active celebration state when countdown reaches 0 or next payout date is past/today
   const isReady = timeLeft.totalSecs <= 0 || targetTs <= Date.now()
+  const cycleProgressPct = isReady
+    ? 100
+    : Math.min(100, Math.max(5, Math.round(((14 * 86400 - timeLeft.totalSecs) / (14 * 86400)) * 100)))
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "relative overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-300 shadow-md select-none",
+        "relative overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-300 shadow-sm select-none",
         isReady
           ? "border-emerald-500/50 bg-gradient-to-br from-emerald-500/20 via-surface to-surface ring-2 ring-emerald-500/30"
-          : "border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-surface to-surface",
+          : "border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-surface to-surface",
         className
       )}
     >
@@ -150,11 +152,11 @@ export function PayoutReadinessCard({
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         
         {/* Left Side: Countdown & Status Badges */}
-        <div className="space-y-3 min-w-0">
+        <div className="space-y-3 min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={cn(
               "text-terminal-micro font-bold uppercase tracking-wider flex items-center gap-1.5",
-              isReady ? "text-emerald-500 dark:text-emerald-400" : "text-amber-500 dark:text-amber-400"
+              isReady ? "text-emerald-700 dark:text-emerald-300" : "text-amber-800 dark:text-amber-300"
             )}>
               <Sparkles className="w-3.5 h-3.5" />
               {isReady ? "🎉 Payout Ready Now! Claim Profit Split" : "Funded Trader Payout Readiness"}
@@ -170,10 +172,10 @@ export function PayoutReadinessCard({
           </div>
 
           <div className="flex items-baseline gap-3">
-            <div className="text-2xl sm:text-3xl font-extrabold terminal-num text-text tracking-tight flex items-center gap-2">
-              <Clock className={cn("w-6 h-6", isReady ? "text-emerald-500 animate-pulse" : "text-amber-500")} />
+            <div className="text-2xl sm:text-3xl font-extrabold terminal-num tabular-nums text-text tracking-tight flex items-center gap-2">
+              <Clock className={cn("w-6 h-6", isReady ? "text-emerald-600 dark:text-emerald-400 animate-pulse" : "text-amber-600 dark:text-amber-400")} />
               {isReady ? (
-                <span className="text-emerald-500 dark:text-emerald-400">00:00:00 • Unlocked</span>
+                <span className="text-emerald-600 dark:text-emerald-400">00:00:00 • Unlocked</span>
               ) : (
                 <span>
                   {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
@@ -182,9 +184,28 @@ export function PayoutReadinessCard({
             </div>
           </div>
 
+          {/* 14-Day Cycle Visual Progress Bar Track */}
+          <div className="max-w-md space-y-1 pt-0.5">
+            <div className="flex items-center justify-between text-terminal-micro text-text-muted font-medium">
+              <span>14-Day Disbursal Track</span>
+              <span className="terminal-num tabular-nums font-semibold text-text">{cycleProgressPct}% Complete</span>
+            </div>
+            <div className="h-1.5 w-full bg-surface-muted border border-border/40 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-700",
+                  isReady
+                    ? "bg-emerald-500 shadow-xs shadow-emerald-500/50"
+                    : "bg-amber-500"
+                )}
+                style={{ width: `${cycleProgressPct}%` }}
+              />
+            </div>
+          </div>
+
           <p className="text-xs text-text-muted leading-relaxed max-w-xl">
             {isReady ? (
-              <span className="text-emerald-600 dark:text-emerald-300 font-medium">
+              <span className="text-emerald-700 dark:text-emerald-300 font-medium">
                 Your scheduled 14-day cycle is complete! Eligible profit splits can now be requested directly to your verified payout wallet.
               </span>
             ) : (
@@ -198,10 +219,10 @@ export function PayoutReadinessCard({
         {/* Right Side: Estimated Eligible Profit & Action CTA */}
         <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end justify-between gap-4 border-t md:border-t-0 md:border-l border-border/60 pt-4 md:pt-0 md:pl-6 shrink-0">
           <div className="text-left md:text-right">
-            <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-medium block">
+            <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-semibold block">
               Estimated Net Split (80%)
             </span>
-            <div className="text-xl sm:text-2xl font-bold terminal-num text-profit mt-0.5">
+            <div className="text-xl sm:text-2xl font-bold terminal-num tabular-nums text-profit mt-0.5">
               {fmtUSD(totalFundedStats.eligibleProfit)}
             </div>
             <span className="text-2xs text-text-muted block mt-0.5">
@@ -211,22 +232,22 @@ export function PayoutReadinessCard({
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             {isReady ? (
-              <Button asChild variant="primary" size="sm" className="w-full sm:w-auto shadow-md shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
+              <Button asChild variant="primary" size="sm" className="w-full sm:w-auto shadow-md shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-500 text-white font-bold active:scale-95">
                 <Link href="/dashboard/payouts">
                   Request Payout <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </Link>
               </Button>
             ) : savedMethod ? (
-              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto border-amber-500/30 text-text hover:bg-amber-500/10">
+              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto border-amber-500/40 text-text hover:bg-amber-500/10 active:scale-95">
                 <Link href="/dashboard/payouts">
-                  <Banknote className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
+                  <Banknote className="w-3.5 h-3.5 mr-1.5 text-amber-600 dark:text-amber-400" />
                   View Payout Hub
                 </Link>
               </Button>
             ) : (
-              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto border-amber-500/30 text-text hover:bg-amber-500/10">
+              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto border-amber-500/40 text-text hover:bg-amber-500/10 active:scale-95">
                 <Link href="/dashboard/payouts">
-                  <Wallet className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
+                  <Wallet className="w-3.5 h-3.5 mr-1.5 text-amber-600 dark:text-amber-400" />
                   Setup Disbursal Method
                 </Link>
               </Button>

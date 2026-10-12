@@ -1,15 +1,13 @@
 'use client'
 
-import React, { useRef, useMemo, useState, useEffect } from 'react'
+import React, { useRef, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Trophy, Sparkles, TrendingUp, TrendingDown, CheckCircle2,
-  AlertTriangle, ShieldCheck, ArrowRight, Layers, ChevronRight,
-  ChevronLeft, Award, Radio
+  Trophy, Layers, ChevronRight,
+  ChevronLeft, ArrowRight, Radio
 } from 'lucide-react'
-import { fmtUSD, fmtPct, toNum, statusTone, statusLabel } from '@/lib/format'
+import { fmtUSD, toNum } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { usePrices } from '@/store/prices'
 import { playOrderOpenClickSound } from '@/lib/sound-effects'
 import { cn } from '@/lib/cn'
@@ -47,6 +45,8 @@ export function MultiAccountPortfolioStrip({
     return []
   }, [tournaments])
 
+  const totalAccountsCount = safeChallenges.length + safeTournaments.length
+
   // Track scroll position for mobile indicators
   const handleScroll = () => {
     if (!scrollContainerRef.current) return
@@ -57,13 +57,13 @@ export function MultiAccountPortfolioStrip({
     }
   }
 
-  if (!safeChallenges || (safeChallenges.length <= 1 && safeTournaments.length === 0)) {
+  if (totalAccountsCount <= 1) {
     return null
   }
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return
-    const offset = direction === 'left' ? -300 : 300
+    const offset = direction === 'left' ? -320 : 320
     scrollContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' })
   }
 
@@ -86,6 +86,26 @@ export function MultiAccountPortfolioStrip({
     })
   }
 
+  const handleSelectTournament = async (t: TournamentMine) => {
+    if (isSwitching) return
+    const tId = Number(t.tournament_id)
+    if (tradingCtx?.kind === 'tournament' && tradingCtx.tournamentId === tId) return
+
+    playOrderOpenClickSound()
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('tournament', String(tId))
+      window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''))
+    }
+
+    await usePrices.getState().setTradingContext({
+      kind: 'tournament',
+      tournamentId: tId,
+      title: t.title,
+    })
+  }
+
   return (
     <div className={cn("space-y-2.5 select-none", className)}>
       <div className="flex items-center justify-between">
@@ -96,7 +116,7 @@ export function MultiAccountPortfolioStrip({
           <h3 className="text-xs font-bold uppercase tracking-wider text-text flex items-center gap-2">
             Multi-Account Portfolio Strip
             <span className="text-2xs font-normal text-text-muted">
-              ({safeChallenges.length} Accounts Active)
+              ({totalAccountsCount} Accounts Available)
             </span>
           </h3>
         </div>
@@ -106,7 +126,7 @@ export function MultiAccountPortfolioStrip({
           <button
             type="button"
             onClick={() => scroll('left')}
-            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shadow-xs"
+            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shadow-xs active:scale-95"
             aria-label="Scroll left"
             title="Scroll left"
           >
@@ -115,7 +135,7 @@ export function MultiAccountPortfolioStrip({
           <button
             type="button"
             onClick={() => scroll('right')}
-            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shadow-xs"
+            className="h-7 w-7 rounded-lg border border-border bg-surface hover:bg-surface-muted flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shadow-xs active:scale-95"
             aria-label="Scroll right"
             title="Scroll right"
           >
@@ -130,7 +150,7 @@ export function MultiAccountPortfolioStrip({
         onScroll={handleScroll}
         className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 -mx-1 px-1 custom-scrollbar snap-x snap-mandatory touch-pan-x overscroll-x-contain scroll-smooth"
       >
-        {safeChallenges.map((ch, idx) => {
+        {safeChallenges.map((ch) => {
           const accId = ch.fxsim_account_id || ch.id
           const isActive = tradingCtx?.kind === 'challenge'
             ? tradingCtx.accountId === accId
@@ -151,9 +171,9 @@ export function MultiAccountPortfolioStrip({
               whileTap={{ scale: 0.985 }}
               onClick={() => handleSelectChallenge(ch)}
               className={cn(
-                "w-[270px] sm:w-[310px] shrink-0 snap-start rounded-2xl border p-4 cursor-pointer transition-all duration-200 select-none flex flex-col justify-between shadow-xs",
+                "w-[275px] sm:w-[315px] shrink-0 snap-start rounded-2xl border p-4 cursor-pointer transition-all duration-200 select-none flex flex-col justify-between shadow-xs",
                 isActive
-                  ? "bg-surface border-accent shadow-md ring-2 ring-accent/30 dark:ring-accent/40"
+                  ? "bg-surface border-accent shadow-lg ring-2 ring-accent/50 dark:ring-accent/60"
                   : "bg-surface/80 hover:bg-surface border-border hover:border-accent/40"
               )}
             >
@@ -161,7 +181,7 @@ export function MultiAccountPortfolioStrip({
                 {/* Header row: ID, Plan, Phase Badge */}
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-2xs font-bold px-2 py-0.5 rounded-md bg-surface-muted text-text border border-border">
+                    <span className="text-2xs font-bold px-2 py-0.5 rounded-md bg-surface-muted text-text border border-border terminal-num tabular-nums">
                       #{ch.id}
                     </span>
                     <span className="text-xs font-semibold text-text truncate">
@@ -202,16 +222,91 @@ export function MultiAccountPortfolioStrip({
               {/* Bottom footer: status / 1-click active state */}
               <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-2xs">
                 <span className="text-text-muted flex items-center gap-1">
-                  Day {ch.trading_days || 1} • Start {fmtUSD(startBal)}
+                  Day {ch.trading_days || 1} • Start <strong className="terminal-num tabular-nums font-semibold text-text">{fmtUSD(startBal)}</strong>
                 </span>
 
                 {isActive ? (
-                  <span className="inline-flex items-center gap-1 font-semibold text-accent">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-accent">
                     <Radio className="w-2.5 h-2.5 animate-pulse text-accent" />
                     Active Account
                   </span>
                 ) : (
-                  <span className="text-text-muted hover:text-text font-medium flex items-center gap-0.5">
+                  <span className="text-text-muted hover:text-text font-medium flex items-center gap-0.5 transition-colors">
+                    Switch <ArrowRight className="w-3 h-3" />
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          )
+        })}
+
+        {safeTournaments.map((t) => {
+          const tId = Number(t.tournament_id)
+          const isActive = tradingCtx?.kind === 'tournament' && tradingCtx.tournamentId === tId
+          const startBal = toNum(t.starting_equity || 100000)
+
+          return (
+            <motion.div
+              key={`strip-tourn-${tId}`}
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.985 }}
+              onClick={() => handleSelectTournament(t)}
+              className={cn(
+                "w-[275px] sm:w-[315px] shrink-0 snap-start rounded-2xl border p-4 cursor-pointer transition-all duration-200 select-none flex flex-col justify-between shadow-xs",
+                isActive
+                  ? "bg-amber-500/10 border-amber-500 shadow-lg ring-2 ring-amber-500/50"
+                  : "bg-surface/80 hover:bg-surface border-border hover:border-amber-500/40"
+              )}
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-2xs font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 terminal-num tabular-nums">
+                      #{tId}
+                    </span>
+                    <span className="text-xs font-semibold text-text truncate">
+                      {t.title || `Tournament #${tId}`}
+                    </span>
+                  </div>
+
+                  <Badge tone="warn" size="sm" className="text-2xs uppercase tracking-wider shrink-0 font-semibold">
+                    <Trophy className="w-2.5 h-2.5 mr-1" />
+                    Tournament
+                  </Badge>
+                </div>
+
+                <div className="mt-3 flex items-baseline justify-between">
+                  <div>
+                    <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-semibold">
+                      Starting Pool
+                    </span>
+                    <span className="text-lg font-bold terminal-num tabular-nums text-text">
+                      {fmtUSD(startBal)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-terminal-micro text-text-muted uppercase tracking-wider block font-semibold">
+                      Prize Pool
+                    </span>
+                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 terminal-num tabular-nums">
+                      {t.prize_pool || '$5,000'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-2xs">
+                <span className="text-text-muted flex items-center gap-1">
+                  Rank #{t.current_rank || 1} • PnL Isolated
+                </span>
+
+                {isActive ? (
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
+                    <Radio className="w-2.5 h-2.5 animate-pulse text-amber-500" />
+                    Active Arena
+                  </span>
+                ) : (
+                  <span className="text-text-muted hover:text-text font-medium flex items-center gap-0.5 transition-colors">
                     Switch <ArrowRight className="w-3 h-3" />
                   </span>
                 )}
@@ -222,14 +317,14 @@ export function MultiAccountPortfolioStrip({
       </div>
 
       {/* Mobile scroll progress touch indicator */}
-      {safeChallenges.length > 1 && (
+      {totalAccountsCount > 1 && (
         <div className="flex sm:hidden items-center justify-center pt-1">
           <div className="w-20 h-1 bg-surface-muted rounded-full overflow-hidden border border-border/40">
             <div
               className="h-full bg-accent rounded-full transition-all duration-150"
               style={{
-                width: `${Math.max(25, 100 / safeChallenges.length)}%`,
-                transform: `translateX(${scrollProgress * (100 * (safeChallenges.length - 1) / safeChallenges.length)}%)`,
+                width: `${Math.max(25, 100 / totalAccountsCount)}%`,
+                transform: `translateX(${scrollProgress * (100 * (totalAccountsCount - 1) / totalAccountsCount)}%)`,
               }}
             />
           </div>

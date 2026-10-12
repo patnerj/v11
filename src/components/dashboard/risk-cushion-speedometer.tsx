@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react'
 import { motion } from 'framer-motion'
-import { Gauge, ShieldCheck, ShieldAlert, AlertTriangle, ArrowUpRight } from 'lucide-react'
+import { Gauge } from 'lucide-react'
 import { fmtUSD, toNum } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { ChallengeMetrics, Account } from '@/types/api'
@@ -62,18 +62,15 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
       ? 'warn'
       : 'danger'
 
-  // Speedometer arc calculations (240-degree sweep from 150deg to 390deg)
-  const strokeDashoffset = 330 - (330 * (compositeScore / 100))
-
   return (
-    <div className={cn("rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs space-y-4", className)}>
+    <div className={cn("rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs space-y-4 select-none", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={cn(
-            "h-7 w-7 rounded-lg flex items-center justify-center border",
-            tone === 'safe' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-            tone === 'warn' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-            tone === 'danger' && "bg-rose-500/10 text-rose-400 border-rose-500/30"
+            "h-7 w-7 rounded-lg flex items-center justify-center border transition-colors",
+            tone === 'safe' && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+            tone === 'warn' && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+            tone === 'danger' && "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
           )}>
             <Gauge className="w-4 h-4" />
           </div>
@@ -86,10 +83,10 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
         </div>
 
         <span className={cn(
-          "text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border",
-          tone === 'safe' && "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-          tone === 'warn' && "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-          tone === 'danger' && "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 animate-pulse"
+          "text-2xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border transition-all",
+          tone === 'safe' && "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
+          tone === 'warn' && "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40",
+          tone === 'danger' && "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40 animate-pulse"
         )}>
           {statusLabel}
         </span>
@@ -97,16 +94,31 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
 
       {/* Speedometer Radial Gauge */}
       <div className="flex flex-col sm:flex-row items-center justify-around gap-4 py-2">
-        <div className="relative flex items-center justify-center w-36 h-36">
-          <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
+        <div className="relative flex items-center justify-center w-36 h-36 shrink-0">
+          <svg className="w-full h-full -rotate-90 transform drop-shadow-xs" viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="cushionGradSafe" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+              <linearGradient id="cushionGradWarn" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#F59E0B" />
+                <stop offset="100%" stopColor="#D97706" />
+              </linearGradient>
+              <linearGradient id="cushionGradDanger" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#EF4444" />
+                <stop offset="100%" stopColor="#DC2626" />
+              </linearGradient>
+            </defs>
             {/* Background Track */}
             <circle
               cx="60"
               cy="60"
               r="48"
               fill="transparent"
-              stroke="hsl(var(--surface-muted))"
-              strokeWidth="10"
+              stroke="hsl(var(--border))"
+              strokeOpacity="0.75"
+              strokeWidth="9"
               strokeDasharray="226"
               strokeDashoffset="75"
               strokeLinecap="round"
@@ -119,12 +131,12 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
               fill="transparent"
               stroke={
                 tone === 'safe'
-                  ? '#10B981'
+                  ? 'url(#cushionGradSafe)'
                   : tone === 'warn'
-                    ? '#F59E0B'
-                    : '#EF4444'
+                    ? 'url(#cushionGradWarn)'
+                    : 'url(#cushionGradDanger)'
               }
-              strokeWidth="10"
+              strokeWidth="9"
               strokeDasharray="226"
               strokeDashoffset={226 - (151 * (compositeScore / 100))}
               strokeLinecap="round"
@@ -134,10 +146,16 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
 
           {/* Center readout */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black terminal-num text-text">
+            <motion.span
+              key={compositeScore}
+              initial={{ scale: 0.9, opacity: 0.8 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.25 }}
+              className="text-2xl font-black terminal-num tabular-nums text-text tracking-tight"
+            >
               {compositeScore}%
-            </span>
-            <span className="text-3xs uppercase tracking-wider text-text-muted font-bold">
+            </motion.span>
+            <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-bold mt-0.5">
               Cushion
             </span>
           </div>
@@ -149,11 +167,11 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
           <div className="space-y-1">
             <div className="flex items-center justify-between text-2xs font-medium">
               <span className="text-text-muted">Daily DD Headroom</span>
-              <span className="terminal-num text-text font-semibold">
+              <span className="terminal-num tabular-nums text-text font-semibold">
                 {fmtUSD(dailyCushion)} ({dailyBufferPct.toFixed(1)}%)
               </span>
             </div>
-            <div className="h-2 rounded-full bg-surface-muted overflow-hidden">
+            <div className="h-2 rounded-full bg-surface-muted border border-border/40 overflow-hidden">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500",
@@ -168,11 +186,11 @@ export const RiskCushionSpeedometer = memo(function RiskCushionSpeedometer({
           <div className="space-y-1">
             <div className="flex items-center justify-between text-2xs font-medium">
               <span className="text-text-muted">Trailing Floor Buffer</span>
-              <span className="terminal-num text-text font-semibold">
+              <span className="terminal-num tabular-nums text-text font-semibold">
                 {fmtUSD(floorCushion)} ({maxBufferPct.toFixed(1)}%)
               </span>
             </div>
-            <div className="h-2 rounded-full bg-surface-muted overflow-hidden">
+            <div className="h-2 rounded-full bg-surface-muted border border-border/40 overflow-hidden">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500",

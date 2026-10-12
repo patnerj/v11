@@ -1352,6 +1352,7 @@ export interface TournamentMine {
   account_id:       number
   starting_equity:  number | string
   joined_at:        string
+  current_rank?:    number
 }
 
 // ── v11.5 AI Powerhouse Types ───────────────────────────────────────────────

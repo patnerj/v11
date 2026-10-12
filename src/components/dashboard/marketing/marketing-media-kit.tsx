@@ -848,11 +848,11 @@ Disclaimer: Trading involves risk. Only risk capital you can afford to lose.`,
                     <span className="bg-purple-500/25 text-purple-300 text-3xs px-1 py-0.2 rounded border border-purple-500/40">VIP</span>
                   </div>
                   <div className="my-auto py-0.5">
-                    <div className="text-[8px] uppercase tracking-wider text-slate-400 font-bold">SCALE UP</div>
-                    <div className="text-[11px] font-black text-white leading-tight">$200,000</div>
-                    <div className="text-[8px] text-emerald-400 font-bold">90% Split</div>
+                    <div className="text-3xs uppercase tracking-wider text-slate-400 font-bold">SCALE UP</div>
+                    <div className="text-terminal-body font-black text-white leading-tight">$200,000</div>
+                    <div className="text-3xs text-emerald-400 font-bold">90% Split</div>
                   </div>
-                  <div className="bg-purple-500/20 border border-purple-500/40 rounded p-1 text-[8px]">
+                  <div className="bg-purple-500/20 border border-purple-500/40 rounded p-1 text-3xs">
                     <div className="text-purple-300 font-bold font-mono">{affiliateCode}</div>
                     <div className="text-amber-400 font-bold">20% OFF</div>
                   </div>

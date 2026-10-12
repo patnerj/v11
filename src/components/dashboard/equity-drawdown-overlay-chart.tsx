@@ -43,13 +43,13 @@ function HighContrastChartTooltip({ active, payload, label }: CustomTooltipProps
   const isCushionSafe = cushionVal >= 0
 
   return (
-    <div className="bg-surface text-text border border-border shadow-2xl rounded-xl p-3 text-xs space-y-2 min-w-[210px] select-none backdrop-blur-md">
+    <div className="bg-surface/95 text-text border border-border shadow-2xl rounded-xl p-3 text-xs space-y-2 min-w-[210px] select-none backdrop-blur-md">
       <div className="font-bold text-text border-b border-border/80 pb-1 flex items-center justify-between">
-        <span className="text-2xs text-text-muted uppercase font-mono">Date / Milestone</span>
-        <span className="font-mono font-semibold text-text">{label}</span>
+        <span className="text-terminal-micro text-text-muted uppercase font-semibold">Date / Milestone</span>
+        <span className="font-semibold text-text terminal-num tabular-nums">{label}</span>
       </div>
 
-      <div className="space-y-1.5 font-mono text-2xs">
+      <div className="space-y-1.5 text-2xs">
         {/* Realized Balance */}
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-text-muted">
@@ -85,7 +85,7 @@ function HighContrastChartTooltip({ active, payload, label }: CustomTooltipProps
 
         {/* Distance to Floor (Buffer / Cushion) */}
         <div className="border-t border-border/80 pt-1.5 flex items-center justify-between">
-          <span className="text-3xs uppercase tracking-wider text-text-muted font-bold">
+          <span className="text-terminal-micro uppercase tracking-wider text-text-muted font-semibold">
             Floor Buffer:
           </span>
           <span

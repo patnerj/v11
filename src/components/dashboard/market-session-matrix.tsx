@@ -127,7 +127,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
               🔥 London / NY Overlap Active
             </Badge>
           )}
-          <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-surface-muted text-accent border border-border" suppressHydrationWarning>
+          <span className="font-bold text-xs px-2.5 py-1 rounded-lg bg-surface-muted text-accent border border-border terminal-num tabular-nums" suppressHydrationWarning>
             {currentUtcString}
           </span>
         </div>
@@ -157,7 +157,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
                 </span>
 
                 {s.isOpen ? (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-terminal-micro font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/35">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -165,7 +165,7 @@ export function MarketSessionMatrix({ className }: { className?: string }) {
                     Active Now
                   </span>
                 ) : (
-                  <Badge tone="neutral" size="sm" className="text-3xs uppercase font-medium">
+                  <Badge tone="neutral" size="sm" className="text-terminal-micro uppercase font-medium">
                     Closed
                   </Badge>
                 )}

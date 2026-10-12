@@ -4,13 +4,11 @@ import React, { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, X, ShieldAlert, ShieldCheck, CheckCircle2, Clock,
-  TrendingDown, TrendingUp, DollarSign, Calendar, Zap, AlertTriangle,
-  Scale, Lock, Newspaper, HelpCircle, Layers
+  Calendar, Zap, Scale, Newspaper
 } from 'lucide-react'
-import { fmtUSD, fmtPct, toNum } from '@/lib/format'
+import { fmtUSD, toNum } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/cn'
 import type { ChallengeAccount, ChallengeMetrics } from '@/types/api'
 
 interface AccountRulesDrawerProps {
@@ -79,7 +77,7 @@ export function AccountRulesDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             aria-hidden="true"
           />
 
@@ -88,7 +86,7 @@ export function AccountRulesDrawer({
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 240 }}
               className="w-screen max-w-md bg-surface border-l border-border shadow-2xl flex flex-col justify-between"
               role="dialog"
               aria-modal="true"
@@ -98,21 +96,21 @@ export function AccountRulesDrawer({
               <div className="p-6 border-b border-border bg-surface-muted/60 flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-accent/15 text-accent border border-accent/20">
+                    <span className="p-1.5 rounded-lg bg-accent/15 text-accent border border-accent/30">
                       <FileText className="w-4 h-4" />
                     </span>
-                    <span className="text-xs font-mono font-bold text-accent uppercase tracking-wider">
+                    <span className="text-xs font-bold text-accent uppercase tracking-wider">
                       Official Plan Specifications
                     </span>
                   </div>
                   <h2 id="rules-drawer-title" className="text-lg font-bold text-text">
-                    {challenge.plan_name || 'Standard Plan'} · {fmtUSD(startingBalance)}
+                    {challenge.plan_name || 'Standard Plan'} · <span className="terminal-num tabular-nums">{fmtUSD(startingBalance)}</span>
                   </h2>
                   <div className="flex items-center gap-2 pt-1">
                     <Badge tone={isFunded ? 'success' : 'accent'} size="sm" className="font-semibold uppercase tracking-wider">
                       {isFunded ? 'Funded Stage' : `Phase ${challenge.phase || 1}`}
                     </Badge>
-                    <span className="text-2xs text-text-muted font-mono">
+                    <span className="text-2xs text-text-muted font-medium terminal-num tabular-nums">
                       Account ID #{challenge.id}
                     </span>
                   </div>
@@ -121,7 +119,7 @@ export function AccountRulesDrawer({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface border border-border/60 hover:border-border transition-colors cursor-pointer"
+                  className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface border border-border/60 hover:border-border transition-colors cursor-pointer active:scale-95"
                   aria-label="Close rules sheet (Escape)"
                   title="Close (Esc)"
                 >
@@ -222,7 +220,7 @@ export function AccountRulesDrawer({
                       <span className="text-text font-medium flex items-center gap-2">
                         <Zap className="w-4 h-4 text-text-muted" /> Account Leverage
                       </span>
-                      <span className="font-semibold text-accent">
+                      <span className="font-semibold text-accent terminal-num tabular-nums">
                         1:100 FX · 1:30 Metals · 1:5 Crypto
                       </span>
                     </div>
@@ -238,7 +236,7 @@ export function AccountRulesDrawer({
                 </div>
 
                 {/* Payout & Scaling Note */}
-                <div className="p-4 rounded-xl border border-accent/20 bg-accent/5 space-y-2">
+                <div className="p-4 rounded-xl border border-accent/30 bg-accent/10 space-y-2">
                   <div className="flex items-center gap-2 text-xs font-semibold text-accent">
                     <CheckCircle2 className="w-4 h-4" />
                     Profit Split &amp; Scaling
@@ -252,7 +250,7 @@ export function AccountRulesDrawer({
 
               {/* Footer */}
               <div className="p-4 border-t border-border bg-surface-muted/50 flex justify-end">
-                <Button onClick={onClose} variant="primary" size="sm" className="w-full">
+                <Button onClick={onClose} variant="primary" size="sm" className="w-full active:scale-95">
                   Got It
                 </Button>
               </div>

@@ -809,10 +809,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-subtle/80">
               <div className="flex flex-col">
                 <span className="text-terminal-micro text-text-muted uppercase font-medium">Risk (Max Loss)</span>
-                <span className="text-terminal-body font-bold text-rose-400 terminal-num tracking-tight">
+                <span className="text-terminal-body font-bold text-rose-600 dark:text-rose-400 terminal-num tracking-tight">
                   -{fmtUSD(slMetrics.lossVal)}
                 </span>
-                <span className="text-terminal-micro text-rose-400/80 terminal-num">
+                <span className="text-terminal-micro text-rose-700/80 dark:text-rose-400/80 terminal-num">
                   {slMetrics.pips.toFixed(1)}p · {slMetrics.lossPct.toFixed(2)}%
                 </span>
               </div>
@@ -821,10 +821,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 <span className="text-terminal-micro text-text-muted uppercase font-medium">Reward (Target)</span>
                 {tpMetrics ? (
                   <>
-                    <span className="text-terminal-body font-bold text-emerald-400 terminal-num tracking-tight">
+                    <span className="text-terminal-body font-bold text-emerald-600 dark:text-emerald-400 terminal-num tracking-tight">
                       +{fmtUSD(tpMetrics.profitVal)}
                     </span>
-                    <span className="text-terminal-micro text-emerald-400/80 terminal-num">
+                    <span className="text-terminal-micro text-emerald-700/80 dark:text-emerald-400/80 terminal-num">
                       +{tpMetrics.pips.toFixed(1)}p · +{tpMetrics.profitPct.toFixed(2)}%
                     </span>
                   </>

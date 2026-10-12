@@ -672,7 +672,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
                   title={slDraftMetrics ? `Calculated Loss: -${fmtUSD(slDraftMetrics.loss)} (-${slDraftMetrics.pips.toFixed(1)}p)` : undefined}
                   className={cn(
                     "w-16 h-7 px-1.5 text-terminal-body terminal-num bg-surface border rounded focus-ring text-right transition-colors",
-                    slDraftMetrics ? "border-rose-500/50 text-rose-300 focus:border-rose-500" : "border-border text-foreground"
+                    slDraftMetrics ? "border-rose-500/50 text-rose-600 dark:text-rose-300 focus:border-rose-500" : "border-border text-foreground"
                   )}
                 />
               </div>
@@ -685,7 +685,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
                   title={tpDraftMetrics ? `Calculated Profit: +${fmtUSD(tpDraftMetrics.profit)} (+${tpDraftMetrics.pips.toFixed(1)}p)` : undefined}
                   className={cn(
                     "w-16 h-7 px-1.5 text-terminal-body terminal-num bg-surface border rounded focus-ring text-right transition-colors",
-                    tpDraftMetrics ? "border-emerald-500/50 text-emerald-300 focus:border-emerald-500" : "border-border text-foreground"
+                    tpDraftMetrics ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-300 focus:border-emerald-500" : "border-border text-foreground"
                   )}
                 />
               </div>
