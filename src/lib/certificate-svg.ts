@@ -40,17 +40,14 @@ export function buildCertificateSvg(
 ): string {
   const funded = (cert.status ?? '') === 'funded'
   const kind = funded ? 'Funded Trader' : 'Evaluation Pass'
-  const year = (() => {
-    const d = new Date(cert.issued_date)
-    return isNaN(d.getTime()) ? new Date().getFullYear() : d.getFullYear()
-  })()
+  const certDate = cert.issued_date ? new Date(cert.issued_date) : new Date()
+  const safeCertDate = isNaN(certDate.getTime()) ? new Date() : certDate
+  const year = safeCertDate.getFullYear()
   const verificationId = `PFL-${year}-${String(cert.challenge_id || 101).padStart(6, '0')}`
   const trader = esc(cert.trader_name || 'Verified Trader')
   const plan = esc(cert.plan_name || 'Executive Trader')
   const issued = esc(
-    cert.issued_date
-      ? new Date(cert.issued_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-      : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    safeCertDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   )
   const sizeStr = esc(money(cert.account_size || 100000))
   const splitPct = (typeof cert.profit_split === 'number' ? cert.profit_split : parseFloat(String(cert.profit_split)) || 85) + '%'
@@ -221,15 +218,14 @@ export function buildPayoutCertificateSvg(
   planName: string = 'Funded Account',
   qrDataUrl: string = ''
 ): string {
-  const issued = payout.processed_at || payout.requested_at || new Date().toISOString()
-  const year = (() => {
-    const d = new Date(issued)
-    return isNaN(d.getTime()) ? new Date().getFullYear() : d.getFullYear()
-  })()
+  const rawIssued = payout.processed_at || payout.requested_at || new Date().toISOString()
+  const poDate = new Date(rawIssued)
+  const safePoDate = isNaN(poDate.getTime()) ? new Date() : poDate
+  const year = safePoDate.getFullYear()
   const verificationId = `PAY-${year}-${String(payout.id || 1).padStart(6, '0')}`
   const trader = esc(payout.name || payout.username || 'Funded Trader')
   const dateFormatted = esc(
-    new Date(issued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    safePoDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   )
   const amountStr = esc(money(payout.trader_amount || 0))
   const splitPct = payout.profit_split_pct ? `${payout.profit_split_pct}%` : '80%'

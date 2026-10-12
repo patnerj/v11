@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles, QrCode, Zap, Percent, Download } from 'lucide-react'
+import { Users2, Copy, Check, DollarSign, TrendingUp, Wallet, ArrowUpRight, ExternalLink, Send, MessageCircle, Share2, Sparkles, QrCode, Zap, Percent, Download, Megaphone } from 'lucide-react'
 import QRCode from 'qrcode'
 import { api } from '@/lib/api'
 import type { Commission, AffiliatePayout } from '@/types/api'
@@ -464,7 +465,7 @@ export default function AffiliatePage() {
       {/* ── MARKETING ASSETS & PROMOTIONAL MEDIA KIT ────────────────────────────── */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-accent" /> Official Marketing Media Kit
@@ -473,9 +474,16 @@ export default function AffiliatePage() {
                 High-conversion promotional assets, social media banners, and copy templates tailored with your unique referral code.
               </p>
             </div>
-            <Badge tone="accent" size="sm" className="self-start sm:self-center">
-              Ultra-HD Graphics
-            </Badge>
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <Link href="/dashboard/marketing">
+                <Button variant="primary" size="sm" className="gap-1.5 text-xs h-8">
+                  <Megaphone className="h-3.5 w-3.5" /> Open Full Studio
+                </Button>
+              </Link>
+              <Badge tone="accent" size="sm">
+                Ultra-HD Graphics
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -484,7 +492,7 @@ export default function AffiliatePage() {
             {/* ── 1. 16:9 Landscape Banner ── */}
             <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
               <div>
-                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                <div className="dark h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none" data-theme="midnight-obsidian">
                   {/* Subtle Grid & Glow Background */}
                   <div className="absolute inset-0 bg-[radial-gradient(#10b98115_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
                   <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
@@ -564,7 +572,7 @@ export default function AffiliatePage() {
             {/* ── 2. 1:1 Square Feed Post ── */}
             <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
               <div>
-                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                <div className="dark h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none" data-theme="midnight-obsidian">
                   {/* Subtle Grid & Glow Background */}
                   <div className="absolute inset-0 bg-[radial-gradient(#38bdf815_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
                   <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-info/20 rounded-full blur-2xl pointer-events-none" />
@@ -643,7 +651,7 @@ export default function AffiliatePage() {
             {/* ── 3. 9:16 Vertical Story & Reel ── */}
             <div className="rounded-xl border border-border-subtle bg-surface-muted/30 p-3.5 flex flex-col justify-between gap-4">
               <div>
-                <div className="h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none">
+                <div className="dark h-56 bg-[#070A12] rounded-lg border border-white/10 relative overflow-hidden group shadow-lg flex items-center justify-center p-3 select-none" data-theme="midnight-obsidian">
                   {/* Subtle Grid & Glow Background */}
                   <div className="absolute inset-0 bg-[radial-gradient(#a855f715_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
                   <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />

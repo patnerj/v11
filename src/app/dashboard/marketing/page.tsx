@@ -2,13 +2,15 @@
 
 import React from 'react'
 import { PageHeader } from '@/components/ui/page-header'
-import { Sparkles, Megaphone } from 'lucide-react'
+import { Megaphone } from 'lucide-react'
 import { MarketingMediaKit } from '@/components/dashboard/marketing/marketing-media-kit'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 export default function TraderMarketingPage() {
-  const { data: me } = useQuery({
+  const { data: me, isPending } = useQuery({
     queryKey: ['affiliateMeForMarketing'],
     queryFn: async () => {
       const res = await api.affiliateMe()
@@ -31,10 +33,16 @@ export default function TraderMarketingPage() {
         badge={{ label: 'Creator Assets', tone: 'accent' }}
       />
 
-      <MarketingMediaKit
-        affiliateCode={affiliateCode}
-        partnerLink={partnerLink}
-      />
+      <SectionErrorBoundary sectionName="Marketing Media Kit">
+        {isPending && me === undefined ? (
+          <Skeleton className="h-[480px] w-full rounded-2xl" />
+        ) : (
+          <MarketingMediaKit
+            affiliateCode={affiliateCode}
+            partnerLink={partnerLink}
+          />
+        )}
+      </SectionErrorBoundary>
     </div>
   )
 }

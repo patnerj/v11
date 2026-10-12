@@ -729,19 +729,21 @@ Disclaimer: Trading involves risk. Only risk capital you can afford to lose.`,
           {/* 1. 16:9 Landscape Card */}
           <div className="rounded-xl border border-border bg-surface p-4 flex flex-col justify-between space-y-4 hover:border-accent/40 transition-colors shadow-sm">
             <div className="space-y-3">
-              <div className="dark aspect-[16/9] rounded-lg bg-gradient-to-br from-[#040711] via-[#0A1226] to-[#060B18] border border-emerald-500/40 p-3 flex flex-col justify-between shadow-md select-none" data-theme="midnight-obsidian">
-                <div className="flex items-center justify-between text-3xs font-bold text-emerald-400">
-                  <span>★ {brandName.toUpperCase()}</span>
-                  <span className="text-white">90% SPLIT</span>
-                </div>
-                <div className="text-center my-auto py-1">
-                  <div className="text-xs font-black text-white">$200,000 CAPITAL</div>
-                  <div className="text-3xs text-slate-300">Raw Spreads · Fast Payouts</div>
-                </div>
-                <div className="bg-emerald-500/15 border border-emerald-500/40 rounded px-2 py-0.5 flex items-center justify-between text-3xs">
-                  <span className="text-emerald-400 font-bold">CODE:</span>
-                  <span className="text-white font-bold font-mono">{affiliateCode}</span>
-                  <span className="text-amber-400 font-bold">20% OFF</span>
+              <div className="h-48 sm:h-52 bg-[#030610] rounded-xl border border-white/5 flex items-center justify-center p-3 overflow-hidden relative select-none">
+                <div className="dark w-full aspect-[16/9] rounded-lg bg-gradient-to-br from-[#040711] via-[#0A1226] to-[#060B18] border border-emerald-500/40 p-3 flex flex-col justify-between shadow-md select-none text-center" data-theme="midnight-obsidian">
+                  <div className="flex items-center justify-between text-3xs font-bold text-emerald-400">
+                    <span>★ {brandName.toUpperCase()}</span>
+                    <span className="bg-emerald-500/20 text-emerald-300 text-3xs px-1.5 py-0.5 rounded border border-emerald-500/40">90% SPLIT</span>
+                  </div>
+                  <div className="my-auto py-1">
+                    <div className="text-xs sm:text-sm font-black text-white">$200,000 CAPITAL</div>
+                    <div className="text-3xs text-slate-300">Raw Spreads · Fast Payouts</div>
+                  </div>
+                  <div className="bg-emerald-500/15 border border-emerald-500/40 rounded px-2 py-0.5 flex items-center justify-between text-3xs">
+                    <span className="text-emerald-400 font-bold">CODE:</span>
+                    <span className="text-white font-bold font-mono">{affiliateCode}</span>
+                    <span className="text-amber-400 font-bold">20% OFF</span>
+                  </div>
                 </div>
               </div>
 
@@ -783,19 +785,21 @@ Disclaimer: Trading involves risk. Only risk capital you can afford to lose.`,
           {/* 2. 1:1 Square Feed Card */}
           <div className="rounded-xl border border-border bg-surface p-4 flex flex-col justify-between space-y-4 hover:border-info/40 transition-colors shadow-sm">
             <div className="space-y-3">
-              <div className="dark aspect-[16/9] rounded-lg bg-gradient-to-tr from-[#040711] via-[#09152C] to-[#060D1E] border border-sky-500/40 p-3 flex flex-col justify-between shadow-md select-none" data-theme="midnight-obsidian">
-                <div className="flex items-center justify-between text-3xs font-bold text-sky-400">
-                  <span>★ {brandName.toUpperCase()}</span>
-                  <span className="text-white">INSTANT</span>
-                </div>
-                <div className="text-center my-auto py-1">
-                  <div className="text-xs font-black text-white">GET FUNDED UP TO $200K</div>
-                  <div className="text-3xs text-emerald-400 font-bold">KEEP 90% PROFITS</div>
-                </div>
-                <div className="bg-sky-500/15 border border-sky-500/40 rounded px-2 py-0.5 flex items-center justify-between text-3xs">
-                  <span className="text-sky-400 font-bold">CODE:</span>
-                  <span className="text-white font-bold font-mono">{affiliateCode}</span>
-                  <span className="text-amber-400 font-bold">20% OFF</span>
+              <div className="h-48 sm:h-52 bg-[#030610] rounded-xl border border-white/5 flex items-center justify-center p-3 overflow-hidden relative select-none">
+                <div className="dark h-full aspect-square rounded-lg bg-gradient-to-tr from-[#040711] via-[#09152C] to-[#060D1E] border border-sky-500/40 p-3 flex flex-col justify-between shadow-md select-none text-center" data-theme="midnight-obsidian">
+                  <div className="flex items-center justify-between text-3xs font-bold text-sky-400">
+                    <span>★ {brandName.toUpperCase()}</span>
+                    <span className="bg-sky-500/20 text-sky-300 text-3xs px-1.5 py-0.5 rounded border border-sky-500/30">1:1</span>
+                  </div>
+                  <div className="my-auto py-1">
+                    <div className="text-3xs uppercase tracking-wider text-slate-400 font-bold">PROP CAPITAL</div>
+                    <div className="text-xs font-black text-white leading-tight mt-0.5">GET FUNDED $200K</div>
+                    <div className="text-3xs text-emerald-400 font-extrabold mt-0.5">KEEP 90% PROFITS</div>
+                  </div>
+                  <div className="bg-sky-500/15 border border-sky-500/40 rounded px-2 py-1 text-3xs">
+                    <div className="text-sky-300 font-bold">CODE: <span className="text-white font-mono">{affiliateCode}</span></div>
+                    <div className="text-amber-400 font-bold">20% DISCOUNT</div>
+                  </div>
                 </div>
               </div>
 
@@ -837,19 +841,21 @@ Disclaimer: Trading involves risk. Only risk capital you can afford to lose.`,
           {/* 3. 9:16 Vertical Story Card */}
           <div className="rounded-xl border border-border bg-surface p-4 flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-colors shadow-sm">
             <div className="space-y-3">
-              <div className="dark aspect-[16/9] rounded-lg bg-gradient-to-b from-[#040711] via-[#120B24] to-[#080514] border border-purple-500/40 p-3 flex flex-col justify-between shadow-md select-none" data-theme="midnight-obsidian">
-                <div className="flex items-center justify-between text-3xs font-bold text-purple-300">
-                  <span>★ {brandName.toUpperCase()}</span>
-                  <span className="text-white">VIP</span>
-                </div>
-                <div className="text-center my-auto py-1">
-                  <div className="text-xs font-black text-white">SCALE TO $200K</div>
-                  <div className="text-3xs text-purple-300">Bi-Weekly Payouts · 90% Split</div>
-                </div>
-                <div className="bg-purple-500/15 border border-purple-500/40 rounded px-2 py-0.5 flex items-center justify-between text-3xs">
-                  <span className="text-purple-300 font-bold">CODE:</span>
-                  <span className="text-white font-bold font-mono">{affiliateCode}</span>
-                  <span className="text-amber-400 font-bold">20% OFF</span>
+              <div className="h-48 sm:h-52 bg-[#030610] rounded-xl border border-white/5 flex items-center justify-center p-3 overflow-hidden relative select-none">
+                <div className="dark h-full aspect-[9/16] rounded-lg bg-gradient-to-b from-[#040711] via-[#120B24] to-[#080514] border border-purple-500/40 p-2 flex flex-col justify-between shadow-md select-none text-center" data-theme="midnight-obsidian">
+                  <div className="flex items-center justify-between text-3xs font-bold text-purple-300">
+                    <span className="truncate">★ {brandName}</span>
+                    <span className="bg-purple-500/25 text-purple-300 text-3xs px-1 py-0.2 rounded border border-purple-500/40">VIP</span>
+                  </div>
+                  <div className="my-auto py-0.5">
+                    <div className="text-[8px] uppercase tracking-wider text-slate-400 font-bold">SCALE UP</div>
+                    <div className="text-[11px] font-black text-white leading-tight">$200,000</div>
+                    <div className="text-[8px] text-emerald-400 font-bold">90% Split</div>
+                  </div>
+                  <div className="bg-purple-500/20 border border-purple-500/40 rounded p-1 text-[8px]">
+                    <div className="text-purple-300 font-bold font-mono">{affiliateCode}</div>
+                    <div className="text-amber-400 font-bold">20% OFF</div>
+                  </div>
                 </div>
               </div>
 

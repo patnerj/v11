@@ -9,6 +9,7 @@ import { CertificateDocument, PayoutCertificateDocument } from '@/components/cer
 import { downloadCertificatePdf, downloadCertificatePng } from '@/lib/certificate-pdf'
 import { downloadPayoutCertificatePdf, downloadPayoutCertificatePng } from '@/lib/certificate-payout-pdf'
 import { useQuery } from '@tanstack/react-query'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,19 +27,38 @@ export default function CertificatesPage() {
       let certsData: Record<number, Cert | null> = {}
       let payoutsData: PayoutItem[] = []
 
-      if (res.ok && Array.isArray(res.data)) {
-        eligible = res.data.filter((c) => c.status === 'passed' || c.status === 'funded')
-        
+      const rawChallenges: ChallengeAccount[] = res.ok
+        ? (Array.isArray(res.data)
+            ? res.data
+            : Array.isArray((res.data as any)?.challenges)
+              ? (res.data as any).challenges
+              : Array.isArray((res.data as any)?.data)
+                ? (res.data as any).data
+                : [])
+        : []
+      eligible = rawChallenges.filter((c) => c && (c.status === 'passed' || c.status === 'funded'))
+      
+      if (eligible.length > 0) {
         const results = await Promise.all(eligible.map(async (c) => {
           const r = await api.certificate(c.id)
-          return [c.id, r.ok ? r.data : null] as const
+          const certPayload = r.ok ? (r.data && (r.data as any).data ? (r.data as any).data : r.data) : null
+          return [c.id, certPayload] as const
         }))
         certsData = Object.fromEntries(results)
       }
 
-      if (poRes.ok && Array.isArray(poRes.data?.history)) {
-        payoutsData = poRes.data.history.filter(p => p.status === 'paid')
-      }
+      const rawPayouts: PayoutItem[] = poRes.ok
+        ? (Array.isArray(poRes.data?.history)
+            ? poRes.data.history
+            : Array.isArray(poRes.data)
+              ? poRes.data
+              : Array.isArray((poRes.data as any)?.data?.history)
+                ? (poRes.data as any).data.history
+                : Array.isArray((poRes.data as any)?.data)
+                  ? (poRes.data as any).data
+                  : [])
+        : []
+      payoutsData = rawPayouts.filter(p => p && p.status === 'paid')
 
       return { eligible, certsData, payoutsData }
     }
@@ -60,59 +80,63 @@ export default function CertificatesPage() {
         badge={{ label: 'Achievements', tone: 'accent' }}
       />
 
-      {loading ? (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {Array.from({ length: 2 }).map((_, i) => <Card key={i} className="p-6"><Skeleton className="h-64 w-full" /></Card>)}
-        </div>
-      ) : !list || list.length === 0 ? (
-        <Card>
-          <CardContent className="p-10 text-center">
-            <div className="inline-flex h-12 w-12 rounded-xl bg-accent/10 text-accent items-center justify-center mb-4">
-              <Award className="h-6 w-6" />
-            </div>
-            <h2 className="text-lg font-semibold tracking-tight text-text">No certificates yet</h2>
-            <p className="text-sm text-text-muted mt-2 max-w-md mx-auto leading-relaxed">
-              Pass an evaluation to earn your first certificate.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className={list.length === 1 ? "flex justify-center" : "grid md:grid-cols-2 gap-6"}>
-          {list.map((c, i) => (
-            <motion.div
-              key={c.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className={list.length === 1 ? "w-full max-w-lg" : ""}
-            >
-              <CertificateCard cert={certs[c.id]} challenge={c} />
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* Payout Certificates */}
-      {payoutList && payoutList.length > 0 && (
-        <div className="pt-8 mt-8 border-t border-border-subtle">
-          <h2 className="text-xl font-bold tracking-tight text-text mb-4">Payout Certificates</h2>
-          <div className={payoutList.length === 1 ? "flex justify-center" : "grid md:grid-cols-2 gap-6"}>
-            {payoutList.map((p, i) => (
+      <SectionErrorBoundary sectionName="Evaluation Certificates">
+        {loading ? (
+          <div className="grid sm:grid-cols-2 gap-4">
+            {Array.from({ length: 2 }).map((_, i) => <Card key={i} className="p-6"><Skeleton className="h-64 w-full" /></Card>)}
+          </div>
+        ) : !list || list.length === 0 ? (
+          <Card>
+            <CardContent className="p-10 text-center">
+              <div className="inline-flex h-12 w-12 rounded-xl bg-accent/10 text-accent items-center justify-center mb-4">
+                <Award className="h-6 w-6" />
+              </div>
+              <h2 className="text-lg font-semibold tracking-tight text-text">No certificates yet</h2>
+              <p className="text-sm text-text-muted mt-2 max-w-md mx-auto leading-relaxed">
+                Pass an evaluation to earn your first certificate.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className={list.length === 1 ? "flex justify-center" : "grid md:grid-cols-2 gap-6"}>
+            {list.map((c, i) => (
               <motion.div
-                key={p.id}
+                key={c.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                className={payoutList.length === 1 ? "w-full max-w-lg" : ""}
+                className={list.length === 1 ? "w-full max-w-lg" : ""}
               >
-                <PayoutCertCard 
-                  payout={p} 
-                  planName={list?.find(c => c.id === p.challenge_id)?.plan_name || (p as any).plan_name || 'Funded Trader Program'} 
-                />
+                <CertificateCard cert={certs[c.id]} challenge={c} />
               </motion.div>
             ))}
           </div>
-        </div>
+        )}
+      </SectionErrorBoundary>
+
+      {/* Payout Certificates */}
+      {payoutList && payoutList.length > 0 && (
+        <SectionErrorBoundary sectionName="Payout Certificates">
+          <div className="pt-8 mt-8 border-t border-border-subtle">
+            <h2 className="text-xl font-bold tracking-tight text-text mb-4">Payout Certificates</h2>
+            <div className={payoutList.length === 1 ? "flex justify-center" : "grid md:grid-cols-2 gap-6"}>
+              {payoutList.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  className={payoutList.length === 1 ? "w-full max-w-lg" : ""}
+                >
+                  <PayoutCertCard 
+                    payout={p} 
+                    planName={list?.find(c => c.id === p.challenge_id)?.plan_name || (p as any).plan_name || 'Funded Trader Program'} 
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </SectionErrorBoundary>
       )}
     </div>
   )
