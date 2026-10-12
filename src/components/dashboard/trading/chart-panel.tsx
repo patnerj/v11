@@ -22,6 +22,7 @@ import {
   setSoundEnabled
 } from '@/lib/sound'
 import { ChartTpSlOverlay } from './chart-tp-sl-overlay'
+import { ScalperExecutionHeader } from './scalper-execution-header'
 
 interface Props {
   compact?: boolean
@@ -607,6 +608,24 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
           </div>
         )}
         <div ref={containerRef} className="absolute inset-0" />
+
+        {/* Floating Scalper Execution Header directly over the chart */}
+        {ready && showOneClick && (
+          <div className="absolute top-2 inset-x-0 flex justify-center pointer-events-none z-[20] px-2">
+            <div className="pointer-events-auto max-w-full">
+              <ScalperExecutionHeader
+                symbol={active}
+                bid={bid || 0}
+                ask={ask || 0}
+                digits={digits}
+                pipSize={pipSize(active, digits)}
+                isSlRequired={isSlRequired}
+                compact={compact}
+                onChanged={onChanged}
+              />
+            </div>
+          </div>
+        )}
 
         {/* 1-Click Trade Box (Draggable, default bottom-center) */}
         {!compact && ready && showOneClick && (

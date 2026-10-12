@@ -187,10 +187,10 @@ export default function DashboardOverview() {
       />
 
       {/* Multi-Account Tabbed Carousel / Portfolio Strip (Rule: 1-click active account switcher) */}
-      {challenges && challenges.length > 1 && (
+      {((challenges?.length || 0) + (myTournaments?.length || 0)) > 1 && (
         <SectionErrorBoundary sectionName="Portfolio Strip">
           <MultiAccountPortfolioStrip
-            challenges={challenges}
+            challenges={challenges || []}
             tournaments={myTournaments}
             activeAccountId={active?.fxsim_account_id || active?.id}
           />

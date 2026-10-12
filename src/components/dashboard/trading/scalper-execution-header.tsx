@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useState, useCallback, useMemo } from 'react'
+import React, { memo, useState, useCallback, useMemo, useEffect } from 'react'
 import { Plus, Minus } from 'lucide-react'
 import { fmtPrice } from '@/lib/format'
 import { api } from '@/lib/api'
@@ -12,6 +12,7 @@ import {
   playOrderLossThumpSound,
 } from '@/lib/sound-effects'
 import { usePrices, nextOptimisticId } from '@/store/prices'
+import { isMarketOpen } from '@/lib/symbol-meta'
 import { SoundToggle } from './sound-toggle'
 import { cn } from '@/lib/cn'
 
@@ -41,6 +42,15 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
   const [lot, setLot] = useState('1.00')
   const [slPips, setSlPips] = useState('30')
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
+  const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(symbol))
+
+  useEffect(() => {
+    setMarketOpen(isMarketOpen(symbol))
+    const interval = setInterval(() => {
+      setMarketOpen(isMarketOpen(symbol))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [symbol])
 
   // Live spread calculation in pips
   const spreadPips = useMemo(() => {
@@ -67,6 +77,12 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
 
   const handleExecute = useCallback(
     async (side: 'buy' | 'sell') => {
+      if (!isMarketOpen(symbol)) {
+        toast.error('Market Closed (Reopens Sun 22:00 UTC)')
+        playOrderLossThumpSound()
+        return
+      }
+
       const lotNum = parseFloat(lot)
       if (isNaN(lotNum) || lotNum <= 0) {
         toast.error('Invalid lot size entered')
@@ -112,7 +128,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
       const currentAcc = usePrices.getState().account
       const activeAccId = tCtx?.kind === 'challenge' ? tCtx.accountId : (currentAcc && 'id' in currentAcc ? (currentAcc as any).id : 0)
 
-      // Optimistic position addition
+      // Optimistic position addition with Rule 95 quarantine flag
       usePrices.getState().addOptimisticPosition({
         id: optId,
         account_id: activeAccId,
@@ -128,6 +144,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
         commission: 0,
         swap: 0,
         opened_at: new Date().toISOString(),
+        isOptimistic: true,
       })
 
       try {
@@ -185,16 +202,17 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
       <button
         type="button"
         onClick={() => handleExecute('sell')}
-        disabled={busy !== null || !bid}
+        disabled={busy !== null || !bid || !marketOpen}
+        title={!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : undefined}
         className={cn(
-          "flex items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 h-8 sm:h-9 bg-danger hover:bg-danger-hover text-white font-bold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50",
+          "flex items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 h-8 sm:h-9 bg-danger hover:bg-danger-hover text-white font-semibold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
           compact ? "min-w-[70px] text-terminal-micro" : "min-w-[85px] sm:min-w-[95px] text-terminal-body"
         )}
       >
         {busy === 'sell' ? (
           <span className="flex items-center gap-1.5">
             <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-            <span className="uppercase tracking-wider font-semibold text-3xs">Submitting</span>
+            <span className="uppercase tracking-wider font-semibold text-terminal-micro">Submitting</span>
           </span>
         ) : (
           <>
@@ -208,15 +226,21 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
 
       {/* Spread & Stepper Center Pill */}
       <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2">
-        {/* Spread Badge */}
-        <div className="hidden xs:flex flex-col items-center justify-center px-1.5 py-0.5 rounded bg-surface-muted border border-border/80">
-          <span className="text-3xs uppercase tracking-tighter text-text-muted font-bold">
-            Spread
-          </span>
-          <span className="text-terminal-micro font-bold text-accent terminal-num tabular-nums">
-            {spreadPips.toFixed(1)}
-          </span>
-        </div>
+        {/* Spread Badge / Market Closed State */}
+        {!marketOpen ? (
+          <div className="flex items-center px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-terminal-micro font-semibold whitespace-nowrap">
+            Market Closed
+          </div>
+        ) : (
+          <div className="hidden xs:flex flex-col items-center justify-center px-1.5 py-0.5 rounded bg-surface-muted border border-border/80">
+            <span className="text-terminal-micro uppercase tracking-tighter text-text-muted font-semibold">
+              Spread
+            </span>
+            <span className="text-terminal-micro font-semibold text-accent terminal-num tabular-nums">
+              {spreadPips.toFixed(1)}
+            </span>
+          </div>
+        )}
 
         {/* Lot Stepper & Custom Input Controls */}
         <div className="flex items-center border border-border bg-surface rounded-lg overflow-hidden h-8 sm:h-9">
@@ -236,7 +260,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
             disabled={busy !== null}
             onChange={(e) => setLot(e.target.value.replace(/[^\d.]/g, ''))}
             onBlur={handleLotBlur}
-            className="w-12 sm:w-14 text-center bg-transparent border-none outline-none font-bold text-terminal-body text-text terminal-num tabular-nums"
+            className="w-12 sm:w-14 text-center bg-transparent border-none outline-none font-semibold text-terminal-body text-text terminal-num tabular-nums"
             title="Type custom lot size (0.01 - 100.00)"
             placeholder="1.00"
           />
@@ -259,7 +283,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
               type="button"
               onClick={() => setLot('0.10')}
               disabled={busy !== null}
-              className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40 terminal-num tabular-nums"
+              className="px-1.5 py-0.5 rounded text-terminal-micro font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40 terminal-num tabular-nums"
             >
               0.1
             </button>
@@ -267,7 +291,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
               type="button"
               onClick={() => setLot('0.50')}
               disabled={busy !== null}
-              className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40 terminal-num tabular-nums"
+              className="px-1.5 py-0.5 rounded text-terminal-micro font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40 terminal-num tabular-nums"
             >
               0.5
             </button>
@@ -275,7 +299,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
               type="button"
               onClick={() => setLot('1.00')}
               disabled={busy !== null}
-              className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40 terminal-num tabular-nums"
+              className="px-1.5 py-0.5 rounded text-terminal-micro font-semibold bg-surface-muted hover:bg-surface border border-border text-text-muted hover:text-text transition-colors cursor-pointer disabled:opacity-40 terminal-num tabular-nums"
             >
               1.0
             </button>
@@ -291,11 +315,11 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
                 value={slPips}
                 disabled={busy !== null}
                 onChange={(e) => setSlPips(e.target.value.replace(/[^\d.]/g, ''))}
-                className="w-10 sm:w-11 h-8 sm:h-9 text-center bg-surface border border-rose-500/50 rounded-lg font-bold text-terminal-body text-rose-600 dark:text-rose-400 terminal-num tabular-nums"
+                className="w-10 sm:w-11 h-8 sm:h-9 text-center bg-surface border border-rose-500/50 rounded-lg font-semibold text-terminal-body text-rose-600 dark:text-rose-400 terminal-num tabular-nums"
                 placeholder="30"
                 title="Stop Loss (Pips)"
               />
-              <span className="text-3xs uppercase font-bold text-rose-600 dark:text-rose-400 tracking-tighter">
+              <span className="text-terminal-micro uppercase font-semibold text-rose-600 dark:text-rose-400 tracking-tighter">
                 SL Pip
               </span>
             </div>
@@ -307,16 +331,17 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
       <button
         type="button"
         onClick={() => handleExecute('buy')}
-        disabled={busy !== null || !ask}
+        disabled={busy !== null || !ask || !marketOpen}
+        title={!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : undefined}
         className={cn(
-          "flex items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 h-8 sm:h-9 bg-success hover:bg-success-hover text-white font-bold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50",
+          "flex items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 h-8 sm:h-9 bg-success hover:bg-success-hover text-white font-semibold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
           compact ? "min-w-[70px] text-terminal-micro" : "min-w-[85px] sm:min-w-[95px] text-terminal-body"
         )}
       >
         {busy === 'buy' ? (
           <span className="flex items-center gap-1.5">
             <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-            <span className="uppercase tracking-wider font-semibold text-3xs">Submitting</span>
+            <span className="uppercase tracking-wider font-semibold text-terminal-micro">Submitting</span>
           </span>
         ) : (
           <>

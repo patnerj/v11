@@ -34,7 +34,7 @@ export function SoundToggle({ className, compact = false }: SoundToggleProps) {
       type="button"
       onClick={handleToggle}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border text-terminal-body font-medium transition-all cursor-pointer focus-ring",
+        "inline-flex items-center gap-1.5 rounded-lg border text-terminal-body font-semibold transition-all cursor-pointer focus-ring",
         compact ? "h-7 px-2" : "h-8 px-2.5",
         enabled
           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"

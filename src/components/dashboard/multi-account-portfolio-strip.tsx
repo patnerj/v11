@@ -297,7 +297,7 @@ export function MultiAccountPortfolioStrip({
 
               <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-2xs">
                 <span className="text-text-muted flex items-center gap-1">
-                  Rank #{t.current_rank || 1} • PnL Isolated
+                  {t.current_rank ? `Rank #${t.current_rank}` : 'Rank Pending'} • PnL Isolated
                 </span>
 
                 {isActive ? (

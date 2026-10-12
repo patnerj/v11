@@ -285,8 +285,8 @@ export default function AnalyticsPage() {
                         <span className="font-medium">{sym.name}</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium">{sym.trades} trades</div>
-                        <div className={`text-xs ${sym.pnl >= 0 ? 'text-success' : 'text-danger'}`}>
+                        <div className="text-sm font-semibold terminal-num tabular-nums">{sym.trades} trades</div>
+                        <div className={`text-xs font-semibold terminal-num tabular-nums ${sym.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                           {fmtUSD(sym.pnl, { sign: true })}
                         </div>
                       </div>
