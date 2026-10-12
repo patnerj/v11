@@ -35,6 +35,7 @@ const ROUTE_NAV_TITLES: Record<string, { title: string; section?: string }> = {
   '/dashboard/analytics': { title: 'Performance Analytics', section: 'Analytics' },
   '/dashboard/payouts': { title: 'Profit Payouts & Escrow', section: 'Finance' },
   '/dashboard/affiliate': { title: 'Affiliate Portal', section: 'Growth' },
+  '/dashboard/marketing': { title: 'Marketing Media Kit', section: 'Growth' },
   '/dashboard/certificates': { title: 'Funded Certificates', section: 'Achievements' },
   '/dashboard/notifications': { title: 'Notifications & Alerts', section: 'System' },
   '/dashboard/support': { title: 'Help & Support Desk', section: 'Support' },

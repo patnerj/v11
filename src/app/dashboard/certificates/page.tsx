@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import type { ChallengeAccount, Certificate as Cert, PayoutItem } from '@/types/api'
 import { CertificateDocument, PayoutCertificateDocument } from '@/components/certificate-document'
-import { downloadCertificatePdf } from '@/lib/certificate-pdf'
-import { downloadPayoutCertificatePdf } from '@/lib/certificate-payout-pdf'
+import { downloadCertificatePdf, downloadCertificatePng } from '@/lib/certificate-pdf'
+import { downloadPayoutCertificatePdf, downloadPayoutCertificatePng } from '@/lib/certificate-payout-pdf'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -121,6 +121,7 @@ export default function CertificatesPage() {
 function CertificateCard({ cert, challenge }: { cert: Cert | null | undefined; challenge: ChallengeAccount }) {
   const c = cert
   const [downloading, setDownloading] = useState(false)
+  const [downloadingPng, setDownloadingPng] = useState(false)
 
   if (c === undefined) return <Card className="p-6"><Skeleton className="h-72 w-full" /></Card>
   if (c === null) return (
@@ -136,6 +137,13 @@ function CertificateCard({ cert, challenge }: { cert: Cert | null | undefined; c
     finally { setDownloading(false) }
   }
 
+  const downloadPng = async () => {
+    setDownloadingPng(true)
+    try { await downloadCertificatePng(doc) }
+    catch { toast.error('Could not generate the image. Please try again.') }
+    finally { setDownloadingPng(false) }
+  }
+
   return (
     <Card className="overflow-hidden relative">
       <CertificateDocument cert={doc} />
@@ -145,8 +153,11 @@ function CertificateCard({ cert, challenge }: { cert: Cert | null | undefined; c
             <Button variant="ghost" size="sm"><ExternalLink className="h-4 w-4" /> View / Share</Button>
           </a>
         )}
+        <Button variant="ghost" size="sm" onClick={downloadPng} loading={downloadingPng}>
+          <Download className="h-4 w-4" /> PNG
+        </Button>
         <Button variant="ghost" size="sm" onClick={download} loading={downloading}>
-          <Download className="h-4 w-4" /> Download
+          <Download className="h-4 w-4" /> PDF
         </Button>
       </div>
     </Card>
@@ -155,6 +166,7 @@ function CertificateCard({ cert, challenge }: { cert: Cert | null | undefined; c
 
 function PayoutCertCard({ payout, planName }: { payout: PayoutItem; planName?: string }) {
   const [downloading, setDownloading] = useState(false)
+  const [downloadingPng, setDownloadingPng] = useState(false)
 
   const download = async () => {
     setDownloading(true)
@@ -163,12 +175,22 @@ function PayoutCertCard({ payout, planName }: { payout: PayoutItem; planName?: s
     finally { setDownloading(false) }
   }
 
+  const downloadPng = async () => {
+    setDownloadingPng(true)
+    try { await downloadPayoutCertificatePng(payout, { planName }) }
+    catch { toast.error('Could not generate the image. Please try again.') }
+    finally { setDownloadingPng(false) }
+  }
+
   return (
     <Card className="overflow-hidden relative border-success/20">
       <PayoutCertificateDocument payout={payout} planName={planName} />
       <div className="px-6 pb-4 -mt-1 flex items-center justify-end gap-1.5">
+        <Button variant="ghost" size="sm" onClick={downloadPng} loading={downloadingPng} className="text-success hover:text-success hover:bg-success/10">
+          <Download className="h-4 w-4" /> PNG
+        </Button>
         <Button variant="ghost" size="sm" onClick={download} loading={downloading} className="text-success hover:text-success hover:bg-success/10">
-          <Download className="h-4 w-4" /> Download Payout Certificate
+          <Download className="h-4 w-4" /> PDF
         </Button>
       </div>
     </Card>

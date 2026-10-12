@@ -59,7 +59,7 @@ export function buildCertificateSvg(
   const W = 1920
   const H = 1080
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="cert-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#050811"/>
@@ -95,7 +95,6 @@ export function buildCertificateSvg(
       <stop offset="100%" stop-color="#10B981"/>
     </linearGradient>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&amp;display=swap');
       text, tspan { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     </style>
   </defs>
@@ -203,7 +202,7 @@ export function buildCertificateSvg(
     <rect x="0" y="0" width="160" height="175" rx="12" fill="#0B1326" stroke="#243452" stroke-width="1.5"/>
     ${
       qrDataUrl
-        ? `<image href="${qrDataUrl}" x="15" y="12" width="130" height="130"/>`
+        ? `<image href="${qrDataUrl}" xlink:href="${qrDataUrl}" x="15" y="12" width="130" height="130"/>`
         : `
       <rect x="25" y="15" width="110" height="110" fill="#13203C" rx="6"/>
       <text x="80" y="75" text-anchor="middle" font-family="monospace" font-size="12" fill="#38BDF8">QR VERIFY</text>
@@ -240,7 +239,7 @@ export function buildPayoutCertificateSvg(
   const W = 1920
   const H = 1080
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="payout-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#04090F"/>
@@ -263,7 +262,6 @@ export function buildPayoutCertificateSvg(
       <stop offset="100%" stop-color="#047857"/>
     </linearGradient>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&amp;display=swap');
       text, tspan { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     </style>
   </defs>
@@ -349,7 +347,7 @@ export function buildPayoutCertificateSvg(
     <rect x="0" y="0" width="160" height="175" rx="12" fill="#0A1C16" stroke="#1B4D3E" stroke-width="1.5"/>
     ${
       qrDataUrl
-        ? `<image href="${qrDataUrl}" x="15" y="12" width="130" height="130"/>`
+        ? `<image href="${qrDataUrl}" xlink:href="${qrDataUrl}" x="15" y="12" width="130" height="130"/>`
         : `
       <rect x="25" y="15" width="110" height="110" fill="#13362A" rx="6"/>
       <text x="80" y="75" text-anchor="middle" font-family="monospace" font-size="12" fill="#34D399">QR VERIFY</text>

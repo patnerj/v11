@@ -39,6 +39,7 @@ const NAV: NavItem[] = [
   { href: '/dashboard/analytics',      label: 'Analytics',     icon: BarChart3, badge: 'NEW', queryKey: ['analytics'] },
   { href: '/dashboard/payouts',        label: 'Payouts',      icon: Banknote, queryKey: ['payouts'] },
   { href: '/dashboard/affiliate',      label: 'Affiliate',    icon: Users2, queryKey: ['affiliate'] },
+  { href: '/dashboard/marketing',      label: 'Marketing Kit', icon: Megaphone, badge: 'HOT', queryKey: ['marketing'] },
   { href: '/dashboard/certificates',   label: 'Certificates', icon: Award, queryKey: ['certificates'] },
   { href: '/dashboard/notifications',  label: 'Notifications', icon: Bell, queryKey: ['notifications'] },
   { href: '/dashboard/support',        label: 'Help & Support', icon: LifeBuoy, queryKey: ['support'] },
