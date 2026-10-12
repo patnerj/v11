@@ -81,7 +81,7 @@ const QUICK_FIXES = [
     a: 'Use server "Pepperstone-Demo" with your assigned MT5 Login ID and Master Password provided in your Trader Dashboard. Ensure "Algo Trading" is enabled in MT5 if executing via WebTrader reverse copier.'
   },
   {
-    q: 'How does MassFunded calculate drawdown differently from other prop firms?',
+    q: 'How does LaunchAPropFirm calculate drawdown differently from other prop firms?',
     a: 'We use 100% Static Drawdown based on your initial starting balance. Unlike trailing drawdown traps that lock in daily peak equity, our drawdown floor never trails up behind you.'
   },
   {
@@ -118,7 +118,7 @@ export default function SupportPage() {
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-6">
               <LifeBuoy className="h-3.5 w-3.5" />
-              <span>MassFunded Client Helpdesk</span>
+              <span>LaunchAPropFirm Client Helpdesk</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tightest leading-[1.08] mb-6 text-text">
@@ -126,58 +126,58 @@ export default function SupportPage() {
             </h1>
 
             <p className="text-base md:text-lg text-text-muted leading-relaxed">
-              Access round-the-clock trading desk assistance, evaluation walkthroughs, payout clearance, and direct executive escalations.
+              Access round-the-clock trading desk assistance, evaluation walkthroughs, payout clearance, and technical escalations.
             </p>
           </div>
 
-          {/* High-Impact Executive & Support Cards */}
+          {/* High-Impact Support Cards */}
           <div className="grid md:grid-cols-2 gap-6 mb-16">
             
-            {/* Executive Desk Card (Owner) */}
-            <div className="p-8 rounded-3xl bg-surface border border-amber-500/30 shadow-card relative overflow-hidden group hover:border-amber-500/50 transition-all">
+            {/* Payouts & Institutional Desk */}
+            <div className="p-8 rounded-3xl bg-surface border border-emerald-500/30 shadow-card relative overflow-hidden group hover:border-emerald-500/50 transition-all">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Sparkles className="h-24 w-24 text-amber-400" />
+                <Sparkles className="h-24 w-24 text-emerald-400" />
               </div>
 
               <div className="flex items-center justify-between mb-6">
-                <span className="text-xs font-bold uppercase tracking-wider font-mono text-amber-500 dark:text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
-                  Executive / Managing Desk
+                <span className="text-xs font-bold uppercase tracking-wider font-mono text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                  Treasury & Institutional Desk
                 </span>
                 <span className="text-xs text-text-muted font-mono flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
-                  SLA: &lt; 2 Hours
+                  <Clock className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
+                  SLA: &lt; 1 Hour
                 </span>
               </div>
 
-              <h2 className="text-2xl font-bold text-text mb-2">Bahadur</h2>
-              <div className="text-xs font-mono text-amber-500 dark:text-amber-400/90 mb-4 font-semibold uppercase tracking-wider">
-                Platform Managing Director & Founder
+              <h2 className="text-2xl font-bold text-text mb-2">Payouts & Allocations</h2>
+              <div className="text-xs font-mono text-emerald-500 dark:text-emerald-400/90 mb-4 font-semibold uppercase tracking-wider">
+                Profit Splits, KYC & Institutional Accounts
               </div>
 
               <p className="text-sm text-text-muted mb-8 leading-relaxed">
-                Direct channel for high-capital trader allocations ($100K–$2,000,000+), institutional partnerships, strategic broker integrations, and senior escalations.
+                Direct channel for bi-weekly profit split withdrawals, institutional scale-up requests ($100K–$2,000,000+), and identity verification.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Button 
                   asChild 
                   size="md" 
-                  className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20"
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm"
                 >
-                  <a href="mailto:bahadur@massfunded.org?subject=Executive%20Escalation%20-%20MassFunded">
+                  <a href="mailto:support@launchapropfirm.com?subject=Payout%20Inquiry%20-%20LaunchAPropFirm">
                     <Mail className="h-4 w-4 mr-2" />
-                    bahadur@massfunded.org
+                    support@launchapropfirm.com
                   </a>
                 </Button>
 
                 <Button
                   size="md"
                   variant="outline"
-                  onClick={() => copyToClipboard('bahadur@massfunded.org', 'Executive email')}
-                  className="border-border-subtle hover:border-amber-400 text-text hover:text-amber-500 px-4"
+                  onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
+                  className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500 px-4"
                   title="Copy email address"
                 >
-                  {copiedEmail === 'bahadur@massfunded.org' ? (
+                  {copiedEmail === 'support@launchapropfirm.com' ? (
                     <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -187,51 +187,51 @@ export default function SupportPage() {
               </div>
             </div>
 
-            {/* 24/7 Operations Helpdesk Card */}
-            <div className="p-8 rounded-3xl bg-surface border border-emerald-500/30 shadow-card relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+            {/* 24/7 Technical Operations Desk */}
+            <div className="p-8 rounded-3xl bg-surface border border-teal-500/30 shadow-card relative overflow-hidden group hover:border-teal-500/50 transition-all">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Headphones className="h-24 w-24 text-emerald-400" />
+                <Headphones className="h-24 w-24 text-teal-400" />
               </div>
 
               <div className="flex items-center justify-between mb-6">
-                <span className="text-xs font-bold uppercase tracking-wider font-mono text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                <span className="text-xs font-bold uppercase tracking-wider font-mono text-teal-500 dark:text-teal-400 bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/30">
                   24/7 Operations Desk
                 </span>
                 <span className="text-xs text-text-muted font-mono flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
+                  <Clock className="h-3.5 w-3.5 text-teal-500 dark:text-teal-400" />
                   SLA: &lt; 15 Minutes
                 </span>
               </div>
 
-              <h2 className="text-2xl font-bold text-text mb-2">Client Support Operations</h2>
-              <div className="text-xs font-mono text-emerald-500 dark:text-emerald-400/90 mb-4 font-semibold uppercase tracking-wider">
-                MT5 Tech, KYC & Disbursals
+              <h2 className="text-2xl font-bold text-text mb-2">Technical Support Operations</h2>
+              <div className="text-xs font-mono text-teal-500 dark:text-teal-400/90 mb-4 font-semibold uppercase tracking-wider">
+                MT5 Tech, WebTrader & Rules Engine
               </div>
 
               <p className="text-sm text-text-muted mb-8 leading-relaxed">
-                24/7 technical support for MetaTrader 5 server connection, WebTrader orders, automated evaluation phase reviews, KYC verification, and payout processing.
+                24/7 technical assistance for MetaTrader 5 credentials, WebTrader order execution, automated challenge phase evaluations, and account sync.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Button 
                   asChild 
                   size="md" 
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm"
+                  className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-white font-bold text-sm shadow-glow-sm"
                 >
-                  <a href="mailto:support@massfunded.org?subject=Support%20Inquiry%20-%20MassFunded">
+                  <a href="mailto:support@launchapropfirm.com?subject=Technical%20Inquiry%20-%20LaunchAPropFirm">
                     <Mail className="h-4 w-4 mr-2" />
-                    support@massfunded.org
+                    support@launchapropfirm.com
                   </a>
                 </Button>
 
                 <Button
                   size="md"
                   variant="outline"
-                  onClick={() => copyToClipboard('support@massfunded.org', 'Support email')}
-                  className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500 px-4"
+                  onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
+                  className="border-border-subtle hover:border-teal-400 text-text hover:text-teal-500 px-4"
                   title="Copy email address"
                 >
-                  {copiedEmail === 'support@massfunded.org' ? (
+                  {copiedEmail === 'support@launchapropfirm.com' ? (
                     <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="h-4 w-4" />

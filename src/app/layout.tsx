@@ -50,8 +50,8 @@ const getCachedBranding = cache(async (apiPath: string) => {
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  let brandName = 'MassFunded'
-  let brandTagline = 'Trade Our Capital'
+  let brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+  let brandTagline = 'Institutional High-Frequency Prop Trading'
   let googleSiteVerification = ''
   let bingSiteVerification = ''
   let customMetaTitle = ''
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
   let robotsIndexing = 'index_follow'
 
   // P3: never fetch from a half-built URL.
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.massfunded.org/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath) return {
     title:       { default: `${brandName} — Trade Up to $200,000 in Funded Capital`, template: `%s | ${brandName}` },
@@ -406,7 +406,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // silent fail
   }
 
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.massfunded.org/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   const settings = await getCachedBranding(apiPath)
 
@@ -417,12 +417,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     (settings as any)?.site_url ||
-    ''
+    'https://demo.launchapropfirm.com'
   ).replace(/\/$/, '')
 
-  const brandName = (settings as any)?.brand_name || 'PropFirm'
+  const brandName = (settings as any)?.brand_name || process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
   const brandTagline = (settings as any)?.brand_tagline || 'Institutional High-Frequency Prop Trading'
-  const supportEmail = (settings as any)?.support_email || 'support@propfirm.com'
+  const supportEmail = (settings as any)?.support_email || 'support@launchapropfirm.com'
   const rawLogo = (settings as any)?.logo_url || '/branding/brand_logo_600x150.png'
   const logoUrl = rawLogo.startsWith('http') ? rawLogo : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`
 
@@ -436,12 +436,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         url: siteUrl,
         logo: logoUrl,
         sameAs: [
-          (settings as any)?.youtube_url || 'https://www.youtube.com/@MassFunded',
-          (settings as any)?.instagram_url || 'https://www.instagram.com/massfundedorg/',
-          (settings as any)?.tiktok_url || 'https://www.tiktok.com/@massfunded.org',
-          (settings as any)?.facebook_url || 'https://www.facebook.com/profile.php?id=61591803448831',
-          (settings as any)?.discord_url || 'https://discord.com/channels/1555893909496799312/1555893997103484969',
-        ],
+          (settings as any)?.youtube_url,
+          (settings as any)?.instagram_url || 'https://www.instagram.com/yourswebsitemaker/',
+          (settings as any)?.tiktok_url,
+          (settings as any)?.facebook_url,
+          (settings as any)?.discord_url,
+        ].filter(Boolean),
         contactPoint: {
           '@type': 'ContactPoint',
           email: supportEmail,

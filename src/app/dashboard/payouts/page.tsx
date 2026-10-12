@@ -758,7 +758,7 @@ export function PayoutCertificateModal({
   date?: string
   method?: string
 }) {
-  const shareText = `Just secured ${fmtUSD(amount)} payout with @MassFunded! Seamless ${method} withdrawal. 🚀 Prop firm trading made real. #MassFunded #Payout #Forex`
+  const shareText = `Just secured ${fmtUSD(amount)} payout with @LaunchAPropFirm! Seamless ${method} withdrawal. 🚀 Prop firm trading made real. #LaunchAPropFirm #Payout #Forex`
 
   const handleCopyShare = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -782,7 +782,7 @@ export function PayoutCertificateModal({
     printWindow.document.write(`<!DOCTYPE html>
 <html>
 <head>
-  <title>MassFunded Payout Certificate - ${traderName}</title>
+  <title>Payout Certificate - ${traderName}</title>
   <style>
     @media print {
       body { margin: 0; padding: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -825,7 +825,7 @@ export function PayoutCertificateModal({
 <body>
   <div class="cert-wrapper">
     <div class="cert-header">
-      <span class="brand-name">MassFunded Enterprise</span>
+      <span class="brand-name">LaunchAPropFirm Enterprise</span>
       <span class="badge">&#128737;&#65039; Verified Disbursal</span>
     </div>
     <div class="title">Official Certificate of Payout</div>
@@ -873,7 +873,7 @@ export function PayoutCertificateModal({
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-emerald-400 to-accent" />
           
           <div className="flex justify-between items-center mb-6">
-            <span className="text-2xs font-mono uppercase tracking-widest text-amber-500 font-bold">MassFunded Enterprise</span>
+            <span className="text-2xs font-mono uppercase tracking-widest text-amber-500 font-bold">LaunchAPropFirm Enterprise</span>
             <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-2xs font-semibold text-emerald-400">
               <ShieldCheck className="h-3.5 w-3.5" /> Verified Disbursal
             </div>

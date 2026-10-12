@@ -46,7 +46,7 @@ export function Logo({
   const imageUrl = variant === 'login'
     ? (branding.login_logo_url || branding.logo_url)
     : branding.logo_url
-  const name = branding.brand_name || 'MassFunded'
+  const name = branding.brand_name || 'LaunchAPropFirm'
 
   const isDefaultMassFundedVector =
     !imageUrl ||
@@ -208,7 +208,7 @@ export function SidebarBrand({ collapsed = false, className }: { collapsed?: boo
   useEffect(() => { load() }, [load])
 
   const icon = branding.sidebar_icon_url || branding.logo_url
-  const name = branding.brand_name || 'MassFunded'
+  const name = branding.brand_name || 'LaunchAPropFirm'
 
   return (
     <div className={cn('flex items-center gap-2.5 min-w-0', className)}>

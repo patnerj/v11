@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Cookie Policy | MassFunded' }
+export const metadata: Metadata = { title: 'Cookie Policy | LaunchAPropFirm' }
 
 export default function Page() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="How MassFunded (massfunded.org) uses essential session cookies to provide high-speed, secure trading workspaces."
+      intro="How LaunchAPropFirm uses essential session cookies to provide high-speed, secure trading workspaces."
       updated="September 2026"
       sections={[
         { 
@@ -16,7 +16,7 @@ export default function Page() {
         },
         { 
           title: '2. Zero Third-Party Advertising Trackers',
-          body: <p>MassFunded does not utilize third-party advertising cookies, cross-site profiling trackers, or invasive data brokers. Your trading patterns, balance details, and interaction data are never sold or shared with external ad platforms.</p> 
+          body: <p>LaunchAPropFirm does not utilize third-party advertising cookies, cross-site profiling trackers, or invasive data brokers. Your trading patterns, balance details, and interaction data are never sold or shared with external ad platforms.</p> 
         },
         { 
           title: '3. Security & Anti-Fraud Telemetry',
@@ -31,12 +31,8 @@ export default function Page() {
           body: (
             <p>
               For questions regarding our cookie practices, reach our support desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
-                support@massfunded.org
-              </a>{' '}
-              or contact our Managing Director at{' '}
-              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
-                bahadur@massfunded.org
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
+                support@launchapropfirm.com
               </a>
               .
             </p>

@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Privacy Policy | MassFunded' }
+export const metadata: Metadata = { title: 'Privacy Policy | LaunchAPropFirm' }
 
 export default function Page() {
   return (
     <LegalPage
       title="Privacy Policy"
-      intro="How MassFunded (massfunded.org) collects, utilizes, and protects your personal information and trading data."
+      intro="How LaunchAPropFirm (launchapropfirm.com) collects, utilizes, and protects your personal information and trading data."
       updated="September 2026"
       sections={[
         { 
@@ -20,7 +20,7 @@ export default function Page() {
         },
         { 
           title: '3. Payment & Banking Data Protection',
-          body: <p>Payment transactions are processed through encrypted, PCI-DSS compliant gateways. Credit/debit card numbers are never stored on MassFunded servers. Cryptocurrency payout wallet addresses are stored in encrypted vaults and used strictly for disbursing your profit splits.</p> 
+          body: <p>Payment transactions are processed through encrypted, PCI-DSS compliant gateways. Credit/debit card numbers are never stored on LaunchAPropFirm servers. Cryptocurrency payout wallet addresses are stored in encrypted vaults and used strictly for disbursing your profit splits.</p> 
         },
         { 
           title: '4. Data Retention & Privacy Rights',
@@ -28,19 +28,15 @@ export default function Page() {
         },
         { 
           title: '5. Security Protocols & Encryption',
-          body: <p>MassFunded enforces 256-bit TLS/SSL encryption for data in transit and AES-256 for data at rest, alongside mandatory rate limiting, automated intrusion detection, and isolated database clusters.</p> 
+          body: <p>LaunchAPropFirm enforces 256-bit TLS/SSL encryption for data in transit and AES-256 for data at rest, alongside mandatory rate limiting, automated intrusion detection, and isolated database clusters.</p> 
         },
         { 
           title: '6. Privacy Inquiries & Data Protection Desk',
           body: (
             <p>
               To exercise your data protection rights or report security concerns, contact our operations desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
-                support@massfunded.org
-              </a>
-              . For compliance escalations or institutional data agreements, reach our Managing Director at{' '}
-              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
-                bahadur@massfunded.org
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
+                support@launchapropfirm.com
               </a>
               .
             </p>

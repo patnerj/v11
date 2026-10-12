@@ -66,7 +66,7 @@ export function MarketingHeader() {
     >
       <BannerBar placement="top" />
       <div className="container max-w-7xl mx-auto flex h-14 md:h-16 items-center justify-between px-4">
-        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'MassFunded'} home`}>
+        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'LaunchAPropFirm'} home`}>
           <Logo />
         </Link>
 

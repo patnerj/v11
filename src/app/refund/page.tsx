@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Refund Policy | MassFunded' }
+export const metadata: Metadata = { title: 'Refund Policy | LaunchAPropFirm' }
 
 export default function Page() {
   return (
@@ -35,14 +35,10 @@ export default function Page() {
           body: (
             <p>
               To request an unused account refund or clarify billing inquiries, email our 24/7 Operations Desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
-                support@massfunded.org
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
+                support@launchapropfirm.com
               </a>{' '}
-              with your order reference. For executive escalations, reach our Managing Director directly at{' '}
-              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
-                bahadur@massfunded.org
-              </a>
-              .
+              with your order reference.
             </p>
           ) 
         },

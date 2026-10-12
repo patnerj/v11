@@ -46,8 +46,8 @@ function LoginForm() {
   const verifyTwoFactor = useAuth((s) => s.verifyTwoFactor)
   const user   = useAuth((s) => s.user)
   const ready  = useAuth((s) => s.ready)
-  const brandName = useBranding((s) => s.branding.brand_name) || 'MassFunded'
-  const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'M'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'L'
   const [username, setU] = useState('')
   const [password, setP] = useState('')
   const [remember, setR] = useState(true)

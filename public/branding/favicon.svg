@@ -1,25 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="emeraldGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#059669" />
-      <stop offset="50%" stop-color="#10B981" />
-      <stop offset="100%" stop-color="#00F5A0" />
+    <linearGradient id="leftGradF" x1="8" y1="42" x2="22" y2="6" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#818CF8" />
     </linearGradient>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#070C1B" />
-      <stop offset="100%" stop-color="#0B1528" />
+    <linearGradient id="rightGradF" x1="26" y1="6" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#10B981" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="10" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
-  <rect width="512" height="512" rx="128" fill="none" stroke="url(#emeraldGrad)" stroke-width="8" opacity="0.4" />
-  <g filter="url(#glow)">
-    <!-- Stylized modern MassFunded M with trading peaks -->
-    <path d="M 120 380 L 120 160 L 195 160 L 256 280 L 317 160 L 392 160 L 392 380 L 332 380 L 332 245 L 282 345 L 230 345 L 180 245 L 180 380 Z" fill="url(#emeraldGrad)" />
-    <!-- Dynamic ascending profit accent diamond -->
-    <polygon points="256,110 276,135 256,160 236,135" fill="#00F5A0" />
+
+  <rect width="48" height="48" rx="10" fill="#0B0F19"/>
+  <g transform="translate(2, 2) scale(0.34)">
+    <path d="M60 18L24 104C22.8 106.8 25.4 110 28.5 109.5L58 104V18Z" fill="url(#leftGradF)"/>
+    <path d="M68 18V104L99.5 109.5C102.6 110 105.2 106.8 104 104L68 18Z" fill="url(#rightGradF)"/>
   </g>
 </svg>

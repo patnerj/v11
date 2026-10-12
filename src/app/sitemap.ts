@@ -4,7 +4,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = (
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    'https://massfunded.org'
+    'https://demo.launchapropfirm.com'
   ).replace(/\/$/, '')
 
   const now = new Date()

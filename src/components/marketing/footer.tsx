@@ -61,7 +61,7 @@ const LINKS: { title: string; items: { href: string; label: string }[] }[] = [
   {
     title: 'Platform & Support',
     items: [
-      { href: '/about',       label: 'About MassFunded' },
+      { href: '/about',       label: 'About Us' },
       { href: '/contact',     label: 'Contact Hub' },
       { href: '/support',     label: 'Support Desk 24/7' },
       { href: '/faq',         label: 'Knowledge Base & FAQ' },
@@ -81,13 +81,13 @@ const LINKS: { title: string; items: { href: string; label: string }[] }[] = [
 ]
 
 export function MarketingFooter() {
-  const brand = useBranding((s) => s.branding.brand_name) || "MassFunded"
+  const brand = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
   const footerText = useBranding((s) => s.branding.footer_text)
-  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || 'https://www.youtube.com/@MassFunded'
-  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/massfundedorg/'
-  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || 'https://www.tiktok.com/@massfunded.org'
-  const facebookUrl = useBranding((s) => s.branding.facebook_url) || 'https://www.facebook.com/profile.php?id=61591803448831'
-  const discordUrl = useBranding((s) => s.branding.discord_url) || 'https://discord.com/channels/1555893909496799312/1555893997103484969'
+  const youtubeUrl = useBranding((s) => s.branding.youtube_url) || '#'
+  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/yourswebsitemaker/'
+  const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || '#'
+  const facebookUrl = useBranding((s) => s.branding.facebook_url) || '#'
+  const discordUrl = useBranding((s) => s.branding.discord_url) || '#'
   const developerUrl = useBranding((s) => s.branding.developer_url) || ''
 
   return (
@@ -146,19 +146,13 @@ export function MarketingFooter() {
             {/* Direct Contact Pills */}
             <div className="pt-3 space-y-2 border-t border-border-subtle max-w-sm">
               <div className="text-2xs font-mono uppercase tracking-wider text-text-muted font-bold">
-                Direct Executive & Support Desks:
+                Direct Support Desk:
               </div>
               <div className="flex flex-col gap-1.5 text-xs font-mono">
-                <div className="flex flex-wrap items-center justify-between p-2 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-amber-500/20 gap-1">
-                  <span className="text-amber-500 dark:text-amber-400 font-semibold shrink-0">Executive (Owner):</span>
-                  <a href="mailto:bahadur@massfunded.org" className="text-text hover:text-amber-500 transition-colors truncate">
-                    bahadur@massfunded.org
-                  </a>
-                </div>
                 <div className="flex flex-wrap items-center justify-between p-2 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-emerald-500/20 gap-1">
                   <span className="text-emerald-500 dark:text-emerald-400 font-semibold shrink-0">24/7 Helpdesk:</span>
-                  <a href="mailto:support@massfunded.org" className="text-text hover:text-emerald-500 transition-colors truncate">
-                    support@massfunded.org
+                  <a href="mailto:support@launchapropfirm.com" className="text-text hover:text-emerald-500 transition-colors truncate">
+                    support@launchapropfirm.com
                   </a>
                 </div>
               </div>
@@ -175,7 +169,7 @@ export function MarketingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="YouTube Channel"
-                  title="MassFunded on YouTube"
+                  title={`${brand} on YouTube`}
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-red-500/50 hover:bg-red-500/10 text-text-muted hover:text-red-500 flex items-center gap-1.5 text-xs font-semibold transition-all group"
                 >
                   <YouTubeIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
@@ -186,7 +180,7 @@ export function MarketingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram Profile"
-                  title="MassFunded on Instagram"
+                  title={`${brand} on Instagram`}
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-pink-500/50 hover:bg-pink-500/10 text-text-muted hover:text-pink-500 flex items-center gap-1.5 text-xs font-semibold transition-all group"
                 >
                   <InstagramIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
@@ -197,7 +191,7 @@ export function MarketingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="TikTok Channel"
-                  title="MassFunded on TikTok"
+                  title={`${brand} on TikTok`}
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-cyan-500/50 hover:bg-cyan-500/10 text-text-muted hover:text-cyan-400 flex items-center gap-1.5 text-xs font-semibold transition-all group"
                 >
                   <TikTokIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
@@ -208,7 +202,7 @@ export function MarketingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook Page"
-                  title="MassFunded on Facebook"
+                  title={`${brand} on Facebook`}
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-blue-500/50 hover:bg-blue-500/10 text-text-muted hover:text-blue-500 flex items-center gap-1.5 text-xs font-semibold transition-all group"
                 >
                   <FacebookIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />
@@ -219,7 +213,7 @@ export function MarketingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Discord Server"
-                  title="MassFunded Discord Floor"
+                  title={`${brand} Discord Floor`}
                   className="h-8 px-2.5 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-border hover:border-indigo-500/50 hover:bg-indigo-500/10 text-text-muted hover:text-indigo-400 flex items-center gap-1.5 text-xs font-semibold transition-all group"
                 >
                   <DiscordIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110" />

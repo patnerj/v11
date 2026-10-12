@@ -34,9 +34,17 @@ const connectSrc = [
   "'self'",
   apiHost,
   wsHost,
+  'https://api.launchapropfirm.com',
+  'https://*.launchapropfirm.com',
+  'wss://*.launchapropfirm.com',
+  'https://api.massfunded.org',
+  'https://*.massfunded.org',
+  'wss://*.massfunded.org',
   'https://*.ingest.sentry.io',
   'https://*.ingest.us.sentry.io',
   'https://*.sentry.io',
+  'https:',
+  'wss:',
 ].filter(Boolean).join(' ');
 
 // frame-src: explicitly whitelists TradingView chart widgets & embeds (no broad wildcards)

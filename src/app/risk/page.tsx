@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/marketing/legal-page'
 
-export const metadata: Metadata = { title: 'Risk Disclosure | MassFunded' }
+export const metadata: Metadata = { title: 'Risk Disclosure | LaunchAPropFirm' }
 
 export default function Page() {
   return (
@@ -12,7 +12,7 @@ export default function Page() {
       sections={[
         { 
           title: '1. Simulated Evaluation Environment',
-          body: <p>MassFunded provides evaluation programmes designed to identify consistent, disciplined trading talent. All challenges and funded stage accounts utilize real-time institutional price feeds in a simulated demonstration environment. Challenge fees grant access to digital educational assessment services and do not constitute retail investment deposits.</p> 
+          body: <p>LaunchAPropFirm provides evaluation programmes designed to identify consistent, disciplined trading talent. All challenges and funded stage accounts utilize real-time institutional price feeds in a simulated demonstration environment. Challenge fees grant access to digital educational assessment services and do not constitute retail investment deposits.</p> 
         },
         { 
           title: '2. High Volatility & Risk of Loss',
@@ -35,12 +35,8 @@ export default function Page() {
           body: (
             <p>
               For questions regarding risk parameters, contact our Risk Desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@massfunded.org">
-                support@massfunded.org
-              </a>
-              . For institutional risk policies and executive inquiries, contact our Managing Director at{' '}
-              <a className="text-amber-400 hover:underline font-semibold" href="mailto:bahadur@massfunded.org">
-                bahadur@massfunded.org
+              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
+                support@launchapropfirm.com
               </a>
               .
             </p>

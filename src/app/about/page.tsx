@@ -50,7 +50,7 @@ export default function AboutPage() {
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Institutional Capital</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
-              MassFunded was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
+              LaunchAPropFirm was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
             </p>
           </div>
 
@@ -78,11 +78,11 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* The MassFunded Philosophy vs Traditional Prop Firms */}
+          {/* The LaunchAPropFirm Philosophy vs Traditional Prop Firms */}
           <div className="max-w-5xl mx-auto mb-20">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-text">The MassFunded Advantage</h2>
-              <p className="mt-2 text-text-muted text-sm">Why serious traders migrate from legacy prop firms to MassFunded.</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-text">The LaunchAPropFirm Advantage</h2>
+              <p className="mt-2 text-text-muted text-sm">Why serious traders migrate from legacy prop firms to LaunchAPropFirm.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -118,45 +118,45 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Leadership & Executive Desk */}
+          {/* Leadership & Platform Integrity */}
           <div className="max-w-5xl mx-auto rounded-3xl border border-emerald-500/30 bg-surface/90 dark:bg-surface/50 backdrop-blur-xl p-8 sm:p-12 mb-20 shadow-card">
             <div className="grid md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-8 space-y-4">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <Building2 className="h-3.5 w-3.5" />
-                  <span>Executive Governance &amp; Platform Ownership</span>
+                  <span>Executive Governance &amp; Platform Integrity</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-text">
                   Led by Traders, Built for Performance
                 </h2>
                 <p className="text-sm sm:text-base text-text-muted leading-relaxed">
-                  Under the leadership of <strong className="text-text">Bahadur (Managing Director &amp; Platform Owner)</strong>, MassFunded operates with strict fiduciary standards. We treat our funded traders as long-term portfolio partners rather than statistics.
+                  LaunchAPropFirm operates with strict fiduciary standards and institutional liquidity risk models. We treat our funded traders as long-term portfolio partners rather than statistics.
                 </p>
                 <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-text-muted">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400" /> Transparent Capital Governance
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400" /> Direct Executive Escalations
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400" /> Direct Institutional Support Desk
                   </span>
                 </div>
               </div>
 
               <div className="md:col-span-4 rounded-2xl bg-surface border border-emerald-500/30 dark:border-emerald-500/20 p-6 text-center space-y-4 shadow-card">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/40 mx-auto flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xl font-bold">
-                  B
+                  <ShieldCheck className="h-8 w-8 text-emerald-500" />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-text">Bahadur</div>
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Managing Director &amp; Owner</div>
-                  <div className="text-2xs font-mono text-text-muted mt-1 select-all">bahadur@massfunded.org</div>
+                  <div className="text-base font-bold text-text">LaunchAPropFirm Desk</div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Institutional Trading Operations</div>
+                  <div className="text-2xs font-mono text-text-muted mt-1 select-all">support@launchapropfirm.com</div>
                 </div>
                 <Link
                   href="/contact"
                   className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs"
                 >
                   <Mail className="h-3.5 w-3.5" />
-                  <span>Contact Executive Desk</span>
+                  <span>Contact Operations Desk</span>
                 </Link>
               </div>
             </div>

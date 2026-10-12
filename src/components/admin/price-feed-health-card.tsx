@@ -280,10 +280,10 @@ export function PriceFeedHealthCard({ onConfigureClick }: PriceFeedHealthCardPro
                   Add to server crontab (crontab -e) for 60s background execution:
                 </div>
                 <div className="flex items-center justify-between p-2 bg-bg-subtle rounded border border-border-subtle font-mono text-2xs text-text-muted">
-                  <code className="truncate mr-2">{cronSetup?.crontab_line || '* * * * * curl -s "https://massfunded.org/wp-cron.php?doing_wp_cron=1" > /dev/null 2>&1'}</code>
+                  <code className="truncate mr-2">{cronSetup?.crontab_line || '* * * * * curl -s "https://api.launchapropfirm.com/wp-cron.php?doing_wp_cron=1" > /dev/null 2>&1'}</code>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(cronSetup?.crontab_line || '* * * * * curl -s "https://massfunded.org/wp-cron.php?doing_wp_cron=1" > /dev/null 2>&1', "Crontab curl command")}
+                    onClick={() => copyToClipboard(cronSetup?.crontab_line || '* * * * * curl -s "https://api.launchapropfirm.com/wp-cron.php?doing_wp_cron=1" > /dev/null 2>&1', "Crontab curl command")}
                     className="p-1 hover:bg-surface-muted rounded text-text-faint hover:text-text shrink-0"
                     title="Copy to clipboard"
                   >
