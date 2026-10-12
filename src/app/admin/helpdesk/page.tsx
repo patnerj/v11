@@ -947,7 +947,7 @@ export default function AdminHelpdeskPage() {
                       type="button"
                       onClick={handleAiDraftReply}
                       disabled={isAutoDrafting || !selectedTicketId}
-                      className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950/20 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-lg bg-accent text-accent-contrast hover:bg-accent/90 font-bold text-xs shadow-md shadow-accent/20 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                     >
                       <Sparkles className={`h-3.5 w-3.5 ${isAutoDrafting ? 'animate-spin' : ''}`} />
                       {isAutoDrafting ? 'Drafting with AI...' : '✨ AI Auto-Draft'}
@@ -964,7 +964,7 @@ export default function AdminHelpdeskPage() {
                           setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${cr.text}` : cr.text))
                           toast.info(`Inserted "${cr.title}" template into reply!`)
                         }}
-                        className="px-2.5 py-1 rounded-md bg-surface hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-2xs text-text hover:text-emerald-600 dark:hover:text-emerald-300 transition-all shrink-0 cursor-pointer"
+                        className="px-2.5 py-1 rounded-md bg-surface hover:bg-accent/15 border border-border hover:border-accent/40 text-2xs text-text hover:text-accent transition-all shrink-0 cursor-pointer"
                         title={cr.text}
                       >
                         {cr.title}
@@ -981,7 +981,7 @@ export default function AdminHelpdeskPage() {
                       onClick={() => setIsInternalNote(false)}
                       className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                         !isInternalNote
-                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-xs'
+                          ? 'bg-accent/15 text-accent border border-accent/30 shadow-xs'
                           : 'text-text-muted hover:text-text'
                       }`}
                     >
@@ -1028,7 +1028,7 @@ export default function AdminHelpdeskPage() {
                     className={`w-full text-xs sm:text-sm bg-surface border-border p-3.5 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[95px] ${
                       isInternalNote
                         ? 'border-amber-500/40 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 bg-amber-500/5'
-                        : 'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30'
+                        : 'focus:border-accent focus:ring-1 focus:ring-accent/30'
                     }`}
                   />
 
@@ -1045,9 +1045,9 @@ export default function AdminHelpdeskPage() {
                         size="sm"
                         disabled={sendReplyMutation.isPending || isSendingAndResolving}
                         onClick={handleSendAndResolve}
-                        className="gap-1.5 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 h-9 px-4 text-xs font-semibold"
+                        className="gap-1.5 border-accent/40 text-accent hover:bg-accent/10 hover:border-accent h-9 px-4 text-xs font-semibold"
                       >
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
                         Send & Mark Resolved
                       </Button>
 
@@ -1059,7 +1059,7 @@ export default function AdminHelpdeskPage() {
                         className={`gap-2 h-9 px-5 text-xs font-semibold ${
                           isInternalNote
                             ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20 text-white'
-                            : 'shadow-emerald-500/20'
+                            : 'shadow-accent/20'
                         }`}
                       >
                         <Send className="h-3.5 w-3.5" />
@@ -1075,7 +1075,7 @@ export default function AdminHelpdeskPage() {
           ) : (
             <Card className="bg-surface border-border h-[calc(100vh-210px)] min-h-[580px] flex items-center justify-center text-center p-8 shadow-sm">
               <div className="space-y-3">
-                <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                <div className="h-12 w-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto">
                   <Headphones className="h-6 w-6" />
                 </div>
                 <h3 className="text-base font-bold text-text">Select a Ticket</h3>

@@ -171,7 +171,7 @@
   :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
     .text-emerald-300, .text-emerald-400, .text-emerald-500
   ):not(.dark *):not([data-theme="midnight-obsidian"] *) {
-    color: #047857 !important;
+    color: var(--primary, #047857) !important;
   }
 
   :is(html.light, [data-theme="clean-light"], html:not(.dark)):not(.dark):not([data-theme="midnight-obsidian"]) :is(
@@ -372,10 +372,10 @@
   }
 
   html.dark .text-emerald-300, html[data-theme="midnight-obsidian"] .text-emerald-300, .dark .text-emerald-300, [data-theme="midnight-obsidian"] .text-emerald-300 {
-    color: #6EE7B7 !important;
+    color: var(--primary, #6EE7B7) !important;
   }
   html.dark .text-emerald-400, html[data-theme="midnight-obsidian"] .text-emerald-400, .dark .text-emerald-400, [data-theme="midnight-obsidian"] .text-emerald-400 {
-    color: #34D399 !important;
+    color: var(--primary, #34D399) !important;
   }
 
   html.dark .text-rose-300, html[data-theme="midnight-obsidian"] .text-rose-300, .dark .text-rose-300, [data-theme="midnight-obsidian"] .text-rose-300,

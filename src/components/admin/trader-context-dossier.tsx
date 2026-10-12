@@ -135,12 +135,12 @@ export function TraderContextDossier({
                 {traderEmail || t.user_email || 'No email provided'}
               </p>
             </div>
-            <Badge tone={isKycApproved ? "success" : "warn"} size="sm" className="font-mono text-3xs shrink-0">
+            <Badge tone={isKycApproved ? "success" : "warn"} size="sm" className="text-2xs shrink-0">
               {isKycApproved ? "KYC OK" : "KYC Pending"}
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between text-2xs pt-1 border-t border-border/50 text-text-muted font-mono">
+          <div className="flex items-center justify-between text-2xs pt-1 border-t border-border/50 text-text-muted">
             <span>User ID: #{traderId}</span>
             <span>Ticket: {ticketNumber || 'Active'}</span>
           </div>
@@ -148,20 +148,20 @@ export function TraderContextDossier({
 
         {/* Live Financial State */}
         <div className="space-y-2">
-          <span className="text-3xs uppercase font-bold text-text-muted tracking-wider block">
+          <span className="text-2xs uppercase font-bold text-text-muted tracking-wider block">
             Live Account Metrics
           </span>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="p-2.5 rounded-lg border border-border bg-surface">
-              <span className="text-3xs text-text-muted uppercase block font-medium">Balance</span>
+              <span className="text-2xs text-text-muted uppercase block font-medium">Balance</span>
               <span className="text-sm font-bold terminal-num text-text mt-0.5 block">
                 {fmtUSD(balance)}
               </span>
             </div>
 
             <div className="p-2.5 rounded-lg border border-border bg-surface">
-              <span className="text-3xs text-text-muted uppercase block font-medium">Equity</span>
+              <span className="text-2xs text-text-muted uppercase block font-medium">Equity</span>
               <span className="text-sm font-bold terminal-num text-profit mt-0.5 block">
                 {fmtUSD(equity)}
               </span>
@@ -178,7 +178,7 @@ export function TraderContextDossier({
 
         {/* Challenge Plan & Drawdown Safeguards */}
         <div className="space-y-2">
-          <span className="text-3xs uppercase font-bold text-text-muted tracking-wider block">
+          <span className="text-2xs uppercase font-bold text-text-muted tracking-wider block">
             Challenge Safeguards
           </span>
 
@@ -187,7 +187,7 @@ export function TraderContextDossier({
               <span className="font-semibold text-text">
                 {challenge?.plan_name || 'Evaluation Plan'}
               </span>
-              <Badge tone="accent" size="sm" className="text-3xs uppercase font-semibold">
+              <Badge tone="accent" size="sm" className="text-2xs uppercase font-semibold">
                 Phase {challenge?.phase || 1}
               </Badge>
             </div>
@@ -195,13 +195,13 @@ export function TraderContextDossier({
             <div className="space-y-1 text-2xs pt-1 border-t border-border/50">
               <div className="flex items-center justify-between">
                 <span className="text-text-muted">Daily DD:</span>
-                <span className="font-mono text-text">
+                <span className="terminal-num text-text font-semibold">
                   {toNum(dailyDd).toFixed(2)}% / {dailyDdLimit}% Max
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-text-muted">Max DD:</span>
-                <span className="font-mono text-text">
+                <span className="terminal-num text-text font-semibold">
                   {toNum(maxDd).toFixed(2)}% / {maxDdLimit}% Max
                 </span>
               </div>

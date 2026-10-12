@@ -265,7 +265,7 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
   const safeFg = safeCssValue(rawForeground, '#ffffff');
 
   return `
-    :root, [data-theme], .dark {
+    :root, [data-theme], html.light, html.dark, .light, .dark {
       --accent: ${hsl} !important;
       --accent-hover: ${hsl} !important;
       --accent-hex: ${cleanHex} !important;
@@ -274,19 +274,28 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       --primary: ${cleanHex} !important;
       --primary-rgb: ${r}, ${g}, ${b} !important;
       --primary-hover: ${cleanHex} !important;
+      --ring: ${cleanHex} !important;
       --font-sans: ${safeFont} !important;
       --font-poppins: ${safeFont} !important;
     }
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),
     .text-accent,
     .text-emerald-400,
-    .text-emerald-500 {
+    .text-emerald-500,
+    .text-primary {
       color: ${cleanHex} !important;
     }
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),
     .bg-accent,
     .bg-emerald-500,
-    .bg-emerald-600 {
+    .bg-emerald-600,
+    .bg-primary {
       background-color: ${cleanHex} !important;
     }
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.border-accent, .border-emerald-500, .border-primary),
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.border-accent, .border-emerald-500, .border-primary),
     .border-accent,
     .border-accent\\/40,
     .border-accent\\/30,
@@ -294,7 +303,8 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
     .border-emerald-500,
     .border-emerald-500\\/40,
     .border-emerald-500\\/30,
-    .border-emerald-500\\/20 {
+    .border-emerald-500\\/20,
+    .border-primary {
       border-color: ${cleanHex} !important;
     }
     .bg-accent\\/20,
@@ -314,15 +324,18 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       background-color: rgba(${r}, ${g}, ${b}, 0.05) !important;
     }
     .hover\\:bg-emerald-500\\/20:hover,
-    .hover\\:bg-emerald-500\\/10:hover {
+    .hover\\:bg-emerald-500\\/10:hover,
+    .hover\\:bg-accent\\/20:hover {
       background-color: rgba(${r}, ${g}, ${b}, 0.2) !important;
     }
     .hover\\:border-emerald-500:hover,
-    .hover\\:border-emerald-500\\/50:hover {
+    .hover\\:border-emerald-500\\/50:hover,
+    .hover\\:border-accent:hover {
       border-color: ${cleanHex} !important;
     }
     .hover\\:text-emerald-300:hover,
-    .hover\\:text-emerald-400:hover {
+    .hover\\:text-emerald-400:hover,
+    .hover\\:text-accent:hover {
       color: ${cleanHex} !important;
     }
     .shadow-accent,
@@ -666,11 +679,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   root.style.setProperty('--primary', cleanHex);
                   root.style.setProperty('--primary-rgb', r + ', ' + g + ', ' + b);
                   root.style.setProperty('--primary-hover', cleanHex);
+                  root.style.setProperty('--ring', cleanHex);
 
                   var safeFont = chosenFont;
                   var safeFgVal = (legacyFg && /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(legacyFg)) ? legacyFg : '#ffffff';
 
-                  var cssText = ':root, [data-theme], .dark {' +
+                  var cssText = ':root, [data-theme], html.light, html.dark, .light, .dark {' +
                     '--accent: ' + accentHsl + ' !important;' +
                     '--accent-hover: ' + accentHsl + ' !important;' +
                     '--accent-hex: ' + cleanHex + ' !important;' +
@@ -679,25 +693,33 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     '--primary: ' + cleanHex + ' !important;' +
                     '--primary-rgb: ' + r + ', ' + g + ', ' + b + ' !important;' +
                     '--primary-hover: ' + cleanHex + ' !important;' +
-                    '--font-sans: ' + safeFont + ';' +
-                    '--font-poppins: ' + safeFont + ';' +
+                    '--ring: ' + cleanHex + ' !important;' +
+                    '--font-sans: ' + safeFont + ' !important;' +
+                    '--font-poppins: ' + safeFont + ' !important;' +
                   '}' +
-                  '.text-accent, .text-emerald-400, .text-emerald-500 { color: ' + cleanHex + ' !important; }' +
-                  '.bg-accent, .bg-emerald-500, .bg-emerald-600 { background-color: ' + cleanHex + ' !important; }' +
-                  '.border-accent, .border-accent\\\\/40, .border-accent\\\\/30, .border-accent\\\\/20, .border-emerald-500, .border-emerald-500\\\\/40, .border-emerald-500\\\\/30, .border-emerald-500\\\\/20 { border-color: ' + cleanHex + ' !important; }' +
+                  ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),' +
+                  ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),' +
+                  '.text-accent, .text-emerald-400, .text-emerald-500, .text-primary { color: ' + cleanHex + ' !important; }' +
+                  ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),' +
+                  ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),' +
+                  '.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary { background-color: ' + cleanHex + ' !important; }' +
+                  ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.border-accent, .border-emerald-500, .border-primary),' +
+                  ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.border-accent, .border-emerald-500, .border-primary),' +
+                  '.border-accent, .border-accent\\\\/40, .border-accent\\\\/30, .border-accent\\\\/20, .border-emerald-500, .border-emerald-500\\\\/40, .border-emerald-500\\\\/30, .border-emerald-500\\\\/20, .border-primary { border-color: ' + cleanHex + ' !important; }' +
                   '.bg-accent\\\\/20, .bg-emerald-500\\\\/20 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
                   '.bg-accent\\\\/15, .bg-emerald-500\\\\/15, .bg-emerald-500\\\\/10, .bg-emerald-600\\\\/10 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.15) !important; }' +
                   '.bg-accent\\\\/10 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.1) !important; }' +
                   '.bg-accent\\\\/5 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.05) !important; }' +
-                  '.hover\\\\:bg-emerald-500\\\\/20:hover, .hover\\\\:bg-emerald-500\\\\/10:hover { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
-                  '.hover\\\\:border-emerald-500:hover, .hover\\\\:border-emerald-500\\\\/50:hover { border-color: ' + cleanHex + ' !important; }' +
-                  '.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover { color: ' + cleanHex + ' !important; }' +
+                  '.hover\\\\:bg-emerald-500\\\\/20:hover, .hover\\\\:bg-emerald-500\\\\/10:hover, .hover\\\\:bg-accent\\\\/20:hover { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
+                  '.hover\\\\:border-emerald-500:hover, .hover\\\\:border-emerald-500\\\\/50:hover, .hover\\\\:border-accent:hover { border-color: ' + cleanHex + ' !important; }' +
+                  '.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover, .hover\\\\:text-accent:hover { color: ' + cleanHex + ' !important; }' +
                   '.shadow-accent, .shadow-accent\\\\/20, .shadow-accent\\\\/10, .shadow-emerald-500\\\\/20, .shadow-emerald-500\\\\/10 { box-shadow: 0 0 15px ' + glow + ' !important; }' +
                   '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
                   '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +
                   'body, html { font-family: ' + safeFont + '; }' +
-                  '*:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num), html, body { font-family: ' + safeFont + ' !important; }' +
-                  '.font-mono, [class*="font-mono"], .tabular, .terminal-num, code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
+                  '*:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + safeFont + '; }' +
+                  'code, pre, kbd, .font-mono, [class*="font-mono"] { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }' +
+                  '.tabular, .terminal-num, [class*="tabular-nums"], .tabular-nums { font-family: inherit !important; font-variant-numeric: tabular-nums !important; }' +
                   '.bg-primary { color: ' + safeFgVal + ' !important; }';
 
                   var ssrEl = document.getElementById('fxsim-dynamic-theme-ssr');

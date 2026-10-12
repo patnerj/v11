@@ -266,6 +266,18 @@ export default function ConfigurationHubPage() {
   // Main Tab: 'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling'
   const [activeTab, setActiveTab] = useState<'plans' | 'branding' | 'payments' | 'rules' | 'trading' | 'smtp' | 'sandbox' | 'mt5' | 'integrations' | 'scaling' | 'license' | 'ai_engine'>('plans')
 
+  // Auto-switch to tab requested via URL query params (e.g. ?tab=branding)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      const validTabs = ['plans', 'branding', 'payments', 'rules', 'trading', 'smtp', 'sandbox', 'mt5', 'integrations', 'scaling', 'license', 'ai_engine'] as const
+      if (tabParam && validTabs.includes(tabParam as any)) {
+        setActiveTab(tabParam as any)
+      }
+    }
+  }, [])
+
   // Dirty state tracking to prevent race condition clobbers (ADMINUI-10)
   const [isAiDirty, setIsAiDirty] = useState(false)
   const [isScalingDirty, setIsScalingDirty] = useState(false)

@@ -73,28 +73,28 @@ export function AdminCapitalPulseBar({
             "h-8 w-8 rounded-xl flex items-center justify-center border shrink-0",
             isEmergencyPaused
               ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
-              : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+              : "bg-accent/15 text-accent border-accent/30"
           )}>
             <Activity className="h-4 w-4" />
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xs font-bold uppercase tracking-wider text-text font-mono">
+              <span className="text-2xs font-bold uppercase tracking-wider text-text">
                 Risk &amp; Capital Pulse
               </span>
               <span className="flex h-2 w-2 relative">
                 <span className={cn(
                   "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                  isEmergencyPaused ? "bg-rose-500" : "bg-emerald-400"
+                  isEmergencyPaused ? "bg-rose-500" : "bg-accent"
                 )} />
                 <span className={cn(
                   "relative inline-flex rounded-full h-2 w-2",
-                  isEmergencyPaused ? "bg-rose-500" : "bg-emerald-500"
+                  isEmergencyPaused ? "bg-rose-500" : "bg-accent"
                 )} />
               </span>
             </div>
-            <span className="text-3xs text-text-muted">Firm-wide real-time telemetry</span>
+            <span className="text-2xs text-text-muted">Firm-wide real-time telemetry</span>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ export function AdminCapitalPulseBar({
           
           {/* 1. Funded Capital */}
           <div className="p-2 sm:p-2.5 rounded-xl border border-border/80 bg-surface-muted/40">
-            <span className="text-3xs uppercase tracking-wider text-text-muted font-bold block">
+            <span className="text-2xs uppercase tracking-wider text-text-muted font-bold block">
               Funded Capital Active
             </span>
             <div className="text-sm sm:text-base font-extrabold terminal-num text-text mt-0.5">
@@ -113,7 +113,7 @@ export function AdminCapitalPulseBar({
 
           {/* 2. Live Open Volume */}
           <div className="p-2 sm:p-2.5 rounded-xl border border-border/80 bg-surface-muted/40">
-            <span className="text-3xs uppercase tracking-wider text-text-muted font-bold block">
+            <span className="text-2xs uppercase tracking-wider text-text-muted font-bold block">
               Open Volume
             </span>
             <div className="text-sm sm:text-base font-extrabold terminal-num text-accent mt-0.5">
@@ -123,7 +123,7 @@ export function AdminCapitalPulseBar({
 
           {/* 3. Firm Net Floating PnL */}
           <div className="p-2 sm:p-2.5 rounded-xl border border-border/80 bg-surface-muted/40">
-            <span className="text-3xs uppercase tracking-wider text-text-muted font-bold block">
+            <span className="text-2xs uppercase tracking-wider text-text-muted font-bold block">
               Net Firm Floating PnL
             </span>
             <div className={cn(
@@ -136,7 +136,7 @@ export function AdminCapitalPulseBar({
 
           {/* 4. MT5 Bridge Status */}
           <div className="p-2 sm:p-2.5 rounded-xl border border-border/80 bg-surface-muted/40">
-            <span className="text-3xs uppercase tracking-wider text-text-muted font-bold block">
+            <span className="text-2xs uppercase tracking-wider text-text-muted font-bold block">
               MT5 Bridge Sync
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">

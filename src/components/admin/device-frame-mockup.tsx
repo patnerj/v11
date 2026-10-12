@@ -127,8 +127,9 @@ export function DeviceFrameMockup({
             <div
               className={cn(
                 'h-[420px] flex flex-col transition-colors duration-200 overflow-hidden text-xs',
-                isDark ? 'bg-background text-gray-100' : 'bg-gray-50 text-gray-900'
+                isDark ? 'dark bg-background text-gray-100' : 'light bg-gray-50 text-gray-900'
               )}
+              data-theme={isDark ? 'midnight-obsidian' : 'clean-light'}
             >
               {/* Mock Top Nav */}
               <header
@@ -338,8 +339,9 @@ export function DeviceFrameMockup({
             <div
               className={cn(
                 'h-[540px] pt-8 pb-5 px-3 flex flex-col justify-between transition-colors duration-200 overflow-y-auto text-xs',
-                isDark ? 'bg-background text-gray-100' : 'bg-gray-50 text-gray-900'
+                isDark ? 'dark bg-background text-gray-100' : 'light bg-gray-50 text-gray-900'
               )}
+              data-theme={isDark ? 'midnight-obsidian' : 'clean-light'}
             >
               {/* Mobile Header */}
               <div className={cn('flex items-center justify-between pb-3 border-b', isDark ? 'border-gray-800' : 'border-gray-200')}>

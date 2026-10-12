@@ -194,6 +194,7 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
   root.style.setProperty('--primary', cleanHex)
   root.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`)
   root.style.setProperty('--primary-hover', cleanHex)
+  root.style.setProperty('--ring', cleanHex)
 
   // Inject or update real-time style override tag
   let styleEl = document.getElementById('fxsim-live-theme-accent')
@@ -203,7 +204,7 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
     document.head.appendChild(styleEl)
   }
   styleEl.innerHTML = `
-    :root, [data-theme], .dark {
+    :root, [data-theme], html.light, html.dark, .light, .dark {
       --accent: ${hsl} !important;
       --accent-hover: ${hsl} !important;
       --accent-hex: ${cleanHex} !important;
@@ -212,17 +213,26 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
       --primary: ${cleanHex} !important;
       --primary-rgb: ${r}, ${g}, ${b} !important;
       --primary-hover: ${cleanHex} !important;
+      --ring: ${cleanHex} !important;
     }
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),
     .text-accent,
     .text-emerald-400,
-    .text-emerald-500 {
+    .text-emerald-500,
+    .text-primary {
       color: ${cleanHex} !important;
     }
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),
     .bg-accent,
     .bg-emerald-500,
-    .bg-emerald-600 {
+    .bg-emerald-600,
+    .bg-primary {
       background-color: ${cleanHex} !important;
     }
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.border-accent, .border-emerald-500, .border-primary),
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.border-accent, .border-emerald-500, .border-primary),
     .border-accent,
     .border-accent\\/40,
     .border-accent\\/30,
@@ -230,7 +240,8 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
     .border-emerald-500,
     .border-emerald-500\\/40,
     .border-emerald-500\\/30,
-    .border-emerald-500\\/20 {
+    .border-emerald-500\\/20,
+    .border-primary {
       border-color: ${cleanHex} !important;
     }
     .bg-accent\\/20,
@@ -250,15 +261,18 @@ export function applyThemeAccent(hex: string, opts: { persist?: boolean } = {}) 
       background-color: rgba(${r}, ${g}, ${b}, 0.05) !important;
     }
     .hover\\:bg-emerald-500\\/20:hover,
-    .hover\\:bg-emerald-500\\/10:hover {
+    .hover\\:bg-emerald-500\\/10:hover,
+    .hover\\:bg-accent\\/20:hover {
       background-color: rgba(${r}, ${g}, ${b}, 0.2) !important;
     }
     .hover\\:border-emerald-500:hover,
-    .hover\\:border-emerald-500\\/50:hover {
+    .hover\\:border-emerald-500\\/50:hover,
+    .hover\\:border-accent:hover {
       border-color: ${cleanHex} !important;
     }
     .hover\\:text-emerald-300:hover,
-    .hover\\:text-emerald-400:hover {
+    .hover\\:text-emerald-400:hover,
+    .hover\\:text-accent:hover {
       color: ${cleanHex} !important;
     }
     .shadow-accent,
@@ -357,19 +371,22 @@ export function applyFontFamily(fontId: string, opts: { persist?: boolean } = {}
     document.head.appendChild(fontStyleEl)
   }
   fontStyleEl.innerHTML = `
-    :root, [data-theme], .dark {
+    :root, [data-theme], html.light, html.dark, .light, .dark {
       --font-sans: ${found.cssVar} !important;
       --font-poppins: ${found.cssVar} !important;
     }
     html, body {
       font-family: ${found.cssVar};
     }
-    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not([class*="tabular"]):not(.terminal-num):not([class*="tabular-nums"]):not(.font-preset-preview):not([data-font-preview]) {
+    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not(.font-preset-preview):not([data-font-preview]) {
       font-family: ${found.cssVar};
     }
-    .font-mono, [class*="font-mono"], .tabular, .terminal-num, [class*="tabular-nums"], code, pre, kbd,
-    .font-mono *, [class*="font-mono"] *, .tabular *, .terminal-num *, [class*="tabular-nums"] *, code *, pre *, kbd * {
+    code, pre, kbd, .font-mono, [class*="font-mono"] {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    }
+    .tabular, .terminal-num, [class*="tabular-nums"], .tabular-nums {
+      font-family: inherit !important;
+      font-variant-numeric: tabular-nums !important;
     }
   `
 
