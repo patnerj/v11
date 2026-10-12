@@ -18,6 +18,8 @@ import {
   LineChart, Line, CartesianGrid, Cell, PieChart, Pie, AreaChart, Area
 } from 'recharts'
 import { CalendarHeatmap } from '@/components/dashboard/calendar-heatmap'
+import { EquityDrawdownOverlayChart } from '@/components/dashboard/equity-drawdown-overlay-chart'
+import { MarketSessionMatrix } from '@/components/dashboard/market-session-matrix'
 
 export default function AnalyticsPage() {
   const isDark = useIsDarkTheme()
@@ -163,6 +165,15 @@ export default function AnalyticsPage() {
         <StatCard label="Avg Win" value={fmtUSD(full.avg_win)} tone="success" />
         <StatCard label="Avg Loss" value={fmtUSD(full.avg_loss)} tone="danger" />
       </StatGrid>
+
+      {/* Equity vs Drawdown Floor Curve Overlay in Analytics */}
+      <EquityDrawdownOverlayChart
+        trades={full.trades}
+        startingBalance={toNum(full.challenge?.starting_balance || (full as any)?.starting_balance || 100000)}
+        maxDdPct={toNum(full.max_drawdown_pct || 10)}
+        currentEquity={toNum(full.account?.equity || (full as any)?.equity)}
+        currentBalance={toNum(full.account?.balance || (full as any)?.balance)}
+      />
 
       <Card>
         <CardHeader>
@@ -347,6 +358,9 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Global Market Session Matrix */}
+      <MarketSessionMatrix />
     </div>
   )
 }

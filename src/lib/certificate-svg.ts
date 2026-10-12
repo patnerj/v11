@@ -10,6 +10,8 @@ function esc(s: unknown): string {
     .replace(/'/g, '&apos;')
 }
 
+const POPPINS_FONT = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+
 function money(v: number | string): string {
   const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/[^0-9.-]/g, ''))
   if (!isFinite(n)) return String(v)
@@ -92,6 +94,10 @@ export function buildCertificateSvg(
       <stop offset="50%" stop-color="#D97706"/>
       <stop offset="100%" stop-color="#10B981"/>
     </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&amp;display=swap');
+      text, tspan { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
   </defs>
 
   <!-- Deep Obsidian luxury canvas -->
@@ -112,28 +118,28 @@ export function buildCertificateSvg(
   <path d="M ${W - 68} ${H - 108} L ${W - 108} ${H - 68} M ${W - 68} ${H - 128} L ${W - 128} ${H - 68} M ${W - 68} ${H - 88} L ${W - 88} ${H - 68}" stroke="#F59E0B" stroke-width="2" stroke-opacity="0.4"/>
 
   <!-- Top Badge / Firm Header -->
-  <text x="${W / 2}" y="125" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" letter-spacing="8" fill="#F59E0B">
+  <text x="${W / 2}" y="125" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="18" font-weight="800" letter-spacing="8" fill="#F59E0B">
     ★ ${brand.toUpperCase()} · INSTITUTIONAL RISK MANAGEMENT ★
   </text>
 
   <!-- Title -->
-  <text x="${W / 2}" y="195" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="900" letter-spacing="3" fill="#FFFFFF">
+  <text x="${W / 2}" y="195" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="52" font-weight="900" letter-spacing="3" fill="#FFFFFF">
     CERTIFICATE OF ACHIEVEMENT
   </text>
 
   <!-- Kind Badge Pill -->
   <rect x="${W / 2 - 160}" y="225" width="320" height="38" rx="19" fill="#10B981" fill-opacity="0.15" stroke="#10B981" stroke-width="1.5"/>
-  <text x="${W / 2}" y="250" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#34D399">
+  <text x="${W / 2}" y="250" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="16" font-weight="700" letter-spacing="3" fill="#34D399">
     ✦  ${kind.toUpperCase()} PRO  ✦
   </text>
 
   <!-- Presentation text -->
-  <text x="${W / 2}" y="340" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" letter-spacing="4" fill="#94A3B8">
+  <text x="${W / 2}" y="340" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="20" font-weight="600" letter-spacing="4" fill="#94A3B8">
     THIS IS PROUDLY PRESENTED TO
   </text>
 
   <!-- Trader Name -->
-  <text x="${W / 2}" y="425" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="900" fill="#FFFFFF" letter-spacing="1">
+  <text x="${W / 2}" y="425" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="64" font-weight="900" fill="#FFFFFF" letter-spacing="1">
     ${trader}
   </text>
 
@@ -142,10 +148,10 @@ export function buildCertificateSvg(
   <polygon points="${W / 2},447 ${W / 2 + 8},455 ${W / 2},463 ${W / 2 - 8},455" fill="#F59E0B"/>
 
   <!-- Qualification Body -->
-  <text x="${W / 2}" y="520" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="500" fill="#CBD5E1">
+  <text x="${W / 2}" y="520" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="24" font-weight="500" fill="#CBD5E1">
     for demonstrating disciplined risk execution and passing the evaluation requirements for the
   </text>
-  <text x="${W / 2}" y="565" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="800" fill="#38BDF8">
+  <text x="${W / 2}" y="565" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="30" font-weight="800" fill="#38BDF8">
     ${plan} Account
   </text>
 
@@ -153,18 +159,18 @@ export function buildCertificateSvg(
   <g transform="translate(${W / 2 - 390}, 625)">
     <!-- Account Size -->
     <rect x="0" y="0" width="240" height="90" rx="14" fill="#0E162B" stroke="#243452" stroke-width="1.5"/>
-    <text x="120" y="32" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">ACCOUNT CAPITAL</text>
-    <text x="120" y="68" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#FFFFFF">${sizeStr}</text>
+    <text x="120" y="32" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">ACCOUNT CAPITAL</text>
+    <text x="120" y="68" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="28" font-weight="900" fill="#FFFFFF">${sizeStr}</text>
 
     <!-- Profit Split -->
     <rect x="270" y="0" width="240" height="90" rx="14" fill="#0E162B" stroke="#243452" stroke-width="1.5"/>
-    <text x="390" y="32" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">PROFIT SPLIT</text>
-    <text x="390" y="68" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#34D399">${splitPct}</text>
+    <text x="390" y="32" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">PROFIT SPLIT</text>
+    <text x="390" y="68" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="28" font-weight="900" fill="#34D399">${splitPct}</text>
 
     <!-- Risk Performance -->
     <rect x="540" y="0" width="240" height="90" rx="14" fill="#0E162B" stroke="#243452" stroke-width="1.5"/>
-    <text x="660" y="32" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">DISCIPLINE STATUS</text>
-    <text x="660" y="68" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#F59E0B">TIER-1 PASS</text>
+    <text x="660" y="32" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">DISCIPLINE STATUS</text>
+    <text x="660" y="68" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="28" font-weight="900" fill="#F59E0B">TIER-1 PASS</text>
   </g>
 
   <!-- Official Dual Metallic Seal -->
@@ -173,21 +179,21 @@ export function buildCertificateSvg(
     <circle cx="0" cy="0" r="58" fill="none" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="6,4"/>
     <circle cx="0" cy="0" r="46" fill="#0B132B"/>
     <path d="M -16 6 L -4 18 L 18 -10" stroke="#F59E0B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="0" y="30" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" letter-spacing="1" fill="#FCD34D">OFFICIAL SEAL</text>
+    <text x="0" y="30" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="9" font-weight="800" letter-spacing="1" fill="#FCD34D">OFFICIAL SEAL</text>
   </g>
 
   <!-- Signatures and Auth -->
   <g transform="translate(360, 850)">
     <text x="0" y="0" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#E2E8F0">${brand}</text>
     <line x1="0" y1="14" x2="260" y2="14" stroke="#475569" stroke-width="2"/>
-    <text x="0" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="1" fill="#94A3B8">CHIEF RISK OFFICER</text>
+    <text x="0" y="38" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="1" fill="#94A3B8">CHIEF RISK OFFICER</text>
   </g>
 
   <!-- Center Date & ID -->
   <g transform="translate(${W / 2}, 850)">
-    <text x="0" y="-8" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">ISSUED ON</text>
-    <text x="0" y="20" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#F8FAFC">${issued}</text>
-    <text x="0" y="55" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#94A3B8">
+    <text x="0" y="-8" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">ISSUED ON</text>
+    <text x="0" y="20" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="18" font-weight="800" fill="#F8FAFC">${issued}</text>
+    <text x="0" y="55" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="600" fill="#94A3B8">
       ID: <tspan fill="#38BDF8" font-family="monospace" font-weight="bold">${verificationId}</tspan>
     </text>
   </g>
@@ -203,7 +209,7 @@ export function buildCertificateSvg(
       <text x="80" y="75" text-anchor="middle" font-family="monospace" font-size="12" fill="#38BDF8">QR VERIFY</text>
       `
     }
-    <text x="80" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" letter-spacing="0.5" fill="#94A3B8">
+    <text x="80" y="160" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="10" font-weight="700" letter-spacing="0.5" fill="#94A3B8">
       SCAN TO VERIFY
     </text>
   </g>
@@ -256,6 +262,10 @@ export function buildPayoutCertificateSvg(
       <stop offset="50%" stop-color="#059669"/>
       <stop offset="100%" stop-color="#047857"/>
     </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&amp;display=swap');
+      text, tspan { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
   </defs>
 
   <rect width="${W}" height="${H}" fill="url(#payout-bg)"/>
@@ -266,34 +276,34 @@ export function buildPayoutCertificateSvg(
   <rect x="56" y="56" width="${W - 112}" height="${H - 112}" rx="14" fill="none" stroke="#16382C" stroke-width="2"/>
 
   <!-- Brand header -->
-  <text x="${W / 2}" y="125" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" letter-spacing="8" fill="#34D399">
+  <text x="${W / 2}" y="125" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="18" font-weight="800" letter-spacing="8" fill="#34D399">
     ★ ${brand.toUpperCase()} · VERIFIED PROFIT DISBURSAL ★
   </text>
 
   <!-- Title -->
-  <text x="${W / 2}" y="195" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="900" letter-spacing="3" fill="#FFFFFF">
+  <text x="${W / 2}" y="195" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="52" font-weight="900" letter-spacing="3" fill="#FFFFFF">
     CERTIFICATE OF PAYOUT
   </text>
 
   <rect x="${W / 2 - 160}" y="225" width="320" height="38" rx="19" fill="#10B981" fill-opacity="0.15" stroke="#10B981" stroke-width="1.5"/>
-  <text x="${W / 2}" y="250" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#34D399">
+  <text x="${W / 2}" y="250" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="16" font-weight="700" letter-spacing="3" fill="#34D399">
     ✦  PROFIT SPLIT DISBURSED  ✦
   </text>
 
   <!-- Recipient -->
-  <text x="${W / 2}" y="335" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" letter-spacing="4" fill="#94A3B8">
+  <text x="${W / 2}" y="335" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="20" font-weight="600" letter-spacing="4" fill="#94A3B8">
     DISBURSED TO
   </text>
-  <text x="${W / 2}" y="415" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="60" font-weight="900" fill="#FFFFFF">
+  <text x="${W / 2}" y="415" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="60" font-weight="900" fill="#FFFFFF">
     ${trader}
   </text>
 
   <!-- Big Amount Display -->
   <g transform="translate(${W / 2}, 530)">
-    <text x="0" y="0" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="76" font-weight="900" fill="#34D399" letter-spacing="1">
+    <text x="0" y="0" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="76" font-weight="900" fill="#34D399" letter-spacing="1">
       ${amountStr}
     </text>
-    <text x="0" y="38" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#94A3B8">
+    <text x="0" y="38" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="18" font-weight="600" fill="#94A3B8">
       Processed via <tspan fill="#F8FAFC" font-weight="bold">${method}</tspan> · Profit Split <tspan fill="#34D399" font-weight="bold">${splitPct}</tspan>
     </text>
   </g>
@@ -301,12 +311,12 @@ export function buildPayoutCertificateSvg(
   <!-- Stat summary -->
   <g transform="translate(${W / 2 - 260}, 640)">
     <rect x="0" y="0" width="240" height="80" rx="12" fill="#0A1C16" stroke="#1B4D3E" stroke-width="1.5"/>
-    <text x="120" y="30" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#64748B">PROGRAM</text>
-    <text x="120" y="60" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#FFFFFF">${esc(planName)}</text>
+    <text x="120" y="30" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="12" font-weight="700" fill="#64748B">PROGRAM</text>
+    <text x="120" y="60" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="20" font-weight="800" fill="#FFFFFF">${esc(planName)}</text>
 
     <rect x="280" y="0" width="240" height="80" rx="12" fill="#0A1C16" stroke="#1B4D3E" stroke-width="1.5"/>
-    <text x="400" y="30" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#64748B">DISBURSAL STATUS</text>
-    <text x="400" y="60" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#34D399">VERIFIED PAID</text>
+    <text x="400" y="30" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="12" font-weight="700" fill="#64748B">DISBURSAL STATUS</text>
+    <text x="400" y="60" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="20" font-weight="800" fill="#34D399">VERIFIED PAID</text>
   </g>
 
   <!-- Seal -->
@@ -315,21 +325,21 @@ export function buildPayoutCertificateSvg(
     <circle cx="0" cy="0" r="58" fill="none" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="6,4"/>
     <circle cx="0" cy="0" r="46" fill="#061E14"/>
     <path d="M -16 6 L -4 18 L 18 -10" stroke="#34D399" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="0" y="30" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" letter-spacing="1" fill="#A7F3D0">PAYOUT VERIFIED</text>
+    <text x="0" y="30" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="9" font-weight="800" letter-spacing="1" fill="#A7F3D0">PAYOUT VERIFIED</text>
   </g>
 
   <!-- Signatures -->
   <g transform="translate(360, 850)">
     <text x="0" y="0" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#E2E8F0">${brand}</text>
     <line x1="0" y1="14" x2="260" y2="14" stroke="#1B4D3E" stroke-width="2"/>
-    <text x="0" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="1" fill="#94A3B8">HEAD OF TREASURY</text>
+    <text x="0" y="38" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="1" fill="#94A3B8">HEAD OF TREASURY</text>
   </g>
 
   <!-- Center Date & ID -->
   <g transform="translate(${W / 2}, 850)">
-    <text x="0" y="-8" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">DISBURSED ON</text>
-    <text x="0" y="20" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#F8FAFC">${dateFormatted}</text>
-    <text x="0" y="55" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#94A3B8">
+    <text x="0" y="-8" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="700" letter-spacing="2" fill="#64748B">DISBURSED ON</text>
+    <text x="0" y="20" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="18" font-weight="800" fill="#F8FAFC">${dateFormatted}</text>
+    <text x="0" y="55" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="13" font-weight="600" fill="#94A3B8">
       TX ID: <tspan fill="#34D399" font-family="monospace" font-weight="bold">${verificationId}</tspan>
     </text>
   </g>
@@ -345,7 +355,7 @@ export function buildPayoutCertificateSvg(
       <text x="80" y="75" text-anchor="middle" font-family="monospace" font-size="12" fill="#34D399">QR VERIFY</text>
       `
     }
-    <text x="80" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" letter-spacing="0.5" fill="#94A3B8">
+    <text x="80" y="160" text-anchor="middle" font-family="${POPPINS_FONT}" font-size="10" font-weight="700" letter-spacing="0.5" fill="#94A3B8">
       SCAN TO VERIFY
     </text>
   </g>

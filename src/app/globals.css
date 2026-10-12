@@ -761,8 +761,8 @@ button, input, select, textarea {
 /* Trading Terminal & Financial Numbers Tabular Alignment (Pillar 1 & 2 / Rule 84 / Rule 85.5) */
 .terminal-num,
 .tabular,
-[class*="tabular-nums"] {
-  font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace !important;
+[class*="tabular-nums"],
+.tabular-nums {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }

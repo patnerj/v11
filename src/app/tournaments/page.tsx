@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import type { Competition, PaymentOrder } from '@/types/api'
 import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
+import { TournamentPodium } from '@/components/tournaments/tournament-podium'
 
 export default function PublicTournamentsPage() {
   const [tournaments, setTournaments] = useState<Competition[]>([])
@@ -101,9 +102,11 @@ export default function PublicTournamentsPage() {
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-text group-hover:text-accent transition-colors line-clamp-1">
-          {cleanTitle(t.name || t.title)}
-        </h3>
+        <Link href={`/tournaments/${tid}`} className="block group/link">
+          <h3 className="text-lg font-bold text-text group-hover/link:text-accent group-hover/link:underline transition-colors line-clamp-1">
+            {cleanTitle(t.name || t.title)}
+          </h3>
+        </Link>
         <p className="text-sm text-text-muted mt-1 line-clamp-2">{cleanDescription(t.description)}</p>
       </div>
 
@@ -144,28 +147,36 @@ export default function PublicTournamentsPage() {
             <span>Ends: <strong className="text-text font-semibold">{new Date(String(t.end_date).replace(' ', 'T')).toLocaleDateString()}</strong></span>
           )}
         </div>
-        {pendingOrder ? (
-          <Link 
-            href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}
-            className="inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-sm gap-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/tournaments/${tid}`}
+            className="inline-flex items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors bg-surface border border-border text-text-muted hover:text-text hover:bg-surface-muted"
           >
-            Payment Pending — View <ArrowRight className="h-3.5 w-3.5" />
+            Details
           </Link>
-        ) : (
-          <Link 
-            href={`/dashboard/tournaments`}
-            className={`inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors shadow-sm gap-1.5 ${
-              isActive 
-                ? 'bg-accent text-accent-foreground hover:bg-accent/90 font-semibold' 
-                : t.status === 'upcoming'
-                ? 'bg-info/15 border border-info/30 text-info hover:bg-info/25 font-semibold'
-                : 'bg-surface border border-border text-text hover:bg-surface-muted'
-            }`}
-          >
-            {isActive ? 'Enter Arena' : t.status === 'upcoming' ? 'Pre-Register Now' : 'View Results'}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        )}
+          {pendingOrder ? (
+            <Link 
+              href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}
+              className="inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-sm gap-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+            >
+              Payment Pending <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : (
+            <Link 
+              href={`/dashboard/tournaments`}
+              className={`inline-flex items-center justify-center rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors shadow-sm gap-1.5 ${
+                isActive 
+                  ? 'bg-accent text-accent-foreground hover:bg-accent/90 font-semibold' 
+                  : t.status === 'upcoming'
+                  ? 'bg-info/15 border border-info/30 text-info hover:bg-info/25 font-semibold'
+                  : 'bg-surface border border-border text-text hover:bg-surface-muted'
+              }`}
+            >
+              {isActive ? 'Enter Arena' : t.status === 'upcoming' ? 'Pre-Register Now' : 'View Results'}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+        </div>
       </div>
     </div>
     )
@@ -177,8 +188,8 @@ export default function PublicTournamentsPage() {
           header or footer — a visitor landing here had no navigation back to
           the rest of the site except the browser back button. */}
       <MarketingHeader />
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-surface border-b border-border py-16 sm:py-24">
+      {/* Hero Section with Rule 86.2 Top Clearance for Fixed Navigation */}
+      <div className="relative overflow-hidden bg-surface border-b border-border pt-28 sm:pt-36 pb-16 sm:pb-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] bg-accent/20 rounded-full blur-[100px] opacity-60 mix-blend-screen animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] bg-info/20 rounded-full blur-[80px] opacity-60 mix-blend-screen" />
@@ -197,6 +208,14 @@ export default function PublicTournamentsPage() {
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        {/* 3D Metallic Tournament Podium Showcase */}
+        <TournamentPodium
+          title="Global Arena Champions & Prize Pool Podium"
+          firstPrize="$10,000 + $100K Live Account"
+          secondPrize="$5,000 + $50K Live Account"
+          thirdPrize="$2,500 + $25K Live Account"
+        />
+
         {loading ? (
           <div className="text-center py-20 text-text-muted animate-pulse">Loading arenas...</div>
         ) : tournaments.length === 0 ? (

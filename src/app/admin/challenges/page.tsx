@@ -16,6 +16,7 @@ import {
   Search, RefreshCw, CheckCircle2, DollarSign, Activity, Lock
 } from 'lucide-react'
 import Link from 'next/link'
+import { ChallengeDrawer } from '@/components/admin/challenge-drawer'
 
 const STANDARD_PLANS = [
   { id: 1, name: '$5K Starter Challenge', size: 5000, fee: 49, targetP1: 8, targetP2: 5, maxDd: 10, dailyDd: 5, split: 80 },
@@ -30,6 +31,8 @@ export default function AdminChallengesPage() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'plans' | 'rules'>('accounts')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [selectedChallenge, setSelectedChallenge] = useState<any | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const { data: challengesResp, isPending, refetch, isFetching } = useQuery({
     queryKey: ['adminChallengesList', statusFilter],
@@ -190,9 +193,16 @@ export default function AdminChallengesPage() {
                         const floor = toNum((c as any).trailing_dd_floor)
                         const size = toNum(c.account_size)
                         return (
-                          <tr key={c.id} className="hover:bg-surface-muted/40 transition-colors">
-                            <td className="px-4 py-3 font-mono font-medium text-text">#{c.id}</td>
-                            <td className="px-4 py-3">
+                          <tr 
+                            key={c.id} 
+                            onClick={() => {
+                              setSelectedChallenge(c)
+                              setIsDrawerOpen(true)
+                            }}
+                            className="hover:bg-surface-muted/60 transition-colors cursor-pointer group"
+                          >
+                            <td className="px-4 py-3 terminal-num font-medium text-text">#{c.id}</td>
+                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                               <Link 
                                 href={`/admin/traders/${c.user_id}`}
                                 className="font-medium text-accent hover:underline flex items-center gap-1"
@@ -204,21 +214,34 @@ export default function AdminChallengesPage() {
                             <td className="px-4 py-3 text-text font-medium">{c.plan_name ?? 'Standard Evaluation'}</td>
                             <td className="px-4 py-3 text-right tabular text-text-muted">{fmtUSD(size, { decimals: 0 })}</td>
                             <td className="px-4 py-3 text-right tabular font-semibold text-text">{fmtUSD(c.current_balance)}</td>
-                            <td className="px-4 py-3 text-right tabular text-danger font-mono">
+                            <td className="px-4 py-3 text-right tabular text-danger font-semibold">
                               {floor > 0 ? fmtUSD(floor) : '—'}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <span className="px-2 py-0.5 rounded bg-surface-muted border border-border text-2xs font-mono">
+                              <span className="px-2 py-0.5 rounded bg-surface-muted border border-border text-2xs font-semibold">
                                 Phase {c.phase ?? 1}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-center">
                               <Badge tone={statusTone(c.status)} size="sm">{statusLabel(c.status)}</Badge>
                             </td>
-                            <td className="px-4 py-3 text-right">
-                              <Button asChild variant="ghost" size="sm" className="h-7 text-2xs">
-                                <Link href={`/admin/traders/${c.user_id}`}>View Profile</Link>
-                              </Button>
+                            <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-7 text-2xs border-accent/40 text-accent hover:bg-accent/10"
+                                  onClick={() => {
+                                    setSelectedChallenge(c)
+                                    setIsDrawerOpen(true)
+                                  }}
+                                >
+                                  Inspect
+                                </Button>
+                                <Button asChild variant="ghost" size="sm" className="h-7 text-2xs">
+                                  <Link href={`/admin/traders/${c.user_id}`}>Profile</Link>
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         )
@@ -367,6 +390,17 @@ export default function AdminChallengesPage() {
           </Card>
         </div>
       )}
+
+      {/* Slide-Over Quick Inspection Drawer (Phase 2) */}
+      <ChallengeDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false)
+          setSelectedChallenge(null)
+        }}
+        challenge={selectedChallenge}
+        onRefresh={() => refetch()}
+      />
     </div>
   )
 }

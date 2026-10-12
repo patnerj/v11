@@ -46,7 +46,9 @@ export default function CheckoutPage() {
 function CheckoutInner() {
   const router = useRouter()
   const params = useSearchParams()
-  const planId = Number(params.get('plan') ?? 0)
+  const rawPlanParam = params.get('plan') ?? params.get('plan_id') ?? ''
+  const parsedId = Number(rawPlanParam)
+  const planId = !isNaN(parsedId) && parsedId > 0 ? parsedId : 0
   const tournamentId = Number(params.get('tournament') ?? 0)
   
   const { user, ready } = useAuth()
@@ -123,7 +125,7 @@ function CheckoutInner() {
       return
     }
 
-    if (!planId) {
+    if (!planId && !rawPlanParam) {
       setPlanErr("No plan selected.")
       setFetchingPlan(false)
       return
@@ -132,7 +134,18 @@ function CheckoutInner() {
     api.challengePlans().then((res) => {
       setFetchingPlan(false)
       if (res.ok) {
-        const p = res.data.find((pl) => Number(pl.id) === planId)
+        let p = planId ? res.data.find((pl) => Number(pl.id) === planId) : null
+        if (!p && rawPlanParam) {
+          const cleanParam = rawPlanParam.replace(/[$,]/g, '').trim().toLowerCase()
+          const numSize = parseFloat(cleanParam)
+          p = res.data.find((pl) => {
+            if (String(pl.id) === rawPlanParam) return true
+            if (pl.slug && pl.slug.toLowerCase() === rawPlanParam.toLowerCase()) return true
+            if (numSize > 0 && Number(pl.account_size) === numSize) return true
+            if (pl.name && pl.name.toLowerCase().includes(rawPlanParam.toLowerCase())) return true
+            return false
+          }) || res.data[0] || null
+        }
         if (p) {
           setPlan(p)
           try {

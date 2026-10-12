@@ -26,6 +26,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { PageHeader } from '@/components/ui/page-header'
 import { StatCard, StatGrid } from '@/components/ui/stat-card'
 import { ChallengeProgressCard } from '@/components/dashboard/challenge-progress-card'
+import { RiskSentinelCards } from '@/components/dashboard/risk-sentinel-cards'
+import { MilestoneCelebrationRoadmap } from '@/components/dashboard/milestone-celebration-roadmap'
 import { EquityChart } from '@/components/dashboard/equity-chart'
 import { KycStatusCard } from '@/components/dashboard/kyc-status-card'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
@@ -33,9 +35,13 @@ import { PerformanceInsights } from '@/components/dashboard/performance-insights
 import { TraderBadges } from '@/components/dashboard/trader-badges'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
+import { MultiAccountPortfolioStrip } from '@/components/dashboard/multi-account-portfolio-strip'
+import { PayoutReadinessCard } from '@/components/dashboard/payout-readiness-card'
+import { AccountRulesDrawer } from '@/components/dashboard/account-rules-drawer'
+import { RiskCushionSpeedometer } from '@/components/dashboard/risk-cushion-speedometer'
 import {
   TrendingUp, Wallet, Target, ShieldAlert,
-  ArrowRight, Trophy, Calendar, MailWarning, LayoutDashboard,
+  ArrowRight, Trophy, Calendar, MailWarning, LayoutDashboard, FileText,
 } from 'lucide-react'
 
 function isAccount(x: Account | NoChallengeResp): x is Account {
@@ -79,6 +85,15 @@ export default function DashboardOverview() {
   const { data: metrics, isPending: isPendingMetrics } = useChallengeMetricsQuery(active?.id)
   const { data: recent = null, isPending: isPendingHistory } = useHistoryQuery()
   const { data: kyc, isPending: isPendingKyc } = useKycQuery()
+  
+  const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false)
+  const { data: payoutsData } = useQuery({
+    queryKey: ['dashboard-payouts-readiness'],
+    queryFn: () => api.payouts().then((r) => (r.ok ? r.data : null)),
+    staleTime: 60_000,
+  })
+
+  const fundedChallenges = (challenges || []).filter((c) => c.status === 'funded')
   
   const ready = !isPendingAccount || !!account
 
@@ -150,12 +165,47 @@ export default function DashboardOverview() {
         badge={{ label: 'Pro Trader', tone: 'accent' }}
         actions={
           !noChallenge ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/challenges">View all challenges <ArrowRight className="h-3.5 w-3.5 ml-1" /></Link>
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {active && (
+                <Button
+                  type="button"
+                  onClick={() => setRulesDrawerOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-accent/40 text-accent hover:bg-accent/10"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  📜 My Account Rules
+                </Button>
+              )}
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/challenges">View all challenges <ArrowRight className="h-3.5 w-3.5 ml-1" /></Link>
+              </Button>
+            </div>
           ) : undefined
         }
       />
+
+      {/* Multi-Account Tabbed Carousel / Portfolio Strip (Rule: 1-click active account switcher) */}
+      {challenges && challenges.length > 1 && (
+        <SectionErrorBoundary sectionName="Portfolio Strip">
+          <MultiAccountPortfolioStrip
+            challenges={challenges}
+            tournaments={myTournaments}
+            activeAccountId={active?.fxsim_account_id || active?.id}
+          />
+        </SectionErrorBoundary>
+      )}
+
+      {/* Next Payout Readiness Countdown Timer Card (For funded accounts) */}
+      {fundedChallenges.length > 0 && (
+        <SectionErrorBoundary sectionName="Payout Readiness">
+          <PayoutReadinessCard
+            fundedChallenges={fundedChallenges}
+            nextPayoutAt={payoutsData?.next_payout_at}
+          />
+        </SectionErrorBoundary>
+      )}
 
       {/* Multi-account switcher — challenges + tournaments (stats follow selection) */}
       {switchEntries.length > 1 && (
@@ -288,6 +338,23 @@ export default function DashboardOverview() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Challenge Milestone Journey Roadmap (Phase 3 Gamification) */}
+          {active && (
+            <SectionErrorBoundary sectionName="Milestone Roadmap">
+              <MilestoneCelebrationRoadmap challenge={active} metrics={metrics} />
+            </SectionErrorBoundary>
+          )}
+
+          {/* Dynamic Risk Sentinel Gauge Cards & Speedometer (P0 Trading Ergonomics) */}
+          {metrics && (
+            <SectionErrorBoundary sectionName="Risk Sentinel">
+              <div className="space-y-4">
+                <RiskSentinelCards metrics={metrics} account={acc} />
+                <RiskCushionSpeedometer metrics={metrics} account={acc} />
+              </div>
+            </SectionErrorBoundary>
           )}
 
           {/* Top Stat Cards using StatCard & StatGrid */}
@@ -430,6 +497,14 @@ export default function DashboardOverview() {
 
       {/* Phase Pass Celebration Confetti & Congratulations Modal */}
       <PhasePassCelebrationModal challenge={active} metrics={metrics} />
+
+      {/* 1-Click "View Challenge Rules" Slide-Over Drawer */}
+      <AccountRulesDrawer
+        isOpen={rulesDrawerOpen}
+        onClose={() => setRulesDrawerOpen(false)}
+        challenge={active}
+        metrics={metrics}
+      />
     </div>
   )
 }
