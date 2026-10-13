@@ -9,17 +9,17 @@ export const badgeVariants = cva(
   {
     variants: {
       tone: {
-        default:     'bg-primary/10 text-primary border-primary/20',
-        secondary:   'bg-surface-muted text-muted-foreground border-border',
-        success:     'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
-        warning:     'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-        warn:        'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-        danger:      'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
-        destructive: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
-        info:        'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
-        accent:      'bg-accent/15 text-accent border-accent/30',
-        neutral:     'bg-surface-muted text-muted-foreground border-border',
-        outline:     'bg-transparent text-foreground border-border',
+        default:     'bg-primary/10 text-emerald-800 dark:text-primary border-primary/20',
+        secondary:   'bg-surface-muted text-slate-700 dark:text-muted-foreground border-border',
+        success:     'bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20',
+        warning:     'bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20',
+        warn:        'bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20',
+        danger:      'bg-rose-500/10 text-rose-800 dark:text-rose-400 border-rose-500/20',
+        destructive: 'bg-rose-500/10 text-rose-800 dark:text-rose-400 border-rose-500/20',
+        info:        'bg-blue-500/10 text-blue-800 dark:text-blue-400 border-blue-500/20',
+        accent:      'bg-accent/15 text-teal-900 dark:text-accent border-accent/30',
+        neutral:     'bg-surface-muted text-slate-700 dark:text-muted-foreground border-border',
+        outline:     'bg-transparent text-slate-900 dark:text-foreground border-border',
       },
       size: {
         xs: 'text-3xs px-1.5 py-0.5',

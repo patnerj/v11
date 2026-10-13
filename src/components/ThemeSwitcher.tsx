@@ -1,91 +1,81 @@
 'use client'
 
 import * as React from 'react'
-import { Moon, Sun, Monitor, Code, Palette, Zap } from 'lucide-react'
-import { useThemeContext, Theme } from '@/context/ThemeContext'
+import { Moon, Sun } from 'lucide-react'
+import { useThemeContext } from '@/context/ThemeContext'
 import { useTheme } from 'next-themes'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
-
-const themes: { value: Theme; label: string; icon: React.FC<any> }[] = [
-  { value: 'midnight-obsidian', label: 'Midnight Obsidian', icon: Moon },
-  { value: 'vscode-dark', label: 'VS Code Dark', icon: Code },
-  { value: 'cyberpunk-neon', label: 'Cyberpunk Neon', icon: Zap },
-  { value: 'tokyo-night', label: 'Tokyo Night', icon: Monitor },
-  { value: 'clean-light', label: 'Clean Light', icon: Sun },
-]
 
 export function ThemeSwitcher({ className }: { className?: string } = {}) {
   const { theme, setTheme } = useThemeContext()
   const { setTheme: setNextTheme } = useTheme()
-  const [open, setOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
 
-  const handleSelectTheme = (val: Theme) => {
-    setTheme(val)
-    try {
-      setNextTheme(val === 'clean-light' ? 'light' : 'dark')
-    } catch (e) {}
-    setOpen(false)
+  const isDark = theme !== 'clean-light'
+
+  const toggleTheme = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    const nextDark = !isDark
+    if (nextDark) {
+      setTheme('midnight-obsidian')
+      try {
+        setNextTheme('dark')
+      } catch (err) {}
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('light')
+        document.documentElement.classList.add('dark')
+        document.documentElement.setAttribute('data-theme', 'midnight-obsidian')
+      }
+      try {
+        localStorage.setItem('theme', 'dark')
+        localStorage.setItem('user-theme', 'midnight-obsidian')
+      } catch (err) {}
+    } else {
+      setTheme('clean-light')
+      try {
+        setNextTheme('light')
+      } catch (err) {}
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.add('light')
+        document.documentElement.setAttribute('data-theme', 'clean-light')
+      }
+      try {
+        localStorage.setItem('theme', 'light')
+        localStorage.setItem('user-theme', 'clean-light')
+      } catch (err) {}
+    }
   }
 
-  const ActiveIcon = themes.find(t => t.value === theme)?.icon || Palette
+  if (!mounted) {
+    return (
+      <div className={cn("w-9 h-9 rounded-xl border border-border bg-surface flex items-center justify-center text-text-muted", className)}>
+        <Sun className="w-4 h-4 text-text-muted" />
+      </div>
+    )
+  }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <button 
-          type="button"
-          className={cn(
-            "w-9 h-9 rounded-xl border border-border bg-surface hover:bg-surface-muted text-text-muted hover:text-text flex items-center justify-center transition-all shadow-sm focus-ring select-none",
-            className
-          )}
-          title="Select Theme"
-          aria-label="Toggle theme"
-        >
-          {mounted ? <ActiveIcon className="w-4 h-4 text-accent" /> : <Palette className="w-4 h-4 text-text-muted" />}
-          <span className="sr-only">Toggle theme</span>
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-surface border border-border shadow-2xl p-1.5 z-50">
-        <DropdownMenuLabel className="text-text-subtle font-semibold text-2xs tracking-wider uppercase px-2.5 py-1.5">
-          Interface Theme
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-border" />
-        {themes.map((t) => {
-          const isSelected = theme === t.value
-          return (
-            <DropdownMenuItem 
-              key={t.value} 
-              onSelect={() => handleSelectTheme(t.value)}
-              onClick={() => handleSelectTheme(t.value)}
-              className={cn(
-                "flex items-center justify-between cursor-pointer py-2 px-2.5 rounded-lg text-xs font-medium transition-colors",
-                isSelected 
-                  ? "bg-accent/15 text-emerald-700 dark:text-emerald-400 font-semibold" 
-                  : "text-text-muted hover:text-text hover:bg-surface-muted"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <t.icon className={cn("w-4 h-4", isSelected ? "text-emerald-700 dark:text-emerald-400" : "text-text-subtle")} />
-                <span>{t.label}</span>
-              </div>
-              {isSelected && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-              )}
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <button 
+      type="button"
+      onClick={toggleTheme}
+      className={cn(
+        "w-9 h-9 rounded-xl border border-border bg-surface hover:bg-surface-muted text-text-muted hover:text-text flex items-center justify-center transition-all shadow-sm focus-ring select-none cursor-pointer group",
+        className
+      )}
+      title={isDark ? "Switch to Day Mode (Clean Light)" : "Switch to Night Mode (Midnight Obsidian)"}
+      aria-label="Toggle Day / Night Mode"
+    >
+      {isDark ? (
+        <Sun className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform" />
+      ) : (
+        <Moon className="w-4 h-4 text-accent group-hover:-rotate-12 transition-transform" />
+      )}
+      <span className="sr-only">{isDark ? 'Day Mode' : 'Night Mode'}</span>
+    </button>
   )
 }

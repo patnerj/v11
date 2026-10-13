@@ -255,6 +255,20 @@ function resolveFontFamily(rawFont?: string): string {
   return safeCssValue(rawFont, FONT_MAP['poppins'])
 }
 
+function getContrastDarkHex(cleanHex: string): string {
+  const { r, g, b } = hexToRgb(cleanHex);
+  const lum = 0.2126 * Math.pow(r / 255, 2.2) + 0.7152 * Math.pow(g / 255, 2.2) + 0.0722 * Math.pow(b / 255, 2.2);
+  if (lum > 0.15) {
+    const scale = Math.min(1, Math.sqrt(0.14 / Math.max(0.01, lum)));
+    const darkR = Math.min(255, Math.max(0, Math.round(r * scale)));
+    const darkG = Math.min(255, Math.max(0, Math.round(g * scale)));
+    const darkB = Math.min(255, Math.max(0, Math.round(b * scale)));
+    const toHex = (n: number) => n.toString(16).padStart(2, '0');
+    return `#${toHex(darkR)}${toHex(darkG)}${toHex(darkB)}`;
+  }
+  return cleanHex;
+}
+
 function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: string): string {
   const cleanHex = colorHex.startsWith('#') ? colorHex : `#${colorHex}`;
   if (!/^#[0-9a-fA-F]{3,8}$/.test(cleanHex)) return '';
@@ -263,6 +277,7 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
   const glow = `rgba(${r}, ${g}, ${b}, 0.25)`;
   const safeFont = resolveFontFamily(rawFont);
   const safeFg = safeCssValue(rawForeground, '#ffffff');
+  const darkHex = getContrastDarkHex(cleanHex);
 
   return `
     :root, [data-theme], html.light, html.dark, .light, .dark {
@@ -278,12 +293,14 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       --font-sans: ${safeFont} !important;
       --font-poppins: ${safeFont} !important;
     }
-    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary) {
+      color: ${darkHex} !important;
+    }
     :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),
-    .text-accent,
-    .text-emerald-400,
-    .text-emerald-500,
-    .text-primary {
+    html.dark .text-accent,
+    html.dark .text-emerald-400,
+    html.dark .text-emerald-500,
+    html.dark .text-primary {
       color: ${cleanHex} !important;
     }
     :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),
@@ -333,9 +350,10 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
     .hover\\:border-accent:hover {
       border-color: ${cleanHex} !important;
     }
-    .hover\\:text-emerald-300:hover,
-    .hover\\:text-emerald-400:hover,
-    .hover\\:text-accent:hover {
+    :is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.hover\\:text-emerald-300:hover, .hover\\:text-emerald-400:hover, .hover\\:text-accent:hover) {
+      color: ${darkHex} !important;
+    }
+    :is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.hover\\:text-emerald-300:hover, .hover\\:text-emerald-400:hover, .hover\\:text-accent:hover) {
       color: ${cleanHex} !important;
     }
     .shadow-accent,
@@ -684,6 +702,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   var safeFont = chosenFont;
                   var safeFgVal = (legacyFg && /^[a-zA-Z0-9 _#%(),.'"-]{1,120}$/.test(legacyFg)) ? legacyFg : '#ffffff';
 
+                  var darkHex = cleanHex;
+                  var lum = 0.2126 * Math.pow(rNorm, 2.2) + 0.7152 * Math.pow(gNorm, 2.2) + 0.0722 * Math.pow(bNorm, 2.2);
+                  if (lum > 0.15) {
+                    var scale = Math.min(1, Math.sqrt(0.14 / Math.max(0.01, lum)));
+                    var darkR = Math.min(255, Math.max(0, Math.round(r * scale)));
+                    var darkG = Math.min(255, Math.max(0, Math.round(g * scale)));
+                    var darkB = Math.min(255, Math.max(0, Math.round(b * scale)));
+                    var toHex = function(n){ return (n < 16 ? '0' : '') + n.toString(16); };
+                    darkHex = '#' + toHex(darkR) + toHex(darkG) + toHex(darkB);
+                  }
+
                   var cssText = ':root, [data-theme], html.light, html.dark, .light, .dark {' +
                     '--accent: ' + accentHsl + ' !important;' +
                     '--accent-hover: ' + accentHsl + ' !important;' +
@@ -697,9 +726,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     '--font-sans: ' + safeFont + ' !important;' +
                     '--font-poppins: ' + safeFont + ' !important;' +
                   '}' +
-                  ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),' +
-                  ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary),' +
-                  '.text-accent, .text-emerald-400, .text-emerald-500, .text-primary { color: ' + cleanHex + ' !important; }' +
+                  ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary) { color: ' + darkHex + ' !important; }' +
+                  ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.text-accent, .text-emerald-400, .text-emerald-500, .text-primary) { color: ' + cleanHex + ' !important; }' +
                   ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),' +
                   ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary),' +
                   '.bg-accent, .bg-emerald-500, .bg-emerald-600, .bg-primary { background-color: ' + cleanHex + ' !important; }' +
@@ -712,7 +740,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   '.bg-accent\\\\/5 { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.05) !important; }' +
                   '.hover\\\\:bg-emerald-500\\\\/20:hover, .hover\\\\:bg-emerald-500\\\\/10:hover, .hover\\\\:bg-accent\\\\/20:hover { background-color: rgba(' + r + ', ' + g + ', ' + b + ', 0.2) !important; }' +
                   '.hover\\\\:border-emerald-500:hover, .hover\\\\:border-emerald-500\\\\/50:hover, .hover\\\\:border-accent:hover { border-color: ' + cleanHex + ' !important; }' +
-                  '.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover, .hover\\\\:text-accent:hover { color: ' + cleanHex + ' !important; }' +
+                  ':is(html.light, [data-theme="clean-light"], [data-theme="light"], html:not(.dark)) :is(.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover, .hover\\\\:text-accent:hover) { color: ' + darkHex + ' !important; }' +
+                  ':is(html.dark, [data-theme="midnight-obsidian"], .dark) :is(.hover\\\\:text-emerald-300:hover, .hover\\\\:text-emerald-400:hover, .hover\\\\:text-accent:hover) { color: ' + cleanHex + ' !important; }' +
                   '.shadow-accent, .shadow-accent\\\\/20, .shadow-accent\\\\/10, .shadow-emerald-500\\\\/20, .shadow-emerald-500\\\\/10 { box-shadow: 0 0 15px ' + glow + ' !important; }' +
                   '.focus-within\\\\:border-\\\\[\\\\#10B981\\\\]:focus-within { border-color: ' + cleanHex + ' !important; }' +
                   '.focus-within\\\\:ring-\\\\[\\\\#10B981\\\\]:focus-within { --tw-ring-color: ' + cleanHex + ' !important; }' +

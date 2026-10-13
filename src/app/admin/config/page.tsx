@@ -1897,7 +1897,7 @@ export default function ConfigurationHubPage() {
                           onChange={() => toggleSelectPlan(planId)}
                           className="h-4 w-4 rounded border-gray-700 bg-background text-emerald-500 focus:ring-emerald-500/40 cursor-pointer"
                         />
-                        <CardTitle className="text-base text-gray-100 font-bold font-sans">
+                        <CardTitle className="text-base text-slate-900 dark:text-gray-100 font-bold font-sans">
                           {plan.name}
                         </CardTitle>
                       </div>
@@ -1906,7 +1906,7 @@ export default function ConfigurationHubPage() {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <CardDescription className="text-xs text-emerald-400 font-mono">
+                      <CardDescription className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold font-mono">
                         Capital: ${(accountSize).toLocaleString()}
                       </CardDescription>
                       <Badge tone="neutral" size="sm" className="text-2xs uppercase font-mono">
@@ -1917,26 +1917,26 @@ export default function ConfigurationHubPage() {
 
                   <CardContent className="p-5 space-y-3 text-xs font-mono">
                     <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
-                      <span className="text-gray-400">Phase 1 Target:</span>
-                      <span className="text-emerald-400 font-bold">+{p1Target}% (${((accountSize * p1Target) / 100).toLocaleString()})</span>
+                      <span className="text-slate-600 dark:text-gray-400">Phase 1 Target:</span>
+                      <span className="text-emerald-700 dark:text-emerald-400 font-bold">+{p1Target}% (${((accountSize * p1Target) / 100).toLocaleString()})</span>
                     </div>
 
                     {!plan.is_instant_funding && (plan.phases ?? 2) >= 2 && (
                       <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
-                        <span className="text-gray-400">Phase 2 Target:</span>
-                        <span className="text-emerald-400 font-bold">+{p2Target}% (${((accountSize * p2Target) / 100).toLocaleString()})</span>
+                        <span className="text-slate-600 dark:text-gray-400">Phase 2 Target:</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold">+{p2Target}% (${((accountSize * p2Target) / 100).toLocaleString()})</span>
                       </div>
                     )}
 
                     <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
-                      <span className="text-gray-400">Daily Loss Limit:</span>
-                      <span className="text-amber-400 font-bold">{dailyDD}% (${((accountSize * dailyDD) / 100).toLocaleString()})</span>
+                      <span className="text-slate-600 dark:text-gray-400">Daily Loss Limit:</span>
+                      <span className="text-amber-700 dark:text-amber-400 font-bold">{dailyDD}% (${((accountSize * dailyDD) / 100).toLocaleString()})</span>
                     </div>
 
                     <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
-                      <span className="text-gray-400">Max Total Drawdown:</span>
+                      <span className="text-slate-600 dark:text-gray-400">Max Total Drawdown:</span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-red-400 font-bold">{maxDD}% (${((accountSize * maxDD) / 100).toLocaleString()})</span>
+                        <span className="text-rose-700 dark:text-red-400 font-bold">{maxDD}% (${((accountSize * maxDD) / 100).toLocaleString()})</span>
                         <Badge tone="neutral" size="sm" className="text-2xs lowercase font-sans">
                           {ddType.includes('trailing') ? 'trailing' : 'static'}
                         </Badge>
@@ -1944,8 +1944,8 @@ export default function ConfigurationHubPage() {
                     </div>
 
                     <div className="flex justify-between items-center py-1 border-b border-surface-muted/40">
-                      <span className="text-gray-400">Profit Split / Leverage:</span>
-                      <span className="text-gray-200 font-bold">{split}% • 1:{plan.max_leverage || 100}</span>
+                      <span className="text-slate-600 dark:text-gray-400">Profit Split / Leverage:</span>
+                      <span className="text-slate-900 dark:text-gray-200 font-bold">{split}% • 1:{plan.max_leverage || 100}</span>
                     </div>
 
                     {/* Feature Badges Matrix */}
@@ -1980,9 +1980,9 @@ export default function ConfigurationHubPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => openEditPlan(plan)}
-                        className="h-8 text-xs border-surface-muted hover:border-emerald-500 text-gray-300 hover:text-white gap-1.5"
+                        className="h-8 text-xs border-border hover:border-emerald-500 text-slate-700 dark:text-gray-300 hover:text-slate-950 dark:hover:text-white gap-1.5"
                       >
-                        <Edit2 className="h-3 w-3 text-emerald-400" />
+                        <Edit2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                         Configure
                       </Button>
                       <Button
@@ -4664,8 +4664,8 @@ export default function ConfigurationHubPage() {
                   className={cn(
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'basics'
-                      ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
+                      ? "bg-accent/15 border-accent shadow-sm"
+                      : "bg-surface border-border hover:border-accent/40 hover:bg-surface-muted"
                   )}
                 >
                   <div className={cn(
@@ -4676,12 +4676,12 @@ export default function ConfigurationHubPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className={cn("text-xs font-bold block", modalSection === 'basics' ? "text-white" : "text-gray-300 group-hover:text-white")}>
+                      <span className={cn("text-xs font-bold block", modalSection === 'basics' ? "text-slate-950 dark:text-white font-extrabold" : "text-slate-700 dark:text-gray-300 group-hover:text-slate-950 dark:group-hover:text-white")}>
                         1. Sizing & Structure
                       </span>
                       {planForm.name && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 ml-1" />}
                     </div>
-                    <span className="text-xs text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-slate-500 dark:text-gray-400 block truncate mt-0.5">
                       Capital, Price & Model
                     </span>
                   </div>
@@ -4694,8 +4694,8 @@ export default function ConfigurationHubPage() {
                   className={cn(
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'drawdown'
-                      ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
+                      ? "bg-accent/15 border-accent shadow-sm"
+                      : "bg-surface border-border hover:border-accent/40 hover:bg-surface-muted"
                   )}
                 >
                   <div className={cn(
@@ -4706,12 +4706,12 @@ export default function ConfigurationHubPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className={cn("text-xs font-bold block", modalSection === 'drawdown' ? "text-white" : "text-gray-300 group-hover:text-white")}>
+                      <span className={cn("text-xs font-bold block", modalSection === 'drawdown' ? "text-slate-950 dark:text-white font-extrabold" : "text-slate-700 dark:text-gray-300 group-hover:text-slate-950 dark:group-hover:text-white")}>
                         2. Objectives & DD
                       </span>
                       {planForm.drawdown_type && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 ml-1" />}
                     </div>
-                    <span className="text-xs text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-slate-500 dark:text-gray-400 block truncate mt-0.5">
                       Targets, DD Floor & Split
                     </span>
                   </div>
@@ -4724,8 +4724,8 @@ export default function ConfigurationHubPage() {
                   className={cn(
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'rules'
-                      ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
+                      ? "bg-accent/15 border-accent shadow-sm"
+                      : "bg-surface border-border hover:border-accent/40 hover:bg-surface-muted"
                   )}
                 >
                   <div className={cn(
@@ -4736,11 +4736,11 @@ export default function ConfigurationHubPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className={cn("text-xs font-bold block", modalSection === 'rules' ? "text-white" : "text-gray-300 group-hover:text-white")}>
+                      <span className={cn("text-xs font-bold block", modalSection === 'rules' ? "text-slate-950 dark:text-white font-extrabold" : "text-slate-700 dark:text-gray-300 group-hover:text-slate-950 dark:group-hover:text-white")}>
                         3. Execution Rules
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-slate-500 dark:text-gray-400 block truncate mt-0.5">
                       EA, News & Shields
                     </span>
                   </div>
@@ -4753,8 +4753,8 @@ export default function ConfigurationHubPage() {
                   className={cn(
                     "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative cursor-pointer",
                     modalSection === 'scaling'
-                      ? "bg-accent/10 border-accent/40 shadow-sm shadow-accent/10"
-                      : "bg-background border-surface-muted hover:border-gray-700 hover:bg-slate-900/60"
+                      ? "bg-accent/15 border-accent shadow-sm"
+                      : "bg-surface border-border hover:border-accent/40 hover:bg-surface-muted"
                   )}
                 >
                   <div className={cn(
@@ -4765,11 +4765,11 @@ export default function ConfigurationHubPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className={cn("text-xs font-bold block", modalSection === 'scaling' ? "text-white" : "text-gray-300 group-hover:text-white")}>
+                      <span className={cn("text-xs font-bold block", modalSection === 'scaling' ? "text-slate-950 dark:text-white font-extrabold" : "text-slate-700 dark:text-gray-300 group-hover:text-slate-950 dark:group-hover:text-white")}>
                         4. Scaling & Perks
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500 block truncate mt-0.5">
+                    <span className="text-xs text-slate-500 dark:text-gray-400 block truncate mt-0.5">
                       Growth & Refund Fee
                     </span>
                   </div>
@@ -4777,29 +4777,29 @@ export default function ConfigurationHubPage() {
               </div>
 
               {/* Live Summary Card */}
-              <div className="p-3.5 rounded-xl bg-background border border-surface-muted space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-surface-muted border border-border space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xs font-mono uppercase text-gray-400 tracking-wider">Plan Summary</span>
+                  <span className="text-2xs font-mono uppercase text-slate-500 dark:text-gray-400 tracking-wider">Plan Summary</span>
                   <Badge tone={planForm.is_active ? 'accent' : 'neutral'} size="sm" className="text-2xs px-1.5 py-0">
                     {planForm.is_active ? 'Active' : 'Draft'}
                   </Badge>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-white truncate">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {planForm.name || 'Untitled Challenge Plan'}
                   </p>
                   <div className="flex items-baseline justify-between text-xs font-mono">
-                    <span className="text-gray-400">Capital:</span>
-                    <span className="text-accent font-bold">${Number(planForm.account_size || 50000).toLocaleString()}</span>
+                    <span className="text-slate-500 dark:text-gray-400">Capital:</span>
+                    <span className="text-emerald-800 dark:text-emerald-400 font-bold">${Number(planForm.account_size || 50000).toLocaleString()}</span>
                   </div>
                   <div className="flex items-baseline justify-between text-xs font-mono">
-                    <span className="text-gray-400">Price:</span>
-                    <span className="text-white font-bold">${Number(planForm.price || 299).toLocaleString()}</span>
+                    <span className="text-slate-500 dark:text-gray-400">Price:</span>
+                    <span className="text-slate-900 dark:text-white font-bold">${Number(planForm.price || 299).toLocaleString()}</span>
                   </div>
                   <div className="flex items-baseline justify-between text-xs font-mono">
-                    <span className="text-gray-400">Model:</span>
-                    <span className="text-gray-300 capitalize">{planForm.plan_type || '2-step'} (1:{planForm.max_leverage || 100})</span>
+                    <span className="text-slate-500 dark:text-gray-400">Model:</span>
+                    <span className="text-slate-800 dark:text-gray-300 capitalize">{planForm.plan_type || '2-step'} (1:{planForm.max_leverage || 100})</span>
                   </div>
                 </div>
               </div>
@@ -4813,18 +4813,18 @@ export default function ConfigurationHubPage() {
               {modalSection === 'basics' && (
                 <div className="space-y-4">
                   <div className="border-b border-surface-muted/70 pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Layers className="h-4 w-4 text-accent" />
                       Plan Sizing, Pricing & Account Structure
                     </h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
                       Define the headline title, starting capital balance, client checkout price, and evaluation format.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="plan-name" className="text-xs font-semibold text-gray-300">Plan Title</Label>
+                      <Label htmlFor="plan-name" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Plan Title</Label>
                       <Input
                         id="plan-name"
                         placeholder="e.g. $100K Elite Challenge"
@@ -4837,29 +4837,29 @@ export default function ConfigurationHubPage() {
                             slug: slugify(newName),
                           }))
                         }}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="plan-slug" className="text-xs font-semibold text-gray-300">URL Slug</Label>
-                        <span className="text-2xs text-gray-500 font-mono">Auto-generated</span>
+                        <Label htmlFor="plan-slug" className="text-xs font-semibold text-slate-800 dark:text-gray-300">URL Slug</Label>
+                        <span className="text-2xs text-slate-500 dark:text-gray-400 font-mono">Auto-generated</span>
                       </div>
                       <Input
                         id="plan-slug"
                         placeholder="e.g. 100k-elite-challenge"
                         value={planForm.slug || ''}
                         onChange={(e) => setPlanForm({ ...planForm, slug: slugify(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-gray-300 focus:outline-none focus:border-accent font-mono transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-gray-300 focus:outline-none focus:border-accent font-mono transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="plan-type" className="text-xs font-semibold text-gray-300">Evaluation Structure</Label>
+                      <Label htmlFor="plan-type" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Evaluation Structure</Label>
                       <select
                         id="plan-type"
                         value={planForm.plan_type || '2-step'}
                         onChange={(e) => setPlanForm({ ...planForm, plan_type: e.target.value as any })}
-                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value="1-step">1-Step Fast Track (1 Phase)</option>
                         <option value="2-step">2-Step Standard (2 Phases)</option>
@@ -4868,32 +4868,32 @@ export default function ConfigurationHubPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="account-size" className="text-xs font-semibold text-gray-300">Starting Capital ($)</Label>
+                      <Label htmlFor="account-size" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Starting Capital ($)</Label>
                       <Input
                         id="account-size"
                         type="number"
                         value={planForm.account_size || 50000}
                         onChange={(e) => setPlanForm({ ...planForm, account_size: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="plan-price" className="text-xs font-semibold text-gray-300">Checkout Price ($)</Label>
+                      <Label htmlFor="plan-price" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Checkout Price ($)</Label>
                       <Input
                         id="plan-price"
                         type="number"
                         value={planForm.price || 299}
                         onChange={(e) => setPlanForm({ ...planForm, price: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="max-leverage" className="text-xs font-semibold text-gray-300">Max Account Leverage</Label>
+                      <Label htmlFor="max-leverage" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Max Account Leverage</Label>
                       <select
                         id="max-leverage"
                         value={planForm.max_leverage || 100}
                         onChange={(e) => setPlanForm({ ...planForm, max_leverage: Number(e.target.value) })}
-                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value={30}>1:30 (Conservative FX)</option>
                         <option value={50}>1:50 (Moderate FX)</option>
@@ -4903,8 +4903,8 @@ export default function ConfigurationHubPage() {
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="plan-sort-order" className="text-xs font-semibold text-gray-300">Display Sort Order</Label>
-                        <span className="text-2xs text-gray-500 font-mono">0 = First</span>
+                        <Label htmlFor="plan-sort-order" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Display Sort Order</Label>
+                        <span className="text-2xs text-slate-500 dark:text-gray-400 font-mono">0 = First</span>
                       </div>
                       <Input
                         id="plan-sort-order"
@@ -4912,23 +4912,23 @@ export default function ConfigurationHubPage() {
                         placeholder="0"
                         value={planForm.sort_order ?? 0}
                         onChange={(e) => setPlanForm({ ...planForm, sort_order: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-mono transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-mono transition-all"
                       />
                     </div>
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Active / Live Product</p>
-                        <p className="text-2xs text-gray-500">Visible in client checkout catalog</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Active / Live Product</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Visible in client checkout catalog</p>
                       </div>
                       <Switch
                         checked={!!planForm.is_active}
                         onCheckedChange={(checked) => setPlanForm({ ...planForm, is_active: checked ? 1 : 0 })}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Refundable Fee</p>
-                        <p className="text-2xs text-gray-500">100% refund on 1st payout</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Refundable Fee</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">100% refund on 1st payout</p>
                       </div>
                       <Switch
                         checked={!!planForm.refundable_fee}
@@ -4943,11 +4943,11 @@ export default function ConfigurationHubPage() {
               {modalSection === 'drawdown' && (
                 <div className="space-y-5">
                   <div className="border-b border-surface-muted/70 pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Scale className="h-4 w-4 text-accent" />
                       Profit Objectives & Risk Drawdown Engine
                     </h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
                       Configure evaluation milestone targets, drawdown formulas, margin call floors, and funded profit splits.
                     </p>
                   </div>
@@ -4955,12 +4955,12 @@ export default function ConfigurationHubPage() {
                   {/* Drawdown Engine Model & Funded Profit Split */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="dd-type" className="text-xs font-semibold text-gray-300">Drawdown Engine Model</Label>
+                      <Label htmlFor="dd-type" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Drawdown Engine Model</Label>
                       <select
                         id="dd-type"
                         value={planForm.drawdown_type || 'static'}
                         onChange={(e) => setPlanForm({ ...planForm, drawdown_type: e.target.value as any })}
-                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value="static">Static Balance (Fixed Starting Floor)</option>
                         <option value="trailing">Trailing Equity (High Water Mark)</option>
@@ -4972,21 +4972,21 @@ export default function ConfigurationHubPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="funded-split" className="text-xs font-semibold text-gray-300">Funded Profit Split (%)</Label>
+                      <Label htmlFor="funded-split" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Funded Profit Split (%)</Label>
                       <Input
                         id="funded-split"
                         type="number"
                         value={planForm.funded_profit_split ?? 80}
                         onChange={(e) => setPlanForm({ ...planForm, funded_profit_split: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                   </div>
 
                   {/* Phase 1 Evaluation Box */}
-                  <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                  <div className="p-3.5 rounded-xl border border-border bg-surface space-y-3">
                     <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
-                      <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 font-mono flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Phase 1 Evaluation Parameters
                       </span>
                       <Badge tone="accent" size="sm">Step 1</Badge>
@@ -4994,53 +4994,53 @@ export default function ConfigurationHubPage() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-target" className="text-xs text-gray-300">Target (%)</Label>
+                        <Label htmlFor="p1-target" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Target (%)</Label>
                         <Input
                           id="p1-target"
                           type="number"
                           value={planForm.p1_profit_target ?? 8}
                           onChange={(e) => setPlanForm({ ...planForm, p1_profit_target: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-daily-dd" className="text-xs text-gray-300">Daily DD (%)</Label>
+                        <Label htmlFor="p1-daily-dd" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Daily DD (%)</Label>
                         <Input
                           id="p1-daily-dd"
                           type="number"
                           value={planForm.p1_daily_dd ?? 5}
                           onChange={(e) => setPlanForm({ ...planForm, p1_daily_dd: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-max-dd" className="text-xs text-gray-300">Max DD (%)</Label>
+                        <Label htmlFor="p1-max-dd" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Max DD (%)</Label>
                         <Input
                           id="p1-max-dd"
                           type="number"
                           value={planForm.p1_max_dd ?? 10}
                           onChange={(e) => setPlanForm({ ...planForm, p1_max_dd: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-min-days" className="text-xs text-gray-300">Min Days</Label>
+                        <Label htmlFor="p1-min-days" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Min Days</Label>
                         <Input
                           id="p1-min-days"
                           type="number"
                           value={planForm.p1_min_days ?? 5}
                           onChange={(e) => setPlanForm({ ...planForm, p1_min_days: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="p1-max-days" className="text-xs text-gray-300">Max Days (0=∞)</Label>
+                        <Label htmlFor="p1-max-days" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Max Days (0=∞)</Label>
                         <Input
                           id="p1-max-days"
                           type="number"
                           value={planForm.p1_max_days ?? 30}
                           onChange={(e) => setPlanForm({ ...planForm, p1_max_days: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
                     </div>
@@ -5048,9 +5048,9 @@ export default function ConfigurationHubPage() {
 
                   {/* Phase 2 Verification Box (when applicable) */}
                   {planForm.plan_type !== '1-step' && planForm.plan_type !== 'instant' && (
-                    <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                    <div className="p-3.5 rounded-xl border border-border bg-surface space-y-3">
                       <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
-                        <span className="text-xs font-bold text-blue-400 font-mono flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-blue-700 dark:text-blue-400 font-mono flex items-center gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Phase 2 Verification Parameters
                         </span>
                         <Badge tone="accent" size="sm">Step 2</Badge>
@@ -5058,53 +5058,53 @@ export default function ConfigurationHubPage() {
 
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-target" className="text-xs text-gray-300">Target (%)</Label>
+                          <Label htmlFor="p2-target" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Target (%)</Label>
                           <Input
                             id="p2-target"
                             type="number"
                             value={planForm.p2_profit_target ?? 5}
                             onChange={(e) => setPlanForm({ ...planForm, p2_profit_target: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-daily-dd" className="text-xs text-gray-300">Daily DD (%)</Label>
+                          <Label htmlFor="p2-daily-dd" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Daily DD (%)</Label>
                           <Input
                             id="p2-daily-dd"
                             type="number"
                             value={planForm.p2_daily_dd ?? 5}
                             onChange={(e) => setPlanForm({ ...planForm, p2_daily_dd: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-max-dd" className="text-xs text-gray-300">Max DD (%)</Label>
+                          <Label htmlFor="p2-max-dd" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Max DD (%)</Label>
                           <Input
                             id="p2-max-dd"
                             type="number"
                             value={planForm.p2_max_dd ?? 10}
                             onChange={(e) => setPlanForm({ ...planForm, p2_max_dd: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-min-days" className="text-xs text-gray-300">Min Days</Label>
+                          <Label htmlFor="p2-min-days" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Min Days</Label>
                           <Input
                             id="p2-min-days"
                             type="number"
                             value={planForm.p2_min_days ?? 5}
                             onChange={(e) => setPlanForm({ ...planForm, p2_min_days: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p2-max-days" className="text-xs text-gray-300">Max Days (0=∞)</Label>
+                          <Label htmlFor="p2-max-days" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Max Days (0=∞)</Label>
                           <Input
                             id="p2-max-days"
                             type="number"
                             value={planForm.p2_max_days ?? 60}
                             onChange={(e) => setPlanForm({ ...planForm, p2_max_days: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                       </div>
@@ -5113,9 +5113,9 @@ export default function ConfigurationHubPage() {
 
                   {/* Phase 3 Verification Box (when 3-step) */}
                   {planForm.plan_type === '3-step' && (
-                    <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                    <div className="p-3.5 rounded-xl border border-border bg-surface space-y-3">
                       <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
-                        <span className="text-xs font-bold text-amber-400 font-mono flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400 font-mono flex items-center gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Phase 3 Verification Parameters
                         </span>
                         <Badge tone="accent" size="sm">Step 3</Badge>
@@ -5123,53 +5123,53 @@ export default function ConfigurationHubPage() {
 
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-target" className="text-xs text-gray-300">Target (%)</Label>
+                          <Label htmlFor="p3-target" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Target (%)</Label>
                           <Input
                             id="p3-target"
                             type="number"
                             value={planForm.p3_profit_target ?? 3}
                             onChange={(e) => setPlanForm({ ...planForm, p3_profit_target: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-daily-dd" className="text-xs text-gray-300">Daily DD (%)</Label>
+                          <Label htmlFor="p3-daily-dd" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Daily DD (%)</Label>
                           <Input
                             id="p3-daily-dd"
                             type="number"
                             value={planForm.p3_daily_dd ?? 5}
                             onChange={(e) => setPlanForm({ ...planForm, p3_daily_dd: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-max-dd" className="text-xs text-gray-300">Max DD (%)</Label>
+                          <Label htmlFor="p3-max-dd" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Max DD (%)</Label>
                           <Input
                             id="p3-max-dd"
                             type="number"
                             value={planForm.p3_max_dd ?? 10}
                             onChange={(e) => setPlanForm({ ...planForm, p3_max_dd: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-min-days" className="text-xs text-gray-300">Min Days</Label>
+                          <Label htmlFor="p3-min-days" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Min Days</Label>
                           <Input
                             id="p3-min-days"
                             type="number"
                             value={planForm.p3_min_days ?? 5}
                             onChange={(e) => setPlanForm({ ...planForm, p3_min_days: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="p3-max-days" className="text-xs text-gray-300">Max Days (0=∞)</Label>
+                          <Label htmlFor="p3-max-days" className="text-xs text-slate-700 dark:text-gray-300 font-medium">Max Days (0=∞)</Label>
                           <Input
                             id="p3-max-days"
                             type="number"
                             value={planForm.p3_max_days ?? 60}
                             onChange={(e) => setPlanForm({ ...planForm, p3_max_days: Number(e.target.value) })}
-                            className="h-9 text-xs"
+                            className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                           />
                         </div>
                       </div>
@@ -5177,9 +5177,9 @@ export default function ConfigurationHubPage() {
                   )}
 
                   {/* Institutional Risk Guardrails & Safety Parameters */}
-                  <div className="p-3.5 rounded-xl border border-surface-muted bg-background space-y-3">
+                  <div className="p-3.5 rounded-xl border border-border bg-surface space-y-3">
                     <div className="flex items-center justify-between border-b border-surface-muted/60 pb-2">
-                      <span className="text-xs font-bold text-gray-200 font-mono flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-900 dark:text-gray-200 font-mono flex items-center gap-1.5">
                         <ShieldAlert className="h-3.5 w-3.5 text-accent" /> Institutional Risk Floors & Limits
                       </span>
                       <Badge tone="neutral" size="sm">Safety Limits</Badge>
@@ -5187,57 +5187,57 @@ export default function ConfigurationHubPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="margin-call" className="text-xs text-gray-300">Margin Call Level (%)</Label>
+                        <Label htmlFor="margin-call" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Margin Call Level (%)</Label>
                         <Input
                           id="margin-call"
                           type="number"
                           value={planForm.margin_call_level ?? 100}
                           onChange={(e) => setPlanForm({ ...planForm, margin_call_level: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="max-lot" className="text-xs text-gray-300">Max Lot Size Limit (Lots)</Label>
+                        <Label htmlFor="max-lot" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Max Lot Size Limit (Lots)</Label>
                         <Input
                           id="max-lot"
                           type="number"
                           value={planForm.max_lot_size ?? 50}
                           onChange={(e) => setPlanForm({ ...planForm, max_lot_size: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="funded-max-dd" className="text-xs text-gray-300">Funded Max Total DD (%)</Label>
+                        <Label htmlFor="funded-max-dd" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Funded Max Total DD (%)</Label>
                         <Input
                           id="funded-max-dd"
                           type="number"
                           value={planForm.funded_max_dd ?? 10}
                           onChange={(e) => setPlanForm({ ...planForm, funded_max_dd: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="eval-split" className="text-xs text-gray-300">Eval Profit Share (%)</Label>
+                        <Label htmlFor="eval-split" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Eval Profit Share (%)</Label>
                         <Input
                           id="eval-split"
                           type="number"
                           value={planForm.evaluation_profit_share ?? 0}
                           onChange={(e) => setPlanForm({ ...planForm, evaluation_profit_share: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="reset-discount" className="text-xs text-gray-300">Breach Reset Discount (%)</Label>
+                        <Label htmlFor="reset-discount" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Breach Reset Discount (%)</Label>
                         <Input
                           id="reset-discount"
                           type="number"
                           value={planForm.reset_discount_pct ?? 10}
                           onChange={(e) => setPlanForm({ ...planForm, reset_discount_pct: Number(e.target.value) })}
-                          className="h-9 text-xs"
+                          className="h-9 text-xs bg-surface border-border text-slate-900 dark:text-white"
                         />
                       </div>
                     </div>
@@ -5249,20 +5249,20 @@ export default function ConfigurationHubPage() {
               {modalSection === 'rules' && (
                 <div className="space-y-4">
                   <div className="border-b border-surface-muted/70 pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <ShieldCheck className="h-4 w-4 text-accent" />
                       Trade Execution, Bots & Risk Rules
                     </h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
                       Enforce anti-scalping duration shields, weekend holding, news trading, and EA bot policies.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">EA & Bot Trading</p>
-                        <p className="text-2xs text-gray-500">Allow automated Expert Advisors</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">EA & Bot Trading</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Allow automated Expert Advisors</p>
                       </div>
                       <Switch
                         checked={!!planForm.ea_allowed}
@@ -5270,10 +5270,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Copy Trading</p>
-                        <p className="text-2xs text-gray-500">Allow account-to-account trade copiers</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Copy Trading</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Allow account-to-account trade copiers</p>
                       </div>
                       <Switch
                         checked={!!planForm.copy_trading_allowed}
@@ -5281,10 +5281,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Hedging Allowed</p>
-                        <p className="text-2xs text-gray-500">Allow simultaneous buy/sell on same pair</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Hedging Allowed</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Allow simultaneous buy/sell on same pair</p>
                       </div>
                       <Switch
                         checked={!!planForm.hedging_allowed}
@@ -5292,10 +5292,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Martingale / Grid</p>
-                        <p className="text-2xs text-gray-500">Allow doubling lot sizes on losing streaks</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Martingale / Grid</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Allow doubling lot sizes on losing streaks</p>
                       </div>
                       <Switch
                         checked={!!planForm.martingale_allowed}
@@ -5303,10 +5303,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Weekend Holding</p>
-                        <p className="text-2xs text-gray-500">Allow open swing trades over weekend</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Weekend Holding</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Allow open swing trades over weekend</p>
                       </div>
                       <Switch
                         checked={!!planForm.weekend_holding}
@@ -5314,10 +5314,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">News Event Trading</p>
-                        <p className="text-2xs text-gray-500">Allow orders during high impact news</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">News Event Trading</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Allow orders during high impact news</p>
                       </div>
                       <Switch
                         checked={!!planForm.news_trading}
@@ -5325,10 +5325,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Stop Loss Required</p>
-                        <p className="text-2xs text-gray-500">Enforce mandatory SL on position open</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Stop Loss Required</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Enforce mandatory SL on position open</p>
                       </div>
                       <Switch
                         checked={!!planForm.stop_loss_required}
@@ -5336,10 +5336,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Consistency Rule</p>
-                        <p className="text-2xs text-gray-500">Cap max profit from any single trading day</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Consistency Rule</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Cap max profit from any single trading day</p>
                       </div>
                       <Switch
                         checked={!!planForm.consistency_rule}
@@ -5347,10 +5347,10 @@ export default function ConfigurationHubPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Strict IP Matching</p>
-                        <p className="text-2xs text-gray-500">Enforce verified IP addresses on trades</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Strict IP Matching</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Enforce verified IP addresses on trades</p>
                       </div>
                       <Switch
                         checked={!!planForm.ip_matching_required}
@@ -5362,17 +5362,17 @@ export default function ConfigurationHubPage() {
                   {!!planForm.consistency_rule && (
                     <div className="p-3.5 bg-amber-500/10 rounded-xl border border-amber-500/30 space-y-3">
                       <div className="space-y-1.5">
-                        <Label htmlFor="consistency-pct" className="text-xs font-semibold text-amber-400">Consistency Profit Cap (%)</Label>
+                        <Label htmlFor="consistency-pct" className="text-xs font-semibold text-amber-700 dark:text-amber-400">Consistency Profit Cap (%)</Label>
                         <Input
                           id="consistency-pct"
                           type="number"
                           value={planForm.consistency_pct || 50}
                           onChange={(e) => setPlanForm({ ...planForm, consistency_pct: Number(e.target.value) })}
-                          className="h-10 px-3 rounded-xl bg-background border-amber-500/30 text-amber-200 text-xs focus:outline-none focus:border-amber-400 font-sans transition-all"
+                          className="h-10 px-3 rounded-xl bg-surface border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs focus:outline-none focus:border-amber-400 font-sans transition-all"
                         />
                       </div>
-                      <div className="flex items-start gap-2.5 pt-1 text-xs text-amber-200/90 leading-relaxed border-t border-amber-500/20">
-                        <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2.5 pt-1 text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed border-t border-amber-500/20">
+                        <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <p>
                           <strong>Capital Protection Rule:</strong> Prevents one-off 'gambling' trades. No single trading day can exceed {planForm.consistency_pct || 50}% of the total required profit target. Traders must demonstrate consistent edge over multiple sessions.
                         </p>
@@ -5382,24 +5382,24 @@ export default function ConfigurationHubPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-muted/60">
                     <div className="space-y-1.5">
-                      <Label htmlFor="min-trade-sec" className="text-xs font-semibold text-gray-300">Anti-Scalping Min Duration (Seconds)</Label>
+                      <Label htmlFor="min-trade-sec" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Anti-Scalping Min Duration (Seconds)</Label>
                       <Input
                         id="min-trade-sec"
                         type="number"
                         value={planForm.min_trade_seconds || 30}
                         onChange={(e) => setPlanForm({ ...planForm, min_trade_seconds: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
-                      <span className="text-2xs text-gray-500">Minimum time a position must remain open</span>
+                      <span className="text-2xs text-slate-500 dark:text-gray-400">Minimum time a position must remain open</span>
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="min-hold-action" className="text-xs font-semibold text-gray-300">Action on Under-Duration Trade</Label>
+                      <Label htmlFor="min-hold-action" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Action on Under-Duration Trade</Label>
                       <select
                         id="min-hold-action"
                         value={planForm.min_hold_action || 'flag'}
                         onChange={(e) => setPlanForm({ ...planForm, min_hold_action: e.target.value as any })}
-                        className="w-full h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="w-full h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       >
                         <option value="flag">Flag in Risk Alert Hub (Investigation)</option>
                         <option value="void_pnl">Void Trade PnL (Zero Profit/Loss)</option>
@@ -5409,8 +5409,8 @@ export default function ConfigurationHubPage() {
                   </div>
 
                   {(planForm.min_trade_seconds || 0) > 0 && (
-                    <div className="p-3.5 bg-blue-500/10 rounded-xl border border-blue-500/30 flex items-start gap-2.5 text-xs text-blue-200 leading-relaxed">
-                      <Zap className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                    <div className="p-3.5 bg-blue-500/10 rounded-xl border border-blue-500/30 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-200 leading-relaxed">
+                      <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                       <p>
                         <strong>Bridge & Liquidity Shield:</strong> Trades closed in under {planForm.min_trade_seconds} seconds will be {planForm.min_hold_action === 'void_pnl' ? 'voided (0 PnL credited)' : planForm.min_hold_action === 'reject' ? 'breached automatically' : 'flagged for compliance review'}. This protects your liquidity provider connections against toxic high-frequency latency arbitrage.
                       </p>
@@ -5419,24 +5419,24 @@ export default function ConfigurationHubPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="news-minutes" className="text-xs font-semibold text-gray-300">News Window Buffer (Minutes)</Label>
+                      <Label htmlFor="news-minutes" className="text-xs font-semibold text-slate-800 dark:text-gray-300">News Window Buffer (Minutes)</Label>
                       <Input
                         id="news-minutes"
                         type="number"
                         value={planForm.news_window_minutes || 5}
                         onChange={(e) => setPlanForm({ ...planForm, news_window_minutes: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="inactivity" className="text-xs font-semibold text-gray-300">Max Inactivity Auto-Close (Days)</Label>
+                      <Label htmlFor="inactivity" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Max Inactivity Auto-Close (Days)</Label>
                       <Input
                         id="inactivity"
                         type="number"
                         value={planForm.max_inactivity_days || 30}
                         onChange={(e) => setPlanForm({ ...planForm, max_inactivity_days: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
                     </div>
                   </div>
@@ -5447,20 +5447,20 @@ export default function ConfigurationHubPage() {
               {modalSection === 'scaling' && (
                 <div className="space-y-4">
                   <div className="border-b border-surface-muted/70 pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-accent" />
                       Trader Scaling Plan & Financial Perks
                     </h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
                       Automated capital growth steps, reset discount coupons, and 100% refundable evaluation fees.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Account Scaling Program</p>
-                        <p className="text-2xs text-gray-500">Auto-bump capital on milestone</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Account Scaling Program</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">Auto-bump capital on milestone</p>
                       </div>
                       <Switch
                         checked={!!planForm.scaling_enabled}
@@ -5469,57 +5469,57 @@ export default function ConfigurationHubPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="scaling-growth" className="text-xs font-semibold text-gray-300">Capital Bump (% Step)</Label>
+                      <Label htmlFor="scaling-growth" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Capital Bump (% Step)</Label>
                       <Input
                         id="scaling-growth"
                         type="number"
                         value={planForm.scaling_growth_pct || 25}
                         onChange={(e) => setPlanForm({ ...planForm, scaling_growth_pct: Number(e.target.value) })}
                         disabled={!planForm.scaling_enabled}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="scaling-target" className="text-xs font-semibold text-gray-300">Required Profit Milestone (%)</Label>
+                      <Label htmlFor="scaling-target" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Required Profit Milestone (%)</Label>
                       <Input
                         id="scaling-target"
                         type="number"
                         value={planForm.scaling_required_profit_pct || 10}
                         onChange={(e) => setPlanForm({ ...planForm, scaling_required_profit_pct: Number(e.target.value) })}
                         disabled={!planForm.scaling_enabled}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="scaling-max" className="text-xs font-semibold text-gray-300">Max Scaled Capital ($)</Label>
+                      <Label htmlFor="scaling-max" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Max Scaled Capital ($)</Label>
                       <Input
                         id="scaling-max"
                         type="number"
                         value={planForm.scaling_max_balance || 2000000}
                         onChange={(e) => setPlanForm({ ...planForm, scaling_max_balance: Number(e.target.value) })}
                         disabled={!planForm.scaling_enabled}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all disabled:opacity-50"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="reset-discount" className="text-xs font-semibold text-gray-300">Breach Reset Discount (%)</Label>
+                      <Label htmlFor="reset-discount" className="text-xs font-semibold text-slate-800 dark:text-gray-300">Breach Reset Discount (%)</Label>
                       <Input
                         id="reset-discount"
                         type="number"
                         value={planForm.reset_discount_pct || 10}
                         onChange={(e) => setPlanForm({ ...planForm, reset_discount_pct: Number(e.target.value) })}
-                        className="h-10 px-3 rounded-xl bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-accent font-sans transition-all"
+                        className="h-10 px-3 rounded-xl bg-surface border border-border text-xs text-slate-900 dark:text-white focus:outline-none focus:border-accent font-sans transition-all"
                       />
-                      <span className="text-2xs text-gray-500">Discount coupon generated upon breach</span>
+                      <span className="text-2xs text-slate-500 dark:text-gray-400">Discount coupon generated upon breach</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div className="flex items-center justify-between p-3.5 bg-surface-muted rounded-xl border border-border">
                       <div>
-                        <p className="text-xs font-semibold text-gray-200">Refundable Evaluation Fee</p>
-                        <p className="text-2xs text-gray-500">100% fee refunded on 1st payout</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-gray-200">Refundable Evaluation Fee</p>
+                        <p className="text-2xs text-slate-500 dark:text-gray-400">100% fee refunded on 1st payout</p>
                       </div>
                       <Switch
                         checked={!!planForm.refundable_fee}
@@ -5535,7 +5535,7 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* Modal Footer Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-surface-muted">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-border">
             <Button
               variant="outline"
               size="sm"
