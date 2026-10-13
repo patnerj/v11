@@ -1354,7 +1354,7 @@ export function TemplateFtmo() {
         <div className="container max-w-6xl mx-auto px-4">
           
           {/* Royal Blue Banner Card (ftmo_ref_cta.png) */}
-          <div className="rounded-3xl bg-gradient-to-r from-[#0066ff] via-[#005cd9] to-[#004bb5] p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl">
+          <div data-theme="midnight-obsidian" className="dark rounded-3xl bg-gradient-to-r from-[#0066ff] via-[#005cd9] to-[#004bb5] p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl">
             {/* Ambient Background Circles */}
             <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
             

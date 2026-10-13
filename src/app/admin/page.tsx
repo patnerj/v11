@@ -1603,16 +1603,16 @@ export default function AdminCommandCenter() {
       <Modal
         isOpen={issueModalOpen}
         onClose={() => setIssueModalOpen(false)}
-        title={<span className="text-slate-100 font-bold text-lg">Issue Manual Challenge Account</span>}
-        description={<span className="text-slate-400 text-xs">Grant a funded or evaluation account directly to a trader without requiring gateway checkout.</span>}
-        className="dark bg-surface-muted border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-accent/20"
+        title={<span className="text-text font-bold text-lg">Issue Manual Challenge Account</span>}
+        description={<span className="text-text-muted text-xs">Grant a funded or evaluation account directly to a trader without requiring gateway checkout.</span>}
+        className="bg-surface border border-border text-text shadow-2xl ring-1 ring-accent/20"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
             <Button 
               variant="secondary" 
               onClick={() => setIssueModalOpen(false)}
               disabled={issuingLoading}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+              className="bg-surface hover:bg-surface-muted text-text border border-border"
             >
               Cancel
             </Button>
@@ -1629,7 +1629,7 @@ export default function AdminCommandCenter() {
       >
         <form onSubmit={handleIssueChallenge} className="space-y-4 py-2">
           <div>
-            <Label htmlFor="trader-email" className="text-xs font-semibold text-slate-300">Trader Email or Username</Label>
+            <Label htmlFor="trader-email" className="text-xs font-semibold text-text-muted">Trader Email or Username</Label>
             <Input
               id="trader-email"
               type="text"
@@ -1637,16 +1637,16 @@ export default function AdminCommandCenter() {
               value={issueForm.email}
               onChange={(e) => setIssueForm({ ...issueForm, email: e.target.value })}
               required
-              className="bg-surface border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-accent h-10 mt-1"
+              className="bg-surface border-border text-text placeholder:text-text-muted focus:border-accent h-10 mt-1"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="plan-type" className="text-xs font-semibold text-slate-300">Challenge Plan</Label>
+              <Label htmlFor="plan-type" className="text-xs font-semibold text-text-muted">Challenge Plan</Label>
               <select
                 id="plan-type"
-                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-accent"
+                className="mt-1 flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
                 value={issueForm.planId || ''}
                 onChange={(e) => {
                   const id = Number(e.target.value)
@@ -1654,46 +1654,46 @@ export default function AdminCommandCenter() {
                   setIssueForm({ ...issueForm, planId: id, balance: plan ? String(plan.account_size) : issueForm.balance })
                 }}
               >
-                {activePlans.length === 0 && <option value="" className="bg-surface text-slate-100">No active plans — create one in Config first</option>}
+                {activePlans.length === 0 && <option value="" className="bg-surface text-text">No active plans — create one in Config first</option>}
                 {activePlans.map((p: any) => (
-                  <option key={p.id} value={p.id} className="bg-surface text-slate-100">{p.name} — ${Number(p.account_size).toLocaleString()}</option>
+                  <option key={p.id} value={p.id} className="bg-surface text-text">{p.name} — ${Number(p.account_size).toLocaleString()}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <Label htmlFor="account-phase" className="text-xs font-semibold text-slate-300">Initial Phase</Label>
+              <Label htmlFor="account-phase" className="text-xs font-semibold text-text-muted">Initial Phase</Label>
               <select
                 id="account-phase"
-                className="mt-1 flex h-10 w-full rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-accent"
+                className="mt-1 flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
                 value={issueForm.phase}
                 onChange={(e) => setIssueForm({ ...issueForm, phase: e.target.value as '1' | 'phase2' | 'funded' })}
               >
-                <option value="1" className="bg-surface text-slate-100">Phase 1 (Evaluation)</option>
-                <option value="phase2" disabled={!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant'} className="bg-surface text-slate-100">
+                <option value="1" className="bg-surface text-text">Phase 1 (Evaluation)</option>
+                <option value="phase2" disabled={!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant'} className="bg-surface text-text">
                   Phase 2 (Verification){(!selectedPlan || selectedPlan.plan_type === '1-step' || selectedPlan.plan_type === 'instant') ? ' — not available on this plan' : ''}
                 </option>
-                <option value="funded" className="bg-surface text-slate-100">Funded (Instant Live)</option>
+                <option value="funded" className="bg-surface text-text">Funded (Instant Live)</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="start-bal" className="text-xs font-semibold text-slate-300">Starting Balance ($)</Label>
+              <Label htmlFor="start-bal" className="text-xs font-semibold text-text-muted">Starting Balance ($)</Label>
               <Input
                 id="start-bal"
                 type="number"
                 value={issueForm.balance}
                 onChange={(e) => setIssueForm({ ...issueForm, balance: e.target.value })}
-                className="bg-surface border-slate-700 text-slate-100 focus:border-accent h-10 mt-1"
+                className="bg-surface border-border text-text focus:border-accent h-10 mt-1"
               />
             </div>
             <div>
-              <Label className="text-xs font-semibold text-slate-300">Max Leverage</Label>
-              <div className="mt-1 flex h-10 w-full items-center rounded-lg border border-slate-700 bg-surface px-3 text-sm">
+              <Label className="text-xs font-semibold text-text-muted">Max Leverage</Label>
+              <div className="mt-1 flex h-10 w-full items-center rounded-lg border border-border bg-surface px-3 text-sm">
                 <span className="font-semibold text-accent font-mono">{selectedPlan ? `1:${selectedPlan.max_leverage}` : '—'}</span>
-                <span className="ml-2 text-xs font-normal text-slate-400">(set by the selected plan)</span>
+                <span className="ml-2 text-xs font-normal text-text-muted">(set by the selected plan)</span>
               </div>
             </div>
           </div>
@@ -1704,16 +1704,16 @@ export default function AdminCommandCenter() {
       <Modal
         isOpen={emergencyModalOpen}
         onClose={() => setEmergencyModalOpen(false)}
-        title={<span className="text-slate-100 font-bold text-lg">{isEmergencyPaused ? "Deactivate Emergency Freeze" : "Activate Emergency Trading Freeze"}</span>}
-        description={<span className="text-slate-400 text-xs">Global kill-switch for trading engine operations during catastrophic events or maintenance.</span>}
-        className="dark bg-surface-muted border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-red-500/20"
+        title={<span className="text-text font-bold text-lg">{isEmergencyPaused ? "Deactivate Emergency Freeze" : "Activate Emergency Trading Freeze"}</span>}
+        description={<span className="text-text-muted text-xs">Global kill-switch for trading engine operations during catastrophic events or maintenance.</span>}
+        className="bg-surface border border-border text-text shadow-2xl ring-1 ring-red-500/20"
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
             <Button 
               variant="secondary" 
               onClick={() => setEmergencyModalOpen(false)} 
               disabled={isPausingLoading}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+              className="bg-surface hover:bg-surface-muted text-text border border-border"
             >
               Cancel
             </Button>
@@ -1752,13 +1752,13 @@ export default function AdminCommandCenter() {
           </div>
 
           <div>
-            <Label htmlFor="pause-reason" className="text-xs font-semibold text-slate-300">Audit Note / Reason</Label>
+            <Label htmlFor="pause-reason" className="text-xs font-semibold text-text-muted">Audit Note / Reason</Label>
             <Input
               id="pause-reason"
               value={emergencyReason}
               onChange={(e) => setEmergencyReason(e.target.value)}
               placeholder="Specify reason for audit logs..."
-              className="bg-surface border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-accent h-10 mt-1"
+              className="bg-surface border-border text-text placeholder:text-text-muted focus:border-accent h-10 mt-1"
             />
           </div>
         </div>
@@ -1773,9 +1773,9 @@ export default function AdminCommandCenter() {
           setTxRefInput('')
           setPayoutRejectReason('')
         }}
-        title={<span className="text-slate-100 font-bold text-lg">{`Review Payout #PAY-${selectedPayout?.id}`}</span>}
-        description={<span className="text-slate-400 text-xs">Audit profit split calculation and approve on-chain disbursement.</span>}
-        className="dark bg-surface-muted border border-slate-800 text-slate-100 shadow-2xl ring-1 ring-accent/20"
+        title={<span className="text-text font-bold text-lg">{`Review Payout #PAY-${selectedPayout?.id}`}</span>}
+        description={<span className="text-text-muted text-xs">Audit profit split calculation and approve on-chain disbursement.</span>}
+        className="bg-surface border border-border text-text shadow-2xl ring-1 ring-accent/20"
         footer={
           <div className="flex items-center justify-between w-full">
             <Button 
@@ -1796,7 +1796,7 @@ export default function AdminCommandCenter() {
                   setPayoutRejectReason('')
                 }}
                 disabled={payoutActionLoading}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                className="bg-surface hover:bg-surface-muted text-text border border-border"
               >
                 Close
               </Button>
@@ -1815,45 +1815,45 @@ export default function AdminCommandCenter() {
       >
         {selectedPayout && (
           <div className="space-y-4 py-2">
-            <div className="bg-surface p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+            <div className="bg-surface-muted p-4 rounded-xl border border-border space-y-2.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-400">Trader:</span>
-                <span className="font-semibold text-slate-100">{selectedPayout.username || selectedPayout.user_login || 'Trader'}</span>
+                <span className="text-text-muted">Trader:</span>
+                <span className="font-semibold text-text">{selectedPayout.username || selectedPayout.user_login || 'Trader'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Account ID:</span>
-                <span className="tabular text-slate-200">ACC-{selectedPayout.challenge_id || selectedPayout.id}</span>
+                <span className="text-text-muted">Account ID:</span>
+                <span className="tabular text-text">ACC-{selectedPayout.challenge_id || selectedPayout.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Total Profit Requested:</span>
+                <span className="text-text-muted">Total Profit Requested:</span>
                 <span className="terminal-num font-bold text-profit text-sm">{formatCurrency(selectedPayout.amount_requested || selectedPayout.amount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Gateway / Destination:</span>
-                <span className="text-slate-200">{selectedPayout.payment_method || selectedPayout.gateway || 'USDT TRC20'}</span>
+                <span className="text-text-muted">Gateway / Destination:</span>
+                <span className="text-text">{selectedPayout.payment_method || selectedPayout.gateway || 'USDT TRC20'}</span>
               </div>
             </div>
 
             <div>
-              <Label htmlFor="tx-ref" className="text-xs font-semibold text-slate-300">Transaction Reference / Tx Hash (Optional)</Label>
+              <Label htmlFor="tx-ref" className="text-xs font-semibold text-text-muted">Transaction Reference / Tx Hash (Optional)</Label>
               <Input
                 id="tx-ref"
                 placeholder="e.g. 0x89f2a71d4..."
                 value={txRefInput}
                 onChange={(e) => setTxRefInput(e.target.value)}
-                className="bg-surface border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-accent h-10 mt-1"
+                className="bg-surface border-border text-text placeholder:text-text-muted focus:border-accent h-10 mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="payout-reject-reason" className="text-xs font-semibold text-slate-300">Audit Note / Rejection Reason</Label>
+              <Label htmlFor="payout-reject-reason" className="text-xs font-semibold text-text-muted">Audit Note / Rejection Reason</Label>
               <textarea
                 id="payout-reject-reason"
                 rows={2}
                 placeholder="Required if rejecting (e.g. Risk rule breach, invalid wallet)..."
                 value={payoutRejectReason}
                 onChange={(e) => setPayoutRejectReason(e.target.value)}
-                className="w-full mt-1 rounded-lg border border-slate-700 bg-surface p-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-accent"
+                className="w-full mt-1 rounded-lg border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-muted focus:outline-none focus:border-accent"
               />
             </div>
           </div>

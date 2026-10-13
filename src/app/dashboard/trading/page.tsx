@@ -711,7 +711,7 @@ function WsBadge() {
   const connected = usePrices((s) => s.connected)
   return (
     <div className={cn(
-      'flex items-center gap-1 text-[10px] leading-none font-medium px-1.5 py-0.5 h-5 rounded border tracking-tight shrink-0',
+      'flex items-center gap-1 text-2xs leading-none font-medium px-1.5 py-0.5 h-5 rounded border tracking-tight shrink-0',
       connected
         ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
         : 'text-warn bg-warn-muted border-warn/30',

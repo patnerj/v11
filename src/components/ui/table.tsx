@@ -60,7 +60,7 @@ const Table = React.forwardRef<
       {canScrollRight && !hasScrolled && (
         <div 
           aria-hidden="true"
-          className="pointer-events-none absolute right-2.5 top-2.5 z-20 px-2 py-0.5 rounded-full bg-surface/90 border border-border/80 text-[10px] font-semibold text-text-muted shadow-xs backdrop-blur-xs flex items-center gap-1 sm:hidden animate-pulse"
+          className="pointer-events-none absolute right-2.5 top-2.5 z-20 px-2 py-0.5 rounded-full bg-surface/90 border border-border/80 text-2xs font-semibold text-text-muted shadow-xs backdrop-blur-xs flex items-center gap-1 sm:hidden animate-pulse"
         >
           <span>↔ Swipe</span>
         </div>

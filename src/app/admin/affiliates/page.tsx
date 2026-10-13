@@ -701,7 +701,7 @@ function AdminAffiliatesContent() {
                     className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
                       commissionFilter === f
                         ? 'bg-emerald-500 text-slate-950 font-bold'
-                        : 'text-gray-400 hover:text-white bg-background border border-surface-muted'
+                        : 'text-text-muted hover:text-text bg-surface hover:bg-surface-muted border border-border'
                     }`}
                   >
                     {f}
@@ -801,7 +801,7 @@ function AdminAffiliatesContent() {
                     className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
                       payoutsFilter === f
                         ? 'bg-emerald-500 text-slate-950 font-bold'
-                        : 'text-gray-400 hover:text-white bg-background border border-surface-muted'
+                        : 'text-text-muted hover:text-text bg-surface hover:bg-surface-muted border border-border'
                     }`}
                   >
                     {f}
@@ -1070,11 +1070,11 @@ function AdminAffiliatesContent() {
               id="payout-method"
               value={payoutMethod}
               onChange={(e) => setPayoutMethod(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+              className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-accent"
             >
-              <option value="crypto">USDT (TRC-20 / ERC-20)</option>
-              <option value="bank">Direct Bank Wire / SWIFT</option>
-              <option value="wise">Wise / PayPal Transfer</option>
+              <option value="crypto" className="bg-surface text-text">USDT (TRC-20 / ERC-20)</option>
+              <option value="bank" className="bg-surface text-text">Direct Bank Wire / SWIFT</option>
+              <option value="wise" className="bg-surface text-text">Wise / PayPal Transfer</option>
             </select>
           </div>
 

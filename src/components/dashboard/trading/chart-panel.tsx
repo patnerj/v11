@@ -10,7 +10,7 @@ import { useBranding } from '@/store/branding'
 import { fmtPrice, toNum } from '@/lib/format'
 import type { Position } from '@/types/api'
 import { toast } from 'sonner'
-import { useTheme } from 'next-themes'
+import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 import { ScalperExecutionHeader } from './scalper-execution-header'
 
 interface Props {
@@ -123,8 +123,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
     useTerminal.getState().setSymbolPositionsCount(symPositions.length)
   }, [symPositions.length])
 
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme !== 'light'
+  const isDark = useIsDarkTheme()
 
   /** Build a TradingView widget into the given host element. */
   const buildWidget = useCallback((host: HTMLElement, resolved: string, sideToolbarHidden: boolean) => {

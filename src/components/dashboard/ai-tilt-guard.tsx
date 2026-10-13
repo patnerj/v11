@@ -89,7 +89,8 @@ export function AiTiltGuard() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="rounded-2xl bg-[#0F172A] border-2 border-rose-500/40 p-5 shadow-2xl shadow-rose-950/50 relative overflow-hidden"
+            data-theme="midnight-obsidian"
+            className="dark rounded-2xl bg-[#0F172A] border-2 border-rose-500/40 p-5 shadow-2xl shadow-rose-950/50 relative overflow-hidden"
           >
             {/* Background Glow */}
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />

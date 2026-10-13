@@ -2244,7 +2244,7 @@ export default function ConfigurationHubPage() {
                         className={`p-2.5 text-xs font-medium border-2 transition-all flex flex-col items-center gap-1.5 ${r.class} ${
                           isSel
                             ? 'border-emerald-500 bg-emerald-500/10 text-white font-bold'
-                            : 'border-surface-muted bg-background text-gray-400 hover:text-white hover:border-slate-700'
+                            : 'border-border bg-surface text-text-muted hover:text-text hover:bg-surface-muted'
                         }`}
                       >
                         <div className={`h-3 w-8 border border-current ${r.class}`} />

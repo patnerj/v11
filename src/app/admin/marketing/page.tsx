@@ -1443,7 +1443,7 @@ export default function MarketingHubPage() {
                     className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
                       payoutsFilter === f
                         ? 'bg-emerald-500 text-slate-950 font-bold'
-                        : 'text-gray-400 hover:text-white bg-background border border-surface-muted'
+                        : 'text-text-muted hover:text-text bg-surface hover:bg-surface-muted border border-border'
                     }`}
                   >
                     {f}
@@ -1616,7 +1616,7 @@ export default function MarketingHubPage() {
                       className={`text-xs px-2.5 py-1 rounded-md font-mono capitalize transition-all ${
                         commissionFilter === f
                           ? 'bg-emerald-500 text-slate-950 font-bold'
-                          : 'text-gray-400 hover:text-white bg-background border border-surface-muted'
+                          : 'text-text-muted hover:text-text bg-surface hover:bg-surface-muted border border-border'
                       }`}
                     >
                       {f}
@@ -1746,21 +1746,21 @@ export default function MarketingHubPage() {
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {trader_name}')}
-                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-emerald-400 font-mono text-xs font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-muted border border-border text-emerald-400 font-mono text-xs font-semibold transition-colors"
                     >
                       + &#123;trader_name&#125;
                     </button>
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {login_id}')}
-                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-blue-400 font-mono text-xs font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-muted border border-border text-blue-400 font-mono text-xs font-semibold transition-colors"
                     >
                       + &#123;login_id&#125;
                     </button>
                     <button
                       type="button"
                       onClick={() => insertTemplateTag(' {account_balance}')}
-                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-slate-800 border border-surface-muted text-amber-400 font-mono text-xs font-semibold transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-muted border border-border text-amber-400 font-mono text-xs font-semibold transition-colors"
                     >
                       + &#123;account_balance&#125;
                     </button>
@@ -2268,11 +2268,11 @@ export default function MarketingHubPage() {
                             theme_badge: e.target.value
                           }
                         })}
-                        className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                        className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-accent"
                       >
-                        <option value="gold">🥇 Gold Sovereign Seal</option>
-                        <option value="platinum">💎 Platinum Elite Seal</option>
-                        <option value="emerald">🟢 Emerald Royal Seal</option>
+                        <option value="gold" className="bg-surface text-text">🥇 Gold Sovereign Seal</option>
+                        <option value="platinum" className="bg-surface text-text">💎 Platinum Elite Seal</option>
+                        <option value="emerald" className="bg-surface text-text">🟢 Emerald Royal Seal</option>
                       </select>
                     </div>
 
@@ -2489,11 +2489,11 @@ export default function MarketingHubPage() {
                 id="banner-placement"
                 value={bannerForm.placement || 'both'}
                 onChange={(e) => setBannerForm({ ...bannerForm, placement: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-accent"
               >
-                <option value="both">Both (Dashboard & Login)</option>
-                <option value="dashboard">Trader Dashboard Only</option>
-                <option value="top">Marketing / Login Only</option>
+                <option value="both" className="bg-surface text-text">Both (Dashboard & Login)</option>
+                <option value="dashboard" className="bg-surface text-text">Trader Dashboard Only</option>
+                <option value="top" className="bg-surface text-text">Marketing / Login Only</option>
               </select>
             </div>
           </div>
@@ -2505,10 +2505,10 @@ export default function MarketingHubPage() {
                 id="banner-scope-type"
                 value={bannerForm.scope_type || 'global'}
                 onChange={(e) => setBannerForm({ ...bannerForm, scope_type: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-accent"
               >
-                <option value="global">Global (All platform pages)</option>
-                <option value="page">Specific Page Route</option>
+                <option value="global" className="bg-surface text-text">Global (All platform pages)</option>
+                <option value="page" className="bg-surface text-text">Specific Page Route</option>
               </select>
             </div>
 
@@ -2718,10 +2718,10 @@ export default function MarketingHubPage() {
                 id="coupon-type"
                 value={couponForm.type || 'percent'}
                 onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value as any })}
-                className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-accent"
               >
-                <option value="percent">Percentage (%)</option>
-                <option value="fixed">Fixed Dollar ($)</option>
+                <option value="percent" className="bg-surface text-text">Percentage (%)</option>
+                <option value="fixed" className="bg-surface text-text">Fixed Dollar ($)</option>
               </select>
             </div>
 
@@ -2882,11 +2882,11 @@ export default function MarketingHubPage() {
               id="payout-method"
               value={payoutMethod}
               onChange={(e) => setPayoutMethod(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-background border border-surface-muted text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+              className="w-full h-10 px-3 rounded-lg bg-surface border border-border text-xs text-text focus:outline-none focus:border-accent"
             >
-              <option value="crypto">USDT (TRC-20 / ERC-20)</option>
-              <option value="bank">Direct Bank Wire / SWIFT</option>
-              <option value="wise">Wise / PayPal Transfer</option>
+              <option value="crypto" className="bg-surface text-text">USDT (TRC-20 / ERC-20)</option>
+              <option value="bank" className="bg-surface text-text">Direct Bank Wire / SWIFT</option>
+              <option value="wise" className="bg-surface text-text">Wise / PayPal Transfer</option>
             </select>
           </div>
 

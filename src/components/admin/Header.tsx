@@ -12,8 +12,6 @@ import {
 import { useAuth } from '@/store/auth'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { cn } from '@/lib/cn'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
@@ -120,7 +118,7 @@ export function Header({ onMobileMenuToggle, onOpenSearch }: HeaderProps) {
         <div className="h-5 w-px bg-border hidden sm:block" />
 
         {/* Theme Toggle (Daylight / Obsidian Mode) */}
-        <ThemeToggle />
+        <ThemeSwitcher />
 
         {/* Notifications Icon with Badge */}
         <Link

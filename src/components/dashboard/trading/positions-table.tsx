@@ -642,7 +642,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
           <div className="flex items-center gap-1.5">
             <span className="font-semibold terminal-num">{pos.symbol}</span>
             {pos.isOptimistic && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                 In-Flight
               </span>
             )}

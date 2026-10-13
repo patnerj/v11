@@ -501,10 +501,10 @@ export default function AffiliatePage() {
                   <div className="w-full aspect-[16/9] rounded-lg border border-accent/50 bg-gradient-to-br from-[#06080F] via-[#0C1220] to-[#0A1628] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-accent/25 rounded-full blur-xl pointer-events-none" />
                     <div className="flex items-center justify-between relative z-10">
-                      <span className="text-[10px] font-extrabold text-accent tracking-wider flex items-center gap-1">
+                      <span className="text-2xs font-extrabold text-accent tracking-wider flex items-center gap-1">
                         ★ {brandName.toUpperCase()}
                       </span>
-                      <span className="bg-accent/25 text-accent text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-accent/40">
+                      <span className="bg-accent/25 text-accent text-3xs font-bold px-1.5 py-0.5 rounded-full border border-accent/40">
                         90% PROFIT SPLIT
                       </span>
                     </div>
@@ -512,14 +512,14 @@ export default function AffiliatePage() {
                       <div className="text-base sm:text-lg font-black text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                         TRADE UP TO $200,000
                       </div>
-                      <div className="text-[8px] text-slate-300 font-medium mt-0.5">
+                      <div className="text-3xs text-slate-300 font-medium mt-0.5">
                         Instant Disbursals · Lowest Spreads · Zero Time Limit
                       </div>
                     </div>
                     <div className="bg-accent/20 border border-accent/50 rounded-md px-2 py-1 flex items-center justify-between relative z-10">
-                      <span className="text-[8px] text-accent font-bold tracking-wider">AFFILIATE CODE:</span>
-                      <span className="text-[11px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
-                      <span className="text-[8px] text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
+                      <span className="text-3xs text-accent font-bold tracking-wider">AFFILIATE CODE:</span>
+                      <span className="text-terminal-body font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
+                      <span className="text-3xs text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
                     </div>
                   </div>
 
@@ -547,7 +547,7 @@ export default function AffiliatePage() {
                 <div className="mt-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold text-text">16:9 Landscape Banner</h4>
-                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                    <span className="text-2xs font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
                       1920 × 1080
                     </span>
                   </div>
@@ -581,24 +581,24 @@ export default function AffiliatePage() {
                   <div className="h-full aspect-square max-h-52 rounded-lg border border-info/50 bg-gradient-to-tr from-[#06080F] via-[#0A1326] to-[#0D1B36] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-info/25 rounded-full blur-xl pointer-events-none" />
                     <div className="flex items-center justify-between relative z-10">
-                      <span className="text-[10px] font-extrabold text-info tracking-wider flex items-center gap-1">
+                      <span className="text-2xs font-extrabold text-info tracking-wider flex items-center gap-1">
                         ★ {brandName.toUpperCase()}
                       </span>
-                      <span className="bg-info/25 text-info text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-info/40">
+                      <span className="bg-info/25 text-info text-3xs font-bold px-1.5 py-0.5 rounded-full border border-info/40">
                         INSTANT PASS
                       </span>
                     </div>
                     <div className="text-center my-auto py-1 relative z-10">
-                      <div className="text-[8px] uppercase tracking-widest text-slate-300 font-bold">PROP FIRM CAPITAL</div>
+                      <div className="text-3xs uppercase tracking-widest text-slate-300 font-bold">PROP FIRM CAPITAL</div>
                       <div className="text-lg font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                         KEEP 90% PROFITS
                       </div>
                       <div className="text-xs font-mono font-extrabold text-accent mt-0.5">$200K ACCOUNT</div>
                     </div>
                     <div className="bg-info/20 border border-info/50 rounded-md px-2 py-1 flex items-center justify-between relative z-10">
-                      <span className="text-[8px] text-info font-bold">CODE:</span>
-                      <span className="text-[11px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
-                      <span className="text-[8px] text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
+                      <span className="text-3xs text-info font-bold">CODE:</span>
+                      <span className="text-terminal-body font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</span>
+                      <span className="text-3xs text-profit font-black bg-profit/20 px-1 py-0.2 rounded border border-profit/30">25% OFF</span>
                     </div>
                   </div>
 
@@ -626,7 +626,7 @@ export default function AffiliatePage() {
                 <div className="mt-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold text-text">1:1 Square Feed Post</h4>
-                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                    <span className="text-2xs font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
                       1080 × 1080
                     </span>
                   </div>
@@ -660,24 +660,24 @@ export default function AffiliatePage() {
                   <div className="h-full aspect-[9/16] max-h-52 rounded-lg border border-purple-500/50 bg-gradient-to-b from-[#06080F] via-[#100C1F] to-[#1A1033] p-2.5 flex flex-col justify-between shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-20 h-20 bg-purple-500/25 rounded-full blur-xl pointer-events-none" />
                     <div className="flex items-center justify-between relative z-10">
-                      <span className="text-[9px] font-extrabold text-purple-300 tracking-wider">
+                      <span className="text-terminal-micro font-extrabold text-purple-300 tracking-wider">
                         ★ {brandName.toUpperCase()}
                       </span>
-                      <span className="bg-purple-500/25 text-purple-300 text-[7px] font-bold px-1 py-0.2 rounded-full border border-purple-500/40">
+                      <span className="bg-purple-500/25 text-purple-300 text-3xs font-bold px-1 py-0.2 rounded-full border border-purple-500/40">
                         VIP
                       </span>
                     </div>
                     <div className="text-center my-auto py-1 relative z-10">
-                      <div className="text-[7px] uppercase tracking-widest text-slate-300 font-bold">EVALUATION PASS</div>
+                      <div className="text-3xs uppercase tracking-widest text-slate-300 font-bold">EVALUATION PASS</div>
                       <div className="text-sm font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                         GET FUNDED
                       </div>
                       <div className="text-lg font-mono font-black text-accent mt-0.5 leading-none">$200K</div>
-                      <div className="text-[7px] text-slate-300 mt-1">Keep 90% Profits</div>
+                      <div className="text-3xs text-slate-300 mt-1">Keep 90% Profits</div>
                     </div>
                     <div className="bg-purple-500/20 border border-purple-500/50 rounded-md px-1.5 py-1 text-center relative z-10">
-                      <div className="text-[7px] text-purple-300 font-bold">PARTNER CODE:</div>
-                      <div className="text-[10px] font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</div>
+                      <div className="text-3xs text-purple-300 font-bold">PARTNER CODE:</div>
+                      <div className="text-2xs font-mono font-black text-white tracking-widest">{me?.code || 'PARTNER'}</div>
                     </div>
                   </div>
 
@@ -705,7 +705,7 @@ export default function AffiliatePage() {
                 <div className="mt-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold text-text">9:16 Mobile Story & Reel</h4>
-                    <span className="text-[10px] font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
+                    <span className="text-2xs font-mono text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border-subtle">
                       1080 × 1920
                     </span>
                   </div>

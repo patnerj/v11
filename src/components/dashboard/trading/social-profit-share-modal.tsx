@@ -482,7 +482,7 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             
             {/* Live Interactive Card Canvas Container */}
-            <div className="rounded-xl border border-border overflow-hidden bg-[#0A0E17] shadow-card relative group aspect-[16/9] w-full flex items-center justify-center">
+            <div data-theme="midnight-obsidian" className="dark rounded-xl border border-border overflow-hidden bg-[#0A0E17] shadow-card relative group aspect-[16/9] w-full flex items-center justify-center">
               <canvas
                 ref={canvasRef}
                 className="w-full h-auto block select-none pointer-events-none"

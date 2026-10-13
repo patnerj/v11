@@ -191,7 +191,7 @@ export default function AdminActivityPage() {
               variant="outline" 
               size="sm" 
               onClick={handleMarkAllRead} 
-              className="gap-1.5 text-xs border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800"
+              className="gap-1.5 text-xs border-border text-text-muted hover:text-text hover:bg-surface-muted"
             >
               <CheckCheck className="h-4 w-4 text-emerald-400" />
               <span>Mark all read</span>
@@ -201,7 +201,7 @@ export default function AdminActivityPage() {
             variant="outline" 
             size="sm" 
             onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })}
-            className="h-9 w-9 p-0 border-surface-muted text-gray-400 hover:text-white hover:bg-slate-800"
+            className="h-9 w-9 p-0 border-border text-text-muted hover:text-text hover:bg-surface-muted"
             title="Refresh feed"
           >
             <RefreshCw className="h-4 w-4 text-emerald-400" />
@@ -246,7 +246,7 @@ export default function AdminActivityPage() {
                 "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
                 unreadOnly
                   ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                  : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
+                  : "bg-surface hover:bg-surface-muted text-text-muted hover:text-text border border-border"
               )}
             >
               <span>Unread Only</span>
@@ -286,7 +286,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'all'
                 ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
+                : "bg-surface hover:bg-surface-muted text-text-muted hover:text-text border border-border"
             )}
           >
             <span>🌐 All Activity</span>
@@ -300,7 +300,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'purchases'
                 ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
+                : "bg-surface hover:bg-surface-muted text-text-muted hover:text-text border border-border"
             )}
           >
             <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
@@ -314,7 +314,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'breaches'
                 ? "bg-rose-500 text-white font-bold shadow-md shadow-rose-500/20"
-                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
+                : "bg-surface hover:bg-surface-muted text-text-muted hover:text-text border border-border"
             )}
           >
             <AlertCircle className="h-3.5 w-3.5 text-rose-400" />
@@ -328,7 +328,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'passes'
                 ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/20"
-                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
+                : "bg-surface hover:bg-surface-muted text-text-muted hover:text-text border border-border"
             )}
           >
             <Trophy className="h-3.5 w-3.5 text-purple-400" />
@@ -342,7 +342,7 @@ export default function AdminActivityPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5",
               category === 'support'
                 ? "bg-blue-500 text-white font-bold shadow-md shadow-blue-500/20"
-                : "bg-background hover:bg-slate-800 text-gray-400 hover:text-white border border-surface-muted"
+                : "bg-surface hover:bg-surface-muted text-text-muted hover:text-text border border-border"
             )}
           >
             <MessageSquare className="h-3.5 w-3.5 text-blue-400" />
@@ -375,7 +375,7 @@ export default function AdminActivityPage() {
               variant="outline"
               size="sm"
               onClick={handleClearFilters}
-              className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 mt-2"
+              className="border-border text-text-muted hover:text-text hover:bg-surface-muted mt-2"
             >
               Reset Filters
             </Button>
@@ -384,7 +384,7 @@ export default function AdminActivityPage() {
               variant="outline"
               size="sm"
               onClick={() => refetch()}
-              className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 mt-2 gap-1.5"
+              className="border-border text-text-muted hover:text-text hover:bg-surface-muted mt-2 gap-1.5"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Refresh Feed</span>
@@ -552,7 +552,7 @@ export default function AdminActivityPage() {
                       variant="outline" size="sm"
                       disabled={logPage <= 1}
                       onClick={() => setLogPage((p) => Math.max(1, p - 1))}
-                      className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 gap-1"
+                      className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-1"
                     >
                       <ChevronLeft className="h-3.5 w-3.5" /> Prev
                     </Button>
@@ -560,7 +560,7 @@ export default function AdminActivityPage() {
                       variant="outline" size="sm"
                       disabled={!auditRows || auditRows.length < 100}
                       onClick={() => setLogPage((p) => p + 1)}
-                      className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800 gap-1"
+                      className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-1"
                     >
                       Next <ChevronRight className="h-3.5 w-3.5" />
                     </Button>

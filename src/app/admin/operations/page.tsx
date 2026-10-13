@@ -1792,10 +1792,10 @@ export default function OperationsHubPage() {
                 id="event-curr"
                 value={newEventForm.currency}
                 onChange={(e) => setNewEventForm({ ...newEventForm, currency: e.target.value })}
-                className="w-full h-9 rounded-md border border-surface-muted bg-background text-white px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full h-9 rounded-md border border-border bg-surface text-text px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
                 {['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'].map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c} className="bg-surface text-text">{c}</option>
                 ))}
               </select>
             </div>
@@ -1806,11 +1806,11 @@ export default function OperationsHubPage() {
                 id="event-impact"
                 value={newEventForm.impact}
                 onChange={(e) => setNewEventForm({ ...newEventForm, impact: e.target.value as 'high' | 'medium' | 'low' })}
-                className="w-full h-9 rounded-md border border-surface-muted bg-background text-white px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full h-9 rounded-md border border-border bg-surface text-text px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
-                <option value="high">High Impact (Red Folder)</option>
-                <option value="medium">Medium Impact (Orange)</option>
-                <option value="low">Low Impact (Yellow)</option>
+                <option value="high" className="bg-surface text-text">High Impact (Red Folder)</option>
+                <option value="medium" className="bg-surface text-text">Medium Impact (Orange)</option>
+                <option value="low" className="bg-surface text-text">Low Impact (Yellow)</option>
               </select>
             </div>
           </div>

@@ -243,7 +243,7 @@ export default function AdminAnalyticsPage() {
             variant="outline"
             size="sm"
             onClick={handleRefreshAll}
-            className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800/80 gap-1.5 h-9"
+            className="border-border text-text-muted hover:text-text hover:bg-surface-muted gap-1.5 h-9"
           >
             <RefreshCw className="h-3.5 w-3.5 text-accent" />
             <span className="hidden sm:inline">Refresh</span>

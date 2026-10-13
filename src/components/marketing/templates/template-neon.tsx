@@ -578,7 +578,7 @@ export function TemplateNeon() {
                 <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#14131f] border border-white/10 text-left hover:border-[#635BFF]/40 transition-colors">
                   <div className="w-10 h-10 rounded-xl bg-[#635BFF]/20 text-[#635BFF] flex items-center justify-center shrink-0 border border-[#635BFF]/30 relative">
                     <Clock className="w-5 h-5 text-violet-400" />
-                    <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-xs bg-[#635BFF] text-white font-mono text-[9px] font-black leading-none">24</span>
+                    <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-xs bg-[#635BFF] text-white font-mono text-terminal-micro font-black leading-none">24</span>
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">Rewards in 24h</div>
@@ -1650,7 +1650,7 @@ export function TemplateNeon() {
       {/* ── 8. HIGH-IMPACT CLOSING CYBER CTA ─────────────────────────────── */}
       <section className="py-20 relative overflow-hidden bg-gradient-to-b from-transparent via-[#635BFF]/5 to-[#635BFF]/10">
         <div className="container max-w-5xl mx-auto px-4 relative z-10">
-          <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-[#635BFF] via-indigo-600 to-cyan-600 text-white text-center shadow-2xl relative overflow-hidden">
+          <div data-theme="midnight-obsidian" className="dark p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-[#635BFF] via-indigo-600 to-cyan-600 text-white text-center shadow-2xl relative overflow-hidden">
 
             <div className="relative z-10 max-w-2xl mx-auto">
               <span className="px-3 py-1 rounded-full bg-white/20 text-white text-2xs font-mono font-bold uppercase tracking-wider backdrop-blur-md">

@@ -997,12 +997,12 @@ export default function AdminHelpdeskPage() {
                           <span className={isAdmin ? 'text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5' : 'text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1.5'}>
                             {isAdmin ? (
                               <>
-                                <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px]">🛡️</span>
+                                <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xs">🛡️</span>
                                 {msg.sender_id === 1 || msg.message?.includes('AI') ? `${brandName} AI Copilot` : `${brandName} Support Agent`}
                               </>
                             ) : (
                               <>
-                                <span className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px]">👤</span>
+                                <span className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xs">👤</span>
                                 {msg.sender_name || activeTicket.display_name || 'Trader'}
                               </>
                             )}

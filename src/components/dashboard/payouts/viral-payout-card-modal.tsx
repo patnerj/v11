@@ -273,7 +273,8 @@ Trade with them: https://demo.launchapropfirm.com
         {/* Live Preview Canvas Container */}
         <div className="flex justify-center p-3 sm:p-5 bg-background/80 rounded-2xl border border-border/80">
           <div
-            className={`w-full rounded-2xl border p-6 flex flex-col justify-between text-center relative overflow-hidden shadow-2xl transition-all duration-300 ${
+            data-theme="midnight-obsidian"
+            className={`dark w-full rounded-2xl border p-6 flex flex-col justify-between text-center relative overflow-hidden shadow-2xl transition-all duration-300 ${
               aspect === '16:9' ? 'aspect-[16/9] max-h-[380px]' : 'aspect-[9/16] max-h-[460px] max-w-[280px]'
             } ${
               themeStyle === 'gold'
@@ -310,7 +311,7 @@ Trade with them: https://demo.launchapropfirm.com
               <div className="text-3xs text-slate-300 font-medium">Disbursed via {method}</div>
             </div>
 
-            <div className="bg-surface/70 border border-white/10 rounded-xl p-2.5 grid grid-cols-2 text-left relative z-10 text-3xs">
+            <div className="bg-[#0B1020]/80 border border-white/10 rounded-xl p-2.5 grid grid-cols-2 text-left relative z-10 text-3xs">
               <div>
                 <span className="text-text-muted">Trader</span>
                 <div className="font-bold text-white truncate">{traderName}</div>

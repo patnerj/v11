@@ -213,7 +213,7 @@ function KycDocViewer({
           asChild 
           variant="outline" 
           size="sm" 
-          className="border-gray-700 text-gray-300 gap-2"
+          className="border-border text-text hover:bg-surface-muted gap-2"
         >
           <a href={blobUrl} download={`kyc_${kycId}_${tabName}.html`}>
             <Download className="h-4 w-4" />
@@ -249,7 +249,7 @@ function KycDocViewer({
             asChild 
             variant="outline" 
             size="sm" 
-            className="border-gray-700 text-gray-300 gap-2"
+            className="border-border text-text hover:bg-surface-muted gap-2"
           >
             <a href={blobUrl} download={`kyc_${kycId}_${tabName}.${getExtension(mimeType, 'pdf')}`}>
               <Download className="h-4 w-4" />

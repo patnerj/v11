@@ -36,6 +36,8 @@ export function FloatingPromoPopup() {
     pathname === '/register' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password') ||
     pathname === '/dashboard/trading' ||
     pathname.startsWith('/dashboard/trading')
   ) {
