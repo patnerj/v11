@@ -24,41 +24,23 @@ const t = {
   infoTint: 'hsl(var(--info) / 0.12)',
 }
 
-// Stock grayscale remapped to dynamic theme tokens for automatic daylight/obsidian adaptation
-const bridgeGrayScale = {
-  50:  'hsl(var(--text) / <alpha-value>)',
-  100: 'hsl(var(--text) / <alpha-value>)',
-  200: t.text,
-  300: t.text,
-  400: t.muted,
-  500: t.muted,
-  600: t.border,
-  700: t.border,
-  800: t.surface,
-  900: t.bg,
-  950: t.bg,
-}
-
 const stockBridge = {
-  slate: bridgeGrayScale,
-  zinc:  bridgeGrayScale,
-  gray:  bridgeGrayScale,
-  green:  { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
-  teal:   { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
+  green:  { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent },
+  teal:   { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent },
   lime:   { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent },
-  yellow: { 200: t.warn, 300: t.warn, 400: t.warn, 500: t.warn, 600: t.warn, 700: t.warn, 900: t.warnTint, 950: t.warnTint },
-  amber:  { 100: t.warnTint, 200: t.warn, 300: t.warn, 400: t.warn, 500: t.warn, 600: t.warn, 700: t.warn, 800: t.warn, 900: t.warnTint, 950: t.warnTint },
-  orange: { 300: t.warn, 400: t.warn, 500: t.warn, 600: t.warn, 700: t.warn, 950: t.warnTint },
-  red:    { 100: t.dangerTint, 200: t.danger, 300: t.danger, 400: t.danger, 500: t.danger, 600: t.danger, 700: t.danger, 800: t.danger, 900: t.dangerTint, 950: t.dangerTint },
-  rose:   { 200: t.dangerTint, 300: t.danger, 400: t.danger, 500: t.danger, 600: t.danger, 700: t.danger, 950: t.dangerTint },
+  yellow: { 200: t.warn, 300: t.warn, 400: t.warn, 500: t.warn, 600: t.warn, 700: t.warn },
+  amber:  { 200: t.warn, 300: t.warn, 400: t.warn, 500: t.warn, 600: t.warn, 700: t.warn, 800: t.warn },
+  orange: { 300: t.warn, 400: t.warn, 500: t.warn, 600: t.warn, 700: t.warn },
+  red:    { 200: t.danger, 300: t.danger, 400: t.danger, 500: t.danger, 600: t.danger, 700: t.danger, 800: t.danger },
+  rose:   { 300: t.danger, 400: t.danger, 500: t.danger, 600: t.danger, 700: t.danger },
   pink:   { 300: t.danger, 400: t.danger, 500: t.danger, 600: t.danger },
-  fuchsia: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 950: t.accentTint },
-  purple: { 100: t.accentTint, 200: t.accentTint, 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 800: t.accent, 900: t.accent, 950: t.accentTint },
-  violet: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
-  indigo: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 950: t.accentTint },
-  blue:   { 100: t.infoTint, 200: t.info, 300: t.info, 400: t.info, 500: t.info, 600: t.info, 700: t.info, 900: t.infoTint, 950: t.infoTint },
-  sky:    { 300: t.info, 400: t.info, 500: t.info, 600: t.info, 700: t.info, 950: t.infoTint },
-  cyan:   { 100: t.infoTint, 200: t.info, 300: t.info, 400: t.info, 500: t.info, 600: t.info, 700: t.info, 900: t.infoTint, 950: t.infoTint },
+  fuchsia: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent },
+  purple: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent, 800: t.accent, 900: t.accent },
+  violet: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent },
+  indigo: { 300: t.accent, 400: t.accent, 500: t.accent, 600: t.accent, 700: t.accent },
+  blue:   { 200: t.info, 300: t.info, 400: t.info, 500: t.info, 600: t.info, 700: t.info },
+  sky:    { 300: t.info, 400: t.info, 500: t.info, 600: t.info, 700: t.info },
+  cyan:   { 200: t.info, 300: t.info, 400: t.info, 500: t.info, 600: t.info, 700: t.info },
 }
 
 const config: Config = {

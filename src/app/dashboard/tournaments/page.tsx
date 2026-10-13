@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Trophy, Users, Calendar, ArrowRight, Loader2, Wallet, CheckCircle2, Clock, BookOpen, ShieldAlert, ShieldCheck, Zap, Sparkles } from 'lucide-react'
+import { Trophy, Users, Calendar, ArrowRight, Loader2, Wallet, CheckCircle2, Clock, BookOpen, ShieldAlert, ShieldCheck, Zap, Sparkles, AlertTriangle, Info } from 'lucide-react'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices } from '@/store/prices'
@@ -533,19 +533,19 @@ export default function DashboardTournamentsPage() {
                 </div>
                 <ul className="space-y-2 text-text-muted pt-1">
                   <li className="flex items-start gap-2">
-                    <span className="text-success font-bold mt-0.5">✓</span>
+                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <span><strong>News Trading:</strong> Holding and opening positions during high-impact news events is allowed.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-success font-bold mt-0.5">✓</span>
+                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     <span><strong>Overnight & Weekend Holding:</strong> Open positions may be carried overnight and over the weekend until tournament close.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-warn font-bold mt-0.5">⚠</span>
+                    <AlertTriangle className="h-4 w-4 text-warn shrink-0 mt-0.5" />
                     <span><strong>Prohibited Conduct:</strong> Latency arbitrage, gap trading exploitation, reverse account hedging between multiple entries, and bot manipulation are strictly forbidden and monitored.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-accent font-bold mt-0.5">ℹ</span>
+                    <Info className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                     <span><strong>Leaderboard Ranking:</strong> Rankings are updated in real-time based on Net ROI % and realized/floating equity.</span>
                   </li>
                 </ul>

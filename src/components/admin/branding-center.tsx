@@ -22,6 +22,12 @@ import {
   BarChart3,
   Globe,
   CheckCircle2,
+  Play,
+  Instagram,
+  Music2,
+  MessageSquare,
+  Facebook,
+  Wrench,
 } from 'lucide-react'
 import { DeviceFrameMockup } from '@/components/admin/device-frame-mockup'
 import { THEME_PRESETS, FONT_PRESETS, applyThemeAccent, applyFontFamily } from '@/lib/theme-accent'
@@ -529,7 +535,9 @@ export function BrandingCenter() {
           <CardContent className="space-y-3">
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="bc-youtube" className="text-2xs">▶ YouTube</Label>
+                <Label htmlFor="bc-youtube" className="text-2xs flex items-center gap-1.5">
+                  <Play className="h-3 w-3 text-red-500 fill-red-500" /> YouTube
+                </Label>
                 <Input
                   id="bc-youtube"
                   value={vals.youtube_url ?? ''}
@@ -539,7 +547,9 @@ export function BrandingCenter() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="bc-instagram" className="text-2xs">📸 Instagram</Label>
+                <Label htmlFor="bc-instagram" className="text-2xs flex items-center gap-1.5">
+                  <Instagram className="h-3 w-3 text-pink-500" /> Instagram
+                </Label>
                 <Input
                   id="bc-instagram"
                   value={vals.instagram_url ?? ''}
@@ -549,7 +559,9 @@ export function BrandingCenter() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="bc-tiktok" className="text-2xs">🎵 TikTok</Label>
+                <Label htmlFor="bc-tiktok" className="text-2xs flex items-center gap-1.5">
+                  <Music2 className="h-3 w-3 text-cyan-400" /> TikTok
+                </Label>
                 <Input
                   id="bc-tiktok"
                   value={vals.tiktok_url ?? ''}
@@ -559,7 +571,9 @@ export function BrandingCenter() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="bc-discord" className="text-2xs">💬 Discord</Label>
+                <Label htmlFor="bc-discord" className="text-2xs flex items-center gap-1.5">
+                  <MessageSquare className="h-3 w-3 text-indigo-400" /> Discord
+                </Label>
                 <Input
                   id="bc-discord"
                   value={vals.discord_url ?? ''}
@@ -569,7 +583,9 @@ export function BrandingCenter() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="bc-facebook" className="text-2xs">📘 Facebook</Label>
+                <Label htmlFor="bc-facebook" className="text-2xs flex items-center gap-1.5">
+                  <Facebook className="h-3 w-3 text-blue-500" /> Facebook
+                </Label>
                 <Input
                   id="bc-facebook"
                   value={vals.facebook_url ?? ''}
@@ -579,7 +595,9 @@ export function BrandingCenter() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="bc-developer" className="text-2xs text-accent font-semibold">🛠️ Platform Developer Desk</Label>
+                <Label htmlFor="bc-developer" className="text-2xs text-accent font-semibold flex items-center gap-1.5">
+                  <Wrench className="h-3 w-3 text-accent" /> Platform Developer Desk
+                </Label>
                 <Input
                   id="bc-developer"
                   value={vals.developer_url ?? ''}

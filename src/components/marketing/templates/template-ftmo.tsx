@@ -1296,7 +1296,7 @@ export function TemplateFtmo() {
                     
                     {/* YouTube View pill */}
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-3xs font-bold text-white flex items-center gap-1">
-                      <span className="text-red-500">▶</span>
+                      <Play className="h-2.5 w-2.5 fill-red-500 text-red-500" />
                       <span>YouTube • {t.views}</span>
                     </div>
 

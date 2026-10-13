@@ -480,10 +480,10 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
                   <button
                     type="button"
                     onClick={() => setDraftSl('')}
-                    className="px-1 py-0.5 rounded text-terminal-micro text-text-faint hover:text-danger cursor-pointer"
+                    className="px-1 py-0.5 rounded text-terminal-micro text-text-faint hover:text-danger cursor-pointer inline-flex items-center justify-center"
                     title="Clear Stop Loss"
                   >
-                    ✕
+                    <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
               </div>
@@ -527,10 +527,10 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
                   <button
                     type="button"
                     onClick={() => setDraftTp('')}
-                    className="px-1 py-0.5 rounded text-terminal-micro text-text-faint hover:text-danger cursor-pointer"
+                    className="px-1 py-0.5 rounded text-terminal-micro text-text-faint hover:text-danger cursor-pointer inline-flex items-center justify-center"
                     title="Clear Take Profit"
                   >
-                    ✕
+                    <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
               </div>
@@ -607,9 +607,9 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
             <button
               type="button"
               onClick={() => handleCancelPending(ord.id)}
-              className="px-1.5 py-0.2 rounded text-terminal-micro font-semibold bg-danger/15 hover:bg-danger text-rose-300 hover:text-white transition-colors cursor-pointer"
+              className="px-1.5 py-0.5 rounded text-terminal-micro font-semibold bg-danger/15 hover:bg-danger text-rose-300 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
             >
-              ✕ Cancel
+              <X className="h-2.5 w-2.5" /> Cancel
             </button>
           </div>
         )

@@ -67,7 +67,7 @@ export function AiSentinelPanel() {
   return (
     <div className="space-y-6">
       {/* ── Sentinel Status Header ─────────────────────────────────────────── */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50/60 via-white to-slate-50/60 dark:from-[#141A2E] dark:via-[#101726] dark:to-[#0A0D17] border border-slate-200 dark:border-surface-muted flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-surface to-surface border border-emerald-500/30 dark:from-[#141A2E] dark:via-[#101726] dark:to-[#0A0D17] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
             <ShieldAlert className="w-7 h-7" />
@@ -167,12 +167,12 @@ export function AiSentinelPanel() {
 
       {/* ── AI Intelligence Recommendations ───────────────────────────────── */}
       {report?.ai_recommendations && report.ai_recommendations.length > 0 && (
-        <div className="p-4 rounded-xl bg-cyan-50/80 border border-cyan-300 text-cyan-950 dark:bg-[#0F172A] dark:border-cyan-500/30 dark:text-cyan-200 space-y-2 shadow-xs">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+        <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-slate-900 dark:bg-[#0F172A] dark:border-cyan-500/30 dark:text-cyan-200 space-y-2 shadow-xs">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-800 dark:text-cyan-400">
             <Zap className="w-4 h-4" />
             Autonomous Risk Recommendations (AI Risk Sentinel)
           </div>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-gray-300 font-medium dark:font-normal">
+          <ul className="space-y-1.5 text-xs text-slate-900 dark:text-gray-200 font-medium dark:font-normal">
             {report.ai_recommendations.map((rec, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className="text-cyan-600 dark:text-cyan-400 font-bold">•</span>

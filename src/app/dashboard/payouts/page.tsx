@@ -663,7 +663,15 @@ function RequestPayoutDialog({
                 </Label>
                 {address.trim().length > 0 && (
                   <span className={`text-2xs font-medium flex items-center gap-1 ${isAddressValid ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {isAddressValid ? '✓ Valid format' : '✗ Invalid format'}
+                    {isAddressValid ? (
+                      <>
+                        <CheckCircle2 className="h-3 w-3 shrink-0" /> Valid format
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="h-3 w-3 shrink-0" /> Invalid format
+                      </>
+                    )}
                   </span>
                 )}
               </div>

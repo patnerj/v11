@@ -217,19 +217,27 @@ export default function HowItWorksPage() {
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-5 rounded-2xl bg-surface-muted/60 dark:bg-surface/60 border border-border text-center shadow-xs">
-                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1">✓ EAs &amp; Algos</div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1 flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> EAs &amp; Algos
+                </div>
                 <div className="text-2xs text-text-muted">All algorithmic trading and Expert Advisors permitted.</div>
               </div>
               <div className="p-5 rounded-2xl bg-surface-muted/60 dark:bg-surface/60 border border-border text-center shadow-xs">
-                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1">✓ News Trading</div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1 flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> News Trading
+                </div>
                 <div className="text-2xs text-text-muted">Execute through NFP, FOMC, and CPI releases.</div>
               </div>
               <div className="p-5 rounded-2xl bg-surface-muted/60 dark:bg-surface/60 border border-border text-center shadow-xs">
-                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1">✓ Weekend Holding</div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1 flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> Weekend Holding
+                </div>
                 <div className="text-2xs text-text-muted">Hold swing positions across market closures (select models).</div>
               </div>
               <div className="p-5 rounded-2xl bg-surface-muted/60 dark:bg-surface/60 border border-border text-center shadow-xs">
-                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1">✓ No Time Limits</div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1 flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> No Time Limits
+                </div>
                 <div className="text-2xs text-text-muted">Zero calendar pressure. Trade at your natural pace.</div>
               </div>
             </div>

@@ -996,12 +996,12 @@ export default function MarketingHubPage() {
                       </Button>
                       <Button
                         size="sm"
-                        variant="danger"
+                        variant="outline"
                         onClick={() => setBannerToDelete(b)}
-                        className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                        className="h-8 w-8 p-0 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                         title="Delete Banner"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardFooter>
@@ -1127,12 +1127,12 @@ export default function MarketingHubPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="danger"
+                      variant="outline"
                       onClick={() => setCouponToDelete(c)}
-                      className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                      className="h-8 w-8 p-0 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                       title="Delete Coupon"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ),

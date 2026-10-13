@@ -142,7 +142,7 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
           <div className="space-y-1.5 pt-1">
             <div className="flex justify-between items-center text-terminal-micro text-text-muted font-medium">
               <span className="text-rose-400 font-semibold flex items-center gap-1">
-                <span>✕</span> Breach Zone ($0 remaining)
+                <AlertTriangle className="h-3 w-3 text-rose-500 inline shrink-0" /> Breach Zone ($0 remaining)
               </span>
               <span className={cn(
                 "terminal-num font-semibold",

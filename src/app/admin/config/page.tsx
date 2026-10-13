@@ -8,7 +8,7 @@ import {
   Award, Clock, AlertTriangle, Layers, Palette, Eye, Sparkles,
   Zap, Scale, Radio, Info, ChevronRight, X, Power, TrendingUp, ArrowRight,
   Mail, Terminal, Server, Activity, Database, AlertOctagon, HardDrive, Send, Sun, Moon, Copy, FileText, CheckCircle2,
-  HelpCircle, Monitor, BellRing, Bot, MessageSquare, CreditCard, CandlestickChart
+  HelpCircle, Monitor, BellRing, Bot, MessageSquare, CreditCard, CandlestickChart, Calendar, UserCheck, Cpu, AlertCircle
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -1987,12 +1987,12 @@ export default function ConfigurationHubPage() {
                       </Button>
                       <Button
                         size="sm"
-                        variant="danger"
+                        variant="outline"
                         onClick={() => setPlanToDelete(plan)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                         title="Delete/Archive Plan"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardFooter>
@@ -2345,13 +2345,13 @@ export default function ConfigurationHubPage() {
                         {brandingForm.logo_url && (
                           <Button
                             type="button"
-                            variant="danger"
+                            variant="outline"
                             size="sm"
                             onClick={() => setBrandingForm({ ...brandingForm, logo_url: '' })}
-                            className="shrink-0 text-xs px-2"
+                            className="shrink-0 text-xs px-2 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                             title="Reset Logo"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -2408,13 +2408,13 @@ export default function ConfigurationHubPage() {
                         {brandingForm.login_logo_url && (
                           <Button
                             type="button"
-                            variant="danger"
+                            variant="outline"
                             size="sm"
                             onClick={() => setBrandingForm({ ...brandingForm, login_logo_url: '' })}
-                            className="shrink-0 text-xs px-2"
+                            className="shrink-0 text-xs px-2 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                             title="Reset Login Logo"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -2472,13 +2472,13 @@ export default function ConfigurationHubPage() {
                         {brandingForm.sidebar_icon_url && (
                           <Button
                             type="button"
-                            variant="danger"
+                            variant="outline"
                             size="sm"
                             onClick={() => setBrandingForm({ ...brandingForm, sidebar_icon_url: '' })}
-                            className="shrink-0 text-xs px-2"
+                            className="shrink-0 text-xs px-2 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                             title="Reset Sidebar Icon"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -2540,13 +2540,13 @@ export default function ConfigurationHubPage() {
                         {brandingForm.favicon_url && (
                           <Button
                             type="button"
-                            variant="danger"
+                            variant="outline"
                             size="sm"
                             onClick={() => setBrandingForm({ ...brandingForm, favicon_url: '' })}
-                            className="shrink-0 text-xs px-2"
+                            className="shrink-0 text-xs px-2 border-red-500/30 text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                             title="Reset Favicon"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -2633,149 +2633,211 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 4: SYSTEM RULES ───────────────────────────────────────────── */}
       {activeTab === 'rules' && (
-        <div className="space-y-6 w-full">
-          <Card className="bg-surface border-surface-muted">
-            <CardHeader className="border-b border-surface-muted/60 pb-4">
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                Global Trading Rules & Compliance Parameters
-              </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
-                Define default risk policies, trading behavior guardrails, and payout cycle constraints
-              </CardDescription>
-            </CardHeader>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 w-full items-start">
+          {/* Main Column: System Rules Configuration (8 cols) */}
+          <div className="xl:col-span-8 space-y-6 w-full">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
+                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  Global Trading Rules & Compliance Parameters
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-400">
+                  Define default risk policies, trading behavior guardrails, and payout cycle constraints
+                </CardDescription>
+              </CardHeader>
 
-            <CardContent className="p-6 space-y-6">
-              
-              {/* Numerical Guardrails */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <CardContent className="p-6 space-y-6">
                 
-                <div className="space-y-1.5">
-                  <Label htmlFor="min-days">Min Trading Days (Default)</Label>
-                  <Input
-                    id="min-days"
-                    type="number"
-                    value={systemRulesForm.min_trading_days_default}
-                    onChange={(e) => setSystemRulesForm({ ...systemRulesForm, min_trading_days_default: Number(e.target.value) })}
-                  />
-                  <span className="text-2xs text-gray-500">Days per evaluation phase</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="inactivity-days">Inactivity Auto-Close Limit</Label>
-                  <Input
-                    id="inactivity-days"
-                    type="number"
-                    value={systemRulesForm.max_inactivity_days}
-                    onChange={(e) => setSystemRulesForm({ ...systemRulesForm, max_inactivity_days: Number(e.target.value) })}
-                  />
-                  <span className="text-2xs text-gray-500">Auto-breach if inactive (Days)</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="news-window">News Window Buffer (Mins)</Label>
-                  <Input
-                    id="news-window"
-                    type="number"
-                    value={systemRulesForm.news_window_minutes}
-                    onChange={(e) => setSystemRulesForm({ ...systemRulesForm, news_window_minutes: Number(e.target.value) })}
-                  />
-                  <span className="text-2xs text-gray-500">Minutes before/after high impact news</span>
-                </div>
-
-              </div>
-
-              {/* Financial Guardrails */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
-                
-                <div className="space-y-1.5">
-                  <Label htmlFor="min-payout">Minimum Payout Amount ($)</Label>
-                  <Input
-                    id="min-payout"
-                    type="number"
-                    value={systemRulesForm.min_payout_amount}
-                    onChange={(e) => setSystemRulesForm({ ...systemRulesForm, min_payout_amount: Number(e.target.value) })}
-                  />
-                  <span className="text-2xs text-gray-500">Minimum withdrawal floor</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="large-payout">Large Payout Review Threshold ($)</Label>
-                  <Input
-                    id="large-payout"
-                    type="number"
-                    value={systemRulesForm.large_payout_threshold}
-                    onChange={(e) => setSystemRulesForm({ ...systemRulesForm, large_payout_threshold: Number(e.target.value) })}
-                  />
-                  <span className="text-2xs text-gray-500">Requires dual admin sign-off</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="payout-freq">Payout Frequency (Days)</Label>
-                  <Input
-                    id="payout-freq"
-                    type="number"
-                    value={systemRulesForm.payout_frequency_days}
-                    onChange={(e) => setSystemRulesForm({ ...systemRulesForm, payout_frequency_days: Number(e.target.value) })}
-                  />
-                  <span className="text-2xs text-gray-500">Interval between payout requests</span>
-                </div>
-
-              </div>
-
-              {/* Toggle Switches */}
-              <div className="space-y-4 pt-2 border-t border-surface-muted/60">
-                <Label>System-Wide Compliance Enforcement</Label>
-
-                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-200">Mandatory KYC Before First Payout</p>
-                    <p className="text-xs text-gray-500">Require photo ID and address verification before withdrawal approvals</p>
+                {/* Numerical Guardrails */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  
+                  <div className="space-y-1.5">
+                    <Label htmlFor="min-days">Min Trading Days (Default)</Label>
+                    <Input
+                      id="min-days"
+                      type="number"
+                      value={systemRulesForm.min_trading_days_default}
+                      onChange={(e) => setSystemRulesForm({ ...systemRulesForm, min_trading_days_default: Number(e.target.value) })}
+                    />
+                    <span className="text-2xs text-gray-500">Days per evaluation phase</span>
                   </div>
-                  <Switch
-                    checked={!!systemRulesForm.mandatory_kyc}
-                    onCheckedChange={(checked) => setSystemRulesForm({ ...systemRulesForm, mandatory_kyc: checked ? 1 : 0 })}
-                  />
-                </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-200">Weekend Position Holding Default</p>
-                    <p className="text-xs text-gray-500">Allow traders to maintain open swing positions through market close</p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inactivity-days">Inactivity Auto-Close Limit</Label>
+                    <Input
+                      id="inactivity-days"
+                      type="number"
+                      value={systemRulesForm.max_inactivity_days}
+                      onChange={(e) => setSystemRulesForm({ ...systemRulesForm, max_inactivity_days: Number(e.target.value) })}
+                    />
+                    <span className="text-2xs text-gray-500">Auto-breach if inactive (Days)</span>
                   </div>
-                  <Switch
-                    checked={!!systemRulesForm.weekend_holding_default}
-                    onCheckedChange={(checked) => setSystemRulesForm({ ...systemRulesForm, weekend_holding_default: checked ? 1 : 0 })}
-                  />
-                </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-200">Mandatory Stop Loss on Every Trade</p>
-                    <p className="text-xs text-gray-500">Require SL parameter on all opened market and pending orders</p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="news-window">News Window Buffer (Mins)</Label>
+                    <Input
+                      id="news-window"
+                      type="number"
+                      value={systemRulesForm.news_window_minutes}
+                      onChange={(e) => setSystemRulesForm({ ...systemRulesForm, news_window_minutes: Number(e.target.value) })}
+                    />
+                    <span className="text-2xs text-gray-500">Minutes before/after high impact news</span>
                   </div>
-                  <Switch
-                    checked={!!systemRulesForm.stop_loss_required_default}
-                    onCheckedChange={(checked) => setSystemRulesForm({ ...systemRulesForm, stop_loss_required_default: checked ? 1 : 0 })}
-                  />
+
                 </div>
 
-              </div>
+                {/* Financial Guardrails */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
+                  
+                  <div className="space-y-1.5">
+                    <Label htmlFor="min-payout">Minimum Payout Amount ($)</Label>
+                    <Input
+                      id="min-payout"
+                      type="number"
+                      value={systemRulesForm.min_payout_amount}
+                      onChange={(e) => setSystemRulesForm({ ...systemRulesForm, min_payout_amount: Number(e.target.value) })}
+                    />
+                    <span className="text-2xs text-gray-500">Minimum withdrawal floor</span>
+                  </div>
 
-            </CardContent>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="large-payout">Large Payout Review Threshold ($)</Label>
+                    <Input
+                      id="large-payout"
+                      type="number"
+                      value={systemRulesForm.large_payout_threshold}
+                      onChange={(e) => setSystemRulesForm({ ...systemRulesForm, large_payout_threshold: Number(e.target.value) })}
+                    />
+                    <span className="text-2xs text-gray-500">Requires dual admin sign-off</span>
+                  </div>
 
-            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
-              <Button
-                variant="primary"
-                onClick={() => saveRulesMutation.mutate(systemRulesForm)}
-                loading={saveRulesMutation.isPending}
-                className="gap-1.5 shadow-emerald-500/20"
-              >
-                <Save className="h-4 w-4" />
-                Save System Rules
-              </Button>
-            </CardFooter>
-          </Card>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="payout-freq">Payout Frequency (Days)</Label>
+                    <Input
+                      id="payout-freq"
+                      type="number"
+                      value={systemRulesForm.payout_frequency_days}
+                      onChange={(e) => setSystemRulesForm({ ...systemRulesForm, payout_frequency_days: Number(e.target.value) })}
+                    />
+                    <span className="text-2xs text-gray-500">Interval between payout requests</span>
+                  </div>
+
+                </div>
+
+                {/* Toggle Switches */}
+                <div className="space-y-4 pt-2 border-t border-surface-muted/60">
+                  <Label>System-Wide Compliance Enforcement</Label>
+
+                  <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-200">Mandatory KYC Before First Payout</p>
+                      <p className="text-xs text-gray-500">Require photo ID and address verification before withdrawal approvals</p>
+                    </div>
+                    <Switch
+                      checked={!!systemRulesForm.mandatory_kyc}
+                      onCheckedChange={(checked) => setSystemRulesForm({ ...systemRulesForm, mandatory_kyc: checked ? 1 : 0 })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-200">Weekend Position Holding Default</p>
+                      <p className="text-xs text-gray-500">Allow traders to maintain open swing positions through market close</p>
+                    </div>
+                    <Switch
+                      checked={!!systemRulesForm.weekend_holding_default}
+                      onCheckedChange={(checked) => setSystemRulesForm({ ...systemRulesForm, weekend_holding_default: checked ? 1 : 0 })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 bg-background rounded-xl border border-surface-muted">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-200">Mandatory Stop Loss on Every Trade</p>
+                      <p className="text-xs text-gray-500">Require SL parameter on all opened market and pending orders</p>
+                    </div>
+                    <Switch
+                      checked={!!systemRulesForm.stop_loss_required_default}
+                      onCheckedChange={(checked) => setSystemRulesForm({ ...systemRulesForm, stop_loss_required_default: checked ? 1 : 0 })}
+                    />
+                  </div>
+
+                </div>
+
+              </CardContent>
+
+              <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
+                <Button
+                  variant="primary"
+                  onClick={() => saveRulesMutation.mutate(systemRulesForm)}
+                  loading={saveRulesMutation.isPending}
+                  className="gap-1.5 shadow-emerald-500/20"
+                >
+                  <Save className="h-4 w-4" />
+                  Save System Rules
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Sidecar Column: Policy Summary & Guardrails Reference (4 cols) */}
+          <div className="xl:col-span-4 space-y-6 w-full xl:sticky xl:top-6">
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-sm font-bold text-text flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    Policy Health & Safeguards
+                  </span>
+                  <Badge tone="accent" size="sm">Active</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <UserCheck className="h-3.5 w-3.5 text-blue-400" /> Mandatory KYC Gate
+                  </span>
+                  <Badge tone={systemRulesForm.mandatory_kyc ? 'success' : 'neutral'} size="sm">
+                    {systemRulesForm.mandatory_kyc ? 'Enforced' : 'Optional'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Calendar className="h-3.5 w-3.5 text-amber-400" /> Weekend Holding
+                  </span>
+                  <Badge tone={systemRulesForm.weekend_holding_default ? 'success' : 'neutral'} size="sm">
+                    {systemRulesForm.weekend_holding_default ? 'Permitted' : 'Closed'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Lock className="h-3.5 w-3.5 text-rose-400" /> Mandatory Stop Loss
+                  </span>
+                  <Badge tone={systemRulesForm.stop_loss_required_default ? 'danger' : 'neutral'} size="sm">
+                    {systemRulesForm.stop_loss_required_default ? 'Strict' : 'Flexible'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-emerald-400" /> News Trading Window
+                  </span>
+                  <Badge tone="accent" size="sm" className="font-mono">
+                    ±{systemRulesForm.news_window_minutes} mins
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-surface border-border shadow-sm p-4 space-y-3 text-xs">
+              <h4 className="font-bold text-text flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-400" />
+                Treasury Payout Thresholds
+              </h4>
+              <p className="text-text-muted leading-relaxed">
+                Minimum disbursal is fixed at <strong className="text-text font-mono">${systemRulesForm.min_payout_amount}</strong>. Requests above <strong className="text-text font-mono">${systemRulesForm.large_payout_threshold.toLocaleString()}</strong> require dual administrative approval.
+              </p>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -2788,171 +2850,238 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 6: SMTP MAIL SERVER ───────────────────────────────────────── */}
       {activeTab === 'smtp' && (
-        <div className="space-y-6 w-full">
-          <Card className="bg-surface border-surface-muted">
-            <CardHeader className="border-b border-surface-muted/60 pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-emerald-400" />
-                  SMTP Mail Server Configuration
-                </CardTitle>
-                <Badge tone="accent" size="sm">Transactional Engine</Badge>
-              </div>
-              <CardDescription className="text-xs text-gray-400">
-                Configure authenticated outbound email delivery for credentials dispatch, payout approvals, and breach notices.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-6">
-              
-              {/* Server Host & Port */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label htmlFor="smtp-host">SMTP Host Server</Label>
-                  <Input
-                    id="smtp-host"
-                    placeholder="smtp.mailgun.org or smtp.sendgrid.net"
-                    value={smtpForm.host}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-port">Port</Label>
-                  <Input
-                    id="smtp-port"
-                    type="number"
-                    placeholder="587"
-                    value={smtpForm.port}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, port: Number(e.target.value) })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Encryption & Auth */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-secure">Encryption Protocol</Label>
-                  <select
-                    id="smtp-secure"
-                    value={smtpForm.secure}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, secure: e.target.value as any })}
-                    className="w-full h-10 px-3 rounded-xl border border-surface-muted bg-background text-gray-200 text-xs focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="tls">TLS (STARTTLS — Recommended)</option>
-                    <option value="ssl">SSL (Implicit Port 465)</option>
-                    <option value="none">None (Plaintext Port 25)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-user">SMTP Username / API Key</Label>
-                  <Input
-                    id="smtp-user"
-                    placeholder="postmaster@yourpropfirm.com"
-                    value={smtpForm.user}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, user: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-pass">SMTP Password / Secret</Label>
-                  <Input
-                    id="smtp-pass"
-                    type="password"
-                    placeholder="••••••••••••"
-                    value={smtpForm.pass}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Sender Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-from-name">From Display Name</Label>
-                  <Input
-                    id="smtp-from-name"
-                    placeholder="PropFirm Support"
-                    value={smtpForm.from_name}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, from_name: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-from-email">From Email Address</Label>
-                  <Input
-                    id="smtp-from-email"
-                    placeholder="support@yourpropfirm.com"
-                    value={smtpForm.from_email}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, from_email: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="smtp-reply-to">Reply-To Address</Label>
-                  <Input
-                    id="smtp-reply-to"
-                    placeholder="support@yourpropfirm.com"
-                    value={smtpForm.reply_to}
-                    onChange={(e) => setSmtpForm({ ...smtpForm, reply_to: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Interactive Live Email Tester */}
-              <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-3 pt-4">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 w-full items-start">
+          {/* Main Column: SMTP Server & Diagnostics (8 cols) */}
+          <div className="xl:col-span-8 space-y-6 w-full">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Send className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs font-bold text-white">Live SMTP Diagnostic & Handshake Tester</span>
+                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-emerald-400" />
+                    SMTP Mail Server Configuration
+                  </CardTitle>
+                  <Badge tone="accent" size="sm">Transactional Engine</Badge>
+                </div>
+                <CardDescription className="text-xs text-gray-400">
+                  Configure authenticated outbound email delivery for credentials dispatch, payout approvals, and breach notices.
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-6">
+                
+                {/* Server Host & Port */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label htmlFor="smtp-host">SMTP Host Server</Label>
+                    <Input
+                      id="smtp-host"
+                      placeholder="smtp.mailgun.org or smtp.sendgrid.net"
+                      value={smtpForm.host}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
+                      className="font-mono text-xs"
+                    />
                   </div>
-                  <Badge tone="success" size="sm">Verification Tool</Badge>
-                </div>
-                <p className="text-xs text-gray-400">
-                  Send an immediate test message through your SMTP gateway to verify socket negotiation, authentication, and inbox delivery.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center gap-2">
-                  <Input
-                    placeholder="Enter destination email (e.g. founder@yourpropfirm.com)"
-                    value={testEmailTo}
-                    onChange={(e) => setTestEmailTo(e.target.value)}
-                    className="font-mono text-xs bg-background"
-                  />
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={handleSendTestEmail}
-                    loading={isTestingSmtp}
-                    className="shrink-0 gap-1.5 text-xs w-full sm:w-auto"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    Send Test Email
-                  </Button>
-                </div>
-              </div>
 
-            </CardContent>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-port">Port</Label>
+                    <Input
+                      id="smtp-port"
+                      type="number"
+                      placeholder="587"
+                      value={smtpForm.port}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, port: Number(e.target.value) })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
 
-            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
-              <Button
-                variant="primary"
-                onClick={() => saveSmtpMutation.mutate(smtpForm)}
-                loading={saveSmtpMutation.isPending}
-                className="gap-1.5 shadow-emerald-500/20"
-              >
-                <Save className="h-4 w-4" />
-                Save SMTP Configuration
-              </Button>
-            </CardFooter>
-          </Card>
+                {/* Encryption & Auth */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-secure">Encryption Protocol</Label>
+                    <select
+                      id="smtp-secure"
+                      value={smtpForm.secure}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, secure: e.target.value as any })}
+                      className="w-full h-10 px-3 rounded-xl border border-surface-muted bg-background text-gray-200 text-xs focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="tls">TLS (STARTTLS — Recommended)</option>
+                      <option value="ssl">SSL (Implicit Port 465)</option>
+                      <option value="none">None (Plaintext Port 25)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-user">SMTP Username / API Key</Label>
+                    <Input
+                      id="smtp-user"
+                      placeholder="postmaster@yourpropfirm.com"
+                      value={smtpForm.user}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, user: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-pass">SMTP Password / Secret</Label>
+                    <Input
+                      id="smtp-pass"
+                      type="password"
+                      placeholder="••••••••••••"
+                      value={smtpForm.pass}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Sender Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-surface-muted/60">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-from-name">From Display Name</Label>
+                    <Input
+                      id="smtp-from-name"
+                      placeholder="PropFirm Support"
+                      value={smtpForm.from_name}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, from_name: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-from-email">From Email Address</Label>
+                    <Input
+                      id="smtp-from-email"
+                      placeholder="support@yourpropfirm.com"
+                      value={smtpForm.from_email}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, from_email: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-reply-to">Reply-To Address</Label>
+                    <Input
+                      id="smtp-reply-to"
+                      placeholder="support@yourpropfirm.com"
+                      value={smtpForm.reply_to}
+                      onChange={(e) => setSmtpForm({ ...smtpForm, reply_to: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Interactive Live Email Tester */}
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-3 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Send className="h-4 w-4 text-emerald-400" />
+                      <span className="text-xs font-bold text-white">Live SMTP Diagnostic & Handshake Tester</span>
+                    </div>
+                    <Badge tone="success" size="sm">Verification Tool</Badge>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Send an immediate test message through your SMTP gateway to verify socket negotiation, authentication, and inbox delivery.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <Input
+                      placeholder="Enter destination email (e.g. founder@yourpropfirm.com)"
+                      value={testEmailTo}
+                      onChange={(e) => setTestEmailTo(e.target.value)}
+                      className="font-mono text-xs bg-background"
+                    />
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={handleSendTestEmail}
+                      loading={isTestingSmtp}
+                      className="shrink-0 gap-1.5 text-xs w-full sm:w-auto"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      Send Test Email
+                    </Button>
+                  </div>
+                </div>
+
+              </CardContent>
+
+              <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
+                <Button
+                  variant="primary"
+                  onClick={() => saveSmtpMutation.mutate(smtpForm)}
+                  loading={saveSmtpMutation.isPending}
+                  className="gap-1.5 shadow-emerald-500/20"
+                >
+                  <Save className="h-4 w-4" />
+                  Save SMTP Configuration
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Sidecar Column: Relay Health & Deliverability Checklist (4 cols) */}
+          <div className="xl:col-span-4 space-y-6 w-full xl:sticky xl:top-6">
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-sm font-bold text-text flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-emerald-500" />
+                    Mail Relay Telemetry
+                  </span>
+                  <Badge tone={smtpForm.host ? 'success' : 'neutral'} size="sm">
+                    {smtpForm.host ? 'Configured' : 'Missing Host'}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Server className="h-3.5 w-3.5 text-blue-400" /> Gateway Server
+                  </span>
+                  <span className="font-mono text-text truncate max-w-[140px]" title={smtpForm.host || 'Not set'}>
+                    {smtpForm.host || 'None'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Activity className="h-3.5 w-3.5 text-emerald-400" /> Port &amp; Protocol
+                  </span>
+                  <Badge tone="accent" size="sm" className="font-mono">
+                    {smtpForm.port} / {smtpForm.secure.toUpperCase()}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Mail className="h-3.5 w-3.5 text-amber-400" /> From Address
+                  </span>
+                  <span className="font-mono text-text truncate max-w-[140px]" title={smtpForm.from_email || 'Not set'}>
+                    {smtpForm.from_email || 'None'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-surface border-border shadow-sm p-4 space-y-3 text-xs">
+              <h4 className="font-bold text-text flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                Inbox Deliverability Checklist
+              </h4>
+              <ul className="space-y-2 text-text-muted">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><strong>SPF Record:</strong> Add <code className="font-mono text-2xs bg-surface-muted px-1 rounded">v=spf1 include:... ~all</code> in DNS.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><strong>DKIM Keys:</strong> Publish TXT selector keys provided by your SMTP relay.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span><strong>DMARC Policy:</strong> Configure <code className="font-mono text-2xs bg-surface-muted px-1 rounded">p=quarantine</code> or <code className="font-mono text-2xs bg-surface-muted px-1 rounded">p=reject</code> to eliminate spoofing.</span>
+                </li>
+              </ul>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -3048,162 +3177,226 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 6: METATRADER 5 BRIDGE & PRICE FEED ───────────────────────── */}
       {activeTab === 'mt5' && (
-        <div className="space-y-6 w-full">
-          {/* Live Price Feed Engine (MT5 Ingest Secret & Health Diagnostics) */}
-          <PriceFeedCard />
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 w-full items-start">
+          {/* Main Column: MT5 Gateway & Price Feed (8 cols) */}
+          <div className="xl:col-span-8 space-y-6 w-full">
+            {/* Live Price Feed Engine (MT5 Ingest Secret & Health Diagnostics) */}
+            <PriceFeedCard />
 
-          <Card className="bg-surface border-surface-muted">
-            <CardHeader className="border-b border-surface-muted/60 pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                  <Server className="h-4 w-4 text-emerald-400" />
-                  MetaTrader 5 Bridge Gateway
-                </CardTitle>
-                <Badge tone="accent" size="sm">Execution Engine</Badge>
-              </div>
-              <CardDescription className="text-xs text-gray-400">
-                Direct integration with MetaTrader 5 Manager API for automatic account provisioning, group assignments, and real-time equity synchronization.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-6">
-              
-              {/* Server IP & Port */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label htmlFor="mt5-ip">MT5 Server IP / Hostname</Label>
-                  <Input
-                    id="mt5-ip"
-                    placeholder="127.0.0.1 or mt5.yourbroker.com"
-                    value={mt5Form.server_ip}
-                    onChange={(e) => setMt5Form({ ...mt5Form, server_ip: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="mt5-port">Server Port</Label>
-                  <Input
-                    id="mt5-port"
-                    type="number"
-                    placeholder="443"
-                    value={mt5Form.server_port}
-                    onChange={(e) => setMt5Form({ ...mt5Form, server_port: Number(e.target.value) })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Manager Login & Pass */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="mt5-login">MT5 Manager Login ID</Label>
-                  <Input
-                    id="mt5-login"
-                    placeholder="1001"
-                    value={mt5Form.manager_login}
-                    onChange={(e) => setMt5Form({ ...mt5Form, manager_login: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="mt5-pass">Manager Password / API Secret</Label>
-                  <Input
-                    id="mt5-pass"
-                    type="password"
-                    placeholder="••••••••••••"
-                    value={mt5Form.manager_pass}
-                    onChange={(e) => setMt5Form({ ...mt5Form, manager_pass: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Group Mappings */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-muted/60">
-                <div className="space-y-1.5">
-                  <Label htmlFor="mt5-demo-group">Demo / Evaluation Group Mapping</Label>
-                  <Input
-                    id="mt5-demo-group"
-                    placeholder="demo\forex-eval"
-                    value={mt5Form.demo_group}
-                    onChange={(e) => setMt5Form({ ...mt5Form, demo_group: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <span className="text-2xs text-gray-500">Group assigned for Phase 1 & 2 accounts</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="mt5-funded-group">Live / Funded Group Mapping</Label>
-                  <Input
-                    id="mt5-funded-group"
-                    placeholder="real\funded-pro"
-                    value={mt5Form.funded_group}
-                    onChange={(e) => setMt5Form({ ...mt5Form, funded_group: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <span className="text-2xs text-gray-500">Group assigned when passing into Funded status</span>
-                </div>
-              </div>
-
-              {/* Ping Gateway Diagnostic Card */}
-              <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-3">
+            <Card className="bg-surface border-surface-muted">
+              <CardHeader className="border-b border-surface-muted/60 pb-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs font-bold text-white">Live MT5 Gateway Connection Ping</span>
+                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                    <Server className="h-4 w-4 text-emerald-400" />
+                    MetaTrader 5 Bridge Gateway
+                  </CardTitle>
+                  <Badge tone="accent" size="sm">Execution Engine</Badge>
+                </div>
+                <CardDescription className="text-xs text-gray-400">
+                  Direct integration with MetaTrader 5 Manager API for automatic account provisioning, group assignments, and real-time equity synchronization.
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="p-6 space-y-6">
+                
+                {/* Server IP & Port */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label htmlFor="mt5-ip">MT5 Server IP / Hostname</Label>
+                    <Input
+                      id="mt5-ip"
+                      placeholder="127.0.0.1 or mt5.yourbroker.com"
+                      value={mt5Form.server_ip}
+                      onChange={(e) => setMt5Form({ ...mt5Form, server_ip: e.target.value })}
+                      className="font-mono text-xs"
+                    />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTestMt5}
-                    loading={isTestingMt5}
-                    className="text-xs gap-1.5"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Test MT5 Manager Connection
-                  </Button>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mt5-port">Server Port</Label>
+                    <Input
+                      id="mt5-port"
+                      type="number"
+                      placeholder="443"
+                      value={mt5Form.server_port}
+                      onChange={(e) => setMt5Form({ ...mt5Form, server_port: Number(e.target.value) })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
                 </div>
 
-                {mt5PingResult && (
-                  <div className={`p-3 rounded-lg border text-xs flex items-center justify-between ${
-                    mt5PingResult.connected
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : 'border-red-500/40 bg-red-500/10 text-red-300'
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      {mt5PingResult.connected ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                      ) : (
-                        <AlertOctagon className="h-4 w-4 text-red-400 shrink-0" />
-                      )}
-                      <span>{mt5PingResult.message}</span>
-                    </div>
-                    {mt5PingResult.connected && (
-                      <Badge tone="success" size="sm" className="font-mono">
-                        Latency: {mt5PingResult.latency_ms}ms
-                      </Badge>
-                    )}
+                {/* Manager Login & Pass */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mt5-login">MT5 Manager Login ID</Label>
+                    <Input
+                      id="mt5-login"
+                      placeholder="1001"
+                      value={mt5Form.manager_login}
+                      onChange={(e) => setMt5Form({ ...mt5Form, manager_login: e.target.value })}
+                      className="font-mono text-xs"
+                    />
                   </div>
-                )}
-              </div>
 
-            </CardContent>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mt5-pass">Manager Password / API Secret</Label>
+                    <Input
+                      id="mt5-pass"
+                      type="password"
+                      placeholder="••••••••••••"
+                      value={mt5Form.manager_pass}
+                      onChange={(e) => setMt5Form({ ...mt5Form, manager_pass: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </div>
 
-            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
-              <Button
-                variant="primary"
-                onClick={() => saveMt5Mutation.mutate(mt5Form)}
-                loading={saveMt5Mutation.isPending}
-                className="gap-1.5 shadow-emerald-500/20"
-              >
-                <Save className="h-4 w-4" />
-                Save MT5 Gateway Settings
-              </Button>
-            </CardFooter>
-          </Card>
+                {/* Group Mappings */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-muted/60">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mt5-demo-group">Demo / Evaluation Group Mapping</Label>
+                    <Input
+                      id="mt5-demo-group"
+                      placeholder="demo\forex-eval"
+                      value={mt5Form.demo_group}
+                      onChange={(e) => setMt5Form({ ...mt5Form, demo_group: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <span className="text-2xs text-gray-500">Group assigned for Phase 1 & 2 accounts</span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mt5-funded-group">Live / Funded Group Mapping</Label>
+                    <Input
+                      id="mt5-funded-group"
+                      placeholder="real\funded-pro"
+                      value={mt5Form.funded_group}
+                      onChange={(e) => setMt5Form({ ...mt5Form, funded_group: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <span className="text-2xs text-gray-500">Group assigned when passing into Funded status</span>
+                  </div>
+                </div>
+
+                {/* Ping Gateway Diagnostic Card */}
+                <div className="p-4 rounded-xl border border-surface-muted bg-background space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-emerald-400" />
+                      <span className="text-xs font-bold text-white">Live MT5 Gateway Connection Ping</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleTestMt5}
+                      loading={isTestingMt5}
+                      className="text-xs gap-1.5"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Test MT5 Manager Connection
+                    </Button>
+                  </div>
+
+                  {mt5PingResult && (
+                    <div className={`p-3 rounded-lg border text-xs flex items-center justify-between ${
+                      mt5PingResult.connected
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                        : 'border-red-500/40 bg-red-500/10 text-red-300'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {mt5PingResult.connected ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                        ) : (
+                          <AlertOctagon className="h-4 w-4 text-red-400 shrink-0" />
+                        )}
+                        <span>{mt5PingResult.message}</span>
+                      </div>
+                      {mt5PingResult.connected && (
+                        <Badge tone="success" size="sm" className="font-mono">
+                          Latency: {mt5PingResult.latency_ms}ms
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+              </CardContent>
+
+              <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
+                <Button
+                  variant="primary"
+                  onClick={() => saveMt5Mutation.mutate(mt5Form)}
+                  loading={saveMt5Mutation.isPending}
+                  className="gap-1.5 shadow-emerald-500/20"
+                >
+                  <Save className="h-4 w-4" />
+                  Save MT5 Gateway Settings
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Sidecar Column: Gateway Health & Architecture (4 cols) */}
+          <div className="xl:col-span-4 space-y-6 w-full xl:sticky xl:top-6">
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-sm font-bold text-text flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Server className="h-4 w-4 text-emerald-500" />
+                    MT5 Bridge Telemetry
+                  </span>
+                  <Badge tone={mt5PingResult?.connected ? 'success' : 'neutral'} size="sm">
+                    {mt5PingResult?.connected ? 'Online' : 'Standby'}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Activity className="h-3.5 w-3.5 text-blue-400" /> Gateway Server
+                  </span>
+                  <span className="font-mono text-text truncate max-w-[140px]" title={mt5Form.server_ip || '127.0.0.1'}>
+                    {mt5Form.server_ip || '127.0.0.1'}:{mt5Form.server_port || 443}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Zap className="h-3.5 w-3.5 text-emerald-400" /> Manager ID
+                  </span>
+                  <span className="font-mono text-text">
+                    #{mt5Form.manager_login || 'None'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <Layers className="h-3.5 w-3.5 text-amber-400" /> Evaluation Group
+                  </span>
+                  <span className="font-mono text-text text-2xs truncate max-w-[140px]" title={mt5Form.demo_group || 'None'}>
+                    {mt5Form.demo_group || 'demo\\forex-eval'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> Funded Group
+                  </span>
+                  <span className="font-mono text-text text-2xs truncate max-w-[140px]" title={mt5Form.funded_group || 'None'}>
+                    {mt5Form.funded_group || 'real\\funded-pro'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-surface border-border shadow-sm p-4 space-y-3 text-xs">
+              <h4 className="font-bold text-text flex items-center gap-2">
+                <Lock className="h-4 w-4 text-emerald-400" />
+                Security &amp; Reverse Copier Guard
+              </h4>
+              <p className="text-text-muted leading-relaxed">
+                MT5 Manager credentials are encrypted in WordPress transients and isolated via fail-closed architecture. All drawdown metrics are calibrated dynamically on first account sync.
+              </p>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -3233,268 +3426,321 @@ export default function ConfigurationHubPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* AI Engine & Gemini Banner Card */}
-            <Card className="col-span-1 md:col-span-2 bg-gradient-to-r from-emerald-50 via-slate-50 to-white dark:from-emerald-950/40 dark:via-surface dark:to-background border border-emerald-200 dark:border-emerald-500/30 p-4 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <Sparkles className="h-5 w-5" />
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 w-full items-start">
+            {/* Main Column: AI Banner, Channels, and Event Subscriptions (8 cols) */}
+            <div className="xl:col-span-8 space-y-6 w-full">
+              {/* AI Engine & Gemini Banner Card */}
+              <Card className="bg-gradient-to-r from-emerald-500/10 via-surface to-surface border border-emerald-500/30 p-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        Google Gemini (Ultra-Fast Free Tier) &amp; DeepSeek AI Engine
+                        {aiForm.gemini_api_key ? (
+                          <span className="text-2xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/40">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-2xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/40">
+                            Key Required
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-slate-600 dark:text-gray-400">
+                        Configure your free Google Gemini API key or local DeepSeek model to power AI Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      Google Gemini (Ultra-Fast Free Tier) &amp; DeepSeek AI Engine
-                      {aiForm.gemini_api_key ? (
-                        <span className="text-2xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/40">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="text-2xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/40">
-                          Key Required
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-xs text-slate-600 dark:text-gray-400">
-                      Configure your free Google Gemini API key or local DeepSeek model to power AI Copilot, 24/7 Support Desk, and Sentinel Risk Auditing.
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setActiveTab('ai_engine')}
+                    className="gap-1.5 text-xs shrink-0 shadow-emerald-500/20"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Configure Gemini Key &rarr;
+                  </Button>
+                </div>
+              </Card>
+
+              {/* 1. Discord Webhook Channel */}
+              <Card className="bg-surface border-surface-muted">
+                <CardHeader className="border-b border-surface-muted/60 pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 text-[#5865F2] flex items-center justify-center font-bold text-sm">
+                        <MessageSquare className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-gray-100">Discord Channel Alerts</CardTitle>
+                        <CardDescription className="text-xs text-gray-400">
+                          Streams rich embed alert cards directly into private Discord channels.
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={webhookForm.discord_enabled}
+                      onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, discord_enabled: checked })}
+                    />
+                  </div>
+                </CardHeader>
+
+                <CardContent className="p-6 space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="discord-url">Discord Webhook URL</Label>
+                    <Input
+                      id="discord-url"
+                      placeholder="https://discord.com/api/webhooks/1234567890/..."
+                      value={webhookForm.discord_webhook_url}
+                      onChange={(e) => setWebhookForm({ ...webhookForm, discord_webhook_url: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-xs text-gray-500 font-mono">
+                      Channel Settings → Integrations → Webhooks → Copy Webhook URL
                     </p>
                   </div>
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setActiveTab('ai_engine')}
-                  className="gap-1.5 text-xs shrink-0 shadow-emerald-500/20"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Configure Gemini Key &rarr;
-                </Button>
-              </div>
-            </Card>
 
-            
-            {/* 1. Discord Webhook Channel */}
-            <Card className="bg-surface border-surface-muted">
-              <CardHeader className="border-b border-surface-muted/60 pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 text-[#5865F2] flex items-center justify-center font-bold text-sm">
-                      <MessageSquare className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base text-gray-100">Discord Channel Alerts</CardTitle>
-                      <CardDescription className="text-xs text-gray-400">
-                        Streams rich embed alert cards directly into private Discord channels.
-                      </CardDescription>
-                    </div>
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleTestDiscordPing}
+                      loading={isTestingDiscord}
+                      disabled={!webhookForm.discord_webhook_url}
+                      className="text-xs gap-1.5 border-surface-muted hover:bg-[#5865F2]/10 text-[#5865F2]"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      Send Test Discord Ping
+                    </Button>
                   </div>
-                  <Switch
-                    checked={webhookForm.discord_enabled}
-                    onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, discord_enabled: checked })}
-                  />
-                </div>
-              </CardHeader>
+                </CardContent>
+              </Card>
 
-              <CardContent className="p-6 space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="discord-url">Discord Webhook URL</Label>
-                  <Input
-                    id="discord-url"
-                    placeholder="https://discord.com/api/webhooks/1234567890/..."
-                    value={webhookForm.discord_webhook_url}
-                    onChange={(e) => setWebhookForm({ ...webhookForm, discord_webhook_url: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-xs text-gray-500 font-mono">
-                    Channel Settings → Integrations → Webhooks → Copy Webhook URL
-                  </p>
-                </div>
-
-                <div className="pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTestDiscordPing}
-                    loading={isTestingDiscord}
-                    disabled={!webhookForm.discord_webhook_url}
-                    className="text-xs gap-1.5 border-surface-muted hover:bg-[#5865F2]/10 text-[#5865F2]"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    Send Test Discord Ping
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 2. Telegram Bot Channel */}
-            <Card className="bg-surface border-surface-muted">
-              <CardHeader className="border-b border-surface-muted/60 pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-[#0088CC]/10 border border-[#0088CC]/20 text-[#0088CC] flex items-center justify-center font-bold text-sm">
-                      <Bot className="h-5 w-5" />
+              {/* 2. Telegram Bot Channel */}
+              <Card className="bg-surface border-surface-muted">
+                <CardHeader className="border-b border-surface-muted/60 pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-[#0088CC]/10 border border-[#0088CC]/20 text-[#0088CC] flex items-center justify-center font-bold text-sm">
+                        <Bot className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-gray-100">Telegram Bot Notifications</CardTitle>
+                        <CardDescription className="text-xs text-gray-400">
+                          Dispatches instant mobile Markdown alerts to a Telegram chat or group.
+                        </CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-base text-gray-100">Telegram Bot Notifications</CardTitle>
-                      <CardDescription className="text-xs text-gray-400">
-                        Dispatches instant mobile Markdown alerts to a Telegram chat or group.
-                      </CardDescription>
-                    </div>
+                    <Switch
+                      checked={webhookForm.telegram_enabled}
+                      onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, telegram_enabled: checked })}
+                    />
                   </div>
-                  <Switch
-                    checked={webhookForm.telegram_enabled}
-                    onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, telegram_enabled: checked })}
-                  />
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="p-6 space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="tg-token">Telegram Bot Token</Label>
-                  <Input
-                    id="tg-token"
-                    placeholder="123456789:ABCdefGhIJKlmNoPQRstuVWxyz"
-                    value={webhookForm.telegram_bot_token}
-                    onChange={(e) => setWebhookForm({ ...webhookForm, telegram_bot_token: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-xs text-gray-500 font-mono">
-                    Obtain from @BotFather on Telegram
-                  </p>
-                </div>
+                <CardContent className="p-6 space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tg-token">Telegram Bot Token</Label>
+                    <Input
+                      id="tg-token"
+                      placeholder="123456789:ABCdefGhIJKlmNoPQRstuVWxyz"
+                      value={webhookForm.telegram_bot_token}
+                      onChange={(e) => setWebhookForm({ ...webhookForm, telegram_bot_token: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-xs text-gray-500 font-mono">
+                      Obtain from @BotFather on Telegram
+                    </p>
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="tg-chat">Telegram Chat ID / Channel ID</Label>
-                  <Input
-                    id="tg-chat"
-                    placeholder="-1001234567890 or 987654321"
-                    value={webhookForm.telegram_chat_id}
-                    onChange={(e) => setWebhookForm({ ...webhookForm, telegram_chat_id: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-xs text-gray-500 font-mono">
-                    User/Group numeric ID (e.g. from @userinfobot)
-                  </p>
-                </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tg-chat">Telegram Chat ID / Channel ID</Label>
+                    <Input
+                      id="tg-chat"
+                      placeholder="-1001234567890 or 987654321"
+                      value={webhookForm.telegram_chat_id}
+                      onChange={(e) => setWebhookForm({ ...webhookForm, telegram_chat_id: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-xs text-gray-500 font-mono">
+                      User/Group numeric ID (e.g. from @userinfobot)
+                    </p>
+                  </div>
 
-                <div className="pt-2">
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleTestTelegramPing}
+                      loading={isTestingTelegram}
+                      disabled={!webhookForm.telegram_bot_token || !webhookForm.telegram_chat_id}
+                      className="text-xs gap-1.5 border-surface-muted hover:bg-[#0088CC]/10 text-[#0088CC]"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      Send Test Telegram Ping
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 3. Real-Time Event Subscription Toggles */}
+              <Card className="bg-surface border-surface-muted">
+                <CardHeader className="border-b border-surface-muted/60 pb-4">
+                  <CardTitle className="text-base text-gray-100 flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-400" />
+                    Real-Time Event Subscriptions
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-400">
+                    Choose which high-priority platform events trigger instant founder webhook dispatches.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+                    {/* Event 1: New Challenge Purchase */}
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-white">💰 Challenge Purchases</span>
+                          <Badge tone="success" size="sm">Revenue</Badge>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Alerts when a trader purchases and pays for a challenge account.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={webhookForm.notify_on_purchase}
+                        onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_purchase: checked })}
+                      />
+                    </div>
+
+                    {/* Event 2: Payout Requests */}
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-white">💳 Payout Requests</span>
+                          <Badge tone="warning" size="sm">Treasury</Badge>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Alerts when a funded trader submits a profit share withdrawal request.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={webhookForm.notify_on_payout}
+                        onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_payout: checked })}
+                      />
+                    </div>
+
+                    {/* Event 3: Account Breaches */}
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-white">⚠️ Hard Drawdown Breaches</span>
+                          <Badge tone="danger" size="sm">Risk Desk</Badge>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Alerts immediately when a trader violates maximum or daily loss limits.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={webhookForm.notify_on_breach}
+                        onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_breach: checked })}
+                      />
+                    </div>
+
+                    {/* Event 4: KYC Submissions */}
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-white">🪪 KYC & AML Submissions</span>
+                          <Badge tone="accent" size="sm">Compliance</Badge>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Alerts when a trader submits government ID & biometric selfie for review.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={webhookForm.notify_on_kyc}
+                        onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_kyc: checked })}
+                      />
+                    </div>
+
+                  </div>
+                </CardContent>
+
+                <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTestTelegramPing}
-                    loading={isTestingTelegram}
-                    disabled={!webhookForm.telegram_bot_token || !webhookForm.telegram_chat_id}
-                    className="text-xs gap-1.5 border-surface-muted hover:bg-[#0088CC]/10 text-[#0088CC]"
+                    variant="primary"
+                    onClick={() => saveWebhooksMutation.mutate(webhookForm)}
+                    loading={saveWebhooksMutation.isPending}
+                    className="gap-1.5 shadow-emerald-500/20"
                   >
-                    <Send className="h-3.5 w-3.5" />
-                    Send Test Telegram Ping
+                    <Save className="h-4 w-4" />
+                    Save Webhook Settings
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardFooter>
+              </Card>
+            </div>
 
+            {/* Sidecar Column: Telemetry & Payload Specs (4 cols) */}
+            <div className="xl:col-span-4 space-y-6 w-full xl:sticky xl:top-6">
+              <Card className="bg-surface border-border shadow-sm">
+                <CardHeader className="pb-3 border-b border-border/60">
+                  <CardTitle className="text-sm font-bold text-text flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <BellRing className="h-4 w-4 text-emerald-500" />
+                      Webhook Channels
+                    </span>
+                    <Badge tone={webhookForm.discord_enabled || webhookForm.telegram_enabled ? 'success' : 'neutral'} size="sm">
+                      {webhookForm.discord_enabled || webhookForm.telegram_enabled ? 'Live' : 'Standby'}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3 text-xs">
+                  <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                    <span className="text-text font-medium flex items-center gap-2">
+                      <MessageSquare className="h-3.5 w-3.5 text-[#5865F2]" /> Discord Channel
+                    </span>
+                    <Badge tone={webhookForm.discord_enabled ? 'success' : 'neutral'} size="sm">
+                      {webhookForm.discord_enabled ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5 border-b border-border/40">
+                    <span className="text-text font-medium flex items-center gap-2">
+                      <Bot className="h-3.5 w-3.5 text-[#0088CC]" /> Telegram Bot
+                    </span>
+                    <Badge tone={webhookForm.telegram_enabled ? 'success' : 'neutral'} size="sm">
+                      {webhookForm.telegram_enabled ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5">
+                    <span className="text-text font-medium flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> AI Engine Key
+                    </span>
+                    <Badge tone={aiForm.gemini_api_key ? 'success' : 'warning'} size="sm">
+                      {aiForm.gemini_api_key ? 'Connected' : 'Missing'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-surface border-border shadow-sm p-4 space-y-3 text-xs">
+                <h4 className="font-bold text-text flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-emerald-400" />
+                  Real-Time Dispatch Engine
+                </h4>
+                <p className="text-text-muted leading-relaxed">
+                  Webhooks are fired asynchronously on transaction settlement, breach enforcement, and payout request submission without adding latency to trading executions.
+                </p>
+              </Card>
+            </div>
           </div>
-
-          {/* 3. Real-Time Event Subscription Toggles */}
-          <Card className="bg-surface border-surface-muted">
-            <CardHeader className="border-b border-surface-muted/60 pb-4">
-              <CardTitle className="text-base text-gray-100 flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-400" />
-                Real-Time Event Subscriptions
-              </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
-                Choose which high-priority platform events trigger instant founder webhook dispatches.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                {/* Event 1: New Challenge Purchase */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">💰 Challenge Purchases</span>
-                      <Badge tone="success" size="sm">Revenue</Badge>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Alerts when a trader purchases and pays for a challenge account.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={webhookForm.notify_on_purchase}
-                    onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_purchase: checked })}
-                  />
-                </div>
-
-                {/* Event 2: Payout Requests */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">💳 Payout Requests</span>
-                      <Badge tone="warning" size="sm">Treasury</Badge>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Alerts when a funded trader submits a profit share withdrawal request.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={webhookForm.notify_on_payout}
-                    onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_payout: checked })}
-                  />
-                </div>
-
-                {/* Event 3: Account Breaches */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">⚠️ Hard Drawdown Breaches</span>
-                      <Badge tone="danger" size="sm">Risk Desk</Badge>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Alerts immediately when a trader violates maximum or daily loss limits.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={webhookForm.notify_on_breach}
-                    onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_breach: checked })}
-                  />
-                </div>
-
-                {/* Event 4: KYC Submissions */}
-                <div className="flex items-center justify-between p-4 rounded-xl border border-surface-muted bg-background">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">🪪 KYC & AML Submissions</span>
-                      <Badge tone="accent" size="sm">Compliance</Badge>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Alerts when a trader submits government ID & biometric selfie for review.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={webhookForm.notify_on_kyc}
-                    onCheckedChange={(checked) => setWebhookForm({ ...webhookForm, notify_on_kyc: checked })}
-                  />
-                </div>
-
-              </div>
-            </CardContent>
-
-            <CardFooter className="border-t border-surface-muted/60 p-4 flex justify-end">
-              <Button
-                variant="primary"
-                onClick={() => saveWebhooksMutation.mutate(webhookForm)}
-                loading={saveWebhooksMutation.isPending}
-                className="gap-1.5 shadow-emerald-500/20"
-              >
-                <Save className="h-4 w-4" />
-                Save Webhook Settings
-              </Button>
-            </CardFooter>
-          </Card>
-
         </div>
       )}
 

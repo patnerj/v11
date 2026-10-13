@@ -30,13 +30,13 @@ export function ImpersonationBanner() {
       clearFxsimCache()
       await refresh(true)
       toast.success(`Returned to your admin account (${record.admin_username}).`)
-      router.replace('/admin')
+      window.location.href = '/admin'
     } else {
       // Fallback: if the session couldn't be restored, fail safe to login.
       endImp()
       await signout()
       toast.error('Could not restore your admin session — please sign in again.')
-      router.replace('/login')
+      window.location.href = '/login'
     }
   }
 

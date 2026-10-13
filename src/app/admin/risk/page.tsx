@@ -801,7 +801,7 @@ export default function RiskManagementHubPage() {
                 
                 {/* Time Delta Sensitivity */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-slate-900 dark:text-gray-200 flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                     Time Delta Sensitivity (ms)
                   </Label>
@@ -813,18 +813,18 @@ export default function RiskManagementHubPage() {
                       step={100}
                       value={syndicateSettingsForm.time_delta_ms}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, time_delta_ms: Number(e.target.value) })}
-                      className="bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-900 dark:text-white font-mono h-10 shadow-xs"
+                      className="bg-white dark:bg-background border-slate-300 dark:border-surface-muted text-slate-900 dark:text-white font-mono h-10 shadow-xs focus:border-emerald-500"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">ms</span>
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-600 dark:text-gray-400 font-mono">ms</span>
                   </div>
-                  <p className="text-2xs text-slate-500 dark:text-gray-500">
+                  <p className="text-2xs text-slate-600 dark:text-gray-400 font-medium">
                     Maximum time window between opposing trades to trigger syndicate flagging (Default: 1,500ms).
                   </p>
                 </div>
 
                 {/* Lot Size Match Ratio */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-slate-900 dark:text-gray-200 flex items-center gap-1.5">
                     <Scale className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                     Lot Size Match Ratio (%)
                   </Label>
@@ -836,18 +836,18 @@ export default function RiskManagementHubPage() {
                       step={1}
                       value={syndicateSettingsForm.lot_match_pct}
                       onChange={(e) => setSyndicateSettingsForm({ ...syndicateSettingsForm, lot_match_pct: Number(e.target.value) })}
-                      className="bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-900 dark:text-white font-mono h-10 shadow-xs"
+                      className="bg-white dark:bg-background border-slate-300 dark:border-surface-muted text-slate-900 dark:text-white font-mono h-10 shadow-xs focus:border-emerald-500"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-gray-500 font-mono">%</span>
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-600 dark:text-gray-400 font-mono">%</span>
                   </div>
-                  <p className="text-2xs text-slate-500 dark:text-gray-500">
-                    Volume symmetry requirement between Buy & Sell legs to qualify as reverse hedging (Default: 85%).
+                  <p className="text-2xs text-slate-600 dark:text-gray-400 font-medium">
+                    Volume symmetry requirement between Buy &amp; Sell legs to qualify as reverse hedging (Default: 85%).
                   </p>
                 </div>
 
                 {/* Strict IP Matching Mode */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Label className="text-xs font-semibold text-slate-900 dark:text-gray-200 flex items-center gap-1.5">
                     <Shield className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" />
                     IP Address Correlation Mode
                   </Label>
@@ -857,12 +857,12 @@ export default function RiskManagementHubPage() {
                       onClick={() => setSyndicateSettingsForm({ ...syndicateSettingsForm, ip_mode: 'subnet_24' })}
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'subnet_24'
-                          ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
-                          : 'bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
+                          ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 font-bold shadow-xs'
+                          : 'bg-white dark:bg-background border-slate-300 dark:border-surface-muted text-slate-800 dark:text-gray-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50'
                       }`}
                     >
                       Subnet /24
-                      <span className="block text-3xs text-slate-500 dark:text-gray-400 font-normal">Proxy/VPN Cluster</span>
+                      <span className="block text-3xs text-slate-600 dark:text-gray-400 font-normal">Proxy/VPN Cluster</span>
                     </button>
 
                     <button
@@ -870,15 +870,15 @@ export default function RiskManagementHubPage() {
                       onClick={() => setSyndicateSettingsForm({ ...syndicateSettingsForm, ip_mode: 'exact' })}
                       className={`p-2 rounded-lg text-xs font-semibold border transition-all text-center ${
                         syndicateSettingsForm.ip_mode === 'exact'
-                          ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 shadow-xs'
-                          : 'bg-white dark:bg-background border-slate-200 dark:border-surface-muted text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white'
+                          ? 'bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300 font-bold shadow-xs'
+                          : 'bg-white dark:bg-background border-slate-300 dark:border-surface-muted text-slate-800 dark:text-gray-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50'
                       }`}
                     >
                       Exact Match
-                      <span className="block text-3xs text-slate-500 dark:text-gray-500 font-normal">Identical IP Only</span>
+                      <span className="block text-3xs text-slate-600 dark:text-gray-400 font-normal">Identical IP Only</span>
                     </button>
                   </div>
-                  <p className="text-2xs text-slate-500 dark:text-gray-500">
+                  <p className="text-2xs text-slate-600 dark:text-gray-400 font-medium">
                     Subnet /24 detects VPN colluders rotating within the same data center range.
                   </p>
                 </div>

@@ -938,10 +938,10 @@ export default function AdminHelpdeskPage() {
               </CardContent>
 
               {/* ── Beautiful, Spacious Admin Reply Composer ──────────────────────── */}
-              <CardFooter className="border-t border-border p-4 flex flex-col gap-3 bg-surface-muted/50 shrink-0">
+              <CardFooter className="border-t border-border p-5 flex flex-col gap-3.5 bg-surface-muted/40 shrink-0">
                 
-                {/* Canned Responses Row */}
-                <div className="w-full flex items-center justify-between gap-2 overflow-x-auto pb-0.5">
+                {/* Canned Responses & AI Drafting Bar */}
+                <div className="w-full flex items-center justify-between gap-3 overflow-x-auto pb-1">
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
@@ -952,10 +952,10 @@ export default function AdminHelpdeskPage() {
                       <Sparkles className={`h-3.5 w-3.5 ${isAutoDrafting ? 'animate-spin' : ''}`} />
                       {isAutoDrafting ? 'Drafting with AI...' : '✨ AI Auto-Draft'}
                     </button>
-                    <span className="text-2xs text-text-muted font-mono hidden md:inline">| Presets:</span>
+                    <span className="text-2xs text-text-muted font-mono hidden md:inline">| Quick Presets:</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 overflow-x-auto">
+                  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
                     {CANNED_RESPONSES.map((cr) => (
                       <button
                         key={cr.title}
@@ -964,7 +964,7 @@ export default function AdminHelpdeskPage() {
                           setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${cr.text}` : cr.text))
                           toast.info(`Inserted "${cr.title}" template into reply!`)
                         }}
-                        className="px-2.5 py-1 rounded-md bg-surface hover:bg-accent/15 border border-border hover:border-accent/40 text-2xs text-text hover:text-accent transition-all shrink-0 cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-surface hover:bg-accent/15 border border-border hover:border-accent/40 text-xs font-medium text-text hover:text-accent transition-all shrink-0 cursor-pointer shadow-2xs"
                         title={cr.text}
                       >
                         {cr.title}
@@ -974,14 +974,14 @@ export default function AdminHelpdeskPage() {
                 </div>
 
                 {/* Mode Selector Tabs: Reply to Trader vs Internal Note */}
-                <div className="w-full flex items-center justify-between border-b border-border pb-2 pt-1">
+                <div className="w-full flex items-center justify-between border-b border-border/80 pb-2.5 pt-1">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsInternalNote(false)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         !isInternalNote
-                          ? 'bg-accent/15 text-accent border border-accent/30 shadow-xs'
+                          ? 'bg-accent/15 text-accent border border-accent/40 shadow-xs'
                           : 'text-text-muted hover:text-text'
                       }`}
                     >
@@ -991,9 +991,9 @@ export default function AdminHelpdeskPage() {
                     <button
                       type="button"
                       onClick={() => setIsInternalNote(true)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         isInternalNote
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-xs'
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-xs'
                           : 'text-text-muted hover:text-text'
                       }`}
                     >
@@ -1001,15 +1001,26 @@ export default function AdminHelpdeskPage() {
                       Internal Compliance Note
                     </button>
                   </div>
-                  {isInternalNote && (
-                    <span className="text-2xs text-amber-600 dark:text-amber-400/80 font-mono italic hidden sm:inline">
-                      🔒 Only visible to staff
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {replyMessage.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setReplyMessage('')}
+                        className="text-2xs text-text-muted hover:text-red-500 transition-colors cursor-pointer"
+                      >
+                        Clear Draft
+                      </button>
+                    )}
+                    {isInternalNote && (
+                      <span className="text-2xs text-amber-600 dark:text-amber-400/90 font-mono italic hidden sm:inline">
+                        🔒 Only visible to internal staff
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Reply Form (Spacious Canvas, NO overlapping buttons) */}
-                <form onSubmit={handleSendReplySubmit} className="w-full space-y-2.5">
+                {/* Reply Form (Spacious Canvas & Clear Action Buttons) */}
+                <form onSubmit={handleSendReplySubmit} className="w-full space-y-3">
                   <Textarea
                     placeholder={
                       isInternalNote
@@ -1024,31 +1035,31 @@ export default function AdminHelpdeskPage() {
                         handleSendReplySubmit(e)
                       }
                     }}
-                    rows={4}
-                    className={`w-full text-xs sm:text-sm bg-surface border-border p-3.5 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[95px] ${
+                    rows={5}
+                    className={`w-full text-xs sm:text-sm bg-surface border-border p-4 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[135px] shadow-xs ${
                       isInternalNote
-                        ? 'border-amber-500/40 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 bg-amber-500/5'
-                        : 'focus:border-accent focus:ring-1 focus:ring-accent/30'
+                        ? 'border-amber-500/40 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 bg-amber-500/5'
+                        : 'focus:border-accent focus:ring-2 focus:ring-accent/20'
                     }`}
                   />
 
                   {/* Dedicated Action Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span>Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border font-mono text-2xs text-text">Ctrl + Enter</kbd> to quickly send</span>
+                      <span>Press <kbd className="px-2 py-0.5 rounded bg-surface border border-border font-mono text-2xs text-text font-bold">Ctrl + Enter</kbd> to dispatch</span>
                     </div>
 
-                    <div className="flex items-center gap-2.5 self-end sm:self-center">
+                    <div className="flex items-center gap-3 self-end sm:self-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         disabled={sendReplyMutation.isPending || isSendingAndResolving}
                         onClick={handleSendAndResolve}
-                        className="gap-1.5 border-accent/40 text-accent hover:bg-accent/10 hover:border-accent h-9 px-4 text-xs font-semibold"
+                        className="gap-2 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 h-9 px-4 text-xs font-semibold"
                       >
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                        Send & Mark Resolved
+                        <CheckCircle2 className="h-4 w-4" />
+                        Send &amp; Mark Resolved
                       </Button>
 
                       <Button
