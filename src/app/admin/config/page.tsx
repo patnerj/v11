@@ -1701,15 +1701,15 @@ export default function ConfigurationHubPage() {
         <div className="space-y-8 w-full">
 
           {/* 1-Click Industry Blueprints Carousel */}
-          <div className="bg-surface border border-surface-muted rounded-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-muted/70 pb-3.5">
+          <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3.5">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">⚡</span>
-                  <h3 className="text-sm font-bold text-white tracking-tight">1-Click Industry Challenge Blueprints</h3>
+                  <h3 className="text-sm font-bold text-text tracking-tight">1-Click Industry Challenge Blueprints</h3>
                   <Badge tone="accent" size="sm">Non-Technical Setup</Badge>
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-text-muted mt-0.5">
                   Launch proven institutional challenge models instantly without manually configuring 25+ risk formulas.
                 </p>
               </div>
@@ -1719,7 +1719,7 @@ export default function ConfigurationHubPage() {
               {CHALLENGE_BLUEPRINTS.map((bp) => (
                 <div
                   key={bp.id}
-                  className="bg-background border border-surface-muted hover:border-emerald-500/50 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-xl group"
+                  className="bg-surface-muted/40 hover:bg-surface border border-border hover:border-accent/60 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-md group"
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
@@ -1728,18 +1728,18 @@ export default function ConfigurationHubPage() {
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                      <h4 className="text-sm font-bold text-text group-hover:text-accent transition-colors">
                         {bp.name}
                       </h4>
-                      <p className="text-xs text-gray-400 mt-1 leading-snug">
+                      <p className="text-xs text-text-muted mt-1 leading-snug">
                         {bp.description}
                       </p>
                     </div>
 
-                    <div className="space-y-1.5 pt-2 border-t border-surface-muted/60">
+                    <div className="space-y-1.5 pt-2 border-t border-border">
                       {bp.bullets.map((bullet, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-xs text-gray-300 font-mono">
-                          <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <div key={i} className="flex items-center gap-1.5 text-xs text-text/80 font-sans">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span className="truncate">{bullet}</span>
                         </div>
                       ))}
@@ -1750,10 +1750,10 @@ export default function ConfigurationHubPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleApplyBlueprint(bp)}
-                    className="mt-4 w-full text-xs font-semibold border-surface-muted text-gray-200 hover:text-white hover:border-emerald-500/60 hover:bg-emerald-500/10 gap-1.5"
+                    className="mt-4 w-full text-xs font-semibold border-border bg-surface text-text hover:text-accent hover:border-accent/60 hover:bg-accent/10 gap-1.5 transition-all shadow-sm"
                   >
                     <span>Apply Blueprint</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               ))}
@@ -1761,13 +1761,13 @@ export default function ConfigurationHubPage() {
           </div>
 
           {/* Plan Builder Header & Global Actions */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface border border-surface-muted rounded-xl p-4.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface border border-border rounded-xl p-4.5">
             <div>
-              <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
-                <Sliders className="h-4 w-4 text-emerald-400" />
+              <h2 className="text-base font-bold text-text flex items-center gap-2">
+                <Sliders className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 Active Challenge Plans ({plans.length})
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-text-muted mt-0.5">
                 Configure account sizing, profit objectives, drawdown formulas, and bulk management.
               </p>
             </div>
@@ -1778,9 +1778,9 @@ export default function ConfigurationHubPage() {
                 size="sm"
                 onClick={() => setIsPurgeResetConfirmOpen(true)}
                 disabled={isPurgingPlans}
-                className="border-amber-500/40 text-amber-300 hover:text-white hover:bg-amber-500/20 gap-1.5 text-xs h-9"
+                className="border-amber-500/40 text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-white hover:bg-amber-500/10 dark:hover:bg-amber-500/20 gap-1.5 text-xs h-9"
               >
-                <Zap className="h-3.5 w-3.5 text-amber-400" />
+                <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                 {isPurgingPlans ? 'Resetting Plans...' : '⚡ Reset to Standard 4 Plans'}
               </Button>
 
@@ -1789,9 +1789,9 @@ export default function ConfigurationHubPage() {
                 size="sm"
                 onClick={() => setBulkDeleteTarget({ isOpen: true, all: true, count: plans.length })}
                 disabled={isBulkDeleting || plans.length === 0}
-                className="border-red-500/40 text-red-300 hover:text-white hover:bg-red-500/20 gap-1.5 text-xs h-9"
+                className="border-red-500/40 text-red-700 dark:text-red-300 hover:text-red-800 dark:hover:text-white hover:bg-red-500/10 dark:hover:bg-red-500/20 gap-1.5 text-xs h-9"
               >
-                <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                <Trash2 className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
                 {isBulkDeleting ? 'Deleting...' : 'Delete All Plans'}
               </Button>
 
@@ -1799,7 +1799,7 @@ export default function ConfigurationHubPage() {
                 variant="primary"
                 size="sm"
                 onClick={openAddPlan}
-                className="gap-1.5 shadow-emerald-500/20 text-xs h-9"
+                className="gap-1.5 shadow-sm text-xs h-9"
               >
                 <Plus className="h-4 w-4" />
                 Create New Plan
