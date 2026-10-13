@@ -402,7 +402,7 @@ export default function AdminAnalyticsPage() {
           <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4 relative">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-muted/70 pb-4">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-accent" />
                   Revenue Over Time
                 </h3>
@@ -484,7 +484,7 @@ export default function AdminAnalyticsPage() {
               <div>
                 <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <BarChart3 className="h-4 w-4 text-blue-400" />
                       Platform Trader & Challenge Growth
                     </h3>
@@ -540,7 +540,7 @@ export default function AdminAnalyticsPage() {
             <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <PieChart className="h-4 w-4 text-accent" />
                     Revenue by Challenge Plan
                   </h3>
@@ -559,7 +559,7 @@ export default function AdminAnalyticsPage() {
                     <div key={idx} className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <div>
-                          <span className="font-bold text-white block">{plan.name}</span>
+                          <span className="font-bold text-slate-900 dark:text-white block">{plan.name}</span>
                           <span className="text-gray-400 font-mono text-2xs">
                             {plan.purchases} sales • {plan.sharePct}% total revenue
                           </span>
@@ -597,7 +597,7 @@ export default function AdminAnalyticsPage() {
             {/* Pass Rates by Plan */}
             <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-accent" />
                   Pass Rates & Milestone Performance
                 </h3>
@@ -611,7 +611,7 @@ export default function AdminAnalyticsPage() {
                     return (
                       <div key={i} className="p-3 bg-background rounded-xl border border-surface-muted flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-white block">{pr.plan_name || pr.name}</span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-white block">{pr.plan_name || pr.name}</span>
                           <span className="text-2xs text-gray-400 font-mono">
                             {pr.passed || 0} passed / {pr.total || 0} evaluations
                           </span>
@@ -636,7 +636,7 @@ export default function AdminAnalyticsPage() {
             {/* Challenge Lifecycle Overview */}
             <div className="bg-surface border border-surface-muted rounded-2xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between border-b border-surface-muted/70 pb-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Activity className="h-4 w-4 text-accent" />
                   Challenge Lifecycle Status
                 </h3>

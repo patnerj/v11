@@ -767,17 +767,17 @@ export default function RiskManagementHubPage() {
 
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="bg-white dark:bg-slate-950/80 px-4 py-2 rounded-xl border border-red-200 dark:border-red-500/20 text-right shadow-xs">
-                  <div className="text-2xs font-mono uppercase text-slate-500 dark:text-gray-400">Flagged Clusters</div>
-                  <div className="text-xl font-bold font-mono text-red-600 dark:text-red-400 flex items-center justify-end gap-1.5">
-                    <Radio className="h-4 w-4 animate-ping text-red-500" />
-                    {flaggedClustersCount} Threat(s)
+                  <div className="text-2xs uppercase text-slate-500 dark:text-gray-400 font-semibold tracking-wider">Flagged Clusters</div>
+                  <div className="text-xl font-bold text-red-600 dark:text-red-400 flex items-center justify-end gap-1.5">
+                    <Radio className="h-4 w-4 animate-ping text-red-500 shrink-0" />
+                    <span className="tabular-nums">{flaggedClustersCount}</span> Threat(s)
                   </div>
                 </div>
 
                 <div className="bg-white dark:bg-slate-950/80 px-4 py-2 rounded-xl border border-emerald-200 dark:border-emerald-500/20 text-right shadow-xs">
-                  <div className="text-2xs font-mono uppercase text-slate-500 dark:text-gray-400">Radar Sensitivity</div>
-                  <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                    {syndicateSettingsForm.time_delta_ms} ms
+                  <div className="text-2xs uppercase text-slate-500 dark:text-gray-400 font-semibold tracking-wider">Radar Sensitivity</div>
+                  <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="tabular-nums">{syndicateSettingsForm.time_delta_ms}</span> ms
                   </div>
                 </div>
               </div>

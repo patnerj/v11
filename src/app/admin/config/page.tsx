@@ -3813,7 +3813,7 @@ export default function ConfigurationHubPage() {
                 
                 {/* Mode Selector */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-300">Execution Mode</Label>
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Execution Mode</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -3825,14 +3825,14 @@ export default function ConfigurationHubPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           🛡️ Requires Founder Approval
                         </span>
                         {!scalingRulesForm.auto_scale && (
                           <Badge tone="success" size="sm">Recommended</Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 leading-relaxed">
+                      <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
                         Enqueues qualified traders into the Scaling Queue below for 1-click administrative review and capital provisioning.
                       </p>
                     </button>
@@ -3847,14 +3847,14 @@ export default function ConfigurationHubPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           ⚡ Automated 1-Click Scale
                         </span>
                         {scalingRulesForm.auto_scale && (
                           <Badge tone="accent" size="sm">Autonomous</Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 leading-relaxed">
+                      <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
                         Instantly increases capital balance and unlocks split upgrades the moment a qualifying payout is approved.
                       </p>
                     </button>

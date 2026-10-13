@@ -557,16 +557,16 @@ function AdminAffiliatesContent() {
                           <button
                             type="button"
                             onClick={() => openDetailDrawer(a)}
-                            className="font-semibold text-gray-100 text-sm hover:text-emerald-400 text-left transition-colors flex items-center gap-1.5"
+                            className="font-semibold text-slate-900 dark:text-gray-100 text-sm hover:text-emerald-600 dark:hover:text-emerald-400 text-left transition-colors flex items-center gap-1.5"
                           >
                             {a.display_name || a.user_login}
-                            <Eye className="h-3 w-3 text-gray-500 hover:text-emerald-400 inline" />
+                            <Eye className="h-3 w-3 text-slate-500 dark:text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 inline" />
                           </button>
                           <Badge tone={a.status === 'active' ? 'success' : 'neutral'} size="sm">
                             {a.status}
                           </Badge>
                         </div>
-                        <div className="text-2xs text-gray-500 font-mono mt-0.5">
+                        <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
                           User #{a.user_id} • {a.user_email || 'No email registered'}
                         </div>
                       </div>
@@ -1205,16 +1205,16 @@ function AdminAffiliatesContent() {
             </div>
 
             <div className="p-3.5 rounded-lg bg-background border border-surface-muted space-y-2">
-              <div className="text-xs font-bold text-gray-200">Registered Payout Destination</div>
+              <div className="text-xs font-bold text-slate-900 dark:text-gray-200">Registered Payout Destination</div>
               <div className="flex items-center justify-between gap-2 p-2 rounded bg-surface border border-surface-muted text-xs font-mono">
-                <span className="truncate text-gray-300">
+                <span className="truncate text-slate-700 dark:text-gray-300">
                   {selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination || 'No payout destination configured by user yet.'}
                 </span>
                 {(selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination) && (
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 text-2xs px-2 text-emerald-400 hover:text-emerald-300"
+                    className="h-6 text-2xs px-2 text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300"
                     onClick={() => {
                       navigator.clipboard.writeText(selectedAffiliateDetail.payout_destination || selectedAffiliateDetail.payment_destination || '')
                       toast.success('Wallet address copied!')
@@ -1228,7 +1228,7 @@ function AdminAffiliatesContent() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-200">Affiliate Orders & Commission Ledger</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-gray-200">Affiliate Orders & Commission Ledger</span>
                 <span className="text-2xs font-mono text-gray-400">
                   {commissions.filter((c) => c.affiliate_code === selectedAffiliateDetail.code || c.affiliate_id === selectedAffiliateDetail.id).length} transactions
                 </span>
@@ -1245,7 +1245,7 @@ function AdminAffiliatesContent() {
                     .map((c) => (
                       <div key={c.id} className="p-2.5 flex items-center justify-between text-xs bg-background hover:bg-surface">
                         <div>
-                          <div className="font-semibold text-gray-200">Order #{c.order_id || c.id} • {c.buyer_user || 'Trader'}</div>
+                          <div className="font-semibold text-slate-900 dark:text-gray-200">Order #{c.order_id || c.id} • {c.buyer_user || 'Trader'}</div>
                           <div className="text-2xs text-gray-500">{c.created_at || 'Recent'}</div>
                         </div>
                         <div className="text-right">

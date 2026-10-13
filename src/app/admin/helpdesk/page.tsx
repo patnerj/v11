@@ -756,7 +756,7 @@ export default function AdminHelpdeskPage() {
         {/* ── Center Column: Conversation & Response Panel (6 Cols on xl, 8 Cols on lg) ── */}
         <div className={`lg:col-span-8 xl:col-span-6 ${!selectedTicketId ? 'hidden lg:block' : ''}`}>
           {activeTicket ? (
-            <Card className="bg-surface border-border flex flex-col h-[calc(100vh-210px)] min-h-[580px] justify-between overflow-hidden shadow-sm">
+            <Card className="bg-surface border-border flex flex-col h-[calc(100vh-190px)] min-h-[640px] justify-between overflow-hidden shadow-sm rounded-2xl">
               
               {/* Ticket Detail Header */}
               <CardHeader className="border-b border-border py-3 px-5 shrink-0 bg-surface-muted/50">
@@ -911,19 +911,31 @@ export default function AdminHelpdeskPage() {
                         key={msg.id} 
                         className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
                       >
-                        <div className="flex items-center gap-2 mb-1 text-2xs font-mono text-text-muted">
-                          <span className={isAdmin ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-text font-medium'}>
-                            {isAdmin ? (msg.sender_id === 1 || msg.message?.includes('AI') ? `${brandName} AI Copilot` : `${brandName} Support Agent`) : (msg.sender_name || activeTicket.display_name || 'Trader')}
+                        <div className="flex items-center gap-2 mb-1.5 text-2xs font-mono text-text-muted">
+                          <span className={isAdmin ? 'text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5' : 'text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1.5'}>
+                            {isAdmin ? (
+                              <>
+                                <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px]">🛡️</span>
+                                {msg.sender_id === 1 || msg.message?.includes('AI') ? `${brandName} AI Copilot` : `${brandName} Support Agent`}
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px]">👤</span>
+                                {msg.sender_name || activeTicket.display_name || 'Trader'}
+                              </>
+                            )}
                           </span>
                           <span>•</span>
                           <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
 
                         <div 
-                          className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
-                            isAdmin 
-                              ? 'bg-emerald-500/10 border border-emerald-500/30 text-text rounded-tr-none shadow-sm' 
-                              : 'bg-surface border border-border text-text rounded-tl-none shadow-sm'
+                          className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed transition-colors ${
+                            displayContent.startsWith('🔒 [INTERNAL NOTE')
+                              ? 'bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 text-amber-950 dark:text-amber-200 rounded-tr-none shadow-xs'
+                              : isAdmin 
+                                ? 'bg-emerald-500/10 dark:bg-emerald-950/25 border border-emerald-500/25 text-slate-900 dark:text-gray-100 rounded-tr-none shadow-xs' 
+                                : 'bg-white dark:bg-slate-900/90 border border-border text-slate-900 dark:text-gray-100 rounded-tl-none shadow-xs'
                           }`}
                         >
                           <p className="whitespace-pre-wrap">
@@ -937,51 +949,19 @@ export default function AdminHelpdeskPage() {
                 <div ref={messagesEndRef} />
               </CardContent>
 
-              {/* ── Beautiful, Spacious Admin Reply Composer ──────────────────────── */}
-              <CardFooter className="border-t border-border p-5 flex flex-col gap-3.5 bg-surface-muted/40 shrink-0">
+              {/* ── Modern Streamlined Admin Reply Composer ──────────────────────── */}
+              <CardFooter className="border-t border-border p-3.5 sm:p-4 flex flex-col gap-2.5 bg-surface-muted/40 shrink-0">
                 
-                {/* Canned Responses & AI Drafting Bar */}
-                <div className="w-full flex items-center justify-between gap-3 overflow-x-auto pb-1">
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={handleAiDraftReply}
-                      disabled={isAutoDrafting || !selectedTicketId}
-                      className="px-3.5 py-1.5 rounded-lg bg-accent text-accent-contrast hover:bg-accent/90 font-bold text-xs shadow-md shadow-accent/20 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Sparkles className={`h-3.5 w-3.5 ${isAutoDrafting ? 'animate-spin' : ''}`} />
-                      {isAutoDrafting ? 'Drafting with AI...' : '✨ AI Auto-Draft'}
-                    </button>
-                    <span className="text-2xs text-text-muted font-mono hidden md:inline">| Quick Presets:</span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-                    {CANNED_RESPONSES.map((cr) => (
-                      <button
-                        key={cr.title}
-                        type="button"
-                        onClick={() => {
-                          setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${cr.text}` : cr.text))
-                          toast.info(`Inserted "${cr.title}" template into reply!`)
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-surface hover:bg-accent/15 border border-border hover:border-accent/40 text-xs font-medium text-text hover:text-accent transition-all shrink-0 cursor-pointer shadow-2xs"
-                        title={cr.text}
-                      >
-                        {cr.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Mode Selector Tabs: Reply to Trader vs Internal Note */}
-                <div className="w-full flex items-center justify-between border-b border-border/80 pb-2.5 pt-1">
-                  <div className="flex items-center gap-2">
+                {/* Integrated Toolbar: Mode Pill (Left) + Presets & AI (Right) */}
+                <div className="w-full flex items-center justify-between gap-2 flex-wrap">
+                  {/* Left: Mode Switcher Pill */}
+                  <div className="flex items-center p-0.5 bg-surface border border-border rounded-lg shadow-2xs">
                     <button
                       type="button"
                       onClick={() => setIsInternalNote(false)}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                         !isInternalNote
-                          ? 'bg-accent/15 text-accent border border-accent/40 shadow-xs'
+                          ? 'bg-accent/20 text-accent font-bold shadow-2xs'
                           : 'text-text-muted hover:text-text'
                       }`}
                     >
@@ -991,41 +971,69 @@ export default function AdminHelpdeskPage() {
                     <button
                       type="button"
                       onClick={() => setIsInternalNote(true)}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                         isInternalNote
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-xs'
+                          ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shadow-2xs'
                           : 'text-text-muted hover:text-text'
                       }`}
                     >
                       <Lock className="w-3.5 h-3.5" />
-                      Internal Compliance Note
+                      Internal Note
                     </button>
                   </div>
+
+                  {/* Right: AI Auto-Draft + Canned Responses Selector */}
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAiDraftReply}
+                      disabled={isAutoDrafting || !selectedTicketId}
+                      className="h-7 px-2.5 rounded-lg bg-accent text-accent-contrast hover:bg-accent/90 font-bold text-2xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <Sparkles className={`h-3 w-3 ${isAutoDrafting ? 'animate-spin' : ''}`} />
+                      {isAutoDrafting ? 'Drafting...' : '✨ AI Draft'}
+                    </button>
+
+                    {/* Canned Responses Dropdown */}
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const selectedTitle = e.target.value
+                        const found = CANNED_RESPONSES.find(cr => cr.title === selectedTitle)
+                        if (found) {
+                          setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${found.text}` : found.text))
+                          toast.info(`Inserted "${found.title}" template!`)
+                        }
+                      }}
+                      className="h-7 px-2 rounded-lg bg-surface border border-border text-2xs text-text hover:border-accent/40 focus:outline-none focus:border-accent cursor-pointer transition-colors"
+                    >
+                      <option value="" disabled>📝 Quick Templates ▾</option>
+                      {CANNED_RESPONSES.map((cr) => (
+                        <option key={cr.title} value={cr.title} className="bg-surface text-text">
+                          {cr.title}
+                        </option>
+                      ))}
+                    </select>
+
                     {replyMessage.trim() && (
                       <button
                         type="button"
                         onClick={() => setReplyMessage('')}
-                        className="text-2xs text-text-muted hover:text-red-500 transition-colors cursor-pointer"
+                        className="text-2xs text-text-muted hover:text-red-500 transition-colors px-1 cursor-pointer"
                       >
-                        Clear Draft
+                        Clear
                       </button>
-                    )}
-                    {isInternalNote && (
-                      <span className="text-2xs text-amber-600 dark:text-amber-400/90 font-mono italic hidden sm:inline">
-                        🔒 Only visible to internal staff
-                      </span>
                     )}
                   </div>
                 </div>
 
-                {/* Reply Form (Spacious Canvas & Clear Action Buttons) */}
-                <form onSubmit={handleSendReplySubmit} className="w-full space-y-3">
+                {/* Reply Form (Compact 3-Row Textarea & Action Row) */}
+                <form onSubmit={handleSendReplySubmit} className="w-full space-y-2.5">
                   <Textarea
                     placeholder={
                       isInternalNote
                         ? "Enter internal staff note (audits, risk investigation, handover note)..."
-                        : "Type your official admin response here... (Markdown supported, Press Ctrl+Enter to send)"
+                        : "Type your official response here... (Markdown supported, Ctrl+Enter to send)"
                     }
                     value={replyMessage}
                     onChange={(e) => setReplyMessage(e.target.value)}
@@ -1035,31 +1043,36 @@ export default function AdminHelpdeskPage() {
                         handleSendReplySubmit(e)
                       }
                     }}
-                    rows={5}
-                    className={`w-full text-xs sm:text-sm bg-surface border-border p-4 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[135px] shadow-xs ${
+                    rows={3}
+                    className={`w-full text-xs sm:text-sm bg-surface border-border p-3 rounded-xl text-text placeholder:text-text-muted leading-relaxed resize-y min-h-[78px] shadow-xs ${
                       isInternalNote
                         ? 'border-amber-500/40 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 bg-amber-500/5'
                         : 'focus:border-accent focus:ring-2 focus:ring-accent/20'
                     }`}
                   />
 
-                  {/* Dedicated Action Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-                    <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span>Press <kbd className="px-2 py-0.5 rounded bg-surface border border-border font-mono text-2xs text-text font-bold">Ctrl + Enter</kbd> to dispatch</span>
+                  {/* Actions Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-2xs text-text-muted">
+                      <span>Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border font-mono text-2xs text-text font-bold">Ctrl+Enter</kbd> to send</span>
+                      {isInternalNote && (
+                        <span className="text-amber-600 dark:text-amber-400 font-mono">
+                          • 🔒 Internal staff only
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-3 self-end sm:self-center">
+                    <div className="flex items-center gap-2 self-end sm:self-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         disabled={sendReplyMutation.isPending || isSendingAndResolving}
                         onClick={handleSendAndResolve}
-                        className="gap-2 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 h-9 px-4 text-xs font-semibold"
+                        className="gap-1.5 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 h-8 px-3 text-xs font-semibold"
                       >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Send &amp; Mark Resolved
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Send &amp; Resolve
                       </Button>
 
                       <Button
@@ -1067,13 +1080,13 @@ export default function AdminHelpdeskPage() {
                         variant="primary"
                         size="sm"
                         loading={sendReplyMutation.isPending && !isSendingAndResolving}
-                        className={`gap-2 h-9 px-5 text-xs font-semibold ${
+                        className={`gap-1.5 h-8 px-4 text-xs font-semibold ${
                           isInternalNote
                             ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20 text-white'
                             : 'shadow-accent/20'
                         }`}
                       >
-                        <Send className="h-3.5 w-3.5" />
+                        <Send className="h-3 w-3" />
                         {isInternalNote ? 'Save Internal Note' : 'Send Reply'}
                       </Button>
                     </div>
@@ -1084,7 +1097,7 @@ export default function AdminHelpdeskPage() {
 
             </Card>
           ) : (
-            <Card className="bg-surface border-border h-[calc(100vh-210px)] min-h-[580px] flex items-center justify-center text-center p-8 shadow-sm">
+            <Card className="bg-surface border-border h-[calc(100vh-190px)] min-h-[640px] flex items-center justify-center text-center p-8 shadow-sm rounded-2xl">
               <div className="space-y-3">
                 <div className="h-12 w-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto">
                   <Headphones className="h-6 w-6" />
