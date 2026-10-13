@@ -130,26 +130,26 @@ export default function AdminChallengesPage() {
       {/* TAB 1: ACCOUNTS */}
       {activeTab === 'accounts' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-border">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-surface p-2.5 sm:p-3 rounded-xl border border-border shadow-xs">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <Input
-                placeholder="Search by ID, User, or Plan..."
+                placeholder="Search by ID, User #, or Plan..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9 text-xs"
+                className="pl-9 h-8.5 text-xs bg-surface border-border text-text"
               />
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-2xs uppercase tracking-wider text-text-muted font-medium">Status:</span>
+            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto scrollbar-none">
+              <span className="text-2xs uppercase tracking-wider text-text-muted font-semibold shrink-0">Status:</span>
               {(['all', 'active', 'passed', 'funded', 'breached'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded text-2xs uppercase font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg text-2xs uppercase font-semibold transition-all shrink-0 border ${
                     statusFilter === st
-                      ? 'bg-accent text-accent-foreground font-semibold'
-                      : 'bg-surface-muted text-text-muted hover:text-text'
+                      ? 'bg-accent/15 border-accent text-accent font-bold shadow-xs'
+                      : 'bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted/60'
                   }`}
                 >
                   {st}

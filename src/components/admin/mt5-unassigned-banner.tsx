@@ -41,51 +41,52 @@ export function Mt5UnassignedBanner() {
 
   return (
     <>
-      <Card className="border-warn/30 bg-warn-muted/20 overflow-hidden">
+      <div className="border border-warn/30 bg-warn/10 rounded-xl overflow-hidden transition-all shadow-2xs">
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="w-full flex items-center justify-between gap-3 p-4 text-left"
+          className="w-full flex items-center justify-between gap-3 px-3.5 py-2 text-left hover:bg-warn/15 transition-colors"
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-9 w-9 rounded-lg bg-warn/15 flex items-center justify-center shrink-0">
-              <Server className="h-4.5 w-4.5 text-warn" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold flex items-center gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Server className="h-4 w-4 text-warn shrink-0" />
+            <div className="flex items-center gap-2 min-w-0 flex-wrap">
+              <span className="text-xs font-semibold text-text">
                 {traders.length} funded {traders.length === 1 ? 'trader' : 'traders'} waiting for MT5 assignment
-                <Badge tone="warn">{traders.length}</Badge>
-              </div>
-              <div className="text-2xs text-text-muted mt-0.5">
-                These accounts passed evaluation but have no live MT5 login bound yet.
-              </div>
+              </span>
+              <Badge tone="warn" size="sm">{traders.length}</Badge>
+              <span className="text-2xs text-text-muted hidden sm:inline">
+                (Passed evaluation · pending MT5 login)
+              </span>
             </div>
           </div>
-          {expanded ? <ChevronUp className="h-4 w-4 text-text-muted shrink-0" /> : <ChevronDown className="h-4 w-4 text-text-muted shrink-0" />}
+          <div className="flex items-center gap-1.5 text-xs text-warn font-medium shrink-0">
+            <span>{expanded ? 'Hide' : 'Review'}</span>
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </div>
         </button>
 
         {expanded && (
-          <div className="border-t border-warn/20 divide-y divide-border-subtle/60">
+          <div className="border-t border-warn/20 divide-y divide-border/60 bg-surface/50">
             {traders.map((t) => (
-              <div key={t.challenge_id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <div key={t.challenge_id} className="flex items-center justify-between gap-3 px-4 py-2">
                 <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">{t.name}</div>
-                  <div className="text-2xs text-text-muted truncate">
+                  <div className="text-xs font-semibold text-text truncate">{t.name}</div>
+                  <div className="text-2xs text-text-muted truncate font-mono">
                     {t.email}
                     {t.days_waiting !== null && (
-                      <span className={t.days_waiting >= 2 ? 'text-warn font-medium' : ''}>
+                      <span className={t.days_waiting >= 2 ? 'text-warn font-semibold' : ''}>
                         {' '}· waiting {t.days_waiting}d
                       </span>
                     )}
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setAssignFor(t)}>
+                <Button size="sm" variant="outline" className="h-7 text-xs border-warn/40 text-warn hover:bg-warn/10" onClick={() => setAssignFor(t)}>
                   Assign MT5
                 </Button>
               </div>
             ))}
           </div>
         )}
-      </Card>
+      </div>
 
       {assignFor && (
         <AssignMt5Dialog

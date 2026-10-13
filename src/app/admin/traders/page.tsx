@@ -702,7 +702,7 @@ export default function TradersHubPage() {
   ]
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 pb-12">
 
       <Mt5UnassignedBanner />
 
@@ -712,21 +712,21 @@ export default function TradersHubPage() {
         description="Directory of registered prop traders, challenge progression, KYC verification, and custom risk overrides."
         badge={{ label: `${allTraders.length} Active Accounts`, tone: 'accent' }}
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleExportCSV}
-              className="border-border text-text hover:bg-surface-muted gap-2 h-9"
+              className="border-border text-text hover:bg-surface-muted gap-2 h-8.5 text-xs font-semibold"
             >
-              <Download className="h-4 w-4 text-accent" />
+              <Download className="h-3.5 w-3.5 text-accent" />
               Export CSV
             </Button>
 
             <Button 
               variant="primary" 
               size="sm" 
-              className="gap-2 h-9 shadow-accent/20"
+              className="gap-2 h-8.5 text-xs font-semibold shadow-accent/20"
               onClick={() => {
                 if (filteredTraders.length > 0) {
                   setSelectedTrader(filteredTraders[0])
@@ -736,7 +736,7 @@ export default function TradersHubPage() {
                 }
               }}
             >
-              <Sliders className="h-4 w-4" />
+              <Sliders className="h-3.5 w-3.5" />
               Apply Overrides
             </Button>
           </div>
@@ -744,11 +744,11 @@ export default function TradersHubPage() {
       />
 
       {/* ── Filter Bar Card ───────────────────────────────────────────────── */}
-      <Card className="bg-surface border-border">
-        <CardContent className="p-4">
+      <Card className="bg-surface border-border shadow-xs">
+        <CardContent className="p-3 sm:p-3.5 space-y-2.5">
           
           {/* Quick Status Tabs Bar (Option 2) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-3 border-b border-border/60 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-border/50 scrollbar-none">
             {[
               { id: 'all', label: 'All Accounts', count: tabCounts.all },
               { id: 'funded', label: '🌟 Active Funded', count: tabCounts.funded },
@@ -765,7 +765,7 @@ export default function TradersHubPage() {
                     setQuickTab(tab.id as any)
                     setPage(1)
                   }}
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap border shadow-2xs ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap border shadow-2xs ${
                     isActive
                       ? 'bg-accent/15 border-accent text-accent shadow-xs font-bold'
                       : 'bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted/60'
@@ -784,21 +784,21 @@ export default function TradersHubPage() {
             })}
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2.5">
             
             {/* Search Input */}
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <Input
                 placeholder="Search by name, email, #USR-12, #CH-88, or #ACC-99..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-surface border-border text-text text-sm"
+                className="pl-9 h-8.5 bg-surface border-border text-text text-xs"
               />
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted hover:text-text"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-2xs text-text-muted hover:text-text"
                 >
                   Clear
                 </button>
@@ -806,15 +806,15 @@ export default function TradersHubPage() {
             </div>
 
             {/* Filter Dropdowns */}
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
               
               {/* Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-text-muted">Status:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xs font-semibold text-text-muted uppercase tracking-wider">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-accent cursor-pointer"
+                  className="h-8.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-text focus:outline-none focus:border-accent cursor-pointer"
                 >
                   <option value="all">All Statuses</option>
                   <option value="phase1">Phase 1 Evaluation</option>
@@ -826,12 +826,12 @@ export default function TradersHubPage() {
               </div>
 
               {/* KYC Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-text-muted">KYC:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xs font-semibold text-text-muted uppercase tracking-wider">KYC:</span>
                 <select
                   value={kycFilter}
                   onChange={(e) => setKycFilter(e.target.value)}
-                  className="h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-none focus:border-accent cursor-pointer"
+                  className="h-8.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-text focus:outline-none focus:border-accent cursor-pointer"
                 >
                   <option value="all">All KYC</option>
                   <option value="verified">Verified</option>
@@ -850,7 +850,7 @@ export default function TradersHubPage() {
                     setStatusFilter('all')
                     setKycFilter('all')
                   }}
-                  className="text-xs text-text-muted hover:text-accent h-9"
+                  className="text-xs text-text-muted hover:text-accent h-8.5 px-2.5"
                 >
                   Reset
                 </Button>

@@ -835,8 +835,8 @@ export default function AdminHelpdeskPage() {
           </div>
         </div>
 
-        {/* ── Center Column: Conversation & Response Panel (6 Cols on xl, 8 Cols on lg) ── */}
-        <div className={`lg:col-span-8 xl:col-span-6 h-full min-h-0 max-h-full flex flex-col ${!selectedTicketId ? 'hidden lg:flex' : ''}`}>
+        {/* ── Center Column: Conversation & Response Panel (9 Cols on xl laptops, 6 Cols on 2xl wide) ── */}
+        <div className={`lg:col-span-8 xl:col-span-9 2xl:col-span-6 h-full min-h-0 max-h-full flex flex-col ${!selectedTicketId ? 'hidden lg:flex' : ''}`}>
           {activeTicket ? (
             <Card className="bg-surface border-border flex flex-col h-full justify-between overflow-hidden shadow-sm rounded-2xl">
               
@@ -877,7 +877,7 @@ export default function AdminHelpdeskPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => setMobileDossierOpen(!mobileDossierOpen)}
-                      className="xl:hidden h-8 text-xs gap-1.5 border-border text-text hover:bg-surface-muted"
+                      className="2xl:hidden h-8 text-xs gap-1.5 border-border text-text hover:bg-surface-muted"
                     >
                       <User className="w-3.5 h-3.5 text-accent" />
                       {mobileDossierOpen ? 'Hide Dossier' : 'Trader Dossier'}
@@ -929,9 +929,9 @@ export default function AdminHelpdeskPage() {
                 </div>
               </CardHeader>
 
-              {/* Mobile / Tablet Collapsible Dossier */}
+              {/* Mobile / Laptop Collapsible Dossier (<1536px) */}
               {mobileDossierOpen && activeTicket && (
-                <div className="xl:hidden border-b border-border p-4 bg-surface-muted/60 max-h-[420px] overflow-y-auto">
+                <div className="2xl:hidden border-b border-border p-4 bg-surface-muted/60 max-h-[420px] overflow-y-auto">
                   <TraderContextDossier
                     traderId={activeTicket.trader_id || activeTicket.user_id}
                     traderName={activeTicket.display_name || activeTicket.user_login}
@@ -1218,8 +1218,8 @@ export default function AdminHelpdeskPage() {
           )}
         </div>
 
-        {/* ── Right Column: Trader 360 Context Dossier (3 Cols on xl, Hidden on lg/md) ── */}
-        <div className="hidden xl:flex xl:col-span-3 h-full min-h-0 max-h-full flex-col overflow-y-auto custom-scrollbar">
+        {/* ── Right Column: Trader 360 Context Dossier (3 Cols on 2xl wide >=1536px, Collapsible Drawer on Laptops) ── */}
+        <div className="hidden 2xl:flex 2xl:col-span-3 h-full min-h-0 max-h-full flex-col overflow-y-auto custom-scrollbar">
           {activeTicket ? (
             <div className="w-full">
               <TraderContextDossier

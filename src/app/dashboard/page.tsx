@@ -155,7 +155,7 @@ export default function DashboardOverview() {
   if (user?.is_admin && !isImpersonating) return null
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Welcome Hero PageHeader */}
       <PageHeader
         variant="hero"
@@ -207,8 +207,8 @@ export default function DashboardOverview() {
         </SectionErrorBoundary>
       )}
 
-      {/* Multi-account switcher — challenges + tournaments (stats follow selection) */}
-      {switchEntries.length > 1 && (
+      {/* Multi-account fallback switcher — only rendered when portfolio strip is absent */}
+      {switchEntries.length > 1 && ((challenges?.length || 0) + (myTournaments?.length || 0)) <= 1 && (
         <AccountSwitcher entries={switchEntries} />
       )}
 
@@ -283,7 +283,7 @@ export default function DashboardOverview() {
           {/* Active Challenge Overview */}
           {acc && active && (
             <Card className="relative overflow-hidden border-border/60 rounded-2xl shadow-sm">
-              <CardContent className="p-6 sm:p-8">
+              <CardContent className="p-5 sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ export default function DashboardOverview() {
                   </Button>
                 </div>
                 {metrics && (
-                  <div className="mt-6 grid sm:grid-cols-2 gap-6">
+                  <div className="mt-4 grid sm:grid-cols-2 gap-4">
                     <div>
                       <div className="flex items-center justify-between text-2xs mb-1.5 font-medium">
                         <span className="text-text-muted">Profit target</span>
@@ -350,9 +350,13 @@ export default function DashboardOverview() {
           {/* Dynamic Risk Sentinel Gauge Cards & Speedometer (P0 Trading Ergonomics) */}
           {metrics && (
             <SectionErrorBoundary sectionName="Risk Sentinel">
-              <div className="space-y-4">
-                <RiskSentinelCards metrics={metrics} account={acc} />
-                <RiskCushionSpeedometer metrics={metrics} account={acc} />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                <div className="lg:col-span-7 xl:col-span-8">
+                  <RiskSentinelCards metrics={metrics} account={acc} />
+                </div>
+                <div className="lg:col-span-5 xl:col-span-4">
+                  <RiskCushionSpeedometer metrics={metrics} account={acc} className="h-full flex flex-col justify-between" />
+                </div>
               </div>
             </SectionErrorBoundary>
           )}
