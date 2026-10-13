@@ -956,7 +956,7 @@ export default function AdminTournamentsPage() {
 
                       <div className="text-right">
                         <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20 inline-block">
-                          {t.prize_pool}
+                          {(t.prize_pool && String(t.prize_pool).startsWith(',') ? '$10' + t.prize_pool : (t.prize_pool && !String(t.prize_pool).startsWith('$') && !String(t.prize_pool).startsWith('€') && !String(t.prize_pool).startsWith('£') ? '$' + t.prize_pool : t.prize_pool)) || '$10,000'}
                         </span>
                       </div>
                     </div>
