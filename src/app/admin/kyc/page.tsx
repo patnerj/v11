@@ -143,7 +143,7 @@ function KycDocViewer({
         <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
           <FileX className="h-6 w-6" />
         </div>
-        <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+        <p className="text-xs font-bold text-text uppercase tracking-wider">
           {tabName === 'back' ? 'Optional Back ID: Not Uploaded' : `No Document Uploaded: ${tabName.toUpperCase()}`}
         </p>
         <p className="text-2xs text-gray-500 max-w-sm mx-auto">
@@ -206,8 +206,8 @@ function KycDocViewer({
           <FileText className="h-8 w-8" />
         </div>
         <div>
-          <p className="text-sm font-bold text-white">HTML Document Attached</p>
-          <p className="text-xs text-gray-400 mt-1">For platform security, HTML files are not previewed inline.</p>
+          <p className="text-sm font-bold text-text">HTML Document Attached</p>
+          <p className="text-xs text-text-muted mt-1">For platform security, HTML files are not previewed inline.</p>
         </div>
         <Button 
           asChild 
@@ -231,8 +231,8 @@ function KycDocViewer({
           <FileText className="h-8 w-8" />
         </div>
         <div>
-          <p className="text-sm font-bold text-white">PDF Document Attached</p>
-          <p className="text-xs text-gray-400 mt-1">Official Identity Document PDF</p>
+          <p className="text-sm font-bold text-text">PDF Document Attached</p>
+          <p className="text-xs text-text-muted mt-1">Official Identity Document PDF</p>
         </div>
         <div className="flex items-center gap-2">
           <Button 

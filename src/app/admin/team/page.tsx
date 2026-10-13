@@ -234,7 +234,7 @@ export default function TeamHubPage() {
               refetch()
               toast.success('Team roster refreshed')
             }}
-            className="border-surface-muted text-gray-300 hover:text-white hover:bg-slate-800/80 gap-2 h-9"
+            className="border-border text-text hover:bg-surface-muted gap-2 h-9"
           >
             <RefreshCw className="h-4 w-4 text-emerald-400" />
             Refresh
@@ -365,7 +365,7 @@ export default function TeamHubPage() {
                           setEditingMember(t)
                           setNewRole(t.role)
                         }}
-                        className="h-8 text-xs gap-1 border-surface-muted hover:bg-slate-800"
+                        className="h-8 text-xs gap-1 border-border text-text hover:bg-surface-muted"
                       >
                         <Edit className="h-3.5 w-3.5 text-blue-400" />
                         Role
@@ -417,8 +417,8 @@ export default function TeamHubPage() {
             </thead>
             <tbody className="divide-y divide-surface-muted">
               {PERMISSIONS_MATRIX.map((perm, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3 px-4 text-gray-200 font-medium font-sans">{perm.feature}</td>
+                <tr key={idx} className="hover:bg-surface-muted transition-colors">
+                  <td className="py-3 px-4 text-text font-medium font-sans">{perm.feature}</td>
                   <td className="py-3 px-4 text-center">
                     {perm.super_admin ? <Check className="h-4 w-4 text-emerald-400 mx-auto" /> : <X className="h-4 w-4 text-gray-600 mx-auto" />}
                   </td>

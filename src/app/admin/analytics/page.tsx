@@ -231,7 +231,7 @@ export default function AdminAnalyticsPage() {
                   "px-3.5 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer",
                   period === p 
                     ? "bg-accent text-slate-950 shadow-sm font-bold" 
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/60"
+                    : "text-text-muted hover:text-text hover:bg-surface-muted"
                 )}
               >
                 {p}

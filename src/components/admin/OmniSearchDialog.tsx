@@ -265,8 +265,8 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
                   className={cn(
                     "w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between gap-3 group cursor-pointer select-none border",
                     active
-                      ? "bg-emerald-500/15 border-emerald-500/40 text-white shadow-xs"
-                      : "bg-transparent border-transparent hover:bg-slate-800/50 text-slate-300 hover:text-white"
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-text shadow-xs"
+                      : "bg-transparent border-transparent hover:bg-surface-muted text-text-muted hover:text-text"
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -274,13 +274,13 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
                       "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors",
                       active
                         ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                        : "bg-slate-800/80 border-slate-700/60 text-slate-300 group-hover:text-white"
+                        : "bg-surface-muted border-border text-text-muted group-hover:text-text"
                     )}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-slate-100 group-hover:text-white truncate">
+                        <span className="text-xs font-semibold text-text group-hover:text-primary truncate">
                           {item.title}
                         </span>
                         {item.badge && (
@@ -295,7 +295,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
                           </span>
                         )}
                       </div>
-                      <span className="text-2xs text-slate-400 group-hover:text-slate-300 truncate block mt-0.5">
+                      <span className="text-2xs text-text-muted group-hover:text-text truncate block mt-0.5">
                         {item.subtitle}
                       </span>
                     </div>

@@ -93,32 +93,32 @@ export function DirectPasswordResetModal({
       onClose={onClose}
       maxWidth="md"
       title={
-        <div className="flex items-center gap-2 text-slate-100">
+        <div className="flex items-center gap-2 text-text">
           <KeyRound className="h-5 w-5 text-amber-400" />
           <span>Direct Password Reset (Local / Offline)</span>
         </div>
       }
       description={
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-text-muted">
           Instantly set a new login password for this trader without requiring SMTP email delivery.
         </span>
       }
     >
       <div className="space-y-4 pt-2">
         {/* Trader Target Summary */}
-        <div className="rounded-lg bg-slate-900/80 border border-slate-800 p-3 space-y-1 text-xs">
-          <div className="flex justify-between text-slate-300">
-            <span className="text-slate-500 font-medium">Trader:</span>
-            <span className="font-semibold text-slate-200">{trader.name || trader.username || `User #${trader.user_id}`}</span>
+        <div className="rounded-lg bg-surface-muted border border-border p-3 space-y-1 text-xs">
+          <div className="flex justify-between text-text">
+            <span className="text-text-muted font-medium">Trader:</span>
+            <span className="font-semibold text-text">{trader.name || trader.username || `User #${trader.user_id}`}</span>
           </div>
-          <div className="flex justify-between text-slate-300">
-            <span className="text-slate-500 font-medium">Username:</span>
+          <div className="flex justify-between text-text">
+            <span className="text-text-muted font-medium">Username:</span>
             <span className="font-mono text-emerald-400">{trader.username || `user_${trader.user_id}`}</span>
           </div>
           {trader.email && (
-            <div className="flex justify-between text-slate-300">
-              <span className="text-slate-500 font-medium">Email:</span>
-              <span className="font-mono text-slate-400">{trader.email}</span>
+            <div className="flex justify-between text-text">
+              <span className="text-text-muted font-medium">Email:</span>
+              <span className="font-mono text-text-muted">{trader.email}</span>
             </div>
           )}
         </div>
@@ -130,10 +130,10 @@ export function DirectPasswordResetModal({
               <Check className="h-4 w-4" />
               <span>Password Changed Successfully!</span>
             </div>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-text-muted">
               The trader can now log in immediately with this new password.
             </p>
-            <div className="flex items-center justify-between bg-black/60 border border-emerald-500/20 rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between bg-surface border border-emerald-500/20 rounded-lg px-3 py-2">
               <span className="font-mono text-base font-bold text-emerald-300 tracking-wider">
                 {successPassword}
               </span>
@@ -157,19 +157,19 @@ export function DirectPasswordResetModal({
           /* Form Input */
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-300">New Password</Label>
+              <Label className="text-xs font-semibold text-text-muted">New Password</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter new password..."
-                  className="bg-black/50 border-slate-700 pr-20 font-mono text-sm"
+                  className="bg-surface border-border text-text placeholder:text-text-muted pr-20 font-mono text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

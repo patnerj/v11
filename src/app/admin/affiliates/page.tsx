@@ -434,7 +434,7 @@ function AdminAffiliatesContent() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'list'
               ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white hover:bg-surface-muted'
+              : 'text-text-muted hover:text-text hover:bg-surface-muted'
           }`}
         >
           <Users2 className="h-4 w-4" />
@@ -447,7 +447,7 @@ function AdminAffiliatesContent() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'commissions'
               ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white hover:bg-surface-muted'
+              : 'text-text-muted hover:text-text hover:bg-surface-muted'
           }`}
         >
           <DollarSign className="h-4 w-4" />
@@ -460,7 +460,7 @@ function AdminAffiliatesContent() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'payouts'
               ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white hover:bg-surface-muted'
+              : 'text-text-muted hover:text-text hover:bg-surface-muted'
           }`}
         >
           <ArrowUpRight className="h-4 w-4" />
@@ -473,7 +473,7 @@ function AdminAffiliatesContent() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'config'
               ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white hover:bg-surface-muted'
+              : 'text-text-muted hover:text-text hover:bg-surface-muted'
           }`}
         >
           <Sliders className="h-4 w-4" />

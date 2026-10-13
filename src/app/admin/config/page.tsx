@@ -1567,7 +1567,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'plans'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Sliders className="h-3.5 w-3.5" />
@@ -1579,7 +1579,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'branding'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Paintbrush className="h-3.5 w-3.5" />
@@ -1591,7 +1591,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'payments'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <CreditCard className="h-3.5 w-3.5" />
@@ -1603,7 +1603,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'rules'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -1615,7 +1615,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'trading'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <CandlestickChart className="h-3.5 w-3.5" />
@@ -1627,7 +1627,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'smtp'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Mail className="h-3.5 w-3.5" />
@@ -1639,7 +1639,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'sandbox'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Database className="h-3.5 w-3.5" />
@@ -1651,7 +1651,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'mt5'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Server className="h-3.5 w-3.5" />
@@ -1663,7 +1663,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'integrations'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <BellRing className="h-3.5 w-3.5" />
@@ -1675,7 +1675,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'scaling'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <TrendingUp className="h-3.5 w-3.5" />
@@ -1687,7 +1687,7 @@ export default function ConfigurationHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'license'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Lock className="h-3.5 w-3.5" />
@@ -2277,7 +2277,7 @@ export default function ConfigurationHubPage() {
                         type="button"
                         onClick={() => setLogoPreviewTheme('dark')}
                         className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                          logoPreviewTheme === 'dark' ? 'bg-slate-800 text-white border border-slate-700' : 'text-gray-400 hover:text-white'
+                          logoPreviewTheme === 'dark' ? 'bg-slate-800 text-white border border-slate-700' : 'text-text-muted hover:text-text hover:bg-surface-muted'
                         }`}
                       >
                         <Moon className="h-3 w-3 inline mr-1" /> Dark Preview
@@ -2286,7 +2286,7 @@ export default function ConfigurationHubPage() {
                         type="button"
                         onClick={() => setLogoPreviewTheme('light')}
                         className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                          logoPreviewTheme === 'light' ? 'bg-gray-200 text-slate-950 border border-white' : 'text-gray-400 hover:text-white'
+                          logoPreviewTheme === 'light' ? 'bg-gray-200 text-slate-950 border border-white' : 'text-text-muted hover:text-text hover:bg-surface-muted'
                         }`}
                       >
                         <Sun className="h-3 w-3 inline mr-1" /> Light Preview
@@ -4080,7 +4080,7 @@ export default function ConfigurationHubPage() {
                         className={`px-2.5 py-1 rounded text-xs font-bold capitalize transition-all ${
                           scalingFilter === filter
                             ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                            : 'text-gray-400 hover:text-white'
+                            : 'text-text-muted hover:text-text hover:bg-surface-muted'
                         }`}
                       >
                         {filter}
@@ -4131,19 +4131,19 @@ export default function ConfigurationHubPage() {
                           return matchesSearch && matchesFilter
                         })
                         .map((trader) => (
-                          <tr key={trader.id} className="hover:bg-slate-800/40 transition-colors">
-                            <td className="px-5 py-3 font-medium text-white whitespace-nowrap">
+                          <tr key={trader.id} className="hover:bg-surface-muted transition-colors">
+                            <td className="px-5 py-3 font-medium text-text whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 <span className="h-7 w-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
                                   {trader.trader_name.charAt(0).toUpperCase()}
                                 </span>
                                 <div>
                                   <div className="font-semibold">{trader.trader_name}</div>
-                                  <div className="text-2xs text-gray-400 font-mono">Account #{trader.id} • {trader.trader_email}</div>
+                                  <div className="text-2xs text-text-muted font-mono">Account #{trader.id} • {trader.trader_email}</div>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-3 font-mono font-bold text-gray-200 whitespace-nowrap">
+                            <td className="px-4 py-3 font-mono font-bold text-text whitespace-nowrap">
                               ${trader.current_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="px-4 py-3 font-mono font-bold text-emerald-400 whitespace-nowrap">
@@ -4155,18 +4155,18 @@ export default function ConfigurationHubPage() {
                                 <Badge tone={trader.current_profit_pct >= scalingRulesForm.profit_target_pct ? 'success' : 'neutral'} size="sm" className="font-mono">
                                   +{trader.current_profit_pct}% ROI
                                 </Badge>
-                                <span className="text-xs text-gray-400 font-mono">
+                                <span className="text-xs text-text-muted font-mono">
                                   {trader.payouts_count} / {scalingRulesForm.min_payouts} payouts
                                 </span>
                               </div>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap font-mono text-xs">
-                              <span className="text-gray-400">{trader.current_split}%</span>
+                              <span className="text-text-muted">{trader.current_split}%</span>
                               <span className="text-emerald-400 font-bold mx-1">➔</span>
                               <span className="text-emerald-400 font-bold">{trader.new_split}%</span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-slate-800 border border-slate-700 text-gray-300">
+                              <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-surface-muted border border-border text-text-muted">
                                 Tier {trader.scaling_level}
                               </span>
                             </td>
@@ -4395,7 +4395,7 @@ export default function ConfigurationHubPage() {
                     <button
                       type="button"
                       onClick={() => setShowGeminiKey(!showGeminiKey)}
-                      className="absolute right-3 top-2.5 text-gray-400 hover:text-white"
+                      className="absolute right-3 top-2.5 text-text-muted hover:text-text"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
@@ -4537,7 +4537,7 @@ export default function ConfigurationHubPage() {
                     <button
                       type="button"
                       onClick={() => setShowDeepSeekKey(!showDeepSeekKey)}
-                      className="absolute right-3 top-2.5 text-gray-400 hover:text-white"
+                      className="absolute right-3 top-2.5 text-text-muted hover:text-text"
                     >
                       <Eye className="h-4 w-4" />
                     </button>

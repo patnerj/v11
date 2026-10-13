@@ -222,13 +222,13 @@ export default function AdminActivityPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search trader, account #, or event keyword..."
-              className="w-full pl-9 pr-8 py-2 bg-background border border-surface-muted focus:border-emerald-500 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none transition-colors"
+              className="w-full pl-9 pr-8 py-2 bg-surface border border-border focus:border-emerald-500 rounded-xl text-xs text-text placeholder:text-text-muted focus:outline-none transition-colors"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text p-0.5"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -362,7 +362,7 @@ export default function AdminActivityPage() {
       ) : filteredList.length === 0 ? (
         <div className="py-20 text-center text-gray-400 bg-surface border border-surface-muted rounded-2xl space-y-3">
           <Bell className="h-10 w-10 mx-auto text-gray-600" />
-          <p className="font-semibold text-white text-base">
+          <p className="font-semibold text-text text-base">
             {rawList.length === 0 ? 'No activity logs recorded yet' : 'No activity matches your filters'}
           </p>
           <p className="text-xs text-gray-400 max-w-md mx-auto">
@@ -421,10 +421,10 @@ export default function AdminActivityPage() {
               <div
                 key={n.id}
                 className={cn(
-                  "bg-surface hover:bg-[#151D2C] border rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col justify-between group relative",
+                  "bg-surface hover:bg-surface-muted border rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col justify-between group relative",
                   !n.is_read 
                     ? "border-emerald-500/40 shadow-emerald-500/5 bg-surface" 
-                    : "border-surface-muted hover:border-slate-700"
+                    : "border-border hover:border-border-strong"
                 )}
               >
                 <div>
@@ -435,7 +435,7 @@ export default function AdminActivityPage() {
                         <IconComponent className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                        <h4 className="text-xs sm:text-sm font-bold text-text group-hover:text-emerald-400 transition-colors truncate">
                           {n.title}
                         </h4>
                         {!n.is_read && (
@@ -460,7 +460,7 @@ export default function AdminActivityPage() {
                 {/* Bottom Row: User Tag Pill & Action Button */}
                 <div className="pt-3 border-t border-surface-muted/70 flex items-center justify-between gap-2">
                   {n.ref_user_label ? (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-background border border-surface-muted text-2xs font-mono text-gray-300 truncate max-w-[75%]">
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-surface border border-border text-2xs font-mono text-text truncate max-w-[75%]">
                       <User className="h-3 w-3 text-emerald-400 shrink-0" />
                       <span className="truncate">{n.ref_user_label}</span>
                     </div>
@@ -501,7 +501,7 @@ export default function AdminActivityPage() {
               <ScrollText className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Admin Audit Trail</h2>
+              <h2 className="text-sm font-bold text-text">Admin Audit Trail</h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 Every privileged action (payouts, impersonation, balance adjustments, config changes) — 100 per page.
               </p>
@@ -534,12 +534,12 @@ export default function AdminActivityPage() {
                     </thead>
                     <tbody>
                       {auditRows.map((row) => (
-                        <tr key={row.id} className="border-t border-surface-muted/60 hover:bg-[#151D2C]">
-                          <td className="px-3 py-2 font-mono text-gray-500 whitespace-nowrap">{row.created_at || '—'}</td>
-                          <td className="px-3 py-2 text-gray-200 whitespace-nowrap">{row.user_login || `#${row.admin_id}`}</td>
-                          <td className="px-3 py-2 font-mono text-purple-300 whitespace-nowrap">{row.action}</td>
-                          <td className="px-3 py-2 text-gray-300 whitespace-nowrap">{row.target_user_id ? `#${row.target_user_id}` : '—'}</td>
-                          <td className="px-3 py-2 text-gray-400 max-w-xs truncate" title={row.details || ''}>{row.details || '—'}</td>
+                        <tr key={row.id} className="border-t border-border hover:bg-surface-muted">
+                          <td className="px-3 py-2 font-mono text-text-muted whitespace-nowrap">{row.created_at || '—'}</td>
+                          <td className="px-3 py-2 text-text whitespace-nowrap">{row.user_login || `#${row.admin_id}`}</td>
+                          <td className="px-3 py-2 font-mono text-purple-400 whitespace-nowrap">{row.action}</td>
+                          <td className="px-3 py-2 text-text-muted whitespace-nowrap">{row.target_user_id ? `#${row.target_user_id}` : '—'}</td>
+                          <td className="px-3 py-2 text-text-muted max-w-xs truncate" title={row.details || ''}>{row.details || '—'}</td>
                         </tr>
                       ))}
                     </tbody>

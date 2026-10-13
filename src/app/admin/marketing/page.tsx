@@ -822,7 +822,7 @@ export default function MarketingHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'banners'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Megaphone className="h-3.5 w-3.5" />
@@ -834,7 +834,7 @@ export default function MarketingHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'coupons'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Ticket className="h-3.5 w-3.5" />
@@ -846,7 +846,7 @@ export default function MarketingHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'affiliates'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Users2 className="h-3.5 w-3.5" />
@@ -858,7 +858,7 @@ export default function MarketingHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'broadcast'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Send className="h-3.5 w-3.5" />
@@ -870,7 +870,7 @@ export default function MarketingHubPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === 'certificates'
                 ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted'
             }`}
           >
             <Award className="h-3.5 w-3.5" />
@@ -908,7 +908,7 @@ export default function MarketingHubPage() {
             <Card className="bg-surface border-surface-muted">
               <CardContent className="py-16 text-center text-gray-400">
                 <Megaphone className="h-10 w-10 mx-auto text-gray-600 mb-3" />
-                <p className="font-semibold text-white">No promotional banners deployed</p>
+                <p className="font-semibold text-text">No promotional banners deployed</p>
                 <p className="text-xs text-gray-500 mt-1">Create your first banner to broadcast flash sales, discount coupons, or platform news.</p>
                 <Button variant="primary" size="sm" onClick={openCreateBanner} className="mt-4 gap-1.5">
                   <Plus className="h-4 w-4" /> Create Banner
@@ -989,7 +989,7 @@ export default function MarketingHubPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => openEditBanner(b)}
-                        className="h-8 text-xs border-surface-muted hover:border-emerald-500 text-gray-300 hover:text-white gap-1.5"
+                        className="h-8 text-xs border-border hover:border-emerald-500 text-text hover:bg-surface-muted gap-1.5"
                       >
                         <Edit2 className="h-3 w-3 text-emerald-400" />
                         Edit
@@ -1854,7 +1854,7 @@ export default function MarketingHubPage() {
                           "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5",
                           broadcastPreviewDevice === 'desktop'
                             ? "bg-emerald-500 text-slate-950 shadow-sm"
-                            : "text-gray-400 hover:text-white"
+                            : "text-text-muted hover:text-text hover:bg-surface-muted"
                         )}
                       >
                         <Monitor className="h-3.5 w-3.5" />
@@ -1867,7 +1867,7 @@ export default function MarketingHubPage() {
                           "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5",
                           broadcastPreviewDevice === 'mobile'
                             ? "bg-emerald-500 text-slate-950 shadow-sm"
-                            : "text-gray-400 hover:text-white"
+                            : "text-text-muted hover:text-text hover:bg-surface-muted"
                         )}
                       >
                         <Smartphone className="h-3.5 w-3.5" />
@@ -1876,11 +1876,11 @@ export default function MarketingHubPage() {
                     </div>
 
                     {/* Inbox Theme Mode Switcher */}
-                    <div className="inline-flex p-0.5 rounded-xl bg-background border border-surface-muted">
+                    <div className="inline-flex p-0.5 rounded-xl bg-surface border border-border">
                       <button
                         type="button"
                         onClick={() => setBroadcastPreviewTheme(broadcastPreviewTheme === 'dark' ? 'light' : 'dark')}
-                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-text-muted hover:text-text hover:bg-surface-muted flex items-center gap-1.5 transition-colors"
                         title={broadcastPreviewTheme === 'dark' ? 'Switch to Light Inbox' : 'Switch to Dark Inbox'}
                       >
                         {broadcastPreviewTheme === 'dark' ? (
@@ -2159,7 +2159,7 @@ export default function MarketingHubPage() {
                           className={`py-1.5 px-2 rounded-lg text-xs font-bold capitalize transition-all ${
                             selectedCertType === type
                               ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                              : 'text-gray-400 hover:text-white'
+                              : 'text-text-muted hover:text-text hover:bg-surface-muted'
                           }`}
                         >
                           {type === 'phase1' ? 'Phase 1' : type === 'phase2' ? 'Phase 2 Pass' : 'Payout Proof'}

@@ -1292,7 +1292,7 @@ export default function OperationsHubPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsAddEventModalOpen(true)}
-                    className="w-full text-xs gap-1.5 border-surface-muted hover:bg-slate-800"
+                    className="w-full text-xs gap-1.5 border-border text-text hover:bg-surface-muted"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add Custom Economic Release
@@ -1341,7 +1341,7 @@ export default function OperationsHubPage() {
                         className={`px-2 py-1 rounded text-2xs font-bold transition-all ${
                           selectedCurrencyFilter === cur
                             ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                            : 'text-gray-400 hover:text-white'
+                            : 'text-text-muted hover:text-text hover:bg-surface-muted'
                         }`}
                       >
                         {cur}
@@ -1392,19 +1392,19 @@ export default function OperationsHubPage() {
                         })
                         .map((evt: NewsEvent) => {
                           return (
-                            <tr key={evt.id} className="hover:bg-slate-800/40 transition-colors">
-                              <td className="px-5 py-3 font-mono font-medium text-gray-200 whitespace-nowrap">
+                            <tr key={evt.id} className="hover:bg-surface-muted transition-colors">
+                              <td className="px-5 py-3 font-mono font-medium text-text whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                  <Clock className="h-3.5 w-3.5 text-gray-500" />
+                                  <Clock className="h-3.5 w-3.5 text-text-muted" />
                                   <span>{evt.event_time_utc} UTC</span>
                                 </div>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
-                                <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-slate-800 border border-slate-700 text-white">
+                                <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-surface-muted border border-border text-text">
                                   {evt.currency}
                                 </span>
                               </td>
-                              <td className="px-5 py-3 font-semibold text-white">
+                              <td className="px-5 py-3 font-semibold text-text">
                                 {evt.title}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">

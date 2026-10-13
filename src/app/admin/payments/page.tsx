@@ -967,7 +967,7 @@ export default function PaymentsHubPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => openProofReviewModal(o)}
-                          className="h-8 text-xs gap-1.5 border-surface-muted hover:bg-slate-800"
+                          className="h-8 text-xs gap-1.5 border-border text-text hover:bg-surface-muted"
                         >
                           <Eye className="h-3.5 w-3.5 text-emerald-400" />
                           Audit Proof

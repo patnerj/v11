@@ -94,7 +94,7 @@ export default function AdminPageBuilder() {
       <header className="flex items-center justify-between px-4 py-3 bg-surface border-b border-surface-muted shrink-0">
         <div className="flex items-center gap-3">
           <Link href="/admin">
-            <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-white gap-1.5 p-2">
+            <Button variant="ghost" size="sm" className="text-xs text-text-muted hover:text-text hover:bg-surface-muted gap-1.5 p-2">
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Admin</span>
             </Button>
