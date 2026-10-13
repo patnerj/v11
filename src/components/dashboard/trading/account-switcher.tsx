@@ -21,7 +21,6 @@ import {
   Loader2,
   ShieldCheck,
   KeyRound,
-  Crosshair,
   Zap,
   Maximize2,
   Minimize2,
@@ -70,13 +69,10 @@ export function AccountSwitcher({
   const [search, setSearch] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const showLevels = useTerminal((s) => s.showLevels)
-  const toggleLevels = useTerminal((s) => s.toggleLevels)
   const showOneClick = useTerminal((s) => s.showOneClick)
   const toggleOneClick = useTerminal((s) => s.toggleOneClick)
   const isChartFs = useTerminal((s) => s.isChartFs)
   const toggleChartFs = useTerminal((s) => s.toggleChartFs)
-  const symbolPositionsCount = useTerminal((s) => s.symbolPositionsCount)
 
   const activeKey = ctx
     ? ctx.kind === 'tournament'
@@ -400,31 +396,9 @@ export function AccountSwitcher({
           {/* Live Midnight Countdown Timer */}
           {showTimer && <DailyDdTimer compact className="hidden md:inline-flex" />}
 
-          {/* Chart Controls: TP/SL, 1-Click, Fullscreen */}
+          {/* Chart Controls: 1-Click, Fullscreen */}
           {showChartControls && !compact && (
             <div className="hidden sm:inline-flex items-center gap-1.5 border-l border-border/80 pl-1.5 ml-0.5">
-              {/* Toggle TP/SL Levels Overlay */}
-              <button
-                type="button"
-                onClick={toggleLevels}
-                className={cn(
-                  "h-7 px-2 sm:px-2.5 inline-flex items-center gap-1.5 rounded-lg text-terminal-label font-semibold focus-ring transition-all cursor-pointer select-none",
-                  showLevels && symbolPositionsCount > 0
-                    ? "text-accent bg-accent/15 border border-accent/30 shadow-xs"
-                    : "text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle"
-                )}
-                title="Toggle TP/SL Price Levels & Risk Overlay on Chart"
-                aria-pressed={showLevels}
-              >
-                <Crosshair className={cn("h-3.5 w-3.5", showLevels && symbolPositionsCount > 0 ? "text-accent" : "")} />
-                <span>TP/SL</span>
-                {symbolPositionsCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-terminal-micro font-semibold bg-accent/20 text-accent terminal-num tabular-nums">
-                    {symbolPositionsCount}
-                  </span>
-                )}
-              </button>
-
               {/* Toggle 1-Click Floating Panel */}
               <button
                 type="button"

@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { motion, useDragControls } from 'framer-motion'
-import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, Zap, Crosshair, Info } from 'lucide-react'
+import { Maximize2, Minimize2, Info, PencilRuler } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
 import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
@@ -11,7 +11,6 @@ import { fmtPrice, toNum } from '@/lib/format'
 import type { Position } from '@/types/api'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
-import { ChartTpSlOverlay } from './chart-tp-sl-overlay'
 import { ScalperExecutionHeader } from './scalper-execution-header'
 
 interface Props {
@@ -112,9 +111,7 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const compactRef = useRef(compact)
   useEffect(() => { compactRef.current = compact }, [compact])
 
-  // TP/SL Levels Overlay & 1-Click visibility synchronized via useTerminal store
-  const showLevels = useTerminal((s) => s.showLevels)
-  const toggleLevels = useTerminal((s) => s.toggleLevels)
+  // 1-Click visibility synchronized via useTerminal store
   const showOneClick = useTerminal((s) => s.showOneClick)
   const toggleOneClick = useTerminal((s) => s.toggleOneClick)
   const dragControls = useDragControls()
@@ -360,24 +357,6 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         </button>
       )}
 
-      {/* Institutional MT5 Position & Risk Bar (Docked directly under header when positions exist) */}
-      <ChartTpSlOverlay
-        symbol={active}
-        positions={symPositions}
-        pendingOrders={symPending}
-        digits={digits}
-        pipSize={pipSize(active, digits)}
-        contractSize={toNum(meta?.contract_size) || 100000}
-        currentBid={bid || 0}
-        currentAsk={ask || 0}
-        isSlRequired={isSlRequired}
-        chartHostRef={chartHostRef}
-        compact={compact}
-        onChanged={onChanged}
-        isVisible={showLevels}
-        onToggleVisible={toggleLevels}
-      />
-
       {/* Chart host */}
       <div ref={chartHostRef} className="relative flex-1 min-h-0" style={{ touchAction: 'pan-y' }}>
         {!ready && !error && (
@@ -401,32 +380,34 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         )}
         <div ref={containerRef} className="absolute inset-0" />
 
-        {/* Floating Scalper Execution Header directly over the chart — Draggable across chart canvas */}
+        {/* Floating Scalper Execution Header docked at bottom-center — Draggable across chart canvas */}
         {ready && showOneClick && (
-          <motion.div
-            drag
-            dragControls={dragControls}
-            dragListener={false}
-            dragConstraints={chartHostRef}
-            dragMomentum={false}
-            dragElastic={0.05}
-            className="absolute top-3 left-6 z-[25] pointer-events-auto"
-            style={{ touchAction: 'none' }}
-          >
-            <ScalperExecutionHeader
-              symbol={active}
-              bid={bid || 0}
-              ask={ask || 0}
-              digits={digits}
-              pipSize={pipSize(active, digits)}
-              isSlRequired={isSlRequired}
-              compact={compact}
-              onChanged={onChanged}
-              dragHandleProps={{
-                onPointerDown: (e) => dragControls.start(e),
-              }}
-            />
-          </motion.div>
+          <div className="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none z-[25] px-2">
+            <motion.div
+              drag
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={chartHostRef}
+              dragMomentum={false}
+              dragElastic={0.05}
+              className="pointer-events-auto max-w-full"
+              style={{ touchAction: 'none' }}
+            >
+              <ScalperExecutionHeader
+                symbol={active}
+                bid={bid || 0}
+                ask={ask || 0}
+                digits={digits}
+                pipSize={pipSize(active, digits)}
+                isSlRequired={isSlRequired}
+                compact={compact}
+                onChanged={onChanged}
+                dragHandleProps={{
+                  onPointerDown: (e) => dragControls.start(e),
+                }}
+              />
+            </motion.div>
+          </div>
         )}
       </div>
 
