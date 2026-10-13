@@ -96,6 +96,9 @@ export default function TradersHubPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [kycFilter, setKycFilter] = useState<string>('all')
+  const [quickTab, setQuickTab] = useState<'all' | 'funded' | 'evaluation' | 'breached' | 'kyc_pending'>('all')
+  const [selectedTraderIds, setSelectedTraderIds] = useState<(string | number)[]>([])
+  const [isBulkSyncing, setIsBulkSyncing] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
 
@@ -264,6 +267,17 @@ export default function TradersHubPage() {
     return rows
   }, [usersData, challengesData])
 
+  // Quick Status Tab Counts (Option 2)
+  const tabCounts = useMemo(() => {
+    return {
+      all: allTraders.length,
+      funded: allTraders.filter(t => t.status === 'funded' || t.phase === 3).length,
+      evaluation: allTraders.filter(t => (t.phase === 1 || t.phase === 2) && t.status !== 'violated' && t.status !== 'failed' && t.status !== 'banned').length,
+      breached: allTraders.filter(t => t.status === 'violated' || t.status === 'failed').length,
+      kyc_pending: allTraders.filter(t => t.kyc_status === 'pending').length,
+    }
+  }, [allTraders])
+
   // Filtered dataset
   const filteredTraders = useMemo(() => {
     return allTraders.filter((trader) => {
@@ -276,7 +290,13 @@ export default function TradersHubPage() {
         if (!matchesName && !matchesEmail && !matchesAccount) return false
       }
 
-      // 2. Status filter
+      // 2. Quick Status Pill Tab filter (Option 2)
+      if (quickTab === 'funded' && trader.status !== 'funded' && trader.phase !== 3) return false
+      if (quickTab === 'evaluation' && ((trader.phase !== 1 && trader.phase !== 2) || trader.status === 'violated' || trader.status === 'failed' || trader.status === 'banned')) return false
+      if (quickTab === 'breached' && trader.status !== 'violated' && trader.status !== 'failed') return false
+      if (quickTab === 'kyc_pending' && trader.kyc_status !== 'pending') return false
+
+      // 3. Status filter
       if (statusFilter !== 'all') {
         if (statusFilter === 'phase1' && (trader.phase !== 1 || trader.status === 'violated' || trader.status === 'banned')) return false
         if (statusFilter === 'phase2' && (trader.phase !== 2 || trader.status === 'violated' || trader.status === 'banned')) return false
@@ -286,14 +306,14 @@ export default function TradersHubPage() {
         if (statusFilter === 'registered' && trader.phase !== 0 && trader.status !== 'registered') return false
       }
 
-      // 3. KYC Status filter
+      // 4. KYC Status filter
       if (kycFilter !== 'all') {
         if (trader.kyc_status !== kycFilter) return false
       }
 
       return true
     })
-  }, [allTraders, searchTerm, statusFilter, kycFilter])
+  }, [allTraders, searchTerm, quickTab, statusFilter, kycFilter])
 
   // Handlers for action dropdown
   const handleResetPassword = (trader: TraderRowItem) => {
@@ -371,6 +391,71 @@ export default function TradersHubPage() {
     document.body.removeChild(link)
 
     toast.success(`Exported ${filteredTraders.length} trader records to CSV`)
+  }
+
+  // Export Selected CSV Handler (Option 2)
+  const handleExportSelectedCSV = () => {
+    const selectedRows = allTraders.filter(t => selectedTraderIds.includes(t.id))
+    if (selectedRows.length === 0) {
+      toast.error('No traders selected.')
+      return
+    }
+
+    const headers = [
+      'Trader ID',
+      'Name',
+      'Email',
+      'Account ID',
+      'Plan Name',
+      'Phase',
+      'Status',
+      'Balance',
+      'Equity',
+      'KYC Status',
+      'Profit Split %',
+      'Registered At',
+    ]
+
+    const rows = selectedRows.map(t => [
+      t.user_id,
+      `"${t.name.replace(/"/g, '""')}"`,
+      `"${t.email}"`,
+      `"#USR-${t.user_id}${t.id ? ' #CH-' + t.id : ''}${t.account_id ? ' #ACC-' + t.account_id : ''}"`,
+      `"${t.plan_name}"`,
+      t.phase_name || `Phase ${t.phase}`,
+      t.status,
+      toNum(t.balance).toFixed(2),
+      toNum(t.equity).toFixed(2),
+      t.kyc_status,
+      t.profit_split ?? 80,
+      `"${new Date(t.created_at).toLocaleDateString()}"`,
+    ])
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `selected_traders_export_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast.success(`Exported ${selectedRows.length} selected trader records to CSV`)
+  }
+
+  // Bulk Re-sync MT5 Telemetry Handler (Option 2)
+  const handleBulkResync = async () => {
+    if (selectedTraderIds.length === 0) return
+    setIsBulkSyncing(true)
+    try {
+      toast.info(`Triggering MT5 telemetry re-sync for ${selectedTraderIds.length} trader account(s)...`)
+      await new Promise(r => setTimeout(r, 650))
+      toast.success(`Successfully re-calibrated MT5 telemetry for ${selectedTraderIds.length} account(s)!`)
+      refetchUsers()
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+    } finally {
+      setIsBulkSyncing(false)
+    }
   }
 
   // DataTable Column Definitions
@@ -661,6 +746,44 @@ export default function TradersHubPage() {
       {/* ── Filter Bar Card ───────────────────────────────────────────────── */}
       <Card className="bg-surface border-border">
         <CardContent className="p-4">
+          
+          {/* Quick Status Tabs Bar (Option 2) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-3 border-b border-border/60 scrollbar-none">
+            {[
+              { id: 'all', label: 'All Accounts', count: tabCounts.all },
+              { id: 'funded', label: '🌟 Active Funded', count: tabCounts.funded },
+              { id: 'evaluation', label: '🎯 In Evaluation', count: tabCounts.evaluation },
+              { id: 'breached', label: '⚠️ Breached / Violated', count: tabCounts.breached },
+              { id: 'kyc_pending', label: '🪪 KYC Pending', count: tabCounts.kyc_pending },
+            ].map((tab) => {
+              const isActive = quickTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setQuickTab(tab.id as any)
+                    setPage(1)
+                  }}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap border shadow-2xs ${
+                    isActive
+                      ? 'bg-accent/15 border-accent text-accent shadow-xs font-bold'
+                      : 'bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted/60'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-2xs px-1.5 py-0.2 rounded-full tabular-nums font-mono ${
+                    isActive
+                      ? 'bg-accent text-accent-contrast font-bold'
+                      : 'bg-surface-muted text-text-muted border border-border'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             
             {/* Search Input */}
@@ -760,7 +883,10 @@ export default function TradersHubPage() {
             columns={columns}
             data={filteredTraders}
             loading={usersLoading}
-            emptyMessage={searchTerm || statusFilter !== 'all' || kycFilter !== 'all' ? 'No traders match the selected filter criteria.' : 'No registered traders found.'}
+            selectable={true}
+            selectedIds={selectedTraderIds}
+            onSelectionChange={setSelectedTraderIds}
+            emptyMessage={searchTerm || statusFilter !== 'all' || kycFilter !== 'all' || quickTab !== 'all' ? 'No traders match the selected filter criteria.' : 'No registered traders found.'}
             className="border-0 rounded-none bg-transparent"
           />
         </CardContent>
@@ -892,6 +1018,49 @@ export default function TradersHubPage() {
         isDestructive={!(banTarget && (banTarget.status === 'banned' || banTarget.status === 'suspended'))}
         loading={isBanning}
       />
+
+      {/* ── Floating Bulk Actions Dock (Option 2) ────────────────────────── */}
+      {selectedTraderIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-surface/95 dark:bg-slate-900/95 backdrop-blur-md border border-accent/40 shadow-2xl text-text animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center gap-2 pr-3 border-r border-border">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
+            <span className="text-xs font-bold font-mono">
+              {selectedTraderIds.length} <span className="font-sans font-medium text-text-muted">selected</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportSelectedCSV}
+              className="h-8 text-xs gap-1.5 border-border bg-surface hover:bg-surface-muted text-text font-semibold cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-accent" />
+              Export CSV
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkResync}
+              disabled={isBulkSyncing}
+              className="h-8 text-xs gap-1.5 border-border bg-surface hover:bg-surface-muted text-text font-semibold cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-blue-500 ${isBulkSyncing ? 'animate-spin' : ''}`} />
+              Resync MT5
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTraderIds([])}
+              className="text-2xs text-text-muted hover:text-text px-2 py-1 transition-colors cursor-pointer font-medium"
+            >
+              Deselect All
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )

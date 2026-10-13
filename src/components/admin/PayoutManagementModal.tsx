@@ -337,11 +337,17 @@ export function PayoutManagementModal({
                 <Button
                   type="button"
                   variant="primary"
-                  onClick={() => setConfirmAction('paid')}
-                  disabled={!txHash.trim() || submittingAction !== null || (reconStatus ? reconStatus.openPositionsCount > 0 : false)}
+                  onClick={() => {
+                    if (!txHash.trim()) {
+                      toast.error('Transaction ID / Tx Hash is required to mark this payout as paid.')
+                      return
+                    }
+                    setConfirmAction('paid')
+                  }}
+                  disabled={submittingAction !== null || (reconStatus ? reconStatus.openPositionsCount > 0 : false)}
                   loading={submittingAction === 'paid'}
                   className="gap-1.5 shadow-emerald-500/20"
-                  title={reconStatus && reconStatus.openPositionsCount > 0 ? "Blocked: All open market positions must be closed before disbursal" : undefined}
+                  title={reconStatus && reconStatus.openPositionsCount > 0 ? "Blocked: All open market positions must be closed before disbursal" : (!txHash.trim() ? "Enter Transaction Reference Hash to disburse" : undefined)}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Mark Paid & Disburse
@@ -592,20 +598,31 @@ export function PayoutManagementModal({
         {/* 4. Input Fields */}
         <div className="space-y-4">
           
-          {/* Transaction ID / Reference (Required to Approve) */}
+          {/* Transaction ID / Reference (Required to Mark Paid) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="tx-hash" className="mb-0">
-                Transaction ID / Reference Hash <span className="text-emerald-400 font-normal">(Required to Mark Paid)</span>
+              <Label htmlFor="tx-hash" className="mb-0 flex items-center gap-1.5">
+                <span>Transaction ID / Reference Hash</span>
+                <span className="text-amber-500 font-semibold text-2xs uppercase tracking-wider">(Required to Mark Paid)</span>
               </Label>
-              <span className="text-2xs text-gray-500">TX Hash / Bank Ref</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const autoRef = `TX-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+                  setTxHash(autoRef)
+                  toast.info(`Generated settlement reference: ${autoRef}`)
+                }}
+                className="text-2xs text-accent hover:underline cursor-pointer font-mono"
+              >
+                + Auto-Ref
+              </button>
             </div>
             <Input
               id="tx-hash"
               value={txHash}
               onChange={(e) => setTxHash(e.target.value)}
               placeholder="e.g. 0x89f2a71d4c8b08a54a94bc80521e6490fdbce2b1 or TX-889124"
-              className="text-xs"
+              className="text-xs font-mono"
             />
           </div>
 

@@ -24,31 +24,79 @@ import { toast } from 'sonner'
 import { useBranding } from '@/store/branding'
 import { useAuth } from '@/store/auth'
 
-// Canned Response Templates (1-Click Quick Replies)
-const CANNED_RESPONSES = [
+// Canned Response Templates (1-Click Quick Replies & Fast Macros)
+export interface MacroTemplate {
+  id: string
+  title: string
+  label: string
+  icon: string
+  render: (traderName: string, brandName: string) => string
+}
+
+export const CANNED_MACROS: MacroTemplate[] = [
   {
-    title: 'Password Reset Info',
-    text: 'Hello, to reset your account password, please click "Forgot Password" on the login screen or navigate to Settings > Security in your trader dashboard. A secure one-time password reset token has been dispatched to your registered email address. If you do not receive it within 5 minutes, please check your spam/junk folder.'
+    id: 'mt5',
+    title: 'MT5 Credentials & Bridge Setup',
+    label: 'MT5 Setup',
+    icon: '🔑',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nYour MT5 trading credentials can be accessed anytime under the Credentials tab in your trader dashboard. Please verify:\n• Broker Server: ${brand}-Live\n• Platform: MetaTrader 5 (Windows, Mac, iOS, Android, or WebTrader)\n• Latency: Gateway bridge is operating normally at sub-15ms.\n\nPlease ensure you copy and paste credentials without leading or trailing whitespace.\n\nBest regards,\n${brand} Technical Support`
   },
   {
-    title: 'Daily DD Explanation',
-    text: 'Hello, our risk engine tracks Daily Drawdown relative to your starting balance or equity baseline captured at 00:00 UTC server midnight. Any floating losses and closed positions that exceed your plan\'s daily threshold trigger a protective stop. You can track your exact daily floor and reset countdown timer in your WebTrader terminal and dashboard.'
+    id: 'drawdown',
+    title: 'Daily & Max Drawdown Calculation',
+    label: 'Drawdown Rules',
+    icon: '📉',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nOur risk engine audits drawdown in real-time:\n• Daily Drawdown: Calibrated against your balance/equity baseline captured at 00:00 UTC server midnight.\n• Trailing Max Drawdown: Ratchets up with peak equity (High-Water Mark) and permanently locks at your starting balance once profit exceeds the maximum loss threshold.\n• Real-Time Cushion: You can monitor your live buffer dollar amount directly on your dashboard dial and WebTrader terminal.\n\nBest regards,\n${brand} Risk Desk`
   },
   {
-    title: 'KYC Verified',
-    text: 'Hello, congratulations! Your identity verification documents have been fully audited and approved by our compliance department. Your account status is now officially updated to KYC Verified. You have full clearance to request profit split payouts upon reaching qualifying milestones.'
+    id: 'kyc',
+    title: 'KYC Document Re-upload Guidance',
+    label: 'KYC Re-upload',
+    icon: '🪪',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nTo complete identity verification and unlock payout disbursal, please re-upload your compliance documents in Dashboard > KYC:\n1. Proof of Identity: Clear, uncropped color scan of Passport, Driver's License, or National ID (all 4 corners visible, no glare).\n2. Proof of Address: Official Utility Bill or Bank Statement issued within the last 90 days with your matching legal name and residential address.\n\nOur compliance team audits submissions within 2 to 4 business hours.\n\nBest regards,\n${brand} Compliance Team`
   },
   {
-    title: 'Weekend Rule Notice',
-    text: 'Hello, as per our Trading Rules, position holding over the weekend depends on your challenge plan tier. Standard evaluation accounts require all open positions to be closed before Friday 21:00 UTC market close. Swing plans permit weekend holding without restriction. Please review your plan specifications in your dashboard.'
+    id: 'payout',
+    title: 'Payout Schedule & Disbursal Protocol',
+    label: 'Payout Schedule',
+    icon: '💰',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nCongratulations on reaching profit split eligibility! Our payout cycle works as follows:\n• Request Review: Dual-admin risk reconciliation and trading history audit are conducted within 24 hours of submission.\n• Disbursal Schedule: Processed every Tuesday & Friday directly to your verified destination address.\n• Supported Methods: USDT (TRC-20, BEP-20) and Wise.\n\nPlease ensure all open market positions are closed when requesting a disbursal.\n\nBest regards,\n${brand} Finance Desk`
   },
   {
-    title: 'Payout Schedule Note',
-    text: 'Hello, your payout request is currently undergoing final risk audit and dual-admin compliance review. Profit split disbursements are processed every Tuesday & Friday via USDT TRC-20 directly to your verified destination address.'
+    id: 'news',
+    title: 'High-Impact News Trading Policy',
+    label: 'News Policy',
+    icon: '⚡',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nRegarding high-impact economic news releases:\n• Standard Evaluation Plans: Opening or closing positions within 2 minutes before or after Tier-1 high-impact calendar events (e.g. CPI, NFP, FOMC) is prohibited.\n• Swing Accounts: Fully exempt — holding positions and trading through high-impact news and weekends is unrestricted.\n\nPlease refer to your account parameters drawer in your dashboard to confirm your plan type.\n\nBest regards,\n${brand} Trade Desk`
   },
   {
-    title: 'MT5 EA Latency Checked',
-    text: 'Hello, our engineering team checked the MT5 gateway bridge telemetry. Server latency is operating normally at sub-15ms. Please ensure your Expert Advisor is utilizing market execution orders and conforms to maximum lot limits.'
+    id: 'hours',
+    title: 'Market Hours & Weekend Holding',
+    label: 'Market Hours',
+    icon: '🕒',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nTrading session hours on ${brand}:\n• Forex & Metals: Open 24/5 from Monday 00:00 UTC through Friday 21:00 UTC. Standard accounts must close positions before the Friday close.\n• Crypto: Open 24/7/365 with continuous pricing and zero weekend freeze.\n\nBest regards,\n${brand} Trade Desk`
+  },
+  {
+    id: 'reset',
+    title: 'Account Reset & Discount Retake',
+    label: 'Reset Policy',
+    icon: '🔄',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nIf your challenge has breached risk parameters, you can reset your account with a discounted retry. Head to your dashboard and click "Reset Account" or browse the Challenges catalog with code RETRY20 for an immediate discount on your next evaluation.\n\nBest regards,\n${brand} Support Team`
+  },
+  {
+    id: 'password',
+    title: 'Password Reset & Account Security',
+    label: 'Password Reset',
+    icon: '🔐',
+    render: (trader, brand) => 
+      `Hello ${trader},\n\nTo reset your dashboard password, click "Forgot Password" on the login portal or visit Settings > Security. A secure one-time reset link has been dispatched to your email. If not received within 5 minutes, please verify your spam/junk folder.\n\nBest regards,\n${brand} Support Team`
   }
 ]
 
@@ -1030,19 +1078,21 @@ export default function AdminHelpdeskPage() {
                     <select
                       value=""
                       onChange={(e) => {
-                        const selectedTitle = e.target.value
-                        const found = CANNED_RESPONSES.find(cr => cr.title === selectedTitle)
+                        const selectedId = e.target.value
+                        const found = CANNED_MACROS.find(cr => cr.id === selectedId)
                         if (found) {
-                          setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${found.text}` : found.text))
-                          toast.info(`Inserted "${found.title}" template!`)
+                          const traderName = activeTicket?.display_name || activeTicket?.user_login || (activeTicket?.trader_id ? `Trader #${activeTicket.trader_id}` : 'Trader')
+                          const text = found.render(traderName, brandName)
+                          setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${text}` : text))
+                          toast.info(`Inserted "${found.label}" template!`)
                         }
                       }}
                       className="h-7 px-2 rounded-lg bg-surface border border-border text-2xs text-text hover:border-accent/40 focus:outline-none focus:border-accent cursor-pointer transition-colors"
                     >
-                      <option value="" disabled>📝 Quick Templates ▾</option>
-                      {CANNED_RESPONSES.map((cr) => (
-                        <option key={cr.title} value={cr.title} className="bg-surface text-text">
-                          {cr.title}
+                      <option value="" disabled>📝 All Macros ▾</option>
+                      {CANNED_MACROS.map((cr) => (
+                        <option key={cr.id} value={cr.id} className="bg-surface text-text">
+                          {cr.icon} {cr.title}
                         </option>
                       ))}
                     </select>
@@ -1051,12 +1101,37 @@ export default function AdminHelpdeskPage() {
                       <button
                         type="button"
                         onClick={() => setReplyMessage('')}
-                        className="text-2xs text-text-muted hover:text-red-500 transition-colors px-1 cursor-pointer"
+                        className="text-2xs text-text-muted hover:text-red-500 transition-colors px-1 cursor-pointer font-medium"
                       >
                         Clear
                       </button>
                     )}
                   </div>
+                </div>
+
+                {/* 1-Click Fast Macro Pills Bar (Option 1) */}
+                <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-0.5">
+                  <span className="text-2xs font-bold text-text-muted shrink-0 flex items-center gap-1 mr-0.5">
+                    <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+                    <span>Fast Macros:</span>
+                  </span>
+                  {CANNED_MACROS.slice(0, 6).map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        const traderName = activeTicket?.display_name || activeTicket?.user_login || (activeTicket?.trader_id ? `Trader #${activeTicket.trader_id}` : 'Trader')
+                        const text = m.render(traderName, brandName)
+                        setReplyMessage((prev) => (prev.trim() ? `${prev}\n\n${text}` : text))
+                        toast.success(`Inserted "${m.label}" macro!`)
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface border border-border hover:border-accent/60 hover:bg-surface-muted text-2xs font-semibold text-text transition-all cursor-pointer whitespace-nowrap shadow-2xs hover:shadow-xs active:scale-95"
+                      title={m.title}
+                    >
+                      <span>{m.icon}</span>
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
                 </div>
 
                 {/* Reply Form (Compact 3-Row Textarea & Action Row) */}

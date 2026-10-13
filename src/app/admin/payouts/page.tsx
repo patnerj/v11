@@ -446,9 +446,17 @@ function PayoutsHubContent() {
       key: 'payout_code',
       header: 'Payout ID',
       render: (row) => (
-        <span className="tabular text-xs font-bold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border">
-          {row.payout_code}
-        </span>
+        <div className="space-y-1">
+          <span className="tabular text-xs font-bold text-text bg-surface-muted px-2.5 py-1 rounded-md border border-border inline-block">
+            {row.payout_code}
+          </span>
+          {row.tx_reference && (
+            <div className="flex items-center gap-1 font-mono text-2xs text-text-muted" title={row.tx_reference}>
+              <span className="text-emerald-500 font-bold">Tx:</span>
+              <span className="truncate max-w-[110px]">{row.tx_reference}</span>
+            </div>
+          )}
+        </div>
       )
     },
     {

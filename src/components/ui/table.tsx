@@ -6,15 +6,81 @@ import { cn } from '@/lib/cn'
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto rounded-xl border border-border bg-surface shadow-sm">
-    <table
-      ref={ref}
-      className={cn('w-full caption-bottom text-sm text-text', className)}
-      {...props}
-    />
-  </div>
-))
+>(({ className, ...props }, ref) => {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false)
+  const [canScrollRight, setCanScrollRight] = React.useState(false)
+  const [hasScrolled, setHasScrolled] = React.useState(false)
+
+  const checkScroll = React.useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const { scrollLeft, scrollWidth, clientWidth } = el
+    setCanScrollLeft(scrollLeft > 6)
+    setCanScrollRight(scrollWidth - clientWidth - scrollLeft > 6)
+  }, [])
+
+  React.useEffect(() => {
+    checkScroll()
+    const el = containerRef.current
+    if (!el) return
+    const resizeObserver = new ResizeObserver(() => checkScroll())
+    resizeObserver.observe(el)
+    window.addEventListener('resize', checkScroll)
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', checkScroll)
+    }
+  }, [checkScroll])
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    checkScroll()
+    if (!hasScrolled && e.currentTarget.scrollLeft > 15) {
+      setHasScrolled(true)
+    }
+  }
+
+  return (
+    <div className="relative w-full rounded-xl border border-border bg-surface shadow-sm group/table">
+      {/* Mobile Scroll Gradient Edge Overlays (Option 5) */}
+      {canScrollLeft && (
+        <div 
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 sm:w-8 bg-gradient-to-r from-surface to-transparent transition-opacity duration-300 z-10 sm:hidden" 
+        />
+      )}
+      {canScrollRight && (
+        <div 
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 sm:w-8 bg-gradient-to-l from-surface to-transparent transition-opacity duration-300 z-10 sm:hidden" 
+        />
+      )}
+
+      {/* Subtle Mobile Swipe Hint (disappears on scroll) */}
+      {canScrollRight && !hasScrolled && (
+        <div 
+          aria-hidden="true"
+          className="pointer-events-none absolute right-2.5 top-2.5 z-20 px-2 py-0.5 rounded-full bg-surface/90 border border-border/80 text-[10px] font-semibold text-text-muted shadow-xs backdrop-blur-xs flex items-center gap-1 sm:hidden animate-pulse"
+        >
+          <span>↔ Swipe</span>
+        </div>
+      )}
+
+      {/* Overflow Scroll Container */}
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="w-full overflow-auto rounded-xl scrollbar-none"
+      >
+        <table
+          ref={ref}
+          className={cn('w-full caption-bottom text-sm text-text', className)}
+          {...props}
+        />
+      </div>
+    </div>
+  )
+})
 Table.displayName = 'Table'
 
 const TableHeader = React.forwardRef<
