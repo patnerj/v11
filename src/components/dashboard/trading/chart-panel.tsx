@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useDragControls } from 'framer-motion'
 import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, Zap, Crosshair, Info } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
@@ -112,41 +112,19 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const compactRef = useRef(compact)
   useEffect(() => { compactRef.current = compact }, [compact])
 
-  // TP/SL Levels Overlay visibility state (persisted per device)
-  const [showLevels, setShowLevels] = useState(true)
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('fxsim:term:levels')
-      if (saved === '0') setShowLevels(false)
-    } catch {}
-  }, [])
+  // TP/SL Levels Overlay & 1-Click visibility synchronized via useTerminal store
+  const showLevels = useTerminal((s) => s.showLevels)
+  const toggleLevels = useTerminal((s) => s.toggleLevels)
+  const showOneClick = useTerminal((s) => s.showOneClick)
+  const toggleOneClick = useTerminal((s) => s.toggleOneClick)
+  const dragControls = useDragControls()
 
-  const toggleLevels = useCallback(() => {
-    setShowLevels((prev) => {
-      const next = !prev
-      try { localStorage.setItem('fxsim:term:levels', next ? '1' : '0') } catch {}
-      return next
-    })
-  }, [])
-
-  // 1-Click Trade state
   const isSlRequired = Boolean(plan?.stop_loss_required || plan?.require_stop_loss)
-  const [showOneClick, setShowOneClick] = useState(true)
 
+  // Sync active symbol position count to terminal store (drives topbar badge)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('fxsim:term:oneclick')
-      if (saved === '0') setShowOneClick(false)
-    } catch {}
-  }, [])
-
-  const toggleOneClick = () => {
-    setShowOneClick((prev) => {
-      const next = !prev
-      try { localStorage.setItem('fxsim:term:oneclick', next ? '1' : '0') } catch {}
-      return next
-    })
-  }
+    useTerminal.getState().setSymbolPositionsCount(symPositions.length)
+  }, [symPositions.length])
 
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme !== 'light'
@@ -308,18 +286,32 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
       if (!document.fullscreenElement) {
         await el.requestFullscreen?.()
         setFs(true)
+        useTerminal.getState().setChartFs(true)
       } else {
         await document.exitFullscreen?.()
         setFs(false)
+        useTerminal.getState().setChartFs(false)
       }
     } catch { /* user-denied or unsupported */ }
   }, [])
 
   useEffect(() => {
-    const onFsChange = () => setFs(!!document.fullscreenElement)
+    const onFsChange = () => {
+      const isFs = !!document.fullscreenElement
+      setFs(isFs)
+      useTerminal.getState().setChartFs(isFs)
+    }
     document.addEventListener('fullscreenchange', onFsChange)
     return () => document.removeEventListener('fullscreenchange', onFsChange)
   }, [])
+
+  // Register fullscreen toggle handler with terminal store
+  useEffect(() => {
+    useTerminal.getState().registerChartFsHandler(toggleFs)
+    return () => {
+      useTerminal.getState().registerChartFsHandler(null)
+    }
+  }, [toggleFs])
 
   const digits = meta?.digits || symbolDigits(active)
   const bid = toNum(tick?.bid)
@@ -328,97 +320,47 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
 
   return (
     <div ref={wrapRef} className="flex flex-col h-full min-h-0 bg-surface relative">
-      {/* Header — symbol info + timeframe selector */}
-      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border-subtle bg-bg-subtle/40">
-        <div className="flex items-center gap-2 min-w-0">
+      {/* Mobile-only compact tap bar (on mobile viewports only) */}
+      {compact && (
+        <div className="shrink-0 flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
           <button
-            onClick={compact && onOpenWatchlist ? onOpenWatchlist : undefined}
-            className={compact && onOpenWatchlist ? 'min-w-0 text-left hover:opacity-80 transition-opacity' : 'min-w-0 text-left cursor-default'}
+            onClick={onOpenWatchlist}
+            className="min-w-0 text-left hover:opacity-80 transition-opacity flex items-center gap-1.5 cursor-pointer"
           >
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-terminal-title font-semibold terminal-num truncate">{active}</span>
-              {meta && (
-                <span className="text-terminal-body text-text-muted truncate hidden sm:inline">
-                  · {meta.display_name}
-                </span>
-              )}
-              {compact && onOpenWatchlist && (
-                <span className="text-terminal-body text-accent truncate sm:hidden">· tap to change</span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 text-terminal-body terminal-num">
-              <span className="text-text-faint uppercase tracking-wider mr-0.5">Exec</span>
-              <span className="text-success">{bid ? fmtPrice(bid, digits) : '—'}</span>
-              <span className="text-text-faint">/</span>
-              <span className="text-danger">{ask ? fmtPrice(ask, digits) : '—'}</span>
-            </div>
+            <span className="text-terminal-title font-semibold terminal-num truncate">{active}</span>
+            {meta && (
+              <span className="text-terminal-body text-text-muted truncate hidden xs:inline">
+                · {meta.display_name}
+              </span>
+            )}
+            <span className="text-terminal-micro text-accent underline ml-1">change</span>
           </button>
-        </div>
 
-        {/* Timeframe + drawing tools are provided by TradingView's own toolbars
-            (no duplicate row here). */}
-
-        {/* Mobile drawing toolbar toggle — the user decides (persisted per device) */}
-        {compact && (
           <button
             onClick={toggleMobileDraw}
-            className={`shrink-0 ml-auto h-7 px-2 inline-flex items-center gap-1 rounded text-terminal-body focus-ring ${mobileDraw ? 'text-accent bg-accent/10' : 'text-text-muted hover:text-text hover:bg-surface-muted/50'}`}
+            className={`shrink-0 h-6 px-2 inline-flex items-center gap-1 rounded text-terminal-micro focus-ring ${mobileDraw ? 'text-accent bg-accent/10' : 'text-text-muted hover:text-text'}`}
             aria-pressed={mobileDraw}
             aria-label="Toggle drawing tools"
           >
-            <PencilRuler className="h-3.5 w-3.5" /> Draw
+            <PencilRuler className="h-3 w-3" /> Draw
           </button>
-        )}
+        </div>
+      )}
 
-        {/* Toggle TP/SL Levels Overlay */}
+      {/* Fullscreen Floating Exit Button (when in browser native fullscreen) */}
+      {fullscreen && (
         <button
-          onClick={toggleLevels}
-          className={`shrink-0 ml-auto sm:ml-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-terminal-label font-semibold focus-ring transition-all ${
-            showLevels && (symPositions.length > 0 || symPending.length > 0)
-              ? 'text-accent bg-accent/15 border border-accent/30 shadow-sm'
-              : 'text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle'
-          }`}
-          title="Toggle TP/SL Price Levels & Risk Overlay"
-          aria-pressed={showLevels}
-        >
-          <Crosshair className={`h-3.5 w-3.5 ${showLevels && (symPositions.length > 0 || symPending.length > 0) ? 'text-accent' : ''}`} />
-          <span>TP/SL</span>
-          {symPositions.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-terminal-micro font-semibold bg-accent/20 text-accent terminal-num">
-              {symPositions.length}
-            </span>
-          )}
-        </button>
-
-        {/* Toggle 1-Click Floating Panel */}
-        {!compact && (
-          <button
-            onClick={toggleOneClick}
-            className={`shrink-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-terminal-label font-semibold focus-ring transition-all ${
-              showOneClick
-                ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 shadow-sm'
-                : 'text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle'
-            }`}
-            title="Toggle Floating 1-Click Trading Panel"
-            aria-pressed={showOneClick}
-          >
-            <Zap className={`h-3.5 w-3.5 ${showOneClick ? 'text-emerald-400 fill-emerald-400' : ''}`} />
-            <span>1-Click</span>
-          </button>
-        )}
-
-        {/* Fullscreen */}
-        <button
+          type="button"
           onClick={toggleFs}
-          className="shrink-0 h-7 w-7 inline-flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-muted/50 border border-border-subtle focus-ring transition-colors"
-          aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          className="absolute top-3 right-3 z-30 h-8 px-2.5 rounded-lg bg-surface/90 border border-border text-text hover:text-accent backdrop-blur-md shadow-lg flex items-center gap-1.5 text-terminal-body font-semibold cursor-pointer"
+          title="Exit Fullscreen"
         >
-          {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          <Minimize2 className="h-4 w-4" />
+          <span>Exit Fullscreen</span>
         </button>
-      </div>
+      )}
 
-      {/* Institutional MT5 Position & Risk Bar (Docked directly under header) */}
+      {/* Institutional MT5 Position & Risk Bar (Docked directly under header when positions exist) */}
       <ChartTpSlOverlay
         symbol={active}
         positions={symPositions}
@@ -459,22 +401,32 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         )}
         <div ref={containerRef} className="absolute inset-0" />
 
-        {/* Floating Scalper Execution Header directly over the chart */}
+        {/* Floating Scalper Execution Header directly over the chart — Draggable across chart canvas */}
         {ready && showOneClick && (
-          <div className="absolute top-2 inset-x-0 flex justify-center pointer-events-none z-[20] px-2">
-            <div className="pointer-events-auto max-w-full">
-              <ScalperExecutionHeader
-                symbol={active}
-                bid={bid || 0}
-                ask={ask || 0}
-                digits={digits}
-                pipSize={pipSize(active, digits)}
-                isSlRequired={isSlRequired}
-                compact={compact}
-                onChanged={onChanged}
-              />
-            </div>
-          </div>
+          <motion.div
+            drag
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={chartHostRef}
+            dragMomentum={false}
+            dragElastic={0.05}
+            className="absolute top-3 left-6 z-[25] pointer-events-auto"
+            style={{ touchAction: 'none' }}
+          >
+            <ScalperExecutionHeader
+              symbol={active}
+              bid={bid || 0}
+              ask={ask || 0}
+              digits={digits}
+              pipSize={pipSize(active, digits)}
+              isSlRequired={isSlRequired}
+              compact={compact}
+              onChanged={onChanged}
+              dragHandleProps={{
+                onPointerDown: (e) => dragControls.start(e),
+              }}
+            />
+          </motion.div>
         )}
       </div>
 

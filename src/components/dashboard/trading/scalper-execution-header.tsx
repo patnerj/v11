@@ -1,7 +1,7 @@
 'use client'
 
 import React, { memo, useState, useCallback, useMemo, useEffect } from 'react'
-import { Plus, Minus } from 'lucide-react'
+import { Plus, Minus, GripVertical } from 'lucide-react'
 import { fmtPrice } from '@/lib/format'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
@@ -26,6 +26,7 @@ interface ScalperExecutionHeaderProps {
   compact?: boolean
   onChanged?: () => void
   className?: string
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
 
 export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
@@ -38,6 +39,7 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
   compact = false,
   onChanged,
   className,
+  dragHandleProps,
 }: ScalperExecutionHeaderProps) {
   const [lot, setLot] = useState('1.00')
   const [slPips, setSlPips] = useState('30')
@@ -194,10 +196,22 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 py-1.5 bg-surface/95 dark:bg-bg-subtle/95 backdrop-blur-md border border-border rounded-xl shadow-md select-none text-terminal-body transition-all",
+        "flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 py-1.5 bg-surface/95 dark:bg-bg-subtle/95 backdrop-blur-md border border-border rounded-xl shadow-lg select-none text-terminal-body transition-all",
         className
       )}
     >
+      {/* Tactile Drag Handle */}
+      {dragHandleProps && (
+        <div
+          {...dragHandleProps}
+          className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-text-muted hover:text-text hover:bg-surface-muted/60 rounded flex items-center justify-center transition-colors touch-none shrink-0"
+          title="Drag to reposition anywhere on chart"
+          aria-label="Drag to reposition 1-Click execution"
+        >
+          <GripVertical className="w-4 h-4 text-text-muted hover:text-text" />
+        </div>
+      )}
+
       {/* Quick Sell Button */}
       <button
         type="button"

@@ -442,7 +442,7 @@ function DesktopLayout({
       {/* Account switcher & Sound Toggle bar */}
       <div className="shrink-0 flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <AccountSwitcher entries={switchEntries} metrics={metrics} />
+          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={true} />
         </div>
         <SoundToggle compact className="shrink-0" />
       </div>

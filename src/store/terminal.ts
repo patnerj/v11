@@ -22,6 +22,30 @@ interface TerminalState {
   refreshSymbols: () => Promise<void>
   /** Get the Symbol meta record for a given ticker. */
   getMeta:       (sym: string) => SymbolMeta | undefined
+  /** TP/SL levels overlay visibility */
+  showLevels:    boolean
+  toggleLevels:  () => void
+  /** Floating 1-Click execution panel visibility */
+  showOneClick:  boolean
+  toggleOneClick: () => void
+  /** Chart Fullscreen toggle handler & state */
+  isChartFs:     boolean
+  setChartFs:    (fs: boolean) => void
+  chartFsHandler: (() => void) | null
+  registerChartFsHandler: (fn: (() => void) | null) => void
+  toggleChartFs: () => void
+  /** Number of active positions on current symbol */
+  symbolPositionsCount: number
+  setSymbolPositionsCount: (count: number) => void
+}
+
+function loadLevels(): boolean {
+  if (typeof window === 'undefined') return true
+  try { return localStorage.getItem('fxsim:term:levels') !== '0' } catch { return true }
+}
+function loadOneClick(): boolean {
+  if (typeof window === 'undefined') return true
+  try { return localStorage.getItem('fxsim:term:oneclick') !== '0' } catch { return true }
 }
 
 function loadActive(): string {
@@ -45,6 +69,28 @@ export const useTerminal = create<TerminalState>((set, get) => ({
   symbolsLoaded: false,
   active: 'EURUSD',
   watchlist: [],
+  showLevels: loadLevels(),
+  toggleLevels: () => {
+    const next = !get().showLevels
+    try { localStorage.setItem('fxsim:term:levels', next ? '1' : '0') } catch {}
+    set({ showLevels: next })
+  },
+  showOneClick: loadOneClick(),
+  toggleOneClick: () => {
+    const next = !get().showOneClick
+    try { localStorage.setItem('fxsim:term:oneclick', next ? '1' : '0') } catch {}
+    set({ showOneClick: next })
+  },
+  isChartFs: false,
+  setChartFs: (fs) => set({ isChartFs: fs }),
+  chartFsHandler: null,
+  registerChartFsHandler: (fn) => set({ chartFsHandler: fn }),
+  toggleChartFs: () => {
+    const handler = get().chartFsHandler
+    if (handler) handler()
+  },
+  symbolPositionsCount: 0,
+  setSymbolPositionsCount: (count) => set({ symbolPositionsCount: count }),
 
   setActive: (sym) => { saveActive(sym); set({ active: sym }) },
 
@@ -66,11 +112,18 @@ export const useTerminal = create<TerminalState>((set, get) => ({
           symbolsLoaded: true,
           active:        loadActive(),
           watchlist:     loadWatch(),
+          showLevels:    loadLevels(),
+          showOneClick:  loadOneClick(),
         })
       } else {
         // Don't fail hard — leave symbolsLoaded false so the page can show
         // an error state if it cares. Active/watchlist are still hydrated.
-        set({ active: loadActive(), watchlist: loadWatch() })
+        set({
+          active: loadActive(),
+          watchlist: loadWatch(),
+          showLevels: loadLevels(),
+          showOneClick: loadOneClick(),
+        })
       }
     })().finally(() => { bootstrapPromise = null })
     return bootstrapPromise
