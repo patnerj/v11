@@ -1,26 +1,16 @@
 'use client'
 
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { motion, useDragControls } from 'framer-motion'
-import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, GripVertical, Zap, Crosshair, Info, Volume2, VolumeX } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Maximize2, Minimize2, ArrowUp, ArrowDown, PencilRuler, Zap, Crosshair, Info } from 'lucide-react'
 import { useTerminal } from '@/store/terminal'
-import { usePrices, nextOptimisticId } from '@/store/prices'
-import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize, isMarketOpen } from '@/lib/symbol-meta'
+import { usePrices } from '@/store/prices'
+import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
 import { useBranding } from '@/store/branding'
-import { fmtPrice, fmtUSD, toNum, pnlClass } from '@/lib/format'
+import { fmtPrice, toNum } from '@/lib/format'
 import type { Position } from '@/types/api'
-import { api } from '@/lib/api'
-import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
-import {
-  playOrderSuccessSound,
-  playOrderOpenClickSound,
-  playOrderLossThumpSound,
-  playSltpUpdatedSound,
-  isSoundEnabled,
-  setSoundEnabled
-} from '@/lib/sound'
 import { ChartTpSlOverlay } from './chart-tp-sl-overlay'
 import { ScalperExecutionHeader } from './scalper-execution-header'
 
@@ -87,7 +77,6 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const widgetRef    = useRef<unknown>(null)
   const wrapRef      = useRef<HTMLDivElement>(null)
   const chartHostRef = useRef<HTMLDivElement>(null)
-  const dragControls = useDragControls()
   const [ready, setReady]   = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [fullscreen, setFs] = useState(false)
@@ -142,36 +131,14 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
 
   // 1-Click Trade state
   const isSlRequired = Boolean(plan?.stop_loss_required || plan?.require_stop_loss)
-  const [oneClickLot, setOneClickLot] = useState('0.10')
-  const [oneClickSlPips, setOneClickSlPips] = useState('30')
-  const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
   const [showOneClick, setShowOneClick] = useState(true)
-  const [soundActive, setSoundActive] = useState(true)
-
-  // Market hours gate (Forex/Metals closed Fri 22:00 UTC - Sun 22:00 UTC; Crypto open 24/7)
-  const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(active))
-  useEffect(() => {
-    setMarketOpen(isMarketOpen(active))
-    const interval = setInterval(() => {
-      setMarketOpen(isMarketOpen(active))
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [active])
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fxsim:term:oneclick')
       if (saved === '0') setShowOneClick(false)
     } catch {}
-    setSoundActive(isSoundEnabled())
   }, [])
-
-  const toggleSound = useCallback(() => {
-    const next = !soundActive
-    setSoundEnabled(next)
-    setSoundActive(next)
-    if (next) playOrderOpenClickSound()
-  }, [soundActive])
 
   const toggleOneClick = () => {
     setShowOneClick((prev) => {
@@ -179,123 +146,6 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
       try { localStorage.setItem('fxsim:term:oneclick', next ? '1' : '0') } catch {}
       return next
     })
-  }
-  
-  const handleOneClick = async (type: 'buy' | 'sell') => {
-    playOrderOpenClickSound()
-
-    if (!isMarketOpen(active)) {
-      playOrderLossThumpSound()
-      toast.error(`Market is closed. ${active} does not trade on weekends. Market reopens Sunday 22:00 UTC.`)
-      return
-    }
-
-    const account = usePrices.getState().account
-    if (account?.status === 'frozen' || account?.status === 'breached' || (account as any)?.is_ip_restricted || (account as any)?.read_only) {
-      playOrderLossThumpSound()
-      toast.error('Account is not allowed to trade (account status: ' + (account?.status || 'restricted') + ')')
-      return
-    }
-
-    const lotSize = toNum(oneClickLot)
-    if (lotSize <= 0) {
-      playOrderLossThumpSound()
-      toast.error('Invalid lot size')
-      return
-    }
-
-    const minLot = toNum(plan?.min_lot_size) || 0.01
-    const maxLot = toNum(plan?.max_lot_size) || 100
-    if (lotSize < minLot) {
-      playOrderLossThumpSound()
-      toast.error(`Minimum lot size is ${minLot}`)
-      return
-    }
-    if (maxLot > 0 && lotSize > maxLot) {
-      playOrderLossThumpSound()
-      toast.error(`Maximum lot size is ${maxLot}`)
-      return
-    }
-
-    const slPipsNum = toNum(oneClickSlPips)
-    if (isSlRequired && (!slPipsNum || slPipsNum <= 0)) {
-      playOrderLossThumpSound()
-      toast.error('Stop Loss is required by this plan (enter SL distance in pips)')
-      return
-    }
-
-    const pSize = pipSize(active)
-    const bid = toNum(tick?.bid)
-    const ask = toNum(tick?.ask)
-    if (!ask || !bid || ask <= 0 || bid <= 0) {
-      playOrderLossThumpSound()
-      toast.error('Market price is not available yet')
-      return
-    }
-    const digits = meta?.digits || symbolDigits(active)
-
-    let calculatedSl: number | null = null
-    if (isSlRequired || slPipsNum > 0) {
-      if (type === 'buy') {
-        const currentAsk = ask || bid || 0
-        calculatedSl = currentAsk > 0 ? Number((currentAsk - slPipsNum * pSize).toFixed(digits)) : null
-      } else {
-        const currentBid = bid || ask || 0
-        calculatedSl = currentBid > 0 ? Number((currentBid + slPipsNum * pSize).toFixed(digits)) : null
-      }
-    }
-
-    setBusy(type)
-
-    const optId = nextOptimisticId()
-    const optPos: Position = {
-      id: optId,
-      account_id: account?.id || 0,
-      symbol: active,
-      type,
-      lot_size: lotSize,
-      open_price: type === 'buy' ? (ask || bid || 0) : (bid || ask || 0),
-      current_price: type === 'buy' ? (ask || bid || 0) : (bid || ask || 0),
-      sl: calculatedSl,
-      tp: null,
-      pnl: 0,
-      swap: 0,
-      commission: 0,
-      margin: 0,
-      opened_at: new Date().toISOString(),
-      opened_at_iso: new Date().toISOString(),
-      isOptimistic: true,
-    }
-    usePrices.getState().injectOptimisticPosition(optPos)
-
-    const tCtx = usePrices.getState().tradingContext
-    const ctxParams = tCtx
-      ? tCtx.kind === 'tournament'
-        ? { tournament_id: tCtx.tournamentId }
-        : tCtx.accountId ? { account_id: tCtx.accountId } : {}
-      : {}
-    const res = await api.open({
-      symbol: active,
-      type,
-      lot_size: lotSize,
-      sl: calculatedSl,
-      tp: null,
-      ...ctxParams,
-    })
-    setBusy(null)
-    if (res.ok && res.data.success) {
-      playOrderSuccessSound()
-      toast.success(`${type.toUpperCase()} ${lotSize} ${active} opened${calculatedSl ? ` (SL: ${calculatedSl})` : ''}`)
-      // P3: explicit ghost cleanup (refresh below also clears, belt & braces).
-      usePrices.getState().removeOptimisticPosition(optId)
-      invalidateFxsim('/positions')
-      invalidateFxsim('/account')
-      usePrices.getState().refresh()
-    } else {
-      playOrderLossThumpSound()
-      usePrices.getState().removeOptimisticPosition(optId)
-      toast.error(res.ok ? (res.data.message || 'Order rejected') : res.error)
-    }
   }
 
   const { resolvedTheme } = useTheme()
@@ -624,138 +474,6 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
                 onChanged={onChanged}
               />
             </div>
-          </div>
-        )}
-
-        {/* 1-Click Trade Box (Draggable, default bottom-center) */}
-        {!compact && ready && showOneClick && (
-          <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-[25]">
-            <motion.div 
-              drag
-              dragListener={false}
-              dragControls={dragControls}
-              dragConstraints={chartHostRef}
-              dragElastic={0}
-              dragMomentum={false}
-              className="pointer-events-auto flex items-center gap-1.5 rounded-xl bg-surface/95 backdrop-blur-md border border-border p-1.5 shadow-2xl select-none"
-            >
-              <div 
-                onPointerDown={(e) => dragControls.start(e)}
-                className="flex items-center px-1.5 py-1 text-text-muted hover:text-text cursor-grab active:cursor-grabbing touch-none select-none" 
-                title="Drag to reposition panel"
-              >
-                <GripVertical className="h-4 w-4" />
-              </div>
-
-              {/* Sell Button */}
-              <div className="flex flex-col gap-0.5 items-center justify-center">
-                <button 
-                  type="button"
-                  onClick={() => handleOneClick('sell')}
-                  disabled={busy !== null || !bid || !marketOpen}
-                  title={!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : undefined}
-                  className="w-16 h-8 rounded-lg bg-danger hover:bg-danger-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-40 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {busy === 'sell' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (bid ? fmtPrice(bid, digits) : 'SELL')}
-                </button>
-                <div className="text-terminal-micro font-semibold text-danger tracking-wider uppercase">Sell</div>
-              </div>
-              
-              {/* Lots Input with - / + Steppers */}
-              <div className="flex flex-col justify-center px-1 items-center">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const cur = toNum(oneClickLot) || 0.1
-                      const minLot = toNum(plan?.min_lot_size) || 0.01
-                      const next = Math.max(minLot, Number((cur - 0.01).toFixed(2)))
-                      setOneClickLot(next.toFixed(2))
-                    }}
-                    className="h-7 w-5 rounded bg-surface border border-border text-terminal-micro text-text-muted hover:text-text hover:bg-surface-muted flex items-center justify-center cursor-pointer transition-colors"
-                    title="Decrease lot (-0.01)"
-                  >
-                    -
-                  </button>
-                  <input 
-                    type="text"
-                    value={oneClickLot}
-                    onChange={(e) => setOneClickLot(e.target.value.replace(/[^\d.]/g, ''))}
-                    className="w-12 h-7 text-center bg-surface border border-border rounded-md text-terminal-body terminal-num font-semibold text-text focus-ring focus:border-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const cur = toNum(oneClickLot) || 0.1
-                      const maxLot = toNum(plan?.max_lot_size) || 100
-                      const next = Math.min(maxLot, Number((cur + 0.01).toFixed(2)))
-                      setOneClickLot(next.toFixed(2))
-                    }}
-                    className="h-7 w-5 rounded bg-surface border border-border text-terminal-micro text-text-muted hover:text-text hover:bg-surface-muted flex items-center justify-center cursor-pointer transition-colors"
-                    title="Increase lot (+0.01)"
-                  >
-                    +
-                  </button>
-                </div>
-                <span className="text-terminal-micro text-text-muted text-center uppercase tracking-tighter mt-0.5">Lots</span>
-              </div>
-
-              {/* SL (Pips) Input */}
-              {isSlRequired && (
-                <div className="flex flex-col justify-center px-1 border-l border-border-subtle pl-1.5">
-                  <input 
-                    type="text"
-                    value={oneClickSlPips}
-                    onChange={(e) => setOneClickSlPips(e.target.value.replace(/[^\d.]/g, ''))}
-                    className="w-12 h-7 text-center bg-surface border border-rose-500/50 rounded-md text-terminal-body terminal-num font-semibold text-rose-600 dark:text-rose-300 focus-ring focus:border-rose-400"
-                    placeholder="30"
-                    title="Stop loss distance in pips (Required by plan)"
-                  />
-                  <span className="text-terminal-micro text-rose-500 dark:text-rose-400 text-center uppercase tracking-tighter mt-0.5 font-semibold">SL (Pips)</span>
-                </div>
-              )}
-
-              {/* Buy Button */}
-              <div className="flex flex-col gap-0.5 items-center justify-center">
-                <button 
-                  type="button"
-                  onClick={() => handleOneClick('buy')}
-                  disabled={busy !== null || !ask || !marketOpen}
-                  title={!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : undefined}
-                  className="w-16 h-8 rounded-lg bg-success hover:bg-success-hover text-white text-terminal-body font-semibold terminal-num flex items-center justify-center disabled:opacity-40 transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {busy === 'buy' ? <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (ask ? fmtPrice(ask, digits) : 'BUY')}
-                </button>
-                <div className="text-terminal-micro font-semibold text-success tracking-wider uppercase">Buy</div>
-              </div>
-
-              {/* Audio Chime Mute/Unmute Toggle */}
-              <div className="flex flex-col gap-0.5 items-center justify-center pl-1 border-l border-border-subtle">
-                <button
-                  type="button"
-                  onClick={toggleSound}
-                  className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors cursor-pointer ${
-                    soundActive
-                      ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20'
-                      : 'text-text-muted border-border bg-surface-muted/40 hover:bg-surface-muted'
-                  }`}
-                  title={soundActive ? 'Trade Chimes Active (Click to mute)' : 'Trade Chimes Muted (Click to enable)'}
-                  aria-label="Toggle trade sounds"
-                >
-                  {soundActive ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5 text-text-muted" />}
-                </button>
-                <div className="text-terminal-micro font-semibold text-text-muted tracking-wider uppercase">Audio</div>
-              </div>
-
-              {!marketOpen && (
-                <div 
-                  className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-500 text-terminal-micro font-semibold whitespace-nowrap ml-0.5"
-                  title="Market Closed (Reopens Sun 22:00 UTC)"
-                >
-                  Closed
-                </div>
-              )}
-            </motion.div>
           </div>
         )}
       </div>

@@ -711,12 +711,12 @@ function WsBadge() {
   const connected = usePrices((s) => s.connected)
   return (
     <div className={cn(
-      'flex items-center gap-1.5 text-terminal-micro font-normal px-2 py-0.5 rounded-md border',
+      'flex items-center gap-1 text-[10px] leading-none font-medium px-1.5 py-0.5 h-5 rounded border tracking-tight shrink-0',
       connected
         ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
         : 'text-warn bg-warn-muted border-warn/30',
     )}>
-      <span className={cn('w-1.5 h-1.5 rounded-full', connected ? 'bg-emerald-400 animate-pulse' : 'bg-warn animate-pulse')} />
+      <span className={cn('w-1 h-1 rounded-full shrink-0', connected ? 'bg-emerald-400 animate-pulse' : 'bg-warn animate-pulse')} />
       <span>{connected ? 'Connected' : 'Reconnecting…'}</span>
     </div>
   )

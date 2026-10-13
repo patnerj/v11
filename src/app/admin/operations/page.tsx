@@ -654,10 +654,10 @@ export default function OperationsHubPage() {
                       />
                     </svg>
                     <div className="absolute flex flex-col items-center justify-center text-center">
-                      <span className={`text-3xl font-bold font-mono tracking-tight ${healthUnknown ? 'text-warn' : 'text-white'}`}>
+                      <span className={`text-3xl font-bold terminal-num tabular-nums tracking-tight ${healthUnknown ? 'text-warn' : 'text-white'}`}>
                         {healthUnknown ? '—' : healthScore}
                       </span>
-                      <span className={`text-2xs uppercase font-bold font-mono tracking-wider ${healthUnknown ? 'text-warn' : 'text-emerald-400'}`}>
+                      <span className={`text-2xs uppercase font-bold tracking-wider ${healthUnknown ? 'text-warn' : 'text-emerald-400'}`}>
                         {healthUnknown ? 'Data unavailable' : 'Operational'}
                       </span>
                     </div>
@@ -667,11 +667,11 @@ export default function OperationsHubPage() {
                   <div className="space-y-3 text-xs">
                     <div>
                       <span className="text-gray-500 block">Checks Passing</span>
-                      <span className="font-mono font-bold text-white text-base">{healthUnknown ? '—' : `${totalChecks - degradedChecks} / ${totalChecks}`}</span>
+                      <span className="terminal-num tabular-nums font-bold text-white text-base">{healthUnknown ? '—' : `${totalChecks - degradedChecks} / ${totalChecks}`}</span>
                     </div>
                     <div>
                       <span className="text-gray-500 block">Degraded / Warning</span>
-                      <span className={`font-mono font-bold text-sm ${degradedChecks > 0 ? 'text-amber-400' : 'text-gray-300'}`}>{healthUnknown ? '—' : `${degradedChecks} Service${degradedChecks === 1 ? '' : 's'}`}</span>
+                      <span className={`terminal-num tabular-nums font-bold text-sm ${degradedChecks > 0 ? 'text-amber-400' : 'text-gray-300'}`}>{healthUnknown ? '—' : `${degradedChecks} Service${degradedChecks === 1 ? '' : 's'}`}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -708,7 +708,7 @@ export default function OperationsHubPage() {
                     <ShieldAlert className="h-5 w-5 text-red-400" />
                     Emergency Global Control Panel
                   </CardTitle>
-                  <Badge tone="danger" size="sm" className="font-mono">
+                  <Badge tone="danger" size="sm">
                     Master Kill-Switches
                   </Badge>
                 </div>
@@ -797,7 +797,7 @@ export default function OperationsHubPage() {
                 Live Subsystem Telemetry & Service Checks ({healthReport?.items ? Object.keys(healthReport.items).length : 0})
               </h3>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500 font-mono">
+                <span className="text-xs text-gray-500">
                   {healthReport?.generated_at ? `Checked ${new Date(healthReport.generated_at * 1000).toLocaleTimeString()}` : 'Polling live checks'}
                 </span>
                 <Button size="sm" variant="outline" onClick={() => refetch()} loading={isHealthLoading} className="h-8 text-xs gap-1.5">
@@ -851,25 +851,25 @@ export default function OperationsHubPage() {
                           </div>
                           <div>
                             <h4 className="text-sm font-semibold text-gray-100">{item.label || conf.name}</h4>
-                            <span className="text-2xs text-gray-500 font-mono">{conf.category}</span>
+                            <span className="text-2xs text-gray-500">{conf.category}</span>
                           </div>
                         </div>
 
-                        <Badge tone={tone as any} size="sm" className="font-mono text-2xs">
+                        <Badge tone={tone as any} size="sm" className="text-2xs font-medium">
                           {statusLabel}
                         </Badge>
                       </div>
 
-                      <p className="text-xs text-gray-400 leading-relaxed font-mono">
+                      <p className="text-xs text-gray-400 leading-relaxed">
                         {item.detail || 'Service responding within normal operating thresholds.'}
                         {item.explain && (
                           <span className="block text-2xs text-gray-500 mt-1">({item.explain})</span>
                         )}
                       </p>
 
-                      <div className="pt-2 border-t border-surface-muted/50 flex items-center justify-between text-xs font-mono text-gray-500">
+                      <div className="pt-2 border-t border-surface-muted/50 flex items-center justify-between text-xs text-gray-500">
                         <span>Check Status: <strong className={item.state === 'ok' ? 'text-emerald-400' : item.state === 'warn' ? 'text-amber-400' : 'text-rose-400'}>{item.state.toUpperCase()}</strong></span>
-                        <span>{item.ts ? `TS: ${new Date(item.ts * 1000).toLocaleTimeString()}` : 'Live'}</span>
+                        <span className="tabular-nums">{item.ts ? `TS: ${new Date(item.ts * 1000).toLocaleTimeString()}` : 'Live'}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -888,7 +888,7 @@ export default function OperationsHubPage() {
                           <h4 className="text-sm font-semibold text-gray-100">{item.label || key}</h4>
                           <Badge tone={tone as any} size="sm">{item.state}</Badge>
                         </div>
-                        <p className="text-xs text-gray-400 font-mono">{item.detail}</p>
+                        <p className="text-xs text-gray-400">{item.detail}</p>
                       </CardContent>
                     </Card>
                   )

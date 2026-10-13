@@ -20,8 +20,22 @@ interface EconomicEvent {
 }
 
 export function NewsRestrictBanner({ plan, className }: NewsRestrictBannerProps) {
-  const [dismissed, setDismissed] = useState(false)
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return sessionStorage.getItem('fxsim_news_dismissed') === '1'
+    } catch {
+      return false
+    }
+  })
   const [now, setNow] = useState<number>(Date.now())
+
+  const handleDismiss = () => {
+    setDismissed(true)
+    try {
+      sessionStorage.setItem('fxsim_news_dismissed', '1')
+    } catch {}
+  }
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
@@ -93,7 +107,7 @@ export function NewsRestrictBanner({ plan, className }: NewsRestrictBannerProps)
 
             <button
               type="button"
-              onClick={() => setDismissed(true)}
+              onClick={handleDismiss}
               className="p-1 rounded-md text-text-muted hover:text-text hover:bg-surface-muted transition-colors shrink-0 cursor-pointer active:scale-90"
               aria-label="Dismiss news alert"
             >

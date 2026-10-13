@@ -2005,7 +2005,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 2: THEME & BRANDING ───────────────────────────────────────── */}
       {activeTab === 'branding' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <Card className="bg-surface border-surface-muted">
             <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -2584,7 +2584,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 3: PAYMENTS & CRYPTO GATEWAYS ───────────────────────────────── */}
       {activeTab === 'payments' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <PaymentsCenter />
 
           {/* Manual Payment & Bank Wire Instructions */}
@@ -2633,7 +2633,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 4: SYSTEM RULES ───────────────────────────────────────────── */}
       {activeTab === 'rules' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <Card className="bg-surface border-surface-muted">
             <CardHeader className="border-b border-surface-muted/60 pb-4">
               <CardTitle className="text-base text-gray-100 flex items-center gap-2">
@@ -2781,14 +2781,14 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 5: TRADINGVIEW & CHART SYMBOL MAP ──────────────────────────── */}
       {activeTab === 'trading' && (
-        <div className="space-y-6 max-w-5xl">
+        <div className="space-y-6 w-full">
           <ChartSymbolMap />
         </div>
       )}
 
       {/* ── TAB 6: SMTP MAIL SERVER ───────────────────────────────────────── */}
       {activeTab === 'smtp' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <Card className="bg-surface border-surface-muted">
             <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex items-center justify-between">
@@ -2958,7 +2958,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 5: DEVELOPER & DEMO DATA SANDBOX ──────────────────────────── */}
       {activeTab === 'sandbox' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <Card className="bg-surface border-surface-muted">
             <CardHeader className="border-b border-surface-muted/60 pb-4">
               <div className="flex items-center justify-between">
@@ -3048,7 +3048,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 6: METATRADER 5 BRIDGE & PRICE FEED ───────────────────────── */}
       {activeTab === 'mt5' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           {/* Live Price Feed Engine (MT5 Ingest Secret & Health Diagnostics) */}
           <PriceFeedCard />
 
@@ -3209,7 +3209,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB 7: WEBHOOKS & INSTANT ALERTS (DISCORD & TELEGRAM) ────────── */}
       {activeTab === 'integrations' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
@@ -3956,7 +3956,7 @@ export default function ConfigurationHubPage() {
 
       {/* ── TAB: LICENSE ─────────────────────────────────────────────────── */}
       {activeTab === 'license' && (
-        <div className="space-y-8 w-full max-w-6xl">
+        <div className="space-y-8 w-full">
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -4071,7 +4071,7 @@ export default function ConfigurationHubPage() {
       
       {/* ── TAB: AI ENGINE & GEMINI ─────────────────────────────────────────── */}
       {activeTab === 'ai_engine' && (
-        <div className="space-y-6 w-full max-w-6xl">
+        <div className="space-y-6 w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
