@@ -1156,40 +1156,40 @@ export default function MarketingHubPage() {
                     <Users2 className="h-4 w-4" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-white mt-2 font-mono">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mt-2 tabular-nums">
                   {affiliateMetrics.totalAffiliates}
                 </div>
-                <span className="text-xs text-gray-500 font-mono">Active partners driving traffic</span>
+                <span className="text-xs text-text-muted">Active partners driving traffic</span>
               </CardContent>
             </Card>
 
             <Card className="bg-surface border-surface-muted">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Lifetime Commission Paid</span>
+                  <span className="text-xs font-semibold text-text-muted">Lifetime Commission Paid</span>
                   <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                     <DollarSign className="h-4 w-4" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-emerald-400 mt-2 font-mono">
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 tabular-nums">
                   ${affiliateMetrics.totalPaid.toLocaleString()}
                 </div>
-                <span className="text-xs text-gray-500 font-mono">Disbursed referral rewards</span>
+                <span className="text-xs text-text-muted">Disbursed referral rewards</span>
               </CardContent>
             </Card>
 
             <Card className="bg-surface border-surface-muted">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Pending Commission Balance</span>
+                  <span className="text-xs font-semibold text-text-muted">Pending Commission Balance</span>
                   <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
                     <Sparkles className="h-4 w-4" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-amber-400 mt-2 font-mono">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2 tabular-nums">
                   ${affiliateMetrics.totalUnpaid.toLocaleString()}
                 </div>
-                <span className="text-xs text-gray-500 font-mono">Awaiting payout execution</span>
+                <span className="text-xs text-text-muted">Awaiting payout execution</span>
               </CardContent>
             </Card>
           </div>
@@ -1640,12 +1640,12 @@ export default function MarketingHubPage() {
                       <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-surface-strong/30 text-xs">
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-white font-mono text-sm">${Number(c.amount).toLocaleString()}</span>
-                            <Badge tone={statusTone as any} size="sm" className="capitalize font-mono">{c.status}</Badge>
-                            <span className="text-gray-400 font-mono">#{c.id}</span>
+                            <span className="font-bold text-slate-900 dark:text-white tabular-nums text-sm">${Number(c.amount).toLocaleString()}</span>
+                            <Badge tone={statusTone as any} size="sm" className="capitalize">{c.status}</Badge>
+                            <span className="text-text-muted tabular-nums">#{c.id}</span>
                           </div>
-                          <div className="text-xs text-gray-400 font-mono">
-                            Partner: <strong className="text-gray-200">{c.affiliate_login}</strong> ← Buyer: <span className="text-gray-300">{c.referred_login || 'Trader'}</span> • Order #{c.order_id} • {c.rate_percent}% of ${Number(c.base_amount || 0).toLocaleString()}
+                          <div className="text-xs text-text-muted">
+                            Partner: <strong className="text-text font-semibold">{c.affiliate_login}</strong> ← Buyer: <span className="text-text">{c.referred_login || 'Trader'}</span> • Order #{c.order_id} • <span className="tabular-nums">{c.rate_percent}%</span> of <span className="tabular-nums">${Number(c.base_amount || 0).toLocaleString()}</span>
                           </div>
                         </div>
 

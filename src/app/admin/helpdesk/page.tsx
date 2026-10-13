@@ -52,6 +52,40 @@ const CANNED_RESPONSES = [
   }
 ]
 
+function FormatMessageText({ content }: { content: string }) {
+  if (!content) return null
+  const paragraphs = content.split('\n')
+  return (
+    <div className="space-y-1.5 leading-relaxed">
+      {paragraphs.map((line, pIdx) => {
+        if (!line.trim()) return <div key={pIdx} className="h-1.5" />
+        const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
+        return (
+          <p key={pIdx} className="break-words">
+            {parts.map((part, i) => {
+              if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+                return (
+                  <strong key={i} className="font-bold text-slate-900 dark:text-white">
+                    {part.slice(2, -2)}
+                  </strong>
+                )
+              }
+              if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+                return (
+                  <code key={i} className="px-1.5 py-0.5 rounded bg-surface border border-border text-xs font-mono font-semibold text-text">
+                    {part.slice(1, -1)}
+                  </code>
+                )
+              }
+              return <span key={i}>{part}</span>
+            })}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function AdminHelpdeskPage() {
   const queryClient = useQueryClient()
   const brandName = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
@@ -418,7 +452,7 @@ export default function AdminHelpdeskPage() {
   }, [allTickets])
 
   return (
-    <div className="w-full space-y-4 pb-12">
+    <div className="w-full space-y-3 pb-2">
       
       {/* ── Top Header Row ────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4 w-full">
@@ -431,7 +465,7 @@ export default function AdminHelpdeskPage() {
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text">
                 Support & Helpdesk Hub
               </h1>
-              <Badge tone="accent" size="sm" pulsing className="font-mono">
+              <Badge tone="accent" size="sm" pulsing>
                 Live Queue
               </Badge>
             </div>
@@ -504,7 +538,7 @@ export default function AdminHelpdeskPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
         <div className="bg-surface border border-border rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
           <span className="text-xs text-text-muted font-medium">Total Tickets</span>
-          <span className="text-base font-bold text-text font-mono">{metrics.total}</span>
+          <span className="text-base font-bold text-text tabular-nums">{metrics.total}</span>
         </div>
 
         <div className="bg-surface border border-border rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
@@ -512,25 +546,25 @@ export default function AdminHelpdeskPage() {
             <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
             Needs Reply
           </span>
-          <span className="text-base font-bold text-amber-600 dark:text-amber-400 font-mono">{metrics.needsReplyCount}</span>
+          <span className="text-base font-bold text-amber-600 dark:text-amber-400 tabular-nums">{metrics.needsReplyCount}</span>
         </div>
 
         <div className="bg-surface border border-border rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
           <span className="text-xs text-text-muted font-medium">Urgent Triage</span>
-          <span className="text-base font-bold text-red-500 dark:text-red-400 font-mono">{metrics.urgentCount}</span>
+          <span className="text-base font-bold text-red-500 dark:text-red-400 tabular-nums">{metrics.urgentCount}</span>
         </div>
 
         <div className="bg-surface border border-border rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm">
           <span className="text-xs text-text-muted font-medium">Resolution Rate</span>
-          <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">{metrics.resolutionRate}%</span>
+          <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{metrics.resolutionRate}%</span>
         </div>
       </div>
 
       {/* ── Main Workspace: 3-Column Modern Helpdesk Workspace (Zendesk / Linear style) ─────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full h-[calc(100vh-215px)] min-h-[660px] items-stretch">
         
         {/* ── Column 1: Ticket Queue (3 Cols on xl, 4 Cols on lg) ─────────────────────────── */}
-        <div className={`lg:col-span-4 xl:col-span-3 space-y-2.5 ${selectedTicketId ? 'hidden lg:block' : ''}`}>
+        <div className={`lg:col-span-4 xl:col-span-3 flex flex-col h-full space-y-2.5 ${selectedTicketId ? 'hidden lg:flex' : ''}`}>
           {/* Search & Category Filter */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -621,7 +655,7 @@ export default function AdminHelpdeskPage() {
           </div>
 
           {/* Ticket Cards List */}
-          <div className="space-y-2 max-h-[calc(100vh-210px)] min-h-[580px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar">
             {isLoadingTickets && allTickets.length === 0 ? (
               <Card className="bg-surface border-border">
                 <CardContent className="py-12 text-center text-text-muted space-y-2">
@@ -678,7 +712,7 @@ export default function AdminHelpdeskPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 tabular-nums">
                           {t.ticket_number}
                         </span>
                         <Badge 
@@ -688,7 +722,7 @@ export default function AdminHelpdeskPage() {
                             t.priority === 'medium' ? 'neutral' : 'neutral'
                           } 
                           size="sm" 
-                          className="text-2xs capitalize font-mono"
+                          className="text-2xs capitalize"
                           pulsing={t.priority === 'urgent'}
                         >
                           {t.priority}
@@ -730,7 +764,7 @@ export default function AdminHelpdeskPage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50 text-2xs font-mono">
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50 text-2xs">
                       <span className="text-text-muted flex items-center gap-1">
                         <User className="w-2.5 h-2.5 text-text-muted" />
                         {t.display_name || t.user_login || `User #${t.trader_id}`}
@@ -754,9 +788,9 @@ export default function AdminHelpdeskPage() {
         </div>
 
         {/* ── Center Column: Conversation & Response Panel (6 Cols on xl, 8 Cols on lg) ── */}
-        <div className={`lg:col-span-8 xl:col-span-6 ${!selectedTicketId ? 'hidden lg:block' : ''}`}>
+        <div className={`lg:col-span-8 xl:col-span-6 h-full flex flex-col ${!selectedTicketId ? 'hidden lg:flex' : ''}`}>
           {activeTicket ? (
-            <Card className="bg-surface border-border flex flex-col h-[calc(100vh-190px)] min-h-[640px] justify-between overflow-hidden shadow-sm rounded-2xl">
+            <Card className="bg-surface border-border flex flex-col h-full justify-between overflow-hidden shadow-sm rounded-2xl">
               
               {/* Ticket Detail Header */}
               <CardHeader className="border-b border-border py-3 px-5 shrink-0 bg-surface-muted/50">
@@ -773,14 +807,14 @@ export default function AdminHelpdeskPage() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">
+                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 tabular-nums">
                         {activeTicket.ticket_number}
                       </span>
                       <h3 className="text-base font-bold text-text line-clamp-1">
                         {activeTicket.subject}
                       </h3>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-text-muted mt-1 font-mono">
+                    <div className="flex items-center gap-2 text-xs text-text-muted mt-1">
                       <span>Trader: <strong className="text-text font-semibold">{activeTicket.display_name || activeTicket.user_login}</strong></span>
                       <span>•</span>
                       <span>{activeTicket.user_email || 'No Email'}</span>
@@ -911,7 +945,7 @@ export default function AdminHelpdeskPage() {
                         key={msg.id} 
                         className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
                       >
-                        <div className="flex items-center gap-2 mb-1.5 text-2xs font-mono text-text-muted">
+                        <div className="flex items-center gap-2 mb-1.5 text-2xs text-text-muted">
                           <span className={isAdmin ? 'text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5' : 'text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1.5'}>
                             {isAdmin ? (
                               <>
@@ -926,7 +960,7 @@ export default function AdminHelpdeskPage() {
                             )}
                           </span>
                           <span>•</span>
-                          <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="tabular-nums">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
 
                         <div 
@@ -938,9 +972,7 @@ export default function AdminHelpdeskPage() {
                                 : 'bg-white dark:bg-slate-900/90 border border-border text-slate-900 dark:text-gray-100 rounded-tl-none shadow-xs'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap">
-                            {displayContent}
-                          </p>
+                          <FormatMessageText content={displayContent} />
                         </div>
                       </div>
                     )
@@ -1097,7 +1129,7 @@ export default function AdminHelpdeskPage() {
 
             </Card>
           ) : (
-            <Card className="bg-surface border-border h-[calc(100vh-190px)] min-h-[640px] flex items-center justify-center text-center p-8 shadow-sm rounded-2xl">
+            <Card className="bg-surface border-border h-full flex items-center justify-center text-center p-8 shadow-sm rounded-2xl">
               <div className="space-y-3">
                 <div className="h-12 w-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto">
                   <Headphones className="h-6 w-6" />
@@ -1112,9 +1144,9 @@ export default function AdminHelpdeskPage() {
         </div>
 
         {/* ── Right Column: Trader 360 Context Dossier (3 Cols on xl, Hidden on lg/md) ── */}
-        <div className="hidden xl:block xl:col-span-3">
+        <div className="hidden xl:flex xl:col-span-3 h-full flex-col overflow-y-auto custom-scrollbar">
           {activeTicket ? (
-            <div className="sticky top-20">
+            <div className="w-full">
               <TraderContextDossier
                 traderId={activeTicket.trader_id || activeTicket.user_id}
                 traderName={activeTicket.display_name || activeTicket.user_login}
@@ -1123,7 +1155,7 @@ export default function AdminHelpdeskPage() {
               />
             </div>
           ) : (
-            <Card className="bg-surface border-border p-6 text-center text-xs text-text-muted">
+            <Card className="bg-surface border-border p-6 text-center text-xs text-text-muted h-full flex items-center justify-center">
               Select a ticket to inspect live trader risk telemetry.
             </Card>
           )}

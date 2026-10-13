@@ -803,10 +803,10 @@ export default function AdminTournamentsPage() {
                     <Trophy className="h-3.5 w-3.5" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-text mt-1.5 font-mono">
+                <div className="text-2xl font-bold text-text mt-1.5 tabular-nums">
                   {metrics.total}
                 </div>
-                <span className="text-2xs text-text-muted font-mono">Hosted all-time</span>
+                <span className="text-2xs text-text-muted">Hosted all-time</span>
               </CardContent>
             </Card>
 
@@ -818,10 +818,10 @@ export default function AdminTournamentsPage() {
                 <Flame className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 font-mono">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 tabular-nums">
               {metrics.active}
             </div>
-            <span className="text-2xs text-text-muted font-mono">Live trading sprints</span>
+            <span className="text-2xs text-text-muted">Live trading sprints</span>
           </CardContent>
         </Card>
 
@@ -833,10 +833,10 @@ export default function AdminTournamentsPage() {
                 <Users className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1.5 font-mono">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1.5 tabular-nums">
               {metrics.totalEnrolled.toLocaleString()}
             </div>
-            <span className="text-2xs text-text-muted font-mono">Community participants</span>
+            <span className="text-2xs text-text-muted">Community participants</span>
           </CardContent>
         </Card>
 
@@ -848,10 +848,10 @@ export default function AdminTournamentsPage() {
                 <DollarSign className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1.5 font-mono">
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1.5 tabular-nums">
               {metrics.prizeSumFormatted}
             </div>
-            <span className="text-2xs text-text-muted font-mono">Guaranteed cash & funded</span>
+            <span className="text-2xs text-text-muted">Guaranteed cash & funded</span>
           </CardContent>
         </Card>
       </div>

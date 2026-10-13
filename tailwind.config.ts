@@ -83,7 +83,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'Poppins', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['var(--font-jetbrains)', 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+        mono: ['var(--font-sans)', 'Poppins', 'sans-serif'],
         poppins: ['var(--font-sans)', 'Poppins', 'sans-serif'],
         inter: ['var(--font-sans)', 'Poppins', 'sans-serif'],
         jakarta: ['var(--font-sans)', 'Poppins', 'sans-serif'],

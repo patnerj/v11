@@ -383,45 +383,45 @@ function AdminAffiliatesContent() {
         <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Total Partners</span>
+              <span className="text-xs font-semibold text-text-muted">Total Partners</span>
               <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <Users2 className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-white mt-2 font-mono">
+            <div className="text-2xl font-bold text-slate-900 dark:text-white mt-2 tabular-nums">
               {affiliateMetrics.totalAffiliates}
             </div>
-            <span className="text-2xs text-gray-500 font-mono">Active partners driving traffic</span>
+            <span className="text-2xs text-text-muted">Active partners driving traffic</span>
           </CardContent>
         </Card>
 
         <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Lifetime Paid</span>
+              <span className="text-xs font-semibold text-text-muted">Lifetime Paid</span>
               <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <DollarSign className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-emerald-400 mt-2 font-mono">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 tabular-nums">
               ${affiliateMetrics.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <span className="text-2xs text-gray-500 font-mono">Disbursed referral rewards</span>
+            <span className="text-2xs text-text-muted">Disbursed referral rewards</span>
           </CardContent>
         </Card>
 
         <Card className="bg-surface border-surface-muted">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Pending Balance</span>
+              <span className="text-xs font-semibold text-text-muted">Pending Balance</span>
               <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
                 <Sparkles className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-amber-400 mt-2 font-mono">
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2 tabular-nums">
               ${affiliateMetrics.totalUnpaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <span className="text-2xs text-gray-500 font-mono">Awaiting payout claims</span>
+            <span className="text-2xs text-text-muted">Awaiting payout claims</span>
           </CardContent>
         </Card>
       </div>

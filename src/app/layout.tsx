@@ -370,11 +370,15 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
       --tw-ring-color: ${cleanHex} !important;
     }
     body, html { font-family: ${safeFont}; }
-    *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not(.font-preset-preview):not([data-font-preview]) {
+    *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) {
       font-family: ${safeFont};
     }
-    code, pre, kbd, .font-mono, [class*="font-mono"] {
+    code, pre, kbd {
       font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    }
+    .font-mono, [class*="font-mono"] {
+      font-family: ${safeFont} !important;
+      font-variant-numeric: tabular-nums !important;
     }
     .tabular, .terminal-num, [class*="tabular-nums"], .tabular-nums {
       font-family: inherit !important;
@@ -612,7 +616,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 fontTag.id = 'fxsim-live-theme-font';
                 document.head.appendChild(fontTag);
               }
-              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + '; } *:not(code):not(pre):not(kbd):not(.font-mono):not([class*="font-mono"]):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + '; } code, pre, kbd, .font-mono, [class*="font-mono"] { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; } .tabular, .terminal-num, [class*="tabular-nums"], .tabular-nums { font-family: inherit !important; font-variant-numeric: tabular-nums !important; }';
+              fontTag.innerHTML = ':root, [data-theme], .dark { --font-sans: ' + chosenFont + ' !important; --font-poppins: ' + chosenFont + ' !important; } html, body { font-family: ' + chosenFont + '; } *:not(code):not(pre):not(kbd):not(.font-preset-preview):not([data-font-preview]) { font-family: ' + chosenFont + '; } code, pre, kbd { font-family: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; } .font-mono, [class*="font-mono"] { font-family: ' + chosenFont + ' !important; font-variant-numeric: tabular-nums !important; } .tabular, .terminal-num, [class*="tabular-nums"], .tabular-nums { font-family: inherit !important; font-variant-numeric: tabular-nums !important; }';
 
               var accent = null;
               try {
