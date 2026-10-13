@@ -561,10 +561,10 @@ export default function AdminHelpdeskPage() {
       </div>
 
       {/* ── Main Workspace: 3-Column Modern Helpdesk Workspace (Zendesk / Linear style) ─────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full h-[calc(100vh-215px)] min-h-[660px] items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full h-[calc(100vh-215px)] max-h-[calc(100vh-215px)] min-h-[600px] overflow-hidden items-stretch">
         
         {/* ── Column 1: Ticket Queue (3 Cols on xl, 4 Cols on lg) ─────────────────────────── */}
-        <div className={`lg:col-span-4 xl:col-span-3 flex flex-col h-full space-y-2.5 ${selectedTicketId ? 'hidden lg:flex' : ''}`}>
+        <div className={`lg:col-span-4 xl:col-span-3 flex flex-col h-full min-h-0 max-h-full space-y-2.5 ${selectedTicketId ? 'hidden lg:flex' : ''}`}>
           {/* Search & Category Filter */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -788,7 +788,7 @@ export default function AdminHelpdeskPage() {
         </div>
 
         {/* ── Center Column: Conversation & Response Panel (6 Cols on xl, 8 Cols on lg) ── */}
-        <div className={`lg:col-span-8 xl:col-span-6 h-full flex flex-col ${!selectedTicketId ? 'hidden lg:flex' : ''}`}>
+        <div className={`lg:col-span-8 xl:col-span-6 h-full min-h-0 max-h-full flex flex-col ${!selectedTicketId ? 'hidden lg:flex' : ''}`}>
           {activeTicket ? (
             <Card className="bg-surface border-border flex flex-col h-full justify-between overflow-hidden shadow-sm rounded-2xl">
               
@@ -1144,7 +1144,7 @@ export default function AdminHelpdeskPage() {
         </div>
 
         {/* ── Right Column: Trader 360 Context Dossier (3 Cols on xl, Hidden on lg/md) ── */}
-        <div className="hidden xl:flex xl:col-span-3 h-full flex-col overflow-y-auto custom-scrollbar">
+        <div className="hidden xl:flex xl:col-span-3 h-full min-h-0 max-h-full flex-col overflow-y-auto custom-scrollbar">
           {activeTicket ? (
             <div className="w-full">
               <TraderContextDossier
