@@ -41,19 +41,21 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="sticky top-0 z-40 bg-warn text-bg shadow-card">
-      <div className="px-4 md:px-8 h-9 flex items-center gap-2 text-2xs sm:text-xs">
-        <ShieldAlert className="h-4 w-4 shrink-0" />
-        <Eye className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate">
-          Viewing as <b>{record.target_username}</b> · admin <b>{record.admin_username}</b>
+    <div className="sticky top-0 z-50 bg-amber-500 dark:bg-amber-600 text-slate-950 font-medium shadow-md border-b border-amber-600/30">
+      <div className="px-4 md:px-8 h-10 flex items-center gap-2.5 text-xs">
+        <div className="flex items-center gap-1.5 shrink-0 text-slate-950">
+          <ShieldAlert className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
+        </div>
+        <span className="truncate text-slate-950">
+          Viewing as <strong className="font-bold">{record.target_username}</strong> <span className="opacity-80">(Admin: {record.admin_username})</span>
         </span>
         <button
           onClick={exit}
-          className="ml-auto inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-bg/20 hover:bg-bg/30 transition-colors font-medium shrink-0"
+          className="ml-auto inline-flex items-center gap-1.5 h-7 px-3 rounded-md bg-slate-950 text-white hover:bg-slate-900 transition-all font-semibold text-xs shadow-sm shrink-0"
         >
-          <LogOut className="h-3 w-3" />
-          Exit
+          <LogOut className="h-3.5 w-3.5" />
+          <span>Exit to Admin Panel</span>
         </button>
       </div>
     </div>
