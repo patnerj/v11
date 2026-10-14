@@ -40,7 +40,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !loading) onCancel() }}>
-      <DialogContent className={cn('max-w-md bg-surface border-surface-muted text-white p-6 shadow-2xl rounded-2xl', className)}>
+      <DialogContent className={cn('max-w-md bg-surface border-border text-text p-6 shadow-2xl rounded-2xl', className)}>
         <div className="flex items-start gap-4">
           <div className={cn(
             'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
@@ -56,25 +56,25 @@ export function ConfirmDialog({
           </div>
 
           <div className="space-y-1.5 flex-1">
-            <DialogTitle className="text-base font-bold text-white tracking-tight">
+            <DialogTitle className="text-base font-bold text-text tracking-tight">
               {title}
             </DialogTitle>
             {description && (
-              <DialogDescription className="text-xs text-gray-400 leading-relaxed">
+              <DialogDescription className="text-xs text-text-muted leading-relaxed">
                 {description}
               </DialogDescription>
             )}
           </div>
         </div>
 
-        <DialogFooter className="mt-6 flex items-center justify-end gap-2.5 pt-4 border-t border-surface-muted/70">
+        <DialogFooter className="mt-6 flex items-center justify-end gap-2.5 pt-4 border-t border-border">
           <Button
             type="button"
             variant="outline"
             size="sm"
             disabled={loading}
             onClick={onCancel}
-            className="border-surface-muted text-gray-300 hover:bg-[#1A2234] hover:text-white text-xs h-9 px-4"
+            className="border-border text-text-muted hover:bg-surface-muted hover:text-text text-xs h-9 px-4"
           >
             {cancelText}
           </Button>

@@ -579,7 +579,7 @@ export function PayoutManagementModal({
                       "text-xs font-semibold flex items-center gap-1.5 transition-all px-2.5 py-1 rounded active:scale-95 cursor-pointer select-none",
                       copiedAmount
                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs"
-                        : "text-gray-300 hover:text-white bg-surface-muted hover:bg-gray-700"
+                        : "border border-border text-text hover:text-text hover:bg-surface-muted"
                     )}
                   >
                     {copiedAmount ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}

@@ -28,6 +28,7 @@ const DOC_META = [
   { key: 'id_doc' as const, label: 'Government ID (Front)', icon: IdCard },
   { key: 'id_doc_back' as const, label: 'Government ID (Back)', icon: IdCard },
   { key: 'selfie' as const, label: 'Biometric Selfie', icon: ScanFace },
+  { key: 'address_doc' as const, label: 'Proof of Address (POA)', icon: FileText },
 ]
 type DocKey = (typeof DOC_META)[number]['key']
 

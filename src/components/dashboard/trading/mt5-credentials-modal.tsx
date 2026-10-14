@@ -492,7 +492,7 @@ export function MT5CredentialsModal({
               href="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted/90 text-text hover:text-white transition-all text-xs font-medium group select-none"
+              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted text-text transition-all text-xs font-medium group select-none"
             >
               <Laptop className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
               <span>Windows</span>
@@ -503,7 +503,7 @@ export function MT5CredentialsModal({
               href="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/MetaTrader5.dmg"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted/90 text-text hover:text-white transition-all text-xs font-medium group select-none"
+              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted text-text transition-all text-xs font-medium group select-none"
             >
               <Laptop className="w-3.5 h-3.5 text-slate-300 group-hover:scale-110 transition-transform" />
               <span>macOS</span>
@@ -514,7 +514,7 @@ export function MT5CredentialsModal({
               href="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/ios"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted/90 text-text hover:text-white transition-all text-xs font-medium group select-none"
+              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted text-text transition-all text-xs font-medium group select-none"
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
               <span>iOS</span>
@@ -525,7 +525,7 @@ export function MT5CredentialsModal({
               href="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/android"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted/90 text-text hover:text-white transition-all text-xs font-medium group select-none"
+              className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface/80 border border-border/60 hover:border-accent hover:bg-surface-muted text-text transition-all text-xs font-medium group select-none"
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
               <span>Android</span>

@@ -105,7 +105,7 @@ export function DisasterRecoveryCard() {
             size="sm"
             onClick={loadStatus}
             disabled={loading}
-            className="border-surface-muted bg-surface text-gray-300 hover:text-white"
+            className="border-border bg-surface text-text-muted hover:text-text hover:bg-surface-muted"
           >
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh Telemetry
@@ -362,7 +362,7 @@ export function DisasterRecoveryCard() {
                 variant="ghost"
                 size="sm"
                 onClick={() => copyToClipboard(latest.checksum_sha256, 'SHA-256 Hash')}
-                className="text-gray-400 hover:text-white ml-2 flex-shrink-0"
+                className="text-text-muted hover:text-text hover:bg-surface-muted ml-2 flex-shrink-0"
               >
                 <Copy className="h-3.5 w-3.5" />
               </Button>
@@ -388,7 +388,7 @@ export function DisasterRecoveryCard() {
               <span>Step 1: Non-Destructive Dry Run Integrity Verification</span>
               <button
                 onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --verify-only', 'Verification command')}
-                className="hover:text-white"
+                className="text-text-muted hover:text-text transition-colors"
               >
                 <Copy className="h-3 w-3" />
               </button>
@@ -403,7 +403,7 @@ export function DisasterRecoveryCard() {
               <span>Step 2: 1-Command Live Database Restoration</span>
               <button
                 onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --restore', 'Restore command')}
-                className="hover:text-white"
+                className="text-text-muted hover:text-text transition-colors"
               >
                 <Copy className="h-3 w-3" />
               </button>

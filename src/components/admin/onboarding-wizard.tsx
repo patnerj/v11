@@ -246,7 +246,7 @@ export function OnboardingWizard({ isOpen, onClose, onSuccess }: OnboardingWizar
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentStep(4)}
-                className="border-surface-muted text-gray-400 hover:text-white"
+                className="border-border text-text-muted hover:text-text hover:bg-surface-muted"
               >
                 Skip Catalog Setup
               </Button>

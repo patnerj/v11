@@ -387,7 +387,7 @@ export default function KycHubPage() {
     if (tab === 'front') return kyc.id_doc || kyc.docs?.id_doc || null
     if (tab === 'back') return kyc.id_doc_back || kyc.docs?.id_doc_back || null
     if (tab === 'selfie') return kyc.selfie || kyc.docs?.selfie || null
-    if (tab === 'address') return (kyc as any).address_doc || (kyc as any).docs?.address_doc || null
+    if (tab === 'address') return kyc.address_doc || kyc.docs?.address_doc || null
     return null
   }
 
@@ -396,7 +396,7 @@ export default function KycHubPage() {
     if (kyc.id_doc || kyc.docs?.id_doc) count++
     if (kyc.id_doc_back || kyc.docs?.id_doc_back) count++
     if (kyc.selfie || kyc.docs?.selfie) count++
-    if ((kyc as any).address_doc || (kyc as any).docs?.address_doc) count++
+    if (kyc.address_doc || kyc.docs?.address_doc) count++
     return count
   }
 

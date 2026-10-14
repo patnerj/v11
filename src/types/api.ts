@@ -167,7 +167,7 @@ export interface AdminKycRow {
   selfie?:      string | null
   address_doc?: string | null
   created_at?:  string
-  docs:         { id_doc: string | null; id_doc_back?: string | null; selfie: string | null; address_doc: string | null }
+  docs:         { id_doc: string | null; id_doc_back?: string | null; selfie: string | null; address_doc?: string | null }
 }
 export type KycSubmission = AdminKycRow
 export interface AdminPayoutRow {
