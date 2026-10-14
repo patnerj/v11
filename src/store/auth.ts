@@ -267,6 +267,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
     else if (res.status === 401 || res.status === 403) {
       // Session expired — clear without calling /logout (likely will 401 too)
+      toast.info('Your session has expired for security. Please sign in again.')
       setSession({ nonce: null, bearer: null })
       void sessionDestroy()
       clearFxsimCache()

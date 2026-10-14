@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Search, ShieldCheck, ExternalLink, CheckCircle2, XCircle, IdCard, ScanFace, FileText, Loader2, Eye, Download,
+  Search, ShieldCheck, ExternalLink, CheckCircle2, XCircle, IdCard, ScanFace, FileText, Loader2, Eye, Download, AlertTriangle,
 } from 'lucide-react'
 
 type Filter = 'all' | 'pending' | 'approved' | 'rejected'
@@ -234,8 +234,11 @@ function ReviewDialog({ row, onClose, onDone }: { row: AdminKycRow; onClose: () 
                       {preview.isPdf ? (
                         <iframe src={preview.url} title={d.label} className="w-full h-72 rounded bg-white" />
                       ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={preview.url} alt={d.label} className="w-full max-h-72 object-contain rounded" />
+                        <KycImagePreview
+                          url={preview.url}
+                          label={d.label}
+                          onOpenOriginal={() => { if (url) openDoc(url) }}
+                        />
                       )}
                     </div>
                   )}
@@ -263,3 +266,31 @@ function ReviewDialog({ row, onClose, onDone }: { row: AdminKycRow; onClose: () 
     </Dialog>
   )
 }
+
+function KycImagePreview({ url, label, onOpenOriginal }: { url: string; label: string; onOpenOriginal: () => void }) {
+  const [imgError, setImgError] = useState(false)
+
+  if (imgError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 rounded bg-surface-muted/50 border border-border text-center space-y-2">
+        <AlertTriangle className="h-6 w-6 text-amber-400" />
+        <span className="text-xs text-text-muted">Preview could not be loaded directly</span>
+        <div className="flex items-center gap-2 pt-1">
+          <Button size="xs" variant="outline" onClick={() => setImgError(false)}>Retry</Button>
+          <Button size="xs" variant="ghost" onClick={onOpenOriginal}>Open Original Link</Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={label}
+      onError={() => setImgError(true)}
+      className="w-full max-h-72 object-contain rounded"
+    />
+  )
+}
+

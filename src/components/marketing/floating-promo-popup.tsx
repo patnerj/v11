@@ -14,6 +14,7 @@ export function FloatingPromoPopup() {
   const [mounted, setMounted] = useState(false)
   const [dismissed, setDismissed] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [mobileExpanded, setMobileExpanded] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -63,7 +64,41 @@ export function FloatingPromoPopup() {
 
   return (
     <AnimatePresence>
+      {/* Mobile compact floating pill badge (< 640px) when not expanded */}
+      {!mobileExpanded && (
+        <motion.div
+          key="mobile-promo-pill"
+          initial={{ opacity: 0, scale: 0.9, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 16 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed z-50 bottom-4 left-4 sm:hidden"
+        >
+          <div className="flex items-center gap-1.5 p-1 pl-3 pr-1.5 rounded-full bg-surface/95 dark:bg-[#0c1222]/95 backdrop-blur-2xl border-2 border-emerald-500/40 dark:border-emerald-400/40 shadow-[0_8px_30px_-4px_rgba(16,185,129,0.35)] ring-1 ring-emerald-500/20">
+            <button
+              type="button"
+              onClick={() => setMobileExpanded(true)}
+              className="flex items-center gap-1.5 text-xs font-black text-text cursor-pointer select-none"
+            >
+              <span className="text-emerald-500 dark:text-emerald-400">🚀</span>
+              <span>30% OFF</span>
+              <span className="text-text-muted font-normal text-2xs">· Tap to view</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDismiss}
+              aria-label="Dismiss promotional offer"
+              className="p-1 rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer ml-0.5"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Full card on desktop, or on mobile when expanded */}
       <motion.aside
+        key="full-promo-card"
         initial={{ opacity: 0, y: 24, scale: 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.92 }}
@@ -72,9 +107,8 @@ export function FloatingPromoPopup() {
         role="complementary"
         className={cn(
           'fixed z-50 transition-all duration-300',
-          // Mobile: sits cleanly above TemplateSwitcher and MobileBottomNav (bottom-32) with zero collision
-          // Desktop: bottom-6 left-6 with max-w-sm
-          'bottom-32 sm:bottom-6 left-3 sm:left-6 max-w-[calc(100vw-24px)] sm:max-w-sm'
+          mobileExpanded ? 'block' : 'hidden sm:block',
+          'bottom-4 left-4 sm:bottom-6 sm:left-6 max-w-[calc(100vw-32px)] sm:max-w-sm'
         )}
       >
         <div
@@ -90,19 +124,28 @@ export function FloatingPromoPopup() {
           {/* Subtle pulsating ambient glow flare in corner */}
           <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-emerald-500/20 blur-2xl pointer-events-none animate-pulse" />
 
-          {/* Top Row: Badge + Close Button */}
+          {/* Top Row: Badge + Close / Minimize Button */}
           <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-2xs uppercase tracking-wider shadow-sm">
               <span>🚀 30% OFF</span>
             </div>
 
-            <button
-              onClick={handleDismiss}
-              aria-label="Close promotional offer"
-              className="p-1 rounded-lg text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileExpanded(false)}
+                className="sm:hidden px-2 py-0.5 rounded-md text-3xs font-medium text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+              >
+                Minimize
+              </button>
+              <button
+                onClick={handleDismiss}
+                aria-label="Close promotional offer"
+                className="p-1 rounded-lg text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Card Body */}

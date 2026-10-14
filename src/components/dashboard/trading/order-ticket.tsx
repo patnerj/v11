@@ -909,11 +909,29 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           )}
         </AnimatePresence>
 
-        {/* Cost preview (TPOL-8) */}
+        {/* Cost preview (TPOL-8 & Rule 108) */}
         <div className="rounded-md bg-bg-subtle/40 border border-border-subtle p-2 space-y-1 text-terminal-body shadow-sm">
           <KV label="Position size"  value={`${fmtLots(lotN)} lots`} mono />
-          <KV label="Pip value"      value={fmtUSD(estimatedPipValue(active, contractSize, lotN))} mono />
-          <KV label="Required margin" value={fmtUSD(margin)} mono />
+          <KV 
+            label="Pip value"      
+            value={fmtUSD(estimatedPipValue(active, contractSize, lotN))} 
+            mono 
+            sublabel={!marketOpen ? '(Indicative · Based on Friday Close)' : undefined}
+          />
+          <KV 
+            label="Required margin" 
+            value={fmtUSD(margin)} 
+            mono 
+            sublabel={!marketOpen ? '(Indicative · Based on Friday Close)' : undefined}
+          />
+          {!marketOpen && (
+            <div className="pt-1 mt-0.5 border-t border-border-subtle/60 flex items-center justify-between text-terminal-micro text-amber-600/90 dark:text-amber-400/90">
+              <span className="flex items-center gap-1 font-medium">
+                <AlertCircle className="h-3 w-3 shrink-0" /> Off-Market Pricing:
+              </span>
+              <span className="italic font-normal">(Indicative · Based on Friday Close)</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -999,10 +1017,14 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 : 'bg-danger text-white hover:bg-danger-hover disabled:bg-danger/40',
             )}
           >
-            {busy === 'pending'
-              ? <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-              : <CheckCircle2 className="h-4 w-4" />}
-            Place {pendingType.replace('_', ' ').toUpperCase()}
+            {busy === 'pending' ? (
+              <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+            ) : !marketOpen ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            {!marketOpen ? 'Market Closed (Reopens Sun 22:00 UTC)' : `Place ${pendingType.replace('_', ' ').toUpperCase()}`}
           </button>
         )}
       </div>
@@ -1026,10 +1048,13 @@ function Field({
   )
 }
 
-function KV({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function KV({ label, value, mono, sublabel }: { label: string; value: string; mono?: boolean; sublabel?: string }) {
   return (
     <div className="flex justify-between items-center text-terminal-body">
-      <span className="text-text-muted">{label}</span>
+      <span className="text-text-muted flex items-center gap-1 min-w-0">
+        <span>{label}</span>
+        {sublabel && <span className="text-terminal-micro text-amber-600/90 dark:text-amber-400/90 italic font-normal">{sublabel}</span>}
+      </span>
       <span className={cn('font-normal text-text', mono && 'terminal-num')}>{value}</span>
     </div>
   )

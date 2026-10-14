@@ -63,7 +63,7 @@ export function MultiAccountPortfolioStrip({
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return
-    const offset = direction === 'left' ? -320 : 320
+    const offset = direction === 'left' ? -340 : 340
     scrollContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' })
   }
 
@@ -144,12 +144,25 @@ export function MultiAccountPortfolioStrip({
         </div>
       </div>
 
-      {/* Horizontal Carousel Strip with Smooth Touch Pan */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-        className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 -mx-1 px-1 custom-scrollbar snap-x snap-mandatory touch-pan-x overscroll-x-contain scroll-smooth"
-      >
+      {/* Horizontal Carousel Strip with Smooth Touch Pan & Desktop Chevrons */}
+      <div className="relative group">
+        {totalAccountsCount >= 4 && (
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full border border-border bg-surface/90 backdrop-blur-md text-text shadow-md hover:bg-surface-muted items-center justify-center transition-all cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+            aria-label="Scroll carousel left"
+            title="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 -mx-1 px-1 custom-scrollbar snap-x snap-mandatory touch-pan-x overscroll-x-contain scroll-smooth"
+        >
         {safeChallenges.map((ch) => {
           const accId = ch.fxsim_account_id || ch.id
           const isActive = tradingCtx?.kind === 'challenge'
@@ -314,6 +327,19 @@ export function MultiAccountPortfolioStrip({
             </motion.div>
           )
         })}
+        </div>
+
+        {totalAccountsCount >= 4 && (
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full border border-border bg-surface/90 backdrop-blur-md text-text shadow-md hover:bg-surface-muted items-center justify-center transition-all cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+            aria-label="Scroll carousel right"
+            title="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Mobile scroll progress touch indicator */}
