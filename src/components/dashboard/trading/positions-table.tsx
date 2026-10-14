@@ -9,7 +9,7 @@ import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { fmtPrice, fmtUSD, fmtLots, toNum, timeAgo, fmtDate, pnlClass } from '@/lib/format'
 import { symbolDigits, pipSize } from '@/lib/symbol-meta'
-import { quoteToUsdRate } from '@/lib/order-math'
+import { quoteToUsdRate, calculateLivePositionPnL } from '@/lib/order-math'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
 import { Badge } from '@/components/ui/badge'
@@ -83,13 +83,26 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
     }
   }, [closingPosition, isClosingSingle, onChanged])
 
+  const getMeta = useTerminal((s) => s.getMeta)
+  const allPrices = usePrices((s) => s.prices)
+
   const totalPnL = useMemo(() => {
-    if (!positions) return 0
+    if (!positions || positions.length === 0) return 0
     return positions.reduce((acc, p) => {
-      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 100000)
+      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 0 && (p as any).source === 'mt5')
+      const tick = allPrices[p.symbol]
+      const curPx = p.type === 'buy' ? (toNum(tick?.bid) || toNum(p.current_price)) : (toNum(tick?.ask) || toNum(p.current_price))
+      const openPx = toNum(p.open_price)
+      if (!isMt5 && curPx > 0 && openPx > 0) {
+        const meta = getMeta(p.symbol)
+        const diff = p.type === 'buy' ? curPx - openPx : openPx - curPx
+        const cSize = toNum(meta?.contract_size) || 100000
+        const calcPnl = diff * cSize * toNum(p.lot_size) * quoteToUsdRate(p.symbol, curPx, allPrices) + toNum(p.swap) - toNum(p.commission)
+        return acc + calcPnl
+      }
       return acc + (isMt5 ? toNum(p.pnl) + toNum(p.swap) - toNum(p.commission) : toNum(p.pnl))
     }, 0)
-  }, [positions])
+  }, [positions, allPrices, getMeta])
 
   const handleCloseAll = useCallback(async () => {
     if (!positions || positions.length === 0 || isClosingAll) return
@@ -488,7 +501,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
   // Live price tick subscription & real-time PnL calculation
   const tick = usePrices((s) => s.prices[pos.symbol])
   const allPrices = usePrices((s) => s.prices)
-  const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 100000)
+  const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 0 && (pos as any).source === 'mt5')
 
   const currentPx = isMt5Synced && toNum(pos.current_price) > 0
     ? toNum(pos.current_price)

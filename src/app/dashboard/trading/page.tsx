@@ -14,6 +14,7 @@ import { fmtPrice, toNum, fmtUSD, fmtPct } from '@/lib/format'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { playOrderCloseSound } from '@/lib/sound'
 import { symbolDigits } from '@/lib/symbol-meta'
+import { calculateLivePositionPnL, quoteToUsdRate } from '@/lib/order-math'
 import type { Account, NoChallengeResp, Position, PendingOrder, ChallengeAccount, ChallengePlan, ChallengeMetrics, TournamentMine } from '@/types/api'
 
 import { MarketWatch }        from '@/components/dashboard/trading/market-watch'
@@ -195,14 +196,27 @@ export default function TradingTerminalPage() {
   // Must NOT be true while switching accounts.
   const noChallenge = !switching && ((!!account && !isAccount(account)) || (loaded && !acc))
 
+  const allPrices = usePrices((s) => s.prices)
+  const getMeta = useTerminal((s) => s.getMeta)
+
   // Aggregate open PnL — drives AccountStrip's "P&L" tile
   const openPnL = useMemo(() => {
-    if (!positions) return 0
+    if (!positions || positions.length === 0) return 0
     return positions.reduce((s, p) => {
-      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 100000)
+      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 0 && (p as any).source === 'mt5')
+      const tick = allPrices[p.symbol]
+      const curPx = p.type === 'buy' ? (toNum(tick?.bid) || toNum(p.current_price)) : (toNum(tick?.ask) || toNum(p.current_price))
+      const openPx = toNum(p.open_price)
+      if (!isMt5 && curPx > 0 && openPx > 0) {
+        const meta = getMeta(p.symbol)
+        const diff = p.type === 'buy' ? curPx - openPx : openPx - curPx
+        const cSize = toNum(meta?.contract_size) || 100000
+        const calcPnl = diff * cSize * toNum(p.lot_size) * quoteToUsdRate(p.symbol, curPx, allPrices) + toNum(p.swap) - toNum(p.commission)
+        return s + calcPnl
+      }
       return s + (isMt5 ? toNum(p.pnl) + toNum(p.swap) - toNum(p.commission) : toNum(p.pnl))
     }, 0)
-  }, [positions])
+  }, [positions, allPrices, getMeta])
 
   const accountId = account && 'id' in account ? account.id : null
 
@@ -413,12 +427,12 @@ function DesktopLayout({
   }
 
   const balance = toNum(account?.balance)
-  const equity  = toNum(account?.equity)
+  const pnl     = openPnL ?? 0
+  const equity  = balance + pnl
   const used    = toNum(account?.margin_used)
   const free    = equity - used
   const level   = used > 0 ? (equity / used) * 100 : null
   const lev     = toNum(account?.leverage) || 100
-  const pnl     = openPnL ?? (equity - balance)
 
   return (
     <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0 w-full overflow-hidden">

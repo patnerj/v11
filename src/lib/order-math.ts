@@ -103,3 +103,62 @@ export function calcLevelPnL(args: {
   }
   return pnl * quoteToUsd
 }
+
+function toSafeNum(v: unknown): number {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0
+  if (typeof v === 'string') {
+    const n = parseFloat(v.replace(/[^0-9.-]/g, ''))
+    return Number.isFinite(n) ? n : 0
+  }
+  return 0
+}
+
+/**
+ * Universal live position PnL calculator:
+ * Used identically across PositionRow, PositionsTable Net P&L header, and TradingTerminal footer stats.
+ *
+ * For external MT5 synced trades (order_id > 0 AND source === 'mt5'): returns MT5 reported pnl + swap - commission.
+ * For internal WebTrader trades: computes live floating PnL dynamically from live tick and quote conversion rate.
+ */
+export function calculateLivePositionPnL(
+  pos: {
+    symbol: string
+    type: string
+    lot_size: number | string
+    open_price: number | string
+    current_price?: number | string
+    pnl?: number | string
+    swap?: number | string
+    commission?: number | string
+    order_id?: number | string | null
+    source?: string | null
+  },
+  allPrices: Record<string, Px | undefined> = {},
+  contractSize?: number | string
+): number {
+  // Real external MT5 synced position has an order_id > 0 and source === 'mt5'
+  const isExternalMt5 = Boolean(
+    pos.order_id &&
+    Number(pos.order_id) > 0 &&
+    pos.source === 'mt5'
+  )
+
+  if (isExternalMt5) {
+    return toSafeNum(pos.pnl) + toSafeNum(pos.swap) - toSafeNum(pos.commission)
+  }
+
+  const tick = allPrices[pos.symbol]
+  const currentPx = pos.type === 'buy'
+    ? (toSafeNum(tick?.bid) || toSafeNum(pos.current_price))
+    : (toSafeNum(tick?.ask) || toSafeNum(pos.current_price))
+
+  const openPx = toSafeNum(pos.open_price)
+  if (currentPx > 0 && openPx > 0) {
+    const diff = pos.type === 'buy' ? currentPx - openPx : openPx - currentPx
+    const cSize = toSafeNum(contractSize) || 100000
+    const calcPnl = diff * cSize * toSafeNum(pos.lot_size)
+    return calcPnl * quoteToUsdRate(pos.symbol, currentPx, allPrices) + toSafeNum(pos.swap) - toSafeNum(pos.commission)
+  }
+
+  return toSafeNum(pos.pnl)
+}
