@@ -426,9 +426,17 @@ function DesktopLayout({
     }
   }
 
+  const openWebTraderCommission = useMemo(() => {
+    if (!positions || positions.length === 0) return 0
+    return positions.reduce((sum, p) => {
+      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 0 && (p as any).source === 'mt5')
+      return isMt5 ? sum : sum + toNum(p.commission)
+    }, 0)
+  }, [positions])
+
   const balance = toNum(account?.balance)
   const pnl     = openPnL ?? 0
-  const equity  = balance + pnl
+  const equity  = balance + pnl + openWebTraderCommission
   const used    = toNum(account?.margin_used)
   const free    = equity - used
   const level   = used > 0 ? (equity / used) * 100 : null
