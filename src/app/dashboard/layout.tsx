@@ -57,6 +57,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [])
 
+  // Dynamic document title synchronized with active route and whitelabel brand
+  useEffect(() => {
+    try {
+      const brand = localStorage.getItem('fxsim:brand-name') || process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+      const titleMap: Record<string, string> = {
+        '/dashboard': 'Trader Dashboard',
+        '/dashboard/trading': 'Trading Terminal',
+        '/dashboard/challenges': 'Challenges',
+        '/dashboard/tournaments': 'Tournaments',
+        '/dashboard/arena': 'PvP Arena',
+        '/dashboard/history': 'Trade History',
+        '/dashboard/analytics': 'Analytics',
+        '/dashboard/payouts': 'Payouts',
+        '/dashboard/affiliate': 'Affiliates',
+        '/dashboard/marketing': 'Marketing Media Kit',
+        '/dashboard/certificates': 'Certificates',
+        '/dashboard/kyc': 'Identity Verification',
+        '/dashboard/settings': 'Settings',
+      }
+      const pageName = titleMap[pathname] || (pathname.split('/').pop() ? pathname.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Dashboard')
+      document.title = `${pageName} | ${brand}`
+    } catch { /* SSR or restricted context */ }
+  }, [pathname])
+
   // Redirect to login if known-unauthenticated
   useEffect(() => {
     if (ready && !user) {

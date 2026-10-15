@@ -39,6 +39,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [theme])
 
+  // Dynamic document title synchronized with active admin route
+  useEffect(() => {
+    try {
+      const brand = localStorage.getItem('fxsim:brand-name') || process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+      const titleMap: Record<string, string> = {
+        '/admin': 'Admin Command Center',
+        '/admin/traders': 'Traders CRM',
+        '/admin/challenges': 'Challenges',
+        '/admin/payouts': 'Payout Disbursals',
+        '/admin/kyc': 'KYC Review Queue',
+        '/admin/payments': 'Payment Gateways',
+        '/admin/operations': 'System Operations',
+        '/admin/config': 'Platform Config & Whitelabel',
+        '/admin/marketing': 'Marketing & Coupons',
+        '/admin/tournaments': 'Tournaments & PvP',
+        '/admin/helpdesk': 'Helpdesk Support',
+        '/admin/activity': 'Audit Logs',
+        '/admin/analytics': 'Executive Analytics',
+      }
+      const pageName = titleMap[pathname] || (pathname.split('/').pop() ? pathname.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Admin')
+      document.title = `${pageName} | ${brand} Admin`
+    } catch { /* SSR */ }
+  }, [pathname])
+
   // Global Admin Omni-Search Shortcut (Cmd + K / Ctrl + K)
   useEffect(() => {
     if (isLoginPage) return
