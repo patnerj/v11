@@ -556,6 +556,8 @@ export function buildSwitchEntries(
     title: string
     starting_balance: number | string
     tournament_status?: string
+    current_balance?: number | string
+    current_equity?: number | string
   }>,
   activeOnly = false,
 ): SwitchEntry[] {
@@ -606,7 +608,7 @@ export function buildSwitchEntries(
       ctx: { kind: 'tournament', tournamentId: t.tournament_id, title: cleanTitle },
       kind: 'tournament',
       status: t.tournament_status ?? 'active',
-      balance: toNum(t.starting_balance),
+      balance: t.current_balance != null ? toNum(t.current_balance) : toNum(t.starting_balance),
       tournamentId: t.tournament_id,
     })
   }

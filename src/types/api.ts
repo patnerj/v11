@@ -1353,6 +1353,9 @@ export interface TournamentMine {
   starting_equity:  number | string
   joined_at:        string
   current_rank?:    number
+  current_balance?: number | string
+  current_equity?:  number | string
+  participant_status?: 'active' | 'disqualified' | 'eliminated' | 'winner'
 }
 
 // ── v11.5 AI Powerhouse Types ───────────────────────────────────────────────
