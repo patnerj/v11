@@ -172,8 +172,10 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
           : (toNum(tick?.ask) || toNum(p.current_price))
         const sl = p.sl ? toNum(p.sl) : null
 
-        const inProfit = isBuy ? (currentPrice > openPrice) : (currentPrice < openPrice)
-        if (!inProfit) {
+        const meta = getMeta(p.symbol)
+        const livePnL = calculateLivePositionPnL(p, livePrices, meta?.contract_size)
+        const isPriceInProfit = isBuy ? (currentPrice > openPrice) : (currentPrice < openPrice)
+        if (!isPriceInProfit || livePnL <= 0) {
           skipped++
           continue
         }
@@ -217,7 +219,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
     } finally {
       setIsSettingBreakeven(false)
     }
-  }, [positions, isSettingBreakeven, onChanged])
+  }, [positions, isSettingBreakeven, getMeta, onChanged])
 
   const handlePartialCloseAll50 = useCallback(async () => {
     if (!positions || positions.length === 0 || isPartialClosingAll) return
@@ -512,7 +514,8 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
   const handleRowBreakeven = useCallback(async () => {
     const isBuy = pos.type === 'buy'
     const openPrice = toNum(pos.open_price)
-    const inProfit = isBuy ? (currentPx > openPrice) : (currentPx < openPrice)
+    const livePnL = calculateLivePositionPnL(pos, allPrices, meta?.contract_size)
+    const inProfit = (isBuy ? (currentPx > openPrice) : (currentPx < openPrice)) && livePnL > 0
     if (!inProfit) {
       toast.warning(`${pos.symbol} is not in profit. Stop Loss cannot be moved to entry price.`)
       return
