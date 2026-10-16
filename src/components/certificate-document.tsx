@@ -10,12 +10,12 @@ import { buildCertificateSvg, buildPayoutCertificateSvg, generateQrDataUrl } fro
  * that is exported on download, guaranteeing 100% WYSIWYG parity.
  */
 export function CertificateDocument({ cert }: { cert: Cert }) {
-  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const [qrUrl, setQrUrl] = useState<string>('')
 
   const shareHref = typeof window !== 'undefined'
     ? `${window.location.origin}/certificate/${cert.share_code || cert.challenge_id}`
-    : `https://demo.launchapropfirm.com/certificate/${cert.share_code || cert.challenge_id}`
+    : `/certificate/${cert.share_code || cert.challenge_id}`
 
   useEffect(() => {
     generateQrDataUrl(shareHref).then(setQrUrl)
@@ -34,12 +34,12 @@ export function CertificateDocument({ cert }: { cert: Cert }) {
 }
 
 export function PayoutCertificateDocument({ payout, planName }: { payout: PayoutItem; planName?: string }) {
-  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const [qrUrl, setQrUrl] = useState<string>('')
 
   const shareHref = typeof window !== 'undefined'
     ? `${window.location.origin}/dashboard/payouts?id=${payout.id}`
-    : `https://demo.launchapropfirm.com/dashboard/payouts?id=${payout.id}`
+    : `/dashboard/payouts?id=${payout.id}`
 
   useEffect(() => {
     generateQrDataUrl(shareHref).then(setQrUrl)

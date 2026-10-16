@@ -8,7 +8,7 @@
  * by encrypting with AES-GCM (256-bit) and PBKDF2 key derivation.
  * Tokens are decrypted only upon successful platform biometric authentication.
  * 
- * @version 11.5.1
+ * @version 12.0.0
  */
 
 const BIOMETRIC_USER_KEY = 'fxsim:biometric_user'
@@ -33,7 +33,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer
 }
 
-async function deriveBiometricKey(username: string, salt: Uint8Array, version: string = 'v11.5'): Promise<CryptoKey> {
+async function deriveBiometricKey(username: string, salt: Uint8Array, version: string = 'v12.0'): Promise<CryptoKey> {
   const origin = typeof window !== 'undefined' ? (window.location?.origin || 'fxsim-vault') : 'fxsim-vault'
   const normalizedUser = (username || '').trim().toLowerCase()
   const keyMaterialText = `${origin}:${normalizedUser}:fxsim_biometrics_${version}:vault`

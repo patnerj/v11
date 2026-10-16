@@ -139,9 +139,9 @@ const AUTHORITY_BRANDS = [
 ]
 
 export function TemplateFtmo() {
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const brandTagline = useBranding((s) => s.branding.brand_tagline) || 'Modern Prop Trading'
-  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@launchapropfirm.com'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
 
   const [plans, setPlans] = useState<ChallengePlan[] | null>(null)
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyKey>('USD')

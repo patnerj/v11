@@ -64,7 +64,7 @@ export function MarketingHeader() {
       )}
     >
       <div className="container max-w-7xl mx-auto flex h-14 md:h-16 items-center justify-between px-4">
-        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'LaunchAPropFirm'} home`}>
+        <Link href="/" className="focus-ring rounded-md flex items-center gap-2 shrink-0" aria-label={`${brand || 'Prop Firm'} home`}>
           <Logo />
         </Link>
 

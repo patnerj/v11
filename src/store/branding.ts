@@ -36,31 +36,31 @@ export interface Branding {
 }
 
 const DEFAULTS: Branding = {
-  brand_name: 'LaunchAPropFirm',
+  brand_name: 'Trading Firm',
   brand_tagline: 'Institutional High-Frequency Prop Trading',
   logo_url: '/branding/brand_logo.svg',
   sidebar_icon_url: '/branding/sidebar_icon.svg',
   login_logo_url: '/branding/login_logo.svg',
   favicon_url: '/favicon.svg',
-  support_email: 'support@launchapropfirm.com',
+  support_email: 'support@example.com',
   primary_color: '#10B981',
   secondary_color: '#059669',
-  footer_text: '© 2026 LaunchAPropFirm. All rights reserved.',
+  footer_text: '© 2026 Trading Firm. All rights reserved.',
   tv_symbol_map: '',
   youtube_url: '',
-  instagram_url: 'https://www.instagram.com/yourswebsitemaker/',
+  instagram_url: '',
   tiktok_url: '',
   facebook_url: '',
   discord_url: '',
   developer_url: '',
-  meta_title: 'LaunchAPropFirm — Trade Up to $200,000 in Funded Capital',
+  meta_title: 'Funded Trading Platform — Trade Up to $200,000 in Capital',
   meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.',
-  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, LaunchAPropFirm',
+  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge',
   google_site_verification: '',
   bing_site_verification: '',
   robots_indexing: 'index_follow',
   og_image_url: '/og-image.png',
-  ga_measurement_id: 'G-G5758RZV7E',
+  ga_measurement_id: '',
   facebook_pixel_id: '',
   custom_head_code: '',
 }
@@ -124,7 +124,7 @@ export const useBranding = create<BrandingState>((set, get) => ({
 /** Apply title + favicon at runtime (true white-label without rebuild). */
 function applyDocumentBranding(b: Branding) {
   if (typeof document === 'undefined') return
-  const title = b.brand_name || 'LaunchAPropFirm'
+  const title = b.brand_name || 'Trading Firm'
   if (document.title !== title) {
     document.title = title
   }

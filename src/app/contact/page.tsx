@@ -67,9 +67,11 @@ function DiscordIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function ContactPage() {
-  const brand = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
+  const brand = useBranding((s) => s.branding.brand_name) || "Trading Firm"
+  const supportEmail = useBranding((s) => s.branding.support_email) || "support@example.com"
+  const vipEmail = supportEmail.includes('@') ? 'vip@' + supportEmail.split('@')[1] : supportEmail
   const youtubeUrl = useBranding((s) => s.branding.youtube_url) || '#'
-  const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/yourswebsitemaker/'
+  const instagramUrl = useBranding((s) => s.branding.instagram_url) || '#'
   const tiktokUrl = useBranding((s) => s.branding.tiktok_url) || '#'
   const facebookUrl = useBranding((s) => s.branding.facebook_url) || '#'
   const discordUrl = useBranding((s) => s.branding.discord_url) || '#'
@@ -99,11 +101,15 @@ export default function ContactPage() {
       return
     }
     if (formState.category === 'developer') {
-      window.open(developerUrl, '_blank')
-      toast.success('Opening Platform Architecture Portal (launchapropfirm.com)...')
+      if (developerUrl) {
+        window.open(developerUrl, '_blank')
+        toast.success('Opening Platform Architecture Portal...')
+      } else {
+        toast.info('Developer portal not configured.')
+      }
       return
     }
-    const targetEmail = formState.category === 'executive' || formState.category === 'vip' ? 'vip@launchapropfirm.com' : 'support@launchapropfirm.com'
+    const targetEmail = formState.category === 'executive' || formState.category === 'vip' ? vipEmail : supportEmail
     const mailtoUrl = `mailto:${targetEmail}?subject=${encodeURIComponent(`[${formState.category.toUpperCase()}] Inquiry from ${formState.name || 'Trader'}`)}&body=${encodeURIComponent(
       `Name: ${formState.name}\nEmail: ${formState.email}\nOrder/Account Ref: ${formState.orderRef || 'N/A'}\n\nMessage:\n${formState.message}`
     )}`
@@ -179,16 +185,16 @@ export default function ContactPage() {
                       <Mail className="h-4 w-4" />
                     </div>
                     <span className="font-mono text-sm sm:text-base font-bold text-text truncate select-all">
-                      vip@launchapropfirm.com
+                      {vipEmail}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard('vip@launchapropfirm.com', 'VIP Email')}
+                    onClick={() => copyToClipboard(vipEmail, 'VIP Email')}
                     className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-muted border border-border shadow-xs hover:border-emerald-500/40 text-xs font-semibold text-text hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                     title="Copy Email"
                   >
-                    {copiedEmail === 'vip@launchapropfirm.com' ? (
+                    {copiedEmail === vipEmail ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied</span>
@@ -204,7 +210,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:vip@launchapropfirm.com?subject=Institutional%20Allocation%20Inquiry"
+                href={`mailto:${vipEmail}?subject=Institutional%20Allocation%20Inquiry`}
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-sm font-bold transition-all"
               >
                 <span>Email Institutional Desk</span>
@@ -244,16 +250,16 @@ export default function ContactPage() {
                       <LifeBuoy className="h-4 w-4" />
                     </div>
                     <span className="font-mono text-sm sm:text-base font-bold text-text truncate select-all">
-                      support@launchapropfirm.com
+                      {supportEmail}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support Email')}
+                    onClick={() => copyToClipboard(supportEmail, 'Support Email')}
                     className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-muted border border-border shadow-xs hover:border-teal-500/40 text-xs font-semibold text-text hover:text-teal-600 dark:hover:text-teal-400 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                     title="Copy Email"
                   >
-                    {copiedEmail === 'support@launchapropfirm.com' ? (
+                    {copiedEmail === supportEmail ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                         <span className="text-teal-600 dark:text-teal-400 font-bold">Copied</span>
@@ -269,7 +275,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:support@launchapropfirm.com?subject=Trader%20Support%20Request"
+                href={`mailto:${supportEmail}?subject=Trader%20Support%20Request`}
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm transition-all"
               >
                 <span>Launch Direct Support Ticket</span>
@@ -309,16 +315,16 @@ export default function ContactPage() {
                       <Mail className="h-4 w-4" />
                     </div>
                     <span className="font-mono text-sm sm:text-base font-bold text-text truncate select-all">
-                      support@launchapropfirm.com
+                      {supportEmail}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard('support@launchapropfirm.com', 'Institutional Desk Email')}
+                    onClick={() => copyToClipboard(supportEmail, 'Institutional Desk Email')}
                     className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-muted border border-border shadow-xs hover:border-blue-500/40 text-xs font-semibold text-text hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                     title="Copy Email"
                   >
-                    {copiedEmail === 'support@launchapropfirm.com' ? (
+                    {copiedEmail === supportEmail ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         <span className="text-blue-600 dark:text-blue-400 font-bold">Copied</span>
@@ -334,7 +340,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:support@launchapropfirm.com?subject=Institutional%20Desk%20Inquiry"
+                href={`mailto:${supportEmail}?subject=Institutional%20Desk%20Inquiry`}
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-sm font-bold transition-all"
               >
                 <span>Contact Institutional Desk</span>
@@ -499,12 +505,12 @@ export default function ContactPage() {
                       onChange={(e) => setFormState({ ...formState, category: e.target.value })}
                       className="w-full h-11 px-3.5 rounded-xl bg-surface border border-border focus:border-emerald-500 text-sm text-text outline-none transition-colors shadow-xs"
                     >
-                      <option value="support" className="bg-surface text-text">Client Support (support@launchapropfirm.com)</option>
-                      <option value="payouts" className="bg-surface text-text">Payout Treasury (support@launchapropfirm.com)</option>
-                      <option value="mt5" className="bg-surface text-text">MT5 Bridge &amp; Feeds (support@launchapropfirm.com)</option>
-                      <option value="executive" className="bg-surface text-text">VIP Capital Allocation (vip@launchapropfirm.com)</option>
-                      <option value="vip" className="bg-surface text-text">Enterprise Partnerships (vip@launchapropfirm.com)</option>
-                      <option value="developer" className="bg-surface text-text">Platform Architecture / Developer (launchapropfirm.com)</option>
+                      <option value="support" className="bg-surface text-text">Client Support &amp; General Inquiries</option>
+                      <option value="payouts" className="bg-surface text-text">Payout Treasury &amp; Disbursals</option>
+                      <option value="mt5" className="bg-surface text-text">MT5 Bridge &amp; Price Feeds</option>
+                      <option value="executive" className="bg-surface text-text">VIP Capital Allocation</option>
+                      <option value="vip" className="bg-surface text-text">Enterprise Partnerships &amp; Affiliates</option>
+                      <option value="developer" className="bg-surface text-text">Platform Engineering Desk</option>
                     </select>
                   </div>
                   <div>

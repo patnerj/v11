@@ -32,7 +32,7 @@ export function ViralPayoutCardModal({
   method = 'USDT (TRC20)',
   payoutId = 101,
 }: ViralPayoutCardModalProps) {
-  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const brandName = storeBrand
 
   const [aspect, setAspect] = useState<'16:9' | '9:16'>('16:9')
@@ -40,10 +40,11 @@ export function ViralPayoutCardModal({
   const [downloading, setDownloading] = useState(false)
   const [copiedShare, setCopiedShare] = useState(false)
 
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const shareText = `💰 Just received another verified profit split of ${fmtUSD(amount)} from @${brandName.replace(/\s+/g, '')}!
 
 Fast disbursal via ${method}. Consistent execution pays off. 🚀
-Trade with them: https://demo.launchapropfirm.com
+Trade with them: ${siteUrl}
 
 #PropFirm #FundedTrader #PayoutProof #Forex`
 
@@ -182,7 +183,8 @@ Trade with them: https://demo.launchapropfirm.com
       const footY = aspect === '9:16' ? 1680 : 960
       ctx.fillStyle = '#64748B'
       ctx.font = `600 ${aspect === '9:16' ? '30px' : '22px'} ${brandFont}`
-      ctx.fillText(`Verification TX: PAY-2026-${String(payoutId).padStart(6, '0')} · launchapropfirm.com`, width / 2, footY)
+      const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'propfirm.com'
+      ctx.fillText(`Verification TX: PAY-2026-${String(payoutId).padStart(6, '0')} · ${displayDomain}`, width / 2, footY)
 
       const dataUrl = canvas.toDataURL('image/png')
       const a = document.createElement('a')

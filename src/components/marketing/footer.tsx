@@ -81,7 +81,8 @@ const LINKS: { title: string; items: { href: string; label: string }[] }[] = [
 ]
 
 export function MarketingFooter() {
-  const brand = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
+  const brand = useBranding((s) => s.branding.brand_name) || "Prop Firm"
+  const supportEmail = useBranding((s) => s.branding.support_email) || "support@example.com"
   const footerText = useBranding((s) => s.branding.footer_text)
   const youtubeUrl = useBranding((s) => s.branding.youtube_url) || '#'
   const instagramUrl = useBranding((s) => s.branding.instagram_url) || 'https://www.instagram.com/yourswebsitemaker/'
@@ -151,8 +152,8 @@ export function MarketingFooter() {
               <div className="flex flex-col gap-1.5 text-xs">
                 <div className="flex flex-wrap items-center justify-between p-2 rounded-lg bg-surface-secondary/80 dark:bg-slate-900/80 border border-emerald-500/20 gap-1">
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">24/7 Helpdesk:</span>
-                  <a href="mailto:support@launchapropfirm.com" className="text-text hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate">
-                    support@launchapropfirm.com
+                  <a href={`mailto:${supportEmail}`} className="text-text hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate">
+                    {supportEmail}
                   </a>
                 </div>
               </div>

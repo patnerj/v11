@@ -324,7 +324,7 @@ export function OmniSearchDialog({ isOpen, onClose }: OmniSearchDialogProps) {
             <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">↵</kbd> Select</span>
             <span><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-foreground">ESC</kbd> Close</span>
           </div>
-          <span className="text-primary font-semibold">{branding.brand_name || 'LaunchAPropFirm'} Omni-Search</span>
+          <span className="text-primary font-semibold">{branding.brand_name || 'Prop Firm'} Omni-Search</span>
         </div>
       </DialogContent>
     </Dialog>

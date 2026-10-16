@@ -28,6 +28,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useBranding } from '@/store/branding'
 import Link from 'next/link'
 
 const SUPPORT_TOPICS = [
@@ -81,7 +82,7 @@ const QUICK_FIXES = [
     a: 'Use server "Pepperstone-Demo" with your assigned MT5 Login ID and Master Password provided in your Trader Dashboard. Ensure "Algo Trading" is enabled in MT5 if executing via WebTrader reverse copier.'
   },
   {
-    q: 'How does LaunchAPropFirm calculate drawdown differently from other prop firms?',
+    q: 'How does our evaluation calculate drawdown differently from other prop firms?',
     a: 'We use 100% Static Drawdown based on your initial starting balance. Unlike trailing drawdown traps that lock in daily peak equity, our drawdown floor never trails up behind you.'
   },
   {
@@ -95,6 +96,8 @@ const QUICK_FIXES = [
 ]
 
 export default function SupportPage() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
 
   const copyToClipboard = (text: string, label: string) => {
@@ -118,7 +121,7 @@ export default function SupportPage() {
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-6">
               <LifeBuoy className="h-3.5 w-3.5" />
-              <span>LaunchAPropFirm Client Helpdesk</span>
+              <span>{brandName} Client Helpdesk</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tightest leading-[1.08] mb-6 text-text">
@@ -164,20 +167,20 @@ export default function SupportPage() {
                   size="md" 
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm"
                 >
-                  <a href="mailto:support@launchapropfirm.com?subject=Payout%20Inquiry%20-%20LaunchAPropFirm">
+                  <a href={`mailto:${supportEmail}?subject=Payout%20Inquiry%20-%20${encodeURIComponent(brandName)}`}>
                     <Mail className="h-4 w-4 mr-2" />
-                    support@launchapropfirm.com
+                    {supportEmail}
                   </a>
                 </Button>
 
                 <Button
                   size="md"
                   variant="outline"
-                  onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
+                  onClick={() => copyToClipboard(supportEmail, 'Support email')}
                   className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500 px-4"
                   title="Copy email address"
                 >
-                  {copiedEmail === 'support@launchapropfirm.com' ? (
+                  {copiedEmail === supportEmail ? (
                     <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -218,20 +221,20 @@ export default function SupportPage() {
                   size="md" 
                   className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-white font-bold text-sm shadow-glow-sm"
                 >
-                  <a href="mailto:support@launchapropfirm.com?subject=Technical%20Inquiry%20-%20LaunchAPropFirm">
+                  <a href={`mailto:${supportEmail}?subject=Technical%20Inquiry%20-%20${encodeURIComponent(brandName)}`}>
                     <Mail className="h-4 w-4 mr-2" />
-                    support@launchapropfirm.com
+                    {supportEmail}
                   </a>
                 </Button>
 
                 <Button
                   size="md"
                   variant="outline"
-                  onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
+                  onClick={() => copyToClipboard(supportEmail, 'Support email')}
                   className="border-border-subtle hover:border-teal-400 text-text hover:text-teal-500 px-4"
                   title="Copy email address"
                 >
-                  {copiedEmail === 'support@launchapropfirm.com' ? (
+                  {copiedEmail === supportEmail ? (
                     <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
                     <Copy className="h-4 w-4" />

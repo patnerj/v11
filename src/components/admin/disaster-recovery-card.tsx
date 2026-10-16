@@ -387,7 +387,7 @@ export function DisasterRecoveryCard() {
             <div className="flex items-center justify-between text-text-muted text-2xs pb-1 border-b border-surface-muted">
               <span>Step 1: Non-Destructive Dry Run Integrity Verification</span>
               <button
-                onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --verify-only', 'Verification command')}
+                onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/database_backup_*.sql.gz.enc --verify-only', 'Verification command')}
                 className="p-1 rounded text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
                 title="Copy verification command"
               >
@@ -403,7 +403,7 @@ export function DisasterRecoveryCard() {
             <div className="flex items-center justify-between text-text-muted text-2xs pb-1 border-b border-surface-muted">
               <span>Step 2: 1-Command Live Database Restoration</span>
               <button
-                onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/alphacapital_backup_*.sql.gz.enc --restore', 'Restore command')}
+                onClick={() => copyToClipboard('python 05_DATABASE_AND_DEPLOYMENT/backup_scripts/restore_database.py backups/database_backup_*.sql.gz.enc --restore', 'Restore command')}
                 className="p-1 rounded text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
                 title="Copy restore command"
               >

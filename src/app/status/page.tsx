@@ -26,6 +26,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useBranding } from '@/store/branding'
 import Link from 'next/link'
 
 interface ServiceComponent {
@@ -112,6 +113,8 @@ const UPTIME_DAYS = Array.from({ length: 90 }, (_, i) => ({
 }))
 
 export default function StatusPage() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
   const [lastChecked, setLastChecked] = useState<string>('Just now')
 
@@ -149,7 +152,7 @@ export default function StatusPage() {
             </h1>
 
             <p className="text-base md:text-lg text-text-muted leading-relaxed">
-              Real-time operational metrics across LaunchAPropFirm execution nodes, MetaTrader 5 bridge connectors, and institutional liquidity feeds.
+              Real-time operational metrics across {brandName} execution nodes, MetaTrader 5 bridge connectors, and institutional liquidity feeds.
             </p>
 
             {/* Overall Health Pill */}
@@ -324,18 +327,18 @@ export default function StatusPage() {
                     size="sm" 
                     className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
                   >
-                    <a href="mailto:vip@launchapropfirm.com?subject=VIP%20Escalation">
+                    <a href={`mailto:${supportEmail}?subject=VIP%20Escalation%20-%20${encodeURIComponent(brandName)}`}>
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
-                      vip@launchapropfirm.com
+                      {supportEmail}
                     </a>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => copyToClipboard('vip@launchapropfirm.com', 'VIP email')}
+                    onClick={() => copyToClipboard(supportEmail, 'VIP email')}
                     className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500"
                   >
-                    {copiedEmail === 'vip@launchapropfirm.com' ? (
+                    {copiedEmail === supportEmail ? (
                       <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -362,18 +365,18 @@ export default function StatusPage() {
                     size="sm" 
                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-glow-sm"
                   >
-                    <a href="mailto:support@launchapropfirm.com?subject=Support%20Request">
+                    <a href={`mailto:${supportEmail}?subject=Support%20Request%20-%20${encodeURIComponent(brandName)}`}>
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
-                      support@launchapropfirm.com
+                      {supportEmail}
                     </a>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => copyToClipboard('support@launchapropfirm.com', 'Support email')}
+                    onClick={() => copyToClipboard(supportEmail, 'Support email')}
                     className="border-border-subtle hover:border-emerald-400 text-text hover:text-emerald-500"
                   >
-                    {copiedEmail === 'support@launchapropfirm.com' ? (
+                    {copiedEmail === supportEmail ? (
                       <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                     ) : (
                       <Copy className="h-4 w-4" />

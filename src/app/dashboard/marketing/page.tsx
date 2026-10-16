@@ -21,7 +21,7 @@ export default function TraderMarketingPage() {
   const affiliateCode = me?.code || 'PARTNER'
   const partnerLink = typeof window !== 'undefined'
     ? `${window.location.origin}/register?ref=${affiliateCode}`
-    : `https://demo.launchapropfirm.com/register?ref=${affiliateCode}`
+    : `/register?ref=${affiliateCode}`
 
   return (
     <div className="space-y-8">

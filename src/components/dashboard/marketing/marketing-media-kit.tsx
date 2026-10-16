@@ -23,10 +23,11 @@ type BannerFormat = '16:9' | '1:1' | '9:16'
 
 export function MarketingMediaKit({
   affiliateCode = 'PARTNER',
-  partnerLink = 'https://demo.launchapropfirm.com',
+  partnerLink = '',
 }: MarketingMediaKitProps) {
-  const storeBrand = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const storeBrand = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const brandName = storeBrand
+  const effectivePartnerLink = partnerLink || (typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${affiliateCode}` : `/register?ref=${affiliateCode}`)
   const [selectedFormat, setSelectedFormat] = useState<BannerFormat>('16:9')
   const [downloadingType, setDownloadingType] = useState<string | null>(null)
   const [copiedCaptionIndex, setCopiedCaptionIndex] = useState<number | null>(null)
@@ -43,7 +44,7 @@ export function MarketingMediaKit({
   }
 
   const handleCopyLink = () => {
-    copyToClipboard(partnerLink, 'Partner referral link copied!')
+    copyToClipboard(effectivePartnerLink, 'Partner referral link copied!')
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2000)
   }
@@ -211,7 +212,7 @@ export function MarketingMediaKit({
         // Bottom Website Link & Authority Seal
         ctx.fillStyle = '#64748B'
         ctx.font = `600 24px ${brandFont}`
-        ctx.fillText(partnerLink.replace(/^https?:\/\//, ''), width / 2, 880)
+        ctx.fillText(effectivePartnerLink.replace(/^https?:\/\//, ''), width / 2, 880)
 
         ctx.fillStyle = '#475569'
         ctx.font = `500 18px ${brandFont}`
@@ -288,7 +289,7 @@ export function MarketingMediaKit({
         // Footer Link
         ctx.fillStyle = '#38BDF8'
         ctx.font = `700 24px ${brandFont}`
-        ctx.fillText(partnerLink.replace(/^https?:\/\//, ''), width / 2, 790)
+        ctx.fillText(effectivePartnerLink.replace(/^https?:\/\//, ''), width / 2, 790)
 
         ctx.fillStyle = '#64748B'
         ctx.font = `500 18px ${brandFont}`
@@ -405,7 +406,7 @@ export function MarketingMediaKit({
 
         ctx.fillStyle = '#64748B'
         ctx.font = `600 24px ${brandFont}`
-        ctx.fillText(partnerLink.replace(/^https?:\/\//, ''), width / 2, 1680)
+        ctx.fillText(effectivePartnerLink.replace(/^https?:\/\//, ''), width / 2, 1680)
       }
 
       // Download Trigger adhering to Rule 93
@@ -436,7 +437,7 @@ export function MarketingMediaKit({
       text: `🚀 Looking to trade up to $200,000 in funded capital with an 85-90% profit split? I just partnered with ${brandName}!
 
 Use my exclusive partner code "${affiliateCode}" for 20% OFF your evaluation at checkout:
-👉 ${partnerLink}
+👉 ${effectivePartnerLink}
 
 #PropFirm #ForexTrader #FundedTrader #CryptoTrading #TradeFunded`,
     },
@@ -450,7 +451,7 @@ Use my exclusive partner code "${affiliateCode}" for 20% OFF your evaluation at 
 💎 Lowest raw spreads, zero hidden time limits & fast bi-weekly payouts.
 
 ⚡ Tap the link in my bio or use discount code "${affiliateCode}" for 20% OFF at checkout!
-👉 ${partnerLink}`,
+👉 ${effectivePartnerLink}`,
     },
     {
       platform: 'Telegram & Discord',
@@ -467,7 +468,7 @@ Trade with **${brandName}** and unlock up to **$200,000** in funded capital:
 • 0 minimum trading days
 
 🎟️ **Partner Discount Code:** \`${affiliateCode}\` (20% OFF)
-🔗 **Join & Claim Discount:** ${partnerLink}`,
+🔗 **Join & Claim Discount:** ${effectivePartnerLink}`,
     },
     {
       platform: 'YouTube',
@@ -476,7 +477,7 @@ Trade with **${brandName}** and unlock up to **$200,000** in funded capital:
       icon: Layers,
       badgeTone: 'warn' as const,
       text: `🏆 GET FUNDED WITH ${brandName.toUpperCase()} (Up to $200K Capital):
-👉 Sign Up: ${partnerLink}
+👉 Sign Up: ${effectivePartnerLink}
 🎟️ Use Coupon Code "${affiliateCode}" for 20% OFF any challenge!
 
 Key Highlights:

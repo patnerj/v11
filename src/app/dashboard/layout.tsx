@@ -60,7 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Dynamic document title synchronized with active route and whitelabel brand
   useEffect(() => {
     try {
-      const brand = localStorage.getItem('fxsim:brand-name') || process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+      const brand = localStorage.getItem('fxsim:brand-name') || process.env.NEXT_PUBLIC_BRAND_NAME || 'Trading Firm'
       const titleMap: Record<string, string> = {
         '/dashboard': 'Trader Dashboard',
         '/dashboard/trading': 'Trading Terminal',

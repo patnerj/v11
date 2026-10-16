@@ -50,7 +50,7 @@ const getCachedBranding = cache(async (apiPath: string) => {
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  let brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+  let brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'Trading Firm'
   let brandTagline = 'Institutional High-Frequency Prop Trading'
   let googleSiteVerification = ''
   let bingSiteVerification = ''
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
   let robotsIndexing = 'index_follow'
 
   // P3: never fetch from a half-built URL.
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'http://127.0.0.1/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath) return {
     title:       { default: `${brandName} — Trade Up to $200,000 in Funded Capital`, template: `%s | ${brandName}` },
@@ -389,7 +389,7 @@ function buildThemeCss(colorHex: string, rawFont?: string, rawForeground?: strin
 }
 
 async function getThemeCSS(overrideFont?: string) {
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'http://127.0.0.1/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath.startsWith('http')) return overrideFont ? buildThemeCss('#10B981', overrideFont) : ''
 
@@ -444,7 +444,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // silent fail
   }
 
-  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'https://api.launchapropfirm.com/wp-json/fxsim/v1'
+  const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'http://127.0.0.1/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   const settings = await getCachedBranding(apiPath)
 
@@ -455,12 +455,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     (settings as any)?.site_url ||
-    'https://demo.launchapropfirm.com'
+    'https://your-domain.com'
   ).replace(/\/$/, '')
 
-  const brandName = (settings as any)?.brand_name || process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+  const brandName = (settings as any)?.brand_name || process.env.NEXT_PUBLIC_BRAND_NAME || 'Prop Firm'
   const brandTagline = (settings as any)?.brand_tagline || 'Institutional High-Frequency Prop Trading'
-  const supportEmail = (settings as any)?.support_email || 'support@launchapropfirm.com'
+  const supportEmail = (settings as any)?.support_email || 'support@example.com'
   const rawLogo = (settings as any)?.logo_url || '/branding/brand_logo_600x150.png'
   const logoUrl = rawLogo.startsWith('http') ? rawLogo : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`
 

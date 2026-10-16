@@ -28,7 +28,7 @@ const payoutTone = (s: AffiliatePayout['status']) =>
   s === 'paid' ? 'success' : s === 'rejected' ? 'danger' : s === 'approved' ? 'info' : 'warn'
 const METHOD_LABEL: Record<string, string> = { usdt_trc20: 'USDT (TRC20)', usdt_bep20: 'USDT (BEP20)', wise: 'Wise' }
 
-function downloadBanner(type: '16:9' | '1:1' | '9:16', code: string, refLink: string, brandName: string = 'LaunchAPropFirm') {
+function downloadBanner(type: '16:9' | '1:1' | '9:16', code: string, refLink: string, brandName: string = 'Prop Firm') {
   if (typeof window === 'undefined') return
   const canvas = document.createElement('canvas')
   const width = type === '16:9' ? 1920 : 1080
@@ -132,7 +132,8 @@ function downloadBanner(type: '16:9' | '1:1' | '9:16', code: string, refLink: st
   const footY = type === '9:16' ? 1650 : type === '16:9' ? 950 : 960
   ctx.fillStyle = '#64748B'
   ctx.font = `500 ${type === '9:16' ? '32px' : '24px'} ${brandFont}`
-  ctx.fillText(refLink || 'launchapropfirm.com', width / 2, footY)
+  const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'propfirm.com'
+  ctx.fillText(refLink || displayDomain, width / 2, footY)
 
   // Trigger download
   const dataUrl = canvas.toDataURL('image/png')
@@ -178,7 +179,7 @@ export default function AffiliatePage() {
   const [isTiersModalOpen, setIsTiersModalOpen] = useState(false)
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
 
   const [origin, setOrigin] = useState('')
 

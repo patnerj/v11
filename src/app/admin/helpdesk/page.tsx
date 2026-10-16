@@ -136,7 +136,7 @@ function FormatMessageText({ content }: { content: string }) {
 
 export default function AdminHelpdeskPage() {
   const queryClient = useQueryClient()
-  const brandName = useBranding((s) => s.branding.brand_name) || 'Alpha Capital'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Trading Firm'
   const { user, ready } = useAuth()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -166,7 +166,7 @@ export default function AdminHelpdeskPage() {
     staleTime: 30000,
   })
 
-  // ── v11.5 AI Autonomous Support Desk State ─────────────────────────────
+  // ── v12.0 AI Autonomous Support Desk State ─────────────────────────────
   const [aiAutopilotActive, setAiAutopilotActive] = useState(true)
   const [isAutoDrafting, setIsAutoDrafting] = useState(false)
   const [isAutoResolvingBatch, setIsAutoResolvingBatch] = useState(false)

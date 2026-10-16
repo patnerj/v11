@@ -167,17 +167,16 @@ export function Sidebar({
         </div>
         {!collapsed && (
           <div className="mt-2.5 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-2xs text-text-faint px-2">
-            <span>Architecture</span>
-            <a
-              href="https://launchapropfirm.com"
+            <span>Platform</span>
+            <Link
+              href="/"
               target="_blank"
-              rel="noopener noreferrer"
               className="text-accent hover:underline flex items-center gap-1 font-semibold transition-colors"
-              title="Platform Architecture & Engineering Desk"
+              title="Trader Portal & Landing Page"
             >
-              <span>launchapropfirm.com</span>
+              <span>{typeof window !== 'undefined' ? window.location.hostname : 'Trader Portal'}</span>
               <ExternalLink className="h-3 w-3" />
-            </a>
+            </Link>
           </div>
         )}
       </div>

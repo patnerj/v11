@@ -22,14 +22,14 @@ export async function downloadPayoutCertificatePdf(
   options: { brand?: string; planName?: string } = {}
 ): Promise<void> {
   const storeBrand = typeof window !== 'undefined'
-    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'LaunchAPropFirm')
-    : 'LaunchAPropFirm'
+    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'Trading Firm')
+    : 'Trading Firm'
   const brand = options.brand || storeBrand
   const plan = options.planName || (payout as any).plan_name || 'Funded Trader Program'
 
   const shareHref = typeof window !== 'undefined'
     ? `${window.location.origin}/dashboard/payouts?id=${payout.id}`
-    : `https://demo.launchapropfirm.com/dashboard/payouts?id=${payout.id}`
+    : `/dashboard/payouts?id=${payout.id}`
 
   const qrDataUrl = await generateQrDataUrl(shareHref)
   const svg = buildPayoutCertificateSvg(payout, brand, plan, qrDataUrl)
@@ -78,14 +78,14 @@ export async function downloadPayoutCertificatePng(
   options: { brand?: string; planName?: string } = {}
 ): Promise<void> {
   const storeBrand = typeof window !== 'undefined'
-    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'LaunchAPropFirm')
-    : 'LaunchAPropFirm'
+    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'Trading Firm')
+    : 'Trading Firm'
   const brand = options.brand || storeBrand
   const plan = options.planName || (payout as any).plan_name || 'Funded Trader Program'
 
   const shareHref = typeof window !== 'undefined'
     ? `${window.location.origin}/dashboard/payouts?id=${payout.id}`
-    : `https://demo.launchapropfirm.com/dashboard/payouts?id=${payout.id}`
+    : `/dashboard/payouts?id=${payout.id}`
 
   const qrDataUrl = await generateQrDataUrl(shareHref)
   const svg = buildPayoutCertificateSvg(payout, brand, plan, qrDataUrl)

@@ -35,7 +35,7 @@ export async function generateQrDataUrl(text: string): Promise<string> {
 
 export function buildCertificateSvg(
   cert: Cert,
-  brandName: string = 'LaunchAPropFirm',
+  brandName: string = 'Trading Firm',
   qrDataUrl: string = ''
 ): string {
   const funded = (cert.status ?? '') === 'funded'
@@ -51,7 +51,7 @@ export function buildCertificateSvg(
   )
   const sizeStr = esc(money(cert.account_size || 100000))
   const splitPct = (typeof cert.profit_split === 'number' ? cert.profit_split : parseFloat(String(cert.profit_split)) || 85) + '%'
-  const brand = esc(cert.brand || brandName || 'LaunchAPropFirm')
+  const brand = esc(cert.brand || brandName || 'Trading Firm')
 
   const W = 1920
   const H = 1080
@@ -214,7 +214,7 @@ export function buildCertificateSvg(
 
 export function buildPayoutCertificateSvg(
   payout: PayoutItem,
-  brandName: string = 'LaunchAPropFirm',
+  brandName: string = 'Trading Firm',
   planName: string = 'Funded Account',
   qrDataUrl: string = ''
 ): string {
@@ -230,7 +230,7 @@ export function buildPayoutCertificateSvg(
   const amountStr = esc(money(payout.trader_amount || 0))
   const splitPct = payout.profit_split_pct ? `${payout.profit_split_pct}%` : '80%'
   const method = esc((payout.payment_method || 'Crypto USDT').toUpperCase())
-  const brand = esc(brandName || 'LaunchAPropFirm')
+  const brand = esc(brandName || 'Trading Firm')
 
   const W = 1920
   const H = 1080

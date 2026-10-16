@@ -94,7 +94,7 @@ const PLANS = [
 ]
 
 export function TemplateTerminal() {
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const brandTagline = useBranding((s) => s.branding.brand_tagline) || 'Institutional High-Frequency Prop Trading'
   const [activeSymbol, setActiveSymbol] = useState(SYMBOLS[0])
   const [lotSize, setLotSize] = useState('1.00')
@@ -201,7 +201,7 @@ export function TemplateTerminal() {
                 <span className="h-3 w-3 rounded-full bg-red-500/80 inline-block" />
                 <span className="h-3 w-3 rounded-full bg-amber-500/80 inline-block" />
                 <span className="h-3 w-3 rounded-full bg-emerald-500/80 inline-block" />
-                <span className="ml-2 font-bold text-text">{brandName} Institutional WebTrader v11.5</span>
+                <span className="ml-2 font-bold text-text">{brandName} Institutional WebTrader v12.0</span>
               </div>
               <div className="flex items-center gap-4 text-text-muted text-2xs">
                 <span className="flex items-center gap-1.5">

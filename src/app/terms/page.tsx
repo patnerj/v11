@@ -1,18 +1,21 @@
-import type { Metadata } from 'next'
-import { LegalPage } from '@/components/marketing/legal-page'
+'use client'
 
-export const metadata: Metadata = { title: 'Terms of Service | LaunchAPropFirm' }
+import { LegalPage } from '@/components/marketing/legal-page'
+import { useBranding } from '@/store/branding'
 
 export default function Page() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Trading Firm'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
+
   return (
     <LegalPage
       title="Terms of Service"
-      intro="By using LaunchAPropFirm (launchapropfirm.com) you agree to the following institutional terms and service conditions."
+      intro={`By using ${brandName} you agree to the following institutional terms and service conditions.`}
       updated="September 2026"
       sections={[
         { 
           title: '1. The Service & Evaluation Framework',
-          body: <p>LaunchAPropFirm provides simulated proprietary trading evaluation programmes. Funded accounts operate on demonstration accounts mirroring live institutional market pricing. Payouts represent the operator&apos;s contractual profit-split share of allocated performance capital, backed by our institutional liquidity reserves, and are not the direct result of executions on a retail broker account.</p> 
+          body: <p>{brandName} provides simulated proprietary trading evaluation programmes. Funded accounts operate on demonstration accounts mirroring live institutional market pricing. Payouts represent the operator&apos;s contractual profit-split share of allocated performance capital, backed by our institutional liquidity reserves, and are not the direct result of executions on a retail broker account.</p> 
         },
         { 
           title: '2. Eligibility & Compliance',
@@ -32,15 +35,15 @@ export default function Page() {
         },
         { 
           title: '6. Limitation of Liability',
-          body: <p>The service is provided on an &quot;as is&quot; and &quot;as available&quot; basis without warranties of any kind. LaunchAPropFirm is not liable for indirect, incidental, or consequential damages. Trading foreign exchange and CFDs carries financial risk; past performance does not guarantee future results.</p> 
+          body: <p>The service is provided on an &quot;as is&quot; and &quot;as available&quot; basis without warranties of any kind. {brandName} is not liable for indirect, incidental, or consequential damages. Trading foreign exchange and CFDs carries financial risk; past performance does not guarantee future results.</p> 
         },
         { 
           title: '7. Official Notices & Contact Channels',
           body: (
             <p>
               For general client support, order verification, or technical inquiries, contact our 24/7 Operations Desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
-                support@launchapropfirm.com
+              <a className="text-emerald-400 hover:underline font-semibold" href={`mailto:${supportEmail}`}>
+                {supportEmail}
               </a>
               .
             </p>

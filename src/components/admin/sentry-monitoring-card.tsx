@@ -31,7 +31,7 @@ export function SentryMonitoringCard() {
       const testTimestamp = new Date().toISOString()
       
       // Dispatch test event to Sentry
-      Sentry.captureMessage(`[TEST_ALERT] AlphaCapital Sentry Sentinel Handshake Verified at ${testTimestamp}`, {
+      Sentry.captureMessage(`[TEST_ALERT] Sentry Sentinel Handshake Verified at ${testTimestamp}`, {
         level: 'info',
         extra: {
           platform: APP_NAME_VERSION,

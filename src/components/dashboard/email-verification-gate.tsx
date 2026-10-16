@@ -47,9 +47,9 @@ function getWebmailProvider(email: string) {
 }
 
 export function EmailVerificationGate({ user }: { user: AuthUser }) {
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
-  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@launchapropfirm.com'
-  const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'L'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
+  const brandInitial = brandName.trim().charAt(0).toUpperCase() || 'P'
   const [resending, setResending] = useState(false)
   const [checking, setChecking] = useState(false)
   const [cooldown, setCooldown] = useState(() => {

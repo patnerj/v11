@@ -24,7 +24,7 @@ export function DeviceFrameMockup({
   const [device, setDevice] = useState<'laptop' | 'mobile'>('laptop')
   const [previewTheme, setPreviewTheme] = useState<'dark' | 'light'>('dark')
 
-  const effectiveName = brandName?.trim() || 'Alpha Capital'
+  const effectiveName = brandName?.trim() || 'Prop Firm'
   const effectiveTagline = brandTagline?.trim() || 'The Funded Trader Platform'
   const effectiveAccent = accentColor || '#10B981'
 

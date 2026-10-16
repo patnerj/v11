@@ -5,6 +5,7 @@ import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useBranding } from '@/store/branding'
 import { 
   Building2, 
   ShieldCheck, 
@@ -22,6 +23,8 @@ import {
 } from 'lucide-react'
 
 export default function AboutPage() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Our Platform'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-emerald-500 selection:text-white transition-colors duration-200">
       <MarketingHeader />
@@ -50,7 +53,7 @@ export default function AboutPage() {
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Institutional Capital</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
-              LaunchAPropFirm was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
+              {brandName} was established to solve the predatory practices plaguing retail prop firms. We back disciplined traders with transparent rules, real institutional liquidity, and zero drawdown gimmicks.
             </p>
           </div>
 
@@ -78,11 +81,11 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* The LaunchAPropFirm Philosophy vs Traditional Prop Firms */}
+          {/* The Brand Philosophy vs Traditional Prop Firms */}
           <div className="max-w-5xl mx-auto mb-20">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-text">The LaunchAPropFirm Advantage</h2>
-              <p className="mt-2 text-text-muted text-sm">Why serious traders migrate from legacy prop firms to LaunchAPropFirm.</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-text">The {brandName} Advantage</h2>
+              <p className="mt-2 text-text-muted text-sm">Why serious traders migrate from legacy prop firms to {brandName}.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -130,7 +133,7 @@ export default function AboutPage() {
                   Led by Traders, Built for Performance
                 </h2>
                 <p className="text-sm sm:text-base text-text-muted leading-relaxed">
-                  LaunchAPropFirm operates with strict fiduciary standards and institutional liquidity risk models. We treat our funded traders as long-term portfolio partners rather than statistics.
+                  {brandName} operates with strict fiduciary standards and institutional liquidity risk models. We treat our funded traders as long-term portfolio partners rather than statistics.
                 </p>
                 <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-text-muted">
                   <span className="flex items-center gap-1.5">
@@ -147,9 +150,9 @@ export default function AboutPage() {
                   <ShieldCheck className="h-8 w-8 text-emerald-500" />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-text">LaunchAPropFirm Desk</div>
+                  <div className="text-base font-bold text-text">{brandName} Desk</div>
                   <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Institutional Trading Operations</div>
-                  <div className="text-2xs font-mono text-text-muted mt-1 select-all">support@launchapropfirm.com</div>
+                  <div className="text-2xs font-mono text-text-muted mt-1 select-all">{supportEmail}</div>
                 </div>
                 <Link
                   href="/contact"

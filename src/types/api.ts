@@ -1358,7 +1358,7 @@ export interface TournamentMine {
   participant_status?: 'active' | 'disqualified' | 'eliminated' | 'winner'
 }
 
-// ── v11.5 AI Powerhouse Types ───────────────────────────────────────────────
+// ── v12.0 AI Powerhouse Types ───────────────────────────────────────────────
 export interface AiCopilotChatResponse {
   reply: string
   provider: 'gemini' | 'ollama' | 'heuristic_engine' | string

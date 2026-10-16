@@ -19,6 +19,7 @@ import {
   TrendingUp,
   FileCheck
 } from 'lucide-react'
+import { useBranding } from '@/store/branding'
 
 const VERIFIED_PAYOUTS = [
   { trader: 'Trader #61583264', amount: '$9,640.50', rail: 'USDT TRC-20', tx: '0x8f4b...112e', time: '18 mins ago' },
@@ -30,6 +31,7 @@ const VERIFIED_PAYOUTS = [
 ]
 
 export default function PayoutsPage() {
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-emerald-500 selection:text-white transition-colors duration-200">
       <MarketingHeader />
@@ -179,7 +181,7 @@ export default function PayoutsPage() {
 
             <div className="mt-6 pt-4 border-t border-border text-center">
               <span className="text-xs text-text-muted">
-                All payouts are confirmed on-chain or via banking gateway settlement. Treasury inquiries: <a href="mailto:support@launchapropfirm.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">support@launchapropfirm.com</a>
+                All payouts are confirmed on-chain or via banking gateway settlement. Treasury inquiries: <a href={`mailto:${supportEmail}`} className="text-emerald-600 dark:text-emerald-400 hover:underline">{supportEmail}</a>
               </span>
             </div>
           </div>

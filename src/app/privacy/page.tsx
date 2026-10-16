@@ -1,13 +1,16 @@
-import type { Metadata } from 'next'
-import { LegalPage } from '@/components/marketing/legal-page'
+'use client'
 
-export const metadata: Metadata = { title: 'Privacy Policy | LaunchAPropFirm' }
+import { LegalPage } from '@/components/marketing/legal-page'
+import { useBranding } from '@/store/branding'
 
 export default function Page() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Trading Firm'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
+
   return (
     <LegalPage
       title="Privacy Policy"
-      intro="How LaunchAPropFirm (launchapropfirm.com) collects, utilizes, and protects your personal information and trading data."
+      intro={`How ${brandName} collects, utilizes, and protects your personal information and trading data.`}
       updated="September 2026"
       sections={[
         { 
@@ -20,7 +23,7 @@ export default function Page() {
         },
         { 
           title: '3. Payment & Banking Data Protection',
-          body: <p>Payment transactions are processed through encrypted, PCI-DSS compliant gateways. Credit/debit card numbers are never stored on LaunchAPropFirm servers. Cryptocurrency payout wallet addresses are stored in encrypted vaults and used strictly for disbursing your profit splits.</p> 
+          body: <p>Payment transactions are processed through encrypted, PCI-DSS compliant gateways. Credit/debit card numbers are never stored on {brandName} servers. Cryptocurrency payout wallet addresses are stored in encrypted vaults and used strictly for disbursing your profit splits.</p> 
         },
         { 
           title: '4. Data Retention & Privacy Rights',
@@ -28,15 +31,15 @@ export default function Page() {
         },
         { 
           title: '5. Security Protocols & Encryption',
-          body: <p>LaunchAPropFirm enforces 256-bit TLS/SSL encryption for data in transit and AES-256 for data at rest, alongside mandatory rate limiting, automated intrusion detection, and isolated database clusters.</p> 
+          body: <p>{brandName} enforces 256-bit TLS/SSL encryption for data in transit and AES-256 for data at rest, alongside mandatory rate limiting, automated intrusion detection, and isolated database clusters.</p> 
         },
         { 
           title: '6. Privacy Inquiries & Data Protection Desk',
           body: (
             <p>
               To exercise your data protection rights or report security concerns, contact our operations desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
-                support@launchapropfirm.com
+              <a className="text-emerald-400 hover:underline font-semibold" href={`mailto:${supportEmail}`}>
+                {supportEmail}
               </a>
               .
             </p>

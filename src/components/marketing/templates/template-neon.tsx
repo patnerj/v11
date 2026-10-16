@@ -363,9 +363,9 @@ const FAQ_ITEMS = [
 ]
 
 export function TemplateNeon() {
-  const brandName = useBranding((s) => s.branding.brand_name) || 'LaunchAPropFirm'
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const brandTagline = useBranding((s) => s.branding.brand_tagline) || 'Next-Gen Cyber Proprietary Firm'
-  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@launchapropfirm.com'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
 
   // Model & Selection States
   const [selectedMarket, setSelectedMarket] = useState<'CFDs' | 'Futures'>('CFDs')
@@ -778,7 +778,7 @@ export function TemplateNeon() {
                 className="px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-xs font-semibold text-text transition-colors flex items-center gap-2 cursor-pointer"
               >
                 <Bot className="w-3.5 h-3.5 text-emerald-600 dark:text-[#00E676]" />
-                <span>Ask {brandName === 'LaunchAPropFirm' ? 'Fundee' : 'AI'}</span>
+                <span>Ask AI Copilot</span>
               </a>
 
               <button

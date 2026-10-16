@@ -42,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Dynamic document title synchronized with active admin route
   useEffect(() => {
     try {
-      const brand = localStorage.getItem('fxsim:brand-name') || process.env.NEXT_PUBLIC_BRAND_NAME || 'LaunchAPropFirm'
+      const brand = localStorage.getItem('fxsim:brand-name') || process.env.NEXT_PUBLIC_BRAND_NAME || 'Prop Firm'
       const titleMap: Record<string, string> = {
         '/admin': 'Admin Command Center',
         '/admin/traders': 'Traders CRM',

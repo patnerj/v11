@@ -23,7 +23,7 @@ const LivePriceTicker = dynamic(
 import { useBranding } from '@/store/branding'
 
 export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: string, subtitle?: string, badge?: string } }) {
-  const brandName = useBranding((s) => s.branding.brand_name) || "LaunchAPropFirm"
+  const brandName = useBranding((s) => s.branding.brand_name) || "Prop Firm"
   
   const rawTitle = puckProps?.title
   const rawHighlight = puckProps?.highlight
@@ -210,7 +210,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                     <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-500/80 shrink-0" />
                     <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-500/80 shrink-0" />
                     <span className="text-2xs sm:text-2xs font-mono text-text-muted font-medium ml-1 sm:ml-2 truncate">
-                      {brandName} Pro Terminal v11.5
+                      {brandName} Pro Terminal v12.0
                     </span>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-1.5 text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-1.5 py-0.5 sm:px-2 rounded-full border border-emerald-500/20 font-semibold shrink-0">

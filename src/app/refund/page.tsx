@@ -1,9 +1,11 @@
-import type { Metadata } from 'next'
-import { LegalPage } from '@/components/marketing/legal-page'
+'use client'
 
-export const metadata: Metadata = { title: 'Refund Policy | LaunchAPropFirm' }
+import { LegalPage } from '@/components/marketing/legal-page'
+import { useBranding } from '@/store/branding'
 
 export default function Page() {
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
+
   return (
     <LegalPage
       title="Refund Policy"
@@ -35,8 +37,8 @@ export default function Page() {
           body: (
             <p>
               To request an unused account refund or clarify billing inquiries, email our 24/7 Operations Desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
-                support@launchapropfirm.com
+              <a className="text-emerald-400 hover:underline font-semibold" href={`mailto:${supportEmail}`}>
+                {supportEmail}
               </a>{' '}
               with your order reference.
             </p>

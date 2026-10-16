@@ -1,13 +1,16 @@
-import type { Metadata } from 'next'
-import { LegalPage } from '@/components/marketing/legal-page'
+'use client'
 
-export const metadata: Metadata = { title: 'Cookie Policy | LaunchAPropFirm' }
+import { LegalPage } from '@/components/marketing/legal-page'
+import { useBranding } from '@/store/branding'
 
 export default function Page() {
+  const brandName = useBranding((s) => s.branding.brand_name) || 'Trading Firm'
+  const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
+
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="How LaunchAPropFirm uses essential session cookies to provide high-speed, secure trading workspaces."
+      intro={`How ${brandName} uses essential session cookies to provide high-speed, secure trading workspaces.`}
       updated="September 2026"
       sections={[
         { 
@@ -16,7 +19,7 @@ export default function Page() {
         },
         { 
           title: '2. Zero Third-Party Advertising Trackers',
-          body: <p>LaunchAPropFirm does not utilize third-party advertising cookies, cross-site profiling trackers, or invasive data brokers. Your trading patterns, balance details, and interaction data are never sold or shared with external ad platforms.</p> 
+          body: <p>{brandName} does not utilize third-party advertising cookies, cross-site profiling trackers, or invasive data brokers. Your trading patterns, balance details, and interaction data are never sold or shared with external ad platforms.</p> 
         },
         { 
           title: '3. Security & Anti-Fraud Telemetry',
@@ -31,8 +34,8 @@ export default function Page() {
           body: (
             <p>
               For questions regarding our cookie practices, reach our support desk at{' '}
-              <a className="text-emerald-400 hover:underline font-semibold" href="mailto:support@launchapropfirm.com">
-                support@launchapropfirm.com
+              <a className="text-emerald-400 hover:underline font-semibold" href={`mailto:${supportEmail}`}>
+                {supportEmail}
               </a>
               .
             </p>

@@ -19,13 +19,13 @@ function slug(s: string): string {
  */
 export async function downloadCertificatePdf(cert: Cert, brandName?: string): Promise<void> {
   const storeBrand = typeof window !== 'undefined'
-    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'LaunchAPropFirm')
-    : 'LaunchAPropFirm'
+    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'Trading Firm')
+    : 'Trading Firm'
   const brand = cert.brand || brandName || storeBrand
 
   const shareHref = typeof window !== 'undefined'
     ? `${window.location.origin}/certificate/${cert.share_code || cert.challenge_id}`
-    : `https://demo.launchapropfirm.com/certificate/${cert.share_code || cert.challenge_id}`
+    : `/certificate/${cert.share_code || cert.challenge_id}`
 
   const qrDataUrl = await generateQrDataUrl(shareHref)
   const svg = buildCertificateSvg(cert, brand, qrDataUrl)
@@ -74,13 +74,13 @@ export async function downloadCertificatePdf(cert: Cert, brandName?: string): Pr
 /** Also provide direct Ultra-HD PNG export for social sharing */
 export async function downloadCertificatePng(cert: Cert, brandName?: string): Promise<void> {
   const storeBrand = typeof window !== 'undefined'
-    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'LaunchAPropFirm')
-    : 'LaunchAPropFirm'
+    ? (useBranding.getState?.()?.branding?.brand_name || localStorage.getItem('fxsim:brand-name') || 'Trading Firm')
+    : 'Trading Firm'
   const brand = cert.brand || brandName || storeBrand
 
   const shareHref = typeof window !== 'undefined'
     ? `${window.location.origin}/certificate/${cert.share_code || cert.challenge_id}`
-    : `https://demo.launchapropfirm.com/certificate/${cert.share_code || cert.challenge_id}`
+    : `/certificate/${cert.share_code || cert.challenge_id}`
 
   const qrDataUrl = await generateQrDataUrl(shareHref)
   const svg = buildCertificateSvg(cert, brand, qrDataUrl)

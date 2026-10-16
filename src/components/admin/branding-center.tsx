@@ -79,7 +79,7 @@ const ASSETS: AssetMeta[] = [
 ]
 
 const DEFAULTS: Record<string, string> = {
-  brand_name: 'LaunchAPropFirm',
+  brand_name: 'Prop Firm',
   brand_tagline: 'Institutional High-Frequency Prop Trading',
   accent_color: '#10B981',
   primary_color: '#10B981',
@@ -191,7 +191,7 @@ export function BrandingCenter() {
     }
   }
 
-  const brand = vals.brand_name || 'Alpha Capital'
+  const brand = vals.brand_name || 'Prop Firm'
   const effectiveAccent = vals.accent_color || vals.primary_color || '#10B981'
   const activeFontId = (vals.font_family || 'poppins').toLowerCase()
 
@@ -602,7 +602,7 @@ export function BrandingCenter() {
                   id="bc-developer"
                   value={vals.developer_url ?? ''}
                   onChange={(e) => set('developer_url', e.target.value.trim())}
-                  placeholder="https://launchapropfirm.com"
+                  placeholder="https://your-domain.com"
                   className="text-xs border-accent/40"
                 />
               </div>
@@ -627,7 +627,7 @@ export function BrandingCenter() {
       <div className="xl:col-span-5 xl:sticky xl:top-20 space-y-4">
         {/* Device Preview Mockup Frame */}
         <DeviceFrameMockup
-          brandName={vals.brand_name || 'Alpha Capital'}
+          brandName={vals.brand_name || 'Prop Firm'}
           brandTagline={vals.brand_tagline || 'The Funded Trader Platform'}
           logoUrl={vals.logo_url || vals.login_logo_url}
           sidebarIconUrl={vals.sidebar_icon_url}
