@@ -24,10 +24,16 @@ import type { ApiResult, ApiErr } from '@/types/api'
  * 2. process.env.NEXT_PUBLIC_FXSIM_API (Secondary / legacy)
  * 3. '/api/wp' (Default relative fallback)
  */
+const CC_SLDS = new Set([
+  'co', 'com', 'org', 'net', 'edu', 'gov', 'ac', 'ltd', 'me', 'gen',
+  'asn', 'sch', 'nic', 'mil', 'res', 'ne', 'or', 'biz', 'info'
+])
+
 function isRealClientDomain(rawHost?: string): boolean {
   if (!rawHost) return false
   const host = rawHost.toLowerCase().split(':')[0].trim()
   if (!host || host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')) return false
+  if (host.endsWith('.test') || host.endsWith('.example') || host.endsWith('.invalid')) return false
   if (host.endsWith('.vercel.app')) return false
   if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(host)) return false
   return true
@@ -39,7 +45,7 @@ function resolveClientBaseDomain(rawHost: string): string {
   if (parts.length <= 2) return host
   const sld = parts[parts.length - 2]
   const tld = parts[parts.length - 1]
-  if (parts.length > 2 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(sld) && tld.length === 2) {
+  if (parts.length > 2 && CC_SLDS.has(sld) && tld.length === 2) {
     return parts.slice(-3).join('.')
   }
   return parts.slice(-2).join('.')

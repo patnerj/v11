@@ -3,7 +3,7 @@
  * Each function returns ApiResult<T>; callers branch on `.ok`.
  */
 
-import { fxsim, getApiBaseUrl, FXSIM_BASE, invalidateFxsim } from './fxsim'
+import { fxsim, getApiBaseUrl, FXSIM_BASE, apiUrl, invalidateFxsim } from './fxsim'
 import type {
   Account, AdminStats, AdminUserRow, AdminUserDetail, AdminRisk, AdminRiskAlerts, AdvancedStats, AnalyticsChallenges,
   AnalyticsGrowth, AnalyticsRevenue, AuthUser, BasicStats, Certificate,
@@ -26,7 +26,7 @@ import type {
   AiTradeAutopsy, AiJournalHistoryResponse, AiTiltStatus, CoolingOffResult,
 } from '@/types/api'
 
-export { getApiBaseUrl, FXSIM_BASE }
+export { getApiBaseUrl, FXSIM_BASE, apiUrl }
 
 /**
  * Helper to simulate API responses with artificial latency for incomplete/unwired endpoints.
