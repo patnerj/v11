@@ -70,6 +70,11 @@ function saveWatch(arr: string[]) {
   storageSet(STORAGE_KEYS.termWatch, JSON.stringify(arr))
 }
 
+function sanitizeSymbols(list: SymbolMeta[]): SymbolMeta[] {
+  if (!Array.isArray(list)) return []
+  return list.filter((s) => !/_[0-9]+$/.test(s.symbol || ''))
+}
+
 let bootstrapPromise: Promise<void> | null = null
 
 export const useTerminal = create<TerminalState>((set, get) => ({
@@ -120,8 +125,9 @@ export const useTerminal = create<TerminalState>((set, get) => ({
     bootstrapPromise = (async () => {
       const res = await api.symbols()
       if (res.ok) {
+        const cleanSymbols = sanitizeSymbols(res.data)
         set({
-          symbols:       res.data,
+          symbols:       cleanSymbols,
           symbolsLoaded: true,
           active:        loadActive(),
           watchlist:     loadWatch(),
@@ -151,7 +157,7 @@ export const useTerminal = create<TerminalState>((set, get) => ({
     // disabled by an admin, fall back to the first available symbol.
     const res = await api.symbols(true)
     if (!res.ok) return
-    const list = res.data
+    const list = sanitizeSymbols(res.data)
     const cur  = get().active
     const stillActive = list.some((s) => s.symbol === cur)
     set({

@@ -141,6 +141,7 @@ export const Mt5Canvas = memo(
     const [scrollOffset, setScrollOffset] = useState(0) // Candles shifted into past (0 = latest on right)
     const [yScaleFactor, setYScaleFactor] = useState(1.0) // Manual Y-scale expansion factor
     const [yScaleOffset, setYScaleOffset] = useState(0) // Vertical pan offset in price units
+    const [canvasCursor, setCanvasCursor] = useState<'crosshair' | 'grab' | 'grabbing' | 'ns-resize'>('crosshair')
 
     // Mouse & interaction states
     const mousePosRef = useRef<{ x: number; y: number; onAxis: boolean; onChart: boolean } | null>(null)
@@ -1085,25 +1086,34 @@ export const Mt5Canvas = memo(
         ctx.stroke()
 
         // Entry badge & floating PnL (Right-aligned before price axis)
-        const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} #${pos.id} @ ${fmtPrice(openPrice, digits)} (${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)})`
+        const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} @ ${fmtPrice(openPrice, digits)} | ${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)}`
         const badgeWidth = ctx.measureText(entryText).width + 36
         const badgeRight = chartW - 8
         const badgeX = badgeRight - badgeWidth
 
-        ctx.fillStyle = 'rgba(10, 15, 30, 0.92)'
-        ctx.fillRect(badgeX, yEntry - 12, badgeWidth, 22)
+        ctx.fillStyle = 'rgba(10, 15, 30, 0.94)'
+        ctx.fillRect(badgeX, yEntry - 12, badgeWidth, 24)
         ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
-        ctx.strokeRect(badgeX, yEntry - 12, badgeWidth, 22)
+        ctx.lineWidth = 1
+        ctx.strokeRect(badgeX, yEntry - 12, badgeWidth, 24)
 
         ctx.fillStyle = '#FFFFFF'
         ctx.font = 'bold 10px monospace'
         ctx.textAlign = 'left'
-        ctx.fillText(entryText, badgeX + 6, yEntry + 3)
+        ctx.fillText(entryText, badgeX + 8, yEntry + 3)
 
         // [x] Close button on Entry Line
         ctx.fillStyle = '#EF4444'
-        ctx.font = 'bold 12px sans-serif'
+        ctx.font = 'bold 13px sans-serif'
         ctx.fillText('×', badgeRight - 14, yEntry + 3)
+
+        // Right Price Axis Entry Tag
+        ctx.fillStyle = isBuy ? '#0284C7' : '#E11D48'
+        ctx.fillRect(chartW + 1, yEntry - 9, PRICE_AXIS_WIDTH - 2, 18)
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = 'bold 9px monospace'
+        ctx.textAlign = 'center'
+        ctx.fillText(`${pos.type.toUpperCase()} ${fmtPrice(openPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yEntry + 3)
 
         // Hover handles [+ Drag SL] and [+ Drag TP] to the left of right-aligned badge
         const isHoveringEntry = mousePos && Math.abs(mousePos.y - yEntry) < 18 && mousePos.x < chartW
@@ -1164,22 +1174,31 @@ export const Mt5Canvas = memo(
               isBuy,
               quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
             }) || 0
-          const pctBal = accountBalance > 0 ? (Math.abs(projPnl) / accountBalance) * 100 : 0
 
-          const slText = `SL #${pos.id}: -${distPips.toFixed(1)}p (-$${Math.abs(projPnl).toFixed(2)} · ${pctBal.toFixed(1)}%)`
+          const slText = `SL: ${fmtPrice(activeSlPrice, digits)} | -$${Math.abs(projPnl).toFixed(2)} (-${distPips.toFixed(1)}p)`
           const slBadgeWidth = ctx.measureText(slText).width + 30
           const slBadgeRight = chartW - 8
           const slBadgeX = slBadgeRight - slBadgeWidth
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.95)'
-          ctx.fillRect(slBadgeX, ySl - 11, slBadgeWidth, 20)
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.94)'
+          ctx.fillRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
+          ctx.strokeStyle = '#EF4444'
+          ctx.strokeRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 10px monospace'
           ctx.fillText(slText, slBadgeX + 6, ySl + 3)
 
           // [x] Remove SL
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 12px sans-serif'
+          ctx.font = 'bold 13px sans-serif'
           ctx.fillText('×', slBadgeRight - 14, ySl + 3)
+
+          // Right Price Axis SL Tag
+          ctx.fillStyle = '#DC2626'
+          ctx.fillRect(chartW + 1, ySl - 9, PRICE_AXIS_WIDTH - 2, 18)
+          ctx.fillStyle = '#FFFFFF'
+          ctx.font = 'bold 9px monospace'
+          ctx.textAlign = 'center'
+          ctx.fillText(`SL ${fmtPrice(activeSlPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, ySl + 3)
         }
 
         // (c) Take Profit (TP) Line
@@ -1210,22 +1229,31 @@ export const Mt5Canvas = memo(
               isBuy,
               quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
             }) || 0
-          const pctBal = accountBalance > 0 ? (projPnl / accountBalance) * 100 : 0
 
-          const tpText = `TP #${pos.id}: +${distPips.toFixed(1)}p (+$${projPnl.toFixed(2)} · ${pctBal.toFixed(1)}%)`
+          const tpText = `TP: ${fmtPrice(activeTpPrice, digits)} | +$${projPnl.toFixed(2)} (+${distPips.toFixed(1)}p)`
           const tpBadgeWidth = ctx.measureText(tpText).width + 30
           const tpBadgeRight = chartW - 8
           const tpBadgeX = tpBadgeRight - tpBadgeWidth
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.95)'
-          ctx.fillRect(tpBadgeX, yTp - 11, tpBadgeWidth, 20)
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.94)'
+          ctx.fillRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
+          ctx.strokeStyle = '#10B981'
+          ctx.strokeRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 10px monospace'
           ctx.fillText(tpText, tpBadgeX + 6, yTp + 3)
 
           // [x] Remove TP
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 12px sans-serif'
+          ctx.font = 'bold 13px sans-serif'
           ctx.fillText('×', tpBadgeRight - 14, yTp + 3)
+
+          // Right Price Axis TP Tag
+          ctx.fillStyle = '#059669'
+          ctx.fillRect(chartW + 1, yTp - 9, PRICE_AXIS_WIDTH - 2, 18)
+          ctx.fillStyle = '#FFFFFF'
+          ctx.font = 'bold 9px monospace'
+          ctx.textAlign = 'center'
+          ctx.fillText(`TP ${fmtPrice(activeTpPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yTp + 3)
         }
 
         ctx.restore()
@@ -1252,15 +1280,25 @@ export const Mt5Canvas = memo(
         const ordBadgeRight = chartW - 8
         const ordBadgeX = ordBadgeRight - ordBadgeWidth
         ctx.fillStyle = 'rgba(245, 158, 11, 0.95)'
-        ctx.fillRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 20)
+        ctx.fillRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
+        ctx.strokeStyle = '#F59E0B'
+        ctx.strokeRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
         ctx.fillStyle = '#050811'
         ctx.font = 'bold 10px monospace'
         ctx.fillText(ordText, ordBadgeX + 6, yTgt + 3)
 
         // [x] Cancel Pending
         ctx.fillStyle = '#050811'
-        ctx.font = 'bold 12px sans-serif'
+        ctx.font = 'bold 13px sans-serif'
         ctx.fillText('×', ordBadgeRight - 14, yTgt + 3)
+
+        // Right Price Axis Tag for Pending
+        ctx.fillStyle = '#D97706'
+        ctx.fillRect(chartW + 1, yTgt - 9, PRICE_AXIS_WIDTH - 2, 18)
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = 'bold 9px monospace'
+        ctx.textAlign = 'center'
+        ctx.fillText(fmtPrice(activeTgtPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, yTgt + 3)
 
         // Render SL and TP for pending orders if specified
         if (ord.sl && toNum(ord.sl) > 0) {
@@ -1990,8 +2028,9 @@ export const Mt5Canvas = memo(
         if (selectedDrawingId) onSelectDrawing(null)
       }
 
-      // 9. Otherwise: Pan chart horizontally
+      // 9. Otherwise: Pan chart horizontally and vertically
       isDraggingChartRef.current = true
+      setCanvasCursor('grabbing')
       dragStartRef.current = {
         x,
         y,
@@ -2014,6 +2053,19 @@ export const Mt5Canvas = memo(
 
       mousePosRef.current = { x, y, onAxis, onChart }
       setMousePos({ x, y, onAxis, onChart })
+
+      // Dynamic cursor update
+      if (isDraggingAxisRef.current || onAxis) {
+        setCanvasCursor('ns-resize')
+      } else if (isDraggingChartRef.current) {
+        setCanvasCursor('grabbing')
+      } else if (draggingSlTpRef.current) {
+        setCanvasCursor('ns-resize')
+      } else if (activeTool === 'select') {
+        setCanvasCursor('grab')
+      } else {
+        setCanvasCursor('crosshair')
+      }
 
       // 1. Right Axis Dragging (Y-Scale Factor)
       if (isDraggingAxisRef.current && dragStartRef.current) {
@@ -2109,12 +2161,18 @@ export const Mt5Canvas = memo(
         return
       }
 
-      // 8. Horizontal Chart Panning
+      // 8. 2D Chart Panning (Horizontal Time Pan + Vertical Price Pan)
       if (isDraggingChartRef.current && dragStartRef.current) {
         const deltaX = x - dragStartRef.current.x
         const candlesMoved = deltaX / candleWidth
         const newOffset = Math.max(0, dragStartRef.current.scrollOffset + candlesMoved)
         setScrollOffset(parseFloat(newOffset.toFixed(1)))
+
+        const deltaY = y - dragStartRef.current.y
+        const { range } = getPriceBounds()
+        const pricePerPx = range / Math.max(1, mainH)
+        const newYOffset = dragStartRef.current.yScaleOffset + deltaY * pricePerPx
+        setYScaleOffset(parseFloat(newYOffset.toFixed(digits > 2 ? 2 : 5)))
       }
     }
 
@@ -2125,6 +2183,7 @@ export const Mt5Canvas = memo(
       dragStartRef.current = null
       draggingAnchorRef.current = null
       draggingDrawingBodyRef.current = null
+      setCanvasCursor(activeTool === 'select' ? 'grab' : 'crosshair')
 
       // 1. Finalize SL/TP modification
       if (draggingSlTpRef.current && draggingSlTpPreview) {
@@ -2202,15 +2261,9 @@ export const Mt5Canvas = memo(
       }
     }
 
-    // Double Click Right Price Axis (Reset Scale to Auto-fit)
-    const handleDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-      const x = e.clientX - rect.left
-      const { chartW } = getLayout()
-      if (x >= chartW) {
-        resetScale()
-      }
+    // Double Click (Reset Scale & Pan to Auto-fit)
+    const handleDoubleClick = () => {
+      resetScale()
     }
 
     // Context Menu Handler
@@ -2238,7 +2291,8 @@ export const Mt5Canvas = memo(
           onMouseLeave={handleMouseUp}
           onDoubleClick={handleDoubleClick}
           onContextMenu={handleContextMenu}
-          className="w-full h-full block cursor-crosshair"
+          style={{ cursor: canvasCursor }}
+          className="w-full h-full block"
         />
       </div>
     )

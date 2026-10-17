@@ -221,9 +221,18 @@ export async function loadHistoricalCandles(args: {
   // Check cache first to avoid abrupt re-generation
   const cached = candleCache.get(cacheKey)
   if (cached && cached.length > 50) {
-    // If live price has moved, smoothly update the last candle
+    // If live price has moved or diverged, smoothly realign the series
     if (anchorPrice && anchorPrice > 0) {
       const last = cached[cached.length - 1]
+      const diff = anchorPrice - last.close
+      if (Math.abs(diff) > anchorPrice * 0.0005) {
+        for (const c of cached) {
+          c.open = parseFloat((c.open + diff).toFixed(digits))
+          c.high = parseFloat((c.high + diff).toFixed(digits))
+          c.low = parseFloat((c.low + diff).toFixed(digits))
+          c.close = parseFloat((c.close + diff).toFixed(digits))
+        }
+      }
       last.close = anchorPrice
       last.high = Math.max(last.high, anchorPrice)
       last.low = Math.min(last.low, anchorPrice)

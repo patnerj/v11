@@ -33,6 +33,8 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
     const q  = query.trim().toLowerCase()
     const filtered = symbols.filter((s) => {
       if (tab === 'watch' && !watchlist.includes(s.symbol)) return false
+      // Defensively filter out temporary/corrupted test symbols like SOLUSD_1789730582
+      if (/_[0-9]+$/.test(s.symbol)) return false
       if (!q) return true
       return s.symbol.toLowerCase().includes(q) || (s.display_name || '').toLowerCase().includes(q)
     })

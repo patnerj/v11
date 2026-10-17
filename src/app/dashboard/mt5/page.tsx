@@ -181,14 +181,17 @@ export default function Mt5WebTerminalPage() {
     }
   }, [refreshSymbols])
 
+  const pricesStart = usePrices((s) => s.start)
+  const pricesStop = usePrices((s) => s.stop)
   const refreshAccount = usePrices((s) => s.refresh)
   const refreshUser = usePrices((s) => s.refreshUser)
-  const stopStream = usePrices((s) => s.stop)
 
+  // Start the prices stream & user data polling while MT5 terminal is mounted
   useEffect(() => {
+    pricesStart()
     refreshAccount().then(() => setLoaded(true))
-    return () => stopStream()
-  }, [refreshAccount, stopStream])
+    return () => pricesStop()
+  }, [pricesStart, pricesStop, refreshAccount])
 
   useEffect(() => {
     let cancelled = false
