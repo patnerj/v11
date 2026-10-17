@@ -24,25 +24,44 @@ import type { ApiResult, ApiErr } from '@/types/api'
  * 2. process.env.NEXT_PUBLIC_FXSIM_API (Secondary / legacy)
  * 3. '/api/wp' (Default relative fallback)
  */
+function isRealClientDomain(rawHost?: string): boolean {
+  if (!rawHost) return false
+  const host = rawHost.toLowerCase().split(':')[0].trim()
+  if (!host || host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')) return false
+  if (host.endsWith('.vercel.app')) return false
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(host)) return false
+  return true
+}
+
+function resolveClientBaseDomain(rawHost: string): string {
+  const host = rawHost.toLowerCase().split(':')[0].trim()
+  const parts = host.split('.')
+  if (parts.length <= 2) return host
+  const sld = parts[parts.length - 2]
+  const tld = parts[parts.length - 1]
+  if (parts.length > 2 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(sld) && tld.length === 2) {
+    return parts.slice(-3).join('.')
+  }
+  return parts.slice(-2).join('.')
+}
+
 export function getApiBaseUrl(req?: any): string {
-  // 1. If in browser, dynamically bind to window.location.hostname (Rule 46 & 47)
+  // 1. If in browser on a real client domain, dynamically bind to window.location.hostname
   if (typeof window !== 'undefined' && window.location?.hostname) {
     const host = window.location.hostname
-    if (host !== 'localhost' && host !== '127.0.0.1') {
-      const parts = host.split('.')
-      const baseDomain = parts.length > 2 ? parts.slice(-2).join('.') : host
+    if (isRealClientDomain(host)) {
+      const baseDomain = resolveClientBaseDomain(host)
       return `https://api.${baseDomain}/wp-json/fxsim/v1`
     }
   }
 
-  // 2. If server-side with request headers (Rule 47)
+  // 2. If server-side with request headers on a real client domain
   if (req) {
-    const host = req.headers?.get?.('x-forwarded-host') || req.headers?.get?.('host') || req.headers?.host
-    if (host && typeof host === 'string') {
-      const cleanHost = host.split(':')[0]
-      if (cleanHost !== 'localhost' && cleanHost !== '127.0.0.1') {
-        const parts = cleanHost.split('.')
-        const baseDomain = parts.length > 2 ? parts.slice(-2).join('.') : cleanHost
+    const rawHost = req.headers?.get?.('x-forwarded-host') || req.headers?.get?.('host') || req.headers?.host
+    if (rawHost && typeof rawHost === 'string') {
+      const cleanHost = rawHost.split(':')[0]
+      if (isRealClientDomain(cleanHost)) {
+        const baseDomain = resolveClientBaseDomain(cleanHost)
         return `https://api.${baseDomain}/wp-json/fxsim/v1`
       }
     }

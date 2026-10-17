@@ -12,15 +12,21 @@
 .DS_Store
 *.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
 # local env files
 .env
 .env.local
 .env.*.local
+.env.production
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+eslint_out.json
+screenshots/
+check_mt5.js
+playwright_audit.js
+run_double_headless.js
 
 # typescript
 *.tsbuildinfo
