@@ -64,6 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const titleMap: Record<string, string> = {
         '/dashboard': 'Trader Dashboard',
         '/dashboard/trading': 'Trading Terminal',
+        '/dashboard/mt5': 'MT5 WebTerminal',
         '/dashboard/challenges': 'Challenges',
         '/dashboard/tournaments': 'Tournaments',
         '/dashboard/arena': 'PvP Arena',
@@ -102,7 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // The trading terminal uses the full viewport width (no max-width / heavy
   // padding) like TradingView / cTrader; other dashboard pages stay readable.
-  const isTerminal = !!pathname?.startsWith('/dashboard/trading')
+  const isTerminal = !!pathname?.startsWith('/dashboard/trading') || !!pathname?.startsWith('/dashboard/mt5')
   const isSupport  = pathname === '/dashboard/support'
 
   if (!ready || !user || adminOnTraderOverview) return <DashboardSkeleton />

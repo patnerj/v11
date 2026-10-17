@@ -28,6 +28,7 @@ export interface TopbarProps {
 const ROUTE_NAV_TITLES: Record<string, { title: string; section?: string }> = {
   '/dashboard': { title: 'Dashboard Overview', section: 'Trader Hub' },
   '/dashboard/trading': { title: 'Trading Terminal', section: 'Live Execution' },
+  '/dashboard/mt5': { title: 'MT5 WebTerminal', section: 'Live Execution' },
   '/dashboard/challenges': { title: 'Evaluation Challenges', section: 'Accounts' },
   '/dashboard/tournaments': { title: 'Tournaments & Contests', section: 'Arena' },
   '/arena': { title: 'PvP Trading Arena', section: 'Esports' },

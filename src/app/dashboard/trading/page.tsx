@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowUpRight, BarChart3, Clock, ListOrdered, PanelLeftClose, PanelLeftOpen, ShoppingCart, CheckCircle2, XCircle, Trophy, ChevronDown } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Clock, ListOrdered, PanelLeftClose, PanelLeftOpen, ShoppingCart, CheckCircle2, XCircle, Trophy, ChevronDown, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
@@ -19,6 +19,7 @@ import type { Account, NoChallengeResp, Position, PendingOrder, ChallengeAccount
 
 import { MarketWatch }        from '@/components/dashboard/trading/market-watch'
 import { ChartPanel }         from '@/components/dashboard/trading/chart-panel'
+import { Mt5ChartPanel }      from '@/components/dashboard/trading/mt5-chart'
 import { OrderTicket }        from '@/components/dashboard/trading/order-ticket'
 import { PositionsTable }     from '@/components/dashboard/trading/positions-table'
 import { PendingOrdersTable } from '@/components/dashboard/trading/pending-orders-table'
@@ -46,6 +47,8 @@ export default function TradingTerminalPage() {
   const refreshSymbols = useTerminal((s) => s.refreshSymbols)
   const symbolsLoaded = useTerminal((s) => s.symbolsLoaded)
   const active        = useTerminal((s) => s.active)
+  const chartEngine   = useTerminal((s) => s.chartEngine)
+  const setChartEngine = useTerminal((s) => s.setChartEngine)
 
   // Real-time state from store
   const account   = usePrices((s) => s.account as Account | NoChallengeResp | null)
@@ -325,6 +328,8 @@ function DesktopLayout({
   tournamentId?: number
   tournamentTitle?: string
 }) {
+  const chartEngine = useTerminal((s) => s.chartEngine)
+  const setChartEngine = useTerminal((s) => s.setChartEngine)
   const [tab, setTab] = useState<Tab>('positions')
   const [showMoreTelemetry, setShowMoreTelemetry] = useState(false)
   const mwPanelRef = useRef<PanelImperativeHandle>(null)
@@ -461,12 +466,45 @@ function DesktopLayout({
           />
         </div>
       )}
-      {/* Account switcher & Sound Toggle bar */}
-      <div className="shrink-0 flex items-center justify-between gap-2">
+      {/* Account switcher, Dual-Mode Chart Engine Switcher & Sound Toggle bar */}
+      <div className="shrink-0 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex-1 min-w-0">
           <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={true} />
         </div>
-        <SoundToggle compact className="shrink-0" />
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Dual-Mode Chart Engine Switcher */}
+          <div className="inline-flex items-center bg-surface/90 dark:bg-bg-subtle/90 p-0.5 rounded-lg border border-border shadow-xs">
+            <button
+              type="button"
+              onClick={() => setChartEngine('mt5')}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                chartEngine === 'mt5'
+                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
+              )}
+              title="Switch to MT5 Pro Native Canvas Chart"
+            >
+              <Zap className="w-3.5 h-3.5 fill-current" />
+              <span>⚡ MT5 Pro Chart</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartEngine('tradingview')}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                chartEngine === 'tradingview'
+                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
+              )}
+              title="Switch to TradingView Chart"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>📊 TradingView</span>
+            </button>
+          </div>
+          <SoundToggle compact className="shrink-0" />
+        </div>
       </div>
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
         {/* Left: market watch */}
@@ -526,8 +564,12 @@ function DesktopLayout({
           <PanelGroup orientation="vertical">
             <Panel defaultSize="70%" minSize="30%">
               <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
-                <SectionErrorBoundary>
-                  <ChartPanel positions={positions} plan={plan || metrics?.plan} onChanged={onChanged} />
+                <SectionErrorBoundary sectionName="ChartPanel">
+                  {chartEngine === 'mt5' ? (
+                    <Mt5ChartPanel positions={positions} pendingOrders={pending} plan={plan || metrics?.plan} onChanged={onChanged} />
+                  ) : (
+                    <ChartPanel positions={positions} plan={plan || metrics?.plan} onChanged={onChanged} />
+                  )}
                 </SectionErrorBoundary>
               </section>
             </Panel>

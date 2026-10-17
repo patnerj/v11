@@ -37,6 +37,9 @@ interface TerminalState {
   /** Number of active positions on current symbol */
   symbolPositionsCount: number
   setSymbolPositionsCount: (count: number) => void
+  /** Active chart engine: 'mt5' pro canvas or 'tradingview' widget */
+  chartEngine:   'mt5' | 'tradingview'
+  setChartEngine: (engine: 'mt5' | 'tradingview') => void
 }
 
 function loadLevels(): boolean {
@@ -46,6 +49,11 @@ function loadLevels(): boolean {
 function loadOneClick(): boolean {
   if (typeof window === 'undefined') return true
   try { return localStorage.getItem('fxsim:term:oneclick') !== '0' } catch { return true }
+}
+
+function loadChartEngine(): 'mt5' | 'tradingview' {
+  const val = storageGet(STORAGE_KEYS.chartEngine)
+  return val === 'tradingview' ? 'tradingview' : 'mt5'
 }
 
 function loadActive(): string {
@@ -91,6 +99,11 @@ export const useTerminal = create<TerminalState>((set, get) => ({
   },
   symbolPositionsCount: 0,
   setSymbolPositionsCount: (count) => set({ symbolPositionsCount: count }),
+  chartEngine: loadChartEngine(),
+  setChartEngine: (engine) => {
+    storageSet(STORAGE_KEYS.chartEngine, engine)
+    set({ chartEngine: engine })
+  },
 
   setActive: (sym) => { saveActive(sym); set({ active: sym }) },
 
@@ -114,6 +127,7 @@ export const useTerminal = create<TerminalState>((set, get) => ({
           watchlist:     loadWatch(),
           showLevels:    loadLevels(),
           showOneClick:  loadOneClick(),
+          chartEngine:   loadChartEngine(),
         })
       } else {
         // Don't fail hard — leave symbolsLoaded false so the page can show
@@ -123,6 +137,7 @@ export const useTerminal = create<TerminalState>((set, get) => ({
           watchlist: loadWatch(),
           showLevels: loadLevels(),
           showOneClick: loadOneClick(),
+          chartEngine:  loadChartEngine(),
         })
       }
     })().finally(() => { bootstrapPromise = null })

@@ -13,7 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   LayoutDashboard, Trophy, History, Banknote,
   Award, Bell, Settings, X, LifeBuoy, CandlestickChart,
-  Users, CreditCard, Layers, BarChart3, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, Mail, Megaphone, Ticket, Users2, HeartPulse, Rocket, Gauge, Palette, ShieldAlert, Swords, Shield, Wallet, UserCheck
+  Users, CreditCard, Layers, BarChart3, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, Mail, Megaphone, Ticket, Users2, HeartPulse, Rocket, Gauge, Palette, ShieldAlert, Swords, Shield, Wallet, UserCheck, Zap
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -29,6 +29,7 @@ export interface NavItem {
 const NAV: NavItem[] = [
   { href: '/dashboard',                label: 'Overview',     icon: LayoutDashboard, queryKey: ['overview'] },
   { href: '/dashboard/trading',        label: 'Trade',         icon: CandlestickChart, badge: 'LIVE', queryKey: ['account'] },
+  { href: '/dashboard/mt5',            label: 'MT5 Web',      icon: Zap, badge: 'PRO', queryKey: ['account'] },
   { href: '/dashboard/challenges',     label: 'Challenges',   icon: Trophy, queryKey: ['challenges'] },
   { href: '/dashboard/tournaments',    label: 'Tournaments',  icon: Trophy, badge: 'WIN', queryKey: ['tournaments'] },
   // The stake-money 1v1 PvP Arena shipped with no entry point anywhere a
@@ -201,7 +202,7 @@ function SidebarBody({
           return Array.isArray(raw) ? raw : (raw as any)?.trades || []
         },
       })
-    } else if (item.href === '/dashboard/trading') {
+    } else if (item.href === '/dashboard/trading' || item.href === '/dashboard/mt5') {
       queryClient.prefetchQuery({
         queryKey: ['account'],
         queryFn: async () => {

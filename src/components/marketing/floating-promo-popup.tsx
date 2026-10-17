@@ -40,7 +40,9 @@ export function FloatingPromoPopup() {
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password') ||
     pathname === '/dashboard/trading' ||
-    pathname.startsWith('/dashboard/trading')
+    pathname.startsWith('/dashboard/trading') ||
+    pathname === '/dashboard/mt5' ||
+    pathname.startsWith('/dashboard/mt5')
   ) {
     return null
   }

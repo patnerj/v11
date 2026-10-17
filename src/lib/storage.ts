@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   termMw:     'fxsim:term:mw',
   termLayout: 'fxsim:term:layout',
   mobileDraw: 'fxsim:chart:mobile-draw',
+  chartEngine: 'fxsim:term:chart_engine',
   nonce:      'fxsim:nonce',
   sidebar:    'fxsim:sidebar-collapsed',
   referral:   'fxsim:ref',
