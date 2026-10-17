@@ -702,10 +702,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               inputMode="decimal"
               value={sl}
               onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder={isSlRequired ? `Price e.g. ${ask ? fmtPrice(ask * 0.995, digits) : '1.0825'}` : "Price (Optional)"}
+              placeholder={isSlRequired ? `e.g. ${ask ? fmtPrice(ask * 0.995, digits) : '1.0825'}` : "Price (Optional)"}
               title={slMetrics ? `Max Loss: -${fmtUSD(slMetrics.lossVal)} (-${slMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
-                "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
+                "w-full h-9 px-3 rounded-md border text-xs sm:text-sm font-semibold tabular-nums font-sans focus-ring transition-colors placeholder:text-xs placeholder:font-normal placeholder:text-text-muted/60",
                 slMetrics
                   ? "border-rose-500/60 bg-rose-500/5 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 focus:border-rose-500"
                   : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"
@@ -761,10 +761,10 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               inputMode="decimal"
               value={tp}
               onChange={(e) => setTp(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder={`Price e.g. ${ask ? fmtPrice(ask * 1.005, digits) : '1.0925'}`}
+              placeholder={`e.g. ${ask ? fmtPrice(ask * 1.005, digits) : '1.0925'}`}
               title={tpMetrics ? `Target Profit: +${fmtUSD(tpMetrics.profitVal)} (+${tpMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
-                "w-full h-9 px-3 rounded-md border text-terminal-title terminal-num focus-ring transition-colors placeholder:text-text-faint",
+                "w-full h-9 px-3 rounded-md border text-xs sm:text-sm font-semibold tabular-nums font-sans focus-ring transition-colors placeholder:text-xs placeholder:font-normal placeholder:text-text-muted/60",
                 tpMetrics
                   ? "border-emerald-500/60 bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 focus:border-emerald-500"
                   : "bg-surface border-border text-text hover:border-border-strong focus:border-accent focus:bg-surface shadow-xs"

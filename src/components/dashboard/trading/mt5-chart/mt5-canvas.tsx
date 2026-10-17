@@ -49,6 +49,7 @@ import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
 import { playOrderSuccessSound, playOrderLossThumpSound } from '@/lib/sound-effects'
 import { usePrices } from '@/store/prices'
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
 const PRICE_AXIS_WIDTH = 88
 const TIME_AXIS_HEIGHT = 26
@@ -80,6 +81,19 @@ function distToRay(px: number, py: number, x0: number, y0: number, x1: number, y
   let t = ((px - x0) * dx + (py - y0) * dy) / lenSq
   t = Math.max(0, t)
   return Math.hypot(px - (x0 + t * dx), py - (y0 + t * dy))
+}
+
+function getNicePriceStep(range: number, targetCount: number): number {
+  if (range <= 0 || targetCount <= 0) return 1
+  const rawStep = range / targetCount
+  const power = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const fraction = rawStep / power
+  let niceFraction: number
+  if (fraction < 1.5) niceFraction = 1
+  else if (fraction < 3) niceFraction = 2
+  else if (fraction < 7) niceFraction = 5
+  else niceFraction = 10
+  return niceFraction * power
 }
 
 interface Mt5CanvasProps {
@@ -534,8 +548,10 @@ export const Mt5Canvas = memo(
         ctx.setLineDash([1, 3])
 
         // Horizontal price grid lines
-        const gridStep = rangeP / 6
-        for (let p = Math.ceil(minP / gridStep) * gridStep; p < maxP; p += gridStep) {
+        const targetTicks = Math.max(8, Math.floor(mainH / 45))
+        const gridStep = getNicePriceStep(rangeP, targetTicks)
+        const firstGrid = Math.ceil(minP / gridStep) * gridStep
+        for (let p = firstGrid; p <= maxP; p += gridStep) {
           const y = priceToY(p)
           if (y > 0 && y < mainH) {
             ctx.beginPath()
@@ -988,25 +1004,46 @@ export const Mt5Canvas = memo(
             { l: 1.0, label: '100.0%' },
           ]
 
-          // Shaded Golden Pocket (50% - 61.8%)
+          const x0 = timeToX(d.points[0].time)
+          const x1 = timeToX(d.points[1].time)
+          const y0 = priceToY(p0)
+          const y1 = priceToY(p1)
+          const leftX = Math.min(x0, x1)
+          const rightX = d.extendRight ? chartW : Math.max(x0, x1)
+          const spanW = Math.max(20, rightX - leftX)
+
+          // Subtle diagonal swing baseline between anchor 0 and anchor 1
+          ctx.save()
+          ctx.strokeStyle = theme === 'daylight' ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)'
+          ctx.lineWidth = 1
+          ctx.setLineDash([3, 3])
+          ctx.beginPath()
+          ctx.moveTo(x0, y0)
+          ctx.lineTo(x1, y1)
+          ctx.stroke()
+          ctx.restore()
+
+          // Shaded Golden Pocket (50% - 61.8%) bounded between leftX and rightX
           const y50 = priceToY(p0 + diff * 0.5)
           const y618 = priceToY(p0 + diff * 0.618)
           ctx.fillStyle = colors.goldenPocket
-          ctx.fillRect(0, Math.min(y50, y618), chartW, Math.abs(y618 - y50))
+          ctx.fillRect(leftX, Math.min(y50, y618), spanW, Math.abs(y618 - y50))
 
           for (const item of levels) {
             const lvlPrice = p0 + diff * item.l
             const y = priceToY(lvlPrice)
             ctx.strokeStyle = item.l === 0.618 || item.l === 0.5 ? '#F59E0B' : d.color
+            ctx.lineWidth = item.l === 0.618 || item.l === 0.5 ? 1.5 : (d.lineWidth || 1)
+            ctx.setLineDash(d.lineStyle === 'dashed' ? [6, 4] : d.lineStyle === 'dotted' ? [2, 2] : [])
             ctx.beginPath()
-            ctx.moveTo(0, y)
-            ctx.lineTo(chartW, y)
+            ctx.moveTo(leftX, Math.floor(y) + 0.5)
+            ctx.lineTo(rightX, Math.floor(y) + 0.5)
             ctx.stroke()
 
-            ctx.fillStyle = d.color
-            ctx.font = FONT_LABEL
+            ctx.fillStyle = item.l === 0.618 || item.l === 0.5 ? '#F59E0B' : (theme === 'daylight' ? '#0F172A' : '#E2E8F0')
+            ctx.font = FONT_MICRO_BOLD
             ctx.textAlign = 'left'
-            ctx.fillText(`${item.label} (${fmtPrice(lvlPrice, digits)})`, 10, y - 4)
+            ctx.fillText(`${item.label} (${fmtPrice(lvlPrice, digits)})`, leftX + 4, y - 4)
           }
         } else if (d.type === 'rectangle' && d.points.length >= 2) {
           const x0 = timeToX(d.points[0].time)
@@ -1027,8 +1064,8 @@ export const Mt5Canvas = memo(
           const slP = d.points[1].price
           const isLong = d.isLong !== undefined ? d.isLong : entryP >= slP
           const riskDist = Math.abs(entryP - slP)
-          const rewardDist = d.points[2] ? Math.abs(d.points[2].price - entryP) : riskDist * 2
-          const tpP = isLong ? entryP + rewardDist : entryP - rewardDist
+          const tpP = d.points[2] ? d.points[2].price : (isLong ? entryP + riskDist * 2 : entryP - riskDist * 2)
+          const rewardDist = Math.abs(tpP - entryP)
 
           const x0 = timeToX(d.points[0].time)
           const x1 = d.points[1] ? timeToX(d.points[1].time) : x0 + 15 * candleWidth
@@ -1040,24 +1077,32 @@ export const Mt5Canvas = memo(
           const yTp = priceToY(tpP)
 
           // Shaded Risk Box (Red)
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.18)'
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.20)'
           ctx.strokeStyle = '#EF4444'
+          ctx.lineWidth = 1.5
           ctx.fillRect(leftX, Math.min(yEntry, ySl), boxW, Math.abs(ySl - yEntry))
           ctx.strokeRect(leftX, Math.min(yEntry, ySl), boxW, Math.abs(ySl - yEntry))
 
           // Shaded Reward Box (Green)
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.18)'
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.20)'
           ctx.strokeStyle = '#10B981'
+          ctx.lineWidth = 1.5
           ctx.fillRect(leftX, Math.min(yEntry, yTp), boxW, Math.abs(yTp - yEntry))
           ctx.strokeRect(leftX, Math.min(yEntry, yTp), boxW, Math.abs(yTp - yEntry))
 
           // Dynamic R:R Ratio Badge
-          const rrRatio = riskDist > 0 ? (rewardDist / riskDist).toFixed(2) : '2.00'
-          const badgeText = `${isLong ? 'Long' : 'Short'} | R:R 1 : ${rrRatio}`
-          ctx.fillStyle = '#050811'
-          ctx.fillRect(leftX + 4, yEntry - 10, ctx.measureText(badgeText).width + 16, 20)
+          const rrRatio = riskDist > 0 ? (rewardDist / riskDist).toFixed(2) : '1.00'
+          const symMeta = getSymbolMeta(symbol)
+          const riskPips = riskDist / (symMeta.pipSize || pSize || 1)
+          const rewardPips = rewardDist / (symMeta.pipSize || pSize || 1)
+          const badgeText = `${isLong ? 'Long' : 'Short'} | R:R 1 : ${rrRatio} (Risk: ${riskPips.toFixed(1)}p · Reward: ${rewardPips.toFixed(1)}p)`
+
+          ctx.fillStyle = theme === 'daylight' ? '#0F172A' : '#050811'
+          const bW = ctx.measureText(badgeText).width + 16
+          ctx.fillRect(leftX + 4, yEntry - 10, bW, 20)
           ctx.strokeStyle = '#38BDF8'
-          ctx.strokeRect(leftX + 4, yEntry - 10, ctx.measureText(badgeText).width + 16, 20)
+          ctx.lineWidth = 1
+          ctx.strokeRect(leftX + 4, yEntry - 10, bW, 20)
           ctx.fillStyle = '#38BDF8'
           ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
@@ -1080,16 +1125,46 @@ export const Mt5Canvas = memo(
         // Selected anchor handles
         if (isSel) {
           ctx.fillStyle = '#FFFFFF'
-          ctx.strokeStyle = '#00E676'
           ctx.lineWidth = 2
-          for (let ptIdx = 0; ptIdx < d.points.length; ptIdx++) {
-            const pt = d.points[ptIdx]
-            const y = priceToY(pt.price)
-            const x = timeToX(pt.time)
-            ctx.beginPath()
-            ctx.arc(x, y, 4, 0, Math.PI * 2)
-            ctx.fill()
-            ctx.stroke()
+          if (d.type === 'risk-reward') {
+            const x0 = timeToX(d.points[0].time)
+            const x1 = d.points[1] ? timeToX(d.points[1].time) : x0 + 15 * candleWidth
+            const leftX = Math.min(x0, x1)
+            const boxW = Math.max(70, Math.abs(x1 - x0))
+            const centerX = leftX + boxW / 2
+            const rightX = leftX + boxW
+            const yEntry = priceToY(d.points[0].price)
+            const ySl = priceToY(d.points[1].price)
+            const isLong = d.isLong !== undefined ? d.isLong : d.points[0].price >= d.points[1].price
+            const riskDist = Math.abs(d.points[0].price - d.points[1].price)
+            const tpPrice = d.points[2] ? d.points[2].price : (isLong ? d.points[0].price + riskDist * 2 : d.points[0].price - riskDist * 2)
+            const yTp = priceToY(tpPrice)
+
+            const handles = [
+              { x: centerX, y: yEntry, col: '#38BDF8' }, // Entry
+              { x: centerX, y: ySl, col: '#EF4444' },    // SL
+              { x: centerX, y: yTp, col: '#10B981' },    // TP
+              { x: rightX, y: yEntry, col: '#F59E0B' },  // Width handle
+            ]
+
+            for (const h of handles) {
+              ctx.strokeStyle = h.col
+              ctx.beginPath()
+              ctx.arc(h.x, h.y, 5, 0, Math.PI * 2)
+              ctx.fill()
+              ctx.stroke()
+            }
+          } else {
+            ctx.strokeStyle = '#00E676'
+            for (let ptIdx = 0; ptIdx < d.points.length; ptIdx++) {
+              const pt = d.points[ptIdx]
+              const y = priceToY(pt.price)
+              const x = timeToX(pt.time)
+              ctx.beginPath()
+              ctx.arc(x, y, 4, 0, Math.PI * 2)
+              ctx.fill()
+              ctx.stroke()
+            }
           }
         }
         ctx.restore()
@@ -1106,13 +1181,15 @@ export const Mt5Canvas = memo(
       ctx.lineTo(chartW + 0.5, mainH)
       ctx.stroke()
 
-      const axisGridStep = rangeP / 6
+      const targetTicks = Math.max(8, Math.floor(mainH / 45))
+      const axisGridStep = getNicePriceStep(rangeP, targetTicks)
+      const firstTick = Math.ceil(minP / axisGridStep) * axisGridStep
       ctx.fillStyle = colors.textMuted
       ctx.font = FONT_LABEL
       ctx.textAlign = 'left'
-      for (let p = Math.ceil(minP / axisGridStep) * axisGridStep; p < maxP; p += axisGridStep) {
+      for (let p = firstTick; p <= maxP; p += axisGridStep) {
         const y = priceToY(p)
-        if (y > 10 && y < mainH - 10) {
+        if (y >= 8 && y <= mainH - 8) {
           ctx.fillText(fmtPrice(p, digits), chartW + 6, y + 3)
         }
       }
@@ -1244,10 +1321,6 @@ export const Mt5Canvas = memo(
         ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
         ctx.lineWidth = 1.5
         ctx.setLineDash([5, 3])
-        ctx.beginPath()
-        ctx.moveTo(0, yEntry)
-        ctx.lineTo(chartW, yEntry)
-        ctx.stroke()
 
         // Entry badge & floating PnL (Right-aligned before price axis)
         const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} @ ${fmtPrice(openPrice, digits)} | ${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)}`
@@ -1255,11 +1328,18 @@ export const Mt5Canvas = memo(
         const badgeRight = chartW - 8
         const badgeX = badgeRight - badgeWidth
 
-        ctx.fillStyle = 'rgba(10, 15, 30, 0.94)'
-        ctx.fillRect(badgeX, yEntry - 12, badgeWidth, 24)
+        // Line stops cleanly before badge so it never strikes through the text
+        ctx.beginPath()
+        ctx.moveTo(0, Math.floor(yEntry) + 0.5)
+        ctx.lineTo(badgeX - 4, Math.floor(yEntry) + 0.5)
+        ctx.stroke()
+
+        // 100% Solid Opaque Badge
+        ctx.fillStyle = theme === 'daylight' ? '#0F172A' : '#0A0F1E'
+        ctx.fillRect(badgeX, yEntry - 11, badgeWidth, 22)
         ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
-        ctx.lineWidth = 1
-        ctx.strokeRect(badgeX, yEntry - 12, badgeWidth, 24)
+        ctx.lineWidth = 1.5
+        ctx.strokeRect(badgeX, yEntry - 11, badgeWidth, 22)
 
         ctx.fillStyle = '#FFFFFF'
         ctx.font = FONT_LABEL_BOLD
@@ -1319,14 +1399,6 @@ export const Mt5Canvas = memo(
 
         if (activeSlPrice > 0) {
           const ySl = priceToY(activeSlPrice)
-          ctx.strokeStyle = '#EF4444'
-          ctx.lineWidth = 1.5
-          ctx.setLineDash([4, 2])
-          ctx.beginPath()
-          ctx.moveTo(0, ySl)
-          ctx.lineTo(chartW, ySl)
-          ctx.stroke()
-
           const distPips = Math.abs(openPrice - activeSlPrice) / symMeta.pipSize
           const projPnl =
             calcLevelPnL({
@@ -1343,9 +1415,22 @@ export const Mt5Canvas = memo(
           const slBadgeWidth = ctx.measureText(slText).width + 30
           const slBadgeRight = chartW - 8
           const slBadgeX = slBadgeRight - slBadgeWidth
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.94)'
-          ctx.fillRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
+
+          // Dotted line stops cleanly before badge
           ctx.strokeStyle = '#EF4444'
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([4, 2])
+          ctx.beginPath()
+          ctx.moveTo(0, Math.floor(ySl) + 0.5)
+          ctx.lineTo(slBadgeX - 4, Math.floor(ySl) + 0.5)
+          ctx.stroke()
+
+          // 100% Solid Opaque SL Badge
+          const slBadgeBg = theme === 'daylight' ? '#DC2626' : '#EF4444'
+          ctx.fillStyle = slBadgeBg
+          ctx.fillRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
+          ctx.strokeStyle = '#FFFFFF'
+          ctx.lineWidth = 1
           ctx.strokeRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_LABEL_BOLD
@@ -1374,14 +1459,6 @@ export const Mt5Canvas = memo(
 
         if (activeTpPrice > 0) {
           const yTp = priceToY(activeTpPrice)
-          ctx.strokeStyle = '#10B981'
-          ctx.lineWidth = 1.5
-          ctx.setLineDash([4, 2])
-          ctx.beginPath()
-          ctx.moveTo(0, yTp)
-          ctx.lineTo(chartW, yTp)
-          ctx.stroke()
-
           const distPips = Math.abs(activeTpPrice - openPrice) / symMeta.pipSize
           const projPnl =
             calcLevelPnL({
@@ -1398,9 +1475,22 @@ export const Mt5Canvas = memo(
           const tpBadgeWidth = ctx.measureText(tpText).width + 30
           const tpBadgeRight = chartW - 8
           const tpBadgeX = tpBadgeRight - tpBadgeWidth
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.94)'
-          ctx.fillRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
+
+          // Dotted line stops cleanly before badge
           ctx.strokeStyle = '#10B981'
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([4, 2])
+          ctx.beginPath()
+          ctx.moveTo(0, Math.floor(yTp) + 0.5)
+          ctx.lineTo(tpBadgeX - 4, Math.floor(yTp) + 0.5)
+          ctx.stroke()
+
+          // 100% Solid Opaque TP Badge
+          const tpBadgeBg = theme === 'daylight' ? '#059669' : '#10B981'
+          ctx.fillStyle = tpBadgeBg
+          ctx.fillRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
+          ctx.strokeStyle = '#FFFFFF'
+          ctx.lineWidth = 1
           ctx.strokeRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_LABEL_BOLD
@@ -1434,18 +1524,22 @@ export const Mt5Canvas = memo(
         ctx.strokeStyle = '#F59E0B'
         ctx.lineWidth = 1.5
         ctx.setLineDash([4, 4])
-        ctx.beginPath()
-        ctx.moveTo(0, yTgt)
-        ctx.lineTo(chartW, yTgt)
-        ctx.stroke()
 
         const ordText = `${ord.order_type.toUpperCase().replace('_', ' ')} ${ord.lot_size} @ ${fmtPrice(activeTgtPrice, digits)}`
         const ordBadgeWidth = ctx.measureText(ordText).width + 30
         const ordBadgeRight = chartW - 8
         const ordBadgeX = ordBadgeRight - ordBadgeWidth
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.95)'
+
+        // Dotted line stops cleanly before badge
+        ctx.beginPath()
+        ctx.moveTo(0, Math.floor(yTgt) + 0.5)
+        ctx.lineTo(ordBadgeX - 4, Math.floor(yTgt) + 0.5)
+        ctx.stroke()
+
+        ctx.fillStyle = '#D97706'
         ctx.fillRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
-        ctx.strokeStyle = '#F59E0B'
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 1
         ctx.strokeRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
         ctx.fillStyle = '#050811'
         ctx.font = FONT_LABEL_BOLD
@@ -1970,11 +2064,14 @@ export const Mt5Canvas = memo(
         }
 
         // Multi-point tool initiation
+        const initialPoints = activeTool === 'risk-reward'
+          ? [clickPoint, clickPoint, clickPoint]
+          : [clickPoint, clickPoint]
         const newObj: DrawingObject = {
           id: `draw_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
           symbol,
           type: activeTool,
-          points: [clickPoint, clickPoint],
+          points: initialPoints,
           color: '#00E676',
           lineWidth: 2,
           lineStyle: 'solid',
@@ -1990,13 +2087,42 @@ export const Mt5Canvas = memo(
       if (selectedDrawingId) {
         const sel = drawings.find((d) => d.id === selectedDrawingId)
         if (sel) {
-          for (let ptIdx = 0; ptIdx < sel.points.length; ptIdx++) {
-            const pt = sel.points[ptIdx]
-            const ptY = priceToY(pt.price)
-            const ptX = timeToX(pt.time)
-            if (Math.hypot(x - ptX, y - ptY) < 10) {
-              draggingAnchorRef.current = { drawingId: sel.id, pointIndex: ptIdx }
-              return
+          if (sel.type === 'risk-reward') {
+            const x0 = timeToX(sel.points[0].time)
+            const x1 = sel.points[1] ? timeToX(sel.points[1].time) : x0 + 15 * candleWidth
+            const leftX = Math.min(x0, x1)
+            const boxW = Math.max(70, Math.abs(x1 - x0))
+            const centerX = leftX + boxW / 2
+            const rightX = leftX + boxW
+            const yEntry = priceToY(sel.points[0].price)
+            const ySl = priceToY(sel.points[1].price)
+            const isLong = sel.isLong !== undefined ? sel.isLong : sel.points[0].price >= sel.points[1].price
+            const riskDist = Math.abs(sel.points[0].price - sel.points[1].price)
+            const tpPrice = sel.points[2] ? sel.points[2].price : (isLong ? sel.points[0].price + riskDist * 2 : sel.points[0].price - riskDist * 2)
+            const yTp = priceToY(tpPrice)
+
+            const handles = [
+              { x: centerX, y: yEntry, ptIdx: 0 },
+              { x: centerX, y: ySl, ptIdx: 1 },
+              { x: centerX, y: yTp, ptIdx: 2 },
+              { x: rightX, y: yEntry, ptIdx: 3 },
+            ]
+
+            for (const h of handles) {
+              if (Math.hypot(x - h.x, y - h.y) < 14) {
+                draggingAnchorRef.current = { drawingId: sel.id, pointIndex: h.ptIdx }
+                return
+              }
+            }
+          } else {
+            for (let ptIdx = 0; ptIdx < sel.points.length; ptIdx++) {
+              const pt = sel.points[ptIdx]
+              const ptY = priceToY(pt.price)
+              const ptX = timeToX(pt.time)
+              if (Math.hypot(x - ptX, y - ptY) < 12) {
+                draggingAnchorRef.current = { drawingId: sel.id, pointIndex: ptIdx }
+                return
+              }
             }
           }
         }
@@ -2040,8 +2166,12 @@ export const Mt5Canvas = memo(
         } else if (d.type === 'fibonacci' && d.points.length >= 2) {
           const p0 = d.points[0].price
           const diff = d.points[1].price - p0
+          const x0 = timeToX(d.points[0].time)
+          const x1 = timeToX(d.points[1].time)
+          const leftX = Math.min(x0, x1)
+          const rightX = d.extendRight ? chartW : Math.max(x0, x1)
           const lvls = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
-          const isHit = lvls.some((l) => Math.abs(y - priceToY(p0 + diff * l)) < 6)
+          const isHit = (x >= leftX - 10 && x <= rightX + 10) && lvls.some((l) => Math.abs(y - priceToY(p0 + diff * l)) < 6)
           if (isHit) {
             hitDrawing = d
             break
@@ -2068,10 +2198,11 @@ export const Mt5Canvas = memo(
           const ySl = priceToY(d.points[1].price)
           const riskDist = Math.abs(d.points[0].price - d.points[1].price)
           const isL = d.isLong !== undefined ? d.isLong : d.points[0].price >= d.points[1].price
-          const yTp = priceToY(isL ? d.points[0].price + riskDist * 2 : d.points[0].price - riskDist * 2)
+          const tpPrice = d.points[2] ? d.points[2].price : (isL ? d.points[0].price + riskDist * 2 : d.points[0].price - riskDist * 2)
+          const yTp = priceToY(tpPrice)
           const topY = Math.min(yEntry, ySl, yTp)
           const botY = Math.max(yEntry, ySl, yTp)
-          if (x >= leftX && x <= rightX && y >= topY && y <= botY) {
+          if (x >= leftX - 6 && x <= rightX + 6 && y >= topY - 6 && y <= botY + 6) {
             hitDrawing = d
             break
           }
@@ -2201,9 +2332,22 @@ export const Mt5Canvas = memo(
       // 5. Vector Drawing in progress
       if (drawingInProgressRef.current) {
         const curPoint = snapToCandle({ time: xToTime(x), price: yToPrice(y) })
-        const pts = [...drawingInProgressRef.current.points]
-        pts[1] = curPoint
-        drawingInProgressRef.current.points = pts
+        if (drawingInProgressRef.current.type === 'risk-reward') {
+          const p0 = drawingInProgressRef.current.points[0]
+          const p1 = curPoint
+          const isLong = p0.price >= p1.price
+          const riskDist = Math.abs(p0.price - p1.price)
+          const p2Price = isLong ? p0.price + riskDist * 2 : p0.price - riskDist * 2
+          drawingInProgressRef.current.points = [
+            p0,
+            p1,
+            { time: p1.time, price: p2Price },
+          ]
+        } else {
+          const pts = [...drawingInProgressRef.current.points]
+          pts[1] = curPoint
+          drawingInProgressRef.current.points = pts
+        }
         return
       }
 
@@ -2213,7 +2357,24 @@ export const Mt5Canvas = memo(
         const sel = drawings.find((d) => d.id === draggingAnchorRef.current?.drawingId)
         if (sel) {
           const nextPts = [...sel.points]
-          nextPts[draggingAnchorRef.current.pointIndex] = curPoint
+          if (sel.type === 'risk-reward') {
+            const ptIdx = draggingAnchorRef.current.pointIndex
+            if (ptIdx === 0) {
+              const oldEntry = nextPts[0].price
+              const deltaP = curPoint.price - oldEntry
+              nextPts[0] = { ...nextPts[0], price: curPoint.price }
+              if (nextPts[1]) nextPts[1] = { ...nextPts[1], price: nextPts[1].price + deltaP }
+              if (nextPts[2]) nextPts[2] = { ...nextPts[2], price: nextPts[2].price + deltaP }
+            } else if (ptIdx === 1) {
+              nextPts[1] = { ...nextPts[1], price: curPoint.price }
+            } else if (ptIdx === 2) {
+              nextPts[2] = { time: nextPts[0].time, price: curPoint.price }
+            } else if (ptIdx === 3) {
+              nextPts[1] = { ...nextPts[1], time: curPoint.time }
+            }
+          } else {
+            nextPts[draggingAnchorRef.current.pointIndex] = curPoint
+          }
           onUpdateDrawing(sel.id, { points: nextPts })
         }
         return
@@ -2369,6 +2530,40 @@ export const Mt5Canvas = memo(
           style={{ cursor: canvasCursor }}
           className="w-full h-full block"
         />
+
+        {/* Bottom Floating Navigation & Zoom Dock ([-] [+] [Reset]) */}
+        <div className="absolute bottom-9 right-28 z-20 flex items-center gap-1 px-1.5 py-1 rounded-lg bg-surface/90 dark:bg-bg-subtle/90 backdrop-blur-md border border-border shadow-md select-none">
+          <button
+            type="button"
+            onClick={zoomOut}
+            className="p-1 rounded text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+            title="Zoom Out (-)"
+            aria-label="Zoom Out"
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-3.5 bg-border/60" />
+          <button
+            type="button"
+            onClick={zoomIn}
+            className="p-1 rounded text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+            title="Zoom In (+)"
+            aria-label="Zoom In"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-3.5 bg-border/60" />
+          <button
+            type="button"
+            onClick={resetScale}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+            title="Reset Chart & Auto-Scale (Double Click Axis)"
+            aria-label="Reset Chart"
+          >
+            <RotateCcw className="w-3 h-3 text-accent" />
+            <span>Reset</span>
+          </button>
+        </div>
       </div>
     )
   })

@@ -24,6 +24,7 @@ import {
   Target,
   Spline,
   Columns,
+  ArrowRightToLine,
 } from 'lucide-react'
 import type { DrawingTool, DrawingObject } from './types'
 import { cn } from '@/lib/cn'
@@ -243,6 +244,27 @@ export const Mt5DrawingInspector = memo(function Mt5DrawingInspector({
           </button>
         ))}
       </div>
+
+      {/* Extend Right Toggle for Fibonacci, Trendlines, Rectangles */}
+      {(selectedDrawing.type === 'fibonacci' || selectedDrawing.type === 'trendline' || selectedDrawing.type === 'rectangle') && (
+        <>
+          <div className="w-px h-4 bg-border mx-1" />
+          <button
+            type="button"
+            onClick={() => onUpdateSelected({ extendRight: !selectedDrawing.extendRight })}
+            className={cn(
+              'flex items-center gap-1 px-2 py-0.5 rounded text-terminal-micro font-semibold transition-colors cursor-pointer border',
+              selectedDrawing.extendRight
+                ? 'bg-accent/20 border-accent/40 text-accent font-bold shadow-xs'
+                : 'border-border text-text-muted hover:text-text hover:bg-surface-muted'
+            )}
+            title={selectedDrawing.extendRight ? 'Lines Extend to Right (Click for Bounded)' : 'Lines Bounded (Click to Extend to Right)'}
+          >
+            <ArrowRightToLine className="w-3 h-3" />
+            <span>{selectedDrawing.extendRight ? 'Extended' : 'Bounded'}</span>
+          </button>
+        </>
+      )}
 
       <div className="w-px h-4 bg-border mx-1" />
 
