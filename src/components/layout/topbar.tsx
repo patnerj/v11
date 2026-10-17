@@ -151,27 +151,6 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
           </div>
         )}
 
-        {/* Live Broker Latency Ping Badge */}
-        {mounted && (
-          <LiveBrokerPingBadge
-            onClick={() => setMt5ModalOpen(true)}
-            className="hidden md:inline-flex"
-          />
-        )}
-
-        {/* 1-Click MT5 Credentials button */}
-        {mounted && (
-          <button
-            type="button"
-            onClick={() => setMt5ModalOpen(true)}
-            className="hidden xl:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/25 text-cyan-300 text-xs font-medium transition-colors focus-ring cursor-pointer"
-            title="Open MT5 Credentials"
-          >
-            <KeyRound className="h-3.5 w-3.5 text-cyan-400" />
-            <span>MT5 Credentials</span>
-          </button>
-        )}
-
         <NotificationsButton 
           unread={unread} 
           notifs={notifs} 

@@ -23,6 +23,8 @@ import {
   Zap,
   Activity,
   Sliders,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import type { Timeframe, ChartStyle, ThemePreset } from '@/components/dashboard/trading/mt5-chart/types'
 import { TIMEFRAMES, CHART_STYLES } from '@/components/dashboard/trading/mt5-chart/mt5-top-controls'
@@ -101,6 +103,8 @@ export default function Mt5WebTerminalPage() {
   const [tabbedDockTab, setTabbedDockTab] = useState<'mw' | 'order'>('mw')
   const [posCollapsed, setPosCollapsed] = useState(false)
   const [tab, setTab] = useState<Tab>('positions')
+  const [isFullChart, setIsFullChart] = useState(false)
+  const [mobileView, setMobileView] = useState<'chart' | 'watchlist' | 'order' | 'positions'>('chart')
 
   // Top Toolbar MT5 state
   const showOneClick = useTerminal((s) => s.showOneClick)
@@ -429,122 +433,46 @@ export default function Mt5WebTerminalPage() {
             <span className="hidden xl:inline text-terminal-micro text-text-muted font-normal">F9</span>
           </button>
 
+          {/* Full Chart Maximize Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsFullChart((v) => {
+                const next = !v
+                if (next) {
+                  setMwOpen(false)
+                  setOrderOpen(false)
+                  setPosCollapsed(true)
+                } else {
+                  setMwOpen(true)
+                  setOrderOpen(true)
+                  setPosCollapsed(false)
+                }
+                return next
+              })
+            }}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-terminal-label font-semibold border transition-all cursor-pointer",
+              isFullChart
+                ? "bg-accent/20 border-accent/60 text-accent shadow-xs"
+                : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted"
+            )}
+            title={isFullChart ? "Exit Full Chart (Esc)" : "Full Chart Mode (Maximize Chart Canvas)"}
+          >
+            {isFullChart ? <Minimize2 className="w-3.5 h-3.5 text-accent" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{isFullChart ? 'Exit Full Chart' : 'Full Chart'}</span>
+          </button>
+
           <SoundToggle compact className="shrink-0" />
         </div>
       </div>
 
-      {/* 3-Zone Workspace: Left Dock + Center Chart/Positions + Right Dock */}
-      <div className="flex-1 min-h-0 w-full flex flex-row gap-1.5 sm:gap-2 overflow-hidden">
-        {/* Left / Tabbed Dock */}
-        {isXl ? (
-          /* Desktop XL (>= 1280px): Dedicated Left Market Watch Dock */
-          mwOpen ? (
-            <aside className="w-[270px] min-w-[270px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
-              <div className="shrink-0 px-3 py-2 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/30">
-                <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">
-                  Market Watch
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setMwOpen(false)}
-                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                  title="Collapse Market Watch (Ctrl+M)"
-                  aria-label="Collapse Market Watch"
-                >
-                  <PanelLeftClose className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <SectionErrorBoundary sectionName="MarketWatch">
-                  <MarketWatch />
-                </SectionErrorBoundary>
-              </div>
-            </aside>
-          ) : (
-            <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
-              <button
-                type="button"
-                onClick={() => setMwOpen(true)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                title="Expand Market Watch (Ctrl+M)"
-                aria-label="Expand Market Watch"
-              >
-                <PanelLeftOpen className="h-4 w-4" />
-              </button>
-            </div>
-          )
-        ) : (
-          /* Responsive Viewports (< 1280px): Single Tabbed Dock */
-          mwOpen ? (
-            <aside className="w-[310px] min-w-[310px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
-              <div className="shrink-0 px-2.5 py-1.5 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/40">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setTabbedDockTab('mw')}
-                    className={cn(
-                      'px-2.5 py-1 rounded-md text-terminal-label font-semibold transition-all cursor-pointer flex items-center gap-1.5',
-                      tabbedDockTab === 'mw'
-                        ? 'bg-accent text-accent-fg shadow-xs'
-                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                    )}
-                  >
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    <span>Market Watch</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTabbedDockTab('order')}
-                    className={cn(
-                      'px-2.5 py-1 rounded-md text-terminal-label font-semibold transition-all cursor-pointer flex items-center gap-1.5',
-                      tabbedDockTab === 'order'
-                        ? 'bg-accent text-accent-fg shadow-xs'
-                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                    )}
-                  >
-                    <ShoppingCart className="w-3.5 h-3.5" />
-                    <span>Order Ticket</span>
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMwOpen(false)}
-                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                  title="Close dock"
-                  aria-label="Close dock"
-                >
-                  <PanelLeftClose className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <SectionErrorBoundary sectionName="TabbedDockContent">
-                  {tabbedDockTab === 'mw' ? (
-                    <MarketWatch />
-                  ) : (
-                    <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
-                  )}
-                </SectionErrorBoundary>
-              </div>
-            </aside>
-          ) : (
-            <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
-              <button
-                type="button"
-                onClick={() => setMwOpen(true)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                title="Expand Dock"
-                aria-label="Expand Dock"
-              >
-                <PanelLeftOpen className="h-4 w-4" />
-              </button>
-            </div>
-          )
-        )}
-
-        {/* Center: MT5 Pro Chart + Positions/Pending Split */}
-        <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
-          {posCollapsed ? (
-            <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+      {/* Workspace */}
+      {!isDesktop ? (
+        /* Mobile / Narrow Viewport Layout: Dedicated Single View Mode with Bottom Navigation */
+        <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 w-full overflow-hidden flex flex-col">
+            {mobileView === 'chart' && (
               <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
                 <SectionErrorBoundary sectionName="Mt5ChartPanel">
                   <Mt5ChartPanel
@@ -568,49 +496,256 @@ export default function Mt5WebTerminalPage() {
                   />
                 </SectionErrorBoundary>
               </section>
+            )}
 
-              {/* Slim 36px MT5 Collapsed Telemetry & Dock Strip */}
-              <div className="mt-1 shrink-0 h-9 rounded-lg border border-border bg-surface/95 px-3 flex items-center justify-between text-xs select-none">
-                <div className="flex items-center gap-3">
+            {mobileView === 'watchlist' && (
+              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
+                <SectionErrorBoundary sectionName="MarketWatch">
+                  <MarketWatch onPick={() => setMobileView('chart')} />
+                </SectionErrorBoundary>
+              </section>
+            )}
+
+            {mobileView === 'order' && (
+              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-y-auto flex flex-col p-2">
+                <SectionErrorBoundary sectionName="OrderTicket">
+                  <OrderTicket
+                    plan={plan || metrics?.plan}
+                    onChanged={onChanged}
+                    onSubmitted={() => setMobileView('positions')}
+                  />
+                </SectionErrorBoundary>
+              </section>
+            )}
+
+            {mobileView === 'positions' && (
+              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
+                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
                   <button
                     type="button"
-                    onClick={() => setPosCollapsed(false)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-accent/10 hover:bg-accent/20 text-accent font-semibold text-xs transition-colors cursor-pointer"
+                    onClick={() => setTab('positions')}
+                    className={cn(
+                      'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors cursor-pointer',
+                      tab === 'positions'
+                        ? 'bg-accent text-accent-fg shadow-xs'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                    )}
                   >
-                    <ChevronDown className="h-3.5 w-3.5 rotate-180" />
-                    <span>Positions & Orders ({positions?.length || 0})</span>
+                    Positions ({positions?.length || 0})
                   </button>
-
-                  <div className="h-4 w-px bg-border-subtle" />
-
-                  <div className="flex items-center gap-3 sm:gap-4 text-text-muted">
-                    <span>
-                      Balance: <strong className="font-semibold tabular-nums text-text">{fmtUSD(balance)}</strong>
-                    </span>
-                    <span>
-                      Equity:{' '}
-                      <strong className={cn('font-semibold tabular-nums', equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>
-                        {fmtUSD(equity)}
-                      </strong>
-                    </span>
-                    <span className="hidden sm:inline">
-                      Free Margin: <strong className="font-semibold tabular-nums text-text">{fmtUSD(free)}</strong>
-                    </span>
+                  <button
+                    type="button"
+                    onClick={() => setTab('pending')}
+                    className={cn(
+                      'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors cursor-pointer',
+                      tab === 'pending'
+                        ? 'bg-accent text-accent-fg shadow-xs'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                    )}
+                  >
+                    Pending Orders ({pending?.filter((o) => o.status === 'pending').length || 0})
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  <SectionErrorBoundary sectionName="PositionsTable">
+                    {tab === 'positions' ? (
+                      <PositionsTable positions={positions} onChanged={onChanged} />
+                    ) : (
+                      <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                    )}
+                  </SectionErrorBoundary>
+                </div>
+                {/* Mobile Telemetry Summary */}
+                <div className="shrink-0 border-t border-border bg-surface/95 px-3 py-2 flex items-center justify-between text-xs select-none">
+                  <div>
+                    Balance: <strong className="font-semibold tabular-nums text-text">{fmtUSD(balance)}</strong>
+                  </div>
+                  <div>
+                    Equity:{' '}
+                    <strong className={cn('font-semibold tabular-nums', equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>
+                      {fmtUSD(equity)}
+                    </strong>
+                  </div>
+                  <div>
+                    P/L:{' '}
+                    <strong className={cn('font-semibold tabular-nums', pnl >= 0 ? 'text-emerald-500' : 'text-rose-500')}>
+                      {fmtUSD(pnl, { sign: true })}
+                    </strong>
                   </div>
                 </div>
+              </section>
+            )}
+          </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-text-muted">Total P/L:</span>
-                  <span className={cn('px-2 py-0.5 rounded text-xs font-semibold tabular-nums', pnl >= 0 ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-500 border border-rose-500/30')}>
-                    {fmtUSD(pnl, { sign: true })}
-                  </span>
+          {/* Sleek Mobile Bottom Tab Navigation */}
+          <nav className="shrink-0 h-12 bg-surface border-t border-border flex items-center justify-around px-2 z-20 mt-1 rounded-lg select-none">
+            <button
+              type="button"
+              onClick={() => setMobileView('chart')}
+              className={cn(
+                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer',
+                mobileView === 'chart' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
+              )}
+            >
+              <Activity className="h-4 w-4" />
+              <span>Chart</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileView('watchlist')}
+              className={cn(
+                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer',
+                mobileView === 'watchlist' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
+              )}
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Watchlist</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileView('order')}
+              className={cn(
+                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer',
+                mobileView === 'order' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
+              )}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span>Trade</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileView('positions')}
+              className={cn(
+                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer relative',
+                mobileView === 'positions' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
+              )}
+            >
+              <ListOrdered className="h-4 w-4" />
+              <span>Positions</span>
+              {positions && positions.length > 0 && (
+                <span className="absolute top-1 right-2 h-3.5 min-w-3.5 px-1 rounded-full bg-accent text-accent-fg text-[9px] font-bold flex items-center justify-center">
+                  {positions.length}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+      ) : (
+        /* Desktop 3-Zone Workspace */
+        <div className="flex-1 min-h-0 w-full flex flex-row gap-1.5 sm:gap-2 overflow-hidden">
+          {/* Left / Tabbed Dock */}
+          {!isFullChart && (
+            isXl ? (
+              /* Desktop XL (>= 1280px): Dedicated Left Market Watch Dock */
+              mwOpen ? (
+                <aside className="w-[270px] min-w-[270px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+                  <div className="shrink-0 px-3 py-2 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/30">
+                    <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">
+                      Market Watch
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setMwOpen(false)}
+                      className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                      title="Collapse Market Watch (Ctrl+M)"
+                      aria-label="Collapse Market Watch"
+                    >
+                      <PanelLeftClose className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <SectionErrorBoundary sectionName="MarketWatch">
+                      <MarketWatch />
+                    </SectionErrorBoundary>
+                  </div>
+                </aside>
+              ) : (
+                <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
+                  <button
+                    type="button"
+                    onClick={() => setMwOpen(true)}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                    title="Expand Market Watch (Ctrl+M)"
+                    aria-label="Expand Market Watch"
+                  >
+                    <PanelLeftOpen className="h-4 w-4" />
+                  </button>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <PanelGroup orientation="vertical" className="h-full w-full">
-              <Panel defaultSize={70} minSize={30}>
-                <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+              )
+            ) : (
+              /* Responsive Viewports (< 1280px): Single Tabbed Dock */
+              mwOpen ? (
+                <aside className="w-[310px] min-w-[310px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+                  <div className="shrink-0 px-2.5 py-1.5 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/40">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setTabbedDockTab('mw')}
+                        className={cn(
+                          'px-2.5 py-1 rounded-md text-terminal-label font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                          tabbedDockTab === 'mw'
+                            ? 'bg-accent text-accent-fg shadow-xs'
+                            : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                        )}
+                      >
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        <span>Market Watch</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTabbedDockTab('order')}
+                        className={cn(
+                          'px-2.5 py-1 rounded-md text-terminal-label font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                          tabbedDockTab === 'order'
+                            ? 'bg-accent text-accent-fg shadow-xs'
+                            : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                        )}
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        <span>Order Ticket</span>
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMwOpen(false)}
+                      className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                      title="Close dock"
+                      aria-label="Close dock"
+                    >
+                      <PanelLeftClose className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto">
+                    <SectionErrorBoundary sectionName="TabbedDockContent">
+                      {tabbedDockTab === 'mw' ? (
+                        <MarketWatch />
+                      ) : (
+                        <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
+                      )}
+                    </SectionErrorBoundary>
+                  </div>
+                </aside>
+              ) : (
+                <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
+                  <button
+                    type="button"
+                    onClick={() => setMwOpen(true)}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                    title="Expand Dock"
+                    aria-label="Expand Dock"
+                  >
+                    <PanelLeftOpen className="h-4 w-4" />
+                  </button>
+                </div>
+              )
+            )
+          )}
+
+          {/* Center: MT5 Pro Chart + Positions/Pending Split */}
+          <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+            {posCollapsed ? (
+              <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+                <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
                   <SectionErrorBoundary sectionName="Mt5ChartPanel">
                     <Mt5ChartPanel
                       positions={positions}
@@ -633,206 +768,272 @@ export default function Mt5WebTerminalPage() {
                     />
                   </SectionErrorBoundary>
                 </section>
-              </Panel>
 
-              <PanelResizeHandle className="h-2 relative group cursor-row-resize">
-                <div className="absolute inset-x-0 top-1 h-px bg-border-subtle group-hover:bg-accent transition-colors" />
-              </PanelResizeHandle>
-
-              <Panel defaultSize={30} minSize={15} collapsible={false}>
-                <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
-                  {/* Positions & Pending Tab Header */}
-                  <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
+                {/* Slim 36px MT5 Collapsed Telemetry & Dock Strip */}
+                <div className="mt-1 shrink-0 h-9 rounded-lg border border-border bg-surface/95 px-3 flex items-center justify-between text-xs select-none">
+                  <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setTab('positions')}
-                      className={cn(
-                        'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 cursor-pointer',
-                        tab === 'positions'
-                          ? 'bg-accent text-accent-fg shadow-xs'
-                          : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                      )}
+                      onClick={() => setPosCollapsed(false)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-accent/10 hover:bg-accent/20 text-accent font-semibold text-xs transition-colors cursor-pointer"
                     >
-                      Positions
-                      {positions && positions.length > 0 && (
-                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-muted text-accent text-[10px] font-semibold px-1">
-                          {positions.length}
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTab('pending')}
-                      className={cn(
-                        'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 cursor-pointer',
-                        tab === 'pending'
-                          ? 'bg-accent text-accent-fg shadow-xs'
-                          : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                      )}
-                    >
-                      Pending Orders
-                      {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
-                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-[10px] font-semibold px-1">
-                          {pending.filter((o) => o.status === 'pending').length}
-                        </span>
-                      )}
+                      <ChevronDown className="h-3.5 w-3.5 rotate-180" />
+                      <span>Positions & Orders ({positions?.length || 0})</span>
                     </button>
 
-                    <div className="ml-auto flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPosCollapsed(true)}
-                        className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                        aria-label="Collapse positions panel"
-                        title="Collapse positions panel"
-                      >
-                        <PanelLeftClose className="h-3.5 w-3.5 rotate-90" />
-                      </button>
-                    </div>
-                  </div>
+                    <div className="h-4 w-px bg-border-subtle" />
 
-                  <div className="flex-1 overflow-y-auto min-h-0">
-                    <SectionErrorBoundary sectionName="PositionsTable">
-                      {tab === 'positions' ? (
-                        <PositionsTable positions={positions} onChanged={onChanged} />
-                      ) : (
-                        <PendingOrdersTable orders={pending} onChanged={onChanged} />
-                      )}
-                    </SectionErrorBoundary>
-                  </div>
-
-                  {/* MT5 Bottom Telemetry Summary Row */}
-                  <div className="shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-normal select-none overflow-x-auto no-scrollbar shadow-xs">
-                    <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
+                    <div className="flex items-center gap-3 sm:gap-4 text-text-muted">
                       <span>
-                        Balance:{' '}
-                        <strong className="font-semibold tabular-nums text-text">
-                          {fmtUSD(balance)}
-                        </strong>
+                        Balance: <strong className="font-semibold tabular-nums text-text">{fmtUSD(balance)}</strong>
                       </span>
                       <span>
                         Equity:{' '}
-                        <strong
-                          className={cn(
-                            'font-semibold tabular-nums',
-                            equity >= balance
-                              ? 'text-emerald-500'
-                              : 'text-rose-500'
-                          )}
-                        >
+                        <strong className={cn('font-semibold tabular-nums', equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>
                           {fmtUSD(equity)}
                         </strong>
                       </span>
-                      <span>
-                        Free Margin:{' '}
-                        <strong className="text-text font-semibold tabular-nums">
-                          {fmtUSD(free)}
-                        </strong>
-                      </span>
-
-                      {showMoreTelemetry && (
-                        <>
-                          <span>
-                            Margin:{' '}
-                            <strong className="text-text font-semibold tabular-nums">
-                              {fmtUSD(used)}
-                            </strong>
-                          </span>
-                          <span>
-                            Margin Level:{' '}
-                            <strong
-                              className={cn(
-                                'font-semibold tabular-nums',
-                                level !== null && level <= 120
-                                  ? 'text-rose-500'
-                                  : 'text-text'
-                              )}
-                            >
-                              {level !== null ? fmtPct(level, 1) : '—'}
-                            </strong>
-                          </span>
-                          <span>
-                            Leverage:{' '}
-                            <strong className="text-text font-semibold tabular-nums">
-                              1:{lev}
-                            </strong>
-                          </span>
-                        </>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => setShowMoreTelemetry((v) => !v)}
-                        className="inline-flex items-center gap-0.5 text-[11px] font-normal text-text-muted hover:text-text px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer"
-                      >
-                        <span>{showMoreTelemetry ? 'Less' : 'More'}</span>
-                        <ChevronDown
-                          className={cn(
-                            'h-3 w-3 transition-transform',
-                            showMoreTelemetry && 'rotate-180'
-                          )}
-                        />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-text-muted">Total P/L:</span>
-                      <span
-                        className={cn(
-                          'px-2.5 py-0.5 rounded text-xs font-semibold tabular-nums',
-                          pnl >= 0
-                            ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
-                            : 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
-                        )}
-                      >
-                        {fmtUSD(pnl, { sign: true })}
+                      <span className="hidden sm:inline">
+                        Free Margin: <strong className="font-semibold tabular-nums text-text">{fmtUSD(free)}</strong>
                       </span>
                     </div>
                   </div>
-                </section>
-              </Panel>
-            </PanelGroup>
-          )}
-        </div>
 
-        {/* Right: Dedicated Order Ticket Dock (Desktop XL >= 1280px) */}
-        {isXl && (
-          orderOpen ? (
-            <aside className="w-[300px] min-w-[300px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
-              <div className="shrink-0 px-3 py-2 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/30">
-                <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">
-                  Order Ticket
-                </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-text-muted">Total P/L:</span>
+                    <span className={cn('px-2 py-0.5 rounded text-xs font-semibold tabular-nums', pnl >= 0 ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-500 border border-rose-500/30')}>
+                      {fmtUSD(pnl, { sign: true })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <PanelGroup orientation="vertical" className="h-full w-full">
+                <Panel defaultSize={70} minSize={30}>
+                  <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+                    <SectionErrorBoundary sectionName="Mt5ChartPanel">
+                      <Mt5ChartPanel
+                        positions={positions}
+                        pendingOrders={pending}
+                        plan={plan || metrics?.plan}
+                        onChanged={onChanged}
+                        showTopControls={false}
+                        timeframe={timeframe}
+                        onChangeTimeframe={setTimeframe}
+                        chartStyle={chartStyle}
+                        onChangeChartStyle={setChartStyle}
+                        theme={theme}
+                        onChangeTheme={setTheme}
+                        showGrid={showGrid}
+                        onChangeShowGrid={setShowGrid}
+                        showPeriodSeparators={showPeriodSeparators}
+                        onChangeShowPeriodSeparators={setShowPeriodSeparators}
+                        isIndicatorsModalOpen={isIndicatorsModalOpen}
+                        onToggleIndicatorsModal={setIsIndicatorsModalOpen}
+                      />
+                    </SectionErrorBoundary>
+                  </section>
+                </Panel>
+
+                <PanelResizeHandle className="h-2 relative group cursor-row-resize">
+                  <div className="absolute inset-x-0 top-1 h-px bg-border-subtle group-hover:bg-accent transition-colors" />
+                </PanelResizeHandle>
+
+                <Panel defaultSize={30} minSize={15} collapsible={false}>
+                  <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+                    {/* Positions & Pending Tab Header */}
+                    <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
+                      <button
+                        type="button"
+                        onClick={() => setTab('positions')}
+                        className={cn(
+                          'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 cursor-pointer',
+                          tab === 'positions'
+                            ? 'bg-accent text-accent-fg shadow-xs'
+                            : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                        )}
+                      >
+                        Positions
+                        {positions && positions.length > 0 && (
+                          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-accent-fg text-[10px] font-semibold px-1">
+                            {positions.length}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTab('pending')}
+                        className={cn(
+                          'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 cursor-pointer',
+                          tab === 'pending'
+                            ? 'bg-accent text-accent-fg shadow-xs'
+                            : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                        )}
+                      >
+                        Pending Orders
+                        {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
+                          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-[10px] font-semibold px-1">
+                            {pending.filter((o) => o.status === 'pending').length}
+                          </span>
+                        )}
+                      </button>
+
+                      <div className="ml-auto flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPosCollapsed(true)}
+                          className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                          aria-label="Collapse positions panel"
+                          title="Collapse positions panel"
+                        >
+                          <PanelLeftClose className="h-3.5 w-3.5 rotate-90" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto min-h-0">
+                      <SectionErrorBoundary sectionName="PositionsTable">
+                        {tab === 'positions' ? (
+                          <PositionsTable positions={positions} onChanged={onChanged} />
+                        ) : (
+                          <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                        )}
+                      </SectionErrorBoundary>
+                    </div>
+
+                    {/* MT5 Bottom Telemetry Summary Row */}
+                    <div className="shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-normal select-none overflow-x-auto no-scrollbar shadow-xs">
+                      <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
+                        <span>
+                          Balance:{' '}
+                          <strong className="font-semibold tabular-nums text-text">
+                            {fmtUSD(balance)}
+                          </strong>
+                        </span>
+                        <span>
+                          Equity:{' '}
+                          <strong
+                            className={cn(
+                              'font-semibold tabular-nums',
+                              equity >= balance
+                                ? 'text-emerald-500'
+                                : 'text-rose-500'
+                            )}
+                          >
+                            {fmtUSD(equity)}
+                          </strong>
+                        </span>
+                        <span>
+                          Free Margin:{' '}
+                          <strong className="text-text font-semibold tabular-nums">
+                            {fmtUSD(free)}
+                          </strong>
+                        </span>
+
+                        {showMoreTelemetry && (
+                          <>
+                            <span>
+                              Margin:{' '}
+                              <strong className="text-text font-semibold tabular-nums">
+                                {fmtUSD(used)}
+                              </strong>
+                            </span>
+                            <span>
+                              Margin Level:{' '}
+                              <strong
+                                className={cn(
+                                  'font-semibold tabular-nums',
+                                  level !== null && level <= 120
+                                    ? 'text-rose-500'
+                                    : 'text-text'
+                                )}
+                              >
+                                {level !== null ? fmtPct(level, 1) : '—'}
+                              </strong>
+                            </span>
+                            <span>
+                              Leverage:{' '}
+                              <strong className="text-text font-semibold tabular-nums">
+                                1:{lev}
+                              </strong>
+                            </span>
+                          </>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setShowMoreTelemetry((v) => !v)}
+                          className="inline-flex items-center gap-0.5 text-[11px] font-normal text-text-muted hover:text-text px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer"
+                        >
+                          <span>{showMoreTelemetry ? 'Less' : 'More'}</span>
+                          <ChevronDown
+                            className={cn(
+                              'h-3 w-3 transition-transform',
+                              showMoreTelemetry && 'rotate-180'
+                            )}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-text-muted">Total P/L:</span>
+                        <span
+                          className={cn(
+                            'px-2.5 py-0.5 rounded text-xs font-semibold tabular-nums',
+                            pnl >= 0
+                              ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+                              : 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                          )}
+                        >
+                          {fmtUSD(pnl, { sign: true })}
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+                </Panel>
+              </PanelGroup>
+            )}
+          </div>
+
+          {/* Right: Dedicated Order Ticket Dock (Desktop XL >= 1280px) */}
+          {!isFullChart && isXl && (
+            orderOpen ? (
+              <aside className="w-[300px] min-w-[300px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+                <div className="shrink-0 px-3 py-2 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/30">
+                  <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">
+                    Order Ticket
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setOrderOpen(false)}
+                    className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                    title="Collapse Order Ticket (F9)"
+                    aria-label="Collapse Order Ticket"
+                  >
+                    <PanelRightClose className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="flex-1 min-h-0 overflow-y-auto">
+                  <SectionErrorBoundary sectionName="OrderTicket">
+                    <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
+                  </SectionErrorBoundary>
+                </div>
+              </aside>
+            ) : (
+              <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
                 <button
                   type="button"
-                  onClick={() => setOrderOpen(false)}
-                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                  title="Collapse Order Ticket (F9)"
-                  aria-label="Collapse Order Ticket"
+                  onClick={() => setOrderOpen(true)}
+                  className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                  title="Expand Order Ticket (F9)"
+                  aria-label="Expand Order Ticket"
                 >
-                  <PanelRightClose className="h-3.5 w-3.5" />
+                  <PanelRightOpen className="h-4 w-4" />
                 </button>
               </div>
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <SectionErrorBoundary sectionName="OrderTicket">
-                  <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
-                </SectionErrorBoundary>
-              </div>
-            </aside>
-          ) : (
-            <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
-              <button
-                type="button"
-                onClick={() => setOrderOpen(true)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                title="Expand Order Ticket (F9)"
-                aria-label="Expand Order Ticket"
-              >
-                <PanelRightOpen className="h-4 w-4" />
-              </button>
-            </div>
-          )
-        )}
-      </div>
+            )
+          )}
+        </div>
+      )}
     </div>
   )
 }

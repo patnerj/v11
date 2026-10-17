@@ -88,6 +88,7 @@ export const api = {
   },
 
   symbols:       (force = false) => fxsim<Symbol[]>('/symbols', { public: true, cache: 5 * 60_000, force }), // changes rarely; force=true bypasses cache
+  candles:       (symbol: string, timeframe: string) => fxsim<Array<{ time: number; open: number; high: number; low: number; close: number; volume: number }>>('/candles', { query: { symbol, timeframe }, public: true, cache: 30_000 }),
   challengePlans: ()             => fxsim<ChallengePlan[]>('/challenge/plans', { public: true, cache: 60_000 }),
   leaderboard:   ()              => fxsim<LeaderboardRow[]>('/stats/leaderboard', { public: true, cache: 30_000 }),
 

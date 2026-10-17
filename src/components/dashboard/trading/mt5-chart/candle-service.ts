@@ -1,84 +1,104 @@
 /**
- * MT5 Pro Chart Engine — Candle & Live Tick Pipeline
- * Generates and streams realistic institutional multi-timeframe OHLCV candles
- * with real-time WebSocket tick absorption and precise countdown synchronization.
+/**
+ * MT5 Pro Historical Candles & Tick Interpolation Pipeline
+ * Feeds authoritative market data to the HTML5 Canvas MT5 Pro Engine.
  */
 
 import type { Candle, Timeframe } from './types'
 import { TIMEFRAME_SECONDS } from './types'
+import { api } from '@/lib/api'
 
-// Memory cache to avoid flickering when toggling toolbars or themes
+// High-speed in-memory LRU cache per symbol & timeframe
 const candleCache = new Map<string, Candle[]>()
 
-/**
- * Format remaining seconds into MT5 digital countdown clock (MM:SS or HH:MM:SS)
- */
-export function formatCountdown(secondsLeft: number): string {
-  if (secondsLeft < 0) return '00:00'
-  const h = Math.floor(secondsLeft / 3600)
-  const m = Math.floor((secondsLeft % 3600) / 60)
-  const s = Math.floor(secondsLeft % 60)
-
-  if (h > 0) {
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  }
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
-/**
- * Compute seconds remaining until current candle closes
- */
-export function getCandleCountdownSeconds(timeframe: Timeframe, nowMs = Date.now()): number {
-  const durationSec = TIMEFRAME_SECONDS[timeframe] || 60
-  const nowSec = Math.floor(nowMs / 1000)
-  const passedInPeriod = nowSec % durationSec
-  return Math.max(0, durationSec - passedInPeriod)
-}
-
-/**
- * Generate a realistic seed price if live price is not yet available
- */
-function getSymbolDefaultAnchor(symbol: string): number {
-  const s = (symbol || '').toUpperCase()
-  if (s.includes('JPY')) return 154.25
-  if (s === 'XAUUSD') return 2735.50
-  if (s === 'XAGUSD') return 32.40
-  if (s === 'BTCUSD') return 68450.00
-  if (s === 'ETHUSD') return 2640.00
-  if (s === 'US30') return 43200.0
-  if (s === 'NAS100') return 20450.0
-  if (s === 'SPX500') return 5860.0
-  if (s === 'GER40') return 19580.0
-  if (s === 'UK100') return 8240.0
-  if (s === 'GBPUSD') return 1.3025
-  if (s === 'EURUSD') return 1.0865
-  if (s === 'USDCHF') return 0.8650
-  if (s === 'AUDUSD') return 0.6680
-  if (s === 'USDCAD') return 1.3820
-  if (s === 'NZDUSD') return 0.6040
-  return 1.1000
-}
-
-/**
- * Target continuous bar count per timeframe to ensure 100% edge-to-edge canvas population
- * spanning > 3 months on all resolutions without white gaps on the left side.
- */
-export function getTimeframeTargetBarCount(timeframe: Timeframe): number {
-  switch (timeframe) {
-    case 'W1': return 800  // ~15 years
-    case 'D1': return 1200 // ~3.3 years
-    case 'H4': return 1500 // ~250 days (8 months)
-    case 'H1': return 1800 // ~75 days (2.5 months)
-    case 'M30': return 1800 // ~37 days
-    case 'M15': return 2000 // ~21 days
-    case 'M5':  return 2000 // ~7 days
-    case 'M1':  return 2000 // ~1.4 days
-    default: return 1500
+function getTimeframeTargetBarCount(tf: Timeframe): number {
+  switch (tf) {
+    case 'M1':  return 600
+    case 'M5':  return 600
+    case 'M15': return 600
+    case 'M30': return 500
+    case 'H1':  return 600
+    case 'H4':  return 600
+    case 'D1':  return 500
+    case 'W1':  return 350
+    default:    return 500
   }
 }
 
+function getSymbolDefaultAnchor(sym: string): number {
+  const s = sym.toUpperCase()
+  if (s.startsWith('BTC')) return 84250.0
+  if (s.startsWith('ETH')) return 2280.0
+  if (s.startsWith('SOL')) return 168.0
+  if (s.includes('XAU') || s.includes('GOLD')) return 2715.0
+  if (s.includes('XAG') || s.includes('SILVER')) return 31.8
+  if (s.includes('US30') || s.includes('DJI')) return 43250.0
+  if (s.includes('US500') || s.includes('SPX')) return 5840.0
+  if (s.includes('NAS100') || s.includes('NDX')) return 20450.0
+  if (s.includes('GER40') || s.includes('DAX')) return 19480.0
+  if (s.includes('EURUSD')) return 1.0845
+  if (s.includes('GBPUSD')) return 1.2985
+  if (s.includes('USDJPY')) return 152.40
+  if (s.includes('AUDUSD')) return 0.6650
+  if (s.includes('USDCAD')) return 1.3850
+  if (s.includes('USDCHF')) return 0.8650
+  if (s.includes('NZDUSD')) return 0.6020
+  if (s.includes('EURJPY')) return 165.20
+  if (s.includes('GBPJPY')) return 197.80
+  return 100.0
+}
+
 /**
- * Generate synthetic institutional candles anchored to the current market price
+ * Synchronous initial candle retriever from memory or localStorage.
+ * Ensures the chart opens in 0ms without waiting for async network requests!
+ */
+export function getInitialCachedCandles(args: {
+  symbol: string
+  timeframe: Timeframe
+  anchorPrice?: number
+  digits: number
+  pipSize: number
+}): Candle[] {
+  const { symbol, timeframe, anchorPrice, digits, pipSize } = args
+  const cacheKey = `${symbol}_${timeframe}`
+
+  // 1. In-memory cache
+  const mem = candleCache.get(cacheKey)
+  if (mem && mem.length > 50) return mem
+
+  // 2. LocalStorage persistence
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(`fxsim_candles_${cacheKey}`)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed) && parsed.length > 50) {
+          candleCache.set(cacheKey, parsed)
+          return parsed
+        }
+      }
+    } catch {}
+  }
+
+  // 3. Fallback: Instant authentic market structure generator
+  const generated = generateRealisticCandles({
+    symbol,
+    timeframe,
+    anchorPrice,
+    digits,
+    pipSize,
+  })
+  candleCache.set(cacheKey, generated)
+  return generated
+}
+
+/**
+ * Generate natural institutional candles anchored to the current market price
+ * Emulates authentic market price action:
+ * - Macro trend structure (higher highs, higher lows or broad consolidation ranges)
+ * - Breakouts with explosive momentum bars
+ * - Pullback retracements with clean rejection pin-bars
+ * - Realistic TradingView / Pepperstone candle wick proportions
  */
 export function generateRealisticCandles(args: {
   symbol: string
@@ -94,19 +114,17 @@ export function generateRealisticCandles(args: {
     ? args.anchorPrice
     : getSymbolDefaultAnchor(symbol)
 
-  const tfSeconds = TIMEFRAME_SECONDS[timeframe] || 60
+  const tfSeconds = TIMEFRAME_SECONDS[timeframe] || 3600
   const tfMs = tfSeconds * 1000
   const now = Date.now()
   const currentCandleTime = Math.floor(now / tfMs) * tfMs
 
-  // Volatility scale per bar based on timeframe & pip size
+  // Realistic volatility scale based on timeframe
   const pipMultiplier = Math.sqrt(tfSeconds / 60)
-  const baseVolatility = Math.max(pipSize * 2, pipSize * 4 * pipMultiplier)
+  const baseVolatility = Math.max(pipSize * 1.5, pipSize * 3.5 * pipMultiplier)
 
-  const candles: Candle[] = []
-
-  // Deterministic seed based on symbol AND timeframe for distinct, authentic multi-timeframe price action
-  const seedStr = `${symbol}_${timeframe}_institutional_v12`
+  // Seeded pseudo-random generator
+  const seedStr = `${symbol}_${timeframe}_structure_v16`
   let seed = 0
   for (let c = 0; c < seedStr.length; c++) {
     seed = (seed * 31 + seedStr.charCodeAt(c)) & 0xffffffff
@@ -116,22 +134,87 @@ export function generateRealisticCandles(args: {
     return (seed >>> 0) / 4294967296
   }
 
-  // Generate walk backward from anchor
+  // Multi-Regime Market Simulation (Trend vs Range vs Breakout)
   const tempWalk: Array<{ open: number; high: number; low: number; close: number; volume: number }> = []
   let rollingClose = anchor
+
+  // Market regimes: 0 = Strong Bull Trend, 1 = Strong Bear Trend, 2 = Consolidation Range
+  let regime = pseudoRand() > 0.5 ? 0 : 2
+  let regimeBarsLeft = Math.floor(25 + pseudoRand() * 60)
+  let rangeCenter = anchor
+  let rangeWidth = baseVolatility * 14
+
   for (let i = 0; i < targetCount; i++) {
-    const r1 = pseudoRand() - 0.495 // slight trend
-    const r2 = pseudoRand()
-    const r3 = pseudoRand()
+    if (--regimeBarsLeft <= 0) {
+      const r = pseudoRand()
+      if (r < 0.40) regime = 0      // Bull
+      else if (r < 0.75) regime = 1 // Bear
+      else {
+        regime = 2                 // Consolidation Range
+        rangeCenter = rollingClose
+        rangeWidth = baseVolatility * (8 + pseudoRand() * 15)
+      }
+      regimeBarsLeft = Math.floor(20 + pseudoRand() * 55)
+    }
 
-    const change = r1 * baseVolatility * 1.5
-    const open = rollingClose - change
+    let isUp = true
+    let isExpansion = false
+    let bodyMagnitude = 0
+
+    if (regime === 2) {
+      // Range: Mean-reverting towards rangeCenter
+      const distFromCenter = rollingClose - rangeCenter
+      const meanRevertProb = 0.5 - (distFromCenter / rangeWidth) * 0.4
+      isUp = pseudoRand() < Math.max(0.15, Math.min(0.85, meanRevertProb))
+      bodyMagnitude = (0.15 + pseudoRand() * 0.75) * baseVolatility
+    } else {
+      // Trend: Directional momentum with occasional pullbacks
+      const trendBull = regime === 0
+      const isPullback = pseudoRand() < 0.32
+      isUp = trendBull ? !isPullback : isPullback
+      isExpansion = pseudoRand() < 0.18
+      bodyMagnitude = (0.25 + pseudoRand() * (isExpansion ? 2.6 : 0.95)) * baseVolatility
+    }
+
+    const bodyChange = (isUp ? 1 : -1) * bodyMagnitude
+    const open = rollingClose - bodyChange
     const close = rollingClose
+    const maxOC = Math.max(open, close)
+    const minOC = Math.min(open, close)
+    const absBody = Math.max(pipSize * 0.1, maxOC - minOC)
 
-    const wickHigh = Math.max(open, close) + r2 * baseVolatility * 0.8
-    const wickLow = Math.min(open, close) - r3 * baseVolatility * 0.8
+    // Realistic wick probabilities matching TradingView Pepperstone:
+    const upperWickRand = pseudoRand()
+    let wickHigh = maxOC
+    if (upperWickRand < 0.40) {
+      wickHigh = maxOC + pseudoRand() * 0.06 * absBody
+    } else if (upperWickRand < 0.88) {
+      wickHigh = maxOC + (0.08 + pseudoRand() * 0.35) * absBody
+    } else {
+      // Single-sided rejection pin-bar
+      wickHigh = maxOC + (0.6 + pseudoRand() * 1.4) * Math.max(absBody, baseVolatility * 0.4)
+    }
 
-    const vol = Math.floor(100 + pseudoRand() * 800 * pipMultiplier)
+    const lowerWickRand = pseudoRand()
+    let wickLow = minOC
+    if (lowerWickRand < 0.40) {
+      wickLow = minOC - pseudoRand() * 0.06 * absBody
+    } else if (lowerWickRand < 0.88) {
+      wickLow = minOC - (0.08 + pseudoRand() * 0.35) * absBody
+    } else {
+      // Single-sided hammer rejection
+      wickLow = minOC - (0.6 + pseudoRand() * 1.4) * Math.max(absBody, baseVolatility * 0.4)
+    }
+
+    // Double-sided spiky hedgehogs are banned in authentic market data
+    if (upperWickRand >= 0.88 && lowerWickRand >= 0.40) {
+      wickLow = minOC - pseudoRand() * 0.05 * absBody
+    }
+    if (lowerWickRand >= 0.88 && upperWickRand >= 0.40) {
+      wickHigh = maxOC + pseudoRand() * 0.05 * absBody
+    }
+
+    const vol = Math.floor(180 + pseudoRand() * (isExpansion ? 1200 : 600) * pipMultiplier)
 
     tempWalk.push({
       open: parseFloat(open.toFixed(digits)),
@@ -144,9 +227,9 @@ export function generateRealisticCandles(args: {
     rollingClose = open
   }
 
-  // Reverse so oldest is first, newest is last (at currentCandleTime)
   tempWalk.reverse()
 
+  const candles: Candle[] = []
   for (let i = 0; i < targetCount; i++) {
     const time = currentCandleTime - (targetCount - 1 - i) * tfMs
     const item = tempWalk[i]
@@ -172,7 +255,12 @@ export function generateRealisticCandles(args: {
 }
 
 /**
- * Fetch historical candles from public Binance API (for crypto) or generate
+ * Fetch authoritative institutional market candles for ANY symbol & timeframe:
+ * 1. Primary: Next.js Same-Origin (/api/candles) — fast Yahoo Finance / Binance proxy with server caching.
+ * 2. Secondary: Backend REST API (/candles) on WordPress bridge.
+ * 3. Fallback: Direct public Binance API (for crypto).
+ * 4. Fallback: Smoothly calibrated cache / localStorage.
+ * 5. Fallback: Authentic market structure generator.
  */
 export async function loadHistoricalCandles(args: {
   symbol: string
@@ -185,79 +273,108 @@ export async function loadHistoricalCandles(args: {
   const cacheKey = `${symbol}_${timeframe}`
   const targetCount = getTimeframeTargetBarCount(timeframe)
 
-  const isCrypto = symbol.startsWith('BTC') || symbol.startsWith('ETH') || symbol.includes('USDT')
+  // 1. Primary: Next.js same-origin candles API (/api/candles)
+  try {
+    const res = await fetch(`/api/candles?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(timeframe)}`, {
+      signal: AbortSignal.timeout(3500),
+    })
+    if (res.ok) {
+      const json = await res.json()
+      if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
+        const candles = calibrateCandles(json.data, anchorPrice, digits)
+        candleCache.set(cacheKey, candles)
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`fxsim_candles_${cacheKey}`, JSON.stringify(candles.slice(-800)))
+          } catch {}
+        }
+        return candles
+      }
+    }
+  } catch {
+    // Continue to next source
+  }
 
+  // 2. Secondary: Backend WordPress /candles REST route
+  try {
+    const res = await api.candles(symbol, timeframe)
+    if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+      const candles = calibrateCandles(res.data, anchorPrice, digits)
+      candleCache.set(cacheKey, candles)
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`fxsim_candles_${cacheKey}`, JSON.stringify(candles.slice(-800)))
+        } catch {}
+      }
+      return candles
+    }
+  } catch {
+    // Continue to Binance
+  }
+
+  // 3. Direct public Binance fallback for crypto
+  const isCrypto = symbol.startsWith('BTC') || symbol.startsWith('ETH') || symbol.includes('USDT') || symbol.includes('SOL')
   if (isCrypto) {
-    try {
-      const pair = symbol.replace('USD', 'USDT')
-      const intervalMap: Record<Timeframe, string> = {
-        M1: '1m',
-        M5: '5m',
-        M15: '15m',
-        M30: '30m',
-        H1: '1h',
-        H4: '4h',
-        D1: '1d',
-        W1: '1w',
-      }
-      const binanceInterval = intervalMap[timeframe] || '1h'
-      const url = `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${binanceInterval}&limit=1000`
+    const pair = symbol.replace('USD', 'USDT')
+    const intervalMap: Record<Timeframe, string> = {
+      M1: '1m', M5: '5m', M15: '15m', M30: '30m',
+      H1: '1h', H4: '4h', D1: '1d', W1: '1w',
+    }
+    const binanceInterval = intervalMap[timeframe] || '1h'
+    const urls = [
+      `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${binanceInterval}&limit=1000`,
+      `https://data-api.binance.vision/api/v3/klines?symbol=${pair}&interval=${binanceInterval}&limit=1000`,
+    ]
 
-      const res = await fetch(url, { signal: AbortSignal.timeout(3500) })
-      if (res.ok) {
-        const raw = await res.json()
-        if (Array.isArray(raw) && raw.length > 0) {
-          const rawLastClose = Number(raw[raw.length - 1][4])
-          let offset = 0
-          if (anchorPrice && anchorPrice > 0 && rawLastClose > 0) {
-            offset = anchorPrice - rawLastClose
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(3000) })
+        if (res.ok) {
+          const raw = await res.json()
+          if (Array.isArray(raw) && raw.length > 0) {
+            const rawCandles = raw.map((k: any) => ({
+              time: Number(k[0]),
+              open: Number(k[1]),
+              high: Number(k[2]),
+              low: Number(k[3]),
+              close: Number(k[4]),
+              volume: Math.round(Number(k[5])),
+            }))
+            const candles = calibrateCandles(rawCandles, anchorPrice, digits)
+            candleCache.set(cacheKey, candles)
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(`fxsim_candles_${cacheKey}`, JSON.stringify(candles.slice(-800)))
+              } catch {}
+            }
+            return candles
           }
-
-          const candles: Candle[] = raw.map((k: any) => ({
-            time: Number(k[0]),
-            open: parseFloat((Number(k[1]) + offset).toFixed(digits)),
-            high: parseFloat((Number(k[2]) + offset).toFixed(digits)),
-            low: parseFloat((Number(k[3]) + offset).toFixed(digits)),
-            close: parseFloat((Number(k[4]) + offset).toFixed(digits)),
-            volume: Math.round(Number(k[5])),
-          }))
-          if (anchorPrice && anchorPrice > 0 && candles.length > 0) {
-            const last = candles[candles.length - 1]
-            last.close = anchorPrice
-            last.high = Math.max(last.high, anchorPrice)
-            last.low = Math.min(last.low, anchorPrice)
-          }
-          candleCache.set(cacheKey, candles)
-          return candles
         }
-      }
-    } catch {
-      // Fall through to synthetic generation on network or timeout
+      } catch {}
     }
   }
 
-  // Check cache first to avoid abrupt re-generation
+  // 4. Cache fallback (memory or localStorage)
   const cached = candleCache.get(cacheKey)
-  if (cached && cached.length >= Math.min(800, targetCount)) {
-    // If live price has moved or diverged, smoothly realign the series
-    if (anchorPrice && anchorPrice > 0) {
-      const last = cached[cached.length - 1]
-      const diff = anchorPrice - last.close
-      if (Math.abs(diff) > anchorPrice * 0.0005) {
-        for (const c of cached) {
-          c.open = parseFloat((c.open + diff).toFixed(digits))
-          c.high = parseFloat((c.high + diff).toFixed(digits))
-          c.low = parseFloat((c.low + diff).toFixed(digits))
-          c.close = parseFloat((c.close + diff).toFixed(digits))
-        }
-      }
-      last.close = anchorPrice
-      last.high = Math.max(last.high, anchorPrice)
-      last.low = Math.min(last.low, anchorPrice)
-    }
-    return [...cached]
+  if (cached && cached.length >= 100) {
+    return calibrateCandles([...cached], anchorPrice, digits)
   }
 
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(`fxsim_candles_${cacheKey}`)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed) && parsed.length >= 100) {
+          const calibrated = calibrateCandles(parsed, anchorPrice, digits)
+          candleCache.set(cacheKey, calibrated)
+          return calibrated
+        }
+      }
+    } catch {}
+  }
+
+  // 5. Authentic market structure generator fallback
   const generated = generateRealisticCandles({
     symbol,
     timeframe,
@@ -269,6 +386,35 @@ export async function loadHistoricalCandles(args: {
 
   candleCache.set(cacheKey, generated)
   return generated
+}
+
+function calibrateCandles(rawCandles: any[], anchorPrice: number | undefined, digits: number): Candle[] {
+  if (!rawCandles || rawCandles.length === 0) return []
+  const rawLastClose = Number(rawCandles[rawCandles.length - 1].close)
+  let offset = 0
+  if (anchorPrice && anchorPrice > 0 && rawLastClose > 0) {
+    const diff = anchorPrice - rawLastClose
+    if (Math.abs(diff) < rawLastClose * 0.08) {
+      offset = diff
+    }
+  }
+
+  const candles: Candle[] = rawCandles.map((c: any) => ({
+    time: Number(c.time),
+    open: parseFloat((Number(c.open) + offset).toFixed(digits)),
+    high: parseFloat((Number(c.high) + offset).toFixed(digits)),
+    low: parseFloat((Number(c.low) + offset).toFixed(digits)),
+    close: parseFloat((Number(c.close) + offset).toFixed(digits)),
+    volume: Math.round(Number(c.volume || 100)),
+  }))
+
+  if (anchorPrice && anchorPrice > 0 && candles.length > 0) {
+    const last = candles[candles.length - 1]
+    last.close = anchorPrice
+    last.high = Math.max(last.high, anchorPrice)
+    last.low = Math.min(last.low, anchorPrice)
+  }
+  return candles
 }
 
 /**
@@ -286,38 +432,50 @@ export function updateCandlesWithLiveTick(
 
   const tfSeconds = TIMEFRAME_SECONDS[timeframe] || 60
   const tfMs = tfSeconds * 1000
-  const now = Date.now()
-  const expectedCandleTime = Math.floor(now / tfMs) * tfMs
+  const tickTime = tick.time ? Math.floor(tick.time / 1000) * 1000 : Date.now()
+  const tickCandleTime = Math.floor(tickTime / tfMs) * tfMs
 
-  const updated = [...candles]
-  const lastIndex = updated.length - 1
-  const last = { ...updated[lastIndex] }
+  const lastCandle = candles[candles.length - 1]
+  const currentPrice = parseFloat(tick.bid.toFixed(digits))
 
-  if (expectedCandleTime === last.time || (now >= last.time && now < last.time + tfMs) || expectedCandleTime < last.time) {
-    // Same period — update current active candle
-    last.close = parseFloat(tick.bid.toFixed(digits))
-    last.high = parseFloat(Math.max(last.high, tick.bid).toFixed(digits))
-    last.low = parseFloat(Math.min(last.low, tick.bid).toFixed(digits))
-    last.volume = (last.volume || 0) + 1
-    updated[lastIndex] = last
-  } else if (expectedCandleTime > last.time) {
-    // New candle timeframe rolled over — open from previous close
-    const openPx = last.close
-    const microTick = digits > 0 ? Math.pow(10, -digits) : 1
+  if (lastCandle && lastCandle.time === tickCandleTime) {
+    lastCandle.close = currentPrice
+    if (currentPrice > lastCandle.high) lastCandle.high = currentPrice
+    if (currentPrice < lastCandle.low) lastCandle.low = currentPrice
+    lastCandle.volume = (lastCandle.volume || 0) + 1
+    return [...candles]
+  } else if (lastCandle && tickCandleTime > lastCandle.time) {
     const newCandle: Candle = {
-      time: expectedCandleTime,
-      open: openPx,
-      high: parseFloat(Math.max(openPx, tick.bid, openPx + microTick).toFixed(digits)),
-      low: parseFloat(Math.min(openPx, tick.bid, Math.max(0, openPx - microTick)).toFixed(digits)),
-      close: parseFloat(tick.bid.toFixed(digits)),
+      time: tickCandleTime,
+      open: currentPrice,
+      high: currentPrice,
+      low: currentPrice,
+      close: currentPrice,
       volume: 1,
     }
-    updated.push(newCandle)
-    // Keep max 3,000 candles in memory for seamless scrolling without memory leaks
-    if (updated.length > 3000) {
-      updated.shift()
-    }
+    return [...candles.slice(-999), newCandle]
   }
 
-  return updated
+  return candles
+}
+
+/**
+ * Formats remaining candle countdown
+ */
+export function formatCountdown(totalSeconds: number): string {
+  if (totalSeconds < 0) totalSeconds = 0
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  if (h > 0) {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+export function getCandleCountdownSeconds(timeframe: Timeframe): number {
+  const tfSeconds = TIMEFRAME_SECONDS[timeframe] || 60
+  const nowSec = Math.floor(Date.now() / 1000)
+  const elapsed = nowSec % tfSeconds
+  return Math.max(0, tfSeconds - elapsed)
 }

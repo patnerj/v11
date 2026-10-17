@@ -22,7 +22,7 @@ import type {
   Mt5CanvasHandle,
 } from './types'
 import { DEFAULT_INDICATORS } from './types'
-import { loadHistoricalCandles, updateCandlesWithLiveTick } from './candle-service'
+import { loadHistoricalCandles, updateCandlesWithLiveTick, getInitialCachedCandles } from './candle-service'
 import { Mt5Canvas } from './mt5-canvas'
 import { Mt5TopControls } from './mt5-top-controls'
 import { Mt5DrawingToolbar, Mt5DrawingInspector } from './mt5-drawing-toolbar'
@@ -163,9 +163,17 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
     price: 0,
   })
 
-  // Candles State
-  const [candles, setCandles] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  // Candles State - Synchronously initialized so chart renders instantly on mount!
+  const [candles, setCandles] = useState<any[]>(() => {
+    return getInitialCachedCandles({
+      symbol: active,
+      timeframe,
+      anchorPrice: undefined,
+      digits,
+      pipSize: pSize,
+    })
+  })
+  const [loading, setLoading] = useState(false)
 
   // Persist drawings per symbol
   const drawingsKey = `fxsim_mt5_drawings_v1_${active}`

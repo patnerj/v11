@@ -48,6 +48,7 @@ import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
 import { playOrderSuccessSound, playOrderLossThumpSound } from '@/lib/sound-effects'
+import { cn } from '@/lib/cn'
 import { usePrices } from '@/store/prices'
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
@@ -58,10 +59,10 @@ const SUB_PANE_HEIGHT = 100
 const SANS_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif'
 const FONT_MICRO = `9px ${SANS_STACK}`
 const FONT_MICRO_BOLD = `bold 9px ${SANS_STACK}`
-const FONT_LABEL = `10px ${SANS_STACK}`
-const FONT_LABEL_BOLD = `bold 10px ${SANS_STACK}`
-const FONT_BODY_BOLD = `bold 11px ${SANS_STACK}`
-const FONT_CLOSE_BTN = `bold 13px ${SANS_STACK}`
+const FONT_LABEL = `11px ${SANS_STACK}`
+const FONT_LABEL_BOLD = `bold 11px ${SANS_STACK}`
+const FONT_BODY_BOLD = `bold 12px ${SANS_STACK}`
+const FONT_CLOSE_BTN = `bold 14px ${SANS_STACK}`
 
 function distToSegment(px: number, py: number, x0: number, y0: number, x1: number, y1: number): number {
   const dx = x1 - x0
@@ -862,28 +863,35 @@ export const Mt5Canvas = memo(
           const yOpen = priceToY(c.open)
           const yClose = priceToY(pxClose)
 
-          const topY = Math.min(yOpen, yClose)
-          const botY = Math.max(yOpen, yClose)
-          const bodyH = Math.max(1, botY - topY)
-          const halfW = Math.max(1, candleWidth * 0.4)
+          const centerX = Math.round(x)
+          const rawBodyW = Math.max(1, Math.round(candleWidth * 0.72))
+          const bodyW = rawBodyW > 2 ? (rawBodyW % 2 === 0 ? rawBodyW - 1 : rawBodyW) : rawBodyW
+          const halfW = Math.floor(bodyW / 2)
+          const bodyLeft = centerX - halfW
 
-          // Wick
+          const topY = Math.round(Math.min(yOpen, yClose))
+          const botY = Math.round(Math.max(yOpen, yClose))
+          const bodyH = Math.max(1, botY - topY)
+          const yH = Math.round(yHigh)
+          const yL = Math.round(yLow)
+
+          // 1. Continuous razor-sharp 1px Wick from High to Low centered at centerX + 0.5
           ctx.strokeStyle = isUp ? colors.candleUpWick : colors.candleDownWick
           ctx.lineWidth = 1
           ctx.beginPath()
-          ctx.moveTo(Math.floor(x) + 0.5, yHigh)
-          ctx.lineTo(Math.floor(x) + 0.5, topY)
-          ctx.moveTo(Math.floor(x) + 0.5, botY)
-          ctx.lineTo(Math.floor(x) + 0.5, yLow)
+          ctx.moveTo(centerX + 0.5, yH)
+          ctx.lineTo(centerX + 0.5, yL)
           ctx.stroke()
 
-          // Body
+          // 2. Solid Crisp Body: masks wick cleanly with exact pixel bounds
           ctx.fillStyle = isUp ? colors.candleUp : colors.candleDown
-          ctx.strokeStyle = isUp ? colors.candleUpBorder : colors.candleDownBorder
-          ctx.lineWidth = 1
+          ctx.fillRect(bodyLeft, topY, bodyW, bodyH)
 
-          ctx.fillRect(x - halfW, topY, halfW * 2, bodyH)
-          ctx.strokeRect(x - halfW, topY, halfW * 2, bodyH)
+          // Subtle border if configured and distinct
+          if (colors.candleUpBorder && colors.candleUpBorder !== colors.candleUp) {
+            ctx.strokeStyle = isUp ? colors.candleUpBorder : colors.candleDownBorder
+            ctx.strokeRect(bodyLeft + 0.5, topY + 0.5, bodyW - 1, Math.max(0, bodyH - 1))
+          }
         }
         ctx.restore()
       }
@@ -1092,23 +1100,24 @@ export const Mt5Canvas = memo(
           ctx.fillRect(leftX, Math.min(yEntry, yTp), boxW, Math.abs(yTp - yEntry))
           ctx.strokeRect(leftX, Math.min(yEntry, yTp), boxW, Math.abs(yTp - yEntry))
 
-          // Dynamic R:R Ratio Badge
+          // Dynamic R:R Ratio Badge (Anchored cleanly inside the box, NOT on yEntry)
           const rrRatio = riskDist > 0 ? (rewardDist / riskDist).toFixed(2) : '1.00'
           const symMeta = getSymbolMeta(symbol)
           const riskPips = riskDist / (symMeta.pipSize || pSize || 1)
           const rewardPips = rewardDist / (symMeta.pipSize || pSize || 1)
           const badgeText = `${isLong ? 'Long' : 'Short'} | R:R 1 : ${rrRatio} (Risk: ${riskPips.toFixed(1)}p · Reward: ${rewardPips.toFixed(1)}p)`
 
-          ctx.fillStyle = theme === 'daylight' ? '#0F172A' : '#050811'
+          const badgeY = isLong ? Math.min(yEntry, yTp) + 6 : Math.max(yEntry, yTp) - 24
+          ctx.fillStyle = theme === 'daylight' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(5, 8, 17, 0.95)'
           const bW = ctx.measureText(badgeText).width + 16
-          ctx.fillRect(leftX + 4, yEntry - 10, bW, 20)
+          ctx.fillRect(leftX + 6, badgeY, bW, 20)
           ctx.strokeStyle = '#38BDF8'
           ctx.lineWidth = 1
-          ctx.strokeRect(leftX + 4, yEntry - 10, bW, 20)
-          ctx.fillStyle = '#38BDF8'
+          ctx.strokeRect(leftX + 6, badgeY, bW, 20)
+          ctx.fillStyle = theme === 'daylight' ? '#0284C7' : '#38BDF8'
           ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
-          ctx.fillText(badgeText, leftX + 10, yEntry + 4)
+          ctx.fillText(badgeText, leftX + 12, badgeY + 14)
         } else if (d.type === 'text' && d.text) {
           const y = priceToY(d.points[0].price)
           const x = timeToX(d.points[0].time)
@@ -1325,41 +1334,43 @@ export const Mt5Canvas = memo(
         ctx.setLineDash([5, 3])
 
         // Entry badge & floating PnL (Right-aligned before price axis)
-        const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} @ ${fmtPrice(openPrice, digits)} | ${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)}`
+        const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} @ ${fmtPrice(openPrice, digits)} · ${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)}`
         const badgeWidth = ctx.measureText(entryText).width + 36
         const badgeRight = chartW - 8
         const badgeX = badgeRight - badgeWidth
 
-        // Line stops cleanly before badge so it never strikes through the text
+        // Line stops cleanly before badge with 6px clear margin
         ctx.beginPath()
         ctx.moveTo(0, Math.floor(yEntry) + 0.5)
-        ctx.lineTo(badgeX - 4, Math.floor(yEntry) + 0.5)
+        ctx.lineTo(badgeX - 6, Math.floor(yEntry) + 0.5)
         ctx.stroke()
 
-        // 100% Solid Opaque Badge
-        ctx.fillStyle = theme === 'daylight' ? '#0F172A' : '#0A0F1E'
-        ctx.fillRect(badgeX, yEntry - 11, badgeWidth, 22)
-        ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
+        // 100% Solid High-Contrast Entry Badge
+        const entryBg = isBuy ? '#0284C7' : '#E11D48'
+        const entryBorder = isBuy ? '#38BDF8' : '#FB7185'
+        ctx.fillStyle = entryBg
+        ctx.fillRect(badgeX, yEntry - 12, badgeWidth, 24)
+        ctx.strokeStyle = entryBorder
         ctx.lineWidth = 1.5
-        ctx.strokeRect(badgeX, yEntry - 11, badgeWidth, 22)
+        ctx.strokeRect(badgeX, yEntry - 12, badgeWidth, 24)
 
         ctx.fillStyle = '#FFFFFF'
         ctx.font = FONT_LABEL_BOLD
         ctx.textAlign = 'left'
-        ctx.fillText(entryText, badgeX + 8, yEntry + 3)
+        ctx.fillText(entryText, badgeX + 8, yEntry + 4)
 
         // [x] Close button on Entry Line
-        ctx.fillStyle = '#EF4444'
+        ctx.fillStyle = '#FFFFFF'
         ctx.font = FONT_CLOSE_BTN
-        ctx.fillText('×', badgeRight - 14, yEntry + 3)
+        ctx.fillText('×', badgeRight - 14, yEntry + 4)
 
         // Right Price Axis Entry Tag
         ctx.fillStyle = isBuy ? '#0284C7' : '#E11D48'
-        ctx.fillRect(chartW + 1, yEntry - 9, PRICE_AXIS_WIDTH - 2, 18)
+        ctx.fillRect(chartW + 1, yEntry - 10, PRICE_AXIS_WIDTH - 2, 20)
         ctx.fillStyle = '#FFFFFF'
         ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
-        ctx.fillText(`${pos.type.toUpperCase()} ${fmtPrice(openPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yEntry + 3)
+        ctx.fillText(`${pos.type.toUpperCase()} ${fmtPrice(openPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yEntry + 4)
 
         // Hover handles [+ Drag SL] and [+ Drag TP] to the left of right-aligned badge
         const isHoveringEntry = mousePos && Math.abs(mousePos.y - yEntry) < 18 && mousePos.x < chartW
@@ -1413,43 +1424,43 @@ export const Mt5Canvas = memo(
               quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
             }) || 0
 
-          const slText = `SL: ${fmtPrice(activeSlPrice, digits)} | -$${Math.abs(projPnl).toFixed(2)} (-${distPips.toFixed(1)}p)`
+          const slText = `SL · ${fmtPrice(activeSlPrice, digits)}  -$${Math.abs(projPnl).toFixed(2)} (-${distPips.toFixed(1)}p)`
           const slBadgeWidth = ctx.measureText(slText).width + 30
           const slBadgeRight = chartW - 8
           const slBadgeX = slBadgeRight - slBadgeWidth
 
-          // Dotted line stops cleanly before badge
+          // Dotted line stops cleanly before badge with 6px margin
           ctx.strokeStyle = '#EF4444'
           ctx.lineWidth = 1.5
           ctx.setLineDash([4, 2])
           ctx.beginPath()
           ctx.moveTo(0, Math.floor(ySl) + 0.5)
-          ctx.lineTo(slBadgeX - 4, Math.floor(ySl) + 0.5)
+          ctx.lineTo(slBadgeX - 6, Math.floor(ySl) + 0.5)
           ctx.stroke()
 
           // 100% Solid Opaque SL Badge
-          const slBadgeBg = theme === 'daylight' ? '#DC2626' : '#EF4444'
+          const slBadgeBg = '#DC2626'
           ctx.fillStyle = slBadgeBg
-          ctx.fillRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
+          ctx.fillRect(slBadgeX, ySl - 12, slBadgeWidth, 24)
           ctx.strokeStyle = '#FFFFFF'
           ctx.lineWidth = 1
-          ctx.strokeRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
+          ctx.strokeRect(slBadgeX, ySl - 12, slBadgeWidth, 24)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_LABEL_BOLD
-          ctx.fillText(slText, slBadgeX + 6, ySl + 3)
+          ctx.fillText(slText, slBadgeX + 8, ySl + 4)
 
           // [x] Remove SL
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_CLOSE_BTN
-          ctx.fillText('×', slBadgeRight - 14, ySl + 3)
+          ctx.fillText('×', slBadgeRight - 14, ySl + 4)
 
           // Right Price Axis SL Tag
           ctx.fillStyle = '#DC2626'
-          ctx.fillRect(chartW + 1, ySl - 9, PRICE_AXIS_WIDTH - 2, 18)
+          ctx.fillRect(chartW + 1, ySl - 10, PRICE_AXIS_WIDTH - 2, 20)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_MICRO_BOLD
           ctx.textAlign = 'center'
-          ctx.fillText(`SL ${fmtPrice(activeSlPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, ySl + 3)
+          ctx.fillText(`SL ${fmtPrice(activeSlPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, ySl + 4)
         }
 
         // (c) Take Profit (TP) Line
@@ -1473,43 +1484,47 @@ export const Mt5Canvas = memo(
               quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
             }) || 0
 
-          const tpText = `TP: ${fmtPrice(activeTpPrice, digits)} | +$${projPnl.toFixed(2)} (+${distPips.toFixed(1)}p)`
+          // Calculate dynamic R:R ratio if SL exists
+          const riskPips = activeSlPrice > 0 ? Math.abs(openPrice - activeSlPrice) / symMeta.pipSize : 0
+          const rrRatio = riskPips > 0 ? (distPips / riskPips).toFixed(1) : ''
+          const rrTag = rrRatio ? ` · 1 : ${rrRatio} R:R` : ''
+          const tpText = `TP · ${fmtPrice(activeTpPrice, digits)}  +$${projPnl.toFixed(2)} (+${distPips.toFixed(1)}p${rrTag})`
           const tpBadgeWidth = ctx.measureText(tpText).width + 30
           const tpBadgeRight = chartW - 8
           const tpBadgeX = tpBadgeRight - tpBadgeWidth
 
-          // Dotted line stops cleanly before badge
+          // Dotted line stops cleanly before badge with 6px margin
           ctx.strokeStyle = '#10B981'
           ctx.lineWidth = 1.5
           ctx.setLineDash([4, 2])
           ctx.beginPath()
           ctx.moveTo(0, Math.floor(yTp) + 0.5)
-          ctx.lineTo(tpBadgeX - 4, Math.floor(yTp) + 0.5)
+          ctx.lineTo(tpBadgeX - 6, Math.floor(yTp) + 0.5)
           ctx.stroke()
 
           // 100% Solid Opaque TP Badge
-          const tpBadgeBg = theme === 'daylight' ? '#059669' : '#10B981'
+          const tpBadgeBg = '#059669'
           ctx.fillStyle = tpBadgeBg
-          ctx.fillRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
+          ctx.fillRect(tpBadgeX, yTp - 12, tpBadgeWidth, 24)
           ctx.strokeStyle = '#FFFFFF'
           ctx.lineWidth = 1
-          ctx.strokeRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
+          ctx.strokeRect(tpBadgeX, yTp - 12, tpBadgeWidth, 24)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_LABEL_BOLD
-          ctx.fillText(tpText, tpBadgeX + 6, yTp + 3)
+          ctx.fillText(tpText, tpBadgeX + 8, yTp + 4)
 
           // [x] Remove TP
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_CLOSE_BTN
-          ctx.fillText('×', tpBadgeRight - 14, yTp + 3)
+          ctx.fillText('×', tpBadgeRight - 14, yTp + 4)
 
           // Right Price Axis TP Tag
           ctx.fillStyle = '#059669'
-          ctx.fillRect(chartW + 1, yTp - 9, PRICE_AXIS_WIDTH - 2, 18)
+          ctx.fillRect(chartW + 1, yTp - 10, PRICE_AXIS_WIDTH - 2, 20)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_MICRO_BOLD
           ctx.textAlign = 'center'
-          ctx.fillText(`TP ${fmtPrice(activeTpPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yTp + 3)
+          ctx.fillText(`TP ${fmtPrice(activeTpPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yTp + 4)
         }
 
         ctx.restore()
@@ -2587,33 +2602,38 @@ export const Mt5Canvas = memo(
           className="w-full h-full block"
         />
 
-        {/* Bottom Floating Navigation & Zoom Dock ([-] [+] [Reset]) */}
-        <div className="absolute bottom-9 right-28 z-20 flex items-center gap-1 px-1.5 py-1 rounded-lg bg-surface/90 dark:bg-bg-subtle/90 backdrop-blur-md border border-border shadow-md select-none">
+        {/* Bottom Floating Navigation & Zoom Dock ([-] [+] [Reset]) — Centered at bottom with Day/Night glassmorphism */}
+        <div className={cn(
+          "absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full select-none transition-all shadow-sm backdrop-blur-md",
+          theme === 'daylight'
+            ? "bg-white/50 hover:bg-white/85 border border-slate-300/70 text-slate-700 hover:text-slate-950 hover:shadow-md"
+            : "bg-black/40 hover:bg-black/75 border border-white/10 text-white/70 hover:text-white hover:border-white/20 hover:shadow-md"
+        )}>
           <button
             type="button"
             onClick={zoomOut}
-            className="p-1 rounded text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+            className="p-1 rounded-full hover:bg-white/15 dark:hover:bg-white/10 transition-colors cursor-pointer"
             title="Zoom Out (-)"
             aria-label="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
-          <div className="w-px h-3.5 bg-border/60" />
+          <div className={cn("w-px h-3.5", theme === 'daylight' ? "bg-slate-300/70" : "bg-white/15")} />
           <button
             type="button"
             onClick={zoomIn}
-            className="p-1 rounded text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
+            className="p-1 rounded-full hover:bg-white/15 dark:hover:bg-white/10 transition-colors cursor-pointer"
             title="Zoom In (+)"
             aria-label="Zoom In"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
-          <div className="w-px h-3.5 bg-border/60" />
+          <div className={cn("w-px h-3.5", theme === 'daylight' ? "bg-slate-300/70" : "bg-white/15")} />
           <button
             type="button"
             onClick={resetScale}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted transition-colors cursor-pointer"
-            title="Reset Chart & Auto-Scale (Double Click Axis)"
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-terminal-micro font-medium hover:bg-white/15 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            title="Reset Chart View & Scale"
             aria-label="Reset Chart"
           >
             <RotateCcw className="w-3 h-3 text-accent" />
