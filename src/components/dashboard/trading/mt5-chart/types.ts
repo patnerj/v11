@@ -266,3 +266,9 @@ export interface PipRulerState {
   startScreen: { x: number; y: number } | null
   currentScreen: { x: number; y: number } | null
 }
+
+export interface Mt5CanvasHandle {
+  zoomIn: () => void
+  zoomOut: () => void
+  resetScale: () => void
+}

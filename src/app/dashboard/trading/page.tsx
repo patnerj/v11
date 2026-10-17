@@ -486,7 +486,7 @@ function DesktopLayout({
               title="Switch to MT5 Pro Native Canvas Chart"
             >
               <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>⚡ MT5 Pro Chart</span>
+              <span>MT5 Pro Chart</span>
             </button>
             <button
               type="button"
@@ -500,7 +500,7 @@ function DesktopLayout({
               title="Switch to TradingView Chart"
             >
               <BarChart3 className="w-3.5 h-3.5" />
-              <span>📊 TradingView</span>
+              <span>TradingView</span>
             </button>
           </div>
           <SoundToggle compact className="shrink-0" />

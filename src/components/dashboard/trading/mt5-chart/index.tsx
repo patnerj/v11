@@ -19,6 +19,7 @@ import type {
   DrawingTool,
   DrawingObject,
   IndicatorsConfig,
+  Mt5CanvasHandle,
 } from './types'
 import { DEFAULT_INDICATORS } from './types'
 import { loadHistoricalCandles, updateCandlesWithLiveTick } from './candle-service'
@@ -47,6 +48,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   plan,
   onChanged,
 }: Mt5ChartPanelProps) {
+  const canvasRef = useRef<Mt5CanvasHandle>(null)
   const active = useTerminal((s) => s.active)
   const meta = useTerminal((s) => s.getMeta(active))
   const showOneClick = useTerminal((s) => s.showOneClick)
@@ -312,6 +314,12 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         setActiveTool('fibonacci')
       } else if (e.key === 'r' || e.key === 'R') {
         setActiveTool('rectangle')
+      } else if (e.key === '+' || e.key === '=') {
+        e.preventDefault()
+        canvasRef.current?.zoomIn()
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        canvasRef.current?.zoomOut()
       } else if (e.key === 'Escape') {
         setActiveTool('select')
         setSelectedDrawingId(null)
@@ -361,8 +369,8 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         onToggleAutoScroll={() => setAutoScroll(!autoScroll)}
         chartShift={chartShift}
         onToggleChartShift={() => setChartShift(!chartShift)}
-        onZoomIn={() => {}}
-        onZoomOut={() => {}}
+        onZoomIn={() => canvasRef.current?.zoomIn()}
+        onZoomOut={() => canvasRef.current?.zoomOut()}
         onOpenIndicators={() => setIsIndicatorsModalOpen(true)}
         showOneClick={showOneClick}
         onToggleOneClick={toggleOneClick}
@@ -406,6 +414,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
         {/* 60 FPS High-DPI Canvas Core */}
         <Mt5Canvas
+          ref={canvasRef}
           symbol={active}
           digits={digits}
           candles={candles}
@@ -444,7 +453,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         lotSize={0.1}
         onClose={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
         onAddHorizontalLine={handleAddHorizontalLineAtPrice}
-        onResetScale={() => {}}
+        onResetScale={() => canvasRef.current?.resetScale()}
         onOpenObjectsList={() => setIsObjectsModalOpen(true)}
         onOpenProperties={() => setIsIndicatorsModalOpen(true)}
         onChanged={onChanged}
