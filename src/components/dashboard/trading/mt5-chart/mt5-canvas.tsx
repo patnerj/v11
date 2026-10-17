@@ -1095,7 +1095,136 @@ export const Mt5Canvas = memo(
         ctx.restore()
       }
 
-      // 9. Interactive On-Chart Trade & Pending Order Lines (Drag-and-Drop SL/TP)
+      // 9. Right Y-Axis Price Scale Scaffolding & Static Grid Ticks
+      ctx.save()
+      ctx.fillStyle = colors.background
+      ctx.fillRect(chartW, 0, PRICE_AXIS_WIDTH, mainH)
+      ctx.strokeStyle = colors.border
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(chartW + 0.5, 0)
+      ctx.lineTo(chartW + 0.5, mainH)
+      ctx.stroke()
+
+      const axisGridStep = rangeP / 6
+      ctx.fillStyle = colors.textMuted
+      ctx.font = FONT_LABEL
+      ctx.textAlign = 'left'
+      for (let p = Math.ceil(minP / axisGridStep) * axisGridStep; p < maxP; p += axisGridStep) {
+        const y = priceToY(p)
+        if (y > 10 && y < mainH - 10) {
+          ctx.fillText(fmtPrice(p, digits), chartW + 6, y + 3)
+        }
+      }
+      ctx.restore()
+
+      // 10. Bottom X-Axis Time Scale Scaffolding & Static Time Ticks
+      ctx.save()
+      ctx.fillStyle = colors.background
+      ctx.fillRect(0, mainH, width, TIME_AXIS_HEIGHT)
+      ctx.strokeStyle = colors.border
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(0, mainH + 0.5)
+      ctx.lineTo(width, mainH + 0.5)
+      ctx.stroke()
+
+      ctx.fillStyle = colors.textMuted
+      ctx.font = FONT_LABEL
+      ctx.textAlign = 'center'
+      const timeStep = Math.max(80, candleWidth * 10)
+      for (let x = chartW % timeStep; x < chartW; x += timeStep) {
+        const t = xToTime(x)
+        const d = new Date(t)
+        let label = ''
+        if (timeframe === 'D1' || timeframe === 'W1') {
+          const dateStr = d.toLocaleDateString([], { day: '2-digit', month: 'short' })
+          const yrStr = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : ''
+          label = `${dateStr}${yrStr}`
+        } else {
+          const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+          const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          label = `${dateStr} ${timeStr}`
+        }
+        ctx.fillText(label, x, mainH + 16)
+      }
+      ctx.restore()
+
+      // 11. Sub-Pane (RSI or MACD)
+      if (hasSubPane) {
+        const subTop = mainH + TIME_AXIS_HEIGHT
+        ctx.save()
+        ctx.fillStyle = colors.background
+        ctx.fillRect(0, subTop, width, subH)
+        ctx.strokeStyle = colors.border
+        ctx.strokeRect(0, subTop, width, subH)
+
+        if (indicators.rsi.enabled) {
+          const rsiVals = calcRSI(candles, indicators.rsi.period)
+          const y70 = subTop + subH * 0.3
+          const y30 = subTop + subH * 0.7
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+          ctx.setLineDash([2, 2])
+          ctx.beginPath()
+          ctx.moveTo(0, y70)
+          ctx.lineTo(chartW, y70)
+          ctx.moveTo(0, y30)
+          ctx.lineTo(chartW, y30)
+          ctx.stroke()
+
+          ctx.strokeStyle = indicators.rsi.color
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([])
+          ctx.beginPath()
+          let s = false
+          for (let i = startIndex; i <= endIndex; i++) {
+            const val = rsiVals[i]
+            if (val !== null) {
+              const x = candleIndexToX(i)
+              const y = subTop + (1 - val / 100) * subH
+              if (!s) {
+                ctx.moveTo(x, y)
+                s = true
+              } else ctx.lineTo(x, y)
+            }
+          }
+          ctx.stroke()
+
+          const lastRsi = rsiVals[endIndex] !== null ? rsiVals[endIndex]!.toFixed(1) : '—'
+          ctx.fillStyle = colors.text
+          ctx.font = FONT_LABEL_BOLD
+          ctx.textAlign = 'left'
+          ctx.fillText(`RSI (${indicators.rsi.period}): ${lastRsi}`, 10, subTop + 14)
+        } else if (indicators.macd.enabled) {
+          const macdObj = calcMACD(candles, indicators.macd.fast, indicators.macd.slow, indicators.macd.signal)
+          const midY = subTop + subH / 2
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+          ctx.beginPath()
+          ctx.moveTo(0, midY)
+          ctx.lineTo(chartW, midY)
+          ctx.stroke()
+
+          for (let i = startIndex; i <= endIndex; i++) {
+            const h = macdObj.hist[i]
+            if (h !== null) {
+              const x = candleIndexToX(i)
+              const barH = h * 500
+              ctx.fillStyle = h >= 0 ? '#10B981' : '#EF4444'
+              ctx.fillRect(x - candleWidth * 0.35, midY, candleWidth * 0.7, -barH)
+            }
+          }
+
+          ctx.fillStyle = colors.text
+          ctx.font = FONT_LABEL_BOLD
+          ctx.textAlign = 'left'
+          ctx.fillText(`MACD (${indicators.macd.fast},${indicators.macd.slow},${indicators.macd.signal})`, 10, subTop + 14)
+        }
+        ctx.restore()
+      }
+
+      // 12. Interactive On-Chart Trade & Pending Order Lines (Drag-and-Drop SL/TP)
       const symPositions = positions.filter((p) => p.symbol === symbol)
       const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
 
@@ -1395,10 +1524,18 @@ export const Mt5Canvas = memo(
         ctx.textAlign = 'center'
         ctx.fillText(`Spread: ${spreadP.toFixed(1)}`, chartW + PRICE_AXIS_WIDTH / 2, midY + 3)
 
-        // Active Live Bid Price Tag on Right Scale
-        ctx.fillStyle = colors.bidLine
+        // Active Live Bid Price Tag on Right Scale (Dynamic Bullish / Bearish color)
+        const isBullish = visible.length > 0 && visible[visible.length - 1].close >= visible[visible.length - 1].open
+        const bidBg = theme === 'daylight' 
+          ? (isBullish ? '#16A34A' : '#DC2626') 
+          : (isBullish ? '#10B981' : '#F43F5E')
+        
+        ctx.fillStyle = bidBg
         ctx.fillRect(chartW + 2, yBid - 10, PRICE_AXIS_WIDTH - 4, 20)
-        ctx.fillStyle = '#050811'
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 1
+        ctx.strokeRect(chartW + 2, yBid - 10, PRICE_AXIS_WIDTH - 4, 20)
+        ctx.fillStyle = '#FFFFFF'
         ctx.font = FONT_BODY_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(fmtPrice(liveBid, digits), chartW + PRICE_AXIS_WIDTH / 2, yBid + 4)
@@ -1407,7 +1544,7 @@ export const Mt5Canvas = memo(
         const cdText = formatCountdown(countdown)
         ctx.fillStyle = theme === 'daylight' ? '#FFFFFF' : 'rgba(5, 8, 17, 0.95)'
         ctx.fillRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
-        ctx.strokeStyle = colors.bidLine
+        ctx.strokeStyle = bidBg
         ctx.lineWidth = 1
         ctx.strokeRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
         ctx.fillStyle = theme === 'daylight' ? '#0f172a' : '#F59E0B'
@@ -1442,10 +1579,18 @@ export const Mt5Canvas = memo(
         ctx.lineTo(Math.floor(curX) + 0.5, mainH)
         ctx.stroke()
 
-        // Cursor Price Tag on Right Axis
-        ctx.fillStyle = colors.border
+        // High-contrast Cursor Price Pill on Right Axis
+        const curPillBg = theme === 'daylight' ? '#0F172A' : '#1E293B'
+        const curPillBorder = theme === 'daylight' ? '#334155' : '#38BDF8'
+        const curPillText = '#FFFFFF'
+
+        ctx.fillStyle = curPillBg
         ctx.fillRect(chartW + 1, curY - 9, PRICE_AXIS_WIDTH - 2, 18)
-        ctx.fillStyle = colors.text
+        ctx.strokeStyle = curPillBorder
+        ctx.lineWidth = 1
+        ctx.strokeRect(chartW + 1, curY - 9, PRICE_AXIS_WIDTH - 2, 18)
+
+        ctx.fillStyle = curPillText
         ctx.font = FONT_LABEL_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(fmtPrice(curPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, curY + 4)
@@ -1463,11 +1608,16 @@ export const Mt5Canvas = memo(
             second: '2-digit',
           })
         }
-        const tagW = Math.max(76, ctx.measureText(timeStr).width + 16)
-        ctx.fillStyle = colors.border
+        const tagW = Math.max(88, ctx.measureText(timeStr).width + 16)
+        ctx.fillStyle = curPillBg
         ctx.fillRect(curX - tagW / 2, mainH + 1, tagW, 18)
-        ctx.fillStyle = colors.text
-        ctx.font = FONT_LABEL
+        ctx.strokeStyle = curPillBorder
+        ctx.lineWidth = 1
+        ctx.strokeRect(curX - tagW / 2, mainH + 1, tagW, 18)
+
+        ctx.fillStyle = curPillText
+        ctx.font = FONT_LABEL_BOLD
+        ctx.textAlign = 'center'
         ctx.fillText(timeStr, curX, mainH + 13)
         ctx.restore()
 
@@ -1512,135 +1662,6 @@ export const Mt5Canvas = memo(
           ctx.fillText(rulerText, boxX + 10, boxY + 16)
           ctx.restore()
         }
-      }
-
-      // 12. Right Y-Axis Price Scale
-      ctx.save()
-      ctx.fillStyle = colors.background
-      ctx.fillRect(chartW, 0, PRICE_AXIS_WIDTH, mainH)
-      ctx.strokeStyle = colors.border
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(chartW + 0.5, 0)
-      ctx.lineTo(chartW + 0.5, mainH)
-      ctx.stroke()
-
-      const axisGridStep = rangeP / 6
-      ctx.fillStyle = colors.textMuted
-      ctx.font = FONT_LABEL
-      ctx.textAlign = 'left'
-      for (let p = Math.ceil(minP / axisGridStep) * axisGridStep; p < maxP; p += axisGridStep) {
-        const y = priceToY(p)
-        if (y > 10 && y < mainH - 10) {
-          ctx.fillText(fmtPrice(p, digits), chartW + 6, y + 3)
-        }
-      }
-      ctx.restore()
-
-      // 13. Bottom X-Axis Time Scale
-      ctx.save()
-      ctx.fillStyle = colors.background
-      ctx.fillRect(0, mainH, width, TIME_AXIS_HEIGHT)
-      ctx.strokeStyle = colors.border
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(0, mainH + 0.5)
-      ctx.lineTo(width, mainH + 0.5)
-      ctx.stroke()
-
-      ctx.fillStyle = colors.textMuted
-      ctx.font = FONT_LABEL
-      ctx.textAlign = 'center'
-      const timeStep = Math.max(80, candleWidth * 10)
-      for (let x = chartW % timeStep; x < chartW; x += timeStep) {
-        const t = xToTime(x)
-        const d = new Date(t)
-        let label = ''
-        if (timeframe === 'D1' || timeframe === 'W1') {
-          const dateStr = d.toLocaleDateString([], { day: '2-digit', month: 'short' })
-          const yrStr = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : ''
-          label = `${dateStr}${yrStr}`
-        } else {
-          const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
-          const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          label = `${dateStr} ${timeStr}`
-        }
-        ctx.fillText(label, x, mainH + 16)
-      }
-      ctx.restore()
-
-      // 14. Sub-Pane (RSI or MACD)
-      if (hasSubPane) {
-        const subTop = mainH + TIME_AXIS_HEIGHT
-        ctx.save()
-        ctx.fillStyle = colors.background
-        ctx.fillRect(0, subTop, width, subH)
-        ctx.strokeStyle = colors.border
-        ctx.strokeRect(0, subTop, width, subH)
-
-        if (indicators.rsi.enabled) {
-          const rsiVals = calcRSI(candles, indicators.rsi.period)
-          const y70 = subTop + subH * 0.3
-          const y30 = subTop + subH * 0.7
-
-          ctx.strokeStyle = 'rgba(255,255,255,0.1)'
-          ctx.setLineDash([2, 2])
-          ctx.beginPath()
-          ctx.moveTo(0, y70)
-          ctx.lineTo(chartW, y70)
-          ctx.moveTo(0, y30)
-          ctx.lineTo(chartW, y30)
-          ctx.stroke()
-
-          ctx.strokeStyle = indicators.rsi.color
-          ctx.lineWidth = 1.5
-          ctx.setLineDash([])
-          ctx.beginPath()
-          let s = false
-          for (let i = startIndex; i <= endIndex; i++) {
-            const val = rsiVals[i]
-            if (val !== null) {
-              const x = candleIndexToX(i)
-              const y = subTop + (1 - val / 100) * subH
-              if (!s) {
-                ctx.moveTo(x, y)
-                s = true
-              } else ctx.lineTo(x, y)
-            }
-          }
-          ctx.stroke()
-
-          const lastRsi = rsiVals[endIndex] !== null ? rsiVals[endIndex]!.toFixed(1) : '—'
-          ctx.fillStyle = colors.text
-          ctx.font = FONT_LABEL_BOLD
-          ctx.textAlign = 'left'
-          ctx.fillText(`RSI (${indicators.rsi.period}): ${lastRsi}`, 10, subTop + 14)
-        } else if (indicators.macd.enabled) {
-          const macdObj = calcMACD(candles, indicators.macd.fast, indicators.macd.slow, indicators.macd.signal)
-          const midY = subTop + subH / 2
-
-          ctx.strokeStyle = 'rgba(255,255,255,0.1)'
-          ctx.beginPath()
-          ctx.moveTo(0, midY)
-          ctx.lineTo(chartW, midY)
-          ctx.stroke()
-
-          for (let i = startIndex; i <= endIndex; i++) {
-            const h = macdObj.hist[i]
-            if (h !== null) {
-              const x = candleIndexToX(i)
-              const barH = h * 500
-              ctx.fillStyle = h >= 0 ? '#10B981' : '#EF4444'
-              ctx.fillRect(x - candleWidth * 0.35, midY, candleWidth * 0.7, -barH)
-            }
-          }
-
-          ctx.fillStyle = colors.text
-          ctx.font = FONT_LABEL_BOLD
-          ctx.textAlign = 'left'
-          ctx.fillText(`MACD (${indicators.macd.fast},${indicators.macd.slow},${indicators.macd.signal})`, 10, subTop + 14)
-        }
-        ctx.restore()
       }
 
       // 15. Top-Left OHLCV Status Line

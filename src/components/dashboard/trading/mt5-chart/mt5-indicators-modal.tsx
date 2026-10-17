@@ -6,8 +6,8 @@
  */
 
 import React, { memo } from 'react'
-import { X, Activity, RotateCcw, Check } from 'lucide-react'
-import type { IndicatorsConfig } from './types'
+import { X, Activity, RotateCcw, Check, Sliders, Palette, Grid, SeparatorVertical } from 'lucide-react'
+import type { IndicatorsConfig, ThemePreset } from './types'
 import { DEFAULT_INDICATORS } from './types'
 import { cn } from '@/lib/cn'
 
@@ -16,6 +16,12 @@ interface IndicatorsModalProps {
   onClose: () => void
   config: IndicatorsConfig
   onChangeConfig: (config: IndicatorsConfig) => void
+  theme?: ThemePreset
+  onChangeTheme?: (theme: ThemePreset) => void
+  showGrid?: boolean
+  onChangeShowGrid?: (show: boolean) => void
+  showPeriodSeparators?: boolean
+  onChangeShowPeriodSeparators?: (show: boolean) => void
 }
 
 export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
@@ -23,6 +29,12 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
   onClose,
   config,
   onChangeConfig,
+  theme = 'cyber',
+  onChangeTheme,
+  showGrid = true,
+  onChangeShowGrid,
+  showPeriodSeparators = true,
+  onChangeShowPeriodSeparators,
 }: IndicatorsModalProps) {
   if (!isOpen) return null
 
@@ -40,8 +52,8 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-muted/40">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-accent" />
-            <h3 className="font-semibold text-terminal-label text-text">Technical Indicators</h3>
+            <Sliders className="w-4 h-4 text-accent" />
+            <h3 className="font-semibold text-terminal-label text-text">Chart Properties & Indicators</h3>
           </div>
           <button
             type="button"
@@ -57,7 +69,7 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
           {/* Main Chart Overlays */}
           <div>
             <h4 className="text-terminal-micro font-bold uppercase tracking-wider text-text-muted mb-2">
-              Chart Overlays
+              Chart Overlays (EMA, SMA, BB, VWAP, ICT)
             </h4>
             <div className="space-y-2 bg-bg-subtle/60 border border-border rounded-xl p-3">
               {/* Exponential Moving Averages */}
@@ -162,6 +174,75 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
                   type="checkbox"
                   checked={config.killzones.enabled}
                   onChange={(e) => update({ killzones: { ...config.killzones, enabled: e.target.checked } })}
+                  className="w-4 h-4 rounded accent-accent cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Chart Display & Theme Properties */}
+          <div>
+            <h4 className="text-terminal-micro font-bold uppercase tracking-wider text-text-muted mb-2">
+              Chart Display & Theme Properties
+            </h4>
+            <div className="space-y-3 bg-bg-subtle/60 border border-border rounded-xl p-3">
+              {/* Theme Preset Switcher */}
+              <div>
+                <label className="block text-xs font-semibold text-text mb-1.5">
+                  Color Theme Preset
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'cyber', label: 'Obsidian Cyber 🌙', desc: 'Emerald & Rose' },
+                    { id: 'classic', label: 'MT5 Classic 🟢', desc: 'Green on Black' },
+                    { id: 'daylight', label: 'Daylight ☀️', desc: 'Clean High Contrast' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => onChangeTheme?.(t.id as any)}
+                      className={cn(
+                        'flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer text-center',
+                        theme === t.id
+                          ? 'border-accent bg-accent/15 text-accent shadow-xs'
+                          : 'border-border bg-surface hover:bg-surface-muted text-text-muted hover:text-text'
+                      )}
+                    >
+                      <span className="whitespace-nowrap">{t.label}</span>
+                      <span className="text-[10px] font-normal text-text-muted mt-0.5">{t.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-border-subtle" />
+
+              {/* Grid Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-text">Dotted Chart Grid (G)</span>
+                  <p className="text-terminal-micro text-text-muted">Display horizontal price and vertical time dotted grid lines</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={showGrid}
+                  onChange={(e) => onChangeShowGrid?.(e.target.checked)}
+                  className="w-4 h-4 rounded accent-accent cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full h-px bg-border-subtle" />
+
+              {/* Period Separators */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-text">Period Separators (Y)</span>
+                  <p className="text-terminal-micro text-text-muted">Multi-timeframe session boundaries (Day, Week, Month, Year)</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={showPeriodSeparators}
+                  onChange={(e) => onChangeShowPeriodSeparators?.(e.target.checked)}
                   className="w-4 h-4 rounded accent-accent cursor-pointer"
                 />
               </div>

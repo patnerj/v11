@@ -75,11 +75,11 @@ export const Mt5OneClick = memo(function Mt5OneClick({
   const [tpPips, setTpPips] = useState('')
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
 
-  // Draggable position state (persisted in localStorage)
+  // Draggable position state (persisted in localStorage, default top-left per MT5 standard)
   const [pos, setPos] = useState<{ x: number; y: number }>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('fxsim_mt5_oneclick_pos')
+        const saved = localStorage.getItem('fxsim_mt5_oneclick_pos_v2')
         if (saved) {
           const parsed = JSON.parse(saved)
           if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
@@ -88,7 +88,7 @@ export const Mt5OneClick = memo(function Mt5OneClick({
         }
       } catch {}
     }
-    return { x: 64, y: 48 }
+    return { x: 12, y: 32 }
   })
 
   const isDraggingRef = useRef(false)
@@ -113,8 +113,8 @@ export const Mt5OneClick = memo(function Mt5OneClick({
     if (!isDraggingRef.current || !dragStartRef.current) return
     const dx = e.clientX - dragStartRef.current.mouseX
     const dy = e.clientY - dragStartRef.current.mouseY
-    const newX = Math.max(10, Math.min(window.innerWidth - 240, dragStartRef.current.startX + dx))
-    const newY = Math.max(10, Math.min(window.innerHeight - 200, dragStartRef.current.startY + dy))
+    const newX = Math.max(8, Math.min(window.innerWidth - 240, dragStartRef.current.startX + dx))
+    const newY = Math.max(8, Math.min(window.innerHeight - 200, dragStartRef.current.startY + dy))
     setPos({ x: newX, y: newY })
   }, [])
 
@@ -126,7 +126,7 @@ export const Mt5OneClick = memo(function Mt5OneClick({
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
     } catch {}
     try {
-      localStorage.setItem('fxsim_mt5_oneclick_pos', JSON.stringify(pos))
+      localStorage.setItem('fxsim_mt5_oneclick_pos_v2', JSON.stringify(pos))
     } catch {}
   }, [pos])
 
@@ -267,6 +267,14 @@ export const Mt5OneClick = memo(function Mt5OneClick({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onDoubleClick={() => {
+          setPos({ x: 12, y: 32 })
+          try {
+            localStorage.setItem('fxsim_mt5_oneclick_pos_v2', JSON.stringify({ x: 12, y: 32 }))
+            toast.info('One-Click panel reset to top-left')
+          } catch {}
+        }}
+        title="Drag to reposition (Double-click to reset to top-left)"
         className="flex items-center justify-between gap-3 px-2.5 py-1.5 bg-surface-muted/60 border-b border-border-subtle cursor-grab active:cursor-grabbing"
       >
         <div className="flex items-center gap-1.5 text-terminal-micro font-semibold text-text">

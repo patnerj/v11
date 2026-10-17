@@ -22,9 +22,7 @@ import {
   ChevronDown,
   Zap,
   Activity,
-  Palette,
-  Grid,
-  SeparatorVertical,
+  Sliders,
 } from 'lucide-react'
 import type { Timeframe, ChartStyle, ThemePreset } from '@/components/dashboard/trading/mt5-chart/types'
 import { TIMEFRAMES, CHART_STYLES } from '@/components/dashboard/trading/mt5-chart/mt5-top-controls'
@@ -340,39 +338,16 @@ export default function Mt5WebTerminalPage() {
             })}
           </div>
 
-          {/* Technical Indicators Modal Trigger */}
+          {/* Chart Properties & Technical Indicators Modal Trigger */}
           <button
             type="button"
             onClick={() => setIsIndicatorsModalOpen(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer shrink-0"
-            title="Technical Indicators (EMA, BB, VWAP, RSI, MACD)"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer shrink-0"
+            title="Chart Properties & Indicators (Themes, Grid, Separators, EMA, ICT, RSI, MACD)"
           >
-            <Activity className="w-3.5 h-3.5 text-accent" />
-            <span className="hidden sm:inline">Indicators</span>
+            <Sliders className="w-3.5 h-3.5 text-accent" />
+            <span>Properties</span>
           </button>
-
-          {/* Theme Preset Switcher (Segmented Pill Group) */}
-          <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle shrink-0">
-            {(['cyber', 'classic', 'daylight'] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => {
-                  setTheme(t)
-                  try { localStorage.setItem('fxsim:mt5:theme', t) } catch {}
-                }}
-                className={cn(
-                  'px-2 py-0.5 rounded text-terminal-micro font-semibold transition-all cursor-pointer flex items-center gap-1',
-                  theme === t
-                    ? 'bg-accent text-accent-fg shadow-xs font-bold'
-                    : 'text-text-muted hover:text-text hover:bg-surface-muted/50'
-                )}
-                title={`Chart Theme: ${t === 'cyber' ? 'Obsidian Cyber' : t === 'classic' ? 'MT5 Classic' : 'Daylight'}`}
-              >
-                <span>{t === 'cyber' ? 'Cyber 🌙' : t === 'classic' ? 'Classic 🟢' : 'Daylight ☀️'}</span>
-              </button>
-            ))}
-          </div>
 
           {/* 1-Click Execution Box Toggle (Alt+T) */}
           <button
@@ -388,38 +363,6 @@ export default function Mt5WebTerminalPage() {
           >
             <Zap className={cn('w-3 h-3', showOneClick && 'fill-emerald-500')} />
             <span>1-Click</span>
-          </button>
-
-          {/* Grid Toggle (G) */}
-          <button
-            type="button"
-            onClick={() => setShowGrid((v) => !v)}
-            className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer shrink-0',
-              showGrid
-                ? 'bg-accent/15 border border-accent/40 text-accent shadow-xs'
-                : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
-            )}
-            title="Toggle Chart Grid (G)"
-          >
-            <Grid className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Grid</span>
-          </button>
-
-          {/* Period Separators Toggle (Y) */}
-          <button
-            type="button"
-            onClick={() => setShowPeriodSeparators((v) => !v)}
-            className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer shrink-0',
-              showPeriodSeparators
-                ? 'bg-accent/15 border border-accent/40 text-accent shadow-xs'
-                : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
-            )}
-            title="Toggle Period Separators (Y)"
-          >
-            <SeparatorVertical className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Separators</span>
           </button>
         </div>
 

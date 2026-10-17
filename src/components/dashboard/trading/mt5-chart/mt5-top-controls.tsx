@@ -5,7 +5,7 @@
  * Timeframes, Chart Styles, Zoom, Auto-Scroll/Shift, Grid, Period Separators, Themes, Indicators
  */
 
-import React, { memo, useState } from 'react'
+import React, { memo } from 'react'
 import {
   CandlestickChart,
   BarChart2,
@@ -13,14 +13,11 @@ import {
   Sparkles,
   ZoomIn,
   ZoomOut,
-  Grid,
   Sliders,
-  Palette,
   Zap,
   Maximize2,
   Minimize2,
   ArrowRightToLine,
-  ChevronDown,
 } from 'lucide-react'
 import type { Timeframe, ChartStyle, ThemePreset } from './types'
 import { cn } from '@/lib/cn'
@@ -81,8 +78,6 @@ export const Mt5TopControls = memo(function Mt5TopControls({
   isFullscreen,
   onToggleFullscreen,
 }: TopControlsProps) {
-  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false)
-
   return (
     <div className="shrink-0 flex items-center justify-between gap-1 sm:gap-2 px-2 py-1 bg-surface border-b border-border select-none text-terminal-body overflow-x-auto no-scrollbar">
       {/* Left section: Timeframes & Chart Styles */}
@@ -191,86 +186,18 @@ export const Mt5TopControls = memo(function Mt5TopControls({
         </div>
       </div>
 
-      {/* Right section: Grid, Separators, Indicators, Theme, 1-Click, Fullscreen */}
+      {/* Right section: Properties & Indicators, 1-Click, Fullscreen */}
       <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-        {/* Grid Toggle (G) */}
-        <button
-          type="button"
-          onClick={onToggleGrid}
-          className={cn(
-            'p-1 rounded transition-colors cursor-pointer',
-            showGrid
-              ? 'text-accent bg-accent/15 border border-accent/30'
-              : 'text-text-muted hover:text-text hover:bg-surface-muted'
-          )}
-          title="Toggle Grid (G)"
-          aria-label="Toggle Grid"
-        >
-          <Grid className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Period Separators (Y) */}
-        <button
-          type="button"
-          onClick={onTogglePeriodSeparators}
-          className={cn(
-            'p-1 rounded transition-colors cursor-pointer',
-            showPeriodSeparators
-              ? 'text-accent bg-accent/15 border border-accent/30'
-              : 'text-text-muted hover:text-text hover:bg-surface-muted'
-          )}
-          title="Period Separators (Y)"
-          aria-label="Period Separators"
-        >
-          <Sliders className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Technical Indicators Modal Trigger */}
+        {/* Chart Properties & Technical Indicators Modal Trigger */}
         <button
           type="button"
           onClick={onOpenIndicators}
           className="flex items-center gap-1 px-2 py-0.5 rounded text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
-          title="Technical Indicators (EMA, BB, VWAP, RSI, MACD)"
+          title="Chart Properties & Indicators (Themes, Grid, Separators, EMA, ICT, RSI, MACD)"
         >
-          <Activity className="w-3.5 h-3.5 text-accent" />
-          <span>Indicators</span>
+          <Sliders className="w-3.5 h-3.5 text-accent" />
+          <span>Properties</span>
         </button>
-
-        {/* Theme Preset Dropdown */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setThemeDropdownOpen((v) => !v)}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
-            title="Chart Theme Preset"
-          >
-            <Palette className="w-3 h-3 text-amber-400" />
-            <span className="capitalize hidden md:inline">{theme}</span>
-            <ChevronDown className="w-2.5 h-2.5" />
-          </button>
-
-          {themeDropdownOpen && (
-            <div className="absolute right-0 top-full mt-1 z-30 w-36 bg-surface border border-border rounded-lg shadow-xl p-1 flex flex-col gap-0.5">
-              {(['classic', 'cyber', 'daylight'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => {
-                    onChangeTheme(t)
-                    setThemeDropdownOpen(false)
-                  }}
-                  className={cn(
-                    'w-full text-left px-2 py-1 rounded text-terminal-micro font-semibold capitalize transition-colors cursor-pointer flex items-center justify-between',
-                    theme === t ? 'bg-accent/15 text-accent' : 'text-text hover:bg-surface-muted'
-                  )}
-                >
-                  <span>{t === 'classic' ? 'MT5 Classic' : t === 'cyber' ? 'Obsidian Cyber' : 'Daylight'}</span>
-                  {theme === t && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* 1-Click Execution Box Toggle (Alt+T) */}
         <button

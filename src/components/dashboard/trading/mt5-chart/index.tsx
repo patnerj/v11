@@ -533,12 +533,18 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         onChanged={onChanged}
       />
 
-      {/* Technical Indicators Settings Modal */}
+      {/* Technical Indicators & Properties Settings Modal */}
       <Mt5IndicatorsModal
         isOpen={isIndicatorsModalOpen}
         onClose={() => setIsIndicatorsModalOpen(false)}
         config={indicators}
         onChangeConfig={handleUpdateIndicators}
+        theme={theme}
+        onChangeTheme={handleThemeChange}
+        showGrid={showGrid}
+        onChangeShowGrid={setShowGrid}
+        showPeriodSeparators={showPeriodSeparators}
+        onChangeShowPeriodSeparators={setShowPeriodSeparators}
       />
 
       {/* Manage Objects & Drawings Modal (Ctrl+B) */}
