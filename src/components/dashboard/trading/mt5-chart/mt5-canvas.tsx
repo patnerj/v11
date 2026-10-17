@@ -1220,19 +1220,27 @@ export const Mt5Canvas = memo(
       ctx.fillStyle = colors.textMuted
       ctx.font = FONT_LABEL
       ctx.textAlign = 'center'
-      const timeStep = Math.max(80, candleWidth * 10)
-      for (let x = chartW % timeStep; x < chartW; x += timeStep) {
+      const minStep = 85
+      const timeStep = Math.max(minStep, Math.round(candleWidth * 8))
+      const startX = Math.round(chartW % timeStep) || Math.round(timeStep / 2)
+      for (let x = startX; x < chartW - 20; x += timeStep) {
         const t = xToTime(x)
-        const d = new Date(t)
+        const ms = t < 1e11 ? t * 1000 : t
+        const d = new Date(ms)
         let label = ''
         if (timeframe === 'D1' || timeframe === 'W1') {
           const dateStr = d.toLocaleDateString([], { day: '2-digit', month: 'short' })
           const yrStr = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : ''
           label = `${dateStr}${yrStr}`
         } else {
-          const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
-          const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          label = `${dateStr} ${timeStr}`
+          // Intraday: clean time display (HH:mm); show date only if midnight/day boundary
+          const hours = d.getHours()
+          const minutes = d.getMinutes()
+          if (hours === 0 && minutes === 0) {
+            label = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+          } else {
+            label = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+          }
         }
         ctx.fillText(label, x, mainH + 16)
       }
@@ -1334,7 +1342,8 @@ export const Mt5Canvas = memo(
         ctx.setLineDash([5, 3])
 
         // Entry badge & floating PnL (Right-aligned before price axis)
-        const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} @ ${fmtPrice(openPrice, digits)} · ${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)}`
+        const posLots = pos.lot_size ?? (pos as any).lots ?? (pos as any).volume ?? 0.01
+        const entryText = `${pos.type.toUpperCase()} ${posLots} @ ${fmtPrice(openPrice, digits)} · ${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)}`
         const badgeWidth = ctx.measureText(entryText).width + 36
         const badgeRight = chartW - 8
         const badgeX = badgeRight - badgeWidth
@@ -1417,7 +1426,7 @@ export const Mt5Canvas = memo(
             calcLevelPnL({
               level: activeSlPrice,
               entry: openPrice,
-              lots: toNum(pos.lot_size),
+              lots: toNum(pos.lot_size ?? (pos as any).lots ?? (pos as any).volume ?? 0.01),
               contractSize: symMeta.contractSize,
               mode: 'market',
               isBuy,
@@ -1477,7 +1486,7 @@ export const Mt5Canvas = memo(
             calcLevelPnL({
               level: activeTpPrice,
               entry: openPrice,
-              lots: toNum(pos.lot_size),
+              lots: toNum(pos.lot_size ?? (pos as any).lots ?? (pos as any).volume ?? 0.01),
               contractSize: symMeta.contractSize,
               mode: 'market',
               isBuy,
@@ -1542,7 +1551,8 @@ export const Mt5Canvas = memo(
         ctx.lineWidth = 1.5
         ctx.setLineDash([4, 4])
 
-        const ordText = `${ord.order_type.toUpperCase().replace('_', ' ')} ${ord.lot_size} @ ${fmtPrice(activeTgtPrice, digits)}`
+        const ordLots = ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01
+        const ordText = `${ord.order_type.toUpperCase().replace('_', ' ')} ${ordLots} @ ${fmtPrice(activeTgtPrice, digits)}`
         const ordBadgeWidth = ctx.measureText(ordText).width + 30
         const ordBadgeRight = chartW - 8
         const ordBadgeX = ordBadgeRight - ordBadgeWidth
@@ -2319,7 +2329,7 @@ export const Mt5Canvas = memo(
           calcLevelPnL({
             level: curPrice,
             entry: openPrice,
-            lots: toNum(pos.lot_size),
+            lots: toNum(pos.lot_size ?? (pos as any).lots ?? (pos as any).volume ?? 0.01),
             contractSize: symMeta.contractSize,
             mode: 'market',
             isBuy,
@@ -2476,7 +2486,7 @@ export const Mt5Canvas = memo(
                   symbol: ord.symbol,
                   order_type: ord.order_type as any,
                   type: ord.type as any,
-                  lot_size: toNum(ord.lot_size),
+                  lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
                   target_price: newTarget,
                   sl: ord.sl !== null ? toNum(ord.sl) : null,
                   tp: ord.tp !== null ? toNum(ord.tp) : null,

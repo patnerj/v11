@@ -95,7 +95,12 @@ export default function Mt5WebTerminalPage() {
 
   const [chs, setChs] = useState<ChallengeAccount[] | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [showMoreTelemetry, setShowMoreTelemetry] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Dock visibility states: auto-collapse Market Watch on screens < 1280px to prevent chart squishing
   const [mwOpen, setMwOpen] = useState(() => {
@@ -264,6 +269,17 @@ export default function Mt5WebTerminalPage() {
     ? Math.max(0, (toNum(activeTick.ask) - toNum(activeTick.bid)) / (activeMeta.pipSize || 1)).toFixed(1)
     : null
 
+  if (!mounted) {
+    return (
+      <div className="flex-1 min-h-0 w-full h-full flex flex-col items-center justify-center bg-bg">
+        <div className="flex flex-col items-center gap-3 text-sm text-text-muted">
+          <div className="h-7 w-7 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+          <span>Loading MT5 WebTerminal…</span>
+        </div>
+      </div>
+    )
+  }
+
   if (!isDesktop) {
     return (
       <div className="flex-1 min-h-0 w-full h-full flex flex-col overflow-hidden bg-bg">
@@ -307,7 +323,7 @@ export default function Mt5WebTerminalPage() {
               </div>
               <div className="flex-1 min-h-0 overflow-hidden">
                 <SectionErrorBoundary sectionName="MarketWatch">
-                  <MarketWatch onPick={() => setMobileView('chart')} />
+                  <MarketWatch showBidAsk onPick={() => setMobileView('chart')} />
                 </SectionErrorBoundary>
               </div>
             </section>
@@ -317,26 +333,26 @@ export default function Mt5WebTerminalPage() {
           {mobileView === 'chart' && (
             <section className="flex-1 min-h-0 bg-surface flex flex-col overflow-hidden relative">
               {/* Sleek Mobile Chart Top Controls (Height 40px) */}
-              <div className="shrink-0 h-10 px-2 border-b border-border bg-surface flex items-center justify-between gap-1 select-none text-xs overflow-x-auto no-scrollbar">
+              <div className="shrink-0 h-10 px-1.5 border-b border-border bg-surface flex items-center justify-between gap-1 select-none text-xs overflow-x-auto no-scrollbar">
                 {/* Active Symbol Pill (Tap to open Quotes) */}
                 <button
                   type="button"
                   onClick={() => setMobileView('quotes')}
-                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-subtle border border-border text-terminal-label font-bold text-text hover:bg-surface-muted transition-colors cursor-pointer shrink-0"
+                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md bg-bg-subtle border border-border text-terminal-label font-bold text-text hover:bg-surface-muted transition-colors cursor-pointer shrink-0"
                   title="Change symbol"
                 >
                   <span>{active}</span>
                   {activeSpread !== null && (
-                    <span className="text-terminal-micro text-text-muted font-normal">
+                    <span className="hidden min-[380px]:inline text-terminal-micro text-text-muted font-normal">
                       <strong className="text-text font-semibold">{activeSpread}</strong> pts
                     </span>
                   )}
                   <ChevronDown className="w-3 h-3 text-text-muted ml-0.5" />
                 </button>
 
-                {/* Timeframe quick switcher pills */}
+                {/* Timeframe quick switcher pills - 4 core MT5 mobile timeframes (M1, M5, H1, D1) */}
                 <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle shrink-0">
-                  {TIMEFRAMES.slice(0, 5).map((tf) => (
+                  {(['M1', 'M5', 'H1', 'D1'] as Timeframe[]).map((tf) => (
                     <button
                       key={tf}
                       type="button"
@@ -455,6 +471,9 @@ export default function Mt5WebTerminalPage() {
                     compact
                     account={currentAcc}
                     plan={plan || metrics?.plan}
+                    challenge={currentCh}
+                    isTournament={isTournamentMode}
+                    tournamentTitle={tournamentTitle}
                     onChanged={onChanged}
                     onSubmitted={() => setMobileView('positions')}
                   />
@@ -517,7 +536,15 @@ export default function Mt5WebTerminalPage() {
               <div className="flex-1 overflow-y-auto min-h-0">
                 <SectionErrorBoundary sectionName="PositionsTable">
                   {tab === 'positions' ? (
-                    <PositionsTable positions={positions} onChanged={onChanged} compact />
+                    <PositionsTable
+                      positions={positions}
+                      onChanged={onChanged}
+                      compact
+                      onViewChart={(sym) => {
+                        useTerminal.getState().setActive(sym)
+                        setMobileView('chart')
+                      }}
+                    />
                   ) : (
                     <PendingOrdersTable orders={pending} onChanged={onChanged} />
                   )}
@@ -870,7 +897,7 @@ export default function Mt5WebTerminalPage() {
             ) : (
               /* Responsive Viewports (< 1280px): Single Tabbed Dock */
               mwOpen ? (
-                <aside className="w-[310px] min-w-[310px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+                <aside className="w-[280px] min-w-[280px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
                   <div className="shrink-0 px-2.5 py-1.5 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/40">
                     <div className="flex items-center gap-1">
                       <button
@@ -915,7 +942,14 @@ export default function Mt5WebTerminalPage() {
                       {tabbedDockTab === 'mw' ? (
                         <MarketWatch />
                       ) : (
-                        <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
+                        <OrderTicket
+                          account={currentAcc}
+                          plan={plan || metrics?.plan}
+                          challenge={currentCh}
+                          isTournament={isTournamentMode}
+                          tournamentTitle={tournamentTitle}
+                          onChanged={onChanged}
+                        />
                       )}
                     </SectionErrorBoundary>
                   </div>
@@ -1089,7 +1123,11 @@ export default function Mt5WebTerminalPage() {
                     <div className="flex-1 overflow-y-auto min-h-0">
                       <SectionErrorBoundary sectionName="PositionsTable">
                         {tab === 'positions' ? (
-                          <PositionsTable positions={positions} onChanged={onChanged} />
+                          <PositionsTable
+                            positions={positions}
+                            onChanged={onChanged}
+                            onViewChart={(sym) => useTerminal.getState().setActive(sym)}
+                          />
                         ) : (
                           <PendingOrdersTable orders={pending} onChanged={onChanged} />
                         )}
@@ -1209,7 +1247,14 @@ export default function Mt5WebTerminalPage() {
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto">
                   <SectionErrorBoundary sectionName="OrderTicket">
-                    <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
+                    <OrderTicket
+                      account={currentAcc}
+                      plan={plan || metrics?.plan}
+                      challenge={currentCh}
+                      isTournament={isTournamentMode}
+                      tournamentTitle={tournamentTitle}
+                      onChanged={onChanged}
+                    />
                   </SectionErrorBoundary>
                 </div>
               </aside>

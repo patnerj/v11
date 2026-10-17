@@ -3,7 +3,7 @@
 import { memo, useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Pencil, X, Check, ChevronDown, Trash2, Share2, MoreHorizontal, ShieldCheck } from 'lucide-react'
+import { Pencil, X, Check, ChevronDown, Trash2, Share2, MoreHorizontal, ShieldCheck, Activity } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
@@ -26,9 +26,11 @@ interface Props {
   onChanged?: () => void
   /** Hide some columns on tiny viewports. */
   compact?: boolean
+  /** Called to view symbol on chart */
+  onViewChart?: (symbol: string) => void
 }
 
-export const PositionsTable = memo(function PositionsTable({ positions, onChanged, compact }: Props) {
+export const PositionsTable = memo(function PositionsTable({ positions, onChanged, compact, onViewChart }: Props) {
   const [shareTrade, setShareTrade] = useState<ShareTradeData | null>(null)
   const [isCloseAllConfirmOpen, setIsCloseAllConfirmOpen] = useState(false)
   const [isClosingAll, setIsClosingAll] = useState(false)
@@ -378,6 +380,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
                 compact={compact}
                 onShare={setShareTrade}
                 onRequestClose={setClosingPosition}
+                onViewChart={onViewChart}
               />
             ))}
           </tbody>
@@ -412,8 +415,8 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   )
 })
 
-function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }: {
-  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void; onRequestClose?: (pos: Position) => void
+function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, onViewChart }: {
+  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void; onRequestClose?: (pos: Position) => void; onViewChart?: (symbol: string) => void
 }) {
   const getMeta = useTerminal((s) => s.getMeta)
   const meta    = getMeta(pos.symbol)
@@ -684,10 +687,13 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
           </div>
         </Td>
         <Td>
-          <Badge tone={pos.type === 'buy' ? 'success' : 'danger'}>{pos.type.toUpperCase()}</Badge>
+          <Badge tone={pos.type === 'buy' ? 'success' : 'danger'}>
+            {pos.type.toUpperCase()}
+            {compact && ` ${fmtLots((pos as any).lot_size ?? (pos as any).lots ?? (pos as any).volume)}`}
+          </Badge>
         </Td>
         <Td align="right" hideOn={compact ? 'sm' : undefined}>
-          <span className="terminal-num text-text-muted">{fmtLots(pos.lot_size)}</span>
+          <span className="terminal-num text-text-muted">{fmtLots((pos as any).lot_size ?? (pos as any).lots ?? (pos as any).volume)}</span>
         </Td>
         <Td align="right" hideOn="md">
           <span className="terminal-num text-text-muted">{fmtPrice(pos.open_price, digits)}</span>
@@ -793,6 +799,15 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Set Breakeven</span>
                 </DropdownMenuItem>
+                {onViewChart && (
+                  <DropdownMenuItem
+                    onClick={() => onViewChart(pos.symbol)}
+                    className="gap-2 text-terminal-body font-normal"
+                  >
+                    <Activity className="h-3.5 w-3.5 text-accent" />
+                    <span>View on Chart</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   disabled={busy || !canPartial}
                   onClick={() => setShowPartial((v) => !v)}

@@ -16,9 +16,11 @@ interface Props {
   compact?: boolean
   /** When given, clicking a symbol also calls this — for closing mobile sheets. */
   onPick?: (sym: string) => void
+  /** Show both Bid and Ask columns (native MT5 mobile quotes style) */
+  showBidAsk?: boolean
 }
 
-export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props) {
+export const MarketWatch = memo(function MarketWatch({ compact, onPick, showBidAsk }: Props) {
   const symbols   = useTerminal((s) => s.symbols)
   const active    = useTerminal((s) => s.active)
   const setActive = useTerminal((s) => s.setActive)
@@ -85,6 +87,17 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
         </div>
       </div>
 
+      {/* Column Headers for MT5 Quotes mode */}
+      {showBidAsk && (
+        <div className="shrink-0 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 flex items-center justify-between text-[10px] uppercase tracking-wider text-text-muted font-semibold">
+          <span>Symbol / Spread</span>
+          <div className="flex items-center gap-7 pr-1">
+            <span className="w-16 text-right">Bid</span>
+            <span className="w-16 text-right">Ask</span>
+          </div>
+        </div>
+      )}
+
       {/* Symbol list */}
       <div className="flex-1 overflow-y-auto px-1 pb-2 min-h-0">
         {Object.entries(grouped).length === 0 ? (
@@ -104,6 +117,7 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
                     isActive={active === s.symbol}
                     isWatched={watchlist.includes(s.symbol)}
                     compact={compact}
+                    showBidAsk={showBidAsk}
                     onPick={() => { setActive(s.symbol); onPick?.(s.symbol) }}
                     onStar={() => toggle(s.symbol)}
                   />
@@ -120,13 +134,14 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
 /** A single watchlist row. Subscribes only to its own symbol's price to avoid
  *  re-rendering on every other symbol's tick. */
 const WatchRow = memo(function WatchRow({
-  sym, digits, isActive, isWatched, compact, onPick, onStar,
+  sym, digits, isActive, isWatched, compact, showBidAsk, onPick, onStar,
 }: {
   sym: string
   digits: number
   isActive: boolean
   isWatched: boolean
   compact?: boolean
+  showBidAsk?: boolean
   onPick: () => void
   onStar: () => void
 }) {
@@ -156,9 +171,10 @@ const WatchRow = memo(function WatchRow({
     // button. Both are keyboard-focusable.
     <div
       className={cn(
-        'w-full grid items-center px-2 py-1.5 rounded-md transition-colors relative',
-        compact ? 'grid-cols-[1fr_auto]' : 'grid-cols-[1fr_auto_auto]',
-        'gap-2',
+        'w-full grid items-center px-2 py-2 rounded-md transition-colors relative',
+        showBidAsk
+          ? 'grid-cols-[1fr_auto_auto] gap-3 sm:gap-4'
+          : compact ? 'grid-cols-[1fr_auto] gap-2' : 'grid-cols-[1fr_auto_auto] gap-2',
         isActive ? 'bg-accent-muted text-text' : 'hover:bg-surface-muted/50 text-text',
       )}
     >
@@ -186,7 +202,7 @@ const WatchRow = memo(function WatchRow({
       </AnimatePresence>
 
       {/* Star + symbol */}
-      <div className="relative z-10 flex items-center gap-1.5 min-w-0 pointer-events-none">
+      <div className="relative z-10 flex items-center gap-2 min-w-0 pointer-events-none">
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onStar() }}
@@ -197,25 +213,56 @@ const WatchRow = memo(function WatchRow({
           aria-pressed={isWatched}
           aria-label={isWatched ? `Remove ${sym} from watchlist` : `Add ${sym} to watchlist`}
         >
-          <Star className={cn('h-3 w-3', isWatched && 'fill-current')} />
+          <Star className={cn('h-3.5 w-3.5', isWatched && 'fill-current')} />
         </button>
-        <span className="text-xs font-semibold truncate text-text font-sans">{sym}</span>
+        <div className="flex flex-col min-w-0">
+          <span className="text-xs font-bold truncate text-text font-sans">{sym}</span>
+          {showBidAsk ? (
+            <span className="text-[10px] tabular-nums text-text-muted font-sans">
+              {bid && ask ? `Spread: ${Math.round(spread / pipSize(sym) * 10) / 10} pts` : ''}
+            </span>
+          ) : null}
+        </div>
       </div>
 
-      {/* Bid + direction glyph (non-color cue) */}
-      <span className={cn(
-        'relative z-10 pointer-events-none text-xs font-medium tabular-nums whitespace-nowrap inline-flex items-center gap-0.5 justify-end font-sans',
-        flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text',
-      )}>
-        {flash && <span aria-hidden className="text-[10px]">{flash === 'up' ? '▲' : '▼'}</span>}
-        {bid ? fmtPrice(bid, digits) : <span className="text-text-faint">—</span>}
-      </span>
+      {showBidAsk ? (
+        <>
+          {/* Bid Column */}
+          <div className="relative z-10 pointer-events-none flex flex-col items-end justify-center min-w-[65px]">
+            <span className={cn(
+              'text-xs font-bold tabular-nums font-mono flex items-center gap-0.5',
+              flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text'
+            )}>
+              {flash && <span aria-hidden className="text-[9px]">{flash === 'up' ? '▲' : '▼'}</span>}
+              {bid ? fmtPrice(bid, digits) : '—'}
+            </span>
+          </div>
 
-      {/* Spread (only in non-compact) */}
-      {!compact && (
-        <span className="relative z-10 pointer-events-none text-[11px] tabular-nums text-text-muted whitespace-nowrap min-w-[42px] text-right font-sans">
-          {bid && ask ? `${Math.round(spread / pipSize(sym) * 10) / 10}p` : ''}
-        </span>
+          {/* Ask Column */}
+          <div className="relative z-10 pointer-events-none flex flex-col items-end justify-center min-w-[65px]">
+            <span className="text-xs font-bold tabular-nums font-mono text-text">
+              {ask ? fmtPrice(ask, digits) : '—'}
+            </span>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Bid + direction glyph (non-color cue) */}
+          <span className={cn(
+            'relative z-10 pointer-events-none text-xs font-medium tabular-nums whitespace-nowrap inline-flex items-center gap-0.5 justify-end font-sans',
+            flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text',
+          )}>
+            {flash && <span aria-hidden className="text-[10px]">{flash === 'up' ? '▲' : '▼'}</span>}
+            {bid ? fmtPrice(bid, digits) : <span className="text-text-faint">—</span>}
+          </span>
+
+          {/* Spread (only in non-compact) */}
+          {!compact && (
+            <span className="relative z-10 pointer-events-none text-[11px] tabular-nums text-text-muted whitespace-nowrap min-w-[42px] text-right font-sans">
+              {bid && ask ? `${Math.round(spread / pipSize(sym) * 10) / 10}p` : ''}
+            </span>
+          )}
+        </>
       )}
     </div>
   )
