@@ -270,12 +270,17 @@ export default function Mt5WebTerminalPage() {
         </div>
       )}
 
+      {/* Dedicated Trader Account Strip (Only rendered when trader has active accounts to switch / view) */}
+      {switchEntries.length > 0 && (
+        <div className="shrink-0">
+          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={false} />
+        </div>
+      )}
+
       {/* MT5 Single Unified Institutional Top Controls Toolbar */}
       <div className="shrink-0 flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 py-1.5 rounded-lg bg-surface border border-border select-none text-terminal-body overflow-x-auto no-scrollbar">
-        {/* Left Section: Account Switcher, Active Symbol Badge, Timeframe pills, Chart Style pills, Indicators button, Theme selector, 1-Click */}
+        {/* Left Section: Active Symbol Badge, Timeframe pills, Chart Style pills, Indicators button, 1-Click */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={false} />
-
           {/* Active Symbol & Spread Badge */}
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-subtle/80 border border-border-subtle text-terminal-label shrink-0">
             <span className="font-bold text-text">{active}</span>
