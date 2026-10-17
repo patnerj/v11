@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices } from '@/store/prices'
 import { fmtPrice, fmtUSD, fmtLots, toNum, pnlClass } from '@/lib/format'
+import { getSymbolMeta } from '@/lib/symbol-meta'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 import { playOrderCloseSound, playSltpUpdatedSound } from '@/lib/sound'
@@ -52,8 +53,9 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
   const positions = useMemo(() => normalizeList<Position>(rawPositions), [rawPositions])
   const pendingOrders = useMemo(() => normalizeList<PendingOrder>(rawPending), [rawPending])
 
-  const pSize = pSizeRaw > 0 ? pSizeRaw : 0.0001
-  const contract = contractSize > 0 ? contractSize : 100000
+  const symMeta = getSymbolMeta(symbol)
+  const pSize = pSizeRaw > 0 ? pSizeRaw : (symMeta.pipSize || 0.0001)
+  const contract = contractSize > 0 ? contractSize : symMeta.contractSize
 
   // Active selected position when multiple exist on this symbol
   const [selectedPosId, setSelectedPosId] = useState<number | null>(null)

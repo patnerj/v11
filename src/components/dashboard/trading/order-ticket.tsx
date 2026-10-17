@@ -14,7 +14,7 @@ import { useTerminal } from '@/store/terminal'
 import { usePrices, nextOptimisticId } from '@/store/prices'
 import { cn } from '@/lib/cn'
 import { fmtPrice, fmtUSD, toNum, fmtLots } from '@/lib/format'
-import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies, isMarketOpen } from '@/lib/symbol-meta'
+import { symbolDigits, pipSize, estimatedPipValue, symbolCurrencies, isMarketOpen, getSymbolMeta } from '@/lib/symbol-meta'
 import { quoteToUsdRate } from '@/lib/order-math'
 import { useQuery } from '@tanstack/react-query'
 import type { Account, ChallengePlan, Position } from '@/types/api'
@@ -112,13 +112,14 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
   if (plan?.max_lot_size) {
     maxLot = Math.min(maxLot, toNum(plan.max_lot_size))
   }
+  const symMeta = getSymbolMeta(active, meta)
   const lotStep = 0.01
-  const contractSize = toNum(meta?.contract_size) || 100000
+  const contractSize = toNum(meta?.contract_size) || symMeta.contractSize
 
   const bid = toNum(tick?.bid)
   const ask = toNum(tick?.ask)
   const spread = bid && ask ? Math.max(0, ask - bid) : 0
-  const spreadPips = spread / pipSize(active, digits)
+  const spreadPips = spread / (symMeta.pipSize || pipSize(active, digits) || 1)
 
   // Numeric versions for previews
   const lotN = toNum(lot)

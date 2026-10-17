@@ -33,12 +33,21 @@ import { Mt5ObjectsModal } from './mt5-objects-modal'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 
-interface Mt5ChartPanelProps {
+export interface Mt5ChartPanelProps {
   compact?: boolean
   positions?: Position[] | null
   pendingOrders?: PendingOrder[] | null
   plan?: any | null
   onChanged?: () => void
+  showTopControls?: boolean
+  timeframe?: Timeframe
+  onChangeTimeframe?: (tf: Timeframe) => void
+  chartStyle?: ChartStyle
+  onChangeChartStyle?: (style: ChartStyle) => void
+  theme?: ThemePreset
+  onChangeTheme?: (theme: ThemePreset) => void
+  isIndicatorsModalOpen?: boolean
+  onToggleIndicatorsModal?: (open: boolean) => void
 }
 
 export const Mt5ChartPanel = memo(function Mt5ChartPanel({
@@ -47,6 +56,15 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   pendingOrders: propPending,
   plan,
   onChanged,
+  showTopControls = true,
+  timeframe: propTimeframe,
+  onChangeTimeframe: propOnChangeTimeframe,
+  chartStyle: propChartStyle,
+  onChangeChartStyle: propOnChangeChartStyle,
+  theme: propTheme,
+  onChangeTheme: propOnChangeTheme,
+  isIndicatorsModalOpen: propIsIndicatorsModalOpen,
+  onToggleIndicatorsModal: propOnToggleIndicatorsModal,
 }: Mt5ChartPanelProps) {
   const canvasRef = useRef<Mt5CanvasHandle>(null)
   const active = useTerminal((s) => s.active)
@@ -68,18 +86,24 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   const pSize = useMemo(() => pipSize(active, digits), [active, digits])
 
   // Persistent preferences: Timeframe, Style, Theme, Grid, Separators, Shift
-  const [timeframe, setTimeframe] = useState<Timeframe>(() => {
+  const [internalTimeframe, setInternalTimeframe] = useState<Timeframe>(() => {
     if (typeof window === 'undefined') return 'H1'
     try { return (localStorage.getItem('fxsim:mt5:tf') as Timeframe) || 'H1' } catch { return 'H1' }
   })
-  const [chartStyle, setChartStyle] = useState<ChartStyle>(() => {
+  const timeframe = propTimeframe ?? internalTimeframe
+
+  const [internalChartStyle, setInternalChartStyle] = useState<ChartStyle>(() => {
     if (typeof window === 'undefined') return 'candlestick'
     try { return (localStorage.getItem('fxsim:mt5:style') as ChartStyle) || 'candlestick' } catch { return 'candlestick' }
   })
-  const [theme, setTheme] = useState<ThemePreset>(() => {
+  const chartStyle = propChartStyle ?? internalChartStyle
+
+  const [internalTheme, setInternalTheme] = useState<ThemePreset>(() => {
     if (typeof window === 'undefined') return 'cyber'
     try { return (localStorage.getItem('fxsim:mt5:theme') as ThemePreset) || 'cyber' } catch { return 'cyber' }
   })
+  const theme = propTheme ?? internalTheme
+
   const [showGrid, setShowGrid] = useState(true)
   const [showPeriodSeparators, setShowPeriodSeparators] = useState(true)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -95,7 +119,12 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
       return DEFAULT_INDICATORS
     }
   })
-  const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false)
+  const [internalIndicatorsOpen, setInternalIndicatorsOpen] = useState(false)
+  const isIndicatorsModalOpen = propIsIndicatorsModalOpen ?? internalIndicatorsOpen
+  const setIsIndicatorsModalOpen = useCallback((open: boolean) => {
+    if (propOnToggleIndicatorsModal) propOnToggleIndicatorsModal(open)
+    else setInternalIndicatorsOpen(open)
+  }, [propOnToggleIndicatorsModal])
 
   // Drawing tools & Objects list
   const [activeTool, setActiveTool] = useState<DrawingTool>('select')
@@ -154,6 +183,14 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
       pipSize: pSize,
     }).then((loadedCandles) => {
       if (!cancelled) {
+        const freshBid = usePrices.getState().prices[active]?.bid
+        if (freshBid && Number(freshBid) > 0 && loadedCandles.length > 0) {
+          const b = Number(freshBid)
+          const last = loadedCandles[loadedCandles.length - 1]
+          last.close = b
+          last.high = Math.max(last.high, b)
+          last.low = Math.min(last.low, b)
+        }
         setCandles(loadedCandles)
         setLoading(false)
       }
@@ -177,17 +214,20 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
   // Handlers for state updates with localStorage persistence
   const handleTimeframeChange = (tf: Timeframe) => {
-    setTimeframe(tf)
+    if (propOnChangeTimeframe) propOnChangeTimeframe(tf)
+    else setInternalTimeframe(tf)
     try { localStorage.setItem('fxsim:mt5:tf', tf) } catch {}
   }
 
   const handleChartStyleChange = (st: ChartStyle) => {
-    setChartStyle(st)
+    if (propOnChangeChartStyle) propOnChangeChartStyle(st)
+    else setInternalChartStyle(st)
     try { localStorage.setItem('fxsim:mt5:style', st) } catch {}
   }
 
   const handleThemeChange = (th: ThemePreset) => {
-    setTheme(th)
+    if (propOnChangeTheme) propOnChangeTheme(th)
+    else setInternalTheme(th)
     try { localStorage.setItem('fxsim:mt5:theme', th) } catch {}
   }
 
@@ -355,29 +395,31 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
       }}
     >
       {/* Top Controls Toolbar */}
-      <Mt5TopControls
-        timeframe={timeframe}
-        onChangeTimeframe={handleTimeframeChange}
-        chartStyle={chartStyle}
-        onChangeChartStyle={handleChartStyleChange}
-        theme={theme}
-        onChangeTheme={handleThemeChange}
-        showGrid={showGrid}
-        onToggleGrid={() => setShowGrid(!showGrid)}
-        showPeriodSeparators={showPeriodSeparators}
-        onTogglePeriodSeparators={() => setShowPeriodSeparators(!showPeriodSeparators)}
-        autoScroll={autoScroll}
-        onToggleAutoScroll={() => setAutoScroll(!autoScroll)}
-        chartShift={chartShift}
-        onToggleChartShift={() => setChartShift(!chartShift)}
-        onZoomIn={() => canvasRef.current?.zoomIn()}
-        onZoomOut={() => canvasRef.current?.zoomOut()}
-        onOpenIndicators={() => setIsIndicatorsModalOpen(true)}
-        showOneClick={showOneClick}
-        onToggleOneClick={toggleOneClick}
-        isFullscreen={isChartFs}
-        onToggleFullscreen={toggleChartFs}
-      />
+      {(showTopControls || isChartFs) && (
+        <Mt5TopControls
+          timeframe={timeframe}
+          onChangeTimeframe={handleTimeframeChange}
+          chartStyle={chartStyle}
+          onChangeChartStyle={handleChartStyleChange}
+          theme={theme}
+          onChangeTheme={handleThemeChange}
+          showGrid={showGrid}
+          onToggleGrid={() => setShowGrid(!showGrid)}
+          showPeriodSeparators={showPeriodSeparators}
+          onTogglePeriodSeparators={() => setShowPeriodSeparators(!showPeriodSeparators)}
+          autoScroll={autoScroll}
+          onToggleAutoScroll={() => setAutoScroll(!autoScroll)}
+          chartShift={chartShift}
+          onToggleChartShift={() => setChartShift(!chartShift)}
+          onZoomIn={() => canvasRef.current?.zoomIn()}
+          onZoomOut={() => canvasRef.current?.zoomOut()}
+          onOpenIndicators={() => setIsIndicatorsModalOpen(true)}
+          showOneClick={showOneClick}
+          onToggleOneClick={toggleOneClick}
+          isFullscreen={isChartFs}
+          onToggleFullscreen={toggleChartFs}
+        />
+      )}
 
       {/* Main Chart Area with Docked Left Rail */}
       <div className="relative flex-1 w-full h-full min-h-0 overflow-hidden flex flex-row">

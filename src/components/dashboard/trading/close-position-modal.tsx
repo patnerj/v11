@@ -6,7 +6,7 @@ import { X, AlertTriangle, ArrowRight, ShieldAlert, Sparkles, TrendingUp, Trendi
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fmtPrice, fmtUSD, fmtLots, toNum, pnlClass } from '@/lib/format'
-import { symbolDigits } from '@/lib/symbol-meta'
+import { symbolDigits, getSymbolMeta } from '@/lib/symbol-meta'
 import { quoteToUsdRate } from '@/lib/order-math'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
@@ -71,7 +71,7 @@ export const ClosePositionModal = memo(function ClosePositionModal({
     if (tick && currentPx > 0 && toNum(position.open_price) > 0) {
       const openPx = toNum(position.open_price)
       const diff = position.type === 'buy' ? currentPx - openPx : openPx - currentPx
-      const contractSize = toNum(meta?.contract_size) || 100000
+      const contractSize = toNum(meta?.contract_size) || getSymbolMeta(position.symbol).contractSize
       const calcPnl = diff * contractSize * toNum(position.lot_size)
       return calcPnl * quoteToUsdRate(position.symbol, currentPx, allPrices) + toNum(position.swap) - toNum(position.commission)
     }

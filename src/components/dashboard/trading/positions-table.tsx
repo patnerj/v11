@@ -426,8 +426,9 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
   const slDraftNum = slDraft.trim() ? toNum(slDraft) : null
   const tpDraftNum = tpDraft.trim() ? toNum(tpDraft) : null
 
-  const pSize = pipSize(pos.symbol, digits)
-  const contract = toNum(meta?.contract_size) || 100000
+  const symMeta = getSymbolMeta(pos.symbol, meta)
+  const pSize = symMeta.pipSize || pipSize(pos.symbol, digits)
+  const contract = toNum(meta?.contract_size) || symMeta.contractSize
   const openPx = toNum(pos.open_price)
 
   const slDraftMetrics = useMemo(() => {
@@ -636,7 +637,7 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose }
     if (tick && currentPx > 0 && toNum(pos.open_price) > 0) {
       const openPx = toNum(pos.open_price)
       const diff = pos.type === 'buy' ? currentPx - openPx : openPx - currentPx
-      const contractSize = toNum(meta?.contract_size) || 100000
+      const contractSize = toNum(meta?.contract_size) || getSymbolMeta(pos.symbol).contractSize
       const calcPnl = diff * contractSize * toNum(pos.lot_size)
       return calcPnl * quoteToUsdRate(pos.symbol, currentPx, allPrices) + toNum(pos.swap) - toNum(pos.commission)
     }

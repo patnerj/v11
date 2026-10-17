@@ -52,7 +52,7 @@ export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): Sym
     digits = Number(fallback.digits)
   } else if (sym.includes('JPY')) {
     digits = 3
-  } else if (sym === 'XAUUSD' || sym === 'XAGUSD' || sym === 'BTCUSD' || sym === 'ETHUSD' || cat === 'crypto') {
+  } else if (sym === 'XAUUSD' || sym === 'XAGUSD' || sym === 'BTCUSD' || sym === 'ETHUSD' || cat === 'crypto' || cat === 'commodity') {
     digits = 2
   } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
     digits = 1
@@ -62,7 +62,7 @@ export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): Sym
   let contractSize = 100000
   if (fallback?.contract_size && Number(fallback.contract_size) > 0) {
     contractSize = Number(fallback.contract_size)
-  } else if (cat === 'crypto' || sym.startsWith('BTC') || sym.startsWith('ETH') || sym.includes('SOL')) {
+  } else if (cat === 'crypto' || sym.startsWith('BTC') || sym.startsWith('ETH') || sym.includes('SOL') || sym.includes('USDT') || sym.startsWith('LTC') || sym.startsWith('XRP')) {
     contractSize = 1
   } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
     contractSize = 1
@@ -70,18 +70,24 @@ export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): Sym
     contractSize = 100
   } else if (sym === 'XAGUSD') {
     contractSize = 5000
+  } else if (sym === 'USOIL' || sym === 'UKOIL') {
+    contractSize = 1000
   }
 
   // 3. Pip Size (Smallest price unit users think in)
   let pSize = 0.0001
   if (cat === 'crypto' || sym.startsWith('BTC') || sym.startsWith('ETH')) {
     pSize = 1
+  } else if (sym.includes('SOL') || sym.startsWith('LTC') || sym.startsWith('XRP')) {
+    pSize = 0.1
   } else if (sym === 'XAUUSD') {
     pSize = 0.1
   } else if (sym === 'XAGUSD') {
     pSize = 0.01
   } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
     pSize = 0.1
+  } else if (sym === 'USOIL' || sym === 'UKOIL') {
+    pSize = 0.01
   } else if (digits === 3 || sym.includes('JPY')) {
     pSize = 0.01
   } else if (digits === 2) {
@@ -112,9 +118,11 @@ export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): Sym
 export function pipSize(sym: string, digits?: number): number {
   const s = (sym || '').toUpperCase()
   if (s === 'BTCUSD' || s === 'ETHUSD' || s.startsWith('BTC') || s.startsWith('ETH')) return 1
+  if (s.includes('SOL') || s.startsWith('LTC') || s.startsWith('XRP')) return 0.1
   if (s === 'XAUUSD') return 0.1
   if (s === 'XAGUSD') return 0.01
   if (/^(US\d|NAS\d|GER\d|UK\d|SPX|DJI)/.test(s)) return 0.1
+  if (s === 'USOIL' || s === 'UKOIL') return 0.01
   const d = digits ?? symbolDigits(sym)
   if (d === 5) return 0.0001
   if (d === 3) return 0.01
@@ -212,9 +220,9 @@ export function parseTvMap(raw: string | undefined | null): Record<string, strin
 /** Group label for the watchlist. Cheap categorisation by symbol shape. */
 export function symbolCategory(sym: string): 'forex' | 'commodity' | 'crypto' | 'index' {
   const s = sym.toUpperCase()
-  if (s === 'XAUUSD' || s === 'XAGUSD') return 'commodity'
-  if (s === 'BTCUSD' || s === 'ETHUSD') return 'crypto'
-  if (/^(US\d|NAS\d|GER\d|UK\d|SPX|DJI)/.test(s)) return 'index'
+  if (s === 'XAUUSD' || s === 'XAGUSD' || s === 'USOIL' || s === 'UKOIL') return 'commodity'
+  if (s === 'BTCUSD' || s === 'ETHUSD' || s.startsWith('BTC') || s.startsWith('ETH') || s.includes('SOL') || s.includes('USDT') || s.startsWith('LTC') || s.startsWith('XRP') || s.startsWith('DOGE')) return 'crypto'
+  if (/^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN|AUS|FRA|EUSTX)/.test(s)) return 'index'
   return 'forex'
 }
 

@@ -189,12 +189,18 @@ export async function loadHistoricalCandles(args: {
       if (res.ok) {
         const raw = await res.json()
         if (Array.isArray(raw) && raw.length > 0) {
+          const rawLastClose = Number(raw[raw.length - 1][4])
+          let offset = 0
+          if (anchorPrice && anchorPrice > 0 && rawLastClose > 0) {
+            offset = anchorPrice - rawLastClose
+          }
+
           const candles: Candle[] = raw.map((k: any) => ({
             time: Number(k[0]),
-            open: parseFloat(Number(k[1]).toFixed(digits)),
-            high: parseFloat(Number(k[2]).toFixed(digits)),
-            low: parseFloat(Number(k[3]).toFixed(digits)),
-            close: parseFloat(Number(k[4]).toFixed(digits)),
+            open: parseFloat((Number(k[1]) + offset).toFixed(digits)),
+            high: parseFloat((Number(k[2]) + offset).toFixed(digits)),
+            low: parseFloat((Number(k[3]) + offset).toFixed(digits)),
+            close: parseFloat((Number(k[4]) + offset).toFixed(digits)),
             volume: Math.round(Number(k[5])),
           }))
           if (anchorPrice && anchorPrice > 0 && candles.length > 0) {
@@ -222,7 +228,7 @@ export async function loadHistoricalCandles(args: {
       last.high = Math.max(last.high, anchorPrice)
       last.low = Math.min(last.low, anchorPrice)
     }
-    return cached
+    return [...cached]
   }
 
   const generated = generateRealisticCandles({
@@ -270,11 +276,12 @@ export function updateCandlesWithLiveTick(
   } else if (expectedCandleTime > last.time) {
     // New candle timeframe rolled over — open from previous close
     const openPx = last.close
+    const microTick = digits > 0 ? Math.pow(10, -digits) : 1
     const newCandle: Candle = {
       time: expectedCandleTime,
       open: openPx,
-      high: parseFloat(Math.max(openPx, tick.bid).toFixed(digits)),
-      low: parseFloat(Math.min(openPx, tick.bid).toFixed(digits)),
+      high: parseFloat(Math.max(openPx, tick.bid, openPx + microTick).toFixed(digits)),
+      low: parseFloat(Math.min(openPx, tick.bid, Math.max(0, openPx - microTick)).toFixed(digits)),
       close: parseFloat(tick.bid.toFixed(digits)),
       volume: 1,
     }

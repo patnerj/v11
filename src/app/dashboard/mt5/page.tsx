@@ -21,7 +21,11 @@ import {
   Trophy,
   ChevronDown,
   Zap,
+  Activity,
+  Palette,
 } from 'lucide-react'
+import type { Timeframe, ChartStyle, ThemePreset } from '@/components/dashboard/trading/mt5-chart/types'
+import { TIMEFRAMES, CHART_STYLES } from '@/components/dashboard/trading/mt5-chart/mt5-top-controls'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -97,6 +101,25 @@ export default function Mt5WebTerminalPage() {
   const [tabbedDockTab, setTabbedDockTab] = useState<'mw' | 'order'>('mw')
   const [posCollapsed, setPosCollapsed] = useState(false)
   const [tab, setTab] = useState<Tab>('positions')
+
+  // Top Toolbar MT5 state
+  const showOneClick = useTerminal((s) => s.showOneClick)
+  const toggleOneClick = useTerminal((s) => s.toggleOneClick)
+
+  const [timeframe, setTimeframe] = useState<Timeframe>(() => {
+    if (typeof window === 'undefined') return 'H1'
+    try { return (localStorage.getItem('fxsim:mt5:tf') as Timeframe) || 'H1' } catch { return 'H1' }
+  })
+  const [chartStyle, setChartStyle] = useState<ChartStyle>(() => {
+    if (typeof window === 'undefined') return 'candlestick'
+    try { return (localStorage.getItem('fxsim:mt5:style') as ChartStyle) || 'candlestick' } catch { return 'candlestick' }
+  })
+  const [theme, setTheme] = useState<ThemePreset>(() => {
+    if (typeof window === 'undefined') return 'cyber'
+    try { return (localStorage.getItem('fxsim:mt5:theme') as ThemePreset) || 'cyber' } catch { return 'cyber' }
+  })
+  const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false)
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false)
 
   // Global hotkeys: Ctrl+M (Market Watch) & F9 (Order Ticket)
   useEffect(() => {
@@ -243,12 +266,14 @@ export default function Mt5WebTerminalPage() {
         </div>
       )}
 
-      {/* Account switcher, MT5 Mode Badge & Institutional Controls bar */}
-      <div className="shrink-0 flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex-1 min-w-0 flex items-center gap-2">
+      {/* MT5 Single Unified Institutional Top Controls Toolbar */}
+      <div className="shrink-0 flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 py-1.5 rounded-lg bg-surface border border-border select-none text-terminal-body overflow-x-auto no-scrollbar">
+        {/* Left Section: Account Switcher, Active Symbol Badge, Timeframe pills, Chart Style pills, Indicators button, Theme selector, 1-Click */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={false} />
+
           {/* Active Symbol & Spread Badge */}
-          <div className="hidden lg:inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface border border-border shadow-xs text-terminal-label shrink-0">
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-subtle/80 border border-border-subtle text-terminal-label shrink-0">
             <span className="font-bold text-text">{active}</span>
             {activeSpread !== null && (
               <span className="text-terminal-micro text-text-muted font-normal">
@@ -256,9 +281,126 @@ export default function Mt5WebTerminalPage() {
               </span>
             )}
           </div>
+
+          <div className="w-px h-4 bg-border/80 mx-0.5" />
+
+          {/* Timeframe Segmented Switcher */}
+          <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle">
+            {TIMEFRAMES.map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                onClick={() => {
+                  setTimeframe(tf)
+                  try { localStorage.setItem('fxsim:mt5:tf', tf) } catch {}
+                }}
+                className={cn(
+                  'px-1.5 py-0.5 rounded text-terminal-micro font-semibold transition-all cursor-pointer',
+                  timeframe === tf
+                    ? 'bg-accent text-accent-fg shadow-xs font-bold'
+                    : 'text-text-muted hover:text-text hover:bg-surface-muted/50'
+                )}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+
+          {/* Chart Style Switcher */}
+          <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle">
+            {CHART_STYLES.map((cs) => {
+              const Icon = cs.icon
+              const isSel = chartStyle === cs.id
+              return (
+                <button
+                  key={cs.id}
+                  type="button"
+                  onClick={() => {
+                    setChartStyle(cs.id)
+                    try { localStorage.setItem('fxsim:mt5:style', cs.id) } catch {}
+                  }}
+                  className={cn(
+                    'p-1 rounded transition-all cursor-pointer',
+                    isSel
+                      ? 'bg-accent text-accent-fg shadow-xs'
+                      : 'text-text-muted hover:text-text hover:bg-surface-muted/50'
+                  )}
+                  title={`${cs.label} (${cs.shortcut})`}
+                  aria-label={cs.label}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Technical Indicators Modal Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsIndicatorsModalOpen(true)}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
+            title="Technical Indicators (EMA, BB, VWAP, RSI, MACD)"
+          >
+            <Activity className="w-3.5 h-3.5 text-accent" />
+            <span className="hidden sm:inline">Indicators</span>
+          </button>
+
+          {/* Theme Preset Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setThemeDropdownOpen((v) => !v)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
+              title="Chart Theme Preset"
+            >
+              <Palette className="w-3 h-3 text-amber-400" />
+              <span className="capitalize hidden md:inline">{theme}</span>
+              <ChevronDown className="w-2.5 h-2.5" />
+            </button>
+
+            {themeDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1 z-30 w-36 bg-surface border border-border rounded-lg shadow-xl p-1 flex flex-col gap-0.5">
+                {(['classic', 'cyber', 'daylight'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setTheme(t)
+                      try { localStorage.setItem('fxsim:mt5:theme', t) } catch {}
+                      setThemeDropdownOpen(false)
+                    }}
+                    className={cn(
+                      'w-full text-left px-2 py-1 rounded text-terminal-micro font-semibold capitalize transition-colors cursor-pointer flex items-center justify-between',
+                      theme === t ? 'bg-accent/15 text-accent' : 'text-text hover:bg-surface-muted'
+                    )}
+                  >
+                    <span>{t === 'classic' ? 'MT5 Classic' : t === 'cyber' ? 'Obsidian Cyber' : 'Daylight'}</span>
+                    {theme === t && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 1-Click Execution Box Toggle (Alt+T) */}
+          <button
+            type="button"
+            onClick={toggleOneClick}
+            className={cn(
+              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer',
+              showOneClick
+                ? 'text-emerald-500 bg-emerald-500/15 border border-emerald-500/30 shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
+            )}
+            title="Toggle 1-Click Trading Box (Alt+T)"
+          >
+            <Zap className={cn('w-3 h-3', showOneClick && 'fill-emerald-500')} />
+            <span>1-Click</span>
+          </button>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right Section: Market Watch, Order Ticket, MT5 Mode Badge, Standard WebTrader, Sound */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Market Watch Dock Toggle */}
           <button
             type="button"
@@ -453,6 +595,15 @@ export default function Mt5WebTerminalPage() {
                     pendingOrders={pending}
                     plan={plan || metrics?.plan}
                     onChanged={onChanged}
+                    showTopControls={false}
+                    timeframe={timeframe}
+                    onChangeTimeframe={setTimeframe}
+                    chartStyle={chartStyle}
+                    onChangeChartStyle={setChartStyle}
+                    theme={theme}
+                    onChangeTheme={setTheme}
+                    isIndicatorsModalOpen={isIndicatorsModalOpen}
+                    onToggleIndicatorsModal={setIsIndicatorsModalOpen}
                   />
                 </SectionErrorBoundary>
               </section>

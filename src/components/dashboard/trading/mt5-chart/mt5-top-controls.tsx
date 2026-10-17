@@ -49,9 +49,9 @@ interface TopControlsProps {
   onToggleFullscreen: () => void
 }
 
-const TIMEFRAMES: Timeframe[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1', 'W1']
+export const TIMEFRAMES: Timeframe[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1', 'W1']
 
-const CHART_STYLES: { id: ChartStyle; label: string; shortcut: string; icon: React.ComponentType<{ className?: string }> }[] = [
+export const CHART_STYLES: { id: ChartStyle; label: string; shortcut: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'bar', label: 'OHLC Bars', shortcut: 'Alt+1', icon: BarChart2 },
   { id: 'candlestick', label: 'Candlesticks', shortcut: 'Alt+2', icon: CandlestickChart },
   { id: 'line', label: 'Line Chart', shortcut: 'Alt+3', icon: Activity },

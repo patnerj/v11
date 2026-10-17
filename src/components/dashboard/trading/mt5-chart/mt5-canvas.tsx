@@ -501,6 +501,11 @@ export const Mt5Canvas = memo(
       const { visible, startIndex, endIndex } = getVisibleSlice()
       const { min: minP, max: maxP, range: rangeP } = getPriceBounds()
 
+      const activePrices = usePrices.getState().prices
+      const activeTick = activePrices[symbol]
+      const liveBid = toNum(activeTick?.bid) || (visible.length > 0 ? visible[visible.length - 1].close : 0)
+      const liveAsk = toNum(activeTick?.ask) || (liveBid > 0 ? liveBid + pSize * 1.5 : 0)
+
       // 1. Background
       ctx.fillStyle = colors.background
       ctx.fillRect(0, 0, width, height)
@@ -732,8 +737,10 @@ export const Mt5Canvas = memo(
         ctx.beginPath()
         for (let i = 0; i < renderCandles.length; i++) {
           const c = renderCandles[i]
+          const isLatestCandle = (startIndex + i) === (candles.length - 1)
+          const pxClose = isLatestCandle && liveBid > 0 ? liveBid : c.close
           const x = candleIndexToX(startIndex + i)
-          const y = priceToY(c.close)
+          const y = priceToY(pxClose)
           if (i === 0) ctx.moveTo(x, y)
           else ctx.lineTo(x, y)
         }
@@ -753,15 +760,19 @@ export const Mt5Canvas = memo(
         ctx.lineWidth = 1.5
         for (let i = 0; i < renderCandles.length; i++) {
           const c = renderCandles[i]
+          const isLatestCandle = (startIndex + i) === (candles.length - 1)
+          const pxClose = isLatestCandle && liveBid > 0 ? liveBid : c.close
+          const pxHigh = isLatestCandle && liveBid > 0 ? Math.max(c.high, liveBid) : c.high
+          const pxLow = isLatestCandle && liveBid > 0 ? Math.min(c.low, liveBid) : c.low
           const x = candleIndexToX(startIndex + i)
-          const isUp = c.close >= c.open
+          const isUp = pxClose >= c.open
           const color = isUp ? colors.candleUp : colors.candleDown
 
           ctx.strokeStyle = color
-          const yHigh = priceToY(c.high)
-          const yLow = priceToY(c.low)
+          const yHigh = priceToY(pxHigh)
+          const yLow = priceToY(pxLow)
           const yOpen = priceToY(c.open)
-          const yClose = priceToY(c.close)
+          const yClose = priceToY(pxClose)
 
           // Vertical spine
           ctx.beginPath()
@@ -787,13 +798,17 @@ export const Mt5Canvas = memo(
         ctx.save()
         for (let i = 0; i < renderCandles.length; i++) {
           const c = renderCandles[i]
+          const isLatestCandle = (startIndex + i) === (candles.length - 1)
+          const pxClose = isLatestCandle && liveBid > 0 ? liveBid : c.close
+          const pxHigh = isLatestCandle && liveBid > 0 ? Math.max(c.high, liveBid) : c.high
+          const pxLow = isLatestCandle && liveBid > 0 ? Math.min(c.low, liveBid) : c.low
           const x = candleIndexToX(startIndex + i)
-          const isUp = c.close >= c.open
+          const isUp = pxClose >= c.open
 
-          const yHigh = priceToY(c.high)
-          const yLow = priceToY(c.low)
+          const yHigh = priceToY(pxHigh)
+          const yLow = priceToY(pxLow)
           const yOpen = priceToY(c.open)
-          const yClose = priceToY(c.close)
+          const yClose = priceToY(pxClose)
 
           const topY = Math.min(yOpen, yClose)
           const botY = Math.max(yOpen, yClose)
@@ -1045,7 +1060,6 @@ export const Mt5Canvas = memo(
       }
 
       // 9. Interactive On-Chart Trade & Pending Order Lines (Drag-and-Drop SL/TP)
-      const activePrices = usePrices.getState().prices
       const symPositions = positions.filter((p) => p.symbol === symbol)
       const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
 
@@ -1272,10 +1286,6 @@ export const Mt5Canvas = memo(
       }
 
       // 10. Real-time Bid & Ask Lines with Live Spread Badge
-      const tick = activePrices[symbol]
-      const liveBid = toNum(tick?.bid) || (visible.length > 0 ? visible[visible.length - 1].close : 0)
-      const liveAsk = toNum(tick?.ask) || (liveBid > 0 ? liveBid + pSize * 1.5 : 0)
-
       if (liveBid > 0 && liveAsk > 0) {
         const yBid = priceToY(liveBid)
         const yAsk = priceToY(liveAsk)
@@ -1391,10 +1401,11 @@ export const Mt5Canvas = memo(
           const p0 = ruler.startPoint.price
           const p1 = curPrice
           const deltaPrice = p1 - p0
-          const deltaPips = Math.abs(deltaPrice) / pSize
+          const symMeta = getSymbolMeta(symbol)
+          const deltaPips = Math.abs(deltaPrice) / (symMeta.pipSize || pSize || 1)
           const deltaPct = (deltaPrice / p0) * 100
           const deltaBars = Math.abs(xToCandleIndex(x1) - xToCandleIndex(x0))
-          const estPnL = deltaPips * activeLot * 10
+          const estPnL = Math.abs(deltaPrice) * symMeta.contractSize * activeLot * quoteToUsdRate(symbol, p1, activePrices)
 
           ctx.save()
           ctx.strokeStyle = colors.rulerBorder
@@ -2028,7 +2039,8 @@ export const Mt5Canvas = memo(
         const curPrice = yToPrice(y)
         const pos = draggingSlTpRef.current.pos
         const openPrice = toNum(pos.open_price)
-        const distPips = Math.abs(curPrice - openPrice) / pSize
+        const symMeta = getSymbolMeta(symbol)
+        const distPips = Math.abs(curPrice - openPrice) / (symMeta.pipSize || pSize || 1)
         const isBuy = pos.type === 'buy'
 
         const projPnl =
@@ -2036,7 +2048,7 @@ export const Mt5Canvas = memo(
             level: curPrice,
             entry: openPrice,
             lots: toNum(pos.lot_size),
-            contractSize: 100000,
+            contractSize: symMeta.contractSize,
             mode: 'market',
             isBuy,
             quoteToUsd: quoteToUsdRate(symbol, openPrice, usePrices.getState().prices),
