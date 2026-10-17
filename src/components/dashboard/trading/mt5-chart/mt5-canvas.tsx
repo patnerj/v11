@@ -50,7 +50,7 @@ import { toast } from 'sonner'
 import { playOrderSuccessSound, playOrderLossThumpSound } from '@/lib/sound-effects'
 import { usePrices } from '@/store/prices'
 
-const PRICE_AXIS_WIDTH = 75
+const PRICE_AXIS_WIDTH = 88
 const TIME_AXIS_HEIGHT = 26
 const SUB_PANE_HEIGHT = 100
 
@@ -556,7 +556,7 @@ export const Mt5Canvas = memo(
         ctx.restore()
       }
 
-      // 3. Period Separators (Y) — day or week boundaries
+      // 3. Period Separators (Y) — smart multi-timeframe boundaries
       if (showPeriodSeparators) {
         ctx.save()
         ctx.strokeStyle = colors.gridPeriod
@@ -566,12 +566,32 @@ export const Mt5Canvas = memo(
         for (let i = 1; i < visible.length; i++) {
           const prev = new Date(visible[i - 1].time)
           const curr = new Date(visible[i].time)
-          if (prev.getUTCDate() !== curr.getUTCDate()) {
+          let isNewPeriod = false
+
+          if (timeframe === 'D1') {
+            // Separator on Month change (1st trading day of each month)
+            isNewPeriod = prev.getUTCMonth() !== curr.getUTCMonth() || prev.getUTCFullYear() !== curr.getUTCFullYear()
+          } else if (timeframe === 'W1') {
+            // Separator on Year change
+            isNewPeriod = prev.getUTCFullYear() !== curr.getUTCFullYear()
+          } else if (timeframe === 'H4') {
+            // Separator on Week change (Sunday / Monday boundary)
+            const prevWeek = Math.floor(prev.getTime() / (7 * 86400000))
+            const currWeek = Math.floor(curr.getTime() / (7 * 86400000))
+            isNewPeriod = prevWeek !== currWeek || curr.getUTCDay() < prev.getUTCDay()
+          } else {
+            // Intraday (M1, M5, M15, M30, H1): Separator on Day change
+            isNewPeriod = prev.getUTCDate() !== curr.getUTCDate()
+          }
+
+          if (isNewPeriod) {
             const x = candleIndexToX(startIndex + i)
-            ctx.beginPath()
-            ctx.moveTo(Math.floor(x) + 0.5, 0)
-            ctx.lineTo(Math.floor(x) + 0.5, mainH)
-            ctx.stroke()
+            if (x > 0 && x < chartW) {
+              ctx.beginPath()
+              ctx.moveTo(Math.floor(x) + 0.5, 0)
+              ctx.lineTo(Math.floor(x) + 0.5, mainH)
+              ctx.stroke()
+            }
           }
         }
         ctx.restore()
@@ -1375,25 +1395,25 @@ export const Mt5Canvas = memo(
         ctx.textAlign = 'center'
         ctx.fillText(`Spread: ${spreadP.toFixed(1)}`, chartW + PRICE_AXIS_WIDTH / 2, midY + 3)
 
-        // Active Price Tag with Countdown Timer on Right Scale
+        // Active Live Bid Price Tag on Right Scale
         ctx.fillStyle = colors.bidLine
-        ctx.fillRect(chartW + 1, yBid - 10, PRICE_AXIS_WIDTH - 2, 20)
+        ctx.fillRect(chartW + 2, yBid - 10, PRICE_AXIS_WIDTH - 4, 20)
         ctx.fillStyle = '#050811'
-        ctx.font = FONT_LABEL_BOLD
+        ctx.font = FONT_BODY_BOLD
         ctx.textAlign = 'center'
-        ctx.fillText(fmtPrice(liveBid, digits), chartW + PRICE_AXIS_WIDTH / 2, yBid + 3)
+        ctx.fillText(fmtPrice(liveBid, digits), chartW + PRICE_AXIS_WIDTH / 2, yBid + 4)
 
-        // Countdown Timer Badge (e.g. 00:42)
+        // Candle Countdown Timer Pill right underneath on Right Scale (Zero overlap in plot area!)
         const cdText = formatCountdown(countdown)
-        ctx.fillStyle = '#050811'
-        ctx.fillRect(chartW - 48, yBid - 9, 44, 18)
-        ctx.strokeStyle = '#F59E0B'
+        ctx.fillStyle = theme === 'daylight' ? '#FFFFFF' : 'rgba(5, 8, 17, 0.95)'
+        ctx.fillRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
+        ctx.strokeStyle = colors.bidLine
         ctx.lineWidth = 1
-        ctx.strokeRect(chartW - 48, yBid - 9, 44, 18)
-        ctx.fillStyle = '#F59E0B'
+        ctx.strokeRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
+        ctx.fillStyle = theme === 'daylight' ? '#0f172a' : '#F59E0B'
         ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
-        ctx.fillText(cdText, chartW - 26, yBid + 3)
+        ctx.fillText(cdText, chartW + PRICE_AXIS_WIDTH / 2, yBid + 24)
 
         ctx.restore()
       }
@@ -1432,13 +1452,20 @@ export const Mt5Canvas = memo(
 
         // Cursor Time Tag on Bottom Axis
         const curTime = xToTime(curX)
-        const timeStr = new Date(curTime).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        })
+        const curD = new Date(curTime)
+        let timeStr = ''
+        if (timeframe === 'D1' || timeframe === 'W1') {
+          timeStr = curD.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })
+        } else {
+          timeStr = curD.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })
+        }
+        const tagW = Math.max(76, ctx.measureText(timeStr).width + 16)
         ctx.fillStyle = colors.border
-        ctx.fillRect(curX - 35, mainH + 1, 70, 18)
+        ctx.fillRect(curX - tagW / 2, mainH + 1, tagW, 18)
         ctx.fillStyle = colors.text
         ctx.font = FONT_LABEL
         ctx.fillText(timeStr, curX, mainH + 13)
@@ -1528,9 +1555,17 @@ export const Mt5Canvas = memo(
       for (let x = chartW % timeStep; x < chartW; x += timeStep) {
         const t = xToTime(x)
         const d = new Date(t)
-        const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
-        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        ctx.fillText(`${dateStr} ${timeStr}`, x, mainH + 16)
+        let label = ''
+        if (timeframe === 'D1' || timeframe === 'W1') {
+          const dateStr = d.toLocaleDateString([], { day: '2-digit', month: 'short' })
+          const yrStr = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : ''
+          label = `${dateStr}${yrStr}`
+        } else {
+          const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+          const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          label = `${dateStr} ${timeStr}`
+        }
+        ctx.fillText(label, x, mainH + 16)
       }
       ctx.restore()
 
@@ -1628,12 +1663,12 @@ export const Mt5Canvas = memo(
         const ohlcvText = `${symbol} • ${timeframe} • O: ${fmtPrice(openVal, digits)} H: ${fmtPrice(highVal, digits)} L: ${fmtPrice(lowVal, digits)} C: ${fmtPrice(closeVal, digits)} Δ: ${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(2)}% Vol: ${activeCandle.volume}`
 
         ctx.save()
-        ctx.fillStyle = 'rgba(5, 8, 17, 0.75)'
+        ctx.fillStyle = theme === 'daylight' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(5, 8, 17, 0.75)'
         ctx.fillRect(6, 6, ctx.measureText(ohlcvText).width + 16, 20)
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+        ctx.strokeStyle = theme === 'daylight' ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.08)'
         ctx.strokeRect(6, 6, ctx.measureText(ohlcvText).width + 16, 20)
 
-        ctx.fillStyle = colors.text
+        ctx.fillStyle = theme === 'daylight' ? '#0f172a' : colors.text
         ctx.font = FONT_BODY_BOLD
         ctx.textAlign = 'left'
         ctx.fillText(ohlcvText, 12, 20)
@@ -2181,7 +2216,10 @@ export const Mt5Canvas = memo(
       if (isDraggingChartRef.current && dragStartRef.current) {
         const deltaX = x - dragStartRef.current.x
         const candlesMoved = deltaX / candleWidth
-        const newOffset = Math.max(0, dragStartRef.current.scrollOffset + candlesMoved)
+        const visibleBars = Math.ceil(chartW / candleWidth)
+        const minOffset = -Math.floor(visibleBars * 0.7)
+        const maxOffset = Math.max(10, candles.length - 10)
+        const newOffset = Math.max(minOffset, Math.min(maxOffset, dragStartRef.current.scrollOffset + candlesMoved))
         setScrollOffset(parseFloat(newOffset.toFixed(1)))
 
         const deltaY = y - dragStartRef.current.y

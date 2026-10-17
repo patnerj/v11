@@ -6,8 +6,8 @@
  * lot steppers, quick SL/TP pips, and instant API connectivity.
  */
 
-import React, { memo, useState, useCallback, useMemo } from 'react'
-import { ChevronUp, ChevronDown, Plus, Minus, Zap, Shield, Target } from 'lucide-react'
+import React, { memo, useState, useCallback, useMemo, useRef } from 'react'
+import { ChevronUp, ChevronDown, Plus, Minus, Zap, Shield, Target, GripHorizontal } from 'lucide-react'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { toast } from 'sonner'
@@ -74,6 +74,61 @@ export const Mt5OneClick = memo(function Mt5OneClick({
   const [slPips, setSlPips] = useState('')
   const [tpPips, setTpPips] = useState('')
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
+
+  // Draggable position state (persisted in localStorage)
+  const [pos, setPos] = useState<{ x: number; y: number }>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('fxsim_mt5_oneclick_pos')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+            return parsed
+          }
+        }
+      } catch {}
+    }
+    return { x: 64, y: 48 }
+  })
+
+  const isDraggingRef = useRef(false)
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null)
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    if (target.closest('button')) return
+
+    isDraggingRef.current = true
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startX: pos.x,
+      startY: pos.y,
+    }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }, [pos])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !dragStartRef.current) return
+    const dx = e.clientX - dragStartRef.current.mouseX
+    const dy = e.clientY - dragStartRef.current.mouseY
+    const newX = Math.max(10, Math.min(window.innerWidth - 240, dragStartRef.current.startX + dx))
+    const newY = Math.max(10, Math.min(window.innerHeight - 200, dragStartRef.current.startY + dy))
+    setPos({ x: newX, y: newY })
+  }, [])
+
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return
+    isDraggingRef.current = false
+    dragStartRef.current = null
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    } catch {}
+    try {
+      localStorage.setItem('fxsim_mt5_oneclick_pos', JSON.stringify(pos))
+    } catch {}
+  }, [pos])
 
   const symMeta = useMemo(() => getSymbolMeta(symbol), [symbol])
   const effectivePipSize = symMeta.pipSize || pipSize || 0.0001
@@ -203,18 +258,34 @@ export const Mt5OneClick = memo(function Mt5OneClick({
   )
 
   return (
-    <div className="absolute top-12 left-16 z-20 flex flex-col bg-surface/95 dark:bg-bg-subtle/95 backdrop-blur-md border border-border rounded-xl shadow-2xl select-none text-terminal-body overflow-hidden min-w-[200px] max-w-[230px] animate-in fade-in zoom-in-95 duration-150">
-      {/* Title / Collapse Toggle Header */}
-      <div className="flex items-center justify-between px-2.5 py-1 bg-surface-muted/60 border-b border-border-subtle cursor-pointer" onClick={() => setCollapsed(!collapsed)}>
+    <div
+      style={{ left: `${pos.x}px`, top: `${pos.y}px` }}
+      className="absolute z-20 flex flex-col bg-surface/95 dark:bg-bg-subtle/95 backdrop-blur-md border border-border rounded-xl shadow-2xl select-none text-terminal-body overflow-hidden min-w-[210px] max-w-[240px] animate-in fade-in zoom-in-95 duration-150"
+    >
+      {/* Title / Drag / Collapse Toggle Header */}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        className="flex items-center justify-between gap-3 px-2.5 py-1.5 bg-surface-muted/60 border-b border-border-subtle cursor-grab active:cursor-grabbing"
+      >
         <div className="flex items-center gap-1.5 text-terminal-micro font-semibold text-text">
-          <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400" />
-          <span>One-Click Trading</span>
+          <GripHorizontal className="w-3.5 h-3.5 text-text-muted shrink-0" />
+          <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 shrink-0" />
+          <span className="whitespace-nowrap">One-Click</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-terminal-micro font-normal text-text-muted">
+        <div className="flex items-center gap-2">
+          <span className="text-terminal-micro font-normal text-text-muted whitespace-nowrap">
             Spread: <strong className="text-text terminal-num">{spreadPips.toFixed(1)}</strong>
           </span>
-          <button type="button" className="p-0.5 text-text-muted hover:text-text rounded">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setCollapsed(!collapsed)
+            }}
+            className="p-0.5 text-text-muted hover:text-text rounded cursor-pointer"
+          >
             {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
           </button>
         </div>

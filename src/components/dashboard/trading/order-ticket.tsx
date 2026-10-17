@@ -610,7 +610,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 const n = Math.min(maxLot, Math.max(minLot, toNum(lot) || minLot))
                 setLot(n.toFixed(2))
               }}
-              className="flex-1 h-9 px-3 rounded-md bg-surface border border-border text-terminal-title terminal-num text-center focus-ring focus:border-accent"
+              className="flex-1 h-9 px-3 rounded-md bg-surface border border-border text-sm font-semibold tabular-nums font-sans text-center focus-ring focus:border-accent"
             />
             <button onClick={() => bumpLot(lotStep)} className="h-9 w-9 rounded-md border border-border bg-surface text-text-muted hover:text-text hover:bg-surface-muted/60 focus-ring flex items-center justify-center">
               <Plus className="h-3.5 w-3.5" />
@@ -623,9 +623,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 key={v}
                 onClick={() => setLot(v.toFixed(2))}
                 className={cn(
-                  'flex-1 h-6 rounded text-terminal-micro font-normal transition-colors terminal-num',
+                  'flex-1 h-7 rounded text-xs font-semibold transition-colors tabular-nums font-sans',
                   lotN === v
-                    ? 'bg-accent-muted text-accent font-semibold'
+                    ? 'bg-accent-muted text-accent font-bold'
                     : 'bg-surface-muted/50 text-text-muted hover:text-text',
                 )}
               >
@@ -636,7 +636,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
           {/* Quick-Risk Preset Pills (TPOL-6: Simplified without redundant "Risk" word) */}
           <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-border-subtle/60">
-            <span className="text-terminal-micro font-semibold text-text-muted uppercase tracking-wider shrink-0">
+            <span className="text-terminal-micro font-semibold text-text-muted uppercase tracking-wider shrink-0 font-sans">
               Risk:
             </span>
             {[0.5, 1.0, 2.0].map((rPct) => (
@@ -645,9 +645,9 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
                 type="button"
                 onClick={() => calculateLotForRisk(rPct)}
                 className={cn(
-                  'flex-1 h-6 rounded text-terminal-body font-semibold transition-all terminal-num border select-none cursor-pointer flex items-center justify-center',
+                  'flex-1 h-7 rounded text-xs font-semibold transition-all tabular-nums font-sans border select-none cursor-pointer flex items-center justify-center',
                   Number(risk) === rPct && slN
-                    ? 'bg-accent/20 border-accent/60 text-accent font-semibold shadow-xs'
+                    ? 'bg-accent/20 border-accent/60 text-accent font-bold shadow-xs'
                     : 'bg-surface-muted/60 hover:bg-surface-muted border-border/70 text-text-muted hover:text-text hover:border-border-strong',
                 )}
                 title={`Auto-size position to risk exactly ${rPct}% of equity based on Stop Loss`}

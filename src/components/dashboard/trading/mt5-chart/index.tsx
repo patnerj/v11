@@ -48,6 +48,10 @@ export interface Mt5ChartPanelProps {
   onChangeTheme?: (theme: ThemePreset) => void
   isIndicatorsModalOpen?: boolean
   onToggleIndicatorsModal?: (open: boolean) => void
+  showGrid?: boolean
+  onChangeShowGrid?: (show: boolean) => void
+  showPeriodSeparators?: boolean
+  onChangeShowPeriodSeparators?: (show: boolean) => void
 }
 
 export const Mt5ChartPanel = memo(function Mt5ChartPanel({
@@ -65,6 +69,10 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   onChangeTheme: propOnChangeTheme,
   isIndicatorsModalOpen: propIsIndicatorsModalOpen,
   onToggleIndicatorsModal: propOnToggleIndicatorsModal,
+  showGrid: propShowGrid,
+  onChangeShowGrid: propOnChangeShowGrid,
+  showPeriodSeparators: propShowPeriodSeparators,
+  onChangeShowPeriodSeparators: propOnChangeShowPeriodSeparators,
 }: Mt5ChartPanelProps) {
   const canvasRef = useRef<Mt5CanvasHandle>(null)
   const active = useTerminal((s) => s.active)
@@ -104,8 +112,22 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   })
   const theme = propTheme ?? internalTheme
 
-  const [showGrid, setShowGrid] = useState(true)
-  const [showPeriodSeparators, setShowPeriodSeparators] = useState(true)
+  const [internalShowGrid, setInternalShowGrid] = useState(true)
+  const showGrid = propShowGrid ?? internalShowGrid
+  const setShowGrid = useCallback((updater: boolean | ((prev: boolean) => boolean)) => {
+    const nextVal = typeof updater === 'function' ? updater(showGrid) : updater
+    if (propOnChangeShowGrid) propOnChangeShowGrid(nextVal)
+    else setInternalShowGrid(nextVal)
+  }, [propOnChangeShowGrid, showGrid])
+
+  const [internalShowPeriodSeparators, setInternalShowPeriodSeparators] = useState(() => timeframe !== 'D1' && timeframe !== 'W1')
+  const showPeriodSeparators = propShowPeriodSeparators ?? internalShowPeriodSeparators
+  const setShowPeriodSeparators = useCallback((updater: boolean | ((prev: boolean) => boolean)) => {
+    const nextVal = typeof updater === 'function' ? updater(showPeriodSeparators) : updater
+    if (propOnChangeShowPeriodSeparators) propOnChangeShowPeriodSeparators(nextVal)
+    else setInternalShowPeriodSeparators(nextVal)
+  }, [propOnChangeShowPeriodSeparators, showPeriodSeparators])
+
   const [autoScroll, setAutoScroll] = useState(true)
   const [chartShift, setChartShift] = useState(true)
 

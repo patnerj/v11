@@ -199,21 +199,21 @@ const WatchRow = memo(function WatchRow({
         >
           <Star className={cn('h-3 w-3', isWatched && 'fill-current')} />
         </button>
-        <span className="text-terminal-label font-semibold truncate text-text">{sym}</span>
+        <span className="text-xs font-semibold truncate text-text font-sans">{sym}</span>
       </div>
 
       {/* Bid + direction glyph (non-color cue) */}
       <span className={cn(
-        'relative z-10 pointer-events-none text-terminal-label terminal-num font-semibold whitespace-nowrap inline-flex items-center gap-0.5 justify-end',
+        'relative z-10 pointer-events-none text-xs font-medium tabular-nums whitespace-nowrap inline-flex items-center gap-0.5 justify-end font-sans',
         flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text',
       )}>
-        {flash && <span aria-hidden className="text-terminal-micro">{flash === 'up' ? '▲' : '▼'}</span>}
+        {flash && <span aria-hidden className="text-[10px]">{flash === 'up' ? '▲' : '▼'}</span>}
         {bid ? fmtPrice(bid, digits) : <span className="text-text-faint">—</span>}
       </span>
 
       {/* Spread (only in non-compact) */}
       {!compact && (
-        <span className="relative z-10 pointer-events-none text-terminal-micro terminal-num text-text-muted whitespace-nowrap min-w-[42px] text-right">
+        <span className="relative z-10 pointer-events-none text-[11px] tabular-nums text-text-muted whitespace-nowrap min-w-[42px] text-right font-sans">
           {bid && ask ? `${Math.round(spread / pipSize(sym) * 10) / 10}p` : ''}
         </span>
       )}

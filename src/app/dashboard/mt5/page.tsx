@@ -23,6 +23,8 @@ import {
   Zap,
   Activity,
   Palette,
+  Grid,
+  SeparatorVertical,
 } from 'lucide-react'
 import type { Timeframe, ChartStyle, ThemePreset } from '@/components/dashboard/trading/mt5-chart/types'
 import { TIMEFRAMES, CHART_STYLES } from '@/components/dashboard/trading/mt5-chart/mt5-top-controls'
@@ -119,6 +121,8 @@ export default function Mt5WebTerminalPage() {
     try { return (localStorage.getItem('fxsim:mt5:theme') as ThemePreset) || 'cyber' } catch { return 'cyber' }
   })
   const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false)
+  const [showGrid, setShowGrid] = useState(true)
+  const [showPeriodSeparators, setShowPeriodSeparators] = useState(() => timeframe !== 'D1' && timeframe !== 'W1')
 
   // Global hotkeys: Ctrl+M (Market Watch) & F9 (Order Ticket)
   useEffect(() => {
@@ -385,6 +389,38 @@ export default function Mt5WebTerminalPage() {
             <Zap className={cn('w-3 h-3', showOneClick && 'fill-emerald-500')} />
             <span>1-Click</span>
           </button>
+
+          {/* Grid Toggle (G) */}
+          <button
+            type="button"
+            onClick={() => setShowGrid((v) => !v)}
+            className={cn(
+              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer shrink-0',
+              showGrid
+                ? 'bg-accent/15 border border-accent/40 text-accent shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
+            )}
+            title="Toggle Chart Grid (G)"
+          >
+            <Grid className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Grid</span>
+          </button>
+
+          {/* Period Separators Toggle (Y) */}
+          <button
+            type="button"
+            onClick={() => setShowPeriodSeparators((v) => !v)}
+            className={cn(
+              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer shrink-0',
+              showPeriodSeparators
+                ? 'bg-accent/15 border border-accent/40 text-accent shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
+            )}
+            title="Toggle Period Separators (Y)"
+          >
+            <SeparatorVertical className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Separators</span>
+          </button>
         </div>
 
         {/* Right Section: Market Watch, Order Ticket, Sound */}
@@ -557,11 +593,11 @@ export default function Mt5WebTerminalPage() {
           )
         )}
 
-        {/* Center: MT5 Pro Chart + Positions/Pending Split via Vertical Resizable Panels */}
+        {/* Center: MT5 Pro Chart + Positions/Pending Split */}
         <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
-          <PanelGroup orientation="vertical" className="h-full w-full">
-            <Panel defaultSize={posCollapsed ? 95 : 70} minSize={30}>
-              <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+          {posCollapsed ? (
+            <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
                 <SectionErrorBoundary sectionName="Mt5ChartPanel">
                   <Mt5ChartPanel
                     positions={positions}
@@ -575,183 +611,239 @@ export default function Mt5WebTerminalPage() {
                     onChangeChartStyle={setChartStyle}
                     theme={theme}
                     onChangeTheme={setTheme}
+                    showGrid={showGrid}
+                    onChangeShowGrid={setShowGrid}
+                    showPeriodSeparators={showPeriodSeparators}
+                    onChangeShowPeriodSeparators={setShowPeriodSeparators}
                     isIndicatorsModalOpen={isIndicatorsModalOpen}
                     onToggleIndicatorsModal={setIsIndicatorsModalOpen}
                   />
                 </SectionErrorBoundary>
               </section>
-            </Panel>
 
-            <PanelResizeHandle className="h-2 relative group cursor-row-resize">
-              <div className="absolute inset-x-0 top-1 h-px bg-border-subtle group-hover:bg-accent transition-colors" />
-            </PanelResizeHandle>
-
-            <Panel defaultSize={posCollapsed ? 5 : 30} minSize={posCollapsed ? 4 : 15} collapsible={false}>
-              <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
-                {/* Positions & Pending Tab Header */}
-                <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
+              {/* Slim 36px MT5 Collapsed Telemetry & Dock Strip */}
+              <div className="mt-1 shrink-0 h-9 rounded-lg border border-border bg-surface/95 px-3 flex items-center justify-between text-xs select-none">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setTab('positions')
-                      setPosCollapsed(false)
-                    }}
-                    className={cn(
-                      'px-3 py-1 rounded-md text-terminal-label font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-                      tab === 'positions' && !posCollapsed
-                        ? 'bg-accent text-accent-fg shadow-xs'
-                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                    )}
+                    onClick={() => setPosCollapsed(false)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-accent/10 hover:bg-accent/20 text-accent font-semibold text-xs transition-colors cursor-pointer"
                   >
-                    Positions
-                    {positions && positions.length > 0 && (
-                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-muted text-accent text-terminal-micro font-semibold px-1">
-                        {positions.length}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTab('pending')
-                      setPosCollapsed(false)
-                    }}
-                    className={cn(
-                      'px-3 py-1 rounded-md text-terminal-label font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-                      tab === 'pending' && !posCollapsed
-                        ? 'bg-accent text-accent-fg shadow-xs'
-                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                    )}
-                  >
-                    Pending Orders
-                    {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
-                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-terminal-micro font-semibold px-1">
-                        {pending.filter((o) => o.status === 'pending').length}
-                      </span>
-                    )}
+                    <ChevronDown className="h-3.5 w-3.5 rotate-180" />
+                    <span>Positions & Orders ({positions?.length || 0})</span>
                   </button>
 
-                  <div className="ml-auto flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPosCollapsed((v) => !v)}
-                      className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
-                      aria-label={posCollapsed ? 'Expand positions panel' : 'Collapse positions panel'}
-                      title={posCollapsed ? 'Expand positions panel' : 'Collapse positions panel'}
-                    >
-                      {posCollapsed ? (
-                        <PanelLeftOpen className="h-3.5 w-3.5 rotate-90" />
-                      ) : (
-                        <PanelLeftClose className="h-3.5 w-3.5 rotate-90" />
-                      )}
-                    </button>
+                  <div className="h-4 w-px bg-border-subtle" />
+
+                  <div className="flex items-center gap-3 sm:gap-4 text-text-muted">
+                    <span>
+                      Balance: <strong className="font-semibold tabular-nums text-text">{fmtUSD(balance)}</strong>
+                    </span>
+                    <span>
+                      Equity:{' '}
+                      <strong className={cn('font-semibold tabular-nums', equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>
+                        {fmtUSD(equity)}
+                      </strong>
+                    </span>
+                    <span className="hidden sm:inline">
+                      Free Margin: <strong className="font-semibold tabular-nums text-text">{fmtUSD(free)}</strong>
+                    </span>
                   </div>
                 </div>
 
-                {!posCollapsed && (
-                  <>
-                    <div className="flex-1 overflow-y-auto min-h-0">
-                      <SectionErrorBoundary sectionName="PositionsTable">
-                        {tab === 'positions' ? (
-                          <PositionsTable positions={positions} onChanged={onChanged} />
-                        ) : (
-                          <PendingOrdersTable orders={pending} onChanged={onChanged} />
-                        )}
-                      </SectionErrorBoundary>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-text-muted">Total P/L:</span>
+                  <span className={cn('px-2 py-0.5 rounded text-xs font-semibold tabular-nums', pnl >= 0 ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-500 border border-rose-500/30')}>
+                    {fmtUSD(pnl, { sign: true })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <PanelGroup orientation="vertical" className="h-full w-full">
+              <Panel defaultSize={70} minSize={30}>
+                <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+                  <SectionErrorBoundary sectionName="Mt5ChartPanel">
+                    <Mt5ChartPanel
+                      positions={positions}
+                      pendingOrders={pending}
+                      plan={plan || metrics?.plan}
+                      onChanged={onChanged}
+                      showTopControls={false}
+                      timeframe={timeframe}
+                      onChangeTimeframe={setTimeframe}
+                      chartStyle={chartStyle}
+                      onChangeChartStyle={setChartStyle}
+                      theme={theme}
+                      onChangeTheme={setTheme}
+                      showGrid={showGrid}
+                      onChangeShowGrid={setShowGrid}
+                      showPeriodSeparators={showPeriodSeparators}
+                      onChangeShowPeriodSeparators={setShowPeriodSeparators}
+                      isIndicatorsModalOpen={isIndicatorsModalOpen}
+                      onToggleIndicatorsModal={setIsIndicatorsModalOpen}
+                    />
+                  </SectionErrorBoundary>
+                </section>
+              </Panel>
 
-                    {/* MT5 Bottom Telemetry Summary Row */}
-                    <div className="shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-terminal-body font-normal select-none overflow-x-auto no-scrollbar shadow-xs">
-                        <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
+              <PanelResizeHandle className="h-2 relative group cursor-row-resize">
+                <div className="absolute inset-x-0 top-1 h-px bg-border-subtle group-hover:bg-accent transition-colors" />
+              </PanelResizeHandle>
+
+              <Panel defaultSize={30} minSize={15} collapsible={false}>
+                <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+                  {/* Positions & Pending Tab Header */}
+                  <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
+                    <button
+                      type="button"
+                      onClick={() => setTab('positions')}
+                      className={cn(
+                        'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 cursor-pointer',
+                        tab === 'positions'
+                          ? 'bg-accent text-accent-fg shadow-xs'
+                          : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                      )}
+                    >
+                      Positions
+                      {positions && positions.length > 0 && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-muted text-accent text-[10px] font-semibold px-1">
+                          {positions.length}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTab('pending')}
+                      className={cn(
+                        'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 cursor-pointer',
+                        tab === 'pending'
+                          ? 'bg-accent text-accent-fg shadow-xs'
+                          : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                      )}
+                    >
+                      Pending Orders
+                      {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-[10px] font-semibold px-1">
+                          {pending.filter((o) => o.status === 'pending').length}
+                        </span>
+                      )}
+                    </button>
+
+                    <div className="ml-auto flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPosCollapsed(true)}
+                        className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                        aria-label="Collapse positions panel"
+                        title="Collapse positions panel"
+                      >
+                        <PanelLeftClose className="h-3.5 w-3.5 rotate-90" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto min-h-0">
+                    <SectionErrorBoundary sectionName="PositionsTable">
+                      {tab === 'positions' ? (
+                        <PositionsTable positions={positions} onChanged={onChanged} />
+                      ) : (
+                        <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                      )}
+                    </SectionErrorBoundary>
+                  </div>
+
+                  {/* MT5 Bottom Telemetry Summary Row */}
+                  <div className="shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-xs font-normal select-none overflow-x-auto no-scrollbar shadow-xs">
+                    <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
+                      <span>
+                        Balance:{' '}
+                        <strong className="font-semibold tabular-nums text-text">
+                          {fmtUSD(balance)}
+                        </strong>
+                      </span>
+                      <span>
+                        Equity:{' '}
+                        <strong
+                          className={cn(
+                            'font-semibold tabular-nums',
+                            equity >= balance
+                              ? 'text-emerald-500'
+                              : 'text-rose-500'
+                          )}
+                        >
+                          {fmtUSD(equity)}
+                        </strong>
+                      </span>
+                      <span>
+                        Free Margin:{' '}
+                        <strong className="text-text font-semibold tabular-nums">
+                          {fmtUSD(free)}
+                        </strong>
+                      </span>
+
+                      {showMoreTelemetry && (
+                        <>
                           <span>
-                            Balance:{' '}
-                            <strong className="font-semibold terminal-num text-text">
-                              {fmtUSD(balance)}
+                            Margin:{' '}
+                            <strong className="text-text font-semibold tabular-nums">
+                              {fmtUSD(used)}
                             </strong>
                           </span>
                           <span>
-                            Equity:{' '}
+                            Margin Level:{' '}
                             <strong
                               className={cn(
-                                'font-semibold terminal-num',
-                                equity >= balance
-                                  ? 'text-emerald-600 dark:text-emerald-400'
-                                  : 'text-rose-600 dark:text-rose-400'
+                                'font-semibold tabular-nums',
+                                level !== null && level <= 120
+                                  ? 'text-rose-500'
+                                  : 'text-text'
                               )}
                             >
-                              {fmtUSD(equity)}
+                              {level !== null ? fmtPct(level, 1) : '—'}
                             </strong>
                           </span>
                           <span>
-                            Free Margin:{' '}
-                            <strong className="text-text font-semibold terminal-num">
-                              {fmtUSD(free)}
+                            Leverage:{' '}
+                            <strong className="text-text font-semibold tabular-nums">
+                              1:{lev}
                             </strong>
                           </span>
+                        </>
+                      )}
 
-                          {showMoreTelemetry && (
-                            <>
-                              <span>
-                                Margin:{' '}
-                                <strong className="text-text font-semibold terminal-num">
-                                  {fmtUSD(used)}
-                                </strong>
-                              </span>
-                              <span>
-                                Margin Level:{' '}
-                                <strong
-                                  className={cn(
-                                    'font-semibold terminal-num',
-                                    level !== null && level <= 120
-                                      ? 'text-rose-600 dark:text-rose-400'
-                                      : 'text-text'
-                                  )}
-                                >
-                                  {level !== null ? fmtPct(level, 1) : '—'}
-                                </strong>
-                              </span>
-                              <span>
-                                Leverage:{' '}
-                                <strong className="text-text font-semibold terminal-num">
-                                  1:{lev}
-                                </strong>
-                              </span>
-                            </>
+                      <button
+                        type="button"
+                        onClick={() => setShowMoreTelemetry((v) => !v)}
+                        className="inline-flex items-center gap-0.5 text-[11px] font-normal text-text-muted hover:text-text px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer"
+                      >
+                        <span>{showMoreTelemetry ? 'Less' : 'More'}</span>
+                        <ChevronDown
+                          className={cn(
+                            'h-3 w-3 transition-transform',
+                            showMoreTelemetry && 'rotate-180'
                           )}
-
-                          <button
-                            type="button"
-                            onClick={() => setShowMoreTelemetry((v) => !v)}
-                            className="inline-flex items-center gap-0.5 text-terminal-micro font-normal text-text-muted hover:text-text px-1.5 py-0.5 rounded hover:bg-surface-muted transition-colors cursor-pointer"
-                          >
-                            <span>{showMoreTelemetry ? 'Less' : 'More'}</span>
-                            <ChevronDown
-                              className={cn(
-                                'h-3 w-3 transition-transform',
-                                showMoreTelemetry && 'rotate-180'
-                              )}
-                            />
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-text-muted">Total P/L:</span>
-                          <span
-                            className={cn(
-                              'px-2.5 py-0.5 rounded text-terminal-body font-semibold terminal-num',
-                              pnl >= 0
-                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                                : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                            )}
-                          >
-                            {fmtUSD(pnl, { sign: true })}
-                          </span>
-                        </div>
-                      </div>
-                  </>
-                )}
-              </section>
-            </Panel>
-          </PanelGroup>
+                        />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-text-muted">Total P/L:</span>
+                      <span
+                        className={cn(
+                          'px-2.5 py-0.5 rounded text-xs font-semibold tabular-nums',
+                          pnl >= 0
+                            ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+                            : 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                        )}
+                      >
+                        {fmtUSD(pnl, { sign: true })}
+                      </span>
+                    </div>
+                  </div>
+                </section>
+              </Panel>
+            </PanelGroup>
+          )}
         </div>
 
         {/* Right: Dedicated Order Ticket Dock (Desktop XL >= 1280px) */}
