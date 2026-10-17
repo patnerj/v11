@@ -179,6 +179,47 @@ export const Mt5Canvas = memo(
       yScaleOffset: number
     } | null>(null)
 
+    // Live state synchronization refs for 60fps touch gestures
+    const candleWidthRef = useRef(candleWidth)
+    candleWidthRef.current = candleWidth
+    const scrollOffsetRef = useRef(scrollOffset)
+    scrollOffsetRef.current = scrollOffset
+    const yScaleOffsetRef = useRef(yScaleOffset)
+    yScaleOffsetRef.current = yScaleOffset
+    const yScaleFactorRef = useRef(yScaleFactor)
+    yScaleFactorRef.current = yScaleFactor
+    const candlesRef = useRef(candles)
+    candlesRef.current = candles
+    const positionsRef = useRef(positions)
+    positionsRef.current = positions
+
+    // Touch & Multi-Touch Gesture Engine state
+    const touchStateRef = useRef<{
+      isDragging: boolean
+      isPinching: boolean
+      startX: number
+      startY: number
+      startScrollOffset: number
+      startYScaleOffset: number
+      startYScaleFactor: number
+      initialPinchDistance: number
+      initialCandleWidth: number
+      lastTapTime: number
+      isAxisDrag: boolean
+    }>({
+      isDragging: false,
+      isPinching: false,
+      startX: 0,
+      startY: 0,
+      startScrollOffset: 0,
+      startYScaleOffset: 0,
+      startYScaleFactor: 1.0,
+      initialPinchDistance: 0,
+      initialCandleWidth: 10,
+      lastTapTime: 0,
+      isAxisDrag: false,
+    })
+
     // Interactive SL/TP drag state
     const draggingSlTpRef = useRef<{
       posId: number
@@ -2594,10 +2635,158 @@ export const Mt5Canvas = memo(
       onRightClick({ x: e.clientX, y: e.clientY, price })
     }
 
+    // Touch & Multi-Touch Gestures for 100% Mobile Panning (Left/Right/Up/Down) & Pinch Zoom
+    useEffect(() => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const onTouchStart = (e: TouchEvent) => {
+        const rect = canvas.getBoundingClientRect()
+        if (e.touches.length === 1) {
+          const touch = e.touches[0]
+          const x = touch.clientX - rect.left
+          const y = touch.clientY - rect.top
+          const { chartW } = getLayout()
+
+          // Double tap detection (< 300ms) to reset auto-fit scale
+          const now = Date.now()
+          if (now - touchStateRef.current.lastTapTime < 300) {
+            resetScale()
+            touchStateRef.current.lastTapTime = 0
+            return
+          }
+          touchStateRef.current.lastTapTime = now
+
+          const isAxis = x >= chartW
+
+          // Quick tap to close position [x] button on chart
+          const symPositions = positionsRef.current.filter((p) => p.symbol === symbol)
+          for (const pos of symPositions) {
+            const openPrice = toNum(pos.open_price)
+            const yEntry = priceToY(openPrice)
+            const badgeRight = chartW - 8
+            if (Math.abs(y - yEntry) < 18 && x >= badgeRight - 38 && x <= badgeRight + 10) {
+              api.close(pos.id).then((r) => {
+                if (r.ok && r.data.success) {
+                  playOrderSuccessSound()
+                  toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
+                  invalidateFxsim('/positions')
+                  invalidateFxsim('/account')
+                  onChanged?.()
+                }
+              })
+              return
+            }
+          }
+
+          touchStateRef.current.isDragging = true
+          touchStateRef.current.isPinching = false
+          touchStateRef.current.isAxisDrag = isAxis
+          touchStateRef.current.startX = x
+          touchStateRef.current.startY = y
+          touchStateRef.current.startScrollOffset = scrollOffsetRef.current
+          touchStateRef.current.startYScaleOffset = yScaleOffsetRef.current
+          touchStateRef.current.startYScaleFactor = yScaleFactorRef.current
+
+          mousePosRef.current = { x, y, onAxis: isAxis, onChart: !isAxis }
+          setMousePos({ x, y, onAxis: isAxis, onChart: !isAxis })
+        } else if (e.touches.length === 2) {
+          const t0 = e.touches[0]
+          const t1 = e.touches[1]
+          const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
+          touchStateRef.current.isDragging = false
+          touchStateRef.current.isPinching = true
+          touchStateRef.current.initialPinchDistance = Math.max(10, dist)
+          touchStateRef.current.initialCandleWidth = candleWidthRef.current
+        }
+      }
+
+      const onTouchMove = (e: TouchEvent) => {
+        // Stop browser page scrolling / pull-to-refresh
+        if (e.cancelable) {
+          e.preventDefault()
+        }
+
+        const rect = canvas.getBoundingClientRect()
+        if (e.touches.length === 1 && touchStateRef.current.isDragging) {
+          const touch = e.touches[0]
+          const x = touch.clientX - rect.left
+          const y = touch.clientY - rect.top
+          const { chartW, mainH } = getLayout()
+
+          mousePosRef.current = { x, y, onAxis: x >= chartW, onChart: x < chartW }
+          setMousePos({ x, y, onAxis: x >= chartW, onChart: x < chartW })
+
+          if (touchStateRef.current.isAxisDrag) {
+            const deltaY = touchStateRef.current.startY - y
+            const factorChange = deltaY * 0.005
+            const newFactor = Math.max(0.2, Math.min(6.0, touchStateRef.current.startYScaleFactor + factorChange))
+            setYScaleFactor(parseFloat(newFactor.toFixed(3)))
+            return
+          }
+
+          // 2D Pan (Horizontal Time Pan + Vertical Price Pan)
+          const deltaX = x - touchStateRef.current.startX
+          const curCandleW = candleWidthRef.current
+          const candlesMoved = deltaX / curCandleW
+          const visibleBars = Math.ceil(chartW / curCandleW)
+          const minOffset = -Math.floor(visibleBars * 0.7)
+          const maxOffset = Math.max(10, candlesRef.current.length - 10)
+          const newOffset = Math.max(minOffset, Math.min(maxOffset, touchStateRef.current.startScrollOffset + candlesMoved))
+          setScrollOffset(parseFloat(newOffset.toFixed(1)))
+
+          const deltaY = y - touchStateRef.current.startY
+          const { range } = getPriceBounds()
+          const pricePerPx = range / Math.max(1, mainH)
+          const newYOffset = touchStateRef.current.startYScaleOffset + deltaY * pricePerPx
+          setYScaleOffset(parseFloat(newYOffset.toFixed(digits > 2 ? 2 : 5)))
+        } else if (e.touches.length === 2 && touchStateRef.current.isPinching) {
+          const t0 = e.touches[0]
+          const t1 = e.touches[1]
+          const curDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
+          const ratio = curDist / (touchStateRef.current.initialPinchDistance || 1)
+          const newW = Math.max(2.5, Math.min(48, touchStateRef.current.initialCandleWidth * ratio))
+          setCandleWidth(parseFloat(newW.toFixed(2)))
+        }
+      }
+
+      const onTouchEnd = (e: TouchEvent) => {
+        if (e.touches.length === 0) {
+          touchStateRef.current.isDragging = false
+          touchStateRef.current.isPinching = false
+          touchStateRef.current.isAxisDrag = false
+        } else if (e.touches.length === 1) {
+          const touch = e.touches[0]
+          const rect = canvas.getBoundingClientRect()
+          const x = touch.clientX - rect.left
+          const y = touch.clientY - rect.top
+          touchStateRef.current.isDragging = true
+          touchStateRef.current.isPinching = false
+          touchStateRef.current.startX = x
+          touchStateRef.current.startY = y
+          touchStateRef.current.startScrollOffset = scrollOffsetRef.current
+          touchStateRef.current.startYScaleOffset = yScaleOffsetRef.current
+        }
+      }
+
+      canvas.addEventListener('touchstart', onTouchStart, { passive: false })
+      canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+      canvas.addEventListener('touchend', onTouchEnd, { passive: false })
+      canvas.addEventListener('touchcancel', onTouchEnd, { passive: false })
+
+      return () => {
+        canvas.removeEventListener('touchstart', onTouchStart)
+        canvas.removeEventListener('touchmove', onTouchMove)
+        canvas.removeEventListener('touchend', onTouchEnd)
+        canvas.removeEventListener('touchcancel', onTouchEnd)
+      }
+    }, [digits, symbol, onChanged, resetScale, getLayout, getPriceBounds, priceToY, yToPrice])
+
     return (
       <div
         ref={containerRef}
-        className="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-black select-none"
+        className="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-black select-none touch-none"
+        style={{ touchAction: 'none' }}
       >
         <canvas
           ref={canvasRef}
@@ -2608,8 +2797,8 @@ export const Mt5Canvas = memo(
           onMouseLeave={handleMouseUp}
           onDoubleClick={handleDoubleClick}
           onContextMenu={handleContextMenu}
-          style={{ cursor: canvasCursor }}
-          className="w-full h-full block"
+          style={{ cursor: canvasCursor, touchAction: 'none' }}
+          className="w-full h-full block touch-none"
         />
 
         {/* Bottom Floating Navigation & Zoom Dock ([-] [+] [Reset]) — Centered at bottom with Day/Night glassmorphism */}
