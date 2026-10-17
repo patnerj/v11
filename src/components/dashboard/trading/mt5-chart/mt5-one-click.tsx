@@ -113,8 +113,11 @@ export const Mt5OneClick = memo(function Mt5OneClick({
     if (!isDraggingRef.current || !dragStartRef.current) return
     const dx = e.clientX - dragStartRef.current.mouseX
     const dy = e.clientY - dragStartRef.current.mouseY
-    const newX = Math.max(8, Math.min(window.innerWidth - 240, dragStartRef.current.startX + dx))
-    const newY = Math.max(8, Math.min(window.innerHeight - 200, dragStartRef.current.startY + dy))
+    const parent = (e.currentTarget.parentElement) as HTMLElement | null
+    const maxW = parent ? parent.clientWidth - 230 : window.innerWidth - 240
+    const maxH = parent ? parent.clientHeight - 160 : window.innerHeight - 200
+    const newX = Math.max(8, Math.min(Math.max(10, maxW), dragStartRef.current.startX + dx))
+    const newY = Math.max(8, Math.min(Math.max(10, maxH), dragStartRef.current.startY + dy))
     setPos({ x: newX, y: newY })
   }, [])
 

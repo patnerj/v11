@@ -377,6 +377,12 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         setActiveTool('fibonacci')
       } else if (e.key === 'r' || e.key === 'R') {
         setActiveTool('rectangle')
+      } else if (e.key === 'b' || e.key === 'B') {
+        setActiveTool('risk-reward')
+      } else if (e.key === 'c' || e.key === 'C') {
+        setActiveTool('channel')
+      } else if (e.key === 'x' || e.key === 'X') {
+        setActiveTool('text')
       } else if (e.key === '+' || e.key === '=') {
         e.preventDefault()
         canvasRef.current?.zoomIn()
