@@ -25,6 +25,8 @@ import {
   Spline,
   Columns,
   ArrowRightToLine,
+  AlignLeft,
+  AlignRight,
 } from 'lucide-react'
 import type { DrawingTool, DrawingObject } from './types'
 import { cn } from '@/lib/cn'
@@ -262,6 +264,31 @@ export const Mt5DrawingInspector = memo(function Mt5DrawingInspector({
           >
             <ArrowRightToLine className="w-3 h-3" />
             <span>{selectedDrawing.extendRight ? 'Extended' : 'Bounded'}</span>
+          </button>
+        </>
+      )}
+
+      {/* Fibonacci Label Alignment Toggle (Left / Right) */}
+      {selectedDrawing.type === 'fibonacci' && (
+        <>
+          <div className="w-px h-4 bg-border mx-1" />
+          <button
+            type="button"
+            onClick={() =>
+              onUpdateSelected({
+                fiboLabelsAlign: selectedDrawing.fiboLabelsAlign === 'right' ? 'left' : 'right',
+              })
+            }
+            className={cn(
+              'flex items-center gap-1 px-2 py-0.5 rounded text-terminal-micro font-semibold transition-colors cursor-pointer border',
+              selectedDrawing.fiboLabelsAlign === 'right'
+                ? 'bg-accent/20 border-accent/40 text-accent font-bold shadow-xs'
+                : 'border-border text-text-muted hover:text-text hover:bg-surface-muted'
+            )}
+            title={selectedDrawing.fiboLabelsAlign === 'right' ? 'Labels on Right (Click for Left)' : 'Labels on Left (Click for Right)'}
+          >
+            {selectedDrawing.fiboLabelsAlign === 'right' ? <AlignRight className="w-3 h-3" /> : <AlignLeft className="w-3 h-3" />}
+            <span>{selectedDrawing.fiboLabelsAlign === 'right' ? 'Right Labels' : 'Left Labels'}</span>
           </button>
         </>
       )}

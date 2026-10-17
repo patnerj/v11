@@ -702,7 +702,7 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
               inputMode="decimal"
               value={sl}
               onChange={(e) => setSl(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder={isSlRequired ? `e.g. ${ask ? fmtPrice(ask * 0.995, digits) : '1.0825'}` : "Price (Optional)"}
+              placeholder={`e.g. ${ask ? fmtPrice(ask * 0.995, digits) : '1.0825'}`}
               title={slMetrics ? `Max Loss: -${fmtUSD(slMetrics.lossVal)} (-${slMetrics.pips.toFixed(1)}p)` : undefined}
               className={cn(
                 "w-full h-9 px-3 rounded-md border text-xs sm:text-sm font-semibold tabular-nums font-sans focus-ring transition-colors placeholder:text-xs placeholder:font-normal placeholder:text-text-muted/60",

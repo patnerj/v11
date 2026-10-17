@@ -1040,10 +1040,12 @@ export const Mt5Canvas = memo(
             ctx.lineTo(rightX, Math.floor(y) + 0.5)
             ctx.stroke()
 
+            const isRight = d.fiboLabelsAlign === 'right'
+            const labelX = isRight ? rightX - 6 : leftX + 6
             ctx.fillStyle = item.l === 0.618 || item.l === 0.5 ? '#F59E0B' : (theme === 'daylight' ? '#0F172A' : '#E2E8F0')
             ctx.font = FONT_MICRO_BOLD
-            ctx.textAlign = 'left'
-            ctx.fillText(`${item.label} (${fmtPrice(lvlPrice, digits)})`, leftX + 4, y - 4)
+            ctx.textAlign = isRight ? 'right' : 'left'
+            ctx.fillText(`${item.label} (${fmtPrice(lvlPrice, digits)})`, labelX, y - 4)
           }
         } else if (d.type === 'rectangle' && d.points.length >= 2) {
           const x0 = timeToX(d.points[0].time)
@@ -2485,7 +2487,61 @@ export const Mt5Canvas = memo(
 
       // 3. Finalize Drawing in Progress
       if (drawingInProgressRef.current) {
-        onAddDrawing(drawingInProgressRef.current)
+        const d = { ...drawingInProgressRef.current, points: [...drawingInProgressRef.current.points] }
+        const tfMs = TIMEFRAME_SECONDS[timeframe] * 1000
+        const { range } = getPriceBounds()
+        const symMeta = getSymbolMeta(symbol)
+        const effPip = symMeta.pipSize || pSize || 1
+        const defaultDist = Math.max(effPip * 30, range * 0.08)
+
+        if (d.type === 'risk-reward') {
+          const p0 = d.points[0]
+          const p1 = d.points[1]
+          // If single clicked without dragging or minimal drag distance
+          if (!p1 || Math.abs(p0.price - p1.price) <= effPip * 2) {
+            const slP = parseFloat((p0.price - defaultDist).toFixed(digits))
+            const tpP = parseFloat((p0.price + defaultDist * 2).toFixed(digits))
+            d.points = [
+              p0,
+              { time: p0.time + 18 * tfMs, price: slP },
+              { time: p0.time, price: tpP },
+            ]
+          }
+        } else if (d.type === 'fibonacci') {
+          const p0 = d.points[0]
+          const p1 = d.points[1]
+          if (!p1 || Math.abs(p0.price - p1.price) <= effPip * 2) {
+            const fibDist = Math.max(effPip * 50, range * 0.15)
+            d.points = [
+              { time: p0.time - 25 * tfMs, price: parseFloat((p0.price + fibDist).toFixed(digits)) },
+              { time: p0.time, price: p0.price },
+            ]
+          }
+        } else if (d.type === 'rectangle') {
+          const p0 = d.points[0]
+          const p1 = d.points[1]
+          if (!p1 || Math.abs(p0.price - p1.price) <= effPip * 2) {
+            const rectH = Math.max(effPip * 25, range * 0.05)
+            d.points = [
+              p0,
+              { time: p0.time + 20 * tfMs, price: parseFloat((p0.price - rectH).toFixed(digits)) },
+            ]
+          }
+        } else if (d.type === 'channel') {
+          const p0 = d.points[0]
+          const p1 = d.points[1]
+          if (!p1 || Math.abs(p0.price - p1.price) <= effPip * 2) {
+            const chanH = Math.max(effPip * 30, range * 0.06)
+            d.points = [
+              { time: p0.time - 20 * tfMs, price: parseFloat((p0.price + chanH).toFixed(digits)) },
+              p0,
+              { time: p0.time, price: parseFloat((p0.price - chanH).toFixed(digits)) },
+            ]
+          }
+        }
+
+        onAddDrawing(d)
+        onSelectDrawing(d.id)
         drawingInProgressRef.current = null
         onSelectTool('select')
       }

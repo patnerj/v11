@@ -156,6 +156,7 @@ export interface DrawingObject {
   visible: boolean
   text?: string
   extendRight?: boolean
+  fiboLabelsAlign?: 'left' | 'right'
   isLong?: boolean // For risk-reward tool
   channelWidth?: number // For parallel channel (in price units)
   createdAt: number
