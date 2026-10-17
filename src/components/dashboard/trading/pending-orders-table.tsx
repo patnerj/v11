@@ -31,11 +31,27 @@ export const PendingOrdersTable = memo(function PendingOrdersTable({ orders, onC
 
   if (active.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-terminal-body text-text-muted">No pending orders</div>
-        <div className="text-terminal-micro text-text-faint mt-1">
-          Switch the order ticket to “Pending” to place a limit or stop order.
-        </div>
+      <div className="overflow-x-auto w-full">
+        <table className="w-full text-terminal-body">
+          <thead>
+            <tr className="border-b border-border-subtle bg-bg-subtle/40">
+              <Th>Symbol</Th>
+              <Th>Type</Th>
+              <Th align="right">Volume</Th>
+              <Th align="right">Trigger</Th>
+              <Th align="right" hideOn="md">SL / TP</Th>
+              <Th align="right" hideOn="md">Placed</Th>
+              <Th align="right">{''}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={7} className="py-6 text-center text-terminal-micro text-text-muted font-normal select-none">
+                No active pending orders. Switch the Order Ticket to "Pending" to place limit or stop orders.
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     )
   }

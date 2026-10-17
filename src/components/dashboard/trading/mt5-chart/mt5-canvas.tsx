@@ -54,6 +54,14 @@ const PRICE_AXIS_WIDTH = 75
 const TIME_AXIS_HEIGHT = 26
 const SUB_PANE_HEIGHT = 100
 
+const SANS_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif'
+const FONT_MICRO = `9px ${SANS_STACK}`
+const FONT_MICRO_BOLD = `bold 9px ${SANS_STACK}`
+const FONT_LABEL = `10px ${SANS_STACK}`
+const FONT_LABEL_BOLD = `bold 10px ${SANS_STACK}`
+const FONT_BODY_BOLD = `bold 11px ${SANS_STACK}`
+const FONT_CLOSE_BTN = `bold 13px ${SANS_STACK}`
+
 function distToSegment(px: number, py: number, x0: number, y0: number, x1: number, y1: number): number {
   const dx = x1 - x0
   const dy = y1 - y0
@@ -222,6 +230,13 @@ export const Mt5Canvas = memo(
         setScrollOffset(0)
       }
     }, [candles.length, autoScroll])
+
+    // Auto-align camera when symbol or timeframe changes
+    useEffect(() => {
+      setScrollOffset(0)
+      setYScaleOffset(0)
+      setYScaleFactor(1.0)
+    }, [symbol, timeframe])
 
     // Imperative Camera Controls
     const zoomIn = useCallback(() => {
@@ -863,7 +878,7 @@ export const Mt5Canvas = memo(
           ctx.fillStyle = d.color
           ctx.fillRect(chartW + 1, y - 9, PRICE_AXIS_WIDTH - 2, 18)
           ctx.fillStyle = '#000000'
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'center'
           ctx.fillText(fmtPrice(d.points[0].price, digits), chartW + PRICE_AXIS_WIDTH / 2, y + 4)
         } else if (d.type === 'vline') {
@@ -894,7 +909,7 @@ export const Mt5Canvas = memo(
           ctx.fillStyle = 'rgba(0,0,0,0.75)'
           ctx.fillRect(midX - 25, midY - 18, 50, 16)
           ctx.fillStyle = d.color
-          ctx.font = '10px monospace'
+          ctx.font = FONT_LABEL
           ctx.textAlign = 'center'
           ctx.fillText(`${deltaPips.toFixed(1)}p`, midX, midY - 6)
         } else if (d.type === 'channel' && d.points.length >= 2) {
@@ -969,7 +984,7 @@ export const Mt5Canvas = memo(
             ctx.stroke()
 
             ctx.fillStyle = d.color
-            ctx.font = '10px monospace'
+            ctx.font = FONT_LABEL
             ctx.textAlign = 'left'
             ctx.fillText(`${item.label} (${fmtPrice(lvlPrice, digits)})`, 10, y - 4)
           }
@@ -1024,7 +1039,7 @@ export const Mt5Canvas = memo(
           ctx.strokeStyle = '#38BDF8'
           ctx.strokeRect(leftX + 4, yEntry - 10, ctx.measureText(badgeText).width + 16, 20)
           ctx.fillStyle = '#38BDF8'
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
           ctx.fillText(badgeText, leftX + 10, yEntry + 4)
         } else if (d.type === 'text' && d.text) {
@@ -1098,20 +1113,20 @@ export const Mt5Canvas = memo(
         ctx.strokeRect(badgeX, yEntry - 12, badgeWidth, 24)
 
         ctx.fillStyle = '#FFFFFF'
-        ctx.font = 'bold 10px monospace'
+        ctx.font = FONT_LABEL_BOLD
         ctx.textAlign = 'left'
         ctx.fillText(entryText, badgeX + 8, yEntry + 3)
 
         // [x] Close button on Entry Line
         ctx.fillStyle = '#EF4444'
-        ctx.font = 'bold 13px sans-serif'
+        ctx.font = FONT_CLOSE_BTN
         ctx.fillText('×', badgeRight - 14, yEntry + 3)
 
         // Right Price Axis Entry Tag
         ctx.fillStyle = isBuy ? '#0284C7' : '#E11D48'
         ctx.fillRect(chartW + 1, yEntry - 9, PRICE_AXIS_WIDTH - 2, 18)
         ctx.fillStyle = '#FFFFFF'
-        ctx.font = 'bold 9px monospace'
+        ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(`${pos.type.toUpperCase()} ${fmtPrice(openPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yEntry + 3)
 
@@ -1127,7 +1142,7 @@ export const Mt5Canvas = memo(
             ctx.lineWidth = 1
             ctx.strokeRect(slHandleX, slHandleY - 9, 72, 18)
             ctx.fillStyle = '#FFFFFF'
-            ctx.font = 'bold 9px monospace'
+            ctx.font = FONT_MICRO_BOLD
             ctx.textAlign = 'center'
             ctx.fillText('+ Drag SL', slHandleX + 36, slHandleY + 3)
           }
@@ -1140,7 +1155,7 @@ export const Mt5Canvas = memo(
             ctx.lineWidth = 1
             ctx.strokeRect(tpHandleX, tpHandleY - 9, 72, 18)
             ctx.fillStyle = '#FFFFFF'
-            ctx.font = 'bold 9px monospace'
+            ctx.font = FONT_MICRO_BOLD
             ctx.textAlign = 'center'
             ctx.fillText('+ Drag TP', tpHandleX + 36, tpHandleY + 3)
           }
@@ -1184,19 +1199,19 @@ export const Mt5Canvas = memo(
           ctx.strokeStyle = '#EF4444'
           ctx.strokeRect(slBadgeX, ySl - 11, slBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.fillText(slText, slBadgeX + 6, ySl + 3)
 
           // [x] Remove SL
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 13px sans-serif'
+          ctx.font = FONT_CLOSE_BTN
           ctx.fillText('×', slBadgeRight - 14, ySl + 3)
 
           // Right Price Axis SL Tag
           ctx.fillStyle = '#DC2626'
           ctx.fillRect(chartW + 1, ySl - 9, PRICE_AXIS_WIDTH - 2, 18)
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 9px monospace'
+          ctx.font = FONT_MICRO_BOLD
           ctx.textAlign = 'center'
           ctx.fillText(`SL ${fmtPrice(activeSlPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, ySl + 3)
         }
@@ -1239,19 +1254,19 @@ export const Mt5Canvas = memo(
           ctx.strokeStyle = '#10B981'
           ctx.strokeRect(tpBadgeX, yTp - 11, tpBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.fillText(tpText, tpBadgeX + 6, yTp + 3)
 
           // [x] Remove TP
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 13px sans-serif'
+          ctx.font = FONT_CLOSE_BTN
           ctx.fillText('×', tpBadgeRight - 14, yTp + 3)
 
           // Right Price Axis TP Tag
           ctx.fillStyle = '#059669'
           ctx.fillRect(chartW + 1, yTp - 9, PRICE_AXIS_WIDTH - 2, 18)
           ctx.fillStyle = '#FFFFFF'
-          ctx.font = 'bold 9px monospace'
+          ctx.font = FONT_MICRO_BOLD
           ctx.textAlign = 'center'
           ctx.fillText(`TP ${fmtPrice(activeTpPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yTp + 3)
         }
@@ -1284,19 +1299,19 @@ export const Mt5Canvas = memo(
         ctx.strokeStyle = '#F59E0B'
         ctx.strokeRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
         ctx.fillStyle = '#050811'
-        ctx.font = 'bold 10px monospace'
+        ctx.font = FONT_LABEL_BOLD
         ctx.fillText(ordText, ordBadgeX + 6, yTgt + 3)
 
         // [x] Cancel Pending
         ctx.fillStyle = '#050811'
-        ctx.font = 'bold 13px sans-serif'
+        ctx.font = FONT_CLOSE_BTN
         ctx.fillText('×', ordBadgeRight - 14, yTgt + 3)
 
         // Right Price Axis Tag for Pending
         ctx.fillStyle = '#D97706'
         ctx.fillRect(chartW + 1, yTgt - 9, PRICE_AXIS_WIDTH - 2, 18)
         ctx.fillStyle = '#FFFFFF'
-        ctx.font = 'bold 9px monospace'
+        ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(fmtPrice(activeTgtPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, yTgt + 3)
 
@@ -1347,6 +1362,7 @@ export const Mt5Canvas = memo(
         ctx.lineTo(chartW, Math.floor(yAsk) + 0.5)
         ctx.stroke()
 
+
         // Live Spread Badge between them on right scale
         const spreadP = (liveAsk - liveBid) / symMeta.pipSize
         const midY = (yBid + yAsk) / 2
@@ -1355,7 +1371,7 @@ export const Mt5Canvas = memo(
         ctx.strokeStyle = '#F59E0B'
         ctx.strokeRect(chartW + 2, midY - 8, PRICE_AXIS_WIDTH - 4, 16)
         ctx.fillStyle = '#F59E0B'
-        ctx.font = 'bold 9px monospace'
+        ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(`Spread: ${spreadP.toFixed(1)}`, chartW + PRICE_AXIS_WIDTH / 2, midY + 3)
 
@@ -1363,7 +1379,7 @@ export const Mt5Canvas = memo(
         ctx.fillStyle = colors.bidLine
         ctx.fillRect(chartW + 1, yBid - 10, PRICE_AXIS_WIDTH - 2, 20)
         ctx.fillStyle = '#050811'
-        ctx.font = 'bold 10px monospace'
+        ctx.font = FONT_LABEL_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(fmtPrice(liveBid, digits), chartW + PRICE_AXIS_WIDTH / 2, yBid + 3)
 
@@ -1375,7 +1391,7 @@ export const Mt5Canvas = memo(
         ctx.lineWidth = 1
         ctx.strokeRect(chartW - 48, yBid - 9, 44, 18)
         ctx.fillStyle = '#F59E0B'
-        ctx.font = 'bold 9px monospace'
+        ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(cdText, chartW - 26, yBid + 3)
 
@@ -1410,7 +1426,7 @@ export const Mt5Canvas = memo(
         ctx.fillStyle = colors.border
         ctx.fillRect(chartW + 1, curY - 9, PRICE_AXIS_WIDTH - 2, 18)
         ctx.fillStyle = colors.text
-        ctx.font = 'bold 10px monospace'
+        ctx.font = FONT_LABEL_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(fmtPrice(curPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, curY + 4)
 
@@ -1424,7 +1440,7 @@ export const Mt5Canvas = memo(
         ctx.fillStyle = colors.border
         ctx.fillRect(curX - 35, mainH + 1, 70, 18)
         ctx.fillStyle = colors.text
-        ctx.font = '10px monospace'
+        ctx.font = FONT_LABEL
         ctx.fillText(timeStr, curX, mainH + 13)
         ctx.restore()
 
@@ -1464,7 +1480,7 @@ export const Mt5Canvas = memo(
           ctx.strokeRect(boxX, boxY, boxW, 26)
 
           ctx.fillStyle = colors.text
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
           ctx.fillText(rulerText, boxX + 10, boxY + 16)
           ctx.restore()
@@ -1484,7 +1500,7 @@ export const Mt5Canvas = memo(
 
       const axisGridStep = rangeP / 6
       ctx.fillStyle = colors.textMuted
-      ctx.font = '10px monospace'
+      ctx.font = FONT_LABEL
       ctx.textAlign = 'left'
       for (let p = Math.ceil(minP / axisGridStep) * axisGridStep; p < maxP; p += axisGridStep) {
         const y = priceToY(p)
@@ -1506,7 +1522,7 @@ export const Mt5Canvas = memo(
       ctx.stroke()
 
       ctx.fillStyle = colors.textMuted
-      ctx.font = '10px monospace'
+      ctx.font = FONT_LABEL
       ctx.textAlign = 'center'
       const timeStep = Math.max(80, candleWidth * 10)
       for (let x = chartW % timeStep; x < chartW; x += timeStep) {
@@ -1561,7 +1577,7 @@ export const Mt5Canvas = memo(
 
           const lastRsi = rsiVals[endIndex] !== null ? rsiVals[endIndex]!.toFixed(1) : '—'
           ctx.fillStyle = colors.text
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
           ctx.fillText(`RSI (${indicators.rsi.period}): ${lastRsi}`, 10, subTop + 14)
         } else if (indicators.macd.enabled) {
@@ -1585,7 +1601,7 @@ export const Mt5Canvas = memo(
           }
 
           ctx.fillStyle = colors.text
-          ctx.font = 'bold 10px monospace'
+          ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
           ctx.fillText(`MACD (${indicators.macd.fast},${indicators.macd.slow},${indicators.macd.signal})`, 10, subTop + 14)
         }
@@ -1618,7 +1634,7 @@ export const Mt5Canvas = memo(
         ctx.strokeRect(6, 6, ctx.measureText(ohlcvText).width + 16, 20)
 
         ctx.fillStyle = colors.text
-        ctx.font = 'bold 11px monospace'
+        ctx.font = FONT_BODY_BOLD
         ctx.textAlign = 'left'
         ctx.fillText(ohlcvText, 12, 20)
         ctx.restore()

@@ -279,11 +279,29 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
   }
   if (positions.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-terminal-body text-text-muted">No open positions</div>
-        <div className="text-terminal-micro text-text-faint mt-1">
-          Use the order ticket to open a trade.
-        </div>
+      <div className="overflow-x-auto w-full">
+        <table className="w-full text-terminal-body">
+          <thead>
+            <tr className="border-b border-border-subtle bg-bg-subtle/40">
+              <Th>Symbol</Th>
+              <Th>Side</Th>
+              <Th align="right" hideOn={compact ? 'sm' : undefined}>Volume</Th>
+              <Th align="right" hideOn="md">Open</Th>
+              <Th align="right" hideOn="sm">Current</Th>
+              <Th align="right" hideOn="md">SL / TP</Th>
+              <Th align="right">P&L</Th>
+              <Th align="right" hideOn="lg">Opened</Th>
+              <Th align="right">{''}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={9} className="py-6 text-center text-terminal-micro text-text-muted font-normal select-none">
+                No open positions. Use Order Ticket or 1-Click to place trades.
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     )
   }

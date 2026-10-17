@@ -60,6 +60,24 @@ function getSymbolDefaultAnchor(symbol: string): number {
 }
 
 /**
+ * Target continuous bar count per timeframe to ensure 100% edge-to-edge canvas population
+ * spanning > 3 months on all resolutions without white gaps on the left side.
+ */
+export function getTimeframeTargetBarCount(timeframe: Timeframe): number {
+  switch (timeframe) {
+    case 'W1': return 800  // ~15 years
+    case 'D1': return 1200 // ~3.3 years
+    case 'H4': return 1500 // ~250 days (8 months)
+    case 'H1': return 1800 // ~75 days (2.5 months)
+    case 'M30': return 1800 // ~37 days
+    case 'M15': return 2000 // ~21 days
+    case 'M5':  return 2000 // ~7 days
+    case 'M1':  return 2000 // ~1.4 days
+    default: return 1500
+  }
+}
+
+/**
  * Generate synthetic institutional candles anchored to the current market price
  */
 export function generateRealisticCandles(args: {
@@ -70,7 +88,8 @@ export function generateRealisticCandles(args: {
   pipSize: number
   count?: number
 }): Candle[] {
-  const { symbol, timeframe, digits, pipSize, count = 280 } = args
+  const { symbol, timeframe, digits, pipSize } = args
+  const targetCount = args.count ?? getTimeframeTargetBarCount(timeframe)
   const anchor = args.anchorPrice && args.anchorPrice > 0
     ? args.anchorPrice
     : getSymbolDefaultAnchor(symbol)
@@ -85,15 +104,12 @@ export function generateRealisticCandles(args: {
   const baseVolatility = Math.max(pipSize * 2, pipSize * 4 * pipMultiplier)
 
   const candles: Candle[] = []
-  let prevClose = anchor
 
-  // Seed pseudo-random walk backwards
-  const tempWalk: Array<{ open: number; high: number; low: number; close: number; volume: number }> = []
-  
-  // Deterministic seed based on symbol name string
+  // Deterministic seed based on symbol AND timeframe for distinct, authentic multi-timeframe price action
+  const seedStr = `${symbol}_${timeframe}_institutional_v12`
   let seed = 0
-  for (let c = 0; c < symbol.length; c++) {
-    seed = (seed * 31 + symbol.charCodeAt(c)) & 0xffffffff
+  for (let c = 0; c < seedStr.length; c++) {
+    seed = (seed * 31 + seedStr.charCodeAt(c)) & 0xffffffff
   }
   const pseudoRand = () => {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff
@@ -101,8 +117,9 @@ export function generateRealisticCandles(args: {
   }
 
   // Generate walk backward from anchor
+  const tempWalk: Array<{ open: number; high: number; low: number; close: number; volume: number }> = []
   let rollingClose = anchor
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < targetCount; i++) {
     const r1 = pseudoRand() - 0.495 // slight trend
     const r2 = pseudoRand()
     const r3 = pseudoRand()
@@ -130,8 +147,8 @@ export function generateRealisticCandles(args: {
   // Reverse so oldest is first, newest is last (at currentCandleTime)
   tempWalk.reverse()
 
-  for (let i = 0; i < count; i++) {
-    const time = currentCandleTime - (count - 1 - i) * tfMs
+  for (let i = 0; i < targetCount; i++) {
+    const time = currentCandleTime - (targetCount - 1 - i) * tfMs
     const item = tempWalk[i]
     candles.push({
       time,
@@ -166,6 +183,7 @@ export async function loadHistoricalCandles(args: {
 }): Promise<Candle[]> {
   const { symbol, timeframe, anchorPrice, digits, pipSize } = args
   const cacheKey = `${symbol}_${timeframe}`
+  const targetCount = getTimeframeTargetBarCount(timeframe)
 
   const isCrypto = symbol.startsWith('BTC') || symbol.startsWith('ETH') || symbol.includes('USDT')
 
@@ -183,7 +201,7 @@ export async function loadHistoricalCandles(args: {
         W1: '1w',
       }
       const binanceInterval = intervalMap[timeframe] || '1h'
-      const url = `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${binanceInterval}&limit=280`
+      const url = `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${binanceInterval}&limit=1000`
 
       const res = await fetch(url, { signal: AbortSignal.timeout(3500) })
       if (res.ok) {
@@ -220,7 +238,7 @@ export async function loadHistoricalCandles(args: {
 
   // Check cache first to avoid abrupt re-generation
   const cached = candleCache.get(cacheKey)
-  if (cached && cached.length > 50) {
+  if (cached && cached.length >= Math.min(800, targetCount)) {
     // If live price has moved or diverged, smoothly realign the series
     if (anchorPrice && anchorPrice > 0) {
       const last = cached[cached.length - 1]
@@ -246,7 +264,7 @@ export async function loadHistoricalCandles(args: {
     anchorPrice,
     digits,
     pipSize,
-    count: 280,
+    count: targetCount,
   })
 
   candleCache.set(cacheKey, generated)
@@ -295,8 +313,8 @@ export function updateCandlesWithLiveTick(
       volume: 1,
     }
     updated.push(newCandle)
-    // Keep max 400 candles in memory for lightweight memory footprint
-    if (updated.length > 400) {
+    // Keep max 3,000 candles in memory for seamless scrolling without memory leaks
+    if (updated.length > 3000) {
       updated.shift()
     }
   }

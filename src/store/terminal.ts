@@ -72,7 +72,7 @@ function saveWatch(arr: string[]) {
 
 function sanitizeSymbols(list: SymbolMeta[]): SymbolMeta[] {
   if (!Array.isArray(list)) return []
-  return list.filter((s) => !/_[0-9]+$/.test(s.symbol || ''))
+  return list.filter((s) => !/_[0-9]+$/.test(s.symbol || '') && s.symbol !== 'SOLUSD')
 }
 
 let bootstrapPromise: Promise<void> | null = null

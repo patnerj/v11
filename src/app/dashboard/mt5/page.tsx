@@ -119,7 +119,6 @@ export default function Mt5WebTerminalPage() {
     try { return (localStorage.getItem('fxsim:mt5:theme') as ThemePreset) || 'cyber' } catch { return 'cyber' }
   })
   const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false)
-  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false)
 
   // Global hotkeys: Ctrl+M (Market Watch) & F9 (Order Ticket)
   useEffect(() => {
@@ -341,48 +340,34 @@ export default function Mt5WebTerminalPage() {
           <button
             type="button"
             onClick={() => setIsIndicatorsModalOpen(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer shrink-0"
             title="Technical Indicators (EMA, BB, VWAP, RSI, MACD)"
           >
             <Activity className="w-3.5 h-3.5 text-accent" />
             <span className="hidden sm:inline">Indicators</span>
           </button>
 
-          {/* Theme Preset Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setThemeDropdownOpen((v) => !v)}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
-              title="Chart Theme Preset"
-            >
-              <Palette className="w-3 h-3 text-amber-400" />
-              <span className="capitalize hidden md:inline">{theme}</span>
-              <ChevronDown className="w-2.5 h-2.5" />
-            </button>
-
-            {themeDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1 z-30 w-36 bg-surface border border-border rounded-lg shadow-xl p-1 flex flex-col gap-0.5">
-                {(['classic', 'cyber', 'daylight'] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => {
-                      setTheme(t)
-                      try { localStorage.setItem('fxsim:mt5:theme', t) } catch {}
-                      setThemeDropdownOpen(false)
-                    }}
-                    className={cn(
-                      'w-full text-left px-2 py-1 rounded text-terminal-micro font-semibold capitalize transition-colors cursor-pointer flex items-center justify-between',
-                      theme === t ? 'bg-accent/15 text-accent' : 'text-text hover:bg-surface-muted'
-                    )}
-                  >
-                    <span>{t === 'classic' ? 'MT5 Classic' : t === 'cyber' ? 'Obsidian Cyber' : 'Daylight'}</span>
-                    {theme === t && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Theme Preset Switcher (Segmented Pill Group) */}
+          <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle shrink-0">
+            {(['cyber', 'classic', 'daylight'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setTheme(t)
+                  try { localStorage.setItem('fxsim:mt5:theme', t) } catch {}
+                }}
+                className={cn(
+                  'px-2 py-0.5 rounded text-terminal-micro font-semibold transition-all cursor-pointer flex items-center gap-1',
+                  theme === t
+                    ? 'bg-accent text-accent-fg shadow-xs font-bold'
+                    : 'text-text-muted hover:text-text hover:bg-surface-muted/50'
+                )}
+                title={`Chart Theme: ${t === 'cyber' ? 'Obsidian Cyber' : t === 'classic' ? 'MT5 Classic' : 'Daylight'}`}
+              >
+                <span>{t === 'cyber' ? 'Cyber 🌙' : t === 'classic' ? 'Classic 🟢' : 'Daylight ☀️'}</span>
+              </button>
+            ))}
           </div>
 
           {/* 1-Click Execution Box Toggle (Alt+T) */}
@@ -390,7 +375,7 @@ export default function Mt5WebTerminalPage() {
             type="button"
             onClick={toggleOneClick}
             className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer',
+              'flex items-center gap-1 px-2 py-1 rounded-md text-terminal-micro font-semibold transition-all cursor-pointer shrink-0',
               showOneClick
                 ? 'text-emerald-500 bg-emerald-500/15 border border-emerald-500/30 shadow-xs'
                 : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
@@ -402,7 +387,7 @@ export default function Mt5WebTerminalPage() {
           </button>
         </div>
 
-        {/* Right Section: Market Watch, Order Ticket, MT5 Mode Badge, Standard WebTrader, Sound */}
+        {/* Right Section: Market Watch, Order Ticket, Sound */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Market Watch Dock Toggle */}
           <button
@@ -459,21 +444,6 @@ export default function Mt5WebTerminalPage() {
             <span className="hidden sm:inline">Order Ticket</span>
             <span className="hidden xl:inline text-terminal-micro text-text-muted font-normal">F9</span>
           </button>
-
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-terminal-label font-bold shadow-xs">
-            <Zap className="w-3.5 h-3.5 fill-emerald-400" />
-            <span className="hidden sm:inline">MT5 Pro Terminal</span>
-            <span className="sm:hidden">MT5</span>
-          </div>
-
-          <Link
-            href="/dashboard/trading"
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted/60 border border-border transition-colors"
-            title="Switch to Standard WebTrader"
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span>Standard WebTrader</span>
-          </Link>
 
           <SoundToggle compact className="shrink-0" />
         </div>
@@ -691,8 +661,7 @@ export default function Mt5WebTerminalPage() {
                     </div>
 
                     {/* MT5 Bottom Telemetry Summary Row */}
-                    {currentAcc && (
-                      <div className="shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-terminal-body font-normal select-none overflow-x-auto no-scrollbar shadow-xs">
+                    <div className="shrink-0 border-t border-border bg-surface/95 dark:bg-bg-subtle/90 backdrop-blur px-3.5 py-1.5 flex items-center justify-between gap-4 text-terminal-body font-normal select-none overflow-x-auto no-scrollbar shadow-xs">
                         <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-text-muted">
                           <span>
                             Balance:{' '}
@@ -778,7 +747,6 @@ export default function Mt5WebTerminalPage() {
                           </span>
                         </div>
                       </div>
-                    )}
                   </>
                 )}
               </section>

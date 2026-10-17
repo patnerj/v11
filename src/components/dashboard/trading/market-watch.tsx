@@ -33,8 +33,8 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick }: Props)
     const q  = query.trim().toLowerCase()
     const filtered = symbols.filter((s) => {
       if (tab === 'watch' && !watchlist.includes(s.symbol)) return false
-      // Defensively filter out temporary/corrupted test symbols like SOLUSD_1789730582
-      if (/_[0-9]+$/.test(s.symbol)) return false
+      // Defensively filter out temporary/corrupted test symbols like SOLUSD_1789730582 and inactive SOLUSD
+      if (/_[0-9]+$/.test(s.symbol) || s.symbol === 'SOLUSD') return false
       if (!q) return true
       return s.symbol.toLowerCase().includes(q) || (s.display_name || '').toLowerCase().includes(q)
     })
@@ -199,7 +199,7 @@ const WatchRow = memo(function WatchRow({
         >
           <Star className={cn('h-3 w-3', isWatched && 'fill-current')} />
         </button>
-        <span className="text-terminal-label font-semibold truncate terminal-num">{sym}</span>
+        <span className="text-terminal-label font-semibold truncate text-text">{sym}</span>
       </div>
 
       {/* Bid + direction glyph (non-color cue) */}
