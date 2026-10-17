@@ -459,8 +459,11 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
       {/* Main Chart Area with Docked Left Rail */}
       <div className="relative flex-1 w-full h-full min-h-0 overflow-hidden flex flex-row">
-        {/* Dedicated Docked Left Drawing Rail (44px) */}
-        <div className="w-11 min-w-[44px] shrink-0 h-full border-r border-border bg-surface flex flex-col items-center py-2 z-10 overflow-y-auto no-scrollbar">
+        {/* Dedicated Docked Left Drawing Rail (44px) — hidden in mobile/compact view so canvas is 100% width */}
+        <div className={cn(
+          "shrink-0 h-full border-r border-border bg-surface flex-col items-center py-2 z-10 overflow-y-auto no-scrollbar",
+          compact ? "hidden" : "w-11 min-w-[44px] hidden md:flex"
+        )}>
           <Mt5DrawingToolbar
             activeTool={activeTool}
             onSelectTool={setActiveTool}

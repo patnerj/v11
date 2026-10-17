@@ -104,6 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // The trading terminal uses the full viewport width (no max-width / heavy
   // padding) like TradingView / cTrader; other dashboard pages stay readable.
   const isTerminal = !!pathname?.startsWith('/dashboard/trading') || !!pathname?.startsWith('/dashboard/mt5')
+  const isMt5      = !!pathname?.startsWith('/dashboard/mt5')
   const isSupport  = pathname === '/dashboard/support'
 
   if (!ready || !user || adminOnTraderOverview) return <DashboardSkeleton />
@@ -121,6 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className={`${collapsed ? 'lg:pl-16' : 'lg:pl-64'} ${isTerminal ? 'h-full max-h-full overflow-hidden' : 'min-h-screen'} flex flex-col min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-200`}>
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <main className={
+          isMt5 ? 'flex-1 min-h-0 min-w-0 max-w-full overflow-hidden w-full p-0 lg:p-2 flex flex-col' :
           isTerminal ? 'flex-1 min-h-0 min-w-0 max-w-full overflow-hidden w-full p-1.5 sm:p-2 md:p-2.5 flex flex-col' :
           isSupport ? 'flex-1 min-w-0 max-w-full overflow-x-hidden p-3 md:p-4 max-w-[1400px] w-full mx-auto pb-28 lg:pb-4' :
           'flex-1 min-w-0 max-w-full overflow-x-hidden p-3 sm:p-4 md:p-8 max-w-[1400px] w-full mx-auto pb-28 md:pb-8'

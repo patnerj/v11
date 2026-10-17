@@ -97,14 +97,24 @@ export default function Mt5WebTerminalPage() {
   const [loaded, setLoaded] = useState(false)
   const [showMoreTelemetry, setShowMoreTelemetry] = useState(false)
 
-  // Dock visibility states
-  const [mwOpen, setMwOpen] = useState(true)
+  // Dock visibility states: auto-collapse Market Watch on screens < 1280px to prevent chart squishing
+  const [mwOpen, setMwOpen] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth >= 1280
+  })
   const [orderOpen, setOrderOpen] = useState(true)
   const [tabbedDockTab, setTabbedDockTab] = useState<'mw' | 'order'>('mw')
   const [posCollapsed, setPosCollapsed] = useState(false)
   const [tab, setTab] = useState<Tab>('positions')
   const [isFullChart, setIsFullChart] = useState(false)
-  const [mobileView, setMobileView] = useState<'chart' | 'watchlist' | 'order' | 'positions'>('chart')
+  const [mobileView, setMobileView] = useState<'quotes' | 'chart' | 'trade' | 'positions'>('chart')
+
+  // Auto-collapse Market Watch dock on viewports < 1280px (tablets / narrow screens) so the chart canvas is never squished
+  useEffect(() => {
+    if (!isXl) {
+      setMwOpen(false)
+    }
+  }, [isXl])
 
   // Top Toolbar MT5 state
   const showOneClick = useTerminal((s) => s.showOneClick)
@@ -142,7 +152,7 @@ export default function Mt5WebTerminalPage() {
           setMwOpen((v) => !v)
         } else {
           setTabbedDockTab('mw')
-          setMwOpen(true)
+          setMwOpen((v) => !v)
         }
       } else if (e.key === 'F9') {
         e.preventDefault()
@@ -150,7 +160,7 @@ export default function Mt5WebTerminalPage() {
           setOrderOpen((v) => !v)
         } else {
           setTabbedDockTab('order')
-          setMwOpen(true)
+          setMwOpen((v) => !v)
         }
       }
     }
@@ -253,6 +263,355 @@ export default function Mt5WebTerminalPage() {
   const activeSpread = activeTick && activeTick.ask && activeTick.bid
     ? Math.max(0, (toNum(activeTick.ask) - toNum(activeTick.bid)) / (activeMeta.pipSize || 1)).toFixed(1)
     : null
+
+  if (!isDesktop) {
+    return (
+      <div className="flex-1 min-h-0 w-full h-full flex flex-col overflow-hidden bg-bg">
+        {/* High-Impact News Restrict Warning Banner */}
+        {plan?.news_trading === 0 && (
+          <div className="shrink-0">
+            <NewsRestrictBanner plan={plan} />
+          </div>
+        )}
+
+        {/* Tournament Warning Banner */}
+        {isTournamentMode && tournamentId && (
+          <div className="shrink-0">
+            <TournamentWarningBanner
+              tournamentId={tournamentId}
+              tournamentTitle={tournamentTitle}
+              account={currentAcc}
+              myTournaments={myTournaments}
+              switchEntries={switchEntries}
+            />
+          </div>
+        )}
+
+        {/* Active Native App Mobile View */}
+        <div className="flex-1 min-h-0 w-full overflow-hidden flex flex-col">
+          {/* 1. Quotes / Watchlist Tab */}
+          {(mobileView === 'quotes' || (mobileView as string) === 'watchlist') && (
+            <section className="flex-1 min-h-0 bg-surface flex flex-col overflow-hidden">
+              <div className="shrink-0 h-11 px-3 border-b border-border bg-surface flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-accent/15 border border-accent/30 flex items-center justify-center text-accent">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-text text-sm">Quotes & Watchlist</span>
+                </div>
+                {switchEntries.length > 1 && (
+                  <div className="max-w-[170px]">
+                    <AccountSwitcher entries={switchEntries} metrics={metrics} compact />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <SectionErrorBoundary sectionName="MarketWatch">
+                  <MarketWatch onPick={() => setMobileView('chart')} />
+                </SectionErrorBoundary>
+              </div>
+            </section>
+          )}
+
+          {/* 2. MT5 Pro Chart Tab */}
+          {mobileView === 'chart' && (
+            <section className="flex-1 min-h-0 bg-surface flex flex-col overflow-hidden relative">
+              {/* Sleek Mobile Chart Top Controls (Height 40px) */}
+              <div className="shrink-0 h-10 px-2 border-b border-border bg-surface flex items-center justify-between gap-1 select-none text-xs overflow-x-auto no-scrollbar">
+                {/* Active Symbol Pill (Tap to open Quotes) */}
+                <button
+                  type="button"
+                  onClick={() => setMobileView('quotes')}
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-subtle border border-border text-terminal-label font-bold text-text hover:bg-surface-muted transition-colors cursor-pointer shrink-0"
+                  title="Change symbol"
+                >
+                  <span>{active}</span>
+                  {activeSpread !== null && (
+                    <span className="text-terminal-micro text-text-muted font-normal">
+                      <strong className="text-text font-semibold">{activeSpread}</strong> pts
+                    </span>
+                  )}
+                  <ChevronDown className="w-3 h-3 text-text-muted ml-0.5" />
+                </button>
+
+                {/* Timeframe quick switcher pills */}
+                <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle shrink-0">
+                  {TIMEFRAMES.slice(0, 5).map((tf) => (
+                    <button
+                      key={tf}
+                      type="button"
+                      onClick={() => {
+                        setTimeframe(tf)
+                        try { localStorage.setItem('fxsim:mt5:tf', tf) } catch {}
+                      }}
+                      className={cn(
+                        'px-1.5 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer',
+                        timeframe === tf
+                          ? 'bg-accent text-accent-fg shadow-xs font-bold'
+                          : 'text-text-muted hover:text-text'
+                      )}
+                    >
+                      {tf}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Style, Properties, 1-Click execution toggle */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = chartStyle === 'candlestick' ? 'line' : 'candlestick'
+                      setChartStyle(next)
+                      try { localStorage.setItem('fxsim:mt5:style', next) } catch {}
+                    }}
+                    className="p-1 rounded-md text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
+                    title={`Style: ${chartStyle}`}
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsIndicatorsModalOpen(true)}
+                    className="p-1 rounded-md text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
+                    title="Properties & Indicators"
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-accent" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={toggleOneClick}
+                    className={cn(
+                      'flex items-center gap-1 px-1.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer',
+                      showOneClick
+                        ? 'text-emerald-500 bg-emerald-500/15 border border-emerald-500/30'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
+                    )}
+                    title="Toggle 1-Click Trading Box"
+                  >
+                    <Zap className={cn('w-3 h-3', showOneClick && 'fill-emerald-500')} />
+                    <span>1-Click</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 100% Canvas Interactive Area */}
+              <div className="flex-1 min-h-0 w-full overflow-hidden relative">
+                <SectionErrorBoundary sectionName="Mt5ChartPanel">
+                  <Mt5ChartPanel
+                    compact
+                    positions={positions}
+                    pendingOrders={pending}
+                    plan={plan || metrics?.plan}
+                    onChanged={onChanged}
+                    showTopControls={false}
+                    timeframe={timeframe}
+                    onChangeTimeframe={setTimeframe}
+                    chartStyle={chartStyle}
+                    onChangeChartStyle={setChartStyle}
+                    theme={theme}
+                    onChangeTheme={setTheme}
+                    showGrid={showGrid}
+                    onChangeShowGrid={setShowGrid}
+                    showPeriodSeparators={showPeriodSeparators}
+                    onChangeShowPeriodSeparators={setShowPeriodSeparators}
+                    isIndicatorsModalOpen={isIndicatorsModalOpen}
+                    onToggleIndicatorsModal={setIsIndicatorsModalOpen}
+                  />
+                </SectionErrorBoundary>
+              </div>
+            </section>
+          )}
+
+          {/* 3. Dedicated Mobile Order Execution Screen */}
+          {(mobileView === 'trade' || (mobileView as string) === 'order') && (
+            <section className="flex-1 min-h-0 bg-surface flex flex-col overflow-hidden">
+              <div className="shrink-0 h-11 px-3 border-b border-border bg-surface flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView('quotes')}
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-subtle border border-border text-terminal-label font-bold text-text hover:bg-surface-muted transition-colors cursor-pointer"
+                  >
+                    <span>{active}</span>
+                    <ChevronDown className="w-3 h-3 text-text-muted" />
+                  </button>
+                  {activeSpread !== null && (
+                    <span className="text-terminal-micro text-text-muted">
+                      Spread: <strong className="text-text font-semibold">{activeSpread}</strong> pts
+                    </span>
+                  )}
+                </div>
+                <div className="text-terminal-micro text-text-muted">
+                  Leverage: <strong className="text-text font-semibold">1:{lev}</strong>
+                </div>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-3">
+                <SectionErrorBoundary sectionName="OrderTicket">
+                  <OrderTicket
+                    compact
+                    account={currentAcc}
+                    plan={plan || metrics?.plan}
+                    onChanged={onChanged}
+                    onSubmitted={() => setMobileView('positions')}
+                  />
+                </SectionErrorBoundary>
+              </div>
+            </section>
+          )}
+
+          {/* 4. Dedicated Mobile Positions & Pending Orders Screen */}
+          {mobileView === 'positions' && (
+            <section className="flex-1 min-h-0 bg-surface flex flex-col overflow-hidden">
+              <div className="shrink-0 flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-bg-subtle/40">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setTab('positions')}
+                    className={cn(
+                      'px-3 py-1.5 rounded-md text-xs font-semibold font-sans transition-colors cursor-pointer flex items-center gap-1.5',
+                      tab === 'positions'
+                        ? 'bg-accent text-accent-fg shadow-xs font-bold'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                    )}
+                  >
+                    Positions
+                    {positions && positions.length > 0 && (
+                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-muted text-accent text-[10px] font-bold px-1">
+                        {positions.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTab('pending')}
+                    className={cn(
+                      'px-3 py-1.5 rounded-md text-xs font-semibold font-sans transition-colors cursor-pointer flex items-center gap-1.5',
+                      tab === 'pending'
+                        ? 'bg-accent text-accent-fg shadow-xs font-bold'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                    )}
+                  >
+                    Pending Orders
+                    {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
+                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-[10px] font-bold px-1">
+                        {pending.filter((o) => o.status === 'pending').length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileView('trade')}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent text-accent-fg text-xs font-semibold shadow-xs hover:bg-accent-hover transition-colors cursor-pointer"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>New Order</span>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <SectionErrorBoundary sectionName="PositionsTable">
+                  {tab === 'positions' ? (
+                    <PositionsTable positions={positions} onChanged={onChanged} compact />
+                  ) : (
+                    <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                  )}
+                </SectionErrorBoundary>
+              </div>
+
+              {/* Mobile Financial Telemetry Summary */}
+              <div className="shrink-0 border-t border-border bg-surface/95 px-3 py-2 flex items-center justify-between text-xs select-none">
+                <div>
+                  <span className="text-text-muted">Balance: </span>
+                  <strong className="font-semibold tabular-nums text-text">{fmtUSD(balance)}</strong>
+                </div>
+                <div>
+                  <span className="text-text-muted">Equity: </span>
+                  <strong className={cn('font-semibold tabular-nums', equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>
+                    {fmtUSD(equity)}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-text-muted">P/L: </span>
+                  <strong className={cn('font-semibold tabular-nums px-1.5 py-0.5 rounded text-xs', pnl >= 0 ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500')}>
+                    {fmtUSD(pnl, { sign: true })}
+                  </strong>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* 4-Tab Native App Bottom Navigation Bar */}
+        <nav className="shrink-0 h-14 bg-surface border-t border-border flex items-center justify-around px-2 z-20 select-none shadow-lg">
+          <button
+            type="button"
+            onClick={() => setMobileView('quotes')}
+            className={cn(
+              'flex-1 flex flex-col items-center justify-center py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              (mobileView === 'quotes' || (mobileView as string) === 'watchlist')
+                ? 'text-accent bg-accent/15 font-bold shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted/40'
+            )}
+          >
+            <BarChart3 className="h-4 w-4 mb-0.5" />
+            <span>Quotes</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileView('chart')}
+            className={cn(
+              'flex-1 flex flex-col items-center justify-center py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              mobileView === 'chart'
+                ? 'text-accent bg-accent/15 font-bold shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted/40'
+            )}
+          >
+            <Activity className="h-4 w-4 mb-0.5" />
+            <span>Chart</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileView('trade')}
+            className={cn(
+              'flex-1 flex flex-col items-center justify-center py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              (mobileView === 'trade' || (mobileView as string) === 'order')
+                ? 'text-accent bg-accent/15 font-bold shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted/40'
+            )}
+          >
+            <ShoppingCart className="h-4 w-4 mb-0.5" />
+            <span>Trade</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileView('positions')}
+            className={cn(
+              'flex-1 flex flex-col items-center justify-center py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer relative',
+              mobileView === 'positions'
+                ? 'text-accent bg-accent/15 font-bold shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted/40'
+            )}
+          >
+            <div className="relative">
+              <ListOrdered className="h-4 w-4 mb-0.5" />
+              {positions && positions.length > 0 && (
+                <span className="absolute -top-1 -right-2.5 h-3.5 min-w-3.5 px-1 rounded-full bg-accent text-accent-fg text-[9px] font-bold flex items-center justify-center">
+                  {positions.length}
+                </span>
+              )}
+            </div>
+            <span>Positions</span>
+          </button>
+        </nav>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0 w-full overflow-hidden">
@@ -467,172 +826,8 @@ export default function Mt5WebTerminalPage() {
         </div>
       </div>
 
-      {/* Workspace */}
-      {!isDesktop ? (
-        /* Mobile / Narrow Viewport Layout: Dedicated Single View Mode with Bottom Navigation */
-        <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
-          <div className="flex-1 min-h-0 w-full overflow-hidden flex flex-col">
-            {mobileView === 'chart' && (
-              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
-                <SectionErrorBoundary sectionName="Mt5ChartPanel">
-                  <Mt5ChartPanel
-                    positions={positions}
-                    pendingOrders={pending}
-                    plan={plan || metrics?.plan}
-                    onChanged={onChanged}
-                    showTopControls={false}
-                    timeframe={timeframe}
-                    onChangeTimeframe={setTimeframe}
-                    chartStyle={chartStyle}
-                    onChangeChartStyle={setChartStyle}
-                    theme={theme}
-                    onChangeTheme={setTheme}
-                    showGrid={showGrid}
-                    onChangeShowGrid={setShowGrid}
-                    showPeriodSeparators={showPeriodSeparators}
-                    onChangeShowPeriodSeparators={setShowPeriodSeparators}
-                    isIndicatorsModalOpen={isIndicatorsModalOpen}
-                    onToggleIndicatorsModal={setIsIndicatorsModalOpen}
-                  />
-                </SectionErrorBoundary>
-              </section>
-            )}
-
-            {mobileView === 'watchlist' && (
-              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
-                <SectionErrorBoundary sectionName="MarketWatch">
-                  <MarketWatch onPick={() => setMobileView('chart')} />
-                </SectionErrorBoundary>
-              </section>
-            )}
-
-            {mobileView === 'order' && (
-              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-y-auto flex flex-col p-2">
-                <SectionErrorBoundary sectionName="OrderTicket">
-                  <OrderTicket
-                    plan={plan || metrics?.plan}
-                    onChanged={onChanged}
-                    onSubmitted={() => setMobileView('positions')}
-                  />
-                </SectionErrorBoundary>
-              </section>
-            )}
-
-            {mobileView === 'positions' && (
-              <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
-                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
-                  <button
-                    type="button"
-                    onClick={() => setTab('positions')}
-                    className={cn(
-                      'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors cursor-pointer',
-                      tab === 'positions'
-                        ? 'bg-accent text-accent-fg shadow-xs'
-                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                    )}
-                  >
-                    Positions ({positions?.length || 0})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab('pending')}
-                    className={cn(
-                      'px-3 py-1.5 h-7 rounded-md text-xs font-semibold font-sans transition-colors cursor-pointer',
-                      tab === 'pending'
-                        ? 'bg-accent text-accent-fg shadow-xs'
-                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
-                    )}
-                  >
-                    Pending Orders ({pending?.filter((o) => o.status === 'pending').length || 0})
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto min-h-0">
-                  <SectionErrorBoundary sectionName="PositionsTable">
-                    {tab === 'positions' ? (
-                      <PositionsTable positions={positions} onChanged={onChanged} />
-                    ) : (
-                      <PendingOrdersTable orders={pending} onChanged={onChanged} />
-                    )}
-                  </SectionErrorBoundary>
-                </div>
-                {/* Mobile Telemetry Summary */}
-                <div className="shrink-0 border-t border-border bg-surface/95 px-3 py-2 flex items-center justify-between text-xs select-none">
-                  <div>
-                    Balance: <strong className="font-semibold tabular-nums text-text">{fmtUSD(balance)}</strong>
-                  </div>
-                  <div>
-                    Equity:{' '}
-                    <strong className={cn('font-semibold tabular-nums', equity >= balance ? 'text-emerald-500' : 'text-rose-500')}>
-                      {fmtUSD(equity)}
-                    </strong>
-                  </div>
-                  <div>
-                    P/L:{' '}
-                    <strong className={cn('font-semibold tabular-nums', pnl >= 0 ? 'text-emerald-500' : 'text-rose-500')}>
-                      {fmtUSD(pnl, { sign: true })}
-                    </strong>
-                  </div>
-                </div>
-              </section>
-            )}
-          </div>
-
-          {/* Sleek Mobile Bottom Tab Navigation */}
-          <nav className="shrink-0 h-12 bg-surface border-t border-border flex items-center justify-around px-2 z-20 mt-1 rounded-lg select-none">
-            <button
-              type="button"
-              onClick={() => setMobileView('chart')}
-              className={cn(
-                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer',
-                mobileView === 'chart' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
-              )}
-            >
-              <Activity className="h-4 w-4" />
-              <span>Chart</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileView('watchlist')}
-              className={cn(
-                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer',
-                mobileView === 'watchlist' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
-              )}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>Watchlist</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileView('order')}
-              className={cn(
-                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer',
-                mobileView === 'order' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
-              )}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              <span>Trade</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileView('positions')}
-              className={cn(
-                'flex flex-col items-center justify-center py-1 px-3 rounded-md text-[10px] font-semibold transition-colors cursor-pointer relative',
-                mobileView === 'positions' ? 'text-accent bg-accent/15' : 'text-text-muted hover:text-text'
-              )}
-            >
-              <ListOrdered className="h-4 w-4" />
-              <span>Positions</span>
-              {positions && positions.length > 0 && (
-                <span className="absolute top-1 right-2 h-3.5 min-w-3.5 px-1 rounded-full bg-accent text-accent-fg text-[9px] font-bold flex items-center justify-center">
-                  {positions.length}
-                </span>
-              )}
-            </button>
-          </nav>
-        </div>
-      ) : (
-        /* Desktop 3-Zone Workspace */
-        <div className="flex-1 min-h-0 w-full flex flex-row gap-1.5 sm:gap-2 overflow-hidden">
+      {/* Desktop 3-Zone Workspace */}
+      <div className="flex-1 min-h-0 w-full flex flex-row gap-1.5 sm:gap-2 overflow-hidden">
           {/* Left / Tabbed Dock */}
           {!isFullChart && (
             isXl ? (
@@ -1033,7 +1228,6 @@ export default function Mt5WebTerminalPage() {
             )
           )}
         </div>
-      )}
     </div>
   )
 }
