@@ -4,7 +4,9 @@
  */
 
 import type { PricesMap, PriceTick } from '@/types/api'
+import { getSymbolMeta, type SymbolMetaInfo } from './symbol-meta'
 
+export { getSymbolMeta, type SymbolMetaInfo }
 export interface LotBounds { minLot: number; maxLot: number }
 
 /**
@@ -155,7 +157,8 @@ export function calculateLivePositionPnL(
   const openPx = toSafeNum(pos.open_price)
   if (currentPx > 0 && openPx > 0) {
     const diff = pos.type === 'buy' ? currentPx - openPx : openPx - currentPx
-    const cSize = toSafeNum(contractSize) || 100000
+    const defMeta = getSymbolMeta(pos.symbol)
+    const cSize = toSafeNum(contractSize) || defMeta.contractSize
     const calcPnl = diff * cSize * toSafeNum(pos.lot_size)
     return calcPnl * quoteToUsdRate(pos.symbol, currentPx, allPrices) + toSafeNum(pos.swap) - toSafeNum(pos.commission)
   }

@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { fmtPrice, fmtUSD, fmtLots, toNum, timeAgo, fmtDate, pnlClass } from '@/lib/format'
-import { symbolDigits, pipSize } from '@/lib/symbol-meta'
+import { symbolDigits, pipSize, getSymbolMeta } from '@/lib/symbol-meta'
 import { quoteToUsdRate, calculateLivePositionPnL } from '@/lib/order-math'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
@@ -96,7 +96,7 @@ export const PositionsTable = memo(function PositionsTable({ positions, onChange
       if (!isMt5 && curPx > 0 && openPx > 0) {
         const meta = getMeta(p.symbol)
         const diff = p.type === 'buy' ? curPx - openPx : openPx - curPx
-        const cSize = toNum(meta?.contract_size) || 100000
+        const cSize = toNum(meta?.contract_size) || getSymbolMeta(p.symbol).contractSize
         const calcPnl = diff * cSize * toNum(p.lot_size) * quoteToUsdRate(p.symbol, curPx, allPrices) + toNum(p.swap) - toNum(p.commission)
         return acc + calcPnl
       }

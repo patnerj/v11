@@ -25,7 +25,7 @@ import { DEFAULT_INDICATORS } from './types'
 import { loadHistoricalCandles, updateCandlesWithLiveTick } from './candle-service'
 import { Mt5Canvas } from './mt5-canvas'
 import { Mt5TopControls } from './mt5-top-controls'
-import { Mt5DrawingToolbar } from './mt5-drawing-toolbar'
+import { Mt5DrawingToolbar, Mt5DrawingInspector } from './mt5-drawing-toolbar'
 import { Mt5OneClick } from './mt5-one-click'
 import { Mt5ContextMenu, type ContextMenuState } from './mt5-context-menu'
 import { Mt5IndicatorsModal } from './mt5-indicators-modal'
@@ -144,7 +144,8 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
     let cancelled = false
     setLoading(true)
 
-    const anchorPrice = tick && tick.bid ? Number(tick.bid) : undefined
+    const storeBid = usePrices.getState().prices[active]?.bid
+    const anchorPrice = tick && tick.bid ? Number(tick.bid) : storeBid ? Number(storeBid) : undefined
     loadHistoricalCandles({
       symbol: active,
       timeframe,
@@ -378,69 +379,78 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         onToggleFullscreen={toggleChartFs}
       />
 
-      {/* Main Chart Area */}
-      <div className="relative flex-1 w-full h-full min-h-0 overflow-hidden">
-        {/* Left Vector Drawing Toolbar & Floating Inspector */}
-        <Mt5DrawingToolbar
-          activeTool={activeTool}
-          onSelectTool={setActiveTool}
-          magnetMode={magnetMode}
-          onToggleMagnet={() => setMagnetMode(!magnetMode)}
-          onOpenObjectsList={() => setIsObjectsModalOpen(true)}
-          onClearAll={handleClearAllDrawings}
-          selectedDrawing={selectedDrawing}
-          onUpdateSelected={(patch) => {
-            if (selectedDrawingId) handleUpdateDrawing(selectedDrawingId, patch)
-          }}
-          onDeleteSelected={() => {
-            if (selectedDrawingId) handleDeleteDrawing(selectedDrawingId)
-          }}
-          onCloneSelected={handleCloneSelected}
-          onDeselect={() => setSelectedDrawingId(null)}
-        />
+      {/* Main Chart Area with Docked Left Rail */}
+      <div className="relative flex-1 w-full h-full min-h-0 overflow-hidden flex flex-row">
+        {/* Dedicated Docked Left Drawing Rail (44px) */}
+        <div className="w-11 min-w-[44px] shrink-0 h-full border-r border-border bg-surface flex flex-col items-center py-2 z-10 overflow-y-auto no-scrollbar">
+          <Mt5DrawingToolbar
+            activeTool={activeTool}
+            onSelectTool={setActiveTool}
+            magnetMode={magnetMode}
+            onToggleMagnet={() => setMagnetMode(!magnetMode)}
+            onOpenObjectsList={() => setIsObjectsModalOpen(true)}
+            onClearAll={handleClearAllDrawings}
+          />
+        </div>
 
-        {/* Top-Left One-Click Trading Widget (Alt+T) */}
-        {showOneClick && (
-          <Mt5OneClick
+        {/* Canvas & Floating Widgets Area */}
+        <div className="relative flex-1 h-full min-w-0 overflow-hidden">
+          {/* Top-Left One-Click Trading Widget (Alt+T) */}
+          {showOneClick && (
+            <Mt5OneClick
+              symbol={active}
+              bid={liveBid}
+              ask={liveAsk}
+              digits={digits}
+              pipSize={pSize}
+              isSlRequired={Boolean(plan?.stop_loss_required)}
+              onChanged={onChanged}
+            />
+          )}
+
+          {/* Floating Drawing Inspector */}
+          <Mt5DrawingInspector
+            selectedDrawing={selectedDrawing}
+            onUpdateSelected={(patch) => {
+              if (selectedDrawingId) handleUpdateDrawing(selectedDrawingId, patch)
+            }}
+            onDeleteSelected={() => {
+              if (selectedDrawingId) handleDeleteDrawing(selectedDrawingId)
+            }}
+            onCloneSelected={handleCloneSelected}
+            onDeselect={() => setSelectedDrawingId(null)}
+          />
+
+          {/* 60 FPS High-DPI Canvas Core */}
+          <Mt5Canvas
+            ref={canvasRef}
             symbol={active}
-            bid={liveBid}
-            ask={liveAsk}
             digits={digits}
-            pipSize={pSize}
-            isSlRequired={Boolean(plan?.stop_loss_required)}
+            candles={candles}
+            timeframe={timeframe}
+            chartStyle={chartStyle}
+            theme={theme}
+            showGrid={showGrid}
+            showPeriodSeparators={showPeriodSeparators}
+            autoScroll={autoScroll}
+            chartShift={chartShift}
+            activeTool={activeTool}
+            onSelectTool={setActiveTool}
+            magnetMode={magnetMode}
+            drawings={drawings}
+            selectedDrawingId={selectedDrawingId}
+            onSelectDrawing={setSelectedDrawingId}
+            onUpdateDrawing={handleUpdateDrawing}
+            onAddDrawing={handleAddDrawing}
+            indicators={indicators}
+            positions={positions}
+            pendingOrders={pendingOrders}
+            accountBalance={toNum(account?.balance) || 10000}
+            activeLot={0.1}
+            onRightClick={handleRightClick}
             onChanged={onChanged}
           />
-        )}
-
-        {/* 60 FPS High-DPI Canvas Core */}
-        <Mt5Canvas
-          ref={canvasRef}
-          symbol={active}
-          digits={digits}
-          candles={candles}
-          timeframe={timeframe}
-          chartStyle={chartStyle}
-          theme={theme}
-          showGrid={showGrid}
-          showPeriodSeparators={showPeriodSeparators}
-          autoScroll={autoScroll}
-          chartShift={chartShift}
-          activeTool={activeTool}
-          onSelectTool={setActiveTool}
-          magnetMode={magnetMode}
-          drawings={drawings}
-          selectedDrawingId={selectedDrawingId}
-          onSelectDrawing={setSelectedDrawingId}
-          onUpdateDrawing={handleUpdateDrawing}
-          onAddDrawing={handleAddDrawing}
-          indicators={indicators}
-          positions={positions}
-          pendingOrders={pendingOrders}
-          accountBalance={toNum(account?.balance) || 10000}
-          activeLot={0.1}
-          onRightClick={handleRightClick}
-          onChanged={onChanged}
-        />
+        </div>
       </div>
 
       {/* Right-Click Context Menu */}

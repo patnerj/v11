@@ -17,7 +17,7 @@ import {
   playOrderLossThumpSound,
 } from '@/lib/sound-effects'
 import { usePrices, nextOptimisticId } from '@/store/prices'
-import { isMarketOpen } from '@/lib/symbol-meta'
+import { isMarketOpen, getSymbolMeta } from '@/lib/symbol-meta'
 import { fmtPrice } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
@@ -75,10 +75,13 @@ export const Mt5OneClick = memo(function Mt5OneClick({
   const [tpPips, setTpPips] = useState('')
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
 
+  const symMeta = useMemo(() => getSymbolMeta(symbol), [symbol])
+  const effectivePipSize = symMeta.pipSize || pipSize || 0.0001
+
   const spreadPips = useMemo(() => {
-    if (!bid || !ask || !pipSize || pipSize <= 0) return 0
-    return Math.max(0, (ask - bid) / pipSize)
-  }, [bid, ask, pipSize])
+    if (!bid || !ask || effectivePipSize <= 0) return 0
+    return Math.max(0, (ask - bid) / effectivePipSize)
+  }, [bid, ask, effectivePipSize])
 
   const bidParts = useMemo(() => splitMt5Price(bid, digits), [bid, digits])
   const askParts = useMemo(() => splitMt5Price(ask, digits), [ask, digits])

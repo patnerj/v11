@@ -5,7 +5,7 @@
  * Institutional WebTrader workspace mode exclusively running the Native MT5 Pro Chart Engine.
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   ArrowUpRight,
   BarChart3,
@@ -13,6 +13,8 @@ import {
   ListOrdered,
   PanelLeftClose,
   PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   ShoppingCart,
   CheckCircle2,
   XCircle,
@@ -30,7 +32,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { fmtPrice, toNum, fmtUSD, fmtPct } from '@/lib/format'
 import { invalidateFxsim } from '@/lib/fxsim'
-import { symbolDigits } from '@/lib/symbol-meta'
+import { symbolDigits, getSymbolMeta } from '@/lib/symbol-meta'
 import { calculateLivePositionPnL, quoteToUsdRate } from '@/lib/order-math'
 import type {
   Account,
@@ -50,15 +52,12 @@ import { AccountSwitcher, buildSwitchEntries } from '@/components/dashboard/trad
 import { TournamentWarningBanner } from '@/components/dashboard/trading/tournament-banner'
 import { NewsRestrictBanner } from '@/components/dashboard/trading/news-restrict-banner'
 import { SoundToggle } from '@/components/dashboard/trading/sound-toggle'
-import { MobileBottomSheet } from '@/components/dashboard/trading/mobile-bottom-sheet'
-import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { cn } from '@/lib/cn'
 import {
   Panel,
   Group as PanelGroup,
   Separator as PanelResizeHandle,
-  type PanelImperativeHandle,
 } from 'react-resizable-panels'
 
 function isAccount(x: Account | NoChallengeResp | null): x is Account {
@@ -69,6 +68,8 @@ type Tab = 'positions' | 'pending'
 
 export default function Mt5WebTerminalPage() {
   const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const isXl = useMediaQuery('(min-width: 1280px)')
+
   const bootstrapTerm = useTerminal((s) => s.bootstrap)
   const refreshSymbols = useTerminal((s) => s.refreshSymbols)
   const symbolsLoaded = useTerminal((s) => s.symbolsLoaded)
@@ -89,6 +90,45 @@ export default function Mt5WebTerminalPage() {
   const [chs, setChs] = useState<ChallengeAccount[] | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [showMoreTelemetry, setShowMoreTelemetry] = useState(false)
+
+  // Dock visibility states
+  const [mwOpen, setMwOpen] = useState(true)
+  const [orderOpen, setOrderOpen] = useState(true)
+  const [tabbedDockTab, setTabbedDockTab] = useState<'mw' | 'order'>('mw')
+  const [posCollapsed, setPosCollapsed] = useState(false)
+  const [tab, setTab] = useState<Tab>('positions')
+
+  // Global hotkeys: Ctrl+M (Market Watch) & F9 (Order Ticket)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement
+      ) {
+        return
+      }
+
+      if (e.ctrlKey && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault()
+        if (isXl) {
+          setMwOpen((v) => !v)
+        } else {
+          setTabbedDockTab('mw')
+          setMwOpen(true)
+        }
+      } else if (e.key === 'F9') {
+        e.preventDefault()
+        if (isXl) {
+          setOrderOpen((v) => !v)
+        } else {
+          setTabbedDockTab('order')
+          setMwOpen(true)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isXl])
 
   const { data: myTournaments } = useQuery({
     queryKey: ['tournamentsMine'],
@@ -154,45 +194,6 @@ export default function Mt5WebTerminalPage() {
 
   const plan = metrics?.plan
 
-  const [tab, setTab] = useState<Tab>('positions')
-
-  const posPanelRef = useRef<PanelImperativeHandle>(null)
-  const [posCollapsed, setPosCollapsed] = useState(false)
-  const mwPanelRef = useRef<PanelImperativeHandle>(null)
-  const [mwCollapsed, setMwCollapsed] = useState(false)
-  const orderPanelRef = useRef<PanelImperativeHandle>(null)
-  const [orderCollapsed, setOrderCollapsed] = useState(false)
-
-  const togglePos = () => {
-    const panel = posPanelRef.current
-    if (panel) {
-      if (panel.isCollapsed()) panel.expand()
-      else panel.collapse()
-    } else {
-      setPosCollapsed((v) => !v)
-    }
-  }
-
-  const toggleMw = () => {
-    const panel = mwPanelRef.current
-    if (panel) {
-      if (panel.isCollapsed()) panel.expand()
-      else panel.collapse()
-    } else {
-      setMwCollapsed((v) => !v)
-    }
-  }
-
-  const toggleOrder = () => {
-    const panel = orderPanelRef.current
-    if (panel) {
-      if (panel.isCollapsed()) panel.expand()
-      else panel.collapse()
-    } else {
-      setOrderCollapsed((v) => !v)
-    }
-  }
-
   const onChanged = useCallback(() => {
     refreshUser()
     invalidateFxsim('/positions')
@@ -202,7 +203,10 @@ export default function Mt5WebTerminalPage() {
   const allPrices = usePrices((s) => s.prices)
   const openPnL = useMemo(() => {
     if (!positions || positions.length === 0) return 0
-    return positions.reduce((sum, p) => sum + calculateLivePositionPnL(p as any, allPrices), 0)
+    return positions.reduce((sum, p) => {
+      const meta = getSymbolMeta(p.symbol)
+      return sum + calculateLivePositionPnL(p as any, allPrices, meta?.contractSize)
+    }, 0)
   }, [positions, allPrices])
 
   const balance = toNum(currentAcc?.balance)
@@ -212,6 +216,12 @@ export default function Mt5WebTerminalPage() {
   const free = equity - used
   const level = used > 0 ? (equity / used) * 100 : null
   const lev = toNum(currentAcc?.leverage) || 100
+
+  const activeTick = allPrices[active]
+  const activeMeta = useMemo(() => getSymbolMeta(active), [active])
+  const activeSpread = activeTick && activeTick.ask && activeTick.bid
+    ? Math.max(0, (toNum(activeTick.ask) - toNum(activeTick.bid)) / (activeMeta.pipSize || 1)).toFixed(1)
+    : null
 
   return (
     <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0 w-full overflow-hidden">
@@ -233,16 +243,84 @@ export default function Mt5WebTerminalPage() {
         </div>
       )}
 
-      {/* Account switcher, MT5 Mode Badge & Controls bar */}
+      {/* Account switcher, MT5 Mode Badge & Institutional Controls bar */}
       <div className="shrink-0 flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex-1 min-w-0">
-          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={true} />
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-terminal-label font-bold shadow-xs">
-            <Zap className="w-3.5 h-3.5 fill-emerald-400" />
-            <span>MT5 Pro Terminal Mode</span>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={false} />
+          {/* Active Symbol & Spread Badge */}
+          <div className="hidden lg:inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface border border-border shadow-xs text-terminal-label shrink-0">
+            <span className="font-bold text-text">{active}</span>
+            {activeSpread !== null && (
+              <span className="text-terminal-micro text-text-muted font-normal">
+                Spread: <strong className="text-text font-semibold">{activeSpread}</strong> pts
+              </span>
+            )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Market Watch Dock Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              if (isXl) {
+                setMwOpen((v) => !v)
+              } else {
+                if (mwOpen && tabbedDockTab === 'mw') {
+                  setMwOpen(false)
+                } else {
+                  setTabbedDockTab('mw')
+                  setMwOpen(true)
+                }
+              }
+            }}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-terminal-label font-semibold border transition-all cursor-pointer",
+              (isXl ? mwOpen : (mwOpen && tabbedDockTab === 'mw'))
+                ? "bg-accent/15 border-accent/40 text-accent shadow-xs"
+                : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted"
+            )}
+            title="Toggle Market Watch (Ctrl+M)"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Market Watch</span>
+            <span className="hidden xl:inline text-terminal-micro text-text-muted font-normal">Ctrl+M</span>
+          </button>
+
+          {/* Order Ticket Dock Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              if (isXl) {
+                setOrderOpen((v) => !v)
+              } else {
+                if (mwOpen && tabbedDockTab === 'order') {
+                  setMwOpen(false)
+                } else {
+                  setTabbedDockTab('order')
+                  setMwOpen(true)
+                }
+              }
+            }}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-terminal-label font-semibold border transition-all cursor-pointer",
+              (isXl ? orderOpen : (mwOpen && tabbedDockTab === 'order'))
+                ? "bg-accent/15 border-accent/40 text-accent shadow-xs"
+                : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-muted"
+            )}
+            title="Toggle Order Ticket (F9)"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Order Ticket</span>
+            <span className="hidden xl:inline text-terminal-micro text-text-muted font-normal">F9</span>
+          </button>
+
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-terminal-label font-bold shadow-xs">
+            <Zap className="w-3.5 h-3.5 fill-emerald-400" />
+            <span className="hidden sm:inline">MT5 Pro Terminal</span>
+            <span className="sm:hidden">MT5</span>
+          </div>
+
           <Link
             href="/dashboard/trading"
             className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-terminal-micro font-semibold text-text-muted hover:text-text hover:bg-surface-muted/60 border border-border transition-colors"
@@ -251,62 +329,123 @@ export default function Mt5WebTerminalPage() {
             <BarChart3 className="w-3.5 h-3.5" />
             <span>Standard WebTrader</span>
           </Link>
+
           <SoundToggle compact className="shrink-0" />
         </div>
       </div>
 
-      <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
-        {/* Left: market watch */}
-        <Panel
-          panelRef={mwPanelRef}
-          defaultSize="24%"
-          minSize="18%"
-          maxSize="30%"
-          collapsible={true}
-          collapsedSize="4%"
-          className="transition-all duration-200"
-        >
-          {mwCollapsed ? (
-            <div className="h-full flex flex-col items-center justify-between py-3 border border-border bg-surface rounded-lg">
-              <button
-                onClick={toggleMw}
-                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
-                aria-label="Expand market watch"
-                title="Expand market watch"
-              >
-                <PanelLeftOpen className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <aside className="rounded-lg border border-border bg-surface flex flex-col h-full min-h-0 overflow-hidden">
-              <div className="shrink-0 px-3 py-2.5 border-b border-border-subtle flex items-center justify-between">
+      {/* 3-Zone Workspace: Left Dock + Center Chart/Positions + Right Dock */}
+      <div className="flex-1 min-h-0 w-full flex flex-row gap-1.5 sm:gap-2 overflow-hidden">
+        {/* Left / Tabbed Dock */}
+        {isXl ? (
+          /* Desktop XL (>= 1280px): Dedicated Left Market Watch Dock */
+          mwOpen ? (
+            <aside className="w-[270px] min-w-[270px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+              <div className="shrink-0 px-3 py-2 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/30">
                 <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">
-                  Market watch
+                  Market Watch
                 </h3>
                 <button
-                  onClick={toggleMw}
-                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
-                  aria-label="Hide market watch"
-                  title="Hide market watch"
+                  type="button"
+                  onClick={() => setMwOpen(false)}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                  title="Collapse Market Watch (Ctrl+M)"
+                  aria-label="Collapse Market Watch"
                 >
                   <PanelLeftClose className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <SectionErrorBoundary sectionName="MarketWatch">
-                <MarketWatch />
-              </SectionErrorBoundary>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <SectionErrorBoundary sectionName="MarketWatch">
+                  <MarketWatch />
+                </SectionErrorBoundary>
+              </div>
             </aside>
-          )}
-        </Panel>
+          ) : (
+            <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
+              <button
+                type="button"
+                onClick={() => setMwOpen(true)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                title="Expand Market Watch (Ctrl+M)"
+                aria-label="Expand Market Watch"
+              >
+                <PanelLeftOpen className="h-4 w-4" />
+              </button>
+            </div>
+          )
+        ) : (
+          /* Responsive Viewports (< 1280px): Single Tabbed Dock */
+          mwOpen ? (
+            <aside className="w-[310px] min-w-[310px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+              <div className="shrink-0 px-2.5 py-1.5 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/40">
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setTabbedDockTab('mw')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-terminal-label font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                      tabbedDockTab === 'mw'
+                        ? 'bg-accent text-accent-fg shadow-xs'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                    )}
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Market Watch</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTabbedDockTab('order')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-terminal-label font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                      tabbedDockTab === 'order'
+                        ? 'bg-accent text-accent-fg shadow-xs'
+                        : 'text-text-muted hover:text-text hover:bg-surface-muted'
+                    )}
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <span>Order Ticket</span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMwOpen(false)}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                  title="Close dock"
+                  aria-label="Close dock"
+                >
+                  <PanelLeftClose className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <SectionErrorBoundary sectionName="TabbedDockContent">
+                  {tabbedDockTab === 'mw' ? (
+                    <MarketWatch />
+                  ) : (
+                    <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
+                  )}
+                </SectionErrorBoundary>
+              </div>
+            </aside>
+          ) : (
+            <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
+              <button
+                type="button"
+                onClick={() => setMwOpen(true)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                title="Expand Dock"
+                aria-label="Expand Dock"
+              >
+                <PanelLeftOpen className="h-4 w-4" />
+              </button>
+            </div>
+          )
+        )}
 
-        <PanelResizeHandle className="w-3 relative group">
-          <div className="absolute inset-y-0 left-1.5 w-px bg-border-subtle group-hover:bg-accent transition-colors" />
-        </PanelResizeHandle>
-
-        {/* Center: MT5 Pro Chart + Positions/Pending Tabs */}
-        <Panel defaultSize="52%" minSize="40%">
-          <PanelGroup orientation="vertical">
-            <Panel defaultSize="70%" minSize="30%">
+        {/* Center: MT5 Pro Chart + Positions/Pending Split via Vertical Resizable Panels */}
+        <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+          <PanelGroup orientation="vertical" className="h-full w-full">
+            <Panel defaultSize={posCollapsed ? 95 : 70} minSize={30}>
               <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
                 <SectionErrorBoundary sectionName="Mt5ChartPanel">
                   <Mt5ChartPanel
@@ -319,25 +458,23 @@ export default function Mt5WebTerminalPage() {
               </section>
             </Panel>
 
-            <PanelResizeHandle className="h-3 relative group">
-              <div className="absolute inset-x-0 top-1.5 h-px bg-border-subtle group-hover:bg-accent transition-colors" />
+            <PanelResizeHandle className="h-2 relative group cursor-row-resize">
+              <div className="absolute inset-x-0 top-1 h-px bg-border-subtle group-hover:bg-accent transition-colors" />
             </PanelResizeHandle>
 
-            <Panel
-              panelRef={posPanelRef}
-              defaultSize="30%"
-              minSize="10%"
-              collapsible={true}
-              collapsedSize="5%"
-            >
+            <Panel defaultSize={posCollapsed ? 5 : 30} minSize={posCollapsed ? 4 : 15} collapsible={false}>
               <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
+                {/* Positions & Pending Tab Header */}
                 <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
                   <button
                     type="button"
-                    onClick={() => setTab('positions')}
+                    onClick={() => {
+                      setTab('positions')
+                      setPosCollapsed(false)
+                    }}
                     className={cn(
                       'px-3 py-1 rounded-md text-terminal-label font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-                      tab === 'positions'
+                      tab === 'positions' && !posCollapsed
                         ? 'bg-accent text-accent-fg shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-muted'
                     )}
@@ -351,10 +488,13 @@ export default function Mt5WebTerminalPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTab('pending')}
+                    onClick={() => {
+                      setTab('pending')
+                      setPosCollapsed(false)
+                    }}
                     className={cn(
                       'px-3 py-1 rounded-md text-terminal-label font-semibold transition-colors flex items-center gap-1.5 cursor-pointer',
-                      tab === 'pending'
+                      tab === 'pending' && !posCollapsed
                         ? 'bg-accent text-accent-fg shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-muted'
                     )}
@@ -369,8 +509,9 @@ export default function Mt5WebTerminalPage() {
 
                   <div className="ml-auto flex items-center gap-2">
                     <button
-                      onClick={togglePos}
-                      className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
+                      type="button"
+                      onClick={() => setPosCollapsed((v) => !v)}
+                      className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
                       aria-label={posCollapsed ? 'Expand positions panel' : 'Collapse positions panel'}
                       title={posCollapsed ? 'Expand positions panel' : 'Collapse positions panel'}
                     >
@@ -489,55 +630,47 @@ export default function Mt5WebTerminalPage() {
               </section>
             </Panel>
           </PanelGroup>
-        </Panel>
+        </div>
 
-        <PanelResizeHandle className="w-3 relative group">
-          <div className="absolute inset-y-0 left-1.5 w-px bg-border-subtle group-hover:bg-accent transition-colors" />
-        </PanelResizeHandle>
-
-        {/* Right: order ticket */}
-        <Panel
-          panelRef={orderPanelRef}
-          defaultSize="24%"
-          minSize="18%"
-          maxSize="35%"
-          collapsible={true}
-          collapsedSize="4%"
-          className="transition-all duration-200"
-        >
-          {orderCollapsed ? (
-            <div className="h-full flex flex-col items-center justify-between py-3 border border-border bg-surface rounded-lg">
-              <button
-                onClick={toggleOrder}
-                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
-                aria-label="Expand order ticket"
-                title="Expand order ticket"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <aside className="rounded-lg border border-border bg-surface flex flex-col h-full min-h-0 overflow-hidden">
-              <div className="shrink-0 px-3 py-2.5 border-b border-border-subtle flex items-center justify-between">
+        {/* Right: Dedicated Order Ticket Dock (Desktop XL >= 1280px) */}
+        {isXl && (
+          orderOpen ? (
+            <aside className="w-[300px] min-w-[300px] shrink-0 h-full rounded-lg border border-border bg-surface flex flex-col overflow-hidden">
+              <div className="shrink-0 px-3 py-2 border-b border-border-subtle flex items-center justify-between bg-bg-subtle/30">
                 <h3 className="text-terminal-label font-semibold uppercase tracking-wider text-text-muted">
                   Order Ticket
                 </h3>
                 <button
-                  onClick={toggleOrder}
-                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring"
-                  aria-label="Hide order ticket"
-                  title="Hide order ticket"
+                  type="button"
+                  onClick={() => setOrderOpen(false)}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                  title="Collapse Order Ticket (F9)"
+                  aria-label="Collapse Order Ticket"
                 >
-                  <PanelLeftOpen className="h-3.5 w-3.5" />
+                  <PanelRightClose className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <SectionErrorBoundary sectionName="OrderTicket">
-                <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
-              </SectionErrorBoundary>
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <SectionErrorBoundary sectionName="OrderTicket">
+                  <OrderTicket plan={plan || metrics?.plan} onChanged={onChanged} />
+                </SectionErrorBoundary>
+              </div>
             </aside>
-          )}
-        </Panel>
-      </PanelGroup>
+          ) : (
+            <div className="w-9 shrink-0 h-full border border-border bg-surface rounded-lg flex flex-col items-center py-3 select-none">
+              <button
+                type="button"
+                onClick={() => setOrderOpen(true)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded text-text-muted hover:text-text hover:bg-surface-muted focus-ring cursor-pointer"
+                title="Expand Order Ticket (F9)"
+                aria-label="Expand Order Ticket"
+              >
+                <PanelRightOpen className="h-4 w-4" />
+              </button>
+            </div>
+          )
+        )}
+      </div>
     </div>
   )
 }

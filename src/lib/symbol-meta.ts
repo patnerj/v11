@@ -25,14 +25,96 @@ export function symbolDigits(sym: string, fallback?: SymbolMeta): number {
   return 5
 }
 
+export interface SymbolMetaInfo {
+  symbol: string
+  contractSize: number
+  pipSize: number
+  digits: number
+  category: 'forex' | 'commodity' | 'crypto' | 'index'
+}
+
+/**
+ * Universal symbol metadata resolver encoding industry standards:
+ * - BTCUSD/Crypto: contractSize = 1, pipSize = 1, digits = 2
+ * - XAUUSD (Gold): contractSize = 100, pipSize = 0.1, digits = 2
+ * - XAGUSD (Silver): contractSize = 5000, pipSize = 0.01, digits = 2
+ * - Indices (US30, NAS100, SPX500, GER40, etc.): contractSize = 1, pipSize = 0.1, digits = 1
+ * - JPY Forex: contractSize = 100000, pipSize = 0.01, digits = 3
+ * - Forex Majors/Crosses: contractSize = 100000, pipSize = 0.0001, digits = 5
+ */
+export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): SymbolMetaInfo {
+  const sym = (symbol || '').toUpperCase().trim()
+  const cat = symbolCategory(sym)
+
+  // 1. Digits
+  let digits = 5
+  if (fallback?.digits !== undefined && Number(fallback.digits) >= 0) {
+    digits = Number(fallback.digits)
+  } else if (sym.includes('JPY')) {
+    digits = 3
+  } else if (sym === 'XAUUSD' || sym === 'XAGUSD' || sym === 'BTCUSD' || sym === 'ETHUSD' || cat === 'crypto') {
+    digits = 2
+  } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
+    digits = 1
+  }
+
+  // 2. Contract Size
+  let contractSize = 100000
+  if (fallback?.contract_size && Number(fallback.contract_size) > 0) {
+    contractSize = Number(fallback.contract_size)
+  } else if (cat === 'crypto' || sym.startsWith('BTC') || sym.startsWith('ETH') || sym.includes('SOL')) {
+    contractSize = 1
+  } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
+    contractSize = 1
+  } else if (sym === 'XAUUSD') {
+    contractSize = 100
+  } else if (sym === 'XAGUSD') {
+    contractSize = 5000
+  }
+
+  // 3. Pip Size (Smallest price unit users think in)
+  let pSize = 0.0001
+  if (cat === 'crypto' || sym.startsWith('BTC') || sym.startsWith('ETH')) {
+    pSize = 1
+  } else if (sym === 'XAUUSD') {
+    pSize = 0.1
+  } else if (sym === 'XAGUSD') {
+    pSize = 0.01
+  } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
+    pSize = 0.1
+  } else if (digits === 3 || sym.includes('JPY')) {
+    pSize = 0.01
+  } else if (digits === 2) {
+    pSize = 0.01
+  } else if (digits === 1) {
+    pSize = 0.1
+  } else {
+    pSize = 0.0001
+  }
+
+  return {
+    symbol: sym,
+    contractSize,
+    pipSize: pSize,
+    digits,
+    category: cat,
+  }
+}
+
 /**
  * Pip size — the smallest price increment users think in.
  * 5-digit forex: 0.0001 (pip is at the 4th decimal, the 5th is a pipette)
  * 3-digit JPY:   0.01
- * Gold:          0.01
+ * Gold:          0.1
+ * Crypto:        1.0
  * Indices:       0.1
  */
 export function pipSize(sym: string, digits?: number): number {
+  const s = (sym || '').toUpperCase()
+  if (s === 'BTCUSD' || s === 'ETHUSD' || s.startsWith('BTC') || s.startsWith('ETH')) return 1
+  if (s === 'XAUUSD') return 0.1
+  if (s === 'XAGUSD') return 0.01
+  if (/^(US\d|NAS\d|GER\d|UK\d|SPX|DJI)/.test(s)) return 0.1
   const d = digits ?? symbolDigits(sym)
   if (d === 5) return 0.0001
   if (d === 3) return 0.01

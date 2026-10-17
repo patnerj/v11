@@ -13,7 +13,7 @@ import { useMediaQuery } from '@/hooks/use-media-query'
 import { fmtPrice, toNum, fmtUSD, fmtPct } from '@/lib/format'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { playOrderCloseSound } from '@/lib/sound'
-import { symbolDigits } from '@/lib/symbol-meta'
+import { symbolDigits, getSymbolMeta } from '@/lib/symbol-meta'
 import { calculateLivePositionPnL, quoteToUsdRate } from '@/lib/order-math'
 import type { Account, NoChallengeResp, Position, PendingOrder, ChallengeAccount, ChallengePlan, ChallengeMetrics, TournamentMine } from '@/types/api'
 
@@ -213,7 +213,7 @@ export default function TradingTerminalPage() {
       if (!isMt5 && curPx > 0 && openPx > 0) {
         const meta = getMeta(p.symbol)
         const diff = p.type === 'buy' ? curPx - openPx : openPx - curPx
-        const cSize = toNum(meta?.contract_size) || 100000
+        const cSize = toNum(meta?.contract_size) || getSymbolMeta(p.symbol).contractSize
         const calcPnl = diff * cSize * toNum(p.lot_size) * quoteToUsdRate(p.symbol, curPx, allPrices) + toNum(p.swap) - toNum(p.commission)
         return s + calcPnl
       }

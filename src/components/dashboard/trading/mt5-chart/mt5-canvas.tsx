@@ -41,7 +41,7 @@ import {
 } from './mt5-indicators'
 import { formatCountdown, getCandleCountdownSeconds } from './candle-service'
 import { fmtPrice, toNum } from '@/lib/format'
-import { pipSize } from '@/lib/symbol-meta'
+import { pipSize, getSymbolMeta } from '@/lib/symbol-meta'
 import { calculateLivePositionPnL, calcLevelPnL, quoteToUsdRate } from '@/lib/order-math'
 import type { Position, PendingOrder } from '@/types/api'
 import { api } from '@/lib/api'
@@ -290,6 +290,19 @@ export const Mt5Canvas = memo(
       for (const c of visible) {
         if (c.low < min) min = c.low
         if (c.high > max) max = c.high
+      }
+
+      // Ensure live Bid & Ask fit inside bounds smoothly
+      const activeTick = usePrices.getState().prices[symbol]
+      const curBid = toNum(activeTick?.bid)
+      const curAsk = toNum(activeTick?.ask)
+      if (curBid > 0) {
+        if (curBid < min) min = curBid
+        if (curBid > max) max = curBid
+      }
+      if (curAsk > 0) {
+        if (curAsk < min) min = curAsk
+        if (curAsk > max) max = curAsk
       }
 
       if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) {
@@ -1036,11 +1049,13 @@ export const Mt5Canvas = memo(
       const symPositions = positions.filter((p) => p.symbol === symbol)
       const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
 
+      const symMeta = getSymbolMeta(symbol)
+
       for (const pos of symPositions) {
         const openPrice = toNum(pos.open_price)
         const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
         const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
-        const livePnl = calculateLivePositionPnL(pos as any, activePrices)
+        const livePnl = calculateLivePositionPnL(pos as any, activePrices, symMeta.contractSize)
         const isBuy = pos.type === 'buy'
 
         ctx.save()
@@ -1055,50 +1070,55 @@ export const Mt5Canvas = memo(
         ctx.lineTo(chartW, yEntry)
         ctx.stroke()
 
-        // Entry badge & floating PnL
+        // Entry badge & floating PnL (Right-aligned before price axis)
         const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} #${pos.id} @ ${fmtPrice(openPrice, digits)} (${livePnl >= 0 ? '+' : ''}$${livePnl.toFixed(2)})`
         const badgeWidth = ctx.measureText(entryText).width + 36
+        const badgeRight = chartW - 8
+        const badgeX = badgeRight - badgeWidth
+
         ctx.fillStyle = 'rgba(10, 15, 30, 0.92)'
-        ctx.fillRect(8, yEntry - 12, badgeWidth, 22)
+        ctx.fillRect(badgeX, yEntry - 12, badgeWidth, 22)
         ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
-        ctx.strokeRect(8, yEntry - 12, badgeWidth, 22)
+        ctx.strokeRect(badgeX, yEntry - 12, badgeWidth, 22)
 
         ctx.fillStyle = '#FFFFFF'
         ctx.font = 'bold 10px monospace'
         ctx.textAlign = 'left'
-        ctx.fillText(entryText, 14, yEntry + 3)
+        ctx.fillText(entryText, badgeX + 6, yEntry + 3)
 
         // [x] Close button on Entry Line
         ctx.fillStyle = '#EF4444'
         ctx.font = 'bold 12px sans-serif'
-        ctx.fillText('×', 8 + badgeWidth - 14, yEntry + 3)
+        ctx.fillText('×', badgeRight - 14, yEntry + 3)
 
-        // Hover handles [+ Drag SL] and [+ Drag TP]
+        // Hover handles [+ Drag SL] and [+ Drag TP] to the left of right-aligned badge
         const isHoveringEntry = mousePos && Math.abs(mousePos.y - yEntry) < 18 && mousePos.x < chartW
         if (isHoveringEntry) {
           if (!pos.sl || toNum(pos.sl) === 0) {
             const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
+            const slHandleX = badgeX - 78
             ctx.fillStyle = 'rgba(239, 68, 68, 0.95)'
-            ctx.fillRect(14, slHandleY - 9, 72, 18)
+            ctx.fillRect(slHandleX, slHandleY - 9, 72, 18)
             ctx.strokeStyle = '#FFFFFF'
             ctx.lineWidth = 1
-            ctx.strokeRect(14, slHandleY - 9, 72, 18)
+            ctx.strokeRect(slHandleX, slHandleY - 9, 72, 18)
             ctx.fillStyle = '#FFFFFF'
             ctx.font = 'bold 9px monospace'
             ctx.textAlign = 'center'
-            ctx.fillText('+ Drag SL', 50, slHandleY + 3)
+            ctx.fillText('+ Drag SL', slHandleX + 36, slHandleY + 3)
           }
           if (!pos.tp || toNum(pos.tp) === 0) {
             const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
+            const tpHandleX = badgeX - 156
             ctx.fillStyle = 'rgba(16, 185, 129, 0.95)'
-            ctx.fillRect(92, tpHandleY - 9, 72, 18)
+            ctx.fillRect(tpHandleX, tpHandleY - 9, 72, 18)
             ctx.strokeStyle = '#FFFFFF'
             ctx.lineWidth = 1
-            ctx.strokeRect(92, tpHandleY - 9, 72, 18)
+            ctx.strokeRect(tpHandleX, tpHandleY - 9, 72, 18)
             ctx.fillStyle = '#FFFFFF'
             ctx.font = 'bold 9px monospace'
             ctx.textAlign = 'center'
-            ctx.fillText('+ Drag TP', 128, tpHandleY + 3)
+            ctx.fillText('+ Drag TP', tpHandleX + 36, tpHandleY + 3)
           }
         }
 
@@ -1119,13 +1139,13 @@ export const Mt5Canvas = memo(
           ctx.lineTo(chartW, ySl)
           ctx.stroke()
 
-          const distPips = Math.abs(openPrice - activeSlPrice) / pSize
+          const distPips = Math.abs(openPrice - activeSlPrice) / symMeta.pipSize
           const projPnl =
             calcLevelPnL({
               level: activeSlPrice,
               entry: openPrice,
               lots: toNum(pos.lot_size),
-              contractSize: 100000,
+              contractSize: symMeta.contractSize,
               mode: 'market',
               isBuy,
               quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
@@ -1134,16 +1154,18 @@ export const Mt5Canvas = memo(
 
           const slText = `SL #${pos.id}: -${distPips.toFixed(1)}p (-$${Math.abs(projPnl).toFixed(2)} · ${pctBal.toFixed(1)}%)`
           const slBadgeWidth = ctx.measureText(slText).width + 30
+          const slBadgeRight = chartW - 8
+          const slBadgeX = slBadgeRight - slBadgeWidth
           ctx.fillStyle = 'rgba(239, 68, 68, 0.95)'
-          ctx.fillRect(8, ySl - 11, slBadgeWidth, 20)
+          ctx.fillRect(slBadgeX, ySl - 11, slBadgeWidth, 20)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 10px monospace'
-          ctx.fillText(slText, 14, ySl + 3)
+          ctx.fillText(slText, slBadgeX + 6, ySl + 3)
 
           // [x] Remove SL
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 12px sans-serif'
-          ctx.fillText('×', 8 + slBadgeWidth - 14, ySl + 3)
+          ctx.fillText('×', slBadgeRight - 14, ySl + 3)
         }
 
         // (c) Take Profit (TP) Line
@@ -1163,13 +1185,13 @@ export const Mt5Canvas = memo(
           ctx.lineTo(chartW, yTp)
           ctx.stroke()
 
-          const distPips = Math.abs(activeTpPrice - openPrice) / pSize
+          const distPips = Math.abs(activeTpPrice - openPrice) / symMeta.pipSize
           const projPnl =
             calcLevelPnL({
               level: activeTpPrice,
               entry: openPrice,
               lots: toNum(pos.lot_size),
-              contractSize: 100000,
+              contractSize: symMeta.contractSize,
               mode: 'market',
               isBuy,
               quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
@@ -1178,22 +1200,24 @@ export const Mt5Canvas = memo(
 
           const tpText = `TP #${pos.id}: +${distPips.toFixed(1)}p (+$${projPnl.toFixed(2)} · ${pctBal.toFixed(1)}%)`
           const tpBadgeWidth = ctx.measureText(tpText).width + 30
+          const tpBadgeRight = chartW - 8
+          const tpBadgeX = tpBadgeRight - tpBadgeWidth
           ctx.fillStyle = 'rgba(16, 185, 129, 0.95)'
-          ctx.fillRect(8, yTp - 11, tpBadgeWidth, 20)
+          ctx.fillRect(tpBadgeX, yTp - 11, tpBadgeWidth, 20)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 10px monospace'
-          ctx.fillText(tpText, 14, yTp + 3)
+          ctx.fillText(tpText, tpBadgeX + 6, yTp + 3)
 
           // [x] Remove TP
           ctx.fillStyle = '#FFFFFF'
           ctx.font = 'bold 12px sans-serif'
-          ctx.fillText('×', 8 + tpBadgeWidth - 14, yTp + 3)
+          ctx.fillText('×', tpBadgeRight - 14, yTp + 3)
         }
 
         ctx.restore()
       }
 
-      // Pending Orders Rendering
+      // Pending Orders Rendering (Right-aligned before price axis)
       for (const ord of symPending) {
         const activeTgtPrice =
           draggingPendingPreview?.ordId === ord.id ? draggingPendingPreview.price : toNum(ord.target_price)
@@ -1211,16 +1235,18 @@ export const Mt5Canvas = memo(
 
         const ordText = `${ord.order_type.toUpperCase().replace('_', ' ')} ${ord.lot_size} @ ${fmtPrice(activeTgtPrice, digits)}`
         const ordBadgeWidth = ctx.measureText(ordText).width + 30
+        const ordBadgeRight = chartW - 8
+        const ordBadgeX = ordBadgeRight - ordBadgeWidth
         ctx.fillStyle = 'rgba(245, 158, 11, 0.95)'
-        ctx.fillRect(8, yTgt - 11, ordBadgeWidth, 20)
+        ctx.fillRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 20)
         ctx.fillStyle = '#050811'
         ctx.font = 'bold 10px monospace'
-        ctx.fillText(ordText, 14, yTgt + 3)
+        ctx.fillText(ordText, ordBadgeX + 6, yTgt + 3)
 
         // [x] Cancel Pending
         ctx.fillStyle = '#050811'
         ctx.font = 'bold 12px sans-serif'
-        ctx.fillText('×', 8 + ordBadgeWidth - 14, yTgt + 3)
+        ctx.fillText('×', ordBadgeRight - 14, yTgt + 3)
 
         // Render SL and TP for pending orders if specified
         if (ord.sl && toNum(ord.sl) > 0) {
@@ -1274,7 +1300,7 @@ export const Mt5Canvas = memo(
         ctx.stroke()
 
         // Live Spread Badge between them on right scale
-        const spreadP = (liveAsk - liveBid) / pSize
+        const spreadP = (liveAsk - liveBid) / symMeta.pipSize
         const midY = (yBid + yAsk) / 2
         ctx.fillStyle = 'rgba(10, 15, 30, 0.9)'
         ctx.fillRect(chartW + 2, midY - 8, PRICE_AXIS_WIDTH - 4, 16)
@@ -1518,16 +1544,23 @@ export const Mt5Canvas = memo(
       }
 
       // 15. Top-Left OHLCV Status Line
+      const isHovering = curMouse && curMouse.onChart && curMouse.x < chartW
+      const hoveredIndex = isHovering ? xToCandleIndex(curMouse.x) : -1
       const activeCandle =
-        curMouse && curMouse.onChart
-          ? candles[xToCandleIndex(curMouse.x)] || candles[candles.length - 1]
+        hoveredIndex >= 0 && hoveredIndex < candles.length
+          ? candles[hoveredIndex]
           : candles[candles.length - 1]
 
       if (activeCandle) {
-        const deltaP = activeCandle.close - activeCandle.open
-        const deltaPct = (deltaP / activeCandle.open) * 100
+        const isLatest = activeCandle === candles[candles.length - 1]
+        const openVal = activeCandle.open
+        const closeVal = isLatest && liveBid > 0 ? liveBid : activeCandle.close
+        const highVal = isLatest && liveBid > 0 ? Math.max(activeCandle.high, liveBid) : activeCandle.high
+        const lowVal = isLatest && liveBid > 0 ? Math.min(activeCandle.low, liveBid) : activeCandle.low
+        const deltaP = closeVal - openVal
+        const deltaPct = openVal > 0 ? (deltaP / openVal) * 100 : 0
 
-        const ohlcvText = `${symbol} • ${timeframe} • O: ${fmtPrice(activeCandle.open, digits)} H: ${fmtPrice(activeCandle.high, digits)} L: ${fmtPrice(activeCandle.low, digits)} C: ${fmtPrice(activeCandle.close, digits)} Δ: ${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(2)}% Vol: ${activeCandle.volume}`
+        const ohlcvText = `${symbol} • ${timeframe} • O: ${fmtPrice(openVal, digits)} H: ${fmtPrice(highVal, digits)} L: ${fmtPrice(lowVal, digits)} C: ${fmtPrice(closeVal, digits)} Δ: ${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(2)}% Vol: ${activeCandle.volume}`
 
         ctx.save()
         ctx.fillStyle = 'rgba(5, 8, 17, 0.75)'
@@ -1655,11 +1688,12 @@ export const Mt5Canvas = memo(
         const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
 
         const isBuy = pos.type === 'buy'
-        const entryText = `${pos.type.toUpperCase()} ${pos.lot_size} #${pos.id} @ ${fmtPrice(openPrice, digits)} (+$0.00)`
-        const entryBadgeW = 120 + digits * 8 + 36
+        const badgeRight = chartW - 8
+        const entryBadgeW = 140 + digits * 8 + 36
+        const badgeX = badgeRight - entryBadgeW
 
-        // (a) Click [x] Close on Entry Line
-        if (Math.abs(y - yEntry) < 12 && x >= 8 + entryBadgeW - 24 && x <= 8 + entryBadgeW + 4) {
+        // (a) Click [x] Close on Entry Line (Right-aligned badge)
+        if (Math.abs(y - yEntry) < 12 && x >= badgeRight - 22 && x <= badgeRight + 4) {
           api.close(pos.id).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()
@@ -1675,8 +1709,10 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (b) Click [+ Drag SL] handle
-        if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - (isBuy ? yEntry + 22 : yEntry - 22)) < 12 && x >= 14 && x <= 86) {
+        // (b) Click [+ Drag SL] handle (Left of right-aligned badge)
+        const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
+        const slHandleX = badgeX - 78
+        if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 12 && x >= slHandleX - 4 && x <= slHandleX + 76) {
           draggingSlTpRef.current = {
             posId: pos.id,
             type: 'new_sl',
@@ -1687,8 +1723,10 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (c) Click [+ Drag TP] handle
-        if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - (isBuy ? yEntry - 22 : yEntry + 22)) < 12 && x >= 92 && x <= 164) {
+        // (c) Click [+ Drag TP] handle (Left of right-aligned badge)
+        const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
+        const tpHandleX = badgeX - 156
+        if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 12 && x >= tpHandleX - 4 && x <= tpHandleX + 76) {
           draggingSlTpRef.current = {
             posId: pos.id,
             type: 'new_tp',
@@ -1699,8 +1737,8 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (d) Click [x] Remove SL
-        if (slPrice > 0 && Math.abs(y - ySl) < 11 && x >= 150 && x <= 220) {
+        // (d) Click [x] Remove SL (Right-aligned [x] on SL badge)
+        if (slPrice > 0 && Math.abs(y - ySl) < 11 && x >= chartW - 28 && x <= chartW + 2) {
           api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()
@@ -1712,8 +1750,8 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (e) Click [x] Remove TP
-        if (tpPrice > 0 && Math.abs(y - yTp) < 11 && x >= 150 && x <= 220) {
+        // (e) Click [x] Remove TP (Right-aligned [x] on TP badge)
+        if (tpPrice > 0 && Math.abs(y - yTp) < 11 && x >= chartW - 28 && x <= chartW + 2) {
           api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()
@@ -1726,7 +1764,7 @@ export const Mt5Canvas = memo(
         }
 
         // (f) Drag existing SL Line
-        if (slPrice > 0 && Math.abs(y - ySl) < 10 && x < chartW) {
+        if (slPrice > 0 && Math.abs(y - ySl) < 10 && x < chartW - 28) {
           draggingSlTpRef.current = {
             posId: pos.id,
             type: 'sl',
@@ -1738,7 +1776,7 @@ export const Mt5Canvas = memo(
         }
 
         // (g) Drag existing TP Line
-        if (tpPrice > 0 && Math.abs(y - yTp) < 10 && x < chartW) {
+        if (tpPrice > 0 && Math.abs(y - yTp) < 10 && x < chartW - 28) {
           draggingSlTpRef.current = {
             posId: pos.id,
             type: 'tp',
@@ -1756,8 +1794,8 @@ export const Mt5Canvas = memo(
         const tgtPrice = toNum(ord.target_price)
         const yTgt = priceToY(tgtPrice)
 
-        // Click [x] Cancel Pending
-        if (Math.abs(y - yTgt) < 12 && x >= 140 && x <= 220) {
+        // Click [x] Cancel Pending (Right-aligned badge)
+        if (Math.abs(y - yTgt) < 12 && x >= chartW - 28 && x <= chartW + 2) {
           api.pendingCancel(ord.id).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()

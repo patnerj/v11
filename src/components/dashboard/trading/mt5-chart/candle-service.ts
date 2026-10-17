@@ -197,6 +197,12 @@ export async function loadHistoricalCandles(args: {
             close: parseFloat(Number(k[4]).toFixed(digits)),
             volume: Math.round(Number(k[5])),
           }))
+          if (anchorPrice && anchorPrice > 0 && candles.length > 0) {
+            const last = candles[candles.length - 1]
+            last.close = anchorPrice
+            last.high = Math.max(last.high, anchorPrice)
+            last.low = Math.min(last.low, anchorPrice)
+          }
           candleCache.set(cacheKey, candles)
           return candles
         }
@@ -247,14 +253,14 @@ export function updateCandlesWithLiveTick(
 
   const tfSeconds = TIMEFRAME_SECONDS[timeframe] || 60
   const tfMs = tfSeconds * 1000
-  const now = tick.time ? (tick.time > 10000000000 ? tick.time : tick.time * 1000) : Date.now()
+  const now = Date.now()
   const expectedCandleTime = Math.floor(now / tfMs) * tfMs
 
   const updated = [...candles]
   const lastIndex = updated.length - 1
   const last = { ...updated[lastIndex] }
 
-  if (last.time === expectedCandleTime) {
+  if (expectedCandleTime === last.time || (now >= last.time && now < last.time + tfMs) || expectedCandleTime < last.time) {
     // Same period — update current active candle
     last.close = parseFloat(tick.bid.toFixed(digits))
     last.high = parseFloat(Math.max(last.high, tick.bid).toFixed(digits))
@@ -262,12 +268,13 @@ export function updateCandlesWithLiveTick(
     last.volume = (last.volume || 0) + 1
     updated[lastIndex] = last
   } else if (expectedCandleTime > last.time) {
-    // New candle timeframe rolled over!
+    // New candle timeframe rolled over — open from previous close
+    const openPx = last.close
     const newCandle: Candle = {
       time: expectedCandleTime,
-      open: parseFloat(tick.bid.toFixed(digits)),
-      high: parseFloat(tick.bid.toFixed(digits)),
-      low: parseFloat(tick.bid.toFixed(digits)),
+      open: openPx,
+      high: parseFloat(Math.max(openPx, tick.bid).toFixed(digits)),
+      low: parseFloat(Math.min(openPx, tick.bid).toFixed(digits)),
       close: parseFloat(tick.bid.toFixed(digits)),
       volume: 1,
     }
