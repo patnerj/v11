@@ -35,6 +35,8 @@ function getSymbolDefaultAnchor(sym: string): number {
   if (s.includes('US500') || s.includes('SPX')) return 5840.0
   if (s.includes('NAS100') || s.includes('NDX')) return 20450.0
   if (s.includes('GER40') || s.includes('DAX')) return 19480.0
+  if (s.includes('UK100') || s.includes('FTSE')) return 8240.0
+  if (s.includes('USOIL') || s.includes('UKOIL') || s.includes('OIL') || s.includes('BRENT')) return 71.50
   if (s.includes('EURUSD')) return 1.0845
   if (s.includes('GBPUSD')) return 1.2985
   if (s.includes('USDJPY')) return 152.40
@@ -439,11 +441,14 @@ export function updateCandlesWithLiveTick(
   const currentPrice = parseFloat(tick.bid.toFixed(digits))
 
   if (lastCandle && lastCandle.time === tickCandleTime) {
-    lastCandle.close = currentPrice
-    if (currentPrice > lastCandle.high) lastCandle.high = currentPrice
-    if (currentPrice < lastCandle.low) lastCandle.low = currentPrice
-    lastCandle.volume = (lastCandle.volume || 0) + 1
-    return [...candles]
+    const updatedLast: Candle = {
+      ...lastCandle,
+      close: currentPrice,
+      high: Math.max(lastCandle.high, currentPrice),
+      low: lastCandle.low > 0 ? Math.min(lastCandle.low, currentPrice) : currentPrice,
+      volume: (lastCandle.volume || 0) + 1,
+    }
+    return [...candles.slice(0, -1), updatedLast]
   } else if (lastCandle && tickCandleTime > lastCandle.time) {
     const newCandle: Candle = {
       time: tickCandleTime,

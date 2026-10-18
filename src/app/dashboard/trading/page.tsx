@@ -631,8 +631,8 @@ function DesktopLayout({
                     <div className="flex-1 overflow-y-auto min-h-0">
                       <SectionErrorBoundary>
                         {tab === 'positions'
-                          ? <PositionsTable positions={positions} onChanged={onChanged} />
-                          : <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                          ? <PositionsTable positions={positions} onChanged={onChanged} onViewChart={(sym) => useTerminal.getState().setActive(sym)} />
+                          : <PendingOrdersTable orders={pending} onChanged={onChanged} onViewChart={(sym) => useTerminal.getState().setActive(sym)} />
                         }
                       </SectionErrorBoundary>
                     </div>
@@ -914,7 +914,15 @@ function MobileLayout({
       >
         <div className="flex-1 overflow-y-auto">
           <SectionErrorBoundary>
-            <PositionsTable positions={positions} onChanged={onChanged} compact />
+            <PositionsTable
+              positions={positions}
+              onChanged={onChanged}
+              compact
+              onViewChart={(sym) => {
+                useTerminal.getState().setActive(sym)
+                setSheet(null)
+              }}
+            />
           </SectionErrorBoundary>
         </div>
       </MobileBottomSheet>
@@ -927,7 +935,14 @@ function MobileLayout({
       >
         <div className="flex-1 overflow-y-auto">
           <SectionErrorBoundary>
-            <PendingOrdersTable orders={pending} onChanged={onChanged} />
+            <PendingOrdersTable
+              orders={pending}
+              onChanged={onChanged}
+              onViewChart={(sym) => {
+                useTerminal.getState().setActive(sym)
+                setSheet(null)
+              }}
+            />
           </SectionErrorBoundary>
         </div>
       </MobileBottomSheet>

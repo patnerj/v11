@@ -97,6 +97,18 @@ function getNicePriceStep(range: number, targetCount: number): number {
   return niceFraction * power
 }
 
+function getSymbolMinTriggerDist(sym: string): number {
+  const s = sym.toUpperCase()
+  if (s.includes('BTC') || s.includes('ETH')) return 10.0
+  if (s.includes('US30') || s.includes('NAS100') || s.includes('SPX') || s.includes('GER40') || s.includes('UK100') || s.includes('DAX')) return 10.0
+  if (s.includes('USOIL') || s.includes('UKOIL') || s.includes('OIL') || s.includes('BRENT')) return 0.10
+  if (s.includes('SOL')) return 0.10
+  if (s.includes('XAU') || s.includes('GOLD')) return 0.5
+  if (s.includes('XAG') || s.includes('SILVER')) return 0.05
+  if (s.includes('JPY')) return 0.1
+  return 0.0010
+}
+
 interface Mt5CanvasProps {
   symbol: string
   digits: number
@@ -1601,8 +1613,12 @@ export const Mt5Canvas = memo(
         ctx.lineWidth = 1.5
         ctx.setLineDash([4, 4])
 
+        const isBuy = ord.order_type.startsWith('buy')
+        const displayType = isBuy
+          ? (activeTgtPrice < liveAsk ? 'buy_limit' : 'buy_stop')
+          : (activeTgtPrice > liveBid ? 'sell_limit' : 'sell_stop')
         const ordLots = ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01
-        const ordText = `${ord.order_type.toUpperCase().replace('_', ' ')} ${ordLots} @ ${fmtPrice(activeTgtPrice, digits)}`
+        const ordText = `${displayType.toUpperCase().replace('_', ' ')} ${ordLots} @ ${fmtPrice(activeTgtPrice, digits)}`
         const ordBadgeWidth = ctx.measureText(ordText).width + 30
         const ordBadgeRight = chartW - 8
         const ordBadgeX = ordBadgeRight - ordBadgeWidth
@@ -1635,9 +1651,13 @@ export const Mt5Canvas = memo(
         ctx.textAlign = 'center'
         ctx.fillText(fmtPrice(activeTgtPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, yTgt + 3)
 
-        // Render SL and TP for pending orders if specified
-        if (ord.sl && toNum(ord.sl) > 0) {
-          const yOrdSl = priceToY(toNum(ord.sl))
+        // Render SL and TP for pending orders if specified (with live drag delta sync)
+        const deltaPrice = activeTgtPrice - toNum(ord.target_price)
+        const curSl = ord.sl && toNum(ord.sl) > 0 ? toNum(ord.sl) + (draggingPendingPreview?.ordId === ord.id ? deltaPrice : 0) : null
+        const curTp = ord.tp && toNum(ord.tp) > 0 ? toNum(ord.tp) + (draggingPendingPreview?.ordId === ord.id ? deltaPrice : 0) : null
+
+        if (curSl && curSl > 0) {
+          const yOrdSl = priceToY(curSl)
           ctx.strokeStyle = '#EF4444'
           ctx.setLineDash([3, 3])
           ctx.beginPath()
@@ -1645,8 +1665,8 @@ export const Mt5Canvas = memo(
           ctx.lineTo(chartW, yOrdSl)
           ctx.stroke()
         }
-        if (ord.tp && toNum(ord.tp) > 0) {
-          const yOrdTp = priceToY(toNum(ord.tp))
+        if (curTp && curTp > 0) {
+          const yOrdTp = priceToY(curTp)
           ctx.strokeStyle = '#10B981'
           ctx.setLineDash([3, 3])
           ctx.beginPath()
@@ -1940,6 +1960,151 @@ export const Mt5Canvas = memo(
       })
     }
 
+    // Centralized Pending Order Drag & Drop handler (shared between Mouse and Touch)
+    const handlePendingDrop = useCallback(
+      (ord: PendingOrder, rawFinalPrice: number) => {
+        const newTarget = parseFloat(rawFinalPrice.toFixed(digits))
+        const oldTarget = toNum(ord.target_price)
+
+        if (newTarget <= 0 || Math.abs(newTarget - oldTarget) <= pSize * 0.5) {
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+          return
+        }
+
+        const activePrices = usePrices.getState().prices
+        const activeTick = activePrices[symbol]
+        const visibleSlice = getVisibleSlice().visible
+        const liveBid = toNum(activeTick?.bid) || (visibleSlice.length > 0 ? visibleSlice[visibleSlice.length - 1].close : 0)
+        const liveAsk = toNum(activeTick?.ask) || (liveBid > 0 ? liveBid + pSize * 1.5 : 0)
+
+        const isBuy = ord.order_type.startsWith('buy')
+        const targetType = isBuy
+          ? (newTarget < liveAsk ? 'buy_limit' : 'buy_stop')
+          : (newTarget > liveBid ? 'sell_limit' : 'sell_stop')
+
+        const minDist = getSymbolMinTriggerDist(ord.symbol)
+        const marketRefPx = isBuy ? liveAsk : liveBid
+        if (marketRefPx > 0 && Math.abs(newTarget - marketRefPx) < minDist) {
+          playOrderLossThumpSound()
+          toast.error(`Target price too close to market (${fmtPrice(marketRefPx, digits)}). Minimum distance is ${minDist}.`)
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+          return
+        }
+
+        const delta = newTarget - oldTarget
+        const newSl = ord.sl !== null && toNum(ord.sl) > 0 ? parseFloat((toNum(ord.sl) + delta).toFixed(digits)) : null
+        const newTp = ord.tp !== null && toNum(ord.tp) > 0 ? parseFloat((toNum(ord.tp) + delta).toFixed(digits)) : null
+
+        // Pre-validate SL/TP positive bounds before cancelling
+        if (newSl !== null && newSl <= 0) {
+          playOrderLossThumpSound()
+          toast.error(`Adjusted Stop Loss (${fmtPrice(newSl, digits)}) must be greater than zero.`)
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+          return
+        }
+        if (newTp !== null && newTp <= 0) {
+          playOrderLossThumpSound()
+          toast.error(`Adjusted Take Profit (${fmtPrice(newTp, digits)}) must be greater than zero.`)
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+          return
+        }
+
+        // Directional boundary checks to prevent backend rejection
+        if (newSl !== null) {
+          if (isBuy && newSl >= newTarget) {
+            playOrderLossThumpSound()
+            toast.error('Adjusted Stop Loss must be below target price for Buy orders.')
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
+            return
+          }
+          if (!isBuy && newSl <= newTarget) {
+            playOrderLossThumpSound()
+            toast.error('Adjusted Stop Loss must be above target price for Sell orders.')
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
+            return
+          }
+        }
+        if (newTp !== null) {
+          if (isBuy && newTp <= newTarget) {
+            playOrderLossThumpSound()
+            toast.error('Adjusted Take Profit must be above target price for Buy orders.')
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
+            return
+          }
+          if (!isBuy && newTp >= newTarget) {
+            playOrderLossThumpSound()
+            toast.error('Adjusted Take Profit must be below target price for Sell orders.')
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
+            return
+          }
+        }
+
+        const accountId = ord.account_id ? Number(ord.account_id) : undefined
+        const tournamentId = (ord as any).tournament_id ? Number((ord as any).tournament_id) : undefined
+
+        api.pendingCancel(ord.id).then((cancelRes) => {
+          if (cancelRes.ok && cancelRes.data.success) {
+            api
+              .pendingPlace({
+                symbol: ord.symbol,
+                order_type: targetType as any,
+                type: (isBuy ? 'buy' : 'sell') as any,
+                lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
+                target_price: newTarget,
+                sl: newSl,
+                tp: newTp,
+                account_id: accountId,
+                tournament_id: tournamentId,
+              })
+              .then((placeRes) => {
+                if (placeRes.ok && placeRes.data.success) {
+                  playOrderSuccessSound()
+                  toast.success(`Updated ${targetType.toUpperCase().replace('_', ' ')} #${ord.id} to ${fmtPrice(newTarget, digits)}`)
+                  invalidateFxsim('/pending-order/my')
+                  onChanged?.()
+                } else {
+                  playOrderLossThumpSound()
+                  toast.error(placeRes.ok ? placeRes.data.message || 'Failed to replace pending order' : placeRes.error)
+                  // Rollback: Attempt to restore original order
+                  api.pendingPlace({
+                    symbol: ord.symbol,
+                    order_type: ord.order_type as any,
+                    type: (ord.order_type.startsWith('buy') ? 'buy' : 'sell') as any,
+                    lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
+                    target_price: oldTarget,
+                    sl: ord.sl !== null ? toNum(ord.sl) : null,
+                    tp: ord.tp !== null ? toNum(ord.tp) : null,
+                    account_id: accountId,
+                    tournament_id: tournamentId,
+                  }).then((restoreRes) => {
+                    if (restoreRes.ok && restoreRes.data.success) {
+                      toast.info(`Restored original pending order #${ord.id} at ${fmtPrice(oldTarget, digits)}`)
+                      invalidateFxsim('/pending-order/my')
+                      onChanged?.()
+                    }
+                  })
+                }
+              })
+          } else {
+            playOrderLossThumpSound()
+            toast.error(cancelRes.ok ? cancelRes.data.message || 'Failed to cancel previous pending order' : cancelRes.error)
+          }
+        })
+
+        draggingPendingRef.current = null
+        setDraggingPendingPreview(null)
+      },
+      [digits, pSize, symbol, getVisibleSlice, onChanged]
+    )
+
     // Mouse Down Event (Panning, Scaling, SL/TP dragging, Vector Drawing)
     const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
       const rect = canvasRef.current?.getBoundingClientRect()
@@ -1977,145 +2142,169 @@ export const Mt5Canvas = memo(
         return
       }
 
-      // 4. Interactive Trade Lines & Drag handles
-      const symPositions = positions.filter((p) => p.symbol === symbol)
-      for (const pos of symPositions) {
-        const openPrice = toNum(pos.open_price)
-        const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
-        const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
+      // 4. Interactive Trade Lines & Drag handles (Guarded by showPositions toggle)
+      const showTradePositions = indicators.tradeLevels?.showPositions ?? true
+      if (showTradePositions) {
+        const symPositions = positions.filter((p) => p.symbol === symbol)
+        for (const pos of symPositions) {
+          const openPrice = toNum(pos.open_price)
+          const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
+          const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
 
-        const yEntry = priceToY(openPrice)
-        const ySl = slPrice > 0 ? priceToY(slPrice) : -999
-        const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
+          const yEntry = priceToY(openPrice)
+          const ySl = slPrice > 0 ? priceToY(slPrice) : -999
+          const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
 
-        const isBuy = pos.type === 'buy'
-        const badgeRight = chartW - 8
-        const entryBadgeW = 140 + digits * 8 + 36
-        const badgeX = badgeRight - entryBadgeW
+          const isBuy = pos.type === 'buy'
+          const badgeRight = chartW - 8
+          const entryBadgeW = 140 + digits * 8 + 36
+          const badgeX = badgeRight - entryBadgeW
 
-        // (a) Click [x] Close on Entry Line (Right-aligned badge)
-        if (Math.abs(y - yEntry) < 12 && x >= badgeRight - 22 && x <= badgeRight + 4) {
-          api.close(pos.id).then((r) => {
-            if (r.ok && r.data.success) {
-              playOrderSuccessSound()
-              toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
-              invalidateFxsim('/positions')
-              invalidateFxsim('/account')
-              onChanged?.()
-            } else {
-              playOrderLossThumpSound()
-              toast.error('Failed to close position')
+          // (a) Click [x] Close on Entry Line (Right-aligned badge)
+          if (Math.abs(y - yEntry) < 12 && x >= badgeRight - 22 && x <= badgeRight + 4) {
+            api.close(pos.id).then((r) => {
+              if (r.ok && r.data.success) {
+                playOrderSuccessSound()
+                toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
+                invalidateFxsim('/positions')
+                invalidateFxsim('/account')
+                onChanged?.()
+              } else {
+                playOrderLossThumpSound()
+                toast.error('Failed to close position')
+              }
+            })
+            return
+          }
+
+          // (b) Click [+ Drag SL] handle (Left of right-aligned badge)
+          const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
+          const slHandleX = badgeX - 78
+          if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 12 && x >= slHandleX - 4 && x <= slHandleX + 76) {
+            draggingSlTpRef.current = {
+              posId: pos.id,
+              type: 'new_sl',
+              currentPrice: openPrice,
+              initialPrice: openPrice,
+              pos,
             }
-          })
-          return
-        }
-
-        // (b) Click [+ Drag SL] handle (Left of right-aligned badge)
-        const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
-        const slHandleX = badgeX - 78
-        if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 12 && x >= slHandleX - 4 && x <= slHandleX + 76) {
-          draggingSlTpRef.current = {
-            posId: pos.id,
-            type: 'new_sl',
-            currentPrice: openPrice,
-            initialPrice: openPrice,
-            pos,
+            return
           }
-          return
-        }
 
-        // (c) Click [+ Drag TP] handle (Left of right-aligned badge)
-        const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
-        const tpHandleX = badgeX - 156
-        if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 12 && x >= tpHandleX - 4 && x <= tpHandleX + 76) {
-          draggingSlTpRef.current = {
-            posId: pos.id,
-            type: 'new_tp',
-            currentPrice: openPrice,
-            initialPrice: openPrice,
-            pos,
-          }
-          return
-        }
-
-        // (d) Click [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
-        if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
-          api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
-            if (r.ok && r.data.success) {
-              playOrderSuccessSound()
-              toast.success(`Removed Stop Loss from #${pos.id}`)
-              invalidateFxsim('/positions')
-              onChanged?.()
+          // (c) Click [+ Drag TP] handle (Left of right-aligned badge)
+          const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
+          const tpHandleX = badgeX - 156
+          if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 12 && x >= tpHandleX - 4 && x <= tpHandleX + 76) {
+            draggingSlTpRef.current = {
+              posId: pos.id,
+              type: 'new_tp',
+              currentPrice: openPrice,
+              initialPrice: openPrice,
+              pos,
             }
-          })
-          return
-        }
+            return
+          }
 
-        // (e) Click [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
-        if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
-          api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
-            if (r.ok && r.data.success) {
-              playOrderSuccessSound()
-              toast.success(`Removed Take Profit from #${pos.id}`)
-              invalidateFxsim('/positions')
-              onChanged?.()
+          // (d) Click [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
+          if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
+            api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
+              if (r.ok && r.data.success) {
+                playOrderSuccessSound()
+                toast.success(`Removed Stop Loss from #${pos.id}`)
+                invalidateFxsim('/positions')
+                onChanged?.()
+              }
+            })
+            return
+          }
+
+          // (e) Click [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
+          if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
+            api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
+              if (r.ok && r.data.success) {
+                playOrderSuccessSound()
+                toast.success(`Removed Take Profit from #${pos.id}`)
+                invalidateFxsim('/positions')
+                onChanged?.()
+              }
+            })
+            return
+          }
+
+          // (f) Drag existing SL Line or SL badge (below line)
+          if (slPrice > 0 && (Math.abs(y - ySl) < 12 || (y >= ySl - 2 && y <= ySl + 26 && x >= badgeRight - 220)) && x < chartW - 28) {
+            draggingSlTpRef.current = {
+              posId: pos.id,
+              type: 'sl',
+              currentPrice: slPrice,
+              initialPrice: slPrice,
+              pos,
             }
-          })
-          return
-        }
-
-        // (f) Drag existing SL Line or SL badge (below line)
-        if (slPrice > 0 && (Math.abs(y - ySl) < 12 || (y >= ySl - 2 && y <= ySl + 26 && x >= badgeRight - 220)) && x < chartW - 28) {
-          draggingSlTpRef.current = {
-            posId: pos.id,
-            type: 'sl',
-            currentPrice: slPrice,
-            initialPrice: slPrice,
-            pos,
+            return
           }
-          return
-        }
 
-        // (g) Drag existing TP Line or TP badge (above line)
-        if (tpPrice > 0 && (Math.abs(y - yTp) < 12 || (y >= yTp - 26 && y <= yTp + 2 && x >= badgeRight - 220)) && x < chartW - 28) {
-          draggingSlTpRef.current = {
-            posId: pos.id,
-            type: 'tp',
-            currentPrice: tpPrice,
-            initialPrice: tpPrice,
-            pos,
+          // (g) Drag existing TP Line or TP badge (above line)
+          if (tpPrice > 0 && (Math.abs(y - yTp) < 12 || (y >= yTp - 2 && y <= yTp + 2 && x >= badgeRight - 220)) && x < chartW - 28) {
+            draggingSlTpRef.current = {
+              posId: pos.id,
+              type: 'tp',
+              currentPrice: tpPrice,
+              initialPrice: tpPrice,
+              pos,
+            }
+            return
           }
-          return
         }
-      }
 
-      // 5. Interactive Pending Orders
-      const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
-      for (const ord of symPending) {
-        const tgtPrice = toNum(ord.target_price)
-        const yTgt = priceToY(tgtPrice)
+        // 5. Interactive Pending Orders (select closest order)
+        const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
 
-        // Click [x] Cancel Pending (Right-aligned badge)
-        if (Math.abs(y - yTgt) < 12 && x >= chartW - 28 && x <= chartW + 2) {
-          api.pendingCancel(ord.id).then((r) => {
+        // Click [x] Cancel on closest pending order
+        let closestCancel: PendingOrder | null = null
+        let minCancelDist = 12
+        for (const ord of symPending) {
+          const tgtPrice = toNum(ord.target_price)
+          if (tgtPrice <= 0) continue
+          const yTgt = priceToY(tgtPrice)
+          const dY = Math.abs(y - yTgt)
+          if (dY < minCancelDist && x >= chartW - 28 && x <= chartW + 2) {
+            minCancelDist = dY
+            closestCancel = ord
+          }
+        }
+        if (closestCancel) {
+          api.pendingCancel(closestCancel.id).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()
-              toast.success(`Cancelled pending order #${ord.id}`)
+              toast.success(`Cancelled pending order #${closestCancel.id}`)
               invalidateFxsim('/pending-order/my')
               onChanged?.()
             } else {
               playOrderLossThumpSound()
-              toast.error('Failed to cancel order')
+              toast.error(r.ok ? r.data.message || 'Failed to cancel order' : r.error)
             }
           })
           return
         }
 
-        // Drag Pending Order target line
-        if (Math.abs(y - yTgt) < 10 && x < chartW) {
+        // Drag closest pending order target line
+        let closestDrag: PendingOrder | null = null
+        let minDragDist = 10
+        for (const ord of symPending) {
+          const tgtPrice = toNum(ord.target_price)
+          if (tgtPrice <= 0) continue
+          const yTgt = priceToY(tgtPrice)
+          const dY = Math.abs(y - yTgt)
+          if (dY < minDragDist && x < chartW) {
+            minDragDist = dY
+            closestDrag = ord
+          }
+        }
+        if (closestDrag) {
+          const tgtPrice = toNum(closestDrag.target_price)
           draggingPendingRef.current = {
-            ordId: ord.id,
-            order: ord,
+            ordId: closestDrag.id,
+            order: closestDrag,
             currentPrice: tgtPrice,
             initialPrice: tgtPrice,
           }
@@ -2348,7 +2537,7 @@ export const Mt5Canvas = memo(
         setCanvasCursor('ns-resize')
       } else if (isDraggingChartRef.current) {
         setCanvasCursor('grabbing')
-      } else if (draggingSlTpRef.current) {
+      } else if (draggingSlTpRef.current || draggingPendingRef.current) {
         setCanvasCursor('ns-resize')
       } else if (activeTool === 'select') {
         setCanvasCursor('grab')
@@ -2408,6 +2597,7 @@ export const Mt5Canvas = memo(
       // 4. Pending Order Dragging
       if (draggingPendingRef.current) {
         const curPrice = yToPrice(y)
+        draggingPendingRef.current.currentPrice = curPrice
         setDraggingPendingPreview({
           ordId: draggingPendingRef.current.ordId,
           price: curPrice,
@@ -2533,40 +2723,10 @@ export const Mt5Canvas = memo(
       }
 
       // 2. Finalize Pending order modification
-      if (draggingPendingRef.current && draggingPendingPreview) {
+      if (draggingPendingRef.current) {
         const ord = draggingPendingRef.current.order
-        const newTarget = parseFloat(draggingPendingPreview.price.toFixed(digits))
-
-        if (newTarget > 0 && Math.abs(newTarget - toNum(ord.target_price)) > pSize * 0.5) {
-          api.pendingCancel(ord.id).then((cancelRes) => {
-            if (cancelRes.ok && cancelRes.data.success) {
-              api
-                .pendingPlace({
-                  symbol: ord.symbol,
-                  order_type: ord.order_type as any,
-                  type: ord.type as any,
-                  lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
-                  target_price: newTarget,
-                  sl: ord.sl !== null ? toNum(ord.sl) : null,
-                  tp: ord.tp !== null ? toNum(ord.tp) : null,
-                })
-                .then((placeRes) => {
-                  if (placeRes.ok && placeRes.data.success) {
-                    playOrderSuccessSound()
-                    toast.success(`Updated pending order #${ord.id} to ${fmtPrice(newTarget, digits)}`)
-                    invalidateFxsim('/pending-order/my')
-                    onChanged?.()
-                  } else {
-                    playOrderLossThumpSound()
-                    toast.error(placeRes.ok ? placeRes.data.message || 'Failed to replace pending order' : placeRes.error)
-                  }
-                })
-            }
-          })
-        }
-
-        draggingPendingRef.current = null
-        setDraggingPendingPreview(null)
+        const finalPrice = draggingPendingRef.current.currentPrice || draggingPendingPreview?.price || toNum(ord.target_price)
+        handlePendingDrop(ord, finalPrice)
       }
 
       // 3. Finalize Drawing in Progress
@@ -2797,44 +2957,64 @@ export const Mt5Canvas = memo(
               }
             }
 
-            // (h) Pending orders touch cancellation & dragging
+            // (h) Pending orders touch cancellation & dragging (select closest order)
             const symPending = pendingOrdersRef.current.filter((o) => o.symbol === symbol && o.status === 'pending')
+            const ordBadgeRight = chartW - 8
+
+            // Quick tap to cancel pending order [x] button on chart
+            let closestTouchCancel: PendingOrder | null = null
+            let minTouchCancelDist = 18
             for (const ord of symPending) {
               const tgtPrice = toNum(ord.target_price)
               if (tgtPrice <= 0) continue
               const yTgt = priceToY(tgtPrice)
-              const ordBadgeRight = chartW - 8
-
-              // Quick tap to cancel pending order [x] button on chart
-              if (Math.abs(y - yTgt) < 18 && x >= ordBadgeRight - 36 && x <= ordBadgeRight + 12) {
-                api.pendingCancel(ord.id).then((r) => {
-                  if (r.ok && r.data.success) {
-                    playOrderSuccessSound()
-                    toast.success(`Cancelled pending order #${ord.id}`)
-                    invalidateFxsim('/pending-order/my')
-                    onChanged?.()
-                  } else {
-                    playOrderLossThumpSound()
-                    toast.error('Failed to cancel order')
-                  }
-                })
-                return
+              const dY = Math.abs(y - yTgt)
+              if (dY < minTouchCancelDist && x >= ordBadgeRight - 36 && x <= ordBadgeRight + 12) {
+                minTouchCancelDist = dY
+                closestTouchCancel = ord
               }
-
-              // Touch & Drag pending order target price line
-              if (Math.abs(y - yTgt) < 18 && x < chartW) {
-                touchStateRef.current.isDragging = false
-                touchStateRef.current.isDraggingSlTp = false
-                touchStateRef.current.isDraggingPending = true
-                draggingPendingRef.current = {
-                  ordId: ord.id,
-                  order: ord,
-                  currentPrice: tgtPrice,
-                  initialPrice: tgtPrice,
+            }
+            if (closestTouchCancel) {
+              api.pendingCancel(closestTouchCancel.id).then((r) => {
+                if (r.ok && r.data.success) {
+                  playOrderSuccessSound()
+                  toast.success(`Cancelled pending order #${closestTouchCancel.id}`)
+                  invalidateFxsim('/pending-order/my')
+                  onChanged?.()
+                } else {
+                  playOrderLossThumpSound()
+                  toast.error(r.ok ? r.data.message || 'Failed to cancel order' : r.error)
                 }
-                if (e.cancelable) e.preventDefault()
-                return
+              })
+              return
+            }
+
+            // Touch & Drag closest pending order target price line
+            let closestTouchDrag: PendingOrder | null = null
+            let minTouchDragDist = 18
+            for (const ord of symPending) {
+              const tgtPrice = toNum(ord.target_price)
+              if (tgtPrice <= 0) continue
+              const yTgt = priceToY(tgtPrice)
+              const dY = Math.abs(y - yTgt)
+              if (dY < minTouchDragDist && x < chartW) {
+                minTouchDragDist = dY
+                closestTouchDrag = ord
               }
+            }
+            if (closestTouchDrag) {
+              const tgtPrice = toNum(closestTouchDrag.target_price)
+              touchStateRef.current.isDragging = false
+              touchStateRef.current.isDraggingSlTp = false
+              touchStateRef.current.isDraggingPending = true
+              draggingPendingRef.current = {
+                ordId: closestTouchDrag.id,
+                order: closestTouchDrag,
+                currentPrice: tgtPrice,
+                initialPrice: tgtPrice,
+              }
+              if (e.cancelable) e.preventDefault()
+              return
             }
           }
 
@@ -2992,38 +3172,7 @@ export const Mt5Canvas = memo(
           if (draggingPendingRef.current) {
             const ord = draggingPendingRef.current.order
             const finalPrice = draggingPendingRef.current.currentPrice
-            const newPrice = parseFloat(finalPrice.toFixed(digits))
-
-            if (newPrice > 0 && Math.abs(newPrice - toNum(ord.target_price)) > pSize * 0.5) {
-              api.pendingCancel(ord.id).then((cancelRes) => {
-                if (cancelRes.ok && cancelRes.data.success) {
-                  api
-                    .pendingPlace({
-                      symbol: ord.symbol,
-                      order_type: ord.order_type as any,
-                      type: ord.type as any,
-                      lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
-                      target_price: newPrice,
-                      sl: ord.sl !== null ? toNum(ord.sl) : null,
-                      tp: ord.tp !== null ? toNum(ord.tp) : null,
-                    })
-                    .then((placeRes) => {
-                      if (placeRes.ok && placeRes.data.success) {
-                        playOrderSuccessSound()
-                        toast.success(`Updated pending order #${ord.id} to ${fmtPrice(newPrice, digits)}`)
-                        invalidateFxsim('/pending-order/my')
-                        onChanged?.()
-                      } else {
-                        playOrderLossThumpSound()
-                        toast.error(placeRes.ok ? placeRes.data.message || 'Failed to replace pending order' : placeRes.error)
-                      }
-                    })
-                }
-              })
-            }
-
-            draggingPendingRef.current = null
-            setDraggingPendingPreview(null)
+            handlePendingDrop(ord, finalPrice)
           }
           return
         }

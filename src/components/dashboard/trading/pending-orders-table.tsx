@@ -140,7 +140,7 @@ function Row({ order, index, onChanged, onViewChart }: { order: PendingOrder; in
           {order.order_type.replace('_', ' ').toUpperCase()}
         </Badge>
       </Td>
-      <Td align="right"><span className="terminal-num text-text-muted">{fmtLots(order.lot_size)}</span></Td>
+      <Td align="right"><span className="terminal-num text-text-muted">{fmtLots((order as any).lot_size ?? (order as any).lots ?? (order as any).volume ?? 0.01)}</span></Td>
       <Td align="right"><span className="terminal-num">{fmtPrice(order.target_price, digits)}</span></Td>
       <Td align="right" hideOn="md">
         <span className="text-terminal-body terminal-num text-text-muted">
