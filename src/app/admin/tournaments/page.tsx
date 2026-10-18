@@ -127,6 +127,9 @@ export default function AdminTournamentsPage() {
     refetchInterval: 10_000,
   })
 
+  // Defensive collection normalization (Rule 1.2 & Rule 133.2 / GAP-NEW-04)
+  const leaderboardList = Array.isArray(leaderboardData?.leaderboard) ? leaderboardData.leaderboard : []
+
   // ─────────────────────────────────────────────────────────────
   // 2.2 SYNTHETIC LEADERBOARD MANAGEMENT (Client Requirement)
   // ─────────────────────────────────────────────────────────────
@@ -274,8 +277,8 @@ export default function AdminTournamentsPage() {
   }
 
   const handleMoveSynthetic = async (p: any, direction: 'up' | 'down') => {
-    if (!selectedTournamentForLeaderboard?.id || !leaderboardData?.leaderboard) return
-    const list = [...leaderboardData.leaderboard]
+    if (!selectedTournamentForLeaderboard?.id || leaderboardList.length === 0) return
+    const list = [...leaderboardList]
     const currentIdx = list.findIndex(item => 
       ((item as any).synthetic_id && (item as any).synthetic_id === (p as any).synthetic_id) || item.id === p.id
     )
@@ -1588,14 +1591,14 @@ export default function AdminTournamentsPage() {
                       Loading live leaderboard ranks...
                     </td>
                   </tr>
-                ) : !leaderboardData?.leaderboard || leaderboardData.leaderboard.length === 0 ? (
+                ) : leaderboardList.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-12 text-center text-text-muted">
                       No participants registered yet for this tournament.
                     </td>
                   </tr>
                 ) : (
-                  leaderboardData.leaderboard.map((p: TournamentParticipant, index: number) => {
+                  leaderboardList.map((p: TournamentParticipant, index: number) => {
                     const isTop3 = p.rank <= 3
                     const rankTone = p.rank === 1 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30' :
                                      p.rank === 2 ? 'text-text-muted bg-surface-muted border-border' :
@@ -1687,7 +1690,7 @@ export default function AdminTournamentsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                disabled={index === leaderboardData.leaderboard.length - 1 || isReordering}
+                                disabled={index === leaderboardList.length - 1 || isReordering}
                                 className="h-6 w-6 p-0 text-text-muted hover:text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-20 disabled:pointer-events-none"
                                 title="Move Down (Nechy karein)"
                                 onClick={() => handleMoveSynthetic(p, 'down')}

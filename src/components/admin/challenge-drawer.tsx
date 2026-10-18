@@ -13,6 +13,9 @@ import { fmtUSD, fmtPct, fmtDate, statusTone, statusLabel, toNum } from '@/lib/f
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 import { api } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { Trade } from '@/types/api'
 import Link from 'next/link'
 
 interface ChallengeDrawerProps {
@@ -52,17 +55,26 @@ export function ChallengeDrawer({
   const targetAmount = (size * targetPct) / 100
   const targetProgress = Math.min(100, Math.max(0, (Math.max(0, pnl) / targetAmount) * 100))
 
-  // Recent 10 Trades (Mocked/Ledger records)
-  const mockTrades = [
-    { id: 101, symbol: 'EURUSD', type: 'BUY', lots: 1.50, open: 1.08450, close: 1.08720, pnl: 405.00, time: '10m ago' },
-    { id: 102, symbol: 'GBPUSD', type: 'SELL', lots: 2.00, open: 1.29800, close: 1.29450, pnl: 700.00, time: '42m ago' },
-    { id: 103, symbol: 'XAUUSD', type: 'BUY', lots: 0.50, open: 2645.20, close: 2652.80, pnl: 380.00, time: '2h ago' },
-    { id: 104, symbol: 'US30', type: 'BUY', lots: 1.00, open: 42150.0, close: 42080.0, pnl: -70.00, time: '4h ago' },
-    { id: 105, symbol: 'USDJPY', type: 'SELL', lots: 1.00, open: 148.60, close: 148.20, pnl: 268.50, time: '6h ago' },
-    { id: 106, symbol: 'EURUSD', type: 'BUY', lots: 2.50, open: 1.08200, close: 1.08550, pnl: 875.00, time: '1d ago' },
-    { id: 107, symbol: 'NAS100', type: 'SELL', lots: 0.50, open: 20180.0, close: 20240.0, pnl: -150.00, time: '1d ago' },
-    { id: 108, symbol: 'XAUUSD', type: 'SELL', lots: 0.80, open: 2660.00, close: 2651.50, pnl: 680.00, time: '2d ago' },
-  ]
+  // Real Trades from API (GAP-F01)
+  const { data: tradesData, isLoading: isLoadingTrades } = useQuery({
+    queryKey: ['admin-challenge-trades', challenge?.id],
+    queryFn: async () => {
+      if (!challenge?.id) return []
+      const res = await api.admin.trades(challenge.id)
+      return res.ok && Array.isArray(res.data) ? res.data : []
+    },
+    enabled: isOpen && !!challenge?.id && activeTab === 'trades',
+    refetchInterval: 15_000,
+  })
+
+  // Defensive array normalization (Rule 1.2 & Rule 133.2)
+  const tradesList = React.useMemo<Trade[]>(() => {
+    if (Array.isArray(tradesData)) return tradesData
+    if (tradesData && typeof tradesData === 'object' && Array.isArray((tradesData as any).trades)) {
+      return (tradesData as any).trades
+    }
+    return []
+  }, [tradesData])
 
   const handleResetChallenge = async () => {
     if (!window.confirm(`Are you sure you want to RESET Challenge #${challenge.id}? This will restore balance to ${fmtUSD(size)} and clear breaches.`)) return
@@ -337,7 +349,7 @@ export function ChallengeDrawer({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">
                   Recent Ledger Executions
                 </h4>
-                <Badge tone="accent" size="sm" className="text-2xs">8 Executions</Badge>
+                <Badge tone="accent" size="sm" className="text-2xs">{tradesList.length} Executions</Badge>
               </div>
 
               <div className="rounded-xl border border-border overflow-hidden">
@@ -353,27 +365,56 @@ export function ChallengeDrawer({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
-                    {mockTrades.map((t) => (
-                      <tr key={t.id} className="hover:bg-surface-secondary/40 transition-colors">
-                        <td className="py-2 px-3 font-semibold text-text">{t.symbol}</td>
-                        <td className="py-2 px-3">
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded text-2xs font-bold",
-                            t.type === 'BUY' ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
-                          )}>
-                            {t.type}
-                          </span>
+                    {isLoadingTrades ? (
+                      [...Array(4)].map((_, i) => (
+                        <tr key={i} className="animate-pulse">
+                          <td className="py-2.5 px-3"><Skeleton className="h-4 w-16" /></td>
+                          <td className="py-2.5 px-3"><Skeleton className="h-4 w-10" /></td>
+                          <td className="py-2.5 px-3 text-right"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                          <td className="py-2.5 px-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="py-2.5 px-3 text-right"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                          <td className="py-2.5 px-3 text-right"><Skeleton className="h-4 w-14 ml-auto" /></td>
+                        </tr>
+                      ))
+                    ) : tradesList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-text-muted text-xs">
+                          No closed trades recorded yet for this challenge.
                         </td>
-                        <td className="py-2 px-3 text-right terminal-num">{t.lots.toFixed(2)}</td>
-                        <td className="py-2 px-3 text-right terminal-num text-text-muted text-2xs">
-                          {t.open} → {t.close}
-                        </td>
-                        <td className={cn("py-2 px-3 text-right terminal-num font-semibold", t.pnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                          {t.pnl >= 0 ? '+' : ''}{fmtUSD(t.pnl)}
-                        </td>
-                        <td className="py-2 px-3 text-right text-2xs text-text-muted">{t.time}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      tradesList.map((t) => {
+                        const rawType = String(t.type || 'BUY').toUpperCase()
+                        const isBuy = rawType.includes('BUY')
+                        const openPrice = toNum(t.open_price ?? (t as any).open)
+                        const closePrice = toNum(t.close_price ?? (t as any).close)
+                        const lots = toNum(t.lot_size ?? (t as any).lots)
+                        const tradePnl = toNum(t.pnl)
+                        const timeDisplay = t.closed_at ? fmtDate(t.closed_at) : (t.opened_at ? fmtDate(t.opened_at) : (t as any).time || '—')
+
+                        return (
+                          <tr key={t.id} className="hover:bg-surface-secondary/40 transition-colors">
+                            <td className="py-2 px-3 font-semibold text-text">{t.symbol}</td>
+                            <td className="py-2 px-3">
+                              <span className={cn(
+                                "px-1.5 py-0.5 rounded text-2xs font-bold",
+                                isBuy ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
+                              )}>
+                                {rawType}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 text-right terminal-num">{lots.toFixed(2)}</td>
+                            <td className="py-2 px-3 text-right terminal-num text-text-muted text-2xs">
+                              {openPrice.toFixed(2)} → {closePrice.toFixed(2)}
+                            </td>
+                            <td className={cn("py-2 px-3 text-right terminal-num font-semibold", tradePnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                              {tradePnl >= 0 ? '+' : ''}{fmtUSD(tradePnl)}
+                            </td>
+                            <td className="py-2 px-3 text-right text-2xs text-text-muted">{timeDisplay}</td>
+                          </tr>
+                        )
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>

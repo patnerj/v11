@@ -182,8 +182,33 @@ export default function DashboardTournamentsPage() {
   const live = tournaments.filter(t => (t.status ?? '') === 'active')
   const upcoming = tournaments.filter(t => (t.status ?? '') !== 'active')
 
-  // Live user rank logic (mocking based on joined tournaments for visual purpose as requested)
-  const myLiveRank = mine.length > 0 ? 42 - (mine.length * 2) : 0
+  // Live user rank logic (GAP-NEW-01: Ingest real rank from participant/tournament data e.g. p.rank ?? t.my_rank ?? null)
+  const myLiveRank = useMemo<number | null>(() => {
+    const safeMine = Array.isArray(mine) ? mine : []
+    const activeMine = safeMine.filter(m => (m.tournament_status ?? (m as any).status) === 'active')
+    const targetMine = activeMine.length > 0 ? activeMine : safeMine
+
+    for (const p of targetMine) {
+      const raw = (p as any).rank ?? p.current_rank ?? (p as any).leaderboard_rank ?? (p as any).my_rank ?? null
+      const n = Number(raw)
+      if (!isNaN(n) && n > 0) return n
+    }
+
+    const safeTournaments = Array.isArray(tournaments) ? tournaments : []
+    for (const t of safeTournaments) {
+      const raw = (t as any).my_rank ?? (t as any).rank ?? null
+      const n = Number(raw)
+      if (!isNaN(n) && n > 0) return n
+    }
+
+    return null
+  }, [mine, tournaments])
+
+  const myLiveRankDisplay = useMemo(() => {
+    if (myLiveRank !== null && myLiveRank > 0) return `#${myLiveRank}`
+    if (Array.isArray(mine) && mine.length > 0) return '—'
+    return 'Unranked'
+  }, [myLiveRank, mine])
 
   const statusBadge = (t: Competition, pendingOrder?: PaymentOrder) => {
     const tid = Number(t.id)
@@ -351,7 +376,11 @@ export default function DashboardTournamentsPage() {
             <div className="min-w-0 flex-1">
               <div className="text-2xs uppercase tracking-wider text-text-muted">Live tournaments</div>
               <div className="flex flex-wrap items-center gap-1.5 my-0.5">
-                {myLiveRank > 0 && <Badge tone="success" size="sm">Live Rank: {myLiveRank}</Badge>}
+                {mine.length > 0 && (
+                  <Badge tone={myLiveRank ? "success" : "neutral"} size="sm">
+                    Live Rank: {myLiveRankDisplay}
+                  </Badge>
+                )}
                 {timeLeft && <Badge tone="accent" size="sm">{timeLeft}</Badge>}
               </div>
               <div className="text-lg font-bold tabular text-text">{live.length}</div>

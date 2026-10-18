@@ -312,7 +312,10 @@ export const api = {
       fxsim<{ success: boolean; status?: string; message?: string }>(`/admin/payouts/${id}/status`, { body: { status, note, ...(extra || {}) }, retries: 0 }),
     challenges:   (params?: { user_ids?: string | number[]; page?: number; limit?: number; search?: string; status?: string }) =>
       fxsim<{ challenges: ChallengeAccount[]; total?: number; page?: number; pages?: number; limit?: number; pending_payouts: unknown[] }>('/admin/challenges', { query: params as any, cache: 8_000 }),
-    trades:       ()                 => fxsim<Trade[]>('/admin/trades',                                  { cache: 10_000 }),
+    trades:       (params?: number | { challenge_id?: number; account_id?: number; page?: number; limit?: number }) => {
+      const query = typeof params === 'number' ? { challenge_id: params } : params
+      return fxsim<Trade[]>('/admin/trades', { query, cache: 10_000 })
+    },
     log:          (page = 1)         => fxsim<unknown[]>('/admin/log',                                   { query: { page }, cache: 15_000 }),
     pendingOrders: ()                => fxsim<PendingOrder[]>('/admin/pending-orders',                   { cache: 5_000 }),
     pendingReject: (id: number, reason: string) =>
