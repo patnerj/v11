@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Trophy, Users, Calendar, ArrowRight, Loader2, Wallet, CheckCircle2, Clock, BookOpen, ShieldAlert, ShieldCheck, Zap, Sparkles, AlertTriangle, Info } from 'lucide-react'
+import { Trophy, Users, Calendar, ArrowRight, Loader2, Wallet, CheckCircle2, Clock, BookOpen, ShieldAlert, ShieldCheck, Zap, Sparkles, AlertTriangle, Info, Activity } from 'lucide-react'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices } from '@/store/prices'
@@ -23,6 +23,7 @@ import { fmtUSD, toNum } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { Competition, PaymentOrder } from '@/types/api'
 import { TournamentPodium } from '@/components/tournaments/tournament-podium'
+import { ArenaChart } from '@/components/arena/arena-chart'
 
 function cleanPrizeValue(val: string): string {
   if (!val) return ''
@@ -79,6 +80,7 @@ export default function DashboardTournamentsPage() {
   const [joining, setJoining] = useState<number | null>(null)
   const [viewingRules, setViewingRules] = useState<Competition | null>(null)
   const [viewingPrizes, setViewingPrizes] = useState<Competition | null>(null)
+  const [viewingChart, setViewingChart] = useState<Competition | null>(null)
 
   const { data: tournaments = [], isLoading } = useQuery({
     queryKey: ['tournaments-public'],
@@ -273,6 +275,15 @@ export default function DashboardTournamentsPage() {
                 onClick={() => setViewingPrizes(t)}
               >
                 <Trophy className="h-3 w-3" /> Prizes
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2.5 text-2xs font-semibold text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 border border-cyan-400/20 rounded-md gap-1"
+                onClick={() => setViewingChart(t)}
+              >
+                <Activity className="h-3 w-3" /> Chart
               </Button>
             </div>
           </div>
@@ -691,6 +702,47 @@ export default function DashboardTournamentsPage() {
           </Modal>
         )
       })()}
+
+      {/* Real-time Tournament Market Chart Modal (MT5 Pro / TradingView Dual Engine) */}
+      {viewingChart && (
+        <Modal
+          isOpen={true}
+          onClose={() => setViewingChart(null)}
+          maxWidth="4xl"
+          title={
+            <div className="flex items-center gap-2 text-text font-bold text-base sm:text-lg min-w-0">
+              <Activity className="h-5 w-5 text-accent shrink-0 animate-pulse" />
+              <span className="truncate">Tournament Market Action · {viewingChart.title || `Tournament #${viewingChart.id}`}</span>
+            </div>
+          }
+          description={
+            <span className="text-2xs sm:text-xs text-text-muted">
+              MT5 Pro Native Canvas & TradingView Dual-Mode Feed
+            </span>
+          }
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <Button variant="outline" onClick={() => setViewingChart(null)}>
+                Close
+              </Button>
+              {joinedIds.has(Number(viewingChart.id)) && (
+                <Button asChild className="bg-accent text-accent-fg font-bold">
+                  <Link href={`/dashboard/trading?tournament=${viewingChart.id}`}>
+                    Trade Now in Terminal <ArrowRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          }
+        >
+          <div className="py-2">
+            <ArenaChart
+              symbol={(viewingChart as any)?.symbol || 'EURUSD'}
+              height={500}
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

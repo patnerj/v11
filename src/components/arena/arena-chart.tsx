@@ -1,8 +1,11 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useId, memo } from 'react'
-import { Activity, ShieldCheck, AlertCircle, Clock, Maximize2, Radio } from 'lucide-react'
+import { Activity, ShieldCheck, AlertCircle, Clock, Maximize2, Radio, Zap, BarChart3 } from 'lucide-react'
 import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
+import { cn } from '@/lib/cn'
+import { Mt5ChartPanel } from '@/components/dashboard/trading/mt5-chart'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 
 interface ArenaChartProps {
   symbol: string
@@ -42,6 +45,22 @@ export const ArenaChart = memo(function ArenaChart({
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [chartEngine, setChartEngine] = useState<'mt5' | 'tv'>(() => {
+    if (typeof window === 'undefined') return 'mt5'
+    try {
+      return (localStorage.getItem('fxsim:arena:chart_engine') as 'mt5' | 'tv') || 'mt5'
+    } catch {
+      return 'mt5'
+    }
+  })
+
+  const handleEngineChange = (engine: 'mt5' | 'tv') => {
+    setChartEngine(engine)
+    try {
+      localStorage.setItem('fxsim:arena:chart_engine', engine)
+    } catch {}
+  }
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -62,6 +81,7 @@ export const ArenaChart = memo(function ArenaChart({
   const resolved = resolveTvSymbol(symbol)
 
   useEffect(() => {
+    if (chartEngine !== 'tv') return
     let active = true
     setError(null)
     setLoaded(false)
@@ -110,7 +130,7 @@ export const ArenaChart = memo(function ArenaChart({
             theme: isDark ? 'dark' : 'light',
             style: '1', // Candlestick
             locale: 'en',
-            toolbar_bg: isDark ? 'var(--background)' : '#F8FAFC',
+            toolbar_bg: isDark ? '#0F172A' : '#F8FAFC',
             enable_publishing: false,
             allow_symbol_change: false,
             save_image: false,
@@ -132,7 +152,7 @@ export const ArenaChart = memo(function ArenaChart({
               'side_toolbar_in_fullscreen_mode',
             ],
             overrides: {
-              'paneProperties.background': isDark ? 'var(--background)' : '#FFFFFF',
+              'paneProperties.background': isDark ? '#0F172A' : '#FFFFFF',
               'paneProperties.vertGridProperties.color': isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
               'paneProperties.horzGridProperties.color': isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
               'mainSeriesProperties.candleStyle.upColor': '#10B981',
@@ -161,7 +181,7 @@ export const ArenaChart = memo(function ArenaChart({
         containerRef.current.innerHTML = ''
       }
     }
-  }, [resolved, isDark, height])
+  }, [resolved, isDark, height, chartEngine])
 
   return (
     <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-xl">
@@ -189,7 +209,7 @@ export const ArenaChart = memo(function ArenaChart({
           )}
         </div>
 
-        {/* Live Market Price Level */}
+        {/* Live Market Price Level & Dual-Engine Switcher */}
         <div className="flex items-center gap-3 tabular">
           {currentPrice && currentPrice > 0 && (
             <div className="text-right">
@@ -199,22 +219,65 @@ export const ArenaChart = memo(function ArenaChart({
               </span>
             </div>
           )}
-          <span className="text-2xs text-text-muted bg-surface px-2 py-0.5 rounded border border-border">
-            5M Candlestick · Dual Telemetry
-          </span>
+
+          {/* Dual-Mode Chart Engine Switcher */}
+          <div className="inline-flex items-center bg-surface dark:bg-bg-subtle p-0.5 rounded-lg border border-border shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleEngineChange('mt5')}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                chartEngine === 'mt5'
+                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
+              )}
+              title="Switch to MT5 Pro Native Canvas Chart"
+            >
+              <Zap className="w-3.5 h-3.5 fill-current" />
+              <span>MT5 Pro</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleEngineChange('tv')}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                chartEngine === 'tv'
+                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
+              )}
+              title="Switch to TradingView Chart"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>TradingView</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Chart Canvas Host */}
-      <div className="relative w-full bg-bg" style={{ minHeight: `${height}px` }}>
-        {error ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-2">
-            <AlertCircle className="h-8 w-8 text-amber-500" />
-            <div className="text-sm font-bold text-text">Live Chart Initializing</div>
-            <div className="text-xs text-text-muted max-w-sm">{error}</div>
-          </div>
-        ) : null}
-        <div ref={containerRef} style={{ width: '100%', height: `${height}px` }} />
+      <div className="relative w-full bg-bg overflow-hidden" style={{ minHeight: `${height}px`, height: `${height}px` }}>
+        {chartEngine === 'mt5' ? (
+          <SectionErrorBoundary sectionName="ArenaMt5Chart">
+            <Mt5ChartPanel
+              symbol={symbol}
+              compact={false}
+              positions={null}
+              pendingOrders={null}
+              hideOneClick={true}
+            />
+          </SectionErrorBoundary>
+        ) : (
+          <>
+            {error ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-2">
+                <AlertCircle className="h-8 w-8 text-amber-500" />
+                <div className="text-sm font-bold text-text">Live Chart Initializing</div>
+                <div className="text-xs text-text-muted max-w-sm">{error}</div>
+              </div>
+            ) : null}
+            <div ref={containerRef} style={{ width: '100%', height: `${height}px` }} />
+          </>
+        )}
       </div>
     </div>
   )

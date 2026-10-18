@@ -44,6 +44,7 @@ interface TopControlsProps {
   onToggleOneClick: () => void
   isFullscreen: boolean
   onToggleFullscreen: () => void
+  hideOneClick?: boolean
 }
 
 export const TIMEFRAMES: Timeframe[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1', 'W1']
@@ -77,6 +78,7 @@ export const Mt5TopControls = memo(function Mt5TopControls({
   onToggleOneClick,
   isFullscreen,
   onToggleFullscreen,
+  hideOneClick,
 }: TopControlsProps) {
   return (
     <div className="shrink-0 flex items-center justify-between gap-1 sm:gap-2 px-2 py-1 bg-surface border-b border-border select-none text-terminal-body overflow-x-auto no-scrollbar">
@@ -200,20 +202,22 @@ export const Mt5TopControls = memo(function Mt5TopControls({
         </button>
 
         {/* 1-Click Execution Box Toggle (Alt+T) */}
-        <button
-          type="button"
-          onClick={onToggleOneClick}
-          className={cn(
-            'flex items-center gap-1 px-2 py-0.5 rounded text-terminal-micro font-semibold transition-all cursor-pointer',
-            showOneClick
-              ? 'text-emerald-500 bg-emerald-500/15 border border-emerald-500/30 shadow-xs'
-              : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
-          )}
-          title="Toggle 1-Click Trading Box (Alt+T)"
-        >
-          <Zap className={cn('w-3 h-3', showOneClick && 'fill-emerald-500')} />
-          <span>1-Click</span>
-        </button>
+        {!hideOneClick && (
+          <button
+            type="button"
+            onClick={onToggleOneClick}
+            className={cn(
+              'flex items-center gap-1 px-2 py-0.5 rounded text-terminal-micro font-semibold transition-all cursor-pointer',
+              showOneClick
+                ? 'text-emerald-500 bg-emerald-500/15 border border-emerald-500/30 shadow-xs'
+                : 'text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle'
+            )}
+            title="Toggle 1-Click Trading Box (Alt+T)"
+          >
+            <Zap className={cn('w-3 h-3', showOneClick && 'fill-emerald-500')} />
+            <span>1-Click</span>
+          </button>
+        )}
 
         {/* Fullscreen Toggle */}
         <button

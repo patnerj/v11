@@ -34,6 +34,8 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 
 export interface Mt5ChartPanelProps {
+  symbol?: string
+  hideOneClick?: boolean
   compact?: boolean
   positions?: Position[] | null
   pendingOrders?: PendingOrder[] | null
@@ -55,6 +57,8 @@ export interface Mt5ChartPanelProps {
 }
 
 export const Mt5ChartPanel = memo(function Mt5ChartPanel({
+  symbol: propSymbol,
+  hideOneClick = false,
   compact,
   positions: propPositions,
   pendingOrders: propPending,
@@ -75,7 +79,8 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   onChangeShowPeriodSeparators: propOnChangeShowPeriodSeparators,
 }: Mt5ChartPanelProps) {
   const canvasRef = useRef<Mt5CanvasHandle>(null)
-  const active = useTerminal((s) => s.active)
+  const storeActive = useTerminal((s) => s.active)
+  const active = propSymbol || storeActive
   const meta = useTerminal((s) => s.getMeta(active))
   const showOneClick = useTerminal((s) => s.showOneClick)
   const toggleOneClick = useTerminal((s) => s.toggleOneClick)
@@ -461,6 +466,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
           onToggleOneClick={toggleOneClick}
           isFullscreen={isChartFs}
           onToggleFullscreen={toggleChartFs}
+          hideOneClick={hideOneClick}
         />
       )}
 
@@ -484,7 +490,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         {/* Canvas & Floating Widgets Area */}
         <div className="relative flex-1 h-full min-w-0 overflow-hidden">
           {/* Top-Left One-Click Trading Widget (Alt+T) */}
-          {showOneClick && (
+          {showOneClick && !hideOneClick && (
             <Mt5OneClick
               symbol={active}
               bid={liveBid}

@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
 import { TournamentPodium } from '@/components/tournaments/tournament-podium'
+import { ArenaChart } from '@/components/arena/arena-chart'
 
 export default function PublicTournamentArena() {
   const params = useParams()
@@ -226,6 +227,23 @@ export default function PublicTournamentArena() {
           }))}
           firstPrize={tournament.prize_pool || '$10,000 + $100K Account'}
         />
+
+        {/* Real-time Tournament Market Action (MT5 Pro / TradingView Dual Engine) */}
+        <div className="w-full space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+            <h3 className="text-xl font-bold text-text flex items-center gap-2">
+              <Activity className="h-5 w-5 text-accent animate-pulse" />
+              Tournament Live Market Action
+            </h3>
+            <span className="text-xs text-text-muted">
+              Live quotes and dual-mode interactive charting powered by AlphaCapital Engine
+            </span>
+          </div>
+          <ArenaChart 
+            symbol={(tournament as any)?.symbol || 'EURUSD'} 
+            height={480} 
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
