@@ -22,6 +22,8 @@ import {
   ChevronDown,
   Zap,
   Activity,
+  CandlestickChart,
+  BarChart2,
   Sliders,
   Maximize2,
   Minimize2,
@@ -350,9 +352,9 @@ export default function Mt5WebTerminalPage() {
                   <ChevronDown className="w-3 h-3 text-text-muted ml-0.5" />
                 </button>
 
-                {/* Timeframe quick switcher pills - 4 core MT5 mobile timeframes (M1, M5, H1, D1) */}
-                <div className="flex items-center bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle shrink-0">
-                  {(['M1', 'M5', 'H1', 'D1'] as Timeframe[]).map((tf) => (
+                {/* Timeframe quick switcher pills - All institutional MT5 timeframes (M1, M5, M15, M30, H1, H4, D1, W1) */}
+                <div className="flex items-center gap-0.5 bg-bg-subtle/80 p-0.5 rounded-md border border-border-subtle overflow-x-auto no-scrollbar shrink-0 max-w-[170px] xs:max-w-[210px] sm:max-w-none">
+                  {TIMEFRAMES.map((tf) => (
                     <button
                       key={tf}
                       type="button"
@@ -361,7 +363,7 @@ export default function Mt5WebTerminalPage() {
                         try { localStorage.setItem('fxsim:mt5:tf', tf) } catch {}
                       }}
                       className={cn(
-                        'px-1.5 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer',
+                        'px-1.5 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap',
                         timeframe === tf
                           ? 'bg-accent text-accent-fg shadow-xs font-bold'
                           : 'text-text-muted hover:text-text'
@@ -377,14 +379,22 @@ export default function Mt5WebTerminalPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const next = chartStyle === 'candlestick' ? 'line' : 'candlestick'
+                      const STYLE_CYCLE: ChartStyle[] = ['candlestick', 'bar', 'line']
+                      const curIdx = STYLE_CYCLE.indexOf(chartStyle)
+                      const next = STYLE_CYCLE[(curIdx + 1) % STYLE_CYCLE.length]
                       setChartStyle(next)
                       try { localStorage.setItem('fxsim:mt5:style', next) } catch {}
                     }}
                     className="p-1 rounded-md text-text-muted hover:text-text hover:bg-surface-muted border border-border-subtle transition-colors cursor-pointer"
-                    title={`Style: ${chartStyle}`}
+                    title={`Chart Style: ${chartStyle} (Tap to cycle Candles, Bars, Line)`}
                   >
-                    <Activity className="w-3.5 h-3.5" />
+                    {chartStyle === 'bar' ? (
+                      <BarChart2 className="w-3.5 h-3.5 text-accent" />
+                    ) : chartStyle === 'line' ? (
+                      <Activity className="w-3.5 h-3.5 text-accent" />
+                    ) : (
+                      <CandlestickChart className="w-3.5 h-3.5 text-accent" />
+                    )}
                   </button>
 
                   <button

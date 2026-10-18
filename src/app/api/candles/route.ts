@@ -110,22 +110,44 @@ export async function GET(req: NextRequest) {
         const q = result.indicators.quote[0]
         const count = ts.length
 
+        const pip = symbol.includes('JPY') ? 0.01 : 0.0001
         const candles = []
         for (let i = 0; i < count; i++) {
           const o = q.open?.[i]
           const h = q.high?.[i]
           const l = q.low?.[i]
           const c = q.close?.[i]
-          const v = q.volume?.[i] || 100
 
           if (o !== null && h !== null && l !== null && c !== null && !isNaN(o) && !isNaN(h) && !isNaN(l) && !isNaN(c)) {
+            const rawO = Number(o)
+            const rawH = Number(h)
+            const rawL = Number(l)
+            const rawC = Number(c)
+            const isFlat = rawO === rawH && rawH === rawL && rawL === rawC
+
+            // Skip zero-range flat weekend / closed artifact bars if not the active last bar
+            if (isFlat && i < count - 1) {
+              continue
+            }
+
+            let adjH = rawH
+            let adjL = rawL
+            if (isFlat) {
+              adjH = rawH + pip * 0.8
+              adjL = rawL - pip * 0.8
+            }
+
+            const pipsSpan = Math.abs(adjH - adjL) / pip
+            const synthVol = Math.max(320, Math.round(pipsSpan * 90 + ((rawO + rawC) * 10000) % 280))
+            const vol = (q.volume?.[i] && Number(q.volume[i]) > 0) ? Math.round(Number(q.volume[i])) : synthVol
+
             candles.push({
               time: Number(ts[i]) * 1000,
-              open: parseFloat(Number(o).toFixed(5)),
-              high: parseFloat(Number(h).toFixed(5)),
-              low: parseFloat(Number(l).toFixed(5)),
-              close: parseFloat(Number(c).toFixed(5)),
-              volume: Math.round(Number(v)),
+              open: parseFloat(rawO.toFixed(5)),
+              high: parseFloat(adjH.toFixed(5)),
+              low: parseFloat(adjL.toFixed(5)),
+              close: parseFloat(rawC.toFixed(5)),
+              volume: vol,
             })
           }
         }

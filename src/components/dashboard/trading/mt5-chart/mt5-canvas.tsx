@@ -192,11 +192,14 @@ export const Mt5Canvas = memo(
     candlesRef.current = candles
     const positionsRef = useRef(positions)
     positionsRef.current = positions
+    const indicatorsRef = useRef(indicators)
+    indicatorsRef.current = indicators
 
     // Touch & Multi-Touch Gesture Engine state
     const touchStateRef = useRef<{
       isDragging: boolean
       isPinching: boolean
+      isDraggingSlTp: boolean
       startX: number
       startY: number
       startScrollOffset: number
@@ -209,6 +212,7 @@ export const Mt5Canvas = memo(
     }>({
       isDragging: false,
       isPinching: false,
+      isDraggingSlTp: false,
       startX: 0,
       startY: 0,
       startScrollOffset: 0,
@@ -307,7 +311,6 @@ export const Mt5Canvas = memo(
       setYScaleFactor(1.0)
       setYScaleOffset(0)
       setScrollOffset(0)
-      toast.info('Chart scale reset to auto-fit')
     }, [])
 
     useImperativeHandle(
@@ -1362,10 +1365,12 @@ export const Mt5Canvas = memo(
       }
 
       // 12. Interactive On-Chart Trade & Pending Order Lines (Drag-and-Drop SL/TP)
-      const symPositions = positions.filter((p) => p.symbol === symbol)
-      const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
+      const showTradePositions = indicators.tradeLevels?.showPositions ?? true
+      const symPositions = showTradePositions ? positions.filter((p) => p.symbol === symbol) : []
+      const symPending = showTradePositions ? pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending') : []
 
       const symMeta = getSymbolMeta(symbol)
+      const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0))
 
       for (const pos of symPositions) {
         const openPrice = toNum(pos.open_price)
@@ -1422,8 +1427,8 @@ export const Mt5Canvas = memo(
         ctx.textAlign = 'center'
         ctx.fillText(`${pos.type.toUpperCase()} ${fmtPrice(openPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yEntry + 4)
 
-        // Hover handles [+ Drag SL] and [+ Drag TP] to the left of right-aligned badge
-        const isHoveringEntry = mousePos && Math.abs(mousePos.y - yEntry) < 18 && mousePos.x < chartW
+        // Hover & Mobile handles [+ Drag SL] and [+ Drag TP] to the left of right-aligned badge
+        const isHoveringEntry = isTouchDevice || (mousePos && Math.abs(mousePos.y - yEntry) < 18 && mousePos.x < chartW)
         if (isHoveringEntry) {
           if (!pos.sl || toNum(pos.sl) === 0) {
             const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
@@ -1479,30 +1484,30 @@ export const Mt5Canvas = memo(
           const slBadgeRight = chartW - 8
           const slBadgeX = slBadgeRight - slBadgeWidth
 
-          // Dotted line stops cleanly before badge with 6px margin
+          // Dotted red line across chart
           ctx.strokeStyle = '#EF4444'
           ctx.lineWidth = 1.5
           ctx.setLineDash([4, 2])
           ctx.beginPath()
           ctx.moveTo(0, Math.floor(ySl) + 0.5)
-          ctx.lineTo(slBadgeX - 6, Math.floor(ySl) + 0.5)
+          ctx.lineTo(chartW, Math.floor(ySl) + 0.5)
           ctx.stroke()
 
-          // 100% Solid Opaque SL Badge
+          // 100% Solid Opaque SL Badge — Positioned BELOW the red line (ySl + 3)
           const slBadgeBg = '#DC2626'
           ctx.fillStyle = slBadgeBg
-          ctx.fillRect(slBadgeX, ySl - 12, slBadgeWidth, 24)
+          ctx.fillRect(slBadgeX, ySl + 3, slBadgeWidth, 22)
           ctx.strokeStyle = '#FFFFFF'
           ctx.lineWidth = 1
-          ctx.strokeRect(slBadgeX, ySl - 12, slBadgeWidth, 24)
+          ctx.strokeRect(slBadgeX, ySl + 3, slBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_LABEL_BOLD
-          ctx.fillText(slText, slBadgeX + 8, ySl + 4)
+          ctx.fillText(slText, slBadgeX + 8, ySl + 18)
 
           // [x] Remove SL
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_CLOSE_BTN
-          ctx.fillText('×', slBadgeRight - 14, ySl + 4)
+          ctx.fillText('×', slBadgeRight - 14, ySl + 18)
 
           // Right Price Axis SL Tag
           ctx.fillStyle = '#DC2626'
@@ -1543,30 +1548,30 @@ export const Mt5Canvas = memo(
           const tpBadgeRight = chartW - 8
           const tpBadgeX = tpBadgeRight - tpBadgeWidth
 
-          // Dotted line stops cleanly before badge with 6px margin
+          // Dotted green line across chart
           ctx.strokeStyle = '#10B981'
           ctx.lineWidth = 1.5
           ctx.setLineDash([4, 2])
           ctx.beginPath()
           ctx.moveTo(0, Math.floor(yTp) + 0.5)
-          ctx.lineTo(tpBadgeX - 6, Math.floor(yTp) + 0.5)
+          ctx.lineTo(chartW, Math.floor(yTp) + 0.5)
           ctx.stroke()
 
-          // 100% Solid Opaque TP Badge
+          // 100% Solid Opaque TP Badge — Positioned ABOVE the green line (yTp - 25)
           const tpBadgeBg = '#059669'
           ctx.fillStyle = tpBadgeBg
-          ctx.fillRect(tpBadgeX, yTp - 12, tpBadgeWidth, 24)
+          ctx.fillRect(tpBadgeX, yTp - 25, tpBadgeWidth, 22)
           ctx.strokeStyle = '#FFFFFF'
           ctx.lineWidth = 1
-          ctx.strokeRect(tpBadgeX, yTp - 12, tpBadgeWidth, 24)
+          ctx.strokeRect(tpBadgeX, yTp - 25, tpBadgeWidth, 22)
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_LABEL_BOLD
-          ctx.fillText(tpText, tpBadgeX + 8, yTp + 4)
+          ctx.fillText(tpText, tpBadgeX + 8, yTp - 10)
 
           // [x] Remove TP
           ctx.fillStyle = '#FFFFFF'
           ctx.font = FONT_CLOSE_BTN
-          ctx.fillText('×', tpBadgeRight - 14, yTp + 4)
+          ctx.fillText('×', tpBadgeRight - 14, yTp - 10)
 
           // Right Price Axis TP Tag
           ctx.fillStyle = '#059669'
@@ -1650,7 +1655,10 @@ export const Mt5Canvas = memo(
       }
 
       // 10. Real-time Bid & Ask Lines with Live Spread Badge
-      if (liveBid > 0 && liveAsk > 0) {
+      const showBidAsk = indicators.tradeLevels?.showBidAsk ?? true
+      const showCountdown = indicators.tradeLevels?.showCountdown ?? true
+
+      if (showBidAsk && liveBid > 0 && liveAsk > 0) {
         const yBid = priceToY(liveBid)
         const yAsk = priceToY(liveAsk)
 
@@ -1673,7 +1681,6 @@ export const Mt5Canvas = memo(
         ctx.lineTo(chartW, Math.floor(yAsk) + 0.5)
         ctx.stroke()
 
-
         // Live Spread Badge between them on right scale
         const spreadP = (liveAsk - liveBid) / symMeta.pipSize
         const midY = (yBid + yAsk) / 2
@@ -1685,7 +1692,12 @@ export const Mt5Canvas = memo(
         ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(`Spread: ${spreadP.toFixed(1)}`, chartW + PRICE_AXIS_WIDTH / 2, midY + 3)
+        ctx.restore()
+      }
 
+      if (liveBid > 0) {
+        const yBid = priceToY(liveBid)
+        ctx.save()
         // Active Live Bid Price Tag on Right Scale (Dynamic Bullish / Bearish color)
         const isBullish = visible.length > 0 && visible[visible.length - 1].close >= visible[visible.length - 1].open
         const bidBg = theme === 'daylight' 
@@ -1703,16 +1715,18 @@ export const Mt5Canvas = memo(
         ctx.fillText(fmtPrice(liveBid, digits), chartW + PRICE_AXIS_WIDTH / 2, yBid + 4)
 
         // Candle Countdown Timer Pill right underneath on Right Scale (Zero overlap in plot area!)
-        const cdText = formatCountdown(countdown)
-        ctx.fillStyle = theme === 'daylight' ? '#FFFFFF' : 'rgba(5, 8, 17, 0.95)'
-        ctx.fillRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
-        ctx.strokeStyle = bidBg
-        ctx.lineWidth = 1
-        ctx.strokeRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
-        ctx.fillStyle = theme === 'daylight' ? '#0f172a' : '#F59E0B'
-        ctx.font = FONT_MICRO_BOLD
-        ctx.textAlign = 'center'
-        ctx.fillText(cdText, chartW + PRICE_AXIS_WIDTH / 2, yBid + 24)
+        if (showCountdown) {
+          const cdText = formatCountdown(countdown)
+          ctx.fillStyle = theme === 'daylight' ? '#FFFFFF' : 'rgba(5, 8, 17, 0.95)'
+          ctx.fillRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
+          ctx.strokeStyle = bidBg
+          ctx.lineWidth = 1
+          ctx.strokeRect(chartW + 4, yBid + 12, PRICE_AXIS_WIDTH - 8, 16)
+          ctx.fillStyle = theme === 'daylight' ? '#0f172a' : '#F59E0B'
+          ctx.font = FONT_MICRO_BOLD
+          ctx.textAlign = 'center'
+          ctx.fillText(cdText, chartW + PRICE_AXIS_WIDTH / 2, yBid + 24)
+        }
 
         ctx.restore()
       }
@@ -2020,8 +2034,8 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (d) Click [x] Remove SL (Right-aligned [x] on SL badge)
-        if (slPrice > 0 && Math.abs(y - ySl) < 11 && x >= chartW - 28 && x <= chartW + 2) {
+        // (d) Click [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
+        if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
           api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()
@@ -2033,8 +2047,8 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (e) Click [x] Remove TP (Right-aligned [x] on TP badge)
-        if (tpPrice > 0 && Math.abs(y - yTp) < 11 && x >= chartW - 28 && x <= chartW + 2) {
+        // (e) Click [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
+        if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
           api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
             if (r.ok && r.data.success) {
               playOrderSuccessSound()
@@ -2046,8 +2060,8 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (f) Drag existing SL Line
-        if (slPrice > 0 && Math.abs(y - ySl) < 10 && x < chartW - 28) {
+        // (f) Drag existing SL Line or SL badge (below line)
+        if (slPrice > 0 && (Math.abs(y - ySl) < 12 || (y >= ySl - 2 && y <= ySl + 26 && x >= badgeRight - 220)) && x < chartW - 28) {
           draggingSlTpRef.current = {
             posId: pos.id,
             type: 'sl',
@@ -2058,8 +2072,8 @@ export const Mt5Canvas = memo(
           return
         }
 
-        // (g) Drag existing TP Line
-        if (tpPrice > 0 && Math.abs(y - yTp) < 10 && x < chartW - 28) {
+        // (g) Drag existing TP Line or TP badge (above line)
+        if (tpPrice > 0 && (Math.abs(y - yTp) < 12 || (y >= yTp - 26 && y <= yTp + 2 && x >= badgeRight - 220)) && x < chartW - 28) {
           draggingSlTpRef.current = {
             posId: pos.id,
             type: 'tp',
@@ -2658,28 +2672,130 @@ export const Mt5Canvas = memo(
           touchStateRef.current.lastTapTime = now
 
           const isAxis = x >= chartW
+          const showTradePositions = indicatorsRef.current.tradeLevels?.showPositions ?? true
 
-          // Quick tap to close position [x] button on chart
-          const symPositions = positionsRef.current.filter((p) => p.symbol === symbol)
-          for (const pos of symPositions) {
-            const openPrice = toNum(pos.open_price)
-            const yEntry = priceToY(openPrice)
-            const badgeRight = chartW - 8
-            if (Math.abs(y - yEntry) < 18 && x >= badgeRight - 38 && x <= badgeRight + 10) {
-              api.close(pos.id).then((r) => {
-                if (r.ok && r.data.success) {
-                  playOrderSuccessSound()
-                  toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
-                  invalidateFxsim('/positions')
-                  invalidateFxsim('/account')
-                  onChanged?.()
+          if (showTradePositions) {
+            const symPositions = positionsRef.current.filter((p) => p.symbol === symbol)
+            for (const pos of symPositions) {
+              const openPrice = toNum(pos.open_price)
+              const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
+              const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
+              const yEntry = priceToY(openPrice)
+              const ySl = slPrice > 0 ? priceToY(slPrice) : -999
+              const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
+              const isBuy = pos.type === 'buy'
+              const badgeRight = chartW - 8
+              const entryBadgeW = 140 + digits * 8 + 36
+              const badgeX = badgeRight - entryBadgeW
+
+              // (a) Quick tap to close position [x] button on chart
+              if (Math.abs(y - yEntry) < 20 && x >= badgeRight - 38 && x <= badgeRight + 12) {
+                api.close(pos.id).then((r) => {
+                  if (r.ok && r.data.success) {
+                    playOrderSuccessSound()
+                    toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
+                    invalidateFxsim('/positions')
+                    invalidateFxsim('/account')
+                    onChanged?.()
+                  }
+                })
+                return
+              }
+
+              // (b) Touch [+ Drag SL] handle (Left of right-aligned badge)
+              const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
+              const slHandleX = badgeX - 78
+              if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 22 && x >= slHandleX - 14 && x <= slHandleX + 85) {
+                touchStateRef.current.isDragging = false
+                touchStateRef.current.isDraggingSlTp = true
+                draggingSlTpRef.current = {
+                  posId: pos.id,
+                  type: 'new_sl',
+                  currentPrice: openPrice,
+                  initialPrice: openPrice,
+                  pos,
                 }
-              })
-              return
+                if (e.cancelable) e.preventDefault()
+                return
+              }
+
+              // (c) Touch [+ Drag TP] handle (Left of right-aligned badge)
+              const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
+              const tpHandleX = badgeX - 156
+              if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 22 && x >= tpHandleX - 14 && x <= tpHandleX + 85) {
+                touchStateRef.current.isDragging = false
+                touchStateRef.current.isDraggingSlTp = true
+                draggingSlTpRef.current = {
+                  posId: pos.id,
+                  type: 'new_tp',
+                  currentPrice: openPrice,
+                  initialPrice: openPrice,
+                  pos,
+                }
+                if (e.cancelable) e.preventDefault()
+                return
+              }
+
+              // (d) Tap [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
+              if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 20 && x >= chartW - 32 && x <= chartW + 6) {
+                api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
+                  if (r.ok && r.data.success) {
+                    playOrderSuccessSound()
+                    toast.success(`Removed Stop Loss from #${pos.id}`)
+                    invalidateFxsim('/positions')
+                    onChanged?.()
+                  }
+                })
+                return
+              }
+
+              // (e) Tap [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
+              if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 20 && x >= chartW - 32 && x <= chartW + 6) {
+                api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
+                  if (r.ok && r.data.success) {
+                    playOrderSuccessSound()
+                    toast.success(`Removed Take Profit from #${pos.id}`)
+                    invalidateFxsim('/positions')
+                    onChanged?.()
+                  }
+                })
+                return
+              }
+
+              // (f) Touch & Drag existing SL Line or SL badge (below line)
+              if (slPrice > 0 && (Math.abs(y - ySl) < 18 || (y >= ySl - 4 && y <= ySl + 28 && x >= badgeRight - 220 && x <= chartW - 30))) {
+                touchStateRef.current.isDragging = false
+                touchStateRef.current.isDraggingSlTp = true
+                draggingSlTpRef.current = {
+                  posId: pos.id,
+                  type: 'sl',
+                  currentPrice: slPrice,
+                  initialPrice: slPrice,
+                  pos,
+                }
+                if (e.cancelable) e.preventDefault()
+                return
+              }
+
+              // (g) Touch & Drag existing TP Line or TP badge (above line)
+              if (tpPrice > 0 && (Math.abs(y - yTp) < 18 || (y >= yTp - 28 && y <= yTp + 4 && x >= badgeRight - 220 && x <= chartW - 30))) {
+                touchStateRef.current.isDragging = false
+                touchStateRef.current.isDraggingSlTp = true
+                draggingSlTpRef.current = {
+                  posId: pos.id,
+                  type: 'tp',
+                  currentPrice: tpPrice,
+                  initialPrice: tpPrice,
+                  pos,
+                }
+                if (e.cancelable) e.preventDefault()
+                return
+              }
             }
           }
 
           touchStateRef.current.isDragging = true
+          touchStateRef.current.isDraggingSlTp = false
           touchStateRef.current.isPinching = false
           touchStateRef.current.isAxisDrag = isAxis
           touchStateRef.current.startX = x
@@ -2695,6 +2811,7 @@ export const Mt5Canvas = memo(
           const t1 = e.touches[1]
           const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
           touchStateRef.current.isDragging = false
+          touchStateRef.current.isDraggingSlTp = false
           touchStateRef.current.isPinching = true
           touchStateRef.current.initialPinchDistance = Math.max(10, dist)
           touchStateRef.current.initialCandleWidth = candleWidthRef.current
@@ -2708,7 +2825,7 @@ export const Mt5Canvas = memo(
         }
 
         const rect = canvas.getBoundingClientRect()
-        if (e.touches.length === 1 && touchStateRef.current.isDragging) {
+        if (e.touches.length === 1) {
           const touch = e.touches[0]
           const x = touch.clientX - rect.left
           const y = touch.clientY - rect.top
@@ -2717,29 +2834,63 @@ export const Mt5Canvas = memo(
           mousePosRef.current = { x, y, onAxis: x >= chartW, onChart: x < chartW }
           setMousePos({ x, y, onAxis: x >= chartW, onChart: x < chartW })
 
-          if (touchStateRef.current.isAxisDrag) {
-            const deltaY = touchStateRef.current.startY - y
-            const factorChange = deltaY * 0.005
-            const newFactor = Math.max(0.2, Math.min(6.0, touchStateRef.current.startYScaleFactor + factorChange))
-            setYScaleFactor(parseFloat(newFactor.toFixed(3)))
+          // Active Touch SL/TP Dragging
+          if (touchStateRef.current.isDraggingSlTp && draggingSlTpRef.current) {
+            const curPrice = yToPrice(y)
+            const pos = draggingSlTpRef.current.pos
+            const openPrice = toNum(pos.open_price)
+            const symMeta = getSymbolMeta(symbol)
+            const isBuy = pos.type === 'buy'
+            const activePrices = usePrices.getState().prices
+
+            const distPips = Math.abs(curPrice - openPrice) / symMeta.pipSize
+            const projPnl =
+              calcLevelPnL({
+                level: curPrice,
+                entry: openPrice,
+                lots: toNum(pos.lot_size ?? (pos as any).lots ?? (pos as any).volume ?? 0.01),
+                contractSize: symMeta.contractSize,
+                mode: 'market',
+                isBuy,
+                quoteToUsd: quoteToUsdRate(symbol, openPrice, activePrices),
+              }) || 0
+
+            draggingSlTpRef.current.currentPrice = curPrice
+            setDraggingSlTpPreview({
+              posId: pos.id,
+              type: draggingSlTpRef.current.type,
+              price: curPrice,
+              pips: distPips,
+              estPnL: projPnl,
+            })
             return
           }
 
-          // 2D Pan (Horizontal Time Pan + Vertical Price Pan)
-          const deltaX = x - touchStateRef.current.startX
-          const curCandleW = candleWidthRef.current
-          const candlesMoved = deltaX / curCandleW
-          const visibleBars = Math.ceil(chartW / curCandleW)
-          const minOffset = -Math.floor(visibleBars * 0.7)
-          const maxOffset = Math.max(10, candlesRef.current.length - 10)
-          const newOffset = Math.max(minOffset, Math.min(maxOffset, touchStateRef.current.startScrollOffset + candlesMoved))
-          setScrollOffset(parseFloat(newOffset.toFixed(1)))
+          if (touchStateRef.current.isDragging) {
+            if (touchStateRef.current.isAxisDrag) {
+              const deltaY = touchStateRef.current.startY - y
+              const factorChange = deltaY * 0.005
+              const newFactor = Math.max(0.2, Math.min(6.0, touchStateRef.current.startYScaleFactor + factorChange))
+              setYScaleFactor(parseFloat(newFactor.toFixed(3)))
+              return
+            }
 
-          const deltaY = y - touchStateRef.current.startY
-          const { range } = getPriceBounds()
-          const pricePerPx = range / Math.max(1, mainH)
-          const newYOffset = touchStateRef.current.startYScaleOffset + deltaY * pricePerPx
-          setYScaleOffset(parseFloat(newYOffset.toFixed(digits > 2 ? 2 : 5)))
+            // 2D Pan (Horizontal Time Pan + Vertical Price Pan)
+            const deltaX = x - touchStateRef.current.startX
+            const curCandleW = candleWidthRef.current
+            const candlesMoved = deltaX / curCandleW
+            const visibleBars = Math.ceil(chartW / curCandleW)
+            const minOffset = -Math.floor(visibleBars * 0.7)
+            const maxOffset = Math.max(10, candlesRef.current.length - 10)
+            const newOffset = Math.max(minOffset, Math.min(maxOffset, touchStateRef.current.startScrollOffset + candlesMoved))
+            setScrollOffset(parseFloat(newOffset.toFixed(1)))
+
+            const deltaY = y - touchStateRef.current.startY
+            const { range } = getPriceBounds()
+            const pricePerPx = range / Math.max(1, mainH)
+            const newYOffset = touchStateRef.current.startYScaleOffset + deltaY * pricePerPx
+            setYScaleOffset(parseFloat(newYOffset.toFixed(digits > 2 ? 2 : 5)))
+          }
         } else if (e.touches.length === 2 && touchStateRef.current.isPinching) {
           const t0 = e.touches[0]
           const t1 = e.touches[1]
@@ -2751,6 +2902,36 @@ export const Mt5Canvas = memo(
       }
 
       const onTouchEnd = (e: TouchEvent) => {
+        if (touchStateRef.current.isDraggingSlTp) {
+          touchStateRef.current.isDraggingSlTp = false
+          if (draggingSlTpRef.current) {
+            const pos = draggingSlTpRef.current.pos
+            const finalPrice = draggingSlTpRef.current.currentPrice
+            const newPrice = parseFloat(finalPrice.toFixed(digits))
+            const isSl = draggingSlTpRef.current.type === 'sl' || draggingSlTpRef.current.type === 'new_sl'
+
+            const finalSl = isSl ? newPrice : pos.sl !== null ? toNum(pos.sl) : null
+            const finalTp = !isSl ? newPrice : pos.tp !== null ? toNum(pos.tp) : null
+
+            api.sltp(pos.id, finalSl, finalTp).then((r) => {
+              if (r.ok && r.data.success) {
+                playOrderSuccessSound()
+                toast.success(
+                  `Updated ${isSl ? 'Stop Loss' : 'Take Profit'} for #${pos.id} @ ${fmtPrice(newPrice, digits)}`
+                )
+                invalidateFxsim('/positions')
+                onChanged?.()
+              } else {
+                playOrderLossThumpSound()
+                toast.error(r.ok ? r.data?.message || 'Failed to update SL/TP' : 'Network error')
+              }
+            })
+            draggingSlTpRef.current = null
+            setDraggingSlTpPreview(null)
+          }
+          return
+        }
+
         if (e.touches.length === 0) {
           touchStateRef.current.isDragging = false
           touchStateRef.current.isPinching = false

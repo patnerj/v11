@@ -191,7 +191,7 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
                 <label className="block text-xs font-semibold text-text mb-1.5">
                   Color Theme Preset
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { id: 'cyber', label: 'Obsidian Cyber 🌙', desc: 'Emerald & Rose' },
                     { id: 'classic', label: 'MT5 Classic 🟢', desc: 'Green on Black' },
@@ -202,13 +202,13 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
                       type="button"
                       onClick={() => onChangeTheme?.(t.id as any)}
                       className={cn(
-                        'flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer text-center',
+                        'flex flex-col items-center justify-center p-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer text-center',
                         theme === t.id
                           ? 'border-accent bg-accent/15 text-accent shadow-xs'
                           : 'border-border bg-surface hover:bg-surface-muted text-text-muted hover:text-text'
                       )}
                     >
-                      <span className="whitespace-nowrap">{t.label}</span>
+                      <span className="font-medium">{t.label}</span>
                       <span className="text-[10px] font-normal text-text-muted mt-0.5">{t.desc}</span>
                     </button>
                   ))}
@@ -243,6 +243,84 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
                   type="checkbox"
                   checked={showPeriodSeparators}
                   onChange={(e) => onChangeShowPeriodSeparators?.(e.target.checked)}
+                  className="w-4 h-4 rounded accent-accent cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Trade Levels & Visibility (Positions, SL/TP, Bid/Ask, Countdown) */}
+          <div>
+            <h4 className="text-terminal-micro font-bold uppercase tracking-wider text-text-muted mb-2">
+              Trade Levels & Price Visibility
+            </h4>
+            <div className="space-y-3 bg-bg-subtle/60 border border-border rounded-xl p-3">
+              {/* Show Positions & Order Levels */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-text">Positions & Trade Levels</span>
+                  <p className="text-terminal-micro text-text-muted">Display open trades, Stop Loss (SL), Take Profit (TP), and pending orders</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.tradeLevels?.showPositions ?? true}
+                  onChange={(e) =>
+                    update({
+                      tradeLevels: {
+                        showPositions: e.target.checked,
+                        showBidAsk: config.tradeLevels?.showBidAsk ?? true,
+                        showCountdown: config.tradeLevels?.showCountdown ?? true,
+                      },
+                    })
+                  }
+                  className="w-4 h-4 rounded accent-accent cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full h-px bg-border-subtle" />
+
+              {/* Show Bid / Ask Price Lines */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-text">Bid & Ask Price Lines</span>
+                  <p className="text-terminal-micro text-text-muted">Display real-time Bid / Ask horizontal lines and live spread badge</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.tradeLevels?.showBidAsk ?? true}
+                  onChange={(e) =>
+                    update({
+                      tradeLevels: {
+                        showPositions: config.tradeLevels?.showPositions ?? true,
+                        showBidAsk: e.target.checked,
+                        showCountdown: config.tradeLevels?.showCountdown ?? true,
+                      },
+                    })
+                  }
+                  className="w-4 h-4 rounded accent-accent cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full h-px bg-border-subtle" />
+
+              {/* Show Candle Countdown Timer */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-text">Candle Countdown Timer</span>
+                  <p className="text-terminal-micro text-text-muted">Display bar remaining countdown badge on price axis</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.tradeLevels?.showCountdown ?? true}
+                  onChange={(e) =>
+                    update({
+                      tradeLevels: {
+                        showPositions: config.tradeLevels?.showPositions ?? true,
+                        showBidAsk: config.tradeLevels?.showBidAsk ?? true,
+                        showCountdown: e.target.checked,
+                      },
+                    })
+                  }
                   className="w-4 h-4 rounded accent-accent cursor-pointer"
                 />
               </div>

@@ -209,6 +209,11 @@ export interface IndicatorsConfig {
   volume: {
     enabled: boolean
   }
+  tradeLevels?: {
+    showPositions: boolean
+    showBidAsk: boolean
+    showCountdown: boolean
+  }
 }
 
 export const DEFAULT_INDICATORS: IndicatorsConfig = {
@@ -257,6 +262,11 @@ export const DEFAULT_INDICATORS: IndicatorsConfig = {
   },
   volume: {
     enabled: true,
+  },
+  tradeLevels: {
+    showPositions: true,
+    showBidAsk: true,
+    showCountdown: true,
   },
 }
 

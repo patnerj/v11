@@ -165,10 +165,11 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
   // Candles State - Synchronously initialized so chart renders instantly on mount!
   const [candles, setCandles] = useState<any[]>(() => {
+    const initBid = usePrices.getState().prices[active]?.bid
     return getInitialCachedCandles({
       symbol: active,
       timeframe,
-      anchorPrice: undefined,
+      anchorPrice: initBid && Number(initBid) > 0 ? Number(initBid) : undefined,
       digits,
       pipSize: pSize,
     })
