@@ -117,7 +117,7 @@ export const api = {
 
   // ── Challenge ─────────────────────────────────────────────────────────
   challengeMy:      ()           => fxsim<ChallengeAccount[]>('/challenge/my', { cache: 8_000 }),
-  challengeStart:   (planId: number, couponCode?: string) => fxsim<{ success: boolean; message?: string; requires_payment?: boolean; plan_id?: number; amount?: number }>('/challenge/start', { body: { plan_id: planId, coupon_code: couponCode } }),
+  challengeStart:   (planId: number, couponCode?: string, addons?: string[]) => fxsim<{ success: boolean; message?: string; requires_payment?: boolean; plan_id?: number; amount?: number }>('/challenge/start', { body: { plan_id: planId, coupon_code: couponCode, addons } }),
   challengeMetrics: (id: number) => fxsim<ChallengeMetrics>(`/challenge/${id}/metrics`, { cache: 6_000 }),
   challengeMt5:     (id: number) => fxsim<{ ready: boolean; message?: string; mt5_login?: string; mt5_password?: string; mt5_server?: string; mt5_account_type?: string }>(`/challenge/${id}/mt5-details`, { cache: 30_000 }),
   challengePayout:  (id: number, method: string, address: string, amount?: number) =>
@@ -210,13 +210,13 @@ export const api = {
   affiliateLeaderboard: () => fxsim<Array<{ name: string; earned: number }> | { success: boolean; leaderboard: Array<{ name: string; earned: number }> }>('/stats/affiliate-leaderboard', { public: true, cache: 60_000 }),
   // ── Payments ──────────────────────────────────────────────────────────
   paymentConfig:    ()           => fxsim<PaymentConfig>('/payment/config', { cache: 60_000 }),
-  paymentCreate:    (planId: number, gateway: string, couponCode?: string, tournamentId?: number) =>
-    fxsim<{ success: boolean; message?: string; order_id?: number; amount?: number; original?: number; discount?: number; payment_url?: string }>('/payment/create', { body: { plan_id: planId, tournament_id: tournamentId, gateway, coupon_code: couponCode } }),
+  paymentCreate:    (planId: number, gateway: string, couponCode?: string, tournamentId?: number, addons?: string[]) =>
+    fxsim<{ success: boolean; message?: string; order_id?: number; amount?: number; original?: number; discount?: number; payment_url?: string }>('/payment/create', { body: { plan_id: planId, tournament_id: tournamentId, gateway, coupon_code: couponCode, addons } }),
   paymentSubmitProof: (form: FormData) =>
     fxsim<{ success: boolean; message?: string }>('/payment/submit-proof', { form, timeout: 60_000 }),
   paymentMyOrders:  (force = false) => fxsim<PaymentOrder[]>('/payment/my-orders', { cache: force ? 0 : 10_000, force }),
-  stripeCheckout:   (planId: number, couponCode?: string, tournamentId?: number) =>
-    fxsim<{ success: boolean; message?: string; checkout_url?: string }>('/payment/stripe-checkout', { body: { plan_id: planId, coupon_code: couponCode, tournament_id: tournamentId } }),
+  stripeCheckout:   (planId: number, couponCode?: string, tournamentId?: number, addons?: string[]) =>
+    fxsim<{ success: boolean; message?: string; checkout_url?: string }>('/payment/stripe-checkout', { body: { plan_id: planId, coupon_code: couponCode, tournament_id: tournamentId, addons } }),
   couponValidate:   (code: string, planId: number) =>
     fxsim<{ valid: boolean; message: string; code?: string; type?: string; value?: number; original?: number; discount?: number; final?: number }>('/coupon/validate', { body: { code, plan_id: planId } }),
   affiliateMe:      () => fxsim<AffiliateMe>('/affiliate/me', { cache: 10_000 }),

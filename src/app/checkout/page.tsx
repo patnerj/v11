@@ -50,6 +50,8 @@ function CheckoutInner() {
   const parsedId = Number(rawPlanParam)
   const planId = !isNaN(parsedId) && parsedId > 0 ? parsedId : 0
   const tournamentId = Number(params.get('tournament') ?? 0)
+  const rawAddonsParam = params.get('addons')
+  const addonsToSend = rawAddonsParam ? rawAddonsParam.split(',').map((s) => s.trim()).filter(Boolean) : undefined
   
   const { user, ready } = useAuth()
   
@@ -249,7 +251,7 @@ function CheckoutInner() {
     setError(null)
     try {
       const couponToSend = couponInfo ? couponInfo.code : undefined
-      const res = await api.challengeStart(plan.id, couponToSend)
+      const res = await api.challengeStart(plan.id, couponToSend, addonsToSend)
       if (res.ok && !res.data.requires_payment) {
         toast.success('Challenge started!')
         // FIX: full reload instead of router.push — kills SPA/RSC staleness so the
@@ -279,7 +281,7 @@ function CheckoutInner() {
       orderInflight.current = true
       setLoading(true)
       try {
-        const res = await api.stripeCheckout(plan.id, couponToSend, tournamentId || undefined)
+        const res = await api.stripeCheckout(plan.id, couponToSend, tournamentId || undefined, addonsToSend)
         if (res.ok && res.data.checkout_url) {
           window.location.href = res.data.checkout_url
         } else {
@@ -298,7 +300,7 @@ function CheckoutInner() {
       orderInflight.current = true
       setLoading(true)
       try {
-        const res = await api.paymentCreate(plan.id, 'confirmo', couponToSend, tournamentId || undefined)
+        const res = await api.paymentCreate(plan.id, 'confirmo', couponToSend, tournamentId || undefined, addonsToSend)
         if (res.ok && res.data.payment_url) {
           window.location.href = res.data.payment_url
         } else {
@@ -317,7 +319,7 @@ function CheckoutInner() {
       orderInflight.current = true
       setLoading(true)
       try {
-        const res = await api.paymentCreate(plan.id, 'coinpayments', couponToSend, tournamentId || undefined)
+        const res = await api.paymentCreate(plan.id, 'coinpayments', couponToSend, tournamentId || undefined, addonsToSend)
         if (res.ok && res.data.payment_url) {
           window.location.href = res.data.payment_url
         } else {
@@ -343,7 +345,7 @@ function CheckoutInner() {
     orderInflight.current = true
     setLoading(true)
     try {
-      const res = await api.paymentCreate(plan.id, g === 'manual_crypto' ? 'crypto' : g, couponToSend, tournamentId || undefined)
+      const res = await api.paymentCreate(plan.id, g === 'manual_crypto' ? 'crypto' : g, couponToSend, tournamentId || undefined, addonsToSend)
       if (res.ok && res.data.order_id) {
         setOrderId(res.data.order_id)
         invalidateFxsim('/payment/my-orders')
