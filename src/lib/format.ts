@@ -121,6 +121,7 @@ export const statusLabel = (status: string) => {
   const map: Record<string, string> = {
     active: 'In Evaluation', passed: 'Passed', failed: 'Failed',
     funded: 'Funded', suspended: 'Suspended', breached: 'Breached',
+    dormant: 'Dormant',
   }
   return map[status] ?? status
 }
@@ -128,7 +129,7 @@ export const statusLabel = (status: string) => {
 export const statusTone = (status: string): 'success' | 'danger' | 'warn' | 'info' | 'neutral' => {
   const map: Record<string, 'success' | 'danger' | 'warn' | 'info' | 'neutral'> = {
     active: 'info', passed: 'success', funded: 'success',
-    failed: 'danger', breached: 'danger', suspended: 'warn',
+    failed: 'danger', breached: 'danger', suspended: 'warn', dormant: 'warn',
     pending: 'warn', submitted: 'warn', approved: 'success', rejected: 'danger',
   }
   return map[status] ?? 'neutral'

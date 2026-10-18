@@ -159,6 +159,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
             await (adminMode ? api.admin.notificationsRead([]) : api.notificationsRead([]))
             loadNotifs()
             void queryClient.invalidateQueries({ queryKey: ['notifications'] })
+            void queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })
           }}
           onRead={(id: number) => {
             if (adminMode) api.admin.notificationsRead([id])
@@ -181,6 +182,7 @@ export function Topbar({ onMenuClick = () => {}, role, user: userProp }: TopbarP
               }
             })
             void queryClient.invalidateQueries({ queryKey: ['notifications'] })
+            void queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })
           }}
         />
 

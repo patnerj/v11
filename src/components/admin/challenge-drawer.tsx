@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { fmtUSD, fmtPct, fmtDate, statusTone, statusLabel, toNum } from '@/lib/format'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
+import { api } from '@/lib/api'
 import Link from 'next/link'
 
 interface ChallengeDrawerProps {
@@ -67,9 +68,13 @@ export function ChallengeDrawer({
     if (!window.confirm(`Are you sure you want to RESET Challenge #${challenge.id}? This will restore balance to ${fmtUSD(size)} and clear breaches.`)) return
     setIsResetting(true)
     try {
-      await new Promise(r => setTimeout(r, 600))
-      toast.success(`Challenge #${challenge.id} successfully reset to ${fmtUSD(size)}!`)
-      onRefresh?.()
+      const res = await api.admin.testToolsSet(challenge.id, 'reset')
+      if (res.ok) {
+        toast.success(`Challenge #${challenge.id} successfully reset to ${fmtUSD(size)}!`)
+        onRefresh?.()
+      } else {
+        toast.error(res.error || 'Failed to reset challenge')
+      }
     } catch (e: any) {
       toast.error('Failed to reset challenge')
     } finally {
@@ -83,13 +88,37 @@ export function ChallengeDrawer({
     if (!window.confirm(`Advance Challenge #${challenge.id} to ${nextPhaseName}?`)) return
     setIsAdvancing(true)
     try {
-      await new Promise(r => setTimeout(r, 600))
-      toast.success(`Challenge #${challenge.id} advanced to ${nextPhaseName}!`)
-      onRefresh?.()
+      const action = nextPhase === 2 ? 'phase1' : 'funded'
+      const res = await api.admin.testToolsSet(challenge.id, action)
+      if (res.ok) {
+        toast.success(`Challenge #${challenge.id} advanced to ${nextPhaseName}!`)
+        onRefresh?.()
+      } else {
+        toast.error(res.error || 'Failed to advance phase')
+      }
     } catch (e: any) {
       toast.error('Failed to advance phase')
     } finally {
       setIsAdvancing(false)
+    }
+  }
+
+  const [isReactivating, setIsReactivating] = useState(false)
+  const handleReactivateChallenge = async () => {
+    if (!window.confirm(`Reactivate / Unsuspend Challenge #${challenge.id}? This will restore the account to active trading.`)) return
+    setIsReactivating(true)
+    try {
+      const res = await api.admin.testToolsSet(challenge.id, 'unsuspend')
+      if (res.ok) {
+        toast.success(`Challenge #${challenge.id} successfully reactivated!`)
+        onRefresh?.()
+      } else {
+        toast.error(res.error || 'Failed to reactivate challenge')
+      }
+    } catch (e: any) {
+      toast.error('Failed to reactivate challenge')
+    } finally {
+      setIsReactivating(false)
     }
   }
 
@@ -381,6 +410,19 @@ export function ChallengeDrawer({
                     <FastForward className="h-4 w-4" />
                     <span>Advance Phase</span>
                   </Button>
+
+                  {(challenge.status === 'suspended' || challenge.status === 'dormant') && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 justify-start gap-2 border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10 col-span-full"
+                      onClick={handleReactivateChallenge}
+                      loading={isReactivating}
+                    >
+                      <Activity className="h-4 w-4 text-emerald-500" />
+                      <span>Unsuspend / Reactivate Trading</span>
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -436,6 +478,18 @@ export function ChallengeDrawer({
             <Button variant="ghost" size="sm" onClick={onClose} className="h-8 text-xs">
               Close Drawer
             </Button>
+            {(challenge.status === 'suspended' || challenge.status === 'dormant') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReactivateChallenge}
+                loading={isReactivating}
+                className="h-8 text-xs border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10 gap-1.5"
+              >
+                <Activity className="h-3.5 w-3.5" />
+                Reactivate
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

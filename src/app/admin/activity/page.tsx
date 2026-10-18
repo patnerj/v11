@@ -117,6 +117,7 @@ export default function AdminActivityPage() {
       if (res.ok) {
         toast.success('All notifications marked as read.')
         queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })
+        queryClient.invalidateQueries({ queryKey: ['topbar.notifs'] })
       } else {
         toast.error(res.error || 'Failed to mark notifications as read.')
       }
@@ -130,6 +131,7 @@ export default function AdminActivityPage() {
       const res = await api.admin.notificationsRead([id])
       if (res.ok) {
         queryClient.invalidateQueries({ queryKey: ['admin-activity-notifications'] })
+        queryClient.invalidateQueries({ queryKey: ['topbar.notifs'] })
       } else {
         toast.error(res.error || 'Failed to mark notification as read.')
       }

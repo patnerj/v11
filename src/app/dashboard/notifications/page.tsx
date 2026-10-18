@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { api } from '@/lib/api'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { timeAgo } from '@/lib/format'
 import type { Notification } from '@/types/api'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +15,7 @@ import { Bell, Check, CheckCheck, Info, AlertCircle, AlertTriangle, CheckCircle2
 import { cn } from '@/lib/cn'
 
 export default function NotificationsPage() {
+  const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [page, setPage] = useState(1)
   const [items, setItems] = useState<Notification[]>([])
@@ -82,6 +83,8 @@ export default function NotificationsPage() {
     await api.notificationsRead([])
     setPage(1)
     refetch()
+    void queryClient.invalidateQueries({ queryKey: ['topbar.notifs'] })
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] })
   }
 
   const markOneRead = async (id: number) => {
@@ -89,6 +92,8 @@ export default function NotificationsPage() {
     setItems(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n))
     setUnreadCount(u => Math.max(0, u - 1))
     refetch()
+    void queryClient.invalidateQueries({ queryKey: ['topbar.notifs'] })
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] })
   }
 
   const handleLoadMore = () => {

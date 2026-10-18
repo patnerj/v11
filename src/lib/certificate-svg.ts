@@ -40,7 +40,8 @@ export function buildCertificateSvg(
 ): string {
   const funded = (cert.status ?? '') === 'funded'
   const kind = funded ? 'Funded Trader' : 'Evaluation Pass'
-  const certDate = cert.issued_date ? new Date(cert.issued_date) : new Date()
+  const rawDate = (cert as any).issued_date_iso || cert.issued_date
+  const certDate = rawDate ? new Date(rawDate) : new Date()
   const safeCertDate = isNaN(certDate.getTime()) ? new Date() : certDate
   const year = safeCertDate.getFullYear()
   const verificationId = `PFL-${year}-${String(cert.challenge_id || 101).padStart(6, '0')}`
@@ -57,6 +58,16 @@ export function buildCertificateSvg(
   const H = 1080
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <title>${brand} — ${kind} Certificate — ${trader}</title>
+  <desc>Official certified credential for ${trader} (${verificationId})</desc>
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <dc:title>${brand} ${kind} Certificate</dc:title>
+      <dc:creator>${brand}</dc:creator>
+      <dc:identifier>${verificationId}</dc:identifier>
+      <dc:date>${safeCertDate.toISOString()}</dc:date>
+    </rdf:RDF>
+  </metadata>
   <defs>
     <linearGradient id="cert-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#050811"/>
@@ -236,6 +247,16 @@ export function buildPayoutCertificateSvg(
   const H = 1080
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <title>${brand} — Profit Disbursement Certificate — ${trader}</title>
+  <desc>Official certified payout disbursement credential for ${trader} (${verificationId})</desc>
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <dc:title>${brand} Profit Disbursement Certificate</dc:title>
+      <dc:creator>${brand}</dc:creator>
+      <dc:identifier>${verificationId}</dc:identifier>
+      <dc:date>${safePoDate.toISOString()}</dc:date>
+    </rdf:RDF>
+  </metadata>
   <defs>
     <linearGradient id="payout-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#04090F"/>

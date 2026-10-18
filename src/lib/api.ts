@@ -102,7 +102,7 @@ export const api = {
   partialClose:  (id: number, lots: number) => fxsim<{ success: boolean; message?: string }>(`/partial-close/${id}`, { body: { lots }, retries: 0 }),
   sltp:          (id: number, sl: number | null, tp: number | null) =>
     fxsim<{ success: boolean; message?: string }>(`/sltp/${id}`, { body: { sl, tp } }),
-  history:       (lastId?: number, params?: { account_id?: number; tournament_id?: number }) => fxsim<HistoryResp>('/history', { query: { last_id: lastId, ...(params || {}) }, cache: 6_000 }),
+  history:       (lastId?: number, params?: { account_id?: number; tournament_id?: number; symbol?: string; type?: string; filter?: string; from?: string; to?: string; limit?: number }) => fxsim<HistoryResp>('/history', { query: { last_id: lastId, ...(params || {}) }, cache: 6_000 }),
   tradeNotesGet: (id: number) => fxsim<{ note?: string; tags?: string; screenshot_url?: string }>(`/trades/${id}/notes`, { cache: 0 }),
   tradeNotesSave:(id: number, data: { note: string; tags: string[]; screenshot_url: string }) => fxsim<{ success: boolean }>(`/trades/${id}/notes`, { method: 'POST', body: data }),
   transactions:  ()              => fxsim<Transaction[]>('/transactions',             { cache: 8_000 }),
@@ -467,7 +467,7 @@ export const api = {
     commissionsList:(status?: string) => fxsim<Commission[]>('/admin/commissions', { query: { status }, cache: 5_000 }),
     commissionStatus:(id: number, status: 'approved' | 'paid' | 'reversed') => fxsim<{ success: boolean }>(`/admin/commissions/${id}/status`, { body: { status } }),
     testToolsChallenges: () => fxsim<TestToolChallenge[]>('/admin/test-tools/challenges', { cache: 3_000 }),
-    testToolsSet:    (id: number, action: 'phase1' | 'phase2' | 'funded' | 'payout_ready' | 'reset' | 'suspend') =>
+    testToolsSet:    (id: number, action: 'phase1' | 'phase2' | 'funded' | 'payout_ready' | 'reset' | 'suspend' | 'unsuspend' | 'reactivate' | 'advance') =>
       fxsim<{ success: boolean; status?: string; message?: string }>(`/admin/test-tools/challenge/${id}/set`, { body: { action } }),
     notificationsRead: (ids?: number[]) =>
       fxsim<{ success: true }>('/admin/notifications/read', { body: { ids: ids ?? [] } }),
