@@ -14,6 +14,7 @@ import { FONT_PRESETS } from '@/lib/theme-accent'
 import { useAuth } from '@/store/auth'
 import { usePrices } from '@/store/prices'
 import { useBranding } from '@/store/branding'
+import QRCode from 'qrcode'
 
 export interface ShareTradeData {
   symbol: string
@@ -300,20 +301,46 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.roundRect(qrX, qrY, 60, 60, 8)
     ctx.fill()
     
-    // QR Pattern mock
-    ctx.fillStyle = '#0A0E17'
-    ctx.fillRect(qrX + 6, qrY + 6, 16, 16)
-    ctx.fillRect(qrX + 38, qrY + 6, 16, 16)
-    ctx.fillRect(qrX + 6, qrY + 38, 16, 16)
-    ctx.fillRect(qrX + 26, qrY + 26, 10, 10)
-    ctx.fillRect(qrX + 38, qrY + 38, 10, 10)
+    // Dynamic brand domain & verification URL
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://demo.launchapropfirm.com'
+    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'demo.launchapropfirm.com'
+    const verifyUrl = `${origin}/verify?trade=${encodeURIComponent(trade?.symbol || '')}&acc=${encodeURIComponent(String(accountId))}`
+
+    // Scannable Dynamic QR Matrix
+    try {
+      const qr = QRCode.create(verifyUrl, { errorCorrectionLevel: 'M' })
+      const modCount = qr.modules.size
+      const padding = 5
+      const cellSize = (60 - padding * 2) / modCount
+
+      ctx.fillStyle = '#0A0E17'
+      for (let r = 0; r < modCount; r++) {
+        for (let c = 0; c < modCount; c++) {
+          if (qr.modules.get(r, c)) {
+            ctx.fillRect(
+              Math.round(qrX + padding + c * cellSize),
+              Math.round(qrY + padding + r * cellSize),
+              Math.ceil(cellSize),
+              Math.ceil(cellSize)
+            )
+          }
+        }
+      }
+    } catch {
+      // Fallback clean high-contrast scan squares if encoder fails
+      ctx.fillStyle = '#0A0E17'
+      ctx.fillRect(qrX + 6, qrY + 6, 16, 16)
+      ctx.fillRect(qrX + 38, qrY + 6, 16, 16)
+      ctx.fillRect(qrX + 6, qrY + 38, 16, 16)
+      ctx.fillRect(qrX + 26, qrY + 26, 10, 10)
+      ctx.fillRect(qrX + 38, qrY + 38, 10, 10)
+    }
 
     ctx.fillStyle = '#9CA3AF'
     ctx.font = `600 11px ${primaryFontFamily}`
     ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
     ctx.fillStyle = '#6B7280'
     ctx.font = `500 10px ${primaryFontFamily}`
-    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'propfirm.com'
     ctx.fillText(displayDomain, qrX - 110, footerY + 42)
 
   }, [trade, traderHandle, accountId, isProfit, pnlPercent, brandName])

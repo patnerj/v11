@@ -46,8 +46,18 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
   selectedIds = [],
   onSelectionChange,
 }: DataTableProps<T>) {
-  const allIds = React.useMemo(() => data.map((r, i) => r.id ?? i), [data])
-  const allSelected = data.length > 0 && allIds.every((id) => selectedIds.includes(id))
+  // Defensive array normalization per Rule 1.2 and Rule 133.2
+  const safeData: T[] = React.useMemo(() => {
+    if (Array.isArray(data)) return data
+    if (data && typeof data === 'object') {
+      const candidate = (data as any).data || (data as any).items || (data as any).rows || (data as any).trades
+      if (Array.isArray(candidate)) return candidate
+    }
+    return []
+  }, [data])
+
+  const allIds = React.useMemo(() => safeData.map((r, i) => r.id ?? i), [safeData])
+  const allSelected = safeData.length > 0 && allIds.every((id) => selectedIds.includes(id))
   const someSelected = selectedIds.length > 0 && !allSelected
 
   const toggleSelectAll = () => {
@@ -108,7 +118,7 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
               </div>
             </TableCell>
           </TableRow>
-        ) : data.length === 0 ? (
+        ) : safeData.length === 0 ? (
           <TableRow>
             <TableCell colSpan={totalCols} className="h-44 text-center">
               <div className="flex flex-col items-center justify-center gap-2 text-text-muted">
@@ -118,7 +128,7 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
             </TableCell>
           </TableRow>
         ) : (
-          data.map((row, idx) => {
+          safeData.map((row, idx) => {
             const rowId = row.id ?? idx
             const isSelected = selectedIds.includes(rowId)
 
