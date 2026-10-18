@@ -315,11 +315,11 @@ export default function PayoutsPage() {
         <ViralPayoutCardModal 
           isOpen={true}
           onClose={() => setShowCertificate(false)}
-          amount={latestApproved ? (latestApproved.trader_amount || totalPaid) : totalPaid}
+          amount={latestApproved ? toNum(latestApproved.trader_amount || totalPaid) : toNum(totalPaid)}
           date={latestApproved?.processed_at ? fmtDate(latestApproved.processed_at) : (latestApproved?.requested_at ? fmtDate(latestApproved.requested_at) : (funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : new Date().toLocaleDateString()))}
           method={latestApproved?.payment_method ?? savedMethod?.method ?? 'USDT - TRC20'}
           traderName={user?.display_name || user?.username || 'Trader'}
-          payoutId={latestApproved?.id || 0}
+          payoutId={Number(latestApproved?.id || 0)}
         />
       )}
     </div>
