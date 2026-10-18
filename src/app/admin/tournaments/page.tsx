@@ -129,6 +129,7 @@ export default function AdminTournamentsPage() {
 
   // Defensive collection normalization (Rule 1.2 & Rule 133.2 / GAP-NEW-04)
   const leaderboardList = Array.isArray(leaderboardData?.leaderboard) ? leaderboardData.leaderboard : []
+  const safeTournaments = Array.isArray(tournaments) ? tournaments : []
 
   // ─────────────────────────────────────────────────────────────
   // 2.2 SYNTHETIC LEADERBOARD MANAGEMENT (Client Requirement)
@@ -413,6 +414,9 @@ export default function AdminTournamentsPage() {
     refetchInterval: 10_000,
   })
 
+  // Defensive array normalization (Rule 1.2 & Rule 133.2)
+  const matchesList = Array.isArray(pvpData?.matches) ? pvpData.matches : []
+
   const [matchToSettle, setMatchToSettle] = useState<any>(null)
 
   const settlePvpMutation = useMutation({
@@ -475,6 +479,9 @@ export default function AdminTournamentsPage() {
     enabled: activeNavTab === 'pvp',
     refetchInterval: 15_000,
   })
+
+  // Defensive array normalization (Rule 1.2 & Rule 133.2)
+  const withdrawalsList = Array.isArray(pvpWithdrawalsData?.withdrawals) ? pvpWithdrawalsData.withdrawals : []
 
   const [actionWithdrawalModal, setActionWithdrawalModal] = useState<{ id: number; action: 'paid' | 'rejected'; amount: number; user_id: number; address: string } | null>(null)
   const [withdrawalTxRef, setWithdrawalTxRef] = useState('')
@@ -683,10 +690,10 @@ export default function AdminTournamentsPage() {
 
   // Summary Metrics Computation
   const metrics = useMemo(() => {
-    const total = tournaments.length
-    const active = tournaments.filter(t => t.status === 'active').length
-    const totalEnrolled = tournaments.reduce((acc, t) => acc + (t.current_participants || t.participants_count || 0), 0)
-    const prizeSum = tournaments.reduce((acc, t) => {
+    const total = safeTournaments.length
+    const active = safeTournaments.filter(t => t.status === 'active').length
+    const totalEnrolled = safeTournaments.reduce((acc, t) => acc + (t.current_participants || t.participants_count || 0), 0)
+    const prizeSum = safeTournaments.reduce((acc, t) => {
       const num = parseFloat(String(t.prize_pool).replace(/[^0-9.]/g, '')) || 0
       return acc + num
     }, 0)
@@ -696,7 +703,7 @@ export default function AdminTournamentsPage() {
       totalEnrolled,
       prizeSumFormatted: `$${prizeSum.toLocaleString()}`
     }
-  }, [tournaments])
+  }, [safeTournaments])
 
   return (
     <div className="w-full space-y-6 pb-16">
@@ -919,7 +926,7 @@ export default function AdminTournamentsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tournaments.map((t) => {
+          {safeTournaments.map((t) => {
             const currentCount = t.current_participants || t.participants_count || 0
             const maxCount = t.max_participants || 500
             const fillPct = Math.min(100, Math.round((currentCount / maxCount) * 100))
@@ -1233,8 +1240,8 @@ export default function AdminTournamentsPage() {
                 <CardTitle className="text-base text-text flex items-center gap-2">
                   <ArrowUpFromLine className="h-4 w-4 text-amber-500" />
                   Arena Withdrawals Review Queue
-                  <Badge tone={pvpWithdrawalsData?.withdrawals?.length ? 'warning' : 'default'} size="sm" className="font-mono text-2xs">
-                    {pvpWithdrawalsData?.withdrawals?.length || 0} Pending
+                  <Badge tone={withdrawalsList.length ? 'warning' : 'default'} size="sm" className="font-mono text-2xs">
+                    {withdrawalsList.length} Pending
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-xs text-text-muted mt-0.5">
@@ -1266,7 +1273,7 @@ export default function AdminTournamentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {(!pvpWithdrawalsData?.withdrawals || pvpWithdrawalsData.withdrawals.length === 0) ? (
+                  {withdrawalsList.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-10 text-center text-text-muted">
                         <CheckCircle2 className="h-8 w-8 text-emerald-500/50 mx-auto mb-2" />
@@ -1274,7 +1281,7 @@ export default function AdminTournamentsPage() {
                       </td>
                     </tr>
                   ) : (
-                    pvpWithdrawalsData.withdrawals.map((w: any) => (
+                    withdrawalsList.map((w: any) => (
                       <tr key={w.id} className="hover:bg-surface-muted/50 transition-colors">
                         <td className="py-3.5 px-4">
                           <div className="font-mono font-bold text-text">#{w.id}</div>
@@ -1388,14 +1395,14 @@ export default function AdminTournamentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {(!pvpData?.matches || pvpData.matches.length === 0) ? (
+                  {matchesList.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-text-muted">
                         No arena matches registered yet.
                       </td>
                     </tr>
                   ) : (
-                    pvpData.matches.map((m) => (
+                    matchesList.map((m) => (
                       <tr key={m.id} className="hover:bg-surface-muted/50 transition-colors">
                         <td className="py-3.5 px-4">
                           <div className="font-mono font-bold text-text flex items-center gap-1.5">

@@ -123,9 +123,12 @@ export default function DashboardTournamentsPage() {
     refetchInterval: 30_000,
   })
 
+  const safeTournaments = useMemo(() => (Array.isArray(tournaments) ? tournaments : []), [tournaments])
+  const safeMine = useMemo(() => (Array.isArray(mine) ? mine : []), [mine])
+
   const joinedIds = useMemo(() => {
-    return new Set(mine.map(m => Number(m.tournament_id)).filter(n => !isNaN(n)))
-  }, [mine])
+    return new Set(safeMine.map(m => Number(m.tournament_id)).filter(n => !isNaN(n)))
+  }, [safeMine])
 
   const join = async (t: Competition) => {
     const tid = Number(t.id)
@@ -179,12 +182,11 @@ export default function DashboardTournamentsPage() {
     return () => clearInterval(timer)
   }, [])
 
-  const live = tournaments.filter(t => (t.status ?? '') === 'active')
-  const upcoming = tournaments.filter(t => (t.status ?? '') !== 'active')
+  const live = safeTournaments.filter(t => (t.status ?? '') === 'active')
+  const upcoming = safeTournaments.filter(t => (t.status ?? '') !== 'active')
 
   // Live user rank logic (GAP-NEW-01: Ingest real rank from participant/tournament data e.g. p.rank ?? t.my_rank ?? null)
   const myLiveRank = useMemo<number | null>(() => {
-    const safeMine = Array.isArray(mine) ? mine : []
     const activeMine = safeMine.filter(m => (m.tournament_status ?? (m as any).status) === 'active')
     const targetMine = activeMine.length > 0 ? activeMine : safeMine
 
@@ -194,7 +196,6 @@ export default function DashboardTournamentsPage() {
       if (!isNaN(n) && n > 0) return n
     }
 
-    const safeTournaments = Array.isArray(tournaments) ? tournaments : []
     for (const t of safeTournaments) {
       const raw = (t as any).my_rank ?? (t as any).rank ?? null
       const n = Number(raw)
@@ -202,13 +203,13 @@ export default function DashboardTournamentsPage() {
     }
 
     return null
-  }, [mine, tournaments])
+  }, [safeMine, safeTournaments])
 
   const myLiveRankDisplay = useMemo(() => {
     if (myLiveRank !== null && myLiveRank > 0) return `#${myLiveRank}`
-    if (Array.isArray(mine) && mine.length > 0) return '—'
+    if (safeMine.length > 0) return '—'
     return 'Unranked'
-  }, [myLiveRank, mine])
+  }, [myLiveRank, safeMine])
 
   const statusBadge = (t: Competition, pendingOrder?: PaymentOrder) => {
     const tid = Number(t.id)
@@ -376,7 +377,7 @@ export default function DashboardTournamentsPage() {
             <div className="min-w-0 flex-1">
               <div className="text-2xs uppercase tracking-wider text-text-muted">Live tournaments</div>
               <div className="flex flex-wrap items-center gap-1.5 my-0.5">
-                {mine.length > 0 && (
+                {safeMine.length > 0 && (
                   <Badge tone={myLiveRank ? "success" : "neutral"} size="sm">
                     Live Rank: {myLiveRankDisplay}
                   </Badge>
@@ -394,7 +395,7 @@ export default function DashboardTournamentsPage() {
             </div>
             <div>
               <div className="text-2xs uppercase tracking-wider text-text-muted">My entries</div>
-              <div className="text-lg font-bold tabular text-text">{mine.length}</div>
+              <div className="text-lg font-bold tabular text-text">{safeMine.length}</div>
             </div>
           </CardContent>
         </Card>

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { fmtUSD, fmtPct, fmtDate, statusTone, statusLabel, toNum } from '@/lib/format'
+import { fmtUSD, fmtPct, fmtDate, timeAgo, statusTone, statusLabel, toNum } from '@/lib/format'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 import { api } from '@/lib/api'
@@ -60,8 +60,12 @@ export function ChallengeDrawer({
     queryKey: ['admin-challenge-trades', challenge?.id],
     queryFn: async () => {
       if (!challenge?.id) return []
-      const res = await api.admin.trades(challenge.id)
-      return res.ok && Array.isArray(res.data) ? res.data : []
+      const res = await api.admin.trades({
+        challenge_id: challenge.id,
+        account_id: challenge.fxsim_account_id || challenge.account_id,
+      })
+      const raw = res.ok ? res.data : null
+      return Array.isArray(raw) ? raw : (raw as any)?.trades || []
     },
     enabled: isOpen && !!challenge?.id && activeTab === 'trades',
     refetchInterval: 15_000,
@@ -390,7 +394,14 @@ export function ChallengeDrawer({
                         const closePrice = toNum(t.close_price ?? (t as any).close)
                         const lots = toNum(t.lot_size ?? (t as any).lots)
                         const tradePnl = toNum(t.pnl)
-                        const timeDisplay = t.closed_at ? fmtDate(t.closed_at) : (t.opened_at ? fmtDate(t.opened_at) : (t as any).time || '—')
+                        const sym = (t.symbol || '').toUpperCase()
+                        const formatTradePrice = (p: number) => {
+                          if (p === 0) return '0.00'
+                          if (sym.includes('JPY')) return p.toFixed(3)
+                          if (p < 20 && !sym.includes('XAU') && !sym.includes('OIL') && !sym.includes('US') && !sym.includes('NAS')) return p.toFixed(5)
+                          return p.toFixed(2)
+                        }
+                        const timeDisplay = t.closed_at ? timeAgo(t.closed_at) : (t.opened_at ? timeAgo(t.opened_at) : (t as any).time || '—')
 
                         return (
                           <tr key={t.id} className="hover:bg-surface-secondary/40 transition-colors">
@@ -405,7 +416,7 @@ export function ChallengeDrawer({
                             </td>
                             <td className="py-2 px-3 text-right terminal-num">{lots.toFixed(2)}</td>
                             <td className="py-2 px-3 text-right terminal-num text-text-muted text-2xs">
-                              {openPrice.toFixed(2)} → {closePrice.toFixed(2)}
+                              {formatTradePrice(openPrice)} → {formatTradePrice(closePrice)}
                             </td>
                             <td className={cn("py-2 px-3 text-right terminal-num font-semibold", tradePnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
                               {tradePnl >= 0 ? '+' : ''}{fmtUSD(tradePnl)}
