@@ -156,6 +156,9 @@ export default function PvpLiveBattleArenaPage() {
 
   // Isolate arena match position for MT5 canvas chart (strictly excluding main account positions)
   const arenaPositions = useMemo<Position[]>(() => {
+    if (!isActive || isCompleted) {
+      return []
+    }
     if (!myPosition || !myPosition.direction || myPosition.direction === 'flat' || !myPosition.open_price) {
       return []
     }
@@ -178,7 +181,7 @@ export default function PvpLiveBattleArenaPage() {
         created_at: new Date().toISOString(),
       } as unknown as Position,
     ]
-  }, [myPosition, matchId, currentUserId, match?.symbol])
+  }, [isActive, isCompleted, myPosition, matchId, currentUserId, match?.symbol])
 
   // Weekend Market Status (Guarded behind mounted state to eliminate SSR hydration mismatch per Rule 29.4)
   const isWeekendClosed = useMemo(() => {
@@ -374,7 +377,7 @@ export default function PvpLiveBattleArenaPage() {
               symbol={match?.symbol || 'BTCUSD'} 
               currentPrice={liveState?.prices?.ask} 
               height={580}
-              chartContext={`arena_${matchId}`}
+              chartContext={`arena_${matchId || 'active'}`}
               positions={arenaPositions}
               pendingOrders={[]}
             />

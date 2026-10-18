@@ -3,16 +3,21 @@
 import { useState, useEffect } from 'react'
 
 export function getActiveDocumentTheme(): string {
-  if (typeof document === 'undefined') return 'clean-light'
+  if (typeof document === 'undefined') return 'midnight-obsidian'
   const el = document.documentElement
   const dt = el.getAttribute('data-theme')
   if (dt) return dt
   if (el.classList.contains('dark')) return 'midnight-obsidian'
-  return 'clean-light'
+  if (el.classList.contains('light')) return 'clean-light'
+  try {
+    const userTheme = localStorage.getItem('user-theme')
+    if (userTheme) return userTheme
+  } catch {}
+  return 'midnight-obsidian'
 }
 
 export function isDocumentDark(): boolean {
-  if (typeof document === 'undefined') return false
+  if (typeof document === 'undefined') return true
   const el = document.documentElement
   const dt = el.getAttribute('data-theme')
   if (dt) {
@@ -20,7 +25,13 @@ export function isDocumentDark(): boolean {
   }
   if (el.classList.contains('dark')) return true
   if (el.classList.contains('light')) return false
-  return false
+  try {
+    const userTheme = localStorage.getItem('user-theme')
+    if (userTheme) return userTheme !== 'clean-light' && userTheme !== 'light'
+    const theme = localStorage.getItem('theme')
+    if (theme === 'light') return false
+  } catch {}
+  return true
 }
 
 /**

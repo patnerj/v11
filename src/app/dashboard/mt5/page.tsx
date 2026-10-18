@@ -196,6 +196,9 @@ export default function Mt5WebTerminalPage() {
       }
 
       if (e.key === 'Escape' && isFullChart) {
+        if (useTerminal.getState().isChartFs) {
+          return
+        }
         e.preventDefault()
         setIsFullChart(false)
         setMwOpen(true)
@@ -238,6 +241,7 @@ export default function Mt5WebTerminalPage() {
   const isTournamentMode = tradingCtx?.kind === 'tournament'
   const tournamentId = isTournamentMode ? tradingCtx.tournamentId : undefined
   const tournamentTitle = isTournamentMode ? tradingCtx.title : undefined
+  const effectiveChartCtx = isTournamentMode && tournamentId ? `tournament_${tournamentId}` : 'main'
 
   useEffect(() => {
     bootstrapTerm()
@@ -479,7 +483,7 @@ export default function Mt5WebTerminalPage() {
                 <SectionErrorBoundary sectionName="Mt5ChartPanel">
                   <Mt5ChartPanel
                     compact
-                    chartContext="main"
+                    chartContext={effectiveChartCtx}
                     positions={positions}
                     pendingOrders={pending}
                     plan={plan || metrics?.plan}
@@ -1046,7 +1050,7 @@ export default function Mt5WebTerminalPage() {
                 <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
                   <SectionErrorBoundary sectionName="Mt5ChartPanel">
                     <Mt5ChartPanel
-                      chartContext="main"
+                      chartContext={effectiveChartCtx}
                       positions={positions}
                       pendingOrders={pending}
                       plan={plan || metrics?.plan}
@@ -1112,7 +1116,7 @@ export default function Mt5WebTerminalPage() {
                   <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
                     <SectionErrorBoundary sectionName="Mt5ChartPanel">
                       <Mt5ChartPanel
-                        chartContext="main"
+                        chartContext={effectiveChartCtx}
                         positions={positions}
                         pendingOrders={pending}
                         plan={plan || metrics?.plan}

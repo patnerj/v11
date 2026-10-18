@@ -95,28 +95,49 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   const storePending = usePrices((s) => s.pending)
   const account = usePrices((s) => s.account)
 
+  const tradingCtx = usePrices((s) => s.tradingContext)
+  const effectiveContext = useMemo(() => {
+    if (chartContext && chartContext !== 'main') return chartContext
+    if (tradingCtx?.kind === 'tournament' && tradingCtx.tournamentId) {
+      return `tournament_${tradingCtx.tournamentId}`
+    }
+    return chartContext || 'main'
+  }, [chartContext, tradingCtx])
+
   // Isolated Positions & Orders: In Arena, Tournaments, or when explicitly passed, NEVER bleed global account trades
   const positions = useMemo(() => {
-    if (chartContext && chartContext !== 'main') {
-      return Array.isArray(propPositions) ? propPositions : []
+    if (effectiveContext && effectiveContext !== 'main') {
+      if (chartContext && chartContext !== 'main') {
+        return Array.isArray(propPositions) ? propPositions : []
+      }
+      if (propPositions !== undefined) {
+        return Array.isArray(propPositions) ? propPositions : []
+      }
+      return Array.isArray(storePositions) ? storePositions : []
     }
     if (propPositions !== undefined) {
       return Array.isArray(propPositions) ? propPositions : []
     }
     const src = storePositions
     return Array.isArray(src) ? src : []
-  }, [propPositions, storePositions, chartContext])
+  }, [propPositions, storePositions, chartContext, effectiveContext])
 
   const pendingOrders = useMemo(() => {
-    if (chartContext && chartContext !== 'main') {
-      return Array.isArray(propPending) ? propPending : []
+    if (effectiveContext && effectiveContext !== 'main') {
+      if (chartContext && chartContext !== 'main') {
+        return Array.isArray(propPending) ? propPending : []
+      }
+      if (propPending !== undefined) {
+        return Array.isArray(propPending) ? propPending : []
+      }
+      return Array.isArray(storePending) ? storePending : []
     }
     if (propPending !== undefined) {
       return Array.isArray(propPending) ? propPending : []
     }
     const src = storePending
     return Array.isArray(src) ? src : []
-  }, [propPending, storePending, chartContext])
+  }, [propPending, storePending, chartContext, effectiveContext])
 
   const digits = useMemo(() => symbolDigits(active, meta), [active, meta])
   const pSize = useMemo(() => pipSize(active, digits), [active, digits])
@@ -296,11 +317,11 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
   // Persist drawings per symbol (isolated by chartContext if in arena or tournament)
   const drawingsKey = useMemo(() => {
-    if (chartContext && chartContext !== 'main') {
-      return `fxsim_mt5_drawings_v1_${chartContext}_${active}`
+    if (effectiveContext && effectiveContext !== 'main') {
+      return `fxsim_mt5_drawings_v1_${effectiveContext}_${active}`
     }
     return `fxsim_mt5_drawings_v1_${active}`
-  }, [chartContext, active])
+  }, [effectiveContext, active])
 
   useEffect(() => {
     try {

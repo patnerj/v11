@@ -739,7 +739,7 @@ export default function DashboardTournamentsPage() {
             <ArenaChart
               symbol={(viewingChart as any)?.symbol || 'EURUSD'}
               height={500}
-              chartContext={`tournament_${viewingChart.id}`}
+              chartContext={`tournament_${viewingChart?.id || 'active'}`}
               positions={[]}
               pendingOrders={[]}
             />
