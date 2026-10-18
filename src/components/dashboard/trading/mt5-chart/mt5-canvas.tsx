@@ -40,7 +40,7 @@ import {
   isSessionTime,
 } from './mt5-indicators'
 import { formatCountdown, getCandleCountdownSeconds } from './candle-service'
-import { fmtPrice, toNum } from '@/lib/format'
+import { fmtPrice, fmtLots, toNum } from '@/lib/format'
 import { pipSize, getSymbolMeta } from '@/lib/symbol-meta'
 import { calculateLivePositionPnL, calcLevelPnL, quoteToUsdRate } from '@/lib/order-math'
 import type { Position, PendingOrder } from '@/types/api'
@@ -586,7 +586,8 @@ export const Mt5Canvas = memo(
       }
 
       ctx.save()
-      ctx.scale(dpr, dpr)
+      try {
+        ctx.scale(dpr, dpr)
 
       const { mainH, subH, chartW } = getLayout()
       const { visible, startIndex, endIndex } = getVisibleSlice()
@@ -1396,7 +1397,7 @@ export const Mt5Canvas = memo(
         const isBuy = pos.type === 'buy'
 
         ctx.save()
-
+        try {
         // (a) Entry Line (Dashed)
         const yEntry = priceToY(openPrice)
         ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
@@ -1597,9 +1598,10 @@ export const Mt5Canvas = memo(
           ctx.textAlign = 'center'
           ctx.fillText(`TP ${fmtPrice(activeTpPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yTp + 4)
         }
-
+      } finally {
         ctx.restore()
       }
+    }
 
       // Pending Orders Rendering (Right-aligned before price axis)
       for (const ord of symPending) {
@@ -1609,73 +1611,76 @@ export const Mt5Canvas = memo(
         const yTgt = priceToY(activeTgtPrice)
 
         ctx.save()
-        ctx.strokeStyle = '#F59E0B'
-        ctx.lineWidth = 1.5
-        ctx.setLineDash([4, 4])
+        try {
+          ctx.strokeStyle = '#F59E0B'
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([4, 4])
 
-        const isBuy = ord.order_type.startsWith('buy')
-        const displayType = isBuy
-          ? (activeTgtPrice < liveAsk ? 'buy_limit' : 'buy_stop')
-          : (activeTgtPrice > liveBid ? 'sell_limit' : 'sell_stop')
-        const ordLots = ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01
-        const ordText = `${displayType.toUpperCase().replace('_', ' ')} ${ordLots} @ ${fmtPrice(activeTgtPrice, digits)}`
-        const ordBadgeWidth = ctx.measureText(ordText).width + 30
-        const ordBadgeRight = chartW - 8
-        const ordBadgeX = ordBadgeRight - ordBadgeWidth
+          const rawType = String(ord.order_type || ord.type || 'buy_limit').toLowerCase()
+          const isBuy = rawType.startsWith('buy')
+          const displayType = isBuy
+            ? (activeTgtPrice < liveAsk ? 'buy_limit' : 'buy_stop')
+            : (activeTgtPrice > liveBid ? 'sell_limit' : 'sell_stop')
+          const ordLots = toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01)
+          const ordText = `${displayType.toUpperCase().replace('_', ' ')} ${fmtLots(ordLots)} @ ${fmtPrice(activeTgtPrice, digits)}`
+          const ordBadgeWidth = ctx.measureText(ordText).width + 30
+          const ordBadgeRight = chartW - 8
+          const ordBadgeX = ordBadgeRight - ordBadgeWidth
 
-        // Dotted line stops cleanly before badge
-        ctx.beginPath()
-        ctx.moveTo(0, Math.floor(yTgt) + 0.5)
-        ctx.lineTo(ordBadgeX - 4, Math.floor(yTgt) + 0.5)
-        ctx.stroke()
-
-        ctx.fillStyle = '#D97706'
-        ctx.fillRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
-        ctx.strokeStyle = '#FFFFFF'
-        ctx.lineWidth = 1
-        ctx.strokeRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
-        ctx.fillStyle = '#050811'
-        ctx.font = FONT_LABEL_BOLD
-        ctx.fillText(ordText, ordBadgeX + 6, yTgt + 3)
-
-        // [x] Cancel Pending
-        ctx.fillStyle = '#050811'
-        ctx.font = FONT_CLOSE_BTN
-        ctx.fillText('×', ordBadgeRight - 14, yTgt + 3)
-
-        // Right Price Axis Tag for Pending
-        ctx.fillStyle = '#D97706'
-        ctx.fillRect(chartW + 1, yTgt - 9, PRICE_AXIS_WIDTH - 2, 18)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.font = FONT_MICRO_BOLD
-        ctx.textAlign = 'center'
-        ctx.fillText(fmtPrice(activeTgtPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, yTgt + 3)
-
-        // Render SL and TP for pending orders if specified (with live drag delta sync)
-        const deltaPrice = activeTgtPrice - toNum(ord.target_price)
-        const curSl = ord.sl && toNum(ord.sl) > 0 ? toNum(ord.sl) + (draggingPendingPreview?.ordId === ord.id ? deltaPrice : 0) : null
-        const curTp = ord.tp && toNum(ord.tp) > 0 ? toNum(ord.tp) + (draggingPendingPreview?.ordId === ord.id ? deltaPrice : 0) : null
-
-        if (curSl && curSl > 0) {
-          const yOrdSl = priceToY(curSl)
-          ctx.strokeStyle = '#EF4444'
-          ctx.setLineDash([3, 3])
+          // Dotted line stops cleanly before badge
           ctx.beginPath()
-          ctx.moveTo(0, yOrdSl)
-          ctx.lineTo(chartW, yOrdSl)
+          ctx.moveTo(0, Math.floor(yTgt) + 0.5)
+          ctx.lineTo(ordBadgeX - 4, Math.floor(yTgt) + 0.5)
           ctx.stroke()
-        }
-        if (curTp && curTp > 0) {
-          const yOrdTp = priceToY(curTp)
-          ctx.strokeStyle = '#10B981'
-          ctx.setLineDash([3, 3])
-          ctx.beginPath()
-          ctx.moveTo(0, yOrdTp)
-          ctx.lineTo(chartW, yOrdTp)
-          ctx.stroke()
-        }
 
-        ctx.restore()
+          ctx.fillStyle = '#D97706'
+          ctx.fillRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
+          ctx.strokeStyle = '#FFFFFF'
+          ctx.lineWidth = 1
+          ctx.strokeRect(ordBadgeX, yTgt - 11, ordBadgeWidth, 22)
+          ctx.fillStyle = '#050811'
+          ctx.font = FONT_LABEL_BOLD
+          ctx.fillText(ordText, ordBadgeX + 6, yTgt + 3)
+
+          // [x] Cancel Pending
+          ctx.fillStyle = '#050811'
+          ctx.font = FONT_CLOSE_BTN
+          ctx.fillText('×', ordBadgeRight - 14, yTgt + 3)
+
+          // Right Price Axis Tag for Pending
+          ctx.fillStyle = '#D97706'
+          ctx.fillRect(chartW + 1, yTgt - 9, PRICE_AXIS_WIDTH - 2, 18)
+          ctx.fillStyle = '#FFFFFF'
+          ctx.font = FONT_MICRO_BOLD
+          ctx.textAlign = 'center'
+          ctx.fillText(fmtPrice(activeTgtPrice, digits), chartW + PRICE_AXIS_WIDTH / 2, yTgt + 3)
+
+          // Render SL and TP for pending orders if specified (with live drag delta sync)
+          const deltaPrice = activeTgtPrice - toNum(ord.target_price)
+          const curSl = ord.sl && toNum(ord.sl) > 0 ? toNum(ord.sl) + (draggingPendingPreview?.ordId === ord.id ? deltaPrice : 0) : null
+          const curTp = ord.tp && toNum(ord.tp) > 0 ? toNum(ord.tp) + (draggingPendingPreview?.ordId === ord.id ? deltaPrice : 0) : null
+
+          if (curSl && curSl > 0) {
+            const yOrdSl = priceToY(curSl)
+            ctx.strokeStyle = '#EF4444'
+            ctx.setLineDash([3, 3])
+            ctx.beginPath()
+            ctx.moveTo(0, yOrdSl)
+            ctx.lineTo(chartW, yOrdSl)
+            ctx.stroke()
+          }
+          if (curTp && curTp > 0) {
+            const yOrdTp = priceToY(curTp)
+            ctx.strokeStyle = '#10B981'
+            ctx.setLineDash([3, 3])
+            ctx.beginPath()
+            ctx.moveTo(0, yOrdTp)
+            ctx.lineTo(chartW, yOrdTp)
+            ctx.stroke()
+          }
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 10. Real-time Bid & Ask Lines with Live Spread Badge
@@ -1895,8 +1900,11 @@ export const Mt5Canvas = memo(
         ctx.fillText(ohlcvText, 12, 20)
         ctx.restore()
       }
-
-      ctx.restore()
+      } catch (err) {
+        console.error('[MT5 Pro Chart] Uncaught render exception:', err)
+      } finally {
+        ctx.restore()
+      }
     }, [
       colors,
       candles,
@@ -1978,7 +1986,8 @@ export const Mt5Canvas = memo(
         const liveBid = toNum(activeTick?.bid) || (visibleSlice.length > 0 ? visibleSlice[visibleSlice.length - 1].close : 0)
         const liveAsk = toNum(activeTick?.ask) || (liveBid > 0 ? liveBid + pSize * 1.5 : 0)
 
-        const isBuy = ord.order_type.startsWith('buy')
+        const rawType = String(ord.order_type || ord.type || 'buy_limit').toLowerCase()
+        const isBuy = rawType.startsWith('buy')
         const targetType = isBuy
           ? (newTarget < liveAsk ? 'buy_limit' : 'buy_stop')
           : (newTarget > liveBid ? 'sell_limit' : 'sell_stop')
@@ -2076,8 +2085,8 @@ export const Mt5Canvas = memo(
                   // Rollback: Attempt to restore original order
                   api.pendingPlace({
                     symbol: ord.symbol,
-                    order_type: ord.order_type as any,
-                    type: (ord.order_type.startsWith('buy') ? 'buy' : 'sell') as any,
+                    order_type: (ord.order_type || ord.type || targetType) as any,
+                    type: (String(ord.order_type || ord.type || targetType).toLowerCase().startsWith('buy') ? 'buy' : 'sell') as any,
                     lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
                     target_price: oldTarget,
                     sl: ord.sl !== null ? toNum(ord.sl) : null,

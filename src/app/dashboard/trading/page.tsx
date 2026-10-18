@@ -629,12 +629,15 @@ function DesktopLayout({
                 {!posCollapsed && (
                   <>
                     <div className="flex-1 overflow-y-auto min-h-0">
-                      <SectionErrorBoundary>
-                        {tab === 'positions'
-                          ? <PositionsTable positions={positions} onChanged={onChanged} onViewChart={(sym) => useTerminal.getState().setActive(sym)} />
-                          : <PendingOrdersTable orders={pending} onChanged={onChanged} onViewChart={(sym) => useTerminal.getState().setActive(sym)} />
-                        }
-                      </SectionErrorBoundary>
+                      {tab === 'positions' ? (
+                        <SectionErrorBoundary sectionName="PositionsTable">
+                          <PositionsTable positions={positions} onChanged={onChanged} onViewChart={(sym) => useTerminal.getState().setActive(sym)} />
+                        </SectionErrorBoundary>
+                      ) : (
+                        <SectionErrorBoundary sectionName="PendingOrdersTable">
+                          <PendingOrdersTable orders={pending} onChanged={onChanged} onViewChart={(sym) => useTerminal.getState().setActive(sym)} />
+                        </SectionErrorBoundary>
+                      )}
                     </div>
 
                     {/* MT5 Bottom Telemetry Summary Row with Dynamic Glow */}

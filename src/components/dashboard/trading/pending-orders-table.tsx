@@ -101,7 +101,8 @@ function Row({ order, index, onChanged, onViewChart }: { order: PendingOrder; in
     }
   }, [order.id, onChanged])
 
-  const isBuy = order.order_type.startsWith('buy')
+  const rawType = String(order.order_type || order.type || 'buy_limit').toLowerCase()
+  const isBuy = rawType.startsWith('buy')
   const placedRaw = order.created_at_iso || order.created_at
 
   return (
@@ -137,14 +138,14 @@ function Row({ order, index, onChanged, onViewChart }: { order: PendingOrder; in
       </Td>
       <Td>
         <Badge tone={isBuy ? 'success' : 'danger'}>
-          {order.order_type.replace('_', ' ').toUpperCase()}
+          {rawType.replace('_', ' ').toUpperCase()}
         </Badge>
       </Td>
-      <Td align="right"><span className="terminal-num text-text-muted">{fmtLots((order as any).lot_size ?? (order as any).lots ?? (order as any).volume ?? 0.01)}</span></Td>
-      <Td align="right"><span className="terminal-num">{fmtPrice(order.target_price, digits)}</span></Td>
+      <Td align="right"><span className="terminal-num text-text-muted">{fmtLots(toNum((order as any).lot_size ?? (order as any).lots ?? (order as any).volume ?? 0.01))}</span></Td>
+      <Td align="right"><span className="terminal-num">{fmtPrice(toNum(order.target_price), digits)}</span></Td>
       <Td align="right" hideOn="md">
         <span className="text-terminal-body terminal-num text-text-muted">
-          {order.sl ? fmtPrice(order.sl, digits) : '—'} / {order.tp ? fmtPrice(order.tp, digits) : '—'}
+          {order.sl && toNum(order.sl) > 0 ? fmtPrice(toNum(order.sl), digits) : '—'} / {order.tp && toNum(order.tp) > 0 ? fmtPrice(toNum(order.tp), digits) : '—'}
         </span>
       </Td>
       <Td align="right" hideOn="md">

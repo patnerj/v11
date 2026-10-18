@@ -600,8 +600,8 @@ export default function Mt5WebTerminalPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto min-h-0">
-                <SectionErrorBoundary sectionName="PositionsTable">
-                  {tab === 'positions' ? (
+                {tab === 'positions' ? (
+                  <SectionErrorBoundary sectionName="PositionsTable">
                     <PositionsTable
                       positions={positions}
                       onChanged={onChanged}
@@ -611,7 +611,9 @@ export default function Mt5WebTerminalPage() {
                         setMobileView('chart')
                       }}
                     />
-                  ) : (
+                  </SectionErrorBoundary>
+                ) : (
+                  <SectionErrorBoundary sectionName="PendingOrdersTable">
                     <PendingOrdersTable
                       orders={pending}
                       onChanged={onChanged}
@@ -620,8 +622,8 @@ export default function Mt5WebTerminalPage() {
                         setMobileView('chart')
                       }}
                     />
-                  )}
-                </SectionErrorBoundary>
+                  </SectionErrorBoundary>
+                )}
               </div>
 
               {/* Mobile Financial Telemetry Summary */}
@@ -1196,21 +1198,23 @@ export default function Mt5WebTerminalPage() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto min-h-0">
-                      <SectionErrorBoundary sectionName="PositionsTable">
-                        {tab === 'positions' ? (
+                      {tab === 'positions' ? (
+                        <SectionErrorBoundary sectionName="PositionsTable">
                           <PositionsTable
                             positions={positions}
                             onChanged={onChanged}
                             onViewChart={(sym) => useTerminal.getState().setActive(sym)}
                           />
-                        ) : (
+                        </SectionErrorBoundary>
+                      ) : (
+                        <SectionErrorBoundary sectionName="PendingOrdersTable">
                           <PendingOrdersTable
                             orders={pending}
                             onChanged={onChanged}
                             onViewChart={(sym) => useTerminal.getState().setActive(sym)}
                           />
-                        )}
-                      </SectionErrorBoundary>
+                        </SectionErrorBoundary>
+                      )}
                     </div>
 
                     {/* MT5 Bottom Telemetry Summary Row */}
