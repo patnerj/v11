@@ -6,11 +6,15 @@ import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 import { cn } from '@/lib/cn'
 import { Mt5ChartPanel } from '@/components/dashboard/trading/mt5-chart'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
+import type { Position, PendingOrder } from '@/types/api'
 
 interface ArenaChartProps {
   symbol: string
   height?: number
   currentPrice?: number
+  chartContext?: string
+  positions?: Position[] | null
+  pendingOrders?: PendingOrder[] | null
 }
 
 function resolveTvSymbol(sym: string): string {
@@ -35,6 +39,9 @@ export const ArenaChart = memo(function ArenaChart({
   symbol,
   height = 420,
   currentPrice,
+  chartContext = 'arena',
+  positions = null,
+  pendingOrders = null,
 }: ArenaChartProps) {
   const isDark = useIsDarkTheme()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -261,9 +268,10 @@ export const ArenaChart = memo(function ArenaChart({
             <Mt5ChartPanel
               symbol={symbol}
               compact={false}
-              positions={null}
-              pendingOrders={null}
+              positions={positions ?? []}
+              pendingOrders={pendingOrders ?? []}
               hideOneClick={true}
+              chartContext={chartContext}
             />
           </SectionErrorBoundary>
         ) : (

@@ -242,6 +242,9 @@ export default function PublicTournamentArena() {
           <ArenaChart 
             symbol={(tournament as any)?.symbol || 'EURUSD'} 
             height={480} 
+            chartContext={`tournament_${tournament.id}`}
+            positions={[]}
+            pendingOrders={[]}
           />
         </div>
 

@@ -5,7 +5,7 @@
  * Institutional WebTrader workspace mode exclusively running the Native MT5 Pro Chart Engine.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   ArrowUpRight,
   BarChart3,
@@ -61,6 +61,7 @@ import { TournamentWarningBanner } from '@/components/dashboard/trading/tourname
 import { NewsRestrictBanner } from '@/components/dashboard/trading/news-restrict-banner'
 import { SoundToggle } from '@/components/dashboard/trading/sound-toggle'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
+import { useIsDarkTheme, isDocumentDark } from '@/hooks/use-theme-attribute'
 import { cn } from '@/lib/cn'
 import {
   Panel,
@@ -136,21 +137,70 @@ export default function Mt5WebTerminalPage() {
     if (typeof window === 'undefined') return 'candlestick'
     try { return (localStorage.getItem('fxsim:mt5:style') as ChartStyle) || 'candlestick' } catch { return 'candlestick' }
   })
+  const isDocDark = useIsDarkTheme()
+  const lastDarkThemeRef = useRef<ThemePreset>('cyber')
+
   const [theme, setTheme] = useState<ThemePreset>(() => {
     if (typeof window === 'undefined') return 'cyber'
-    try { return (localStorage.getItem('fxsim:mt5:theme') as ThemePreset) || 'cyber' } catch { return 'cyber' }
+    try {
+      const isDark = isDocumentDark()
+      if (!isDark) return 'daylight'
+      const savedDark = localStorage.getItem('fxsim:mt5:last_dark_theme') as ThemePreset
+      if (savedDark === 'classic' || savedDark === 'cyber') return savedDark
+      const saved = localStorage.getItem('fxsim:mt5:theme') as ThemePreset
+      if (saved === 'classic' || saved === 'cyber') return saved
+      return 'cyber'
+    } catch { return 'cyber' }
   })
+
+  // Read saved dark preference into ref
+  useEffect(() => {
+    try {
+      const savedDark = localStorage.getItem('fxsim:mt5:last_dark_theme') as ThemePreset
+      if (savedDark === 'classic' || savedDark === 'cyber') {
+        lastDarkThemeRef.current = savedDark
+      }
+    } catch {}
+  }, [])
+
+  // Auto-sync with document day/night theme toggle (website header Sun/Moon button)
+  useEffect(() => {
+    if (!isDocDark) {
+      setTheme('daylight')
+    } else {
+      setTheme((prev) => (prev === 'daylight' ? (lastDarkThemeRef.current || 'cyber') : prev))
+    }
+  }, [isDocDark])
+
+  const handleThemeChange = useCallback((newTheme: ThemePreset) => {
+    if (newTheme !== 'daylight') {
+      lastDarkThemeRef.current = newTheme
+      try { localStorage.setItem('fxsim:mt5:last_dark_theme', newTheme) } catch {}
+    }
+    setTheme(newTheme)
+    try { localStorage.setItem('fxsim:mt5:theme', newTheme) } catch {}
+  }, [])
+
   const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false)
   const [showGrid, setShowGrid] = useState(true)
   const [showPeriodSeparators, setShowPeriodSeparators] = useState(() => timeframe !== 'D1' && timeframe !== 'W1')
 
-  // Global hotkeys: Ctrl+M (Market Watch) & F9 (Order Ticket)
+  // Global hotkeys: Ctrl+M (Market Watch), F9 (Order Ticket), Esc (Exit Full Chart)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         document.activeElement instanceof HTMLInputElement ||
         document.activeElement instanceof HTMLTextAreaElement
       ) {
+        return
+      }
+
+      if (e.key === 'Escape' && isFullChart) {
+        e.preventDefault()
+        setIsFullChart(false)
+        setMwOpen(true)
+        setOrderOpen(true)
+        setPosCollapsed(false)
         return
       }
 
@@ -174,7 +224,7 @@ export default function Mt5WebTerminalPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isXl])
+  }, [isXl, isFullChart])
 
   const { data: myTournaments } = useQuery({
     queryKey: ['tournamentsMine'],
@@ -429,6 +479,7 @@ export default function Mt5WebTerminalPage() {
                 <SectionErrorBoundary sectionName="Mt5ChartPanel">
                   <Mt5ChartPanel
                     compact
+                    chartContext="main"
                     positions={positions}
                     pendingOrders={pending}
                     plan={plan || metrics?.plan}
@@ -439,7 +490,7 @@ export default function Mt5WebTerminalPage() {
                     chartStyle={chartStyle}
                     onChangeChartStyle={setChartStyle}
                     theme={theme}
-                    onChangeTheme={setTheme}
+                    onChangeTheme={handleThemeChange}
                     showGrid={showGrid}
                     onChangeShowGrid={setShowGrid}
                     showPeriodSeparators={showPeriodSeparators}
@@ -995,6 +1046,7 @@ export default function Mt5WebTerminalPage() {
                 <section className="flex-1 min-h-0 rounded-lg border border-border bg-surface overflow-hidden flex flex-col">
                   <SectionErrorBoundary sectionName="Mt5ChartPanel">
                     <Mt5ChartPanel
+                      chartContext="main"
                       positions={positions}
                       pendingOrders={pending}
                       plan={plan || metrics?.plan}
@@ -1005,7 +1057,7 @@ export default function Mt5WebTerminalPage() {
                       chartStyle={chartStyle}
                       onChangeChartStyle={setChartStyle}
                       theme={theme}
-                      onChangeTheme={setTheme}
+                      onChangeTheme={handleThemeChange}
                       showGrid={showGrid}
                       onChangeShowGrid={setShowGrid}
                       showPeriodSeparators={showPeriodSeparators}
@@ -1060,6 +1112,7 @@ export default function Mt5WebTerminalPage() {
                   <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
                     <SectionErrorBoundary sectionName="Mt5ChartPanel">
                       <Mt5ChartPanel
+                        chartContext="main"
                         positions={positions}
                         pendingOrders={pending}
                         plan={plan || metrics?.plan}
@@ -1070,7 +1123,7 @@ export default function Mt5WebTerminalPage() {
                         chartStyle={chartStyle}
                         onChangeChartStyle={setChartStyle}
                         theme={theme}
-                        onChangeTheme={setTheme}
+                        onChangeTheme={handleThemeChange}
                         showGrid={showGrid}
                         onChangeShowGrid={setShowGrid}
                         showPeriodSeparators={showPeriodSeparators}

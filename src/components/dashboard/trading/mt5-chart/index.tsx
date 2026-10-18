@@ -32,7 +32,7 @@ import { Mt5IndicatorsModal } from './mt5-indicators-modal'
 import { Mt5ObjectsModal } from './mt5-objects-modal'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
-import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
+import { useIsDarkTheme, isDocumentDark } from '@/hooks/use-theme-attribute'
 
 export interface Mt5ChartPanelProps {
   symbol?: string
@@ -55,6 +55,7 @@ export interface Mt5ChartPanelProps {
   onChangeShowGrid?: (show: boolean) => void
   showPeriodSeparators?: boolean
   onChangeShowPeriodSeparators?: (show: boolean) => void
+  chartContext?: string
 }
 
 export const Mt5ChartPanel = memo(function Mt5ChartPanel({
@@ -78,6 +79,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   onChangeShowGrid: propOnChangeShowGrid,
   showPeriodSeparators: propShowPeriodSeparators,
   onChangeShowPeriodSeparators: propOnChangeShowPeriodSeparators,
+  chartContext,
 }: Mt5ChartPanelProps) {
   const canvasRef = useRef<Mt5CanvasHandle>(null)
   const storeActive = useTerminal((s) => s.active)
@@ -93,14 +95,28 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   const storePending = usePrices((s) => s.pending)
   const account = usePrices((s) => s.account)
 
+  // Isolated Positions & Orders: In Arena, Tournaments, or when explicitly passed, NEVER bleed global account trades
   const positions = useMemo(() => {
-    const src = propPositions ?? storePositions
+    if (chartContext && chartContext !== 'main') {
+      return Array.isArray(propPositions) ? propPositions : []
+    }
+    if (propPositions !== undefined) {
+      return Array.isArray(propPositions) ? propPositions : []
+    }
+    const src = storePositions
     return Array.isArray(src) ? src : []
-  }, [propPositions, storePositions])
+  }, [propPositions, storePositions, chartContext])
+
   const pendingOrders = useMemo(() => {
-    const src = propPending ?? storePending
+    if (chartContext && chartContext !== 'main') {
+      return Array.isArray(propPending) ? propPending : []
+    }
+    if (propPending !== undefined) {
+      return Array.isArray(propPending) ? propPending : []
+    }
+    const src = storePending
     return Array.isArray(src) ? src : []
-  }, [propPending, storePending])
+  }, [propPending, storePending, chartContext])
 
   const digits = useMemo(() => symbolDigits(active, meta), [active, meta])
   const pSize = useMemo(() => pipSize(active, digits), [active, digits])
@@ -125,23 +141,55 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   const [internalTheme, setInternalTheme] = useState<ThemePreset>(() => {
     if (typeof window === 'undefined') return 'cyber'
     try {
+      const isDark = isDocumentDark()
+      if (!isDark) return 'daylight'
+      const savedDark = localStorage.getItem('fxsim:mt5:last_dark_theme') as ThemePreset
+      if (savedDark === 'classic' || savedDark === 'cyber') return savedDark
       const saved = localStorage.getItem('fxsim:mt5:theme') as ThemePreset
-      if (saved) return saved
+      if (saved === 'classic' || saved === 'cyber') return saved
+      return 'cyber'
     } catch {
       return 'cyber'
     }
-    return 'cyber'
   })
-  const theme = propTheme ?? internalTheme
+
+  // Read saved dark preference into ref
+  useEffect(() => {
+    try {
+      const savedDark = localStorage.getItem('fxsim:mt5:last_dark_theme') as ThemePreset
+      if (savedDark === 'classic' || savedDark === 'cyber') {
+        lastDarkThemeRef.current = savedDark
+      }
+    } catch {}
+  }, [])
 
   // Auto-sync with document day/night theme toggle (website header Sun/Moon button)
+  // In light mode: theme MUST be 'daylight'
+  // In dark mode: theme MUST be a dark theme ('cyber' or 'classic', never 'daylight')
+  const rawTheme = propTheme ?? internalTheme
+  const theme: ThemePreset = useMemo(() => {
+    if (!isDocDark) return 'daylight'
+    if (rawTheme === 'daylight') return lastDarkThemeRef.current || 'cyber'
+    return rawTheme
+  }, [isDocDark, rawTheme])
+
+  // Synchronize internal state, parent callbacks, and localStorage on dark/light switch
   useEffect(() => {
     if (!isDocDark) {
-      setInternalTheme('daylight')
+      if (internalTheme !== 'daylight') setInternalTheme('daylight')
+      if (propTheme && propTheme !== 'daylight' && propOnChangeTheme) {
+        propOnChangeTheme('daylight')
+      }
+      try { localStorage.setItem('fxsim:mt5:theme', 'daylight') } catch {}
     } else {
-      setInternalTheme((prev) => (prev === 'daylight' ? (lastDarkThemeRef.current || 'cyber') : prev))
+      const targetDark = lastDarkThemeRef.current || 'cyber'
+      if (internalTheme === 'daylight') setInternalTheme(targetDark)
+      if (propTheme === 'daylight' && propOnChangeTheme) {
+        propOnChangeTheme(targetDark)
+      }
+      try { localStorage.setItem('fxsim:mt5:theme', targetDark) } catch {}
     }
-  }, [isDocDark])
+  }, [isDocDark, propTheme, internalTheme, propOnChangeTheme])
 
   // Fullscreen toggle handler (supporting both native Fullscreen API and fixed-viewport fallback)
   const toggleFs = useCallback(async () => {
@@ -246,8 +294,14 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   })
   const [loading, setLoading] = useState(false)
 
-  // Persist drawings per symbol
-  const drawingsKey = `fxsim_mt5_drawings_v1_${active}`
+  // Persist drawings per symbol (isolated by chartContext if in arena or tournament)
+  const drawingsKey = useMemo(() => {
+    if (chartContext && chartContext !== 'main') {
+      return `fxsim_mt5_drawings_v1_${chartContext}_${active}`
+    }
+    return `fxsim_mt5_drawings_v1_${active}`
+  }, [chartContext, active])
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem(drawingsKey)
@@ -329,6 +383,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   const handleThemeChange = (th: ThemePreset) => {
     if (th !== 'daylight') {
       lastDarkThemeRef.current = th
+      try { localStorage.setItem('fxsim:mt5:last_dark_theme', th) } catch {}
     }
     if (propOnChangeTheme) propOnChangeTheme(th)
     else setInternalTheme(th)

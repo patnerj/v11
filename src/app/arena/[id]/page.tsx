@@ -14,7 +14,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useAuth } from '@/store/auth'
-import type { PvpLiveStateResponse } from '@/types/api'
+import type { PvpLiveStateResponse, Position } from '@/types/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -153,6 +153,32 @@ export default function PvpLiveBattleArenaPage() {
     if (currentUserId === challenger.user_id) return challenger.position
     return null
   }, [isParticipant, currentUserId, creator.user_id, creator.position, challenger.user_id, challenger.position])
+
+  // Isolate arena match position for MT5 canvas chart (strictly excluding main account positions)
+  const arenaPositions = useMemo<Position[]>(() => {
+    if (!myPosition || !myPosition.direction || myPosition.direction === 'flat' || !myPosition.open_price) {
+      return []
+    }
+    return [
+      {
+        id: 999000000 + matchId,
+        user_id: currentUserId,
+        account_id: 0,
+        order_id: null,
+        symbol: match?.symbol || 'BTCUSD',
+        type: myPosition.direction as 'buy' | 'sell',
+        lots: myPosition.lot_size || 1.0,
+        open_price: Number(myPosition.open_price),
+        sl: null,
+        tp: null,
+        pnl: Number(myPosition.floating_pnl || 0),
+        commission: 0,
+        swap: 0,
+        magic: 0,
+        created_at: new Date().toISOString(),
+      } as unknown as Position,
+    ]
+  }, [myPosition, matchId, currentUserId, match?.symbol])
 
   // Weekend Market Status (Guarded behind mounted state to eliminate SSR hydration mismatch per Rule 29.4)
   const isWeekendClosed = useMemo(() => {
@@ -347,7 +373,10 @@ export default function PvpLiveBattleArenaPage() {
             <ArenaChart 
               symbol={match?.symbol || 'BTCUSD'} 
               currentPrice={liveState?.prices?.ask} 
-              height={580} 
+              height={580}
+              chartContext={`arena_${matchId}`}
+              positions={arenaPositions}
+              pendingOrders={[]}
             />
           </div>
 
