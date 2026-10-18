@@ -88,12 +88,13 @@ export default function Mt5WebTerminalPage() {
   const rawPositions = usePrices((s) => s.positions)
   const optimisticPositions = usePrices((s) => s.optimisticPositions)
   const positions = useMemo(() => {
-    if (!rawPositions && (!optimisticPositions || optimisticPositions.length === 0)) return rawPositions
-    const real = rawPositions || []
-    const opt = (optimisticPositions || []).filter((o) => !real.some((r) => r.id === o.id))
+    const real = Array.isArray(rawPositions) ? rawPositions : []
+    const opt = (Array.isArray(optimisticPositions) ? optimisticPositions : []).filter((o) => !real.some((r) => r.id === o.id))
     return [...opt, ...real]
   }, [rawPositions, optimisticPositions])
-  const pending = usePrices((s) => s.pending)
+  const rawPending = usePrices((s) => s.pending)
+  const pending = useMemo(() => (Array.isArray(rawPending) ? rawPending : []), [rawPending])
+  const pendingActiveCount = useMemo(() => pending.filter((o) => o.status === 'pending').length, [pending])
 
   const [chs, setChs] = useState<ChallengeAccount[] | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -525,9 +526,9 @@ export default function Mt5WebTerminalPage() {
                     )}
                   >
                     Pending Orders
-                    {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
+                    {pendingActiveCount > 0 && (
                       <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-[10px] font-bold px-1">
-                        {pending.filter((o) => o.status === 'pending').length}
+                        {pendingActiveCount}
                       </span>
                     )}
                   </button>
@@ -556,7 +557,14 @@ export default function Mt5WebTerminalPage() {
                       }}
                     />
                   ) : (
-                    <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                    <PendingOrdersTable
+                      orders={pending}
+                      onChanged={onChanged}
+                      onViewChart={(sym) => {
+                        useTerminal.getState().setActive(sym)
+                        setMobileView('chart')
+                      }}
+                    />
                   )}
                 </SectionErrorBoundary>
               </div>
@@ -637,9 +645,9 @@ export default function Mt5WebTerminalPage() {
           >
             <div className="relative">
               <ListOrdered className="h-4 w-4 mb-0.5" />
-              {positions && positions.length > 0 && (
+              {(positions.length > 0 || pendingActiveCount > 0) && (
                 <span className="absolute -top-1 -right-2.5 h-3.5 min-w-3.5 px-1 rounded-full bg-accent text-accent-fg text-[9px] font-bold flex items-center justify-center">
-                  {positions.length}
+                  {positions.length > 0 ? positions.length : pendingActiveCount}
                 </span>
               )}
             </div>
@@ -1110,9 +1118,9 @@ export default function Mt5WebTerminalPage() {
                         )}
                       >
                         Pending Orders
-                        {pending && pending.filter((o) => o.status === 'pending').length > 0 && (
+                        {pendingActiveCount > 0 && (
                           <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warn-muted text-warn text-[10px] font-semibold px-1">
-                            {pending.filter((o) => o.status === 'pending').length}
+                            {pendingActiveCount}
                           </span>
                         )}
                       </button>
@@ -1139,7 +1147,11 @@ export default function Mt5WebTerminalPage() {
                             onViewChart={(sym) => useTerminal.getState().setActive(sym)}
                           />
                         ) : (
-                          <PendingOrdersTable orders={pending} onChanged={onChanged} />
+                          <PendingOrdersTable
+                            orders={pending}
+                            onChanged={onChanged}
+                            onViewChart={(sym) => useTerminal.getState().setActive(sym)}
+                          />
                         )}
                       </SectionErrorBoundary>
                     </div>

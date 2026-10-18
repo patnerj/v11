@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
         const q = result.indicators.quote[0]
         const count = ts.length
 
-        const pip = symbol.includes('JPY') ? 0.01 : 0.0001
+        const pip = getSymbolPip(symbol)
         const candles = []
         for (let i = 0; i < count; i++) {
           const o = q.open?.[i]
@@ -174,9 +174,21 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ ok: false, error: 'Feed unavailable' }, { status: 502 })
 }
 
+function getSymbolPip(sym: string): number {
+  const s = sym.toUpperCase()
+  if (s.includes('JPY')) return 0.01
+  if (s.includes('XAU') || s.includes('GOLD')) return 0.01
+  if (s.includes('XAG') || s.includes('SILVER')) return 0.001
+  if (s.includes('US30') || s.includes('DJI') || s.includes('GER40') || s.includes('DAX')) return 1.0
+  if (s.includes('US500') || s.includes('SPX') || s.includes('NAS100') || s.includes('NDX')) return 0.1
+  if (s.includes('BTC') || s.includes('ETH')) return 0.1
+  return 0.0001
+}
+
 function aggregateH1ToH4(h1Candles: any[]): any[] {
+  const sorted = [...h1Candles].sort((a, b) => a.time - b.time)
   const h4Map = new Map<number, any>()
-  for (const c of h1Candles) {
+  for (const c of sorted) {
     const bucket = Math.floor(c.time / (4 * 3600 * 1000)) * (4 * 3600 * 1000)
     const existing = h4Map.get(bucket)
     if (!existing) {

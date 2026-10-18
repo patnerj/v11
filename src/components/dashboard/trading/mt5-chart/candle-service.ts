@@ -1,5 +1,4 @@
 /**
-/**
  * MT5 Pro Historical Candles & Tick Interpolation Pipeline
  * Feeds authoritative market data to the HTML5 Canvas MT5 Pro Engine.
  */
@@ -432,8 +431,9 @@ export function updateCandlesWithLiveTick(
 
   const tfSeconds = TIMEFRAME_SECONDS[timeframe] || 60
   const tfMs = tfSeconds * 1000
-  const tickTime = tick.time ? Math.floor(tick.time / 1000) * 1000 : Date.now()
-  const tickCandleTime = Math.floor(tickTime / tfMs) * tfMs
+  const rawTime = tick.time || Date.now()
+  const tickMs = rawTime < 1e11 ? rawTime * 1000 : rawTime
+  const tickCandleTime = Math.floor(tickMs / tfMs) * tfMs
 
   const lastCandle = candles[candles.length - 1]
   const currentPrice = parseFloat(tick.bid.toFixed(digits))

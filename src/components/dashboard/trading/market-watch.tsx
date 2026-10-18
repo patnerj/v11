@@ -33,8 +33,10 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick, showBidA
   // Filter + group
   const grouped = useMemo(() => {
     const q  = query.trim().toLowerCase()
-    const filtered = symbols.filter((s) => {
-      if (tab === 'watch' && !watchlist.includes(s.symbol)) return false
+    const safeSymbols = Array.isArray(symbols) ? symbols : []
+    const safeWatchlist = Array.isArray(watchlist) ? watchlist : []
+    const filtered = safeSymbols.filter((s) => {
+      if (tab === 'watch' && !safeWatchlist.includes(s.symbol)) return false
       // Defensively filter out temporary/corrupted test symbols like SOLUSD_1789730582 and inactive SOLUSD
       if (/_[0-9]+$/.test(s.symbol) || s.symbol === 'SOLUSD') return false
       if (!q) return true

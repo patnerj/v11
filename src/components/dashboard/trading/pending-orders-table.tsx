@@ -16,9 +16,10 @@ import { cn } from '@/lib/cn'
 interface Props {
   orders: PendingOrder[] | null
   onChanged?: () => void
+  onViewChart?: (symbol: string) => void
 }
 
-export const PendingOrdersTable = memo(function PendingOrdersTable({ orders, onChanged }: Props) {
+export const PendingOrdersTable = memo(function PendingOrdersTable({ orders, onChanged, onViewChart }: Props) {
   if (orders === null) {
     return (
       <div className="p-3 space-y-2">
@@ -27,7 +28,8 @@ export const PendingOrdersTable = memo(function PendingOrdersTable({ orders, onC
     )
   }
   // Filter to active/pending only for the table; show full status as Badge
-  const active = orders.filter((o) => o.status === 'pending')
+  const safeOrders = Array.isArray(orders) ? orders : []
+  const active = safeOrders.filter((o) => o.status === 'pending')
 
   if (active.length === 0) {
     return (
@@ -72,7 +74,7 @@ export const PendingOrdersTable = memo(function PendingOrdersTable({ orders, onC
         </thead>
         <tbody>
           {active.map((o, i) => (
-            <Row key={o.id} order={o} index={i} onChanged={onChanged} />
+            <Row key={o.id} order={o} index={i} onChanged={onChanged} onViewChart={onViewChart} />
           ))}
         </tbody>
       </table>
@@ -80,7 +82,7 @@ export const PendingOrdersTable = memo(function PendingOrdersTable({ orders, onC
   )
 })
 
-function Row({ order, index, onChanged }: { order: PendingOrder; index: number; onChanged?: () => void }) {
+function Row({ order, index, onChanged, onViewChart }: { order: PendingOrder; index: number; onChanged?: () => void; onViewChart?: (symbol: string) => void }) {
   const getMeta = useTerminal((s) => s.getMeta)
   const meta    = getMeta(order.symbol)
   const digits  = meta?.digits || symbolDigits(order.symbol)
@@ -114,7 +116,18 @@ function Row({ order, index, onChanged }: { order: PendingOrder; index: number; 
     >
       <Td>
         <div className="flex items-center gap-1.5">
-          <span className="font-semibold terminal-num">{order.symbol}</span>
+          {onViewChart ? (
+            <button
+              type="button"
+              onClick={() => onViewChart(order.symbol)}
+              className="font-semibold terminal-num text-text hover:text-accent hover:underline cursor-pointer transition-colors text-left"
+              title={`View ${order.symbol} on chart`}
+            >
+              {order.symbol}
+            </button>
+          ) : (
+            <span className="font-semibold terminal-num">{order.symbol}</span>
+          )}
           {order.isOptimistic && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
               In-Flight

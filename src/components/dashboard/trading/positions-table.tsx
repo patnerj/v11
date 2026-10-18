@@ -20,6 +20,14 @@ import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashbo
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ClosePositionModal } from '@/components/dashboard/trading/close-position-modal'
 
+function normalizePositions(data: unknown): Position[] {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as any).positions)) {
+    return (data as any).positions
+  }
+  return []
+}
+
 interface Props {
   positions: Position[] | null
   /** Called after a successful close/partial/sltp so parent can refresh. */
@@ -30,7 +38,8 @@ interface Props {
   onViewChart?: (symbol: string) => void
 }
 
-export const PositionsTable = memo(function PositionsTable({ positions, onChanged, compact, onViewChart }: Props) {
+export const PositionsTable = memo(function PositionsTable({ positions: rawPositions, onChanged, compact, onViewChart }: Props) {
+  const positions = useMemo(() => (rawPositions ? normalizePositions(rawPositions) : null), [rawPositions])
   const [shareTrade, setShareTrade] = useState<ShareTradeData | null>(null)
   const [isCloseAllConfirmOpen, setIsCloseAllConfirmOpen] = useState(false)
   const [isClosingAll, setIsClosingAll] = useState(false)
@@ -678,7 +687,18 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, 
       >
         <Td>
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold terminal-num">{pos.symbol}</span>
+            {onViewChart ? (
+              <button
+                type="button"
+                onClick={() => onViewChart(pos.symbol)}
+                className="font-semibold terminal-num text-text hover:text-accent hover:underline cursor-pointer transition-colors text-left"
+                title={`View ${pos.symbol} on chart`}
+              >
+                {pos.symbol}
+              </button>
+            ) : (
+              <span className="font-semibold terminal-num">{pos.symbol}</span>
+            )}
             {pos.isOptimistic && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                 In-Flight

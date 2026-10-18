@@ -192,6 +192,8 @@ export const Mt5Canvas = memo(
     candlesRef.current = candles
     const positionsRef = useRef(positions)
     positionsRef.current = positions
+    const pendingOrdersRef = useRef(pendingOrders)
+    pendingOrdersRef.current = pendingOrders
     const indicatorsRef = useRef(indicators)
     indicatorsRef.current = indicators
 
@@ -200,6 +202,7 @@ export const Mt5Canvas = memo(
       isDragging: boolean
       isPinching: boolean
       isDraggingSlTp: boolean
+      isDraggingPending: boolean
       startX: number
       startY: number
       startScrollOffset: number
@@ -213,6 +216,7 @@ export const Mt5Canvas = memo(
       isDragging: false,
       isPinching: false,
       isDraggingSlTp: false,
+      isDraggingPending: false,
       startX: 0,
       startY: 0,
       startScrollOffset: 0,
@@ -2792,6 +2796,46 @@ export const Mt5Canvas = memo(
                 return
               }
             }
+
+            // (h) Pending orders touch cancellation & dragging
+            const symPending = pendingOrdersRef.current.filter((o) => o.symbol === symbol && o.status === 'pending')
+            for (const ord of symPending) {
+              const tgtPrice = toNum(ord.target_price)
+              if (tgtPrice <= 0) continue
+              const yTgt = priceToY(tgtPrice)
+              const ordBadgeRight = chartW - 8
+
+              // Quick tap to cancel pending order [x] button on chart
+              if (Math.abs(y - yTgt) < 18 && x >= ordBadgeRight - 36 && x <= ordBadgeRight + 12) {
+                api.pendingCancel(ord.id).then((r) => {
+                  if (r.ok && r.data.success) {
+                    playOrderSuccessSound()
+                    toast.success(`Cancelled pending order #${ord.id}`)
+                    invalidateFxsim('/pending-order/my')
+                    onChanged?.()
+                  } else {
+                    playOrderLossThumpSound()
+                    toast.error('Failed to cancel order')
+                  }
+                })
+                return
+              }
+
+              // Touch & Drag pending order target price line
+              if (Math.abs(y - yTgt) < 18 && x < chartW) {
+                touchStateRef.current.isDragging = false
+                touchStateRef.current.isDraggingSlTp = false
+                touchStateRef.current.isDraggingPending = true
+                draggingPendingRef.current = {
+                  ordId: ord.id,
+                  order: ord,
+                  currentPrice: tgtPrice,
+                  initialPrice: tgtPrice,
+                }
+                if (e.cancelable) e.preventDefault()
+                return
+              }
+            }
           }
 
           touchStateRef.current.isDragging = true
@@ -2866,6 +2910,17 @@ export const Mt5Canvas = memo(
             return
           }
 
+          // Active Touch Pending Order Dragging
+          if (touchStateRef.current.isDraggingPending && draggingPendingRef.current) {
+            const curPrice = yToPrice(y)
+            draggingPendingRef.current.currentPrice = curPrice
+            setDraggingPendingPreview({
+              ordId: draggingPendingRef.current.ordId,
+              price: curPrice,
+            })
+            return
+          }
+
           if (touchStateRef.current.isDragging) {
             if (touchStateRef.current.isAxisDrag) {
               const deltaY = touchStateRef.current.startY - y
@@ -2932,10 +2987,52 @@ export const Mt5Canvas = memo(
           return
         }
 
+        if (touchStateRef.current.isDraggingPending) {
+          touchStateRef.current.isDraggingPending = false
+          if (draggingPendingRef.current) {
+            const ord = draggingPendingRef.current.order
+            const finalPrice = draggingPendingRef.current.currentPrice
+            const newPrice = parseFloat(finalPrice.toFixed(digits))
+
+            if (newPrice > 0 && Math.abs(newPrice - toNum(ord.target_price)) > pSize * 0.5) {
+              api.pendingCancel(ord.id).then((cancelRes) => {
+                if (cancelRes.ok && cancelRes.data.success) {
+                  api
+                    .pendingPlace({
+                      symbol: ord.symbol,
+                      order_type: ord.order_type as any,
+                      type: ord.type as any,
+                      lot_size: toNum(ord.lot_size ?? (ord as any).lots ?? (ord as any).volume ?? 0.01),
+                      target_price: newPrice,
+                      sl: ord.sl !== null ? toNum(ord.sl) : null,
+                      tp: ord.tp !== null ? toNum(ord.tp) : null,
+                    })
+                    .then((placeRes) => {
+                      if (placeRes.ok && placeRes.data.success) {
+                        playOrderSuccessSound()
+                        toast.success(`Updated pending order #${ord.id} to ${fmtPrice(newPrice, digits)}`)
+                        invalidateFxsim('/pending-order/my')
+                        onChanged?.()
+                      } else {
+                        playOrderLossThumpSound()
+                        toast.error(placeRes.ok ? placeRes.data.message || 'Failed to replace pending order' : placeRes.error)
+                      }
+                    })
+                }
+              })
+            }
+
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
+          }
+          return
+        }
+
         if (e.touches.length === 0) {
           touchStateRef.current.isDragging = false
           touchStateRef.current.isPinching = false
           touchStateRef.current.isAxisDrag = false
+          touchStateRef.current.isDraggingPending = false
         } else if (e.touches.length === 1) {
           const touch = e.touches[0]
           const rect = canvas.getBoundingClientRect()

@@ -87,8 +87,14 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   const storePending = usePrices((s) => s.pending)
   const account = usePrices((s) => s.account)
 
-  const positions = useMemo(() => propPositions ?? storePositions ?? [], [propPositions, storePositions])
-  const pendingOrders = useMemo(() => propPending ?? storePending ?? [], [propPending, storePending])
+  const positions = useMemo(() => {
+    const src = propPositions ?? storePositions
+    return Array.isArray(src) ? src : []
+  }, [propPositions, storePositions])
+  const pendingOrders = useMemo(() => {
+    const src = propPending ?? storePending
+    return Array.isArray(src) ? src : []
+  }, [propPending, storePending])
 
   const digits = useMemo(() => symbolDigits(active, meta), [active, meta])
   const pSize = useMemo(() => pipSize(active, digits), [active, digits])
