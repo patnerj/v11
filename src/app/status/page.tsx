@@ -23,7 +23,8 @@ import {
   ExternalLink,
   Lock,
   Globe2,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useBranding } from '@/store/branding'
@@ -120,6 +121,7 @@ export default function StatusPage() {
   const [services, setServices] = useState<ServiceComponent[]>(SERVICES)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [liveLatencyMs, setLiveLatencyMs] = useState<number>(14)
+  const [uptimePct, setUptimePct] = useState<number>(99.98)
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -137,69 +139,73 @@ export default function StatusPage() {
       setLiveLatencyMs(rtt)
       const data = await res.json().catch(() => null)
       const isUp = res.ok && data?.status === 'operational'
+      if (data?.uptime_90d_pct) {
+        setUptimePct(Number(data.uptime_90d_pct) || 99.98)
+      }
+      const nodes = (data && typeof data === 'object' && data.nodes) ? data.nodes : {}
 
       setServices([
         {
           name: 'MetaTrader 5 Bridge & Execution Gateway',
           description: 'Ultra-low latency institutional bridge interconnecting MT5 demo/live servers',
-          latency: `${Math.round(rtt * 0.45) + 5}ms`,
-          uptime: '99.99%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'Equinix LD4 (London)',
+          latency: `${Math.round(rtt * 0.45) + (nodes.mt5_bridge?.base_latency_ms ? Math.round(nodes.mt5_bridge.base_latency_ms / 3) : 5)}ms`,
+          uptime: `${nodes.mt5_bridge?.uptime_pct ?? 99.99}%`,
+          status: isUp && nodes.mt5_bridge?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.mt5_bridge?.location || 'Equinix LD4 (London)',
           icon: Terminal
         },
         {
           name: 'WebTrader Pro Engine & Order Dispatcher',
           description: 'High-frequency order processing, instant market execution, and SL/TP engine',
-          latency: `${Math.round(rtt * 0.35) + 6}ms`,
-          uptime: '99.98%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'AWS EU-West & Cloudflare Edge',
+          latency: `${Math.round(rtt * 0.35) + (nodes.webtrader_engine?.base_latency_ms ? Math.round(nodes.webtrader_engine.base_latency_ms / 3) : 6)}ms`,
+          uptime: `${nodes.webtrader_engine?.uptime_pct ?? 99.98}%`,
+          status: isUp && nodes.webtrader_engine?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.webtrader_engine?.location || 'AWS EU-West & Cloudflare Edge',
           icon: Cpu
         },
         {
           name: 'Live ECN Market Data Feeds',
           description: 'Direct tier-1 liquidity pricing stream (FX, Crypto, Indices & Metals)',
           latency: `${Math.max(2, Math.round(rtt * 0.15))}ms`,
-          uptime: '100.0%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'Pepperstone ECN Raw Feed',
+          uptime: `${nodes.market_feed?.uptime_pct ?? 100.0}%`,
+          status: isUp && nodes.market_feed?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.market_feed?.location || 'Pepperstone ECN Raw Feed',
           icon: BarChart3
         },
         {
           name: 'Evaluation & Static Drawdown Guard',
           description: 'Automated phase transition, breach protection, and profit target verification',
           latency: `< ${Math.max(4, Math.round(rtt * 0.2))}ms`,
-          uptime: '100.0%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'Core Risk Engine Cluster',
+          uptime: `${nodes.risk_engine?.uptime_pct ?? 100.0}%`,
+          status: isUp && nodes.risk_engine?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.risk_engine?.location || 'Core Risk Engine Cluster',
           icon: ShieldCheck
         },
         {
           name: 'Treasury Disbursal & Crypto Settlement',
           description: 'Automated bi-weekly ledger, USDT TRC-20, ERC-20, BTC & Bank Wire dispatch',
           latency: 'Instant',
-          uptime: '99.97%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'Institutional Vault Gateway',
+          uptime: `${nodes.treasury?.uptime_pct ?? 99.97}%`,
+          status: isUp && nodes.treasury?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.treasury?.location || 'Institutional Vault Gateway',
           icon: Coins
         },
         {
           name: 'Trader Portal & Authentication Gateway',
           description: 'Encrypted JWT sessions, Argon2 password hashing, and 2FA protection',
           latency: `${rtt}ms`,
-          uptime: '100.0%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'Global Anycast CDN',
+          uptime: `${nodes.auth_gateway?.uptime_pct ?? 100.0}%`,
+          status: isUp && nodes.auth_gateway?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.auth_gateway?.location || 'Global Anycast CDN',
           icon: Lock
         },
         {
           name: 'Identity & Automated KYC Queue',
           description: 'Real-time document recognition, AML blacklist screening, and automated verification',
           latency: 'Real-Time',
-          uptime: '99.95%',
-          status: isUp ? 'operational' : 'degraded',
-          location: 'Tier-1 KYC Regulatory API',
+          uptime: `${nodes.kyc_queue?.uptime_pct ?? 99.95}%`,
+          status: isUp && nodes.kyc_queue?.status !== 'degraded' ? 'operational' : 'degraded',
+          location: nodes.kyc_queue?.location || 'Tier-1 KYC Regulatory API',
           icon: Globe2
         }
       ])
@@ -254,25 +260,40 @@ export default function StatusPage() {
             </p>
 
             {/* Overall Health Pill */}
-            <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-4 p-3 px-6 rounded-2xl bg-surface/90 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-              <div className="flex items-center gap-2.5 text-emerald-500 dark:text-emerald-400 font-bold text-sm">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
-                <span>All Core Systems 100% Operational</span>
-              </div>
-              <span className="text-border-subtle hidden sm:inline">|</span>
-              <div className="flex items-center gap-2 text-xs text-text-muted font-mono">
-                <Clock className="h-3.5 w-3.5 text-text-faint" />
-                <span>Verified: {lastChecked}</span>
-                <button 
-                  onClick={handleRefresh} 
-                  disabled={isRefreshing}
-                  title="Re-check telemetry" 
-                  className="hover:text-emerald-500 transition-colors ml-1 p-1 rounded disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
-                </button>
-              </div>
-            </div>
+            {(() => {
+              const allOperational = services.length > 0 && services.every((s) => s.status === 'operational')
+              return (
+                <div className={`mt-8 inline-flex flex-wrap items-center justify-center gap-4 p-3 px-6 rounded-2xl bg-surface/90 border transition-colors ${
+                  allOperational
+                    ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.15)]'
+                    : 'border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.15)]'
+                }`}>
+                  <div className={`flex items-center gap-2.5 font-bold text-sm ${
+                    allOperational ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'
+                  }`}>
+                    {allOperational ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                    )}
+                    <span>{allOperational ? 'All Core Systems 100% Operational' : 'Telemetry Degraded / Under Observation'}</span>
+                  </div>
+                  <span className="text-border-subtle hidden sm:inline">|</span>
+                  <div className="flex items-center gap-2 text-xs text-text-muted font-mono">
+                    <Clock className="h-3.5 w-3.5 text-text-faint" />
+                    <span>Verified: {lastChecked} ({liveLatencyMs}ms probe)</span>
+                    <button 
+                      onClick={handleRefresh} 
+                      disabled={isRefreshing}
+                      title="Re-check telemetry" 
+                      className="hover:text-emerald-500 transition-colors ml-1 p-1 rounded disabled:opacity-50"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Quick Metrics KPI Bar */}
@@ -280,13 +301,13 @@ export default function StatusPage() {
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
               <div className="text-xs text-text-muted font-medium mb-1">MT5 London Latency</div>
               <div className="text-2xl font-bold font-mono text-emerald-500 dark:text-emerald-400">
-                {services[0]?.latency || '14 ms'}
+                {services[0]?.latency || `${liveLatencyMs} ms`}
               </div>
               <div className="text-2xs text-text-faint mt-1">Equinix LD4 Fiber</div>
             </div>
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
               <div className="text-xs text-text-muted font-medium mb-1">90-Day Uptime</div>
-              <div className="text-2xl font-bold font-mono text-emerald-500 dark:text-emerald-400">99.98%</div>
+              <div className="text-2xl font-bold font-mono text-emerald-500 dark:text-emerald-400">{uptimePct}%</div>
               <div className="text-2xs text-text-faint mt-1">Zero downtime breaches</div>
             </div>
             <div className="p-4 rounded-xl bg-surface/80 border border-border-subtle/80">
@@ -312,7 +333,7 @@ export default function StatusPage() {
               </div>
               <div className="flex items-center gap-2 text-xs font-mono text-emerald-500 dark:text-emerald-400 font-semibold">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
-                <span>99.98% Operational Availability</span>
+                <span>{uptimePct}% Operational Availability</span>
               </div>
             </div>
 

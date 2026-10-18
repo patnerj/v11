@@ -125,23 +125,29 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
 
     // 3.5 Large Institutional Brand Watermark (Subtle background rotation)
     ctx.save()
-    ctx.translate(width / 2, height / 2 - 10)
-    ctx.rotate(-Math.PI / 18)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.025)'
-    ctx.font = '900 115px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(brandName.toUpperCase(), 0, 0)
-    ctx.restore()
+    try {
+      ctx.translate(width / 2, height / 2 - 10)
+      ctx.rotate(-Math.PI / 18)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.025)'
+      ctx.font = '900 115px "Plus Jakarta Sans", "Poppins", -apple-system, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(brandName.toUpperCase(), 0, 0)
+    } finally {
+      ctx.restore()
+    }
 
     // 3.6 Instrument Pair Watermark (Subtle background accent)
     ctx.save()
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)'
-    ctx.font = '900 76px "JetBrains Mono", monospace'
-    ctx.textAlign = 'right'
-    ctx.textBaseline = 'top'
-    ctx.fillText(trade.symbol.toUpperCase(), width - 60, 140)
-    ctx.restore()
+    try {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.035)'
+      ctx.font = '900 76px "JetBrains Mono", monospace'
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'top'
+      ctx.fillText(trade.symbol.toUpperCase(), width - 60, 140)
+    } finally {
+      ctx.restore()
+    }
 
     // 4. Card Outer Border with Neon Accent Line
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
@@ -315,14 +321,13 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
 
       ctx.fillStyle = '#0A0E17'
       for (let r = 0; r < modCount; r++) {
+        const y0 = Math.round(qrY + padding + r * cellSize)
+        const y1 = Math.round(qrY + padding + (r + 1) * cellSize)
         for (let c = 0; c < modCount; c++) {
           if (qr.modules.get(r, c)) {
-            ctx.fillRect(
-              Math.round(qrX + padding + c * cellSize),
-              Math.round(qrY + padding + r * cellSize),
-              Math.ceil(cellSize),
-              Math.ceil(cellSize)
-            )
+            const x0 = Math.round(qrX + padding + c * cellSize)
+            const x1 = Math.round(qrX + padding + (c + 1) * cellSize)
+            ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
           }
         }
       }
@@ -336,12 +341,13 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
       ctx.fillRect(qrX + 38, qrY + 38, 10, 10)
     }
 
+    ctx.textAlign = 'right'
     ctx.fillStyle = '#9CA3AF'
     ctx.font = `600 11px ${primaryFontFamily}`
-    ctx.fillText('SCAN TO VERIFY', qrX - 110, footerY + 26)
+    ctx.fillText('SCAN TO VERIFY', qrX - 16, footerY + 26)
     ctx.fillStyle = '#6B7280'
     ctx.font = `500 10px ${primaryFontFamily}`
-    ctx.fillText(displayDomain, qrX - 110, footerY + 42)
+    ctx.fillText(displayDomain, qrX - 16, footerY + 42)
 
   }, [trade, traderHandle, accountId, isProfit, pnlPercent, brandName])
 

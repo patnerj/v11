@@ -47,18 +47,26 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
   onSelectionChange,
 }: DataTableProps<T>) {
   // Defensive array normalization per Rule 1.2 and Rule 133.2
+  const safeColumns: ColumnDef<T>[] = React.useMemo(() => {
+    return Array.isArray(columns) ? columns : []
+  }, [columns])
+
+  const safeSelectedIds = React.useMemo(() => {
+    return Array.isArray(selectedIds) ? selectedIds : []
+  }, [selectedIds])
+
   const safeData: T[] = React.useMemo(() => {
     if (Array.isArray(data)) return data
     if (data && typeof data === 'object') {
-      const candidate = (data as any).data || (data as any).items || (data as any).rows || (data as any).trades
+      const candidate = (data as any).data || (data as any).items || (data as any).rows || (data as any).trades || (data as any).results || (data as any).records || (data as any).list
       if (Array.isArray(candidate)) return candidate
     }
     return []
   }, [data])
 
   const allIds = React.useMemo(() => safeData.map((r, i) => r.id ?? i), [safeData])
-  const allSelected = safeData.length > 0 && allIds.every((id) => selectedIds.includes(id))
-  const someSelected = selectedIds.length > 0 && !allSelected
+  const allSelected = safeData.length > 0 && allIds.every((id) => safeSelectedIds.includes(id))
+  const someSelected = safeSelectedIds.length > 0 && !allSelected
 
   const toggleSelectAll = () => {
     if (allSelected) {
@@ -69,14 +77,14 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
   }
 
   const toggleSelectRow = (id: string | number) => {
-    if (selectedIds.includes(id)) {
-      onSelectionChange?.(selectedIds.filter((item) => item !== id))
+    if (safeSelectedIds.includes(id)) {
+      onSelectionChange?.(safeSelectedIds.filter((item) => item !== id))
     } else {
-      onSelectionChange?.([...selectedIds, id])
+      onSelectionChange?.([...safeSelectedIds, id])
     }
   }
 
-  const totalCols = columns.length + (selectable ? 1 : 0)
+  const totalCols = safeColumns.length + (selectable ? 1 : 0)
 
   return (
     <Table className={className}>
@@ -96,9 +104,9 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
               />
             </TableHead>
           )}
-          {columns.map((col) => (
+          {safeColumns.map((col, cIdx) => (
             <TableHead 
-              key={col.key} 
+              key={col.key || `head-${cIdx}`} 
               align={col.align} 
               hideOn={col.hideOn}
               className={col.className}
@@ -130,7 +138,7 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
         ) : (
           safeData.map((row, idx) => {
             const rowId = row.id ?? idx
-            const isSelected = selectedIds.includes(rowId)
+            const isSelected = safeSelectedIds.includes(rowId)
 
             return (
               <TableRow
@@ -154,9 +162,9 @@ export function DataTable<T extends { id?: string | number } | Record<string, an
                     />
                   </TableCell>
                 )}
-                {columns.map((col) => (
+                {safeColumns.map((col, cIdx) => (
                   <TableCell 
-                    key={col.key} 
+                    key={col.key || `cell-${idx}-${cIdx}`} 
                     align={col.align} 
                     hideOn={col.hideOn}
                     className={col.className}
