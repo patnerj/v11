@@ -6,7 +6,7 @@ import {
   Sparkles, Download, Share2, Copy, Check, Twitter,
   ShieldCheck, ArrowRight, Eye, RefreshCw
 } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fmtUSD } from '@/lib/format'
@@ -26,11 +26,11 @@ interface ViralPayoutCardModalProps {
 export function ViralPayoutCardModal({
   isOpen,
   onClose,
-  amount = 3850,
-  traderName = 'Pro Trader',
+  amount = 0,
+  traderName = 'Trader',
   date = new Date().toLocaleDateString(),
   method = 'USDT (TRC20)',
-  payoutId = 101,
+  payoutId = 0,
 }: ViralPayoutCardModalProps) {
   const storeBrand = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
   const brandName = storeBrand
@@ -39,6 +39,33 @@ export function ViralPayoutCardModal({
   const [themeStyle, setThemeStyle] = useState<'emerald' | 'cyan' | 'gold'>('emerald')
   const [downloading, setDownloading] = useState(false)
   const [copiedShare, setCopiedShare] = useState(false)
+
+  if (!amount || amount <= 0) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-md bg-surface border-border p-6 text-center">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">Proof of Payout</DialogTitle>
+            <DialogDescription className="text-xs text-text-muted">
+              Viral social payout cards are available upon approved payout.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-3">
+            <div className="h-12 w-12 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center mx-auto">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="text-sm font-semibold text-text">No approved payouts yet</div>
+            <p className="text-xs text-text-muted max-w-xs mx-auto">
+              Viral shareable cards and official proof certificates are unlocked automatically once your funded withdrawal request is approved.
+            </p>
+          </div>
+          <DialogFooter className="justify-center sm:justify-center">
+            <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const shareText = `💰 Just received another verified profit split of ${fmtUSD(amount)} from @${brandName.replace(/\s+/g, '')}!

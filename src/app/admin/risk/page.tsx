@@ -1037,7 +1037,7 @@ export default function RiskManagementHubPage() {
                                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                                     </Link>
                                     <div className="text-2xs text-slate-500 dark:text-gray-500 font-mono">
-                                      Acc #{cluster.account_a_id} • {cluster.trader_a_email || 'trader@propfirm.com'}
+                                      Acc #{cluster.account_a_id} • {cluster.trader_a_email || '—'}
                                     </div>
                                   </div>
                                 </div>
@@ -1055,7 +1055,7 @@ export default function RiskManagementHubPage() {
                                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                                     </Link>
                                     <div className="text-2xs text-slate-500 dark:text-gray-500 font-mono">
-                                      Acc #{cluster.account_b_id} • {cluster.trader_b_email || 'trader@propfirm.com'}
+                                      Acc #{cluster.account_b_id} • {cluster.trader_b_email || '—'}
                                     </div>
                                   </div>
                                 </div>

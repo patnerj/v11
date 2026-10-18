@@ -58,6 +58,11 @@ export default function PayoutsPage() {
     .filter((p) => p.status === 'paid')
     .reduce((s, p) => s + (p.trader_amount || 0), 0)
 
+  const approvedPayouts = (Array.isArray(pdata?.history) ? pdata.history : [])
+    .filter((p) => (p.status === 'paid' || p.status === 'approved') && Number(p.trader_amount || 0) > 0)
+  const latestApproved = approvedPayouts[0] ?? null
+  const hasApprovedPayout = approvedPayouts.length > 0
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -132,7 +137,14 @@ export default function PayoutsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3 flex-wrap gap-2">
               <CardTitle>Funded accounts</CardTitle>
-              <Button size="sm" variant="outline" className="gap-1.5 shrink-0 border-accent/40 text-accent hover:bg-accent/10" onClick={() => setShowCertificate(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 shrink-0 border-accent/40 text-accent hover:bg-accent/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setShowCertificate(true)}
+                disabled={!hasApprovedPayout}
+                title={!hasApprovedPayout ? "Available upon approved payout" : "Generate 1-Click Viral Social Card"}
+              >
                 <Sparkles className="h-4 w-4 text-accent" /> 1-Click Viral Social Card
               </Button>
             </CardHeader>
@@ -303,11 +315,11 @@ export default function PayoutsPage() {
         <ViralPayoutCardModal 
           isOpen={true}
           onClose={() => setShowCertificate(false)}
-          amount={totalPaid > 0 ? totalPaid : (funded[0] ? Math.max(500, toNum(funded[0].current_balance) - toNum(funded[0].starting_balance)) : 1450)}
-          date={funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : new Date().toLocaleDateString()}
-          method={savedMethod?.method ?? 'USDT - TRC20'}
-          traderName={user?.display_name || user?.username || 'Pro Trader'}
-          payoutId={pdata?.history?.[0]?.id || 101}
+          amount={latestApproved ? (latestApproved.trader_amount || totalPaid) : totalPaid}
+          date={latestApproved?.processed_at ? fmtDate(latestApproved.processed_at) : (latestApproved?.requested_at ? fmtDate(latestApproved.requested_at) : (funded[0]?.funded_at ? fmtDate(funded[0].funded_at) : new Date().toLocaleDateString()))}
+          method={latestApproved?.payment_method ?? savedMethod?.method ?? 'USDT - TRC20'}
+          traderName={user?.display_name || user?.username || 'Trader'}
+          payoutId={latestApproved?.id || 0}
         />
       )}
     </div>
@@ -772,9 +784,9 @@ function PayoutOrdersList() {
 
 export function PayoutCertificateModal({
   onClose,
-  traderName = 'Prop Firm Trader',
-  amount = 1450,
-  date = 'Current Season',
+  traderName = 'Trader',
+  amount = 0,
+  date = new Date().toLocaleDateString(),
   method = 'USDT - TRC20',
 }: {
   onClose: () => void
@@ -784,6 +796,34 @@ export function PayoutCertificateModal({
   method?: string
 }) {
   const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
+
+  if (amount <= 0) {
+    return (
+      <Dialog open onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-md bg-surface border-border p-6 text-center">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">Proof of Payout Certificate</DialogTitle>
+            <DialogDescription className="text-xs text-text-muted">
+              Official payout certificates are available upon approved payout.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-3">
+            <div className="h-12 w-12 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center mx-auto">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="text-sm font-semibold text-text">No approved payouts yet</div>
+            <p className="text-xs text-text-muted max-w-xs mx-auto">
+              Certificates can only be generated for verified and approved payout disbursements.
+            </p>
+          </div>
+          <DialogFooter className="justify-center sm:justify-center">
+            <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   const shareText = `Just secured ${fmtUSD(amount)} payout with @${brandName.replace(/\s+/g, '')}! Seamless ${method} withdrawal. 🚀 Prop firm trading made real. #${brandName.replace(/\s+/g, '')} #Payout #Forex`
 
   const handleCopyShare = () => {
