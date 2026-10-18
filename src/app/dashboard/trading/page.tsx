@@ -469,7 +469,7 @@ function DesktopLayout({
       {/* Account switcher, Dual-Mode Chart Engine Switcher & Sound Toggle bar */}
       <div className="shrink-0 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex-1 min-w-0">
-          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={true} />
+          <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={chartEngine === 'tradingview'} />
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {/* Dual-Mode Chart Engine Switcher */}
@@ -478,9 +478,9 @@ function DesktopLayout({
               type="button"
               onClick={() => setChartEngine('mt5')}
               className={cn(
-                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
                 chartEngine === 'mt5'
-                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
                   : "text-text-muted hover:text-text hover:bg-surface-muted/50"
               )}
               title="Switch to MT5 Pro Native Canvas Chart"
@@ -492,9 +492,9 @@ function DesktopLayout({
               type="button"
               onClick={() => setChartEngine('tradingview')}
               className={cn(
-                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
                 chartEngine === 'tradingview'
-                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
                   : "text-text-muted hover:text-text hover:bg-surface-muted/50"
               )}
               title="Switch to TradingView Chart"

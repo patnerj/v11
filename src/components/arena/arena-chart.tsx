@@ -226,9 +226,9 @@ export const ArenaChart = memo(function ArenaChart({
               type="button"
               onClick={() => handleEngineChange('mt5')}
               className={cn(
-                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
                 chartEngine === 'mt5'
-                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
                   : "text-text-muted hover:text-text hover:bg-surface-muted/50"
               )}
               title="Switch to MT5 Pro Native Canvas Chart"
@@ -240,9 +240,9 @@ export const ArenaChart = memo(function ArenaChart({
               type="button"
               onClick={() => handleEngineChange('tv')}
               className={cn(
-                "px-2.5 py-1 rounded-md text-terminal-micro font-semibold flex items-center gap-1.5 transition-all cursor-pointer",
+                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
                 chartEngine === 'tv'
-                  ? "bg-accent text-accent-fg shadow-xs font-bold"
+                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
                   : "text-text-muted hover:text-text hover:bg-surface-muted/50"
               )}
               title="Switch to TradingView Chart"

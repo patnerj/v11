@@ -32,6 +32,7 @@ import { Mt5IndicatorsModal } from './mt5-indicators-modal'
 import { Mt5ObjectsModal } from './mt5-objects-modal'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
+import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 
 export interface Mt5ChartPanelProps {
   symbol?: string
@@ -117,11 +118,69 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   })
   const chartStyle = propChartStyle ?? internalChartStyle
 
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const isDocDark = useIsDarkTheme()
+  const lastDarkThemeRef = useRef<ThemePreset>('cyber')
+
   const [internalTheme, setInternalTheme] = useState<ThemePreset>(() => {
     if (typeof window === 'undefined') return 'cyber'
-    try { return (localStorage.getItem('fxsim:mt5:theme') as ThemePreset) || 'cyber' } catch { return 'cyber' }
+    try {
+      const saved = localStorage.getItem('fxsim:mt5:theme') as ThemePreset
+      if (saved) return saved
+    } catch {
+      return 'cyber'
+    }
+    return 'cyber'
   })
   const theme = propTheme ?? internalTheme
+
+  // Auto-sync with document day/night theme toggle (website header Sun/Moon button)
+  useEffect(() => {
+    if (!isDocDark) {
+      setInternalTheme('daylight')
+    } else {
+      setInternalTheme((prev) => (prev === 'daylight' ? (lastDarkThemeRef.current || 'cyber') : prev))
+    }
+  }, [isDocDark])
+
+  // Fullscreen toggle handler (supporting both native Fullscreen API and fixed-viewport fallback)
+  const toggleFs = useCallback(async () => {
+    const el = wrapRef.current
+    const isCurrentlyFs = !!document.fullscreenElement || isChartFs
+    try {
+      if (!isCurrentlyFs) {
+        if (el?.requestFullscreen) {
+          await el.requestFullscreen().catch(() => {})
+        }
+        useTerminal.getState().setChartFs(true)
+      } else {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen().catch(() => {})
+        }
+        useTerminal.getState().setChartFs(false)
+      }
+    } catch {
+      useTerminal.getState().setChartFs(!isCurrentlyFs)
+    }
+  }, [isChartFs])
+
+  // Sync native fullscreen changes (e.g. user pressing Escape in native mode)
+  useEffect(() => {
+    const onFsChange = () => {
+      const isFs = !!document.fullscreenElement
+      useTerminal.getState().setChartFs(isFs)
+    }
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  // Register fullscreen toggle handler with terminal store
+  useEffect(() => {
+    useTerminal.getState().registerChartFsHandler(toggleFs)
+    return () => {
+      useTerminal.getState().registerChartFsHandler(null)
+    }
+  }, [toggleFs])
 
   const [internalShowGrid, setInternalShowGrid] = useState(true)
   const showGrid = propShowGrid ?? internalShowGrid
@@ -268,6 +327,9 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
   }
 
   const handleThemeChange = (th: ThemePreset) => {
+    if (th !== 'daylight') {
+      lastDarkThemeRef.current = th
+    }
     if (propOnChangeTheme) propOnChangeTheme(th)
     else setInternalTheme(th)
     try { localStorage.setItem('fxsim:mt5:theme', th) } catch {}
@@ -410,6 +472,9 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
         e.preventDefault()
         canvasRef.current?.zoomOut()
       } else if (e.key === 'Escape') {
+        if (isChartFs) {
+          toggleFs()
+        }
         setActiveTool('select')
         setSelectedDrawingId(null)
         setContextMenu((prev) => ({ ...prev, visible: false }))
@@ -422,7 +487,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedDrawingId, toggleOneClick, handleDeleteDrawing])
+  }, [selectedDrawingId, toggleOneClick, handleDeleteDrawing, isChartFs, toggleFs])
 
   const selectedDrawing = useMemo(
     () => drawings.find((d) => d.id === selectedDrawingId) || null,
@@ -434,8 +499,10 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
 
   return (
     <div
+      ref={wrapRef}
       className={cn(
-        'relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-black select-none',
+        'relative flex flex-col w-full h-full min-h-0 overflow-hidden select-none',
+        theme === 'daylight' ? 'bg-white text-slate-900' : 'bg-black text-slate-100',
         isChartFs && 'fixed inset-0 z-50 w-screen h-screen'
       )}
       onClick={() => {
@@ -465,7 +532,7 @@ export const Mt5ChartPanel = memo(function Mt5ChartPanel({
           showOneClick={showOneClick}
           onToggleOneClick={toggleOneClick}
           isFullscreen={isChartFs}
-          onToggleFullscreen={toggleChartFs}
+          onToggleFullscreen={toggleFs}
           hideOneClick={hideOneClick}
         />
       )}
