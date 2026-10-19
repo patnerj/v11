@@ -104,8 +104,7 @@ export function ChallengeDrawer({
     if (!window.confirm(`Advance Challenge #${challenge.id} to ${nextPhaseName}?`)) return
     setIsAdvancing(true)
     try {
-      const action = nextPhase === 2 ? 'phase1' : 'funded'
-      const res = await api.admin.testToolsSet(challenge.id, action)
+      const res = await api.admin.testToolsSet(challenge.id, 'advance')
       if (res.ok) {
         toast.success(`Challenge #${challenge.id} advanced to ${nextPhaseName}!`)
         onRefresh?.()

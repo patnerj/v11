@@ -143,7 +143,7 @@ export function PayoutManagementModal({
     : `PO-${payout.id}`
 
   const traderName = payout.name || payout.username || payout.user_login || `Trader #${payout.user_id || payout.id}`
-  const traderEmail = payout.email || payout.user_email || `${payout.username || 'trader'}@example.com`
+  const traderEmail = payout.email || payout.user_email || '—'
   
   // Never invent a payout amount — this figure drives the actual balance
   // deduction when the payout is marked paid, so a fabricated fallback here

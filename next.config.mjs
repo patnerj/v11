@@ -129,7 +129,6 @@ const nextConfig = {
       { source: '/dashboard/competitions', destination: '/dashboard/tournaments', permanent: true },
       { source: '/admin/settings', destination: '/admin/config', permanent: true },
       { source: '/admin/audit-log', destination: '/admin/activity', permanent: true },
-      { source: '/admin/challenges', destination: '/admin/operations?tab=challenges', permanent: false },
     ]
   },
 };

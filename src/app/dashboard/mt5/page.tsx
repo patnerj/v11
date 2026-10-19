@@ -230,7 +230,7 @@ export default function Mt5WebTerminalPage() {
   }, [isXl, isFullChart])
 
   const { data: myTournaments } = useQuery({
-    queryKey: ['tournamentsMine'],
+    queryKey: ['tournaments-mine'],
     queryFn: () => api.tournaments.mine().then((r) => (r.ok ? r.data : [])),
     staleTime: 60_000,
   })

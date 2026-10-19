@@ -201,7 +201,7 @@ function PayoutsHubContent() {
           // a fabricated id would point an admin at the wrong trader.
           user_id: p.user_id,
           trader_name: p.name || p.username || p.user_login || `Trader #${p.user_id || rawId}`,
-          email: p.email || p.user_email || `${p.username || 'trader'}@example.com`,
+          email: p.email || p.user_email || '—',
           amount_requested: amt,
           trader_amount: traderShare,
           firm_amount: firmShare,

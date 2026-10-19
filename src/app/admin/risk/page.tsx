@@ -214,7 +214,7 @@ export default function RiskManagementHubPage() {
       return rawList.map((a: any, idx: number) => ({
         id: a.id || idx + 1,
         trader_name: a.trader_name || a.username || a.display_name || `Trader #${a.user_id || idx + 1}`,
-        email: a.email || a.user_email || `${a.username || 'trader'}@example.com`,
+        email: a.email || a.user_email || '—',
         // 0 is a sentinel for "no real id available" (real WP user ids start
         // at 1) — never fabricate a real-looking id here. Flag Account trusts
         // this value at face value server-side, so a fabricated id could

@@ -7,7 +7,7 @@ import {
   Search, Filter, Download, MoreVertical, Shield, User, 
   ExternalLink, Sliders, KeyRound, Ban, CheckCircle2, 
   Clock, AlertTriangle, RefreshCw, Plus, ArrowUpRight,
-  TrendingUp, TrendingDown, DollarSign, Eye, UserCheck, Wallet
+  TrendingUp, TrendingDown, DollarSign, Eye, UserCheck, Wallet, Trophy
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -36,6 +36,7 @@ import { EnterpriseOverrideModal, TraderOverrideTarget } from '@/components/admi
 import { DirectPasswordResetModal, DirectPasswordResetTarget } from '@/components/admin/DirectPasswordResetModal'
 import { Mt5UnassignedBanner } from '@/components/admin/mt5-unassigned-banner'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ChallengeDrawer } from '@/components/admin/challenge-drawer'
 import { toast } from 'sonner'
 
 // Helper currency & number formatters
@@ -121,6 +122,10 @@ export default function TradersHubPage() {
   // Balance Adjustment State (ported from the retired /dashboard/admin/users page)
   const [balanceTarget, setBalanceTarget] = useState<TraderRowItem | null>(null)
 
+  // Challenge Drawer State (GAP-03)
+  const [selectedChallengeForDrawer, setSelectedChallengeForDrawer] = useState<any | null>(null)
+  const [challengeDrawerOpen, setChallengeDrawerOpen] = useState(false)
+
   const handleImpersonate = async (trader: TraderRowItem) => {
     if (!adminUser) {
       toast.error('Admin session not ready.')
@@ -157,9 +162,9 @@ export default function TradersHubPage() {
 
   // User IDs for the active page to scope challenge fetching
   const userIds = useMemo(() => {
-    const raw = usersData?.data || []
+    const raw = Array.isArray(usersData) ? usersData : (usersData?.data || [])
     return raw.map(u => Number(u.user_id)).filter(Boolean)
-  }, [usersData?.data])
+  }, [usersData])
 
   const { data: challengesData } = useQuery({
     queryKey: ['admin-challenges-list', userIds],
@@ -173,15 +178,16 @@ export default function TradersHubPage() {
 
   // Normalize authentic API data — show all registered users, linking their challenges if present
   const allTraders: TraderRowItem[] = useMemo(() => {
-    const rawUsers = usersData?.data || []
+    const rawUsers = Array.isArray(usersData) ? usersData : (usersData?.data || [])
     const rawChallenges = Array.isArray(challengesData) ? challengesData : []
 
     if (rawUsers.length === 0 && rawChallenges.length === 0) return []
 
-    // Index challenges by user_id
+    // Index challenges by user_id (GAP-02: eradicate c.id fallback)
     const challengesByUser = new Map<number, any[]>()
     for (const c of rawChallenges) {
-      const uid = Number(c.user_id || c.id)
+      const uid = Number(c.user_id)
+      if (!uid || isNaN(uid) || uid <= 0) continue
       if (!challengesByUser.has(uid)) challengesByUser.set(uid, [])
       challengesByUser.get(uid)!.push(c)
     }
@@ -211,7 +217,7 @@ export default function TradersHubPage() {
             user_id: uid,
             name: u.user_login || c.username || `Trader #${uid}`,
             username: u.user_login || c.username || `trader_${uid}`,
-            email: u.user_email || c.user_email || `trader_${uid}@propfirm.com`,
+            email: u.user_email || c.user_email || '—',
             account_id: c.fxsim_account_id ? String(c.fxsim_account_id) : (c.account_id && String(c.account_id) !== String(c.id) ? String(c.account_id) : ''),
             plan_name: c.plan_name || '$100K Stellar 2-Step',
             phase: phaseNum,
@@ -243,7 +249,7 @@ export default function TradersHubPage() {
           user_id: uid,
           name: u.user_login || `Trader #${uid}`,
           username: u.user_login || `trader_${uid}`,
-          email: u.user_email || `trader_${uid}@example.com`,
+          email: u.user_email || '—',
           account_id: u.account_id && String(u.account_id) !== '0' && String(u.account_id) !== String(uid) ? String(u.account_id) : '',
           plan_name: u.plan_name || (hasChallengeId ? 'Active Challenge' : 'No Active Challenge'),
           phase: 0,
@@ -458,6 +464,28 @@ export default function TradersHubPage() {
     }
   }
 
+  // Open Challenge Drawer helper (GAP-03)
+  const openChallengeDrawer = (row: TraderRowItem) => {
+    const rawCh = (Array.isArray(challengesData) ? challengesData : []).find(
+      (rc: any) => Number(rc.id) === Number(row.challenge_id)
+    ) || {
+      id: row.challenge_id,
+      user_id: row.user_id,
+      plan_name: row.plan_name,
+      status: row.status,
+      phase: row.phase,
+      starting_balance: row.starting_balance,
+      account_size: row.starting_balance,
+      current_balance: row.balance,
+      balance: row.balance,
+      equity: row.equity,
+      fxsim_account_id: row.account_id,
+      account_id: row.account_id,
+    }
+    setSelectedChallengeForDrawer(rawCh)
+    setChallengeDrawerOpen(true)
+  }
+
   // DataTable Column Definitions
   const columns: ColumnDef<TraderRowItem>[] = [
     {
@@ -501,9 +529,14 @@ export default function TradersHubPage() {
                 #USR-{row.user_id}
               </span>
               {hasChallenge && (
-                <span className="terminal-num text-xs font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20" title="Challenge Account ID">
+                <button
+                  type="button"
+                  onClick={() => openChallengeDrawer(row)}
+                  className="terminal-num text-xs font-semibold text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded-md border border-purple-500/20 cursor-pointer transition-colors"
+                  title="Click to view Challenge Drawer"
+                >
                   #CH-{row.challenge_id}
-                </span>
+                </button>
               )}
             </div>
             {hasAccount && (
@@ -634,6 +667,16 @@ export default function TradersHubPage() {
                   View 360 Profile
                 </DropdownMenuItem>
               </Link>
+
+              {row.challenge_id && (
+                <DropdownMenuItem 
+                  className="gap-2.5 cursor-pointer"
+                  onClick={() => openChallengeDrawer(row)}
+                >
+                  <Trophy className="h-4 w-4 text-purple-400" />
+                  View Challenge Drawer
+                </DropdownMenuItem>
+              )}
 
               <Link href="/admin/kyc">
                 <DropdownMenuItem className="gap-2.5">
@@ -1061,6 +1104,19 @@ export default function TradersHubPage() {
           </div>
         </div>
       )}
+
+      {/* ── Slide-Over Quick Inspection Drawer for Challenges (GAP-03) ──── */}
+      <ChallengeDrawer
+        isOpen={challengeDrawerOpen}
+        onClose={() => {
+          setChallengeDrawerOpen(false)
+          setSelectedChallengeForDrawer(null)
+        }}
+        challenge={selectedChallengeForDrawer}
+        onRefresh={() => {
+          refetchUsers()
+        }}
+      />
 
     </div>
   )

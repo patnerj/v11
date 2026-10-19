@@ -76,7 +76,7 @@ export default function TradingTerminalPage() {
   const [loadTimedOut, setLoadTimedOut] = useState(false)
   // Tournaments this trader has joined — powers the terminal account switcher.
   const { data: myTournaments } = useQuery({
-    queryKey: ['tournamentsMine'],
+    queryKey: ['tournaments-mine'],
     queryFn: () => api.tournaments.mine().then(r => (r.ok ? r.data : [])),
     staleTime: 60_000,
   })

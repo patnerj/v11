@@ -90,6 +90,8 @@ export default function DashboardTournamentsPage() {
   const { data: mine = [] } = useQuery({
     queryKey: ['tournaments-mine'],
     queryFn: () => api.tournaments.mine().then(r => (r.ok && Array.isArray(r.data) ? r.data : [])),
+    staleTime: 0,
+    refetchInterval: 15_000,
   })
 
   const { data: myOrders = [] } = useQuery({

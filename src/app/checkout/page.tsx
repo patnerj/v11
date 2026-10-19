@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
@@ -45,6 +46,7 @@ export default function CheckoutPage() {
 
 function CheckoutInner() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const params = useSearchParams()
   const rawPlanParam = params.get('plan') ?? params.get('plan_id') ?? ''
   const parsedId = Number(rawPlanParam)
@@ -257,6 +259,9 @@ function CheckoutInner() {
         // FIX: full reload instead of router.push — kills SPA/RSC staleness so the
         // new challenge shows up INSTANTLY on the dashboard (was lagging ~30s).
         clearFxsimCache()
+        queryClient.invalidateQueries({ queryKey: ['tournaments-mine'] })
+        queryClient.invalidateQueries({ queryKey: ['user-challenge-accounts'] })
+        queryClient.invalidateQueries({ queryKey: ['payment-my-orders'] })
         window.location.href = '/dashboard?started=' + plan.id
       } else {
         setError(res.ok ? (res.data.message || 'Unable to start challenge') : res.error)
@@ -374,6 +379,9 @@ function CheckoutInner() {
       if (res.ok) {
         invalidateFxsim('/payment/my-orders')
         invalidateFxsim('/tournaments/mine')
+        queryClient.invalidateQueries({ queryKey: ['tournaments-mine'] })
+        queryClient.invalidateQueries({ queryKey: ['user-challenge-accounts'] })
+        queryClient.invalidateQueries({ queryKey: ['payment-my-orders'] })
         setStep('success')
       } else {
         setError(res.error)
