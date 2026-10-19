@@ -208,6 +208,7 @@ export const api = {
   },
   profile: (id: number) => fxsim<{ id: number; name: string; is_funded: boolean; has_passed: boolean; badges: string[]; total_payouts: number }>(`/profile/${id}`, { public: true, cache: 30_000 }),
   affiliateLeaderboard: () => fxsim<Array<{ name: string; earned: number }> | { success: boolean; leaderboard: Array<{ name: string; earned: number }> }>('/stats/affiliate-leaderboard', { public: true, cache: 60_000 }),
+  maintenance: () => fxsim<{ enabled: boolean; message: string }>('/maintenance', { public: true, cache: 0 }),
   // ── Payments ──────────────────────────────────────────────────────────
   paymentConfig:    ()           => fxsim<PaymentConfig>('/payment/config', { cache: 60_000 }),
   paymentCreate:    (planId: number, gateway: string, couponCode?: string, tournamentId?: number, addons?: string[]) =>
