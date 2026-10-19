@@ -492,7 +492,7 @@ export const api = {
       fxsim<{ success: boolean; status?: string; message?: string }>(`/admin/test-tools/challenge/${id}/set`, { body: { action } }),
     notificationsRead: (ids?: number[]) =>
       fxsim<{ success: true }>('/admin/notifications/read', { body: { ids: ids ?? [] } }),
-    maintenanceGet: () => fxsim<{ enabled: boolean; message: string }>('/admin/maintenance', { public: true, cache: 0 }),
+    maintenanceGet: () => fxsim<{ enabled: boolean; message: string }>('/admin/maintenance', { cache: 0 }),
     maintenance:  (enabled: boolean, message: string) =>
       fxsim<{ success: true }>('/admin/maintenance', { body: { enabled, message } }),
 
