@@ -32,12 +32,16 @@ export function Mt5UnassignedBanner() {
 
   const refresh = useCallback(async () => {
     const res = await api.admin.mt5Unassigned()
-    if (res.ok) setTraders(res.data.traders)
+    if (res.ok && res.data && Array.isArray(res.data.traders)) {
+      setTraders(res.data.traders)
+    } else {
+      setTraders([])
+    }
   }, [])
 
   useEffect(() => { refresh() }, [refresh])
 
-  if (traders === null || traders.length === 0) return null
+  if (!traders || traders.length === 0) return null
 
   return (
     <>

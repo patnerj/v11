@@ -284,8 +284,9 @@ export default function Mt5WebTerminalPage() {
 
   const currentAcc = isAccount(account) ? account : null
   const currentCh = useMemo(() => {
-    if (!chs || !currentAcc) return null
-    return chs.find((c) => c.fxsim_account_id === currentAcc.id) || null
+    const safeChs = Array.isArray(chs) ? chs : []
+    if (safeChs.length === 0 || !currentAcc) return null
+    return safeChs.find((c) => c.fxsim_account_id === currentAcc.id) || null
   }, [chs, currentAcc])
 
   const { data: metrics } = useQuery({

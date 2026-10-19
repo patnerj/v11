@@ -259,6 +259,8 @@ function CheckoutInner() {
         // FIX: full reload instead of router.push — kills SPA/RSC staleness so the
         // new challenge shows up INSTANTLY on the dashboard (was lagging ~30s).
         clearFxsimCache()
+        queryClient.invalidateQueries({ queryKey: ['challengeMy'] })
+        queryClient.invalidateQueries({ queryKey: ['paymentMyOrders'] })
         queryClient.invalidateQueries({ queryKey: ['tournaments-mine'] })
         queryClient.invalidateQueries({ queryKey: ['user-challenge-accounts'] })
         queryClient.invalidateQueries({ queryKey: ['payment-my-orders'] })
@@ -379,6 +381,8 @@ function CheckoutInner() {
       if (res.ok) {
         invalidateFxsim('/payment/my-orders')
         invalidateFxsim('/tournaments/mine')
+        queryClient.invalidateQueries({ queryKey: ['challengeMy'] })
+        queryClient.invalidateQueries({ queryKey: ['paymentMyOrders'] })
         queryClient.invalidateQueries({ queryKey: ['tournaments-mine'] })
         queryClient.invalidateQueries({ queryKey: ['user-challenge-accounts'] })
         queryClient.invalidateQueries({ queryKey: ['payment-my-orders'] })

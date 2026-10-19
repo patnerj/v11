@@ -82,7 +82,9 @@ export default function TradingTerminalPage() {
   })
 
   // Switcher entries: every ACTIVE/FUNDED challenge + every joined tournament.
-  const switchEntries = buildSwitchEntries(chs ?? [], myTournaments ?? [], true)  // terminal: tradeable accounts only
+  const safeChsList = Array.isArray(chs) ? chs : []
+  const safeTourneysList = Array.isArray(myTournaments) ? myTournaments : []
+  const switchEntries = buildSwitchEntries(safeChsList, safeTourneysList, true)  // terminal: tradeable accounts only
 
   // Active trading context: detect tournament mode
   const tradingCtx = usePrices((s) => s.tradingContext)
@@ -155,8 +157,14 @@ export default function TradingTerminalPage() {
       const ch = await api.challengeMy()
       if (mounted) {
         if (ch.ok) {
-          setChs(ch.data)
+          const safeChs = Array.isArray(ch.data)
+            ? ch.data
+            : Array.isArray((ch.data as any)?.challenges)
+            ? (ch.data as any).challenges
+            : []
+          setChs(safeChs)
         } else {
+          setChs([])
           toast.error(ch.error || 'Failed to load challenges')
         }
         setLoaded(true)
@@ -231,17 +239,19 @@ export default function TradingTerminalPage() {
   const { data: metrics = null } = useQuery({
     queryKey: ['challengeMetricsByAccount', accountId],
     queryFn: async () => {
-      if (!accountId || !chs) return null
-      const ch = chs.find(c => c.fxsim_account_id === accountId)
+      const safeChs = Array.isArray(chs) ? chs : []
+      if (!accountId || safeChs.length === 0) return null
+      const ch = safeChs.find(c => c.fxsim_account_id === accountId)
       if (!ch) return null
       const res = await api.challengeMetrics(ch.id)
       return res.ok ? res.data : null
     },
-    enabled: !!accountId && !!chs,
+    enabled: !!accountId && Array.isArray(chs) && chs.length > 0,
     refetchInterval: 15_000,
   })
 
-  const currentChallenge = chs?.find(c => c.fxsim_account_id === accountId) || null
+  const safeChsForCurrent = Array.isArray(chs) ? chs : []
+  const currentChallenge = safeChsForCurrent.find(c => c.fxsim_account_id === accountId) || null
 
   // ── Loading state (including account switching) ──────────────────────
   // Keep the switcher visible so the user can see which account is loading,
@@ -1023,15 +1033,16 @@ function TradingLockState({ accounts, account, challengeStatus }: {
   account?: Account | null
   challengeStatus?: string | null
 }) {
-  const currentCh = account && 'id' in account ? accounts?.find((a) => a.fxsim_account_id === account.id) : null
-  const passed = challengeStatus === 'passed' || currentCh?.status === 'passed' || (!account && !!accounts?.some((a) => a.status === 'passed'))
-  const failed = challengeStatus === 'failed' || currentCh?.status === 'failed' || (!account && !!accounts?.some((a) => a.status === 'failed'))
+  const safeAccounts = Array.isArray(accounts) ? accounts : []
+  const currentCh = account && 'id' in account ? safeAccounts.find((a) => a.fxsim_account_id === account.id) : null
+  const passed = challengeStatus === 'passed' || currentCh?.status === 'passed' || (!account && safeAccounts.some((a) => a.status === 'passed'))
+  const failed = challengeStatus === 'failed' || currentCh?.status === 'failed' || (!account && safeAccounts.some((a) => a.status === 'failed'))
   const funded = challengeStatus === 'funded' || currentCh?.status === 'funded'
   const reason: 'no_challenge' | 'phase_passed' | 'challenge_failed' | 'funded' =
     funded ? 'funded'
     : passed ? 'phase_passed'
     : failed ? 'challenge_failed'
-    : (!accounts || accounts.length === 0) && !account ? 'no_challenge'
+    : safeAccounts.length === 0 && !account ? 'no_challenge'
     : 'challenge_failed'
 
   const cfg = {

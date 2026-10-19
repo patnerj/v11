@@ -35,27 +35,11 @@ export function ChallengeDrawer({
   const [isResetting, setIsResetting] = useState(false)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [isEmailing, setIsEmailing] = useState(false)
+  const [isReactivating, setIsReactivating] = useState(false)
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
 
-  if (!isOpen || !challenge) return null
-
-  const size = toNum(challenge.account_size || challenge.starting_balance || 100000)
-  const balance = toNum(challenge.current_balance || challenge.balance || size)
-  const equity = toNum(challenge.equity || challenge.current_equity || balance)
-  const hwm = toNum(challenge.equity_hwm || challenge.peak_balance || Math.max(balance, size))
-  const floor = toNum(challenge.trailing_dd_floor || (size * 0.90))
-  const floorCushion = Math.max(0, equity - floor)
-  const floorCushionPct = size > 0 ? (floorCushion / size) * 100 : 0
-  const pnl = balance - size
-  const pnlPct = size > 0 ? (pnl / size) * 100 : 0
-
-  // Target math
-  const targetPct = challenge.phase === 2 ? 5 : 8
-  const targetAmount = (size * targetPct) / 100
-  const targetProgress = Math.min(100, Math.max(0, (Math.max(0, pnl) / targetAmount) * 100))
-
-  // Real Trades from API (GAP-F01)
+  // Real Trades from API (GAP-F01) — Hook called unconditionally per React Rules of Hooks
   const { data: tradesData, isLoading: isLoadingTrades } = useQuery({
     queryKey: ['admin-challenge-trades', challenge?.id],
     queryFn: async () => {
@@ -79,6 +63,23 @@ export function ChallengeDrawer({
     }
     return []
   }, [tradesData])
+
+  if (!isOpen || !challenge) return null
+
+  const size = toNum(challenge.account_size || challenge.starting_balance || 100000)
+  const balance = toNum(challenge.current_balance || challenge.balance || size)
+  const equity = toNum(challenge.equity || challenge.current_equity || balance)
+  const hwm = toNum(challenge.equity_hwm || challenge.peak_balance || Math.max(balance, size))
+  const floor = toNum(challenge.trailing_dd_floor || (size * 0.90))
+  const floorCushion = Math.max(0, equity - floor)
+  const floorCushionPct = size > 0 ? (floorCushion / size) * 100 : 0
+  const pnl = balance - size
+  const pnlPct = size > 0 ? (pnl / size) * 100 : 0
+
+  // Target math
+  const targetPct = challenge.phase === 2 ? 5 : 8
+  const targetAmount = (size * targetPct) / 100
+  const targetProgress = Math.min(100, Math.max(0, (Math.max(0, pnl) / targetAmount) * 100))
 
   const handleResetChallenge = async () => {
     if (!window.confirm(`Are you sure you want to RESET Challenge #${challenge.id}? This will restore balance to ${fmtUSD(size)} and clear breaches.`)) return
@@ -118,7 +119,6 @@ export function ChallengeDrawer({
     }
   }
 
-  const [isReactivating, setIsReactivating] = useState(false)
   const handleReactivateChallenge = async () => {
     if (!window.confirm(`Reactivate / Unsuspend Challenge #${challenge.id}? This will restore the account to active trading.`)) return
     setIsReactivating(true)
@@ -457,9 +457,10 @@ export function ChallengeDrawer({
                     className="h-10 justify-start gap-2 shadow-accent/20"
                     onClick={handleAdvancePhase}
                     loading={isAdvancing}
+                    disabled={challenge.status === 'funded' || Number(challenge.phase) >= 3}
                   >
                     <FastForward className="h-4 w-4" />
-                    <span>Advance Phase</span>
+                    <span>{challenge.status === 'funded' || Number(challenge.phase) >= 3 ? 'Already Funded' : 'Advance Phase'}</span>
                   </Button>
 
                   {(challenge.status === 'suspended' || challenge.status === 'dormant') && (
@@ -556,10 +557,11 @@ export function ChallengeDrawer({
               size="sm"
               onClick={handleAdvancePhase}
               loading={isAdvancing}
+              disabled={challenge.status === 'funded' || Number(challenge.phase) >= 3}
               className="h-8 text-xs gap-1.5 shadow-accent/20"
             >
               <FastForward className="h-3.5 w-3.5" />
-              Advance
+              {challenge.status === 'funded' || Number(challenge.phase) >= 3 ? 'Funded' : 'Advance'}
             </Button>
           </div>
         </div>

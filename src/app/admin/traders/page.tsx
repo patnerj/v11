@@ -123,7 +123,8 @@ export default function TradersHubPage() {
   const [balanceTarget, setBalanceTarget] = useState<TraderRowItem | null>(null)
 
   // Challenge Drawer State (GAP-03)
-  const [selectedChallengeForDrawer, setSelectedChallengeForDrawer] = useState<any | null>(null)
+  const [selectedChallengeId, setSelectedChallengeId] = useState<number | null>(null)
+  const [drawerFallback, setDrawerFallback] = useState<any | null>(null)
   const [challengeDrawerOpen, setChallengeDrawerOpen] = useState(false)
 
   const handleImpersonate = async (trader: TraderRowItem) => {
@@ -166,7 +167,7 @@ export default function TradersHubPage() {
     return raw.map(u => Number(u.user_id)).filter(Boolean)
   }, [usersData])
 
-  const { data: challengesData } = useQuery({
+  const { data: challengesData, refetch: refetchChallenges } = useQuery({
     queryKey: ['admin-challenges-list', userIds],
     queryFn: () => {
       if (userIds.length === 0) return Promise.resolve([])
@@ -175,6 +176,15 @@ export default function TradersHubPage() {
     enabled: userIds.length > 0 || !usersLoading,
     staleTime: 10000,
   })
+
+  // Selected challenge for drawer (reactive to challengesData updates)
+  const selectedChallengeForDrawer = useMemo(() => {
+    if (!selectedChallengeId) return null
+    const found = (Array.isArray(challengesData) ? challengesData : []).find(
+      (rc: any) => Number(rc.id) === Number(selectedChallengeId)
+    )
+    return found || drawerFallback
+  }, [selectedChallengeId, challengesData, drawerFallback])
 
   // Normalize authentic API data — show all registered users, linking their challenges if present
   const allTraders: TraderRowItem[] = useMemo(() => {
@@ -466,10 +476,14 @@ export default function TradersHubPage() {
 
   // Open Challenge Drawer helper (GAP-03)
   const openChallengeDrawer = (row: TraderRowItem) => {
-    const rawCh = (Array.isArray(challengesData) ? challengesData : []).find(
-      (rc: any) => Number(rc.id) === Number(row.challenge_id)
-    ) || {
-      id: row.challenge_id,
+    if (!row.challenge_id) {
+      toast.error('No challenge associated with this trader.')
+      return
+    }
+    const chId = Number(row.challenge_id)
+    setSelectedChallengeId(chId)
+    setDrawerFallback({
+      id: chId,
       user_id: row.user_id,
       plan_name: row.plan_name,
       status: row.status,
@@ -481,8 +495,7 @@ export default function TradersHubPage() {
       equity: row.equity,
       fxsim_account_id: row.account_id,
       account_id: row.account_id,
-    }
-    setSelectedChallengeForDrawer(rawCh)
+    })
     setChallengeDrawerOpen(true)
   }
 
@@ -1110,11 +1123,14 @@ export default function TradersHubPage() {
         isOpen={challengeDrawerOpen}
         onClose={() => {
           setChallengeDrawerOpen(false)
-          setSelectedChallengeForDrawer(null)
+          setSelectedChallengeId(null)
+          setDrawerFallback(null)
         }}
         challenge={selectedChallengeForDrawer}
         onRefresh={() => {
           refetchUsers()
+          refetchChallenges()
+          queryClient.invalidateQueries({ queryKey: ['admin-challenges-list'] })
         }}
       />
 
