@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
+import { CountryPhoneInput } from '@/components/ui/country-phone-input'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/store/auth'
 import { useBranding } from '@/store/branding'
@@ -38,6 +39,7 @@ function RegisterForm() {
   const next    = /^\/(?!\/)/.test(rawNext) ? rawNext : '/dashboard'
   const [username, setU] = useState('')
   const [email, setE]    = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setP] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
@@ -134,10 +136,11 @@ function RegisterForm() {
     }
     setLoading(true)
     setError(null)
-    const res = await signup(username, email, password, ref || undefined)
+    const cleanPhone = phone && phone.replace(/\D/g, '').length >= 7 ? phone.trim() : undefined
+    const res = await signup(username, email, password, ref || undefined, cleanPhone)
     setLoading(false)
     if (res.ok) {
-      try { localStorage.removeItem('fxsim:ref') } catch { /* ignore */ }
+      // Preserve affiliate ref in localStorage so checkout can auto-apply the discount
       try { trackRegistration({ method: 'email', status: 'success' }) } catch { /* ignore */ }
       toast.success('Account created! Verification link sent to your email.')
       setRegisteredEmail(email)
@@ -301,6 +304,18 @@ function RegisterForm() {
               onChange={(e) => setE(e.target.value)}
               required
               placeholder="you@example.com"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="phone">Phone Number</Label>
+              <span className="text-2xs text-text-muted">WhatsApp / SMS (with country code)</span>
+            </div>
+            <CountryPhoneInput
+              id="phone"
+              value={phone}
+              onChange={(val) => setPhone(val)}
             />
           </div>
 

@@ -134,3 +134,19 @@ export const statusTone = (status: string): 'success' | 'danger' | 'warn' | 'inf
   }
   return map[status] ?? 'neutral'
 }
+
+/**
+ * Canonical helper to construct a direct WhatsApp click-to-chat URL from a phone number.
+ * Strips all non-digit characters, removes leading '00' (international dialing prefix),
+ * requires at least 7 digits (minimum valid E.164 phone length),
+ * and returns `https://wa.me/${digits}` or null if invalid/missing.
+ */
+export const getWhatsAppUrl = (phone?: string | null): string | null => {
+  if (!phone || typeof phone !== 'string') return null
+  let digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2)
+  }
+  if (digits.length < 7) return null
+  return `https://wa.me/${digits}`
+}

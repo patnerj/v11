@@ -6,11 +6,12 @@ import {
   UserCheck, ShieldAlert, ShieldCheck, Clock, Search, 
   CheckCircle2, XCircle, Eye, RefreshCw, FileText, Camera,
   AlertTriangle, Filter, ExternalLink, MapPin, Download,
-  FileX, Lock, Shield, AlertCircle
+  FileX, Lock, Shield, AlertCircle, Smartphone
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { apiUrl, getSession } from '@/lib/fxsim'
+import { getWhatsAppUrl } from '@/lib/format'
 import type { KycSubmission } from '@/types/api'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
@@ -614,7 +615,30 @@ export default function KycHubPage() {
                       ID #{k.user_id}
                     </span>
                   </div>
-                  <p className="text-2xs text-text-muted truncate">{k.email}</p>
+                  <div className="flex items-center gap-2 text-2xs text-text-muted">
+                    <span className="truncate">{k.email}</span>
+                    {k.phone && (
+                      (() => {
+                        const waUrl = getWhatsAppUrl(k.phone)
+                        return waUrl ? (
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-cyan-600 dark:text-cyan-400 tabular-nums hover:underline flex items-center gap-1 shrink-0 font-medium"
+                            title="Chat on WhatsApp"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            · {k.phone}
+                          </a>
+                        ) : (
+                          <span className="text-cyan-600 dark:text-cyan-400 tabular-nums flex items-center gap-1 shrink-0">
+                            · {k.phone}
+                          </span>
+                        )
+                      })()
+                    )}
+                  </div>
                 </div>
               ),
             },
@@ -740,7 +764,7 @@ export default function KycHubPage() {
 
               return (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-border bg-surface-muted text-xs tabular font-medium">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-3.5 rounded-xl border border-border bg-surface-muted text-xs tabular font-medium">
                     <div>
                       <span className="text-text-muted block text-2xs uppercase">Trader Name</span>
                       <span className="font-bold text-text truncate block">{selectedKyc.name || selectedKyc.username}</span>
@@ -752,6 +776,30 @@ export default function KycHubPage() {
                     <div>
                       <span className="text-text-muted block text-2xs uppercase">Country</span>
                       <span className="font-bold text-text">{selectedKyc.country || 'Global'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-2xs uppercase">Phone / Contact</span>
+                      {selectedKyc.phone ? (
+                        (() => {
+                          const waUrl = getWhatsAppUrl(selectedKyc.phone)
+                          return waUrl ? (
+                            <a 
+                              href={waUrl} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5 tabular-nums"
+                              title="Open WhatsApp Chat"
+                            >
+                              <Smartphone className="h-3.5 w-3.5 shrink-0" />
+                              <span>{selectedKyc.phone}</span>
+                            </a>
+                          ) : (
+                            <span className="font-medium text-text tabular-nums">{selectedKyc.phone}</span>
+                          )
+                        })()
+                      ) : (
+                        <span className="text-text-muted italic">Not on file</span>
+                      )}
                     </div>
                     <div>
                       <span className="text-text-muted block text-2xs uppercase">Attached Files</span>

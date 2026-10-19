@@ -198,6 +198,7 @@ function AdminAffiliatesContent() {
   // TAB 4: PROGRAM CONFIG STATE & QUERIES
   // ─────────────────────────────────────────────────────────────────
   const [tier1Rate, setTier1Rate] = useState<number>(15)
+  const [buyerDiscountPct, setBuyerDiscountPct] = useState<number>(5)
   const [cookieDays, setCookieDays] = useState<number>(60)
   const [minPayout, setMinPayout] = useState<number>(100)
 
@@ -210,6 +211,7 @@ function AdminAffiliatesContent() {
   useEffect(() => {
     if (affiliateConfig) {
       if (affiliateConfig.tier_1_pct !== undefined) setTier1Rate(Number(affiliateConfig.tier_1_pct))
+      if (affiliateConfig.buyer_discount_pct !== undefined) setBuyerDiscountPct(Number(affiliateConfig.buyer_discount_pct))
       if (affiliateConfig.cookie_days !== undefined) setCookieDays(Number(affiliateConfig.cookie_days))
       if (affiliateConfig.min_payout !== undefined) setMinPayout(Number(affiliateConfig.min_payout))
     }
@@ -971,16 +973,31 @@ function AdminAffiliatesContent() {
           </CardHeader>
 
           <CardContent className="p-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="tier1-rate">Direct Referral Commission (%)</Label>
                 <Input
                   id="tier1-rate"
                   type="number"
+                  min="0"
+                  max="100"
                   value={tier1Rate}
                   onChange={(e) => setTier1Rate(Number(e.target.value))}
                 />
                 <span className="text-2xs text-gray-500">Default rate earned on referred purchases</span>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="buyer-discount">Audience Discount Percentage (% Off for Buyers)</Label>
+                <Input
+                  id="buyer-discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={buyerDiscountPct}
+                  onChange={(e) => setBuyerDiscountPct(Number(e.target.value))}
+                />
+                <span className="text-2xs text-gray-500">Discount automatically applied to buyer (Default: 5%)</span>
               </div>
 
               <div className="space-y-1.5">
@@ -1014,6 +1031,7 @@ function AdminAffiliatesContent() {
               onClick={() =>
                 saveAffiliateConfigMutation.mutate({
                   tier_1_pct: tier1Rate,
+                  buyer_discount_pct: buyerDiscountPct,
                   cookie_days: cookieDays,
                   min_payout: minPayout,
                 })

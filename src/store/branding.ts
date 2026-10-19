@@ -3,6 +3,9 @@
 import { create } from 'zustand'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
+import { PageSeoConfig, DEFAULT_SEO_PAGES } from '@/lib/seo-metadata'
+
+export type { PageSeoConfig }
 
 export interface Branding {
   brand_name: string
@@ -33,6 +36,8 @@ export interface Branding {
   ga_measurement_id?: string
   facebook_pixel_id?: string
   custom_head_code?: string
+  seo_pages?: Record<string, PageSeoConfig>
+  seo_pages_data?: string
 }
 
 const DEFAULTS: Branding = {
@@ -63,6 +68,7 @@ const DEFAULTS: Branding = {
   ga_measurement_id: '',
   facebook_pixel_id: '',
   custom_head_code: '',
+  seo_pages: DEFAULT_SEO_PAGES,
 }
 
 interface BrandingState {
@@ -75,13 +81,30 @@ interface BrandingState {
 
 let loadPromise: Promise<void> | null = null
 
-function normalizeBranding(data: Partial<Branding>): Branding {
+export function normalizeBranding(data: Partial<Branding>): Branding {
   const b = { ...DEFAULTS, ...data }
   if (!b.brand_name?.trim()) {
     b.brand_name = DEFAULTS.brand_name
   }
   if (!b.footer_text?.trim()) {
     b.footer_text = `© ${new Date().getFullYear()} ${b.brand_name}. Simulation platform only.`
+  }
+  let parsedSeoPages: Record<string, PageSeoConfig> | undefined
+  if (data.seo_pages && typeof data.seo_pages === 'object' && Object.keys(data.seo_pages).length > 0) {
+    parsedSeoPages = data.seo_pages
+  } else if (data.seo_pages_data && typeof data.seo_pages_data === 'string') {
+    try {
+      const parsed = JSON.parse(data.seo_pages_data)
+      if (parsed && typeof parsed === 'object') {
+        parsedSeoPages = parsed
+      }
+    } catch {
+      // fallback
+    }
+  }
+  b.seo_pages = {
+    ...DEFAULT_SEO_PAGES,
+    ...(parsedSeoPages || b.seo_pages || {})
   }
   return b
 }

@@ -53,7 +53,7 @@ export const api = {
       fxsim<{ user?: AuthUser; nonce?: string; two_factor_required?: boolean; uid?: number }>('/auth/login', { body, public: true, timeout: 25_000 }),
     verify2fa: (uid: number, code: string, remember?: boolean) =>
       fxsim<{ user: AuthUser; nonce: string }>('/auth/2fa/verify', { body: { uid, code, remember: !!remember }, public: true, timeout: 25_000 }),
-    register: (body: { username: string; email: string; password: string; ref?: string }) =>
+    register: (body: { username: string; email: string; password: string; ref?: string; phone?: string }) =>
       fxsim<{ user: AuthUser; nonce: string }>('/auth/register', { body, public: true, timeout: 25_000 }),
     logout:   () => fxsim<{ success: true }>('/auth/logout', { method: 'POST', timeout: 15_000 }),
     me:       (force = true) => fxsim<AuthUser>('/auth/me', { cache: 0, force: true, timeout: 20_000 }),
@@ -218,7 +218,7 @@ export const api = {
   stripeCheckout:   (planId: number, couponCode?: string, tournamentId?: number, addons?: string[]) =>
     fxsim<{ success: boolean; message?: string; checkout_url?: string }>('/payment/stripe-checkout', { body: { plan_id: planId, coupon_code: couponCode, tournament_id: tournamentId, addons } }),
   couponValidate:   (code: string, planId: number) =>
-    fxsim<{ valid: boolean; message: string; code?: string; type?: string; value?: number; original?: number; discount?: number; final?: number }>('/coupon/validate', { body: { code, plan_id: planId } }),
+    fxsim<{ valid: boolean; message: string; code?: string; type?: string; value?: number; original?: number; discount?: number; final?: number; is_affiliate?: boolean; affiliate_id?: number }>('/coupon/validate', { body: { code, plan_id: planId } }),
   affiliateMe:      () => fxsim<AffiliateMe>('/affiliate/me', { cache: 10_000 }),
   affiliateEnroll:  () => fxsim<AffiliateMe>('/affiliate/enroll', { body: {} }),
   affiliateCommissions: () => fxsim<Commission[]>('/affiliate/commissions', { cache: 10_000 }),
@@ -375,6 +375,24 @@ export const api = {
     getWhitelabel: () => fxsim<Record<string, any>>('/admin/whitelabel', { cache: 0 }),
     saveWhitelabel: (data: Record<string, any>) =>
       fxsim<{ success: boolean; message?: string }>('/admin/whitelabel/save', { body: data }),
+    seoAiEnrich: (data: {
+      page_path: string
+      primary_keyword: string
+      secondary_keywords?: string[]
+      search_intent?: string
+    }) =>
+      fxsim<{
+        success: boolean
+        provider?: string
+        title?: string
+        description?: string
+        hero_badge?: string
+        h1_title?: string
+        lead_paragraph?: string
+        search_intent?: string
+        faqs?: Array<{ q: string; a: string }>
+        message?: string
+      }>('/admin/seo/ai-enrich', { body: data }),
     stripeStatus:  () => fxsim<StripeStatus>('/admin/stripe/status', { cache: 0 }),
     demoStatus:    () => fxsim<DemoStatus>('/admin/demo/status', { cache: 10_000 }),
     demoGenerate:  () => fxsim<{ success: boolean; users: number; accounts: number; orders: number; payouts: number; banners: number; message?: string }>('/admin/demo/generate', { body: {}, timeout: 120_000 }),
@@ -460,7 +478,7 @@ export const api = {
     affiliatesList: () => fxsim<AdminAffiliate[]>('/admin/affiliates', { cache: 5_000 }),
     affiliateRate:  (id: number, rate: number) => fxsim<{ success: boolean }>(`/admin/affiliates/${id}/rate`, { body: { rate_percent: rate } }),
     affiliateStatus:(id: number, status: 'active' | 'suspended') => fxsim<{ success: boolean }>(`/admin/affiliates/${id}/status`, { body: { status } }),
-    affiliateConfigGet: () => fxsim<{ tier_1_pct: number; tier_2_pct?: number; cookie_days: number; min_payout: number }>('/admin/affiliates/config', { cache: 0 }),
+    affiliateConfigGet: () => fxsim<{ tier_1_pct: number; tier_2_pct?: number; buyer_discount_pct?: number; cookie_days: number; min_payout: number }>('/admin/affiliates/config', { cache: 0 }),
     affiliateConfigSave: (data: Record<string, any>) => fxsim<{ success: boolean; message?: string }>('/admin/affiliates/config', { body: data }),
     affiliatePayoutCreate: (data: { affiliate_id: number; amount: number; method?: string; destination?: string; note?: string; tx_reference?: string }) =>
       fxsim<{ success: boolean; message?: string }>('/admin/affiliates/payout', { body: data }),

@@ -27,7 +27,15 @@ import { MarketingFooter } from '@/components/marketing/footer'
 import { EmailVerificationGate } from '@/components/dashboard/email-verification-gate'
 
 type Step = 'review' | 'gateway' | 'manual' | 'success'
-type Gateway = 'stripe' | 'manual_crypto' | 'coinpayments' | 'confirmo' | null
+type Gateway = 'stripe' | 'manual_crypto' | 'coinpayments' | 'confirmo' | 'binance' | null
+
+function BinanceIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M16.624 13.92l2.715-2.715-2.715-2.715-2.715 2.715 2.715 2.715zm-9.248 0l2.715-2.715-2.715-2.715-2.715 2.715 2.715 2.715zm4.624-4.625l2.715-2.715-2.715-2.715-2.715 2.715 2.715 2.715zm0 9.25l2.715-2.715-2.715-2.715-2.715 2.715 2.715 2.715zm0-4.625l2.715-2.715-2.715-2.715-2.715 2.715 2.715 2.715zM12 0L8.673 3.327l3.327 3.328 3.327-3.328L12 0zm-8.673 8.673L0 12l3.327 3.327 3.327-3.327-3.327-3.327zm17.346 0l-3.327 3.327 3.327 3.327L24 12l-3.327-3.327zM12 17.345l-3.327 3.328L12 24l3.327-3.327-3.327-3.328z" />
+    </svg>
+  )
+}
 
 export default function CheckoutPage() {
   return (
@@ -70,7 +78,14 @@ function CheckoutInner() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [coupon, setCoupon]     = useState('')
-  const [couponInfo, setCouponInfo] = useState<{ code: string; original: number; discount: number; final: number } | null>(null)
+  const [couponInfo, setCouponInfo] = useState<{
+    code: string
+    original: number
+    discount: number
+    final: number
+    is_affiliate?: boolean
+    discount_pct?: number
+  } | null>(null)
   const [couponErr, setCouponErr]   = useState<string | null>(null)
   const [couponBusy, setCouponBusy] = useState(false)
   // URL coupon auto-apply runs ONCE — without this ref the effect re-fires when
@@ -169,23 +184,51 @@ function CheckoutInner() {
     })
   }, [planId, tournamentId, params])
 
-  // 2. Coupon from URL
+  // 2. Coupon or Referral from URL / localStorage
   useEffect(() => {
     if (plan && !couponInfo && !urlCouponAttempted.current) {
-    urlCouponAttempted.current = true
+      urlCouponAttempted.current = true
       const urlCoupon = params.get('coupon')
-      if (urlCoupon) {
-        setCoupon(urlCoupon)
+      const urlRef = params.get('ref')
+      let savedRef: string | null = null
+      try {
+        if (urlRef) {
+          localStorage.setItem('fxsim:ref', urlRef.trim())
+        }
+        savedRef = localStorage.getItem('fxsim:ref')
+      } catch { /* ignore private browsing */ }
+
+      const candidateCode = (urlCoupon && urlCoupon.trim()) || (urlRef && urlRef.trim()) || (savedRef && savedRef.trim())
+
+      if (candidateCode) {
+        setCoupon(candidateCode)
         setCouponBusy(true)
         setCouponErr(null)
-        api.couponValidate(urlCoupon.trim(), plan.id).then(res => {
+        api.couponValidate(candidateCode.trim(), plan.id).then(res => {
           setCouponBusy(false)
           if (res.ok && res.data.valid) {
-            setCouponInfo({ code: res.data.code || urlCoupon.trim().toUpperCase(), original: res.data.original ?? toNum(plan.price), discount: res.data.discount ?? 0, final: res.data.final ?? toNum(plan.price) })
+            const resolvedCode = res.data.code || candidateCode.trim().toUpperCase()
+            setCoupon(resolvedCode)
+            setCouponInfo({
+              code: resolvedCode,
+              original: res.data.original ?? toNum(plan.price),
+              discount: res.data.discount ?? 0,
+              final: res.data.final ?? toNum(plan.price),
+              is_affiliate: !!res.data.is_affiliate,
+              discount_pct: res.data.value ?? 5,
+            })
           } else {
-            setCouponInfo(null)
-            setCouponErr(res.ok ? res.data.message : (res.error || 'Could not validate coupon'))
+            if (urlCoupon) {
+              setCouponInfo(null)
+              setCouponErr(res.ok ? res.data.message : (res.error || 'Could not validate coupon'))
+            } else {
+              setCoupon('')
+              setCouponInfo(null)
+            }
           }
+        }).catch(() => {
+          setCouponBusy(false)
+          if (!urlCoupon) setCoupon('')
         })
       }
     }
@@ -210,7 +253,19 @@ function CheckoutInner() {
 
   const gateways = useMemo(() => {
     if (!config) return []
-    const list: { id: Gateway; label: string; sub: string; icon: typeof CreditCard; tone: string }[] = []
+    const list: { id: Gateway; label: string; sub: string; icon: React.ComponentType<{ className?: string }>; tone: string }[] = []
+    
+    // Binance Pay (Primary instant crypto transfer)
+    if (config.has_binance !== false) {
+      list.push({
+        id: 'binance',
+        label: 'Binance Pay',
+        sub: 'Instant app scan or Binance ID transfer (0% fee)',
+        icon: BinanceIcon,
+        tone: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+      })
+    }
+
     if (config.has_stripe) {
       list.push({ id: 'stripe',        label: 'Credit / debit card', sub: 'Instant via Stripe',           icon: CreditCard, tone: 'text-info' })
     }
@@ -232,7 +287,16 @@ function CheckoutInner() {
     try {
       const res = await api.couponValidate(coupon.trim(), plan.id)
       if (res.ok && res.data.valid) {
-        setCouponInfo({ code: res.data.code || coupon.trim().toUpperCase(), original: res.data.original ?? price, discount: res.data.discount ?? 0, final: res.data.final ?? price })
+        const resolvedCode = res.data.code || coupon.trim().toUpperCase()
+        setCoupon(resolvedCode)
+        setCouponInfo({
+          code: resolvedCode,
+          original: res.data.original ?? price,
+          discount: res.data.discount ?? 0,
+          final: res.data.final ?? price,
+          is_affiliate: !!res.data.is_affiliate,
+          discount_pct: res.data.value ?? 5,
+        })
       } else {
         setCouponInfo(null)
         setCouponErr(res.ok ? res.data.message : (res.error || 'Could not validate coupon'))
@@ -341,11 +405,11 @@ function CheckoutInner() {
       return
     }
 
-    // Manual gateways — create the order, move to manual step.
+    // Manual & Binance gateways — create the order, move to manual step.
     // Reuse an already-created order when the user goes Back (manual → gateway)
-    // and re-picks a manual method: paymentCreate again would mint a second
-    // pending order for the same plan/coupon.
-    if (orderId) {
+    // with the same gateway selected. If switching gateways, call paymentCreate
+    // to update the pending order's gateway.
+    if (orderId && gateway === g) {
       setStep('manual')
       return
     }
@@ -501,7 +565,7 @@ function CheckoutInner() {
             {step === 'review'  && <ReviewStep    key="review"  plan={plan} onNext={() => isFree ? startFree() : setStep('gateway')} loading={loading} isFree={isFree} error={error} coupon={coupon} setCoupon={setCoupon} applyCoupon={applyCoupon} clearCoupon={clearCoupon} couponInfo={couponInfo} couponErr={couponErr} couponBusy={couponBusy} />}
             {step === 'gateway' && <GatewayStep   key="gateway" plan={plan} gateways={gateways} configLoaded={!!config} onRetryConfig={loadPaymentConfig} chooseGateway={chooseGateway} onBack={() => setStep('review')} loading={loading} error={error} amountDue={finalPrice} couponApplied={!!couponInfo} selectedGateway={gateway} />}
             {step === 'manual'  && <ManualStep    key="manual"  plan={plan} gateway={gateway} config={config} orderId={orderId} proofFile={proofFile} setProof={setProof} txnRef={txnRef} setTxnRef={setTxnRef} onBack={() => setStep('gateway')} onSubmit={submitProof} loading={loading} error={error} amountDue={finalPrice} />}
-            {step === 'success' && <SuccessStep   key="success" tournamentId={tournamentId} />}
+            {step === 'success' && <SuccessStep   key="success" tournamentId={tournamentId} gateway={gateway} />}
           </AnimatePresence>
         </div>
       </main>
@@ -519,7 +583,14 @@ function ReviewStep({
 }: {
   plan: ChallengePlan; onNext: () => void; loading: boolean; isFree: boolean; error: string | null
   coupon: string; setCoupon: (v: string) => void; applyCoupon: () => void; clearCoupon: () => void
-  couponInfo: { code: string; original: number; discount: number; final: number } | null
+  couponInfo: {
+    code: string
+    original: number
+    discount: number
+    final: number
+    is_affiliate?: boolean
+    discount_pct?: number
+  } | null
   couponErr: string | null; couponBusy: boolean
 }) {
   return (
@@ -590,8 +661,17 @@ function ReviewStep({
           ) : (
             <div className="flex items-center justify-between p-3 rounded-lg bg-success/10 border border-success/20 text-sm">
               <div className="flex items-center gap-2 text-success font-medium">
-                <Check className="h-4 w-4" />
-                <span>Coupon <span className="font-bold">{couponInfo.code}</span> applied (−{fmtUSD(couponInfo.discount)})</span>
+                {couponInfo.is_affiliate ? (
+                  <>
+                    <span className="text-base select-none">🎁</span>
+                    <span>Affiliate Discount ({couponInfo.discount_pct || 5}%) Applied via <span className="font-bold">{couponInfo.code}</span> (−{fmtUSD(couponInfo.discount)})</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span>Coupon <span className="font-bold">{couponInfo.code}</span> applied (−{fmtUSD(couponInfo.discount)})</span>
+                  </>
+                )}
               </div>
               <button onClick={clearCoupon} className="text-xs text-text-muted hover:text-text transition-colors underline-offset-2 hover:underline">Remove</button>
             </div>
@@ -769,7 +849,7 @@ function GatewayStep({
   )
 }
 
-// ── Step 3: Manual — show instructions, upload proof ───────────────────────
+// ── Step 3: Manual & Binance — show instructions, upload proof ─────────────
 function ManualStep({
   plan, gateway, config, orderId, proofFile, setProof, txnRef, setTxnRef, onBack, onSubmit, loading, error, amountDue,
 }: {
@@ -787,6 +867,8 @@ function ManualStep({
   error:    string | null
   amountDue: number
 }) {
+  const isBinance = gateway === 'binance'
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 12 }}
@@ -796,29 +878,49 @@ function ManualStep({
       className="space-y-6"
     >
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Manual Crypto Payment</h2>
+        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          {isBinance ? (
+            <>
+              <span className="text-amber-400">Binance Pay</span>
+              <span className="text-xs uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">
+                0% Fee
+              </span>
+            </>
+          ) : (
+            'Manual Crypto Payment'
+          )}
+        </h2>
         <p className="text-text-muted mt-1">
           Order <code className="text-text font-semibold tabular bg-bg-subtle px-1.5 py-0.5 rounded">#{orderId}</code> ·{' '}
           <span className="text-text font-semibold">{fmtUSD(amountDue)}</span> due
         </p>
       </div>
 
-      <CryptoPayBlock config={config} />
+      {isBinance ? (
+        <BinancePayBlock amountDue={amountDue} binanceId={config?.binance_id || '345482171'} binanceQrUrl={config?.binance_qr_url} />
+      ) : (
+        <CryptoPayBlock config={config} />
+      )}
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="txn" className="text-sm font-semibold">Transaction Hash / ID</Label>
+          <Label htmlFor="txn" className="text-sm font-semibold">
+            {isBinance ? 'Binance Order ID / Transaction Hash (TxID)' : 'Transaction Hash / ID'}
+          </Label>
           <Input
             id="txn"
             value={txnRef}
             onChange={(e) => setTxnRef(e.target.value)}
-            placeholder={'e.g. 0x...'}
-            className="h-11"
+            placeholder={isBinance ? 'e.g. 238491823901 or 0x...' : 'e.g. 0x...'}
+            className="h-11 font-mono text-sm"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="proof" className="text-sm font-semibold">Payment Proof <span className="text-text-muted font-normal">(Screenshot/receipt)</span></Label>
+          <Label htmlFor="proof" className="text-sm font-semibold">
+            {isBinance ? 'Binance Payment Screenshot / Receipt' : 'Payment Proof'}{' '}
+            <span className="text-text-muted font-normal">(Screenshot/receipt)</span>
+          </Label>
           <label
             htmlFor="proof"
             className={cn(
@@ -883,7 +985,7 @@ function ManualStep({
             </>
           ) : (
             <>
-              <span>Submit for review</span>
+              <span>{isBinance ? 'Submit Binance Payment' : 'Submit for review'}</span>
               <ArrowRight className="h-4 w-4 ml-2" />
             </>
           )}
@@ -894,7 +996,9 @@ function ManualStep({
 }
 
 // ── Success ────────────────────────────────────────────────────────────────
-function SuccessStep({ tournamentId }: { tournamentId?: number }) {
+function SuccessStep({ tournamentId, gateway }: { tournamentId?: number; gateway?: Gateway }) {
+  const isBinance = gateway === 'binance'
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
@@ -909,7 +1013,9 @@ function SuccessStep({ tournamentId }: { tournamentId?: number }) {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Order Submitted!</h2>
         <p className="text-text-muted mt-3 max-w-sm mx-auto leading-relaxed">
-          We&apos;ve received your payment proof. You&apos;ll be notified via email within 24 hours once it&apos;s approved and your challenge account is provisioned.
+          {isBinance
+            ? "We've received your Binance Pay order details. Our treasury team will verify the TxID and provision your trading account within 15–30 minutes."
+            : "We've received your payment proof. You'll be notified via email within 24 hours once it's approved and your challenge account is provisioned."}
         </p>
       </div>
       
@@ -922,6 +1028,139 @@ function SuccessStep({ tournamentId }: { tournamentId?: number }) {
         </Button>
       </div>
     </motion.div>
+  )
+}
+
+// ── Binance Pay block: QR card + 1-click Binance ID copy + instructions ───────
+function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: number; binanceId: string; binanceQrUrl?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const copyBinanceId = () => {
+    const doSuccess = () => {
+      setCopied(true)
+      toast.success(`Binance ID ${binanceId} copied to clipboard!`)
+      setTimeout(() => setCopied(false), 2500)
+    }
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(binanceId)
+          .then(doSuccess)
+          .catch(() => fallbackCopy(doSuccess))
+      } else {
+        fallbackCopy(doSuccess)
+      }
+    } catch {
+      fallbackCopy(doSuccess)
+    }
+  }
+
+  const fallbackCopy = (onDone: () => void) => {
+    try {
+      const el = document.createElement('textarea')
+      el.value = binanceId
+      el.setAttribute('readonly', '')
+      el.style.position = 'absolute'
+      el.style.left = '-9999px'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      onDone()
+    } catch {
+      toast.error('Unable to copy Binance ID')
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-surface to-surface border border-amber-500/30 shadow-lg shadow-amber-500/5 space-y-5">
+        
+        {/* Top Header inside Card */}
+        <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <BinanceIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-text flex items-center gap-2">
+                Binance Pay Transfer
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                  0% Fee
+                </span>
+              </div>
+              <p className="text-xs text-text-muted">Instant app scan or Binance ID transfer</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-xs text-text-muted block">Payable</span>
+            <span className="text-base font-bold tabular tracking-tight text-amber-400">
+              ${Number(amountDue).toFixed(2)} USDT
+            </span>
+          </div>
+        </div>
+
+        {/* QR Code and Binance ID */}
+        <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
+          {/* QR Code Graphic from extracted asset */}
+          <div className="shrink-0 p-2.5 bg-white rounded-xl shadow-md border border-border/60 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src={binanceQrUrl || "/branding/binance_pay_qr.png"} 
+              alt="Scan with Binance App to pay" 
+              className="w-36 h-auto rounded-lg object-contain mx-auto"
+            />
+            <div className="text-[10px] font-medium text-gray-500 mt-1.5">
+              Scan with Binance App (0% Fee)
+            </div>
+          </div>
+
+          {/* Binance ID and Instructions */}
+          <div className="flex-1 min-w-0 space-y-3 w-full">
+            <div>
+              <div className="text-xs uppercase font-bold tracking-wider text-text-muted mb-1.5 flex items-center justify-between">
+                <span>Official Binance ID</span>
+                <span className="text-[10px] text-amber-400 font-semibold font-mono">Verified ID</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 font-mono text-base font-bold text-text bg-bg px-3.5 py-2.5 rounded-xl border border-border shadow-inner tracking-wider select-all">
+                  {binanceId}
+                </div>
+                <Button
+                  type="button"
+                  onClick={copyBinanceId}
+                  variant="outline"
+                  className={cn(
+                    "shrink-0 h-11 px-3.5 rounded-xl border transition-all text-xs font-semibold gap-1.5",
+                    copied 
+                      ? "border-success bg-success/10 text-success" 
+                      : "border-amber-500/40 hover:border-amber-500 text-amber-400 hover:bg-amber-500/10"
+                  )}
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>{copied ? 'Copied!' : 'Copy ID'}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Step-by-Step Instructions */}
+            <div className="p-3 rounded-xl bg-bg-subtle/80 border border-border-subtle text-xs space-y-2">
+              <div className="font-semibold text-text flex items-center gap-1.5">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-[10px] text-amber-400 font-bold">!</span>
+                How to Pay via Binance:
+              </div>
+              <ol className="list-decimal list-inside space-y-1 text-text-muted text-[11px] leading-relaxed">
+                <li>Open Binance App &rarr; Tap <strong className="text-text">Pay</strong> icon on homepage.</li>
+                <li>Tap <strong className="text-text">Scan</strong> to scan QR code, OR tap <strong className="text-text">Send</strong> and paste Binance ID: <span className="font-mono text-text font-bold">{binanceId}</span>.</li>
+                <li>Enter payable amount: <span className="text-amber-400 font-bold font-mono">${Number(amountDue).toFixed(2)} USDT</span>.</li>
+                <li>Confirm transfer and save payment screenshot or copy TxID/Order ID below.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   )
 }
 

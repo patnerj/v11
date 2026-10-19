@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { Toaster } from 'sonner'
 import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
@@ -14,6 +14,7 @@ import { OfflineBanner } from '@/components/ui/offline-banner'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { TopProgressBar } from '@/components/ui/top-progress-bar'
 import { MetaPixelTracker } from '@/components/meta-pixel-tracker'
+import { AffiliateTracker } from '@/components/affiliate-tracker'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const bootstrap = useAuth((s) => s.bootstrap)
@@ -51,6 +52,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <OfflineBanner />
           <TopProgressBar />
           <MetaPixelTracker />
+          <Suspense fallback={null}>
+            <AffiliateTracker />
+          </Suspense>
           {children}
           <MobileBottomNav />
           <Toaster

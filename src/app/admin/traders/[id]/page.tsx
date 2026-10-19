@@ -10,14 +10,14 @@ import {
   Activity, Target, Award, CheckCircle2, Clock, FileText,
   CreditCard, Wallet, AlertTriangle, Loader2, ExternalLink,
   Lock, RefreshCw, Send, Check, X, Shield, Sparkles, Server,
-  Radio, Terminal, Eye, EyeOff, Save, Layers
+  Radio, Terminal, Eye, EyeOff, Save, Layers, Smartphone
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { setSession, clearFxsimCache } from '@/lib/fxsim'
-import { toNum } from '@/lib/format'
+import { toNum, getWhatsAppUrl } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
@@ -264,6 +264,7 @@ export default function Trader360ProfilePage() {
       mt5_login: mt5Login,
       mt5_server: mt5Server,
       mt5_account_type: mt5AccountType,
+      phone: apiUser?.phone || traderApiData?.user?.phone || traderApiData?.phone || '',
     }
   }, [traderApiData, userId, isBanned, challengesList, selectedChallengeId, selectedChallengeMetrics])
 
@@ -701,7 +702,7 @@ export default function Trader360ProfilePage() {
           { label: trader.name },
         ]}
         title={trader.name}
-        description={`${trader.email || 'No email registered'} • Joined ${trader.joined_date} • ${trader.plan_name}`}
+        description={`${trader.email || 'No email registered'}${trader.phone ? ` • ${trader.phone}` : ''} • Joined ${trader.joined_date} • ${trader.plan_name}`}
         badge={{
           label: `#USR-${trader.user_id || userId}${trader.challenge_id ? ` · #CH-${trader.challenge_id}` : ''}${trader.account_id && String(trader.account_id) !== String(trader.user_id) && String(trader.account_id) !== String(trader.challenge_id) ? ` · #ACC-${trader.account_id}` : ''} · ${isBanned ? 'Account Frozen' : trader.phase_label}`,
           tone: isBanned ? 'danger' : 'accent',
@@ -714,6 +715,22 @@ export default function Trader360ProfilePage() {
                 MT5: {trader.mt5_login}
               </Badge>
             )}
+            {(() => {
+              const waUrl = getWhatsAppUrl(trader.phone)
+              if (!waUrl) return null
+              return (
+                <a href={waUrl} target="_blank" rel="noreferrer">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-500/10 gap-2 h-9"
+                  >
+                    <Smartphone className="h-3.5 w-3.5 text-emerald-500" />
+                    Chat on WhatsApp
+                  </Button>
+                </a>
+              )
+            })()}
             <Button
               variant="outline"
               size="sm"

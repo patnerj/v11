@@ -7,14 +7,15 @@ import {
   Search, Filter, Download, MoreVertical, Shield, User, 
   ExternalLink, Sliders, KeyRound, Ban, CheckCircle2, 
   Clock, AlertTriangle, RefreshCw, Plus, ArrowUpRight,
-  TrendingUp, TrendingDown, DollarSign, Eye, UserCheck, Wallet, Trophy
+  TrendingUp, TrendingDown, DollarSign, Eye, UserCheck, Wallet, Trophy,
+  Smartphone
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useImpersonation } from '@/store/impersonation'
 import { setSession, clearFxsimCache } from '@/lib/fxsim'
-import { toNum } from '@/lib/format'
+import { toNum, getWhatsAppUrl } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -80,6 +81,7 @@ export interface TraderRowItem {
   starting_balance: number
   kyc_status: 'verified' | 'approved' | 'pending' | 'unverified' | string
   created_at: string
+  phone?: string
   profit_split?: number
   max_daily_loss?: number
   max_total_loss?: number
@@ -518,7 +520,30 @@ export default function TradersHubPage() {
               >
                 {row.name}
               </Link>
-              <p className="text-xs text-text-muted truncate font-mono">{row.email}</p>
+              <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                <span className="truncate">{row.email}</span>
+                {row.phone && (
+                  (() => {
+                    const waUrl = getWhatsAppUrl(row.phone)
+                    return waUrl ? (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-cyan-600 dark:text-cyan-400 hover:underline tabular-nums text-2xs shrink-0 font-medium"
+                        title="Chat on WhatsApp"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        · {row.phone}
+                      </a>
+                    ) : (
+                      <span className="text-cyan-600 dark:text-cyan-400 tabular-nums text-2xs shrink-0 font-medium">
+                        · {row.phone}
+                      </span>
+                    )
+                  })()
+                )}
+              </div>
             </div>
           </div>
         )
@@ -697,6 +722,19 @@ export default function TradersHubPage() {
                   Review KYC Hub
                 </DropdownMenuItem>
               </Link>
+
+              {(() => {
+                const waUrl = getWhatsAppUrl(row.phone)
+                if (!waUrl) return null
+                return (
+                  <a href={waUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem className="gap-2.5">
+                      <Smartphone className="h-4 w-4 text-emerald-500" />
+                      Chat on WhatsApp
+                    </DropdownMenuItem>
+                  </a>
+                )
+              })()}
 
               <DropdownMenuItem 
                 className="gap-2.5"

@@ -167,6 +167,7 @@ export interface AdminKycRow {
   selfie?:      string | null
   address_doc?: string | null
   created_at?:  string
+  phone?:       string
   docs:         { id_doc: string | null; id_doc_back?: string | null; selfie: string | null; address_doc?: string | null }
 }
 export type KycSubmission = AdminKycRow
@@ -676,6 +677,9 @@ export interface PaymentConfig {
   has_confirmo?:     boolean
   has_stripe:        boolean
   has_manual_crypto: boolean
+  has_binance?:      boolean
+  binance_id?:       string
+  binance_qr_url?:   string
 }
 
 export interface PaymentOrder {
@@ -717,6 +721,7 @@ export interface AuthUser {
   is_admin:   boolean
   email_verified: boolean
   two_factor: boolean
+  phone?:     string
 }
 
 // ── Trade ticket payloads ────────────────────────────────────────────────────
@@ -986,6 +991,9 @@ export interface PaymentGatewaysConfig {
   paypal_secret_set?: boolean;
   manual_crypto_enabled: boolean;
   manual_bank_enabled: boolean;
+  binance_enabled?: boolean;
+  binance_id?: string;
+  binance_qr_url?: string;
 }
 
 // ── Team Member & RBAC ──────────────────────────────────────────────────────

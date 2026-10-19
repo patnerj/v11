@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { 
   CreditCard, Globe, Cpu, CheckCircle2, XCircle, Eye, 
   RefreshCw, Save, DollarSign, ShieldCheck, FileText,
-  Clock, AlertTriangle, ExternalLink, Zap, Lock
+  Clock, AlertTriangle, ExternalLink, Zap, Lock, QrCode
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -46,6 +46,9 @@ export default function PaymentsHubPage() {
     paypal_secret: '',
     manual_crypto_enabled: true,
     manual_bank_enabled: true,
+    binance_enabled: true,
+    binance_id: '345482171',
+    binance_qr_url: '/branding/binance_pay_qr.png',
   })
 
   const { data: gatewayData, isLoading: isGatewaysLoading, isError: isGatewaysError, refetch: refetchGateways } = useQuery({
@@ -653,6 +656,60 @@ export default function PaymentsHubPage() {
               </CardContent>
             </Card>
 
+            {/* Binance Pay Direct Transfer Card */}
+            <Card className="bg-surface border-border shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                      <QrCode className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-sm font-bold text-text flex items-center gap-2">
+                        Binance Pay Direct Transfer
+                        <Badge tone={gatewayForm.binance_enabled ? 'accent' : 'neutral'} size="sm">
+                          {gatewayForm.binance_enabled ? 'Enabled' : 'Disabled'}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className="text-xs text-text-muted">
+                        Dynamic Binance Pay direct ID transfer with QR card, TxID submission & proof receipt upload.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={gatewayForm.binance_enabled ?? true}
+                    onCheckedChange={(checked) => setGatewayForm({ ...gatewayForm, binance_enabled: checked })}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-text">Official Binance Pay ID</Label>
+                    <Input
+                      type="text"
+                      placeholder="345482171"
+                      value={gatewayForm.binance_id ?? '345482171'}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, binance_id: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-2xs text-text-muted">Traders will see this ID with a 1-click copy button on checkout.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-text">Binance Pay QR Image URL</Label>
+                    <Input
+                      type="text"
+                      placeholder="/branding/binance_pay_qr.png"
+                      value={gatewayForm.binance_qr_url ?? '/branding/binance_pay_qr.png'}
+                      onChange={(e) => setGatewayForm({ ...gatewayForm, binance_qr_url: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-2xs text-text-muted">Default asset: /branding/binance_pay_qr.png</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Save Button */}
             <div className="flex justify-end pt-2">
               <Button
@@ -710,12 +767,20 @@ export default function PaymentsHubPage() {
                     {gatewayForm.paypal_enabled ? 'Active' : 'Disabled'}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center justify-between py-1.5 border-b border-border/40">
                   <span className="text-text font-medium flex items-center gap-2">
                     <DollarSign className="h-3.5 w-3.5 text-emerald-500" /> Manual Payment Proofs
                   </span>
                   <Badge tone={gatewayForm.manual_crypto_enabled || gatewayForm.manual_bank_enabled ? 'success' : 'neutral'} size="sm">
                     {gatewayForm.manual_crypto_enabled || gatewayForm.manual_bank_enabled ? 'Active' : 'Disabled'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-text font-medium flex items-center gap-2">
+                    <QrCode className="h-3.5 w-3.5 text-amber-400" /> Binance Pay Direct
+                  </span>
+                  <Badge tone={gatewayForm.binance_enabled ? 'accent' : 'neutral'} size="sm">
+                    {gatewayForm.binance_enabled ? 'Active' : 'Disabled'}
                   </Badge>
                 </div>
               </CardContent>
