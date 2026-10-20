@@ -605,6 +605,7 @@ export const Mt5Canvas = memo(
       // 2. Dotted Grid (G)
       if (showGrid && rangeP > 0) {
         ctx.save()
+        try {
         ctx.strokeStyle = colors.grid
         ctx.lineWidth = 1
         ctx.setLineDash([1, 3])
@@ -631,12 +632,15 @@ export const Mt5Canvas = memo(
           ctx.lineTo(Math.floor(x) + 0.5, mainH)
           ctx.stroke()
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 3. Period Separators (Y) — smart multi-timeframe boundaries
       if (showPeriodSeparators) {
         ctx.save()
+        try {
         ctx.strokeStyle = colors.gridPeriod
         ctx.lineWidth = 1
         ctx.setLineDash([4, 4])
@@ -672,12 +676,15 @@ export const Mt5Canvas = memo(
             }
           }
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 4. Killzone Sessions Overlay
       if (indicators.killzones.enabled) {
         ctx.save()
+        try {
         for (let i = 0; i < visible.length; i++) {
           const c = visible[i]
           const x = candleIndexToX(startIndex + i)
@@ -692,13 +699,16 @@ export const Mt5Canvas = memo(
             ctx.fillRect(x - candleWidth / 2, 0, candleWidth, mainH)
           }
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 5. Technical Overlays (SMA, EMA, Bollinger Bands, VWAP)
       if (indicators.bb.enabled) {
         const bb = calcBollingerBands(candles, indicators.bb.period, indicators.bb.stdDev)
         ctx.save()
+        try {
         ctx.strokeStyle = indicators.bb.color
         ctx.lineWidth = 1
         ctx.fillStyle = 'rgba(99, 102, 241, 0.05)'
@@ -746,7 +756,9 @@ export const Mt5Canvas = memo(
         drawLine(bb.upper)
         drawLine(bb.middle)
         drawLine(bb.lower)
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // EMA overlays
@@ -754,6 +766,7 @@ export const Mt5Canvas = memo(
         const renderEMA = (period: number, color: string) => {
           const emaValues = calcEMA(candles, period)
           ctx.save()
+          try {
           ctx.strokeStyle = color
           ctx.lineWidth = 1.5
           ctx.beginPath()
@@ -770,7 +783,9 @@ export const Mt5Canvas = memo(
             }
           }
           ctx.stroke()
-          ctx.restore()
+          } finally {
+            ctx.restore()
+          }
         }
         if (indicators.ema.p20) renderEMA(20, indicators.ema.c20)
         if (indicators.ema.p50) renderEMA(50, indicators.ema.c50)
@@ -781,6 +796,7 @@ export const Mt5Canvas = memo(
       if (indicators.sma.enabled) {
         const smaValues = calcSMA(candles, indicators.sma.period)
         ctx.save()
+        try {
         ctx.strokeStyle = indicators.sma.color
         ctx.lineWidth = 1.5
         ctx.beginPath()
@@ -797,13 +813,16 @@ export const Mt5Canvas = memo(
           }
         }
         ctx.stroke()
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // VWAP overlay
       if (indicators.vwap.enabled) {
         const vwapValues = calcVWAP(candles)
         ctx.save()
+        try {
         ctx.strokeStyle = indicators.vwap.color
         ctx.lineWidth = 1.5
         ctx.setLineDash([3, 2])
@@ -821,7 +840,9 @@ export const Mt5Canvas = memo(
           }
         }
         ctx.stroke()
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 6. Volume Histogram at Bottom of Main Chart
@@ -829,6 +850,7 @@ export const Mt5Canvas = memo(
         const maxVol = Math.max(...visible.map((c) => c.volume), 1)
         const volH = Math.min(60, mainH * 0.18)
         ctx.save()
+        try {
         for (let i = 0; i < visible.length; i++) {
           const c = visible[i]
           const x = candleIndexToX(startIndex + i)
@@ -837,7 +859,9 @@ export const Mt5Canvas = memo(
           ctx.fillStyle = isUp ? colors.volumeUp : colors.volumeDown
           ctx.fillRect(x - candleWidth * 0.4, mainH - h, candleWidth * 0.8, h)
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 7. Render Candles / Bars / Line / Heikin Ashi
@@ -846,6 +870,7 @@ export const Mt5Canvas = memo(
 
       if (chartStyle === 'line') {
         ctx.save()
+        try {
         ctx.strokeStyle = colors.lineColor
         ctx.lineWidth = 2
         ctx.beginPath()
@@ -868,9 +893,12 @@ export const Mt5Canvas = memo(
         ctx.lineTo(candleIndexToX(startIndex), mainH)
         ctx.closePath()
         ctx.fill()
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       } else if (chartStyle === 'bar') {
         ctx.save()
+        try {
         ctx.lineWidth = 1.5
         for (let i = 0; i < renderCandles.length; i++) {
           const c = renderCandles[i]
@@ -906,10 +934,13 @@ export const Mt5Canvas = memo(
           ctx.lineTo(x + candleWidth * 0.45, Math.floor(yClose) + 0.5)
           ctx.stroke()
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       } else {
         // Candlesticks
         ctx.save()
+        try {
         for (let i = 0; i < renderCandles.length; i++) {
           const c = renderCandles[i]
           const isLatestCandle = (startIndex + i) === (candles.length - 1)
@@ -954,7 +985,9 @@ export const Mt5Canvas = memo(
             ctx.strokeRect(bodyLeft + 0.5, topY + 0.5, bodyW - 1, Math.max(0, bodyH - 1))
           }
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 8. Vector Drawings (Persistent annotations using continuous coordinates)
@@ -965,6 +998,7 @@ export const Mt5Canvas = memo(
         if (!d.visible || d.points.length === 0) continue
 
         ctx.save()
+        try {
         ctx.strokeStyle = d.color
         ctx.lineWidth = d.lineWidth
         if (d.lineStyle === 'dashed') ctx.setLineDash([6, 4])
@@ -1053,12 +1087,15 @@ export const Mt5Canvas = memo(
 
           // Median Line
           ctx.save()
+          try {
           ctx.setLineDash([4, 4])
           ctx.beginPath()
           ctx.moveTo(x0, (y0 + y0B) / 2)
           ctx.lineTo(x1, (y1 + y1B) / 2)
           ctx.stroke()
-          ctx.restore()
+          } finally {
+            ctx.restore()
+          }
         } else if (d.type === 'fibonacci' && d.points.length >= 2) {
           const p0 = d.points[0].price
           const p1 = d.points[1].price
@@ -1083,6 +1120,7 @@ export const Mt5Canvas = memo(
 
           // Subtle diagonal swing baseline between anchor 0 and anchor 1
           ctx.save()
+          try {
           ctx.strokeStyle = theme === 'daylight' ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)'
           ctx.lineWidth = 1
           ctx.setLineDash([3, 3])
@@ -1090,7 +1128,9 @@ export const Mt5Canvas = memo(
           ctx.moveTo(x0, y0)
           ctx.lineTo(x1, y1)
           ctx.stroke()
-          ctx.restore()
+          } finally {
+            ctx.restore()
+          }
 
           // Shaded Golden Pocket (50% - 61.8%) bounded between leftX and rightX
           const y50 = priceToY(p0 + diff * 0.5)
@@ -1239,11 +1279,16 @@ export const Mt5Canvas = memo(
             }
           }
         }
-        ctx.restore()
+        } catch (err) {
+          console.warn('[MT5Canvas] Drawing error:', err)
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 9. Right Y-Axis Price Scale Scaffolding & Static Grid Ticks
       ctx.save()
+      try {
       ctx.fillStyle = colors.background
       ctx.fillRect(chartW, 0, PRICE_AXIS_WIDTH, mainH)
       ctx.strokeStyle = colors.border
@@ -1265,10 +1310,13 @@ export const Mt5Canvas = memo(
           ctx.fillText(fmtPrice(p, digits), chartW + 6, y + 3)
         }
       }
-      ctx.restore()
+      } finally {
+        ctx.restore()
+      }
 
       // 10. Bottom X-Axis Time Scale Scaffolding & Static Time Ticks
       ctx.save()
+      try {
       ctx.fillStyle = colors.background
       ctx.fillRect(0, mainH, width, TIME_AXIS_HEIGHT)
       ctx.strokeStyle = colors.border
@@ -1305,12 +1353,15 @@ export const Mt5Canvas = memo(
         }
         ctx.fillText(label, x, mainH + 16)
       }
-      ctx.restore()
+      } finally {
+        ctx.restore()
+      }
 
       // 11. Sub-Pane (RSI or MACD)
       if (hasSubPane) {
         const subTop = mainH + TIME_AXIS_HEIGHT
         ctx.save()
+        try {
         ctx.fillStyle = colors.background
         ctx.fillRect(0, subTop, width, subH)
         ctx.strokeStyle = colors.border
@@ -1378,7 +1429,9 @@ export const Mt5Canvas = memo(
           ctx.textAlign = 'left'
           ctx.fillText(`MACD (${indicators.macd.fast},${indicators.macd.slow},${indicators.macd.signal})`, 10, subTop + 14)
         }
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 12. Interactive On-Chart Trade & Pending Order Lines (Drag-and-Drop SL/TP)
@@ -1692,6 +1745,7 @@ export const Mt5Canvas = memo(
         const yAsk = priceToY(liveAsk)
 
         ctx.save()
+        try {
         // Bid Line
         ctx.strokeStyle = colors.bidLine
         ctx.lineWidth = 1
@@ -1721,12 +1775,15 @@ export const Mt5Canvas = memo(
         ctx.font = FONT_MICRO_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(`Spread: ${spreadP.toFixed(1)}`, chartW + PRICE_AXIS_WIDTH / 2, midY + 3)
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       if (liveBid > 0) {
         const yBid = priceToY(liveBid)
         ctx.save()
+        try {
         // Active Live Bid Price Tag on Right Scale (Dynamic Bullish / Bearish color)
         const isBullish = visible.length > 0 && visible[visible.length - 1].close >= visible[visible.length - 1].open
         const bidBg = theme === 'daylight' 
@@ -1757,7 +1814,9 @@ export const Mt5Canvas = memo(
           ctx.fillText(cdText, chartW + PRICE_AXIS_WIDTH / 2, yBid + 24)
         }
 
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
 
       // 11. Crosshair & MT5 Pip Ruler
@@ -1768,6 +1827,7 @@ export const Mt5Canvas = memo(
         const curPrice = yToPrice(curY)
 
         ctx.save()
+        try {
         ctx.strokeStyle = colors.crosshair
         ctx.lineWidth = 1
         ctx.setLineDash([4, 4])
@@ -1824,7 +1884,9 @@ export const Mt5Canvas = memo(
         ctx.font = FONT_LABEL_BOLD
         ctx.textAlign = 'center'
         ctx.fillText(timeStr, curX, mainH + 13)
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
 
         // Pip Ruler Box (Ctrl+F or Middle Drag)
         const ruler = rulerRef.current
@@ -1844,6 +1906,7 @@ export const Mt5Canvas = memo(
           const estPnL = Math.abs(deltaPrice) * symMeta.contractSize * activeLot * quoteToUsdRate(symbol, p1, activePrices)
 
           ctx.save()
+          try {
           ctx.strokeStyle = colors.rulerBorder
           ctx.lineWidth = 1.5
           ctx.beginPath()
@@ -1865,7 +1928,9 @@ export const Mt5Canvas = memo(
           ctx.font = FONT_LABEL_BOLD
           ctx.textAlign = 'left'
           ctx.fillText(rulerText, boxX + 10, boxY + 16)
-          ctx.restore()
+          } finally {
+            ctx.restore()
+          }
         }
       }
 
@@ -1889,6 +1954,7 @@ export const Mt5Canvas = memo(
         const ohlcvText = `${symbol} • ${timeframe} • O: ${fmtPrice(openVal, digits)} H: ${fmtPrice(highVal, digits)} L: ${fmtPrice(lowVal, digits)} C: ${fmtPrice(closeVal, digits)} Δ: ${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(2)}% Vol: ${activeCandle.volume}`
 
         ctx.save()
+        try {
         ctx.fillStyle = theme === 'daylight' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(5, 8, 17, 0.75)'
         ctx.fillRect(6, 6, ctx.measureText(ohlcvText).width + 16, 20)
         ctx.strokeStyle = theme === 'daylight' ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.08)'
@@ -1898,7 +1964,9 @@ export const Mt5Canvas = memo(
         ctx.font = FONT_BODY_BOLD
         ctx.textAlign = 'left'
         ctx.fillText(ohlcvText, 12, 20)
-        ctx.restore()
+        } finally {
+          ctx.restore()
+        }
       }
       } catch (err) {
         console.error('[MT5 Pro Chart] Uncaught render exception:', err)
