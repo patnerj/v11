@@ -48,13 +48,15 @@ async function verifySession(value: string | undefined, secret: string): Promise
 const SOCIAL_CRAWLER_REGEX = /facebookexternalhit|WhatsApp|Twitterbot|TelegramBot|Discordbot|LinkedInBot|Slackbot|SkypeUriPreview|Google-Structured-Data-Testing-Tool|vkShare|W3C_Validator/i
 
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname
   const userAgent = request.headers.get('user-agent') || ''
-  // Allow social media link preview bots to read <head> Open Graph metadata on all routes
-  if (SOCIAL_CRAWLER_REGEX.test(userAgent)) {
+
+  // Allow social media link preview bots to read Open Graph metadata ONLY on public routes.
+  // Strictly forbid crawler bypass on protected routes (/admin, /dashboard, /arena) to prevent header-spoofing auth bypass.
+  const isProtectedRoute = path.startsWith('/admin') || path.startsWith('/dashboard') || path.startsWith('/arena')
+  if (!isProtectedRoute && SOCIAL_CRAWLER_REGEX.test(userAgent)) {
     return NextResponse.next()
   }
-
-  const path = request.nextUrl.pathname
   const secret = getSessionSecret()
 
   // P0: fail-closed — no secret = no verified session = redirect to login.

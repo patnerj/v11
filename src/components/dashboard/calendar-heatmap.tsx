@@ -10,8 +10,17 @@ interface CalendarHeatmapProps {
   trades: Trade[]
 }
 
+function normalizeTrades(data: unknown): Trade[] {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as any).trades)) {
+    return (data as any).trades
+  }
+  return []
+}
+
 export function CalendarHeatmap({ trades }: CalendarHeatmapProps) {
   const isDark = useIsDarkTheme()
+  const safeTrades = useMemo(() => normalizeTrades(trades), [trades])
 
   // Generate last 90 days
   const data = useMemo(() => {
@@ -29,7 +38,7 @@ export function CalendarHeatmap({ trades }: CalendarHeatmapProps) {
     }
     
     // Populate with trades
-    trades.forEach(t => {
+    safeTrades.forEach(t => {
       const pnl = typeof t.pnl === 'string' ? parseFloat(t.pnl) : t.pnl
       let dateStr = ''
       if (t.closed_at_iso) {
@@ -46,7 +55,7 @@ export function CalendarHeatmap({ trades }: CalendarHeatmapProps) {
     })
     
     return Array.from(daysMap.values())
-  }, [trades])
+  }, [safeTrades])
 
   // Group by weeks
   const weeks: { pnl: number, count: number, date: Date }[][] = []

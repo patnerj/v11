@@ -55,7 +55,7 @@ export const ClosePositionModal = memo(function ClosePositionModal({
   // Real-time market tick subscription
   const tick = usePrices((s) => (position ? s.prices[position.symbol] : undefined))
   const allPrices = usePrices((s) => s.prices)
-  const isMt5Synced = Boolean(position?.order_id && Number(position.order_id) > 100000)
+  const isMt5Synced = Boolean(position?.order_id && Number(position.order_id) > 0 && ((position as any).source === 'mt5' || (position as any).source === 'bridge'))
 
   const currentPx = isMt5Synced && toNum(position?.current_price) > 0
     ? toNum(position?.current_price)

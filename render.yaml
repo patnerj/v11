@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: SECRET_TOKEN
-        value: a4f9b8c2e1d74653a928f01b54e76c3d82a10e4b7c6d5e9f1a2b3c4d5e6f7a8b
+        generateValue: true
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: MAX_TOTAL_CLIENTS
