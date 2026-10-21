@@ -132,7 +132,7 @@ export default function AdminTournamentsPage() {
   const safeTournaments = Array.isArray(tournaments) ? tournaments : []
 
   // ─────────────────────────────────────────────────────────────
-  // 2.2 SYNTHETIC LEADERBOARD MANAGEMENT (Client Requirement)
+  // 2.2 DEMO BENCHMARK & SANDBOX LEADERBOARD SEEDER
   // ─────────────────────────────────────────────────────────────
   const [isManualEntryModalOpen, setIsManualEntryModalOpen] = useState(false)
   const [isGeneratingSynthetic, setIsGeneratingSynthetic] = useState(false)
@@ -151,7 +151,7 @@ export default function AdminTournamentsPage() {
     try {
       const res = await api.admin.tournaments.generateSynthetic(selectedTournamentForLeaderboard.id)
       if (res.ok && res.data.success) {
-        toast.success(`Generated ${res.data.count || 12} realistic synthetic leaderboard entries!`)
+        toast.success(`Generated ${res.data.count || 12} realistic benchmark seeder entries!`)
         refetchLeaderboard()
       } else {
         toast.error(res.ok ? (res.data.message || 'Generation failed') : res.error)
@@ -169,7 +169,7 @@ export default function AdminTournamentsPage() {
     try {
       const res = await api.admin.tournaments.clearSynthetic(selectedTournamentForLeaderboard.id, cleanId)
       if (res.ok && res.data.success) {
-        toast.success(entryId ? 'Removed synthetic entry.' : 'Cleared all synthetic entries.')
+        toast.success(entryId ? 'Removed benchmark entry.' : 'Cleared all benchmark seeder entries.')
         refetchLeaderboard()
       } else {
         toast.error(res.ok ? (res.data.message || 'Failed') : res.error)
@@ -308,7 +308,7 @@ export default function AdminTournamentsPage() {
       const pCleanId = String(p.synthetic_id || p.id).replace(/^synth_/, '')
       const currSynthetic = syntheticItems.find(s => s.id === pCleanId || s.id === String(p.synthetic_id) || s.id === String(p.id))
       if (!currSynthetic) {
-        toast.error('Synthetic entry not found.')
+        toast.error('Benchmark seeder entry not found.')
         setIsReordering(false)
         return
       }
@@ -1562,7 +1562,7 @@ export default function AdminTournamentsPage() {
                 className="gap-1 text-xs border-red-500/30 text-red-500 hover:bg-red-500/10 h-7"
               >
                 <Trash2 className="h-3 w-3" />
-                Clear Synthetic
+                Clear Demo Seeder
               </Button>
 
               <Button
@@ -1644,7 +1644,7 @@ export default function AdminTournamentsPage() {
                               )}
                               {(p as any).is_synthetic && (
                                 <Badge tone="warn" size="sm" className="text-3xs py-0 px-1 border-amber-500/30 text-amber-500 bg-amber-500/10 font-mono">
-                                  Synthetic
+                                  Demo Seeder
                                 </Badge>
                               )}
                             </div>
@@ -1719,7 +1719,7 @@ export default function AdminTournamentsPage() {
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 p-0 text-red-500/70 hover:text-red-500 hover:bg-red-500/10"
-                                title="Delete synthetic entry"
+                                title="Delete benchmark seeder entry"
                                 onClick={() => handleClearSynthetic((p as any).synthetic_id || (p as any).id)}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -1749,7 +1749,7 @@ export default function AdminTournamentsPage() {
         </div>
       </Modal>
 
-      {/* ── Modal 1.5: Add Manual Synthetic Leaderboard Entry ──────────────── */}
+      {/* ── Modal 1.5: Add Manual Benchmark Seeder Entry ──────────────── */}
       <Modal
         isOpen={isManualEntryModalOpen}
         onClose={() => setIsManualEntryModalOpen(false)}
@@ -1857,7 +1857,7 @@ export default function AdminTournamentsPage() {
         </form>
       </Modal>
 
-      {/* ── Modal 1.6: Edit Synthetic Leaderboard Entry ────────────────────── */}
+      {/* ── Modal 1.6: Edit Benchmark Seeder Entry ────────────────────── */}
       <Modal
         isOpen={isEditSyntheticModalOpen}
         onClose={() => setIsEditSyntheticModalOpen(false)}

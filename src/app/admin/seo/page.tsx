@@ -84,6 +84,9 @@ export default function AdminSeoPage() {
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [aiResult, setAiResult] = useState<any>(null)
 
+  const siteOrigin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com')
+  const siteHost = typeof window !== 'undefined' ? window.location.host : 'your-domain.com'
+
   // Load current values from API
   useEffect(() => {
     let mounted = true
@@ -1322,7 +1325,7 @@ export default function AdminSeoPage() {
                       <div className="text-xs font-semibold text-slate-800 dark:text-foreground">XML Sitemap</div>
                       <div className="text-2xs text-slate-500 dark:text-muted-foreground font-mono">/sitemap.xml</div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleCopy('https://massfunded.org/sitemap.xml', 'sitemap')}>
+                    <Button variant="ghost" size="sm" onClick={() => handleCopy(`${siteOrigin}/sitemap.xml`, 'sitemap')}>
                       {copiedKey === 'sitemap' ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="h-4 w-4 text-slate-600 dark:text-slate-400" />}
                     </Button>
                   </div>
@@ -1331,7 +1334,7 @@ export default function AdminSeoPage() {
                       <div className="text-xs font-semibold text-slate-800 dark:text-foreground">Robots.txt Directives</div>
                       <div className="text-2xs text-slate-500 dark:text-muted-foreground font-mono">/robots.txt</div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleCopy('https://massfunded.org/robots.txt', 'robots')}>
+                    <Button variant="ghost" size="sm" onClick={() => handleCopy(`${siteOrigin}/robots.txt`, 'robots')}>
                       {copiedKey === 'robots' ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="h-4 w-4 text-slate-600 dark:text-slate-400" />}
                     </Button>
                   </div>
@@ -1386,12 +1389,12 @@ export default function AdminSeoPage() {
                   <div className="rounded-xl border border-slate-200 dark:border-border overflow-hidden bg-slate-50 dark:bg-surface-muted/40">
                     <div className="h-36 bg-gradient-to-tr from-emerald-950 via-zinc-900 to-teal-950 flex items-center justify-center text-center p-4">
                       <div className="space-y-1">
-                        <div className="text-xs font-bold text-emerald-400 font-mono">MASSFUNDED</div>
+                        <div className="text-xs font-bold text-emerald-400 font-mono">{(brandName || 'YOUR BRAND').toUpperCase()}</div>
                         <div className="text-xs text-white font-semibold">Simulated Funded Capital Up to $200k</div>
                       </div>
                     </div>
                     <div className="p-3 space-y-1">
-                      <div className="text-2xs text-slate-500 dark:text-muted-foreground uppercase font-mono">massfunded.org</div>
+                      <div className="text-2xs text-slate-500 dark:text-muted-foreground uppercase font-mono">{siteHost}</div>
                       <div className="text-xs font-semibold text-slate-800 dark:text-foreground line-clamp-1">{form.meta_title}</div>
                       <div className="text-2xs text-slate-600 dark:text-muted-foreground line-clamp-2">{form.meta_description}</div>
                     </div>

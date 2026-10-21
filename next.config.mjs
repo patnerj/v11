@@ -34,12 +34,6 @@ const connectSrc = [
   "'self'",
   apiHost,
   wsHost,
-  'https://api.launchapropfirm.com',
-  'https://*.launchapropfirm.com',
-  'wss://*.launchapropfirm.com',
-  'https://api.massfunded.org',
-  'https://*.massfunded.org',
-  'wss://*.massfunded.org',
   'https://*.ingest.sentry.io',
   'https://*.ingest.us.sentry.io',
   'https://*.sentry.io',
@@ -58,7 +52,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns'],

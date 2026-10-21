@@ -308,8 +308,8 @@ export function SocialProfitShareModal({ open, onClose, trade }: SocialProfitSha
     ctx.fill()
     
     // Dynamic brand domain & verification URL
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://demo.launchapropfirm.com'
-    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'demo.launchapropfirm.com'
+    const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com')
+    const displayDomain = typeof window !== 'undefined' ? window.location.hostname : 'your-domain.com'
     const verifyUrl = `${origin}/verify?trade=${encodeURIComponent(trade?.symbol || '')}&acc=${encodeURIComponent(String(accountId))}`
 
     // Scannable Dynamic QR Matrix

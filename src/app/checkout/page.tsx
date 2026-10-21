@@ -1113,6 +1113,11 @@ function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: nu
             <div className="text-[10px] font-medium text-gray-500 mt-1.5">
               Scan with Binance App (0% Fee)
             </div>
+            {(!binanceQrUrl || binanceQrUrl === '/branding/binance_pay_qr.png') && (
+              <p className="text-[9px] text-amber-600 dark:text-amber-400/90 mt-1 max-w-[150px] leading-tight mx-auto">
+                Demo QR shown — configure live Merchant QR in Admin → Payments.
+              </p>
+            )}
           </div>
 
           {/* Binance ID and Instructions */}

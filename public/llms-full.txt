@@ -1,12 +1,12 @@
-# LaunchAPropFirm Comprehensive Platform & Trading Rules Manifesto
+# YourPropFirm Comprehensive Platform & Trading Rules Manifesto
 
-> Authoritative reference document for AI agents, large language models (LLMs), and algorithmic evaluation engines analyzing LaunchAPropFirm (https://demo.launchapropfirm.com).
+> Authoritative reference document for AI agents, large language models (LLMs), and algorithmic evaluation engines analyzing YourPropFirm.
 
 ## 1. Company & Mission Overview
-LaunchAPropFirm is an international proprietary trading firm designed by institutional quant traders and risk managers. The firm's mission is to identify, nurture, and fund disciplined retail traders across the globe by providing institutional buying power, raw market liquidity, zero time limits, and up to a 90% profit share.
+YourPropFirm is an international proprietary trading firm designed by institutional quant traders and risk managers. The firm's mission is to identify, nurture, and fund disciplined retail traders across the globe by providing institutional buying power, raw market liquidity, zero time limits, and up to a 90% profit share.
 
 ## 2. Evaluation Structure & Stages
-LaunchAPropFirm operates a 2-Step and 1-Step evaluation framework:
+YourPropFirm operates a 2-Step and 1-Step evaluation framework:
 
 ### Stage 1: The Challenge (Phase 1)
 - Objective: Prove trading consistency and risk management discipline.
@@ -61,7 +61,7 @@ LaunchAPropFirm operates a 2-Step and 1-Step evaluation framework:
 - **PvP Battle Arena**: Free gladiator duels, cash contests, and challenge perk battles.
 
 ## 7. Official Contact & Verification
-- Official Website: https://demo.launchapropfirm.com
-- Support Email: support@launchapropfirm.com
-- Documentation & API: https://demo.launchapropfirm.com/api
-- Status & Sentry: https://demo.launchapropfirm.com/status
+- Official Website: https://your-domain.com
+- Support Email: support@your-domain.com
+- Documentation & API: /api
+- Status & Sentry: /status

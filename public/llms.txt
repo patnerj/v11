@@ -1,6 +1,6 @@
-# LaunchAPropFirm — Institutional Proprietary Trading Firm
+# YourPropFirm — Institutional Proprietary Trading Firm
 
-> LaunchAPropFirm (https://demo.launchapropfirm.com) is an institutional-grade proprietary trading firm empowering talented retail traders worldwide with up to $200,000 in funded capital, up to 90% profit splits, raw institutional spreads, and cutting-edge execution technology.
+> YourPropFirm is an institutional-grade proprietary trading firm empowering talented retail traders worldwide with up to $200,000 in funded capital, up to 90% profit splits, raw institutional spreads, and cutting-edge execution technology.
 
 ## Core Platform Highlights
 
@@ -36,13 +36,13 @@
 
 ## Key Links & Resources
 
-- [Home Page](https://demo.launchapropfirm.com)
-- [Challenge Programs & Pricing](https://demo.launchapropfirm.com/challenges)
-- [Trading Tournaments](https://demo.launchapropfirm.com/tournaments)
-- [PvP Battle Arena](https://demo.launchapropfirm.com/arena)
-- [Payout Proof & Disbursals](https://demo.launchapropfirm.com/payouts)
-- [Frequently Asked Questions (FAQ)](https://demo.launchapropfirm.com/faq)
-- [Trading Rules & Drawdown Guidelines](https://demo.launchapropfirm.com/risk)
-- [Platform Status & Latency Monitors](https://demo.launchapropfirm.com/status)
-- [Support Desk & Inquiries](https://demo.launchapropfirm.com/contact)
-- [Full LLM Knowledge Document](https://demo.launchapropfirm.com/llms-full.txt)
+- [Home Page](/)
+- [Challenge Programs & Pricing](/challenges)
+- [Trading Tournaments](/tournaments)
+- [PvP Battle Arena](/arena)
+- [Payout Proof & Disbursals](/payouts)
+- [Frequently Asked Questions (FAQ)](/faq)
+- [Trading Rules & Drawdown Guidelines](/risk)
+- [Platform Status & Latency Monitors](/status)
+- [Support Desk & Inquiries](/contact)
+- [Full LLM Knowledge Document](/llms-full.txt)

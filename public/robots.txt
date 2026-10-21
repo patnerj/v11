@@ -1,5 +1,4 @@
-# LaunchAPropFirm Robots Configuration & Crawler Directives
-# Website: https://demo.launchapropfirm.com
+# White-Label Prop Firm — Robots.txt
 
 # ── General Search Engine Crawlers ────────────────────────────────────────────
 User-agent: *
@@ -54,6 +53,5 @@ Allow: /
 Disallow: /dashboard/
 Disallow: /admin/
 
-# ── Authoritative Sitemaps & Host ─────────────────────────────────────────────
-Sitemap: https://demo.launchapropfirm.com/sitemap.xml
-Host: https://demo.launchapropfirm.com
+# ── Authoritative Sitemaps ───────────────────────────────────────────────────
+Sitemap: /sitemap.xml
