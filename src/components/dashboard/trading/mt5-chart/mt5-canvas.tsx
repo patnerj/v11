@@ -2246,8 +2246,10 @@ export const Mt5Canvas = memo(
       // 4. Interactive Trade Lines & Drag handles (Guarded by showPositions toggle)
       const showTradePositions = indicators.tradeLevels?.showPositions ?? true
       if (showTradePositions) {
-        const symPositions = positions.filter((p) => p.symbol === symbol)
+        const safePositions = Array.isArray(positions) ? positions : []
+        const symPositions = safePositions.filter((p) => p && typeof p === 'object' && p.symbol === symbol)
         for (const pos of symPositions) {
+          if (!pos || typeof pos !== 'object') continue
           const openPrice = toNum(pos.open_price)
           const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
           const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
@@ -2358,12 +2360,14 @@ export const Mt5Canvas = memo(
         }
 
         // 5. Interactive Pending Orders (select closest order)
-        const symPending = pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending')
+        const safePending = Array.isArray(pendingOrders) ? pendingOrders : []
+        const symPending = safePending.filter((o) => o && typeof o === 'object' && o.symbol === symbol && o.status === 'pending')
 
         // Click [x] Cancel on closest pending order
         let closestCancel: PendingOrder | null = null
         let minCancelDist = 12
         for (const ord of symPending) {
+          if (!ord || typeof ord !== 'object') continue
           const tgtPrice = toNum(ord.target_price)
           if (tgtPrice <= 0) continue
           const yTgt = priceToY(tgtPrice)
@@ -2392,6 +2396,7 @@ export const Mt5Canvas = memo(
         let closestDrag: PendingOrder | null = null
         let minDragDist = 10
         for (const ord of symPending) {
+          if (!ord || typeof ord !== 'object') continue
           const tgtPrice = toNum(ord.target_price)
           if (tgtPrice <= 0) continue
           const yTgt = priceToY(tgtPrice)
@@ -2461,7 +2466,8 @@ export const Mt5Canvas = memo(
 
       // 7. Select tool: Check click on drawing anchor handles
       if (selectedDrawingId) {
-        const sel = drawings.find((d) => d.id === selectedDrawingId)
+        const safeDrawings = Array.isArray(drawings) ? drawings : []
+        const sel = safeDrawings.find((d) => d && typeof d === 'object' && d.id === selectedDrawingId)
         if (sel) {
           if (sel.type === 'risk-reward') {
             const x0 = timeToX(sel.points[0].time)
@@ -2731,7 +2737,8 @@ export const Mt5Canvas = memo(
       // 6. Dragging Drawing Anchor Handle
       if (draggingAnchorRef.current) {
         const curPoint = snapToCandle({ time: xToTime(x), price: yToPrice(y) })
-        const sel = drawings.find((d) => d.id === draggingAnchorRef.current?.drawingId)
+        const safeDrawings = Array.isArray(drawings) ? drawings : []
+        const sel = safeDrawings.find((d) => d && typeof d === 'object' && d.id === draggingAnchorRef.current?.drawingId)
         if (sel) {
           const nextPts = [...sel.points]
           if (sel.type === 'risk-reward') {
@@ -2940,8 +2947,10 @@ export const Mt5Canvas = memo(
           const showTradePositions = indicatorsRef.current.tradeLevels?.showPositions ?? true
 
           if (showTradePositions) {
-            const symPositions = positionsRef.current.filter((p) => p.symbol === symbol)
+            const safePositions = Array.isArray(positionsRef.current) ? positionsRef.current : []
+            const symPositions = safePositions.filter((p) => p && typeof p === 'object' && p.symbol === symbol)
             for (const pos of symPositions) {
+              if (!pos || typeof pos !== 'object') continue
               const openPrice = toNum(pos.open_price)
               const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
               const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
@@ -3059,13 +3068,15 @@ export const Mt5Canvas = memo(
             }
 
             // (h) Pending orders touch cancellation & dragging (select closest order)
-            const symPending = pendingOrdersRef.current.filter((o) => o.symbol === symbol && o.status === 'pending')
+            const safePending = Array.isArray(pendingOrdersRef.current) ? pendingOrdersRef.current : []
+            const symPending = safePending.filter((o) => o && typeof o === 'object' && o.symbol === symbol && o.status === 'pending')
             const ordBadgeRight = chartW - 8
 
             // Quick tap to cancel pending order [x] button on chart
             let closestTouchCancel: PendingOrder | null = null
             let minTouchCancelDist = 18
             for (const ord of symPending) {
+              if (!ord || typeof ord !== 'object') continue
               const tgtPrice = toNum(ord.target_price)
               if (tgtPrice <= 0) continue
               const yTgt = priceToY(tgtPrice)
@@ -3094,6 +3105,7 @@ export const Mt5Canvas = memo(
             let closestTouchDrag: PendingOrder | null = null
             let minTouchDragDist = 18
             for (const ord of symPending) {
+              if (!ord || typeof ord !== 'object') continue
               const tgtPrice = toNum(ord.target_price)
               if (tgtPrice <= 0) continue
               const yTgt = priceToY(tgtPrice)
