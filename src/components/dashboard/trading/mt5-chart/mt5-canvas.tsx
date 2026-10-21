@@ -2478,9 +2478,10 @@ export const Mt5Canvas = memo(
 
       // 7. Select tool: Check click on drawing anchor handles
       if (selectedDrawingId) {
-        const safeDrawings = Array.isArray(drawings) ? drawings : []
-        const sel = safeDrawings.find((d) => d && typeof d === 'object' && d.id === selectedDrawingId)
-        if (sel) {
+        try {
+          const safeDrawings = Array.isArray(drawings) ? drawings : []
+          const sel = safeDrawings.find((d) => d && typeof d === 'object' && d.id === selectedDrawingId)
+          if (sel && Array.isArray(sel.points) && sel.points.length > 0) {
           if (sel.type === 'risk-reward') {
             const x0 = timeToX(sel.points[0].time)
             const x1 = sel.points[1] ? timeToX(sel.points[1].time) : x0 + 15 * candleWidth
@@ -2519,6 +2520,9 @@ export const Mt5Canvas = memo(
               }
             }
           }
+        }
+        } catch {
+          // Defensive: suppress anchor handle error on corrupt points
         }
       }
 
@@ -2857,7 +2861,8 @@ export const Mt5Canvas = memo(
 
       // 3. Finalize Drawing in Progress
       if (drawingInProgressRef.current) {
-        const d = { ...drawingInProgressRef.current, points: [...drawingInProgressRef.current.points] }
+        try {
+          const d = { ...drawingInProgressRef.current, points: Array.isArray(drawingInProgressRef.current.points) ? [...drawingInProgressRef.current.points] : [] }
         const tfMs = TIMEFRAME_SECONDS[timeframe] * 1000
         const { range } = getPriceBounds()
         const symMeta = getSymbolMeta(symbol)
@@ -2912,8 +2917,12 @@ export const Mt5Canvas = memo(
 
         onAddDrawing(d)
         onSelectDrawing(d.id)
-        drawingInProgressRef.current = null
-        onSelectTool('select')
+        } catch {
+          // Defensive: suppress error on corrupt in-progress drawing points
+        } finally {
+          drawingInProgressRef.current = null
+          onSelectTool('select')
+        }
       }
 
       // 4. Deactivate Pip Ruler if triggered via middle mouse
