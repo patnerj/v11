@@ -2063,7 +2063,20 @@ export const Mt5Canvas = memo(
     // Centralized Pending Order Drag & Drop handler (shared between Mouse and Touch)
     const handlePendingDrop = useCallback(
       (ord: PendingOrder, rawFinalPrice: number) => {
-        const newTarget = parseFloat(rawFinalPrice.toFixed(digits))
+        if (
+          !ord ||
+          typeof ord !== 'object' ||
+          !Number.isFinite(Number(ord.id)) ||
+          Number(ord.id) <= 0 ||
+          typeof ord.symbol !== 'string' ||
+          !Number.isFinite(Number(rawFinalPrice))
+        ) {
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+          return
+        }
+
+        const newTarget = parseFloat(Number(rawFinalPrice).toFixed(digits))
         const oldTarget = toNum(ord.target_price)
 
         if (newTarget <= 0 || Math.abs(newTarget - oldTarget) <= pSize * 0.5) {
@@ -2725,46 +2738,75 @@ export const Mt5Canvas = memo(
 
       // 4. Pending Order Dragging
       if (draggingPendingRef.current) {
-        const curPrice = yToPrice(y)
-        draggingPendingRef.current.currentPrice = curPrice
-        setDraggingPendingPreview({
-          ordId: draggingPendingRef.current.ordId,
-          price: curPrice,
-        })
+        try {
+          const drag = draggingPendingRef.current
+          if (!drag || typeof drag !== 'object' || !drag.order || typeof drag.order !== 'object') {
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
+            return
+          }
+          const curPrice = yToPrice(y)
+          drag.currentPrice = curPrice
+          setDraggingPendingPreview({ ordId: drag.ordId, price: curPrice })
+        } catch {
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+        }
         return
       }
 
       // 5. Vector Drawing in progress
       if (drawingInProgressRef.current) {
-        const curPoint = snapToCandle({ time: xToTime(x), price: yToPrice(y) })
-        if (drawingInProgressRef.current.type === 'risk-reward') {
-          const p0 = drawingInProgressRef.current.points[0]
-          const p1 = curPoint
-          const isLong = p0.price >= p1.price
-          const riskDist = Math.abs(p0.price - p1.price)
-          const p2Price = isLong ? p0.price + riskDist * 2 : p0.price - riskDist * 2
-          drawingInProgressRef.current.points = [
-            p0,
-            p1,
-            { time: p1.time, price: p2Price },
-          ]
-        } else {
-          const pts = [...drawingInProgressRef.current.points]
-          pts[1] = curPoint
-          drawingInProgressRef.current.points = pts
+        try {
+          const drawing = drawingInProgressRef.current
+          const points = drawing && Array.isArray(drawing.points) ? drawing.points : []
+          const firstPoint = points[0]
+          if (
+            !drawing ||
+            !firstPoint ||
+            typeof firstPoint !== 'object' ||
+            !Number.isFinite(Number(firstPoint.time)) ||
+            !Number.isFinite(Number(firstPoint.price))
+          ) {
+            drawingInProgressRef.current = null
+            return
+          }
+          const curPoint = snapToCandle({ time: xToTime(x), price: yToPrice(y) })
+          if (drawing.type === 'risk-reward') {
+            const p0 = firstPoint
+            const p1 = curPoint
+            const isLong = p0.price >= p1.price
+            const riskDist = Math.abs(p0.price - p1.price)
+            const p2Price = isLong ? p0.price + riskDist * 2 : p0.price - riskDist * 2
+            drawing.points = [p0, p1, { time: p1.time, price: p2Price }]
+          } else {
+            const pts = [...points]
+            pts[1] = curPoint
+            drawing.points = pts
+          }
+        } catch {
+          drawingInProgressRef.current = null
         }
         return
       }
 
       // 6. Dragging Drawing Anchor Handle
       if (draggingAnchorRef.current) {
-        const curPoint = snapToCandle({ time: xToTime(x), price: yToPrice(y) })
-        const safeDrawings = Array.isArray(drawings) ? drawings : []
-        const sel = safeDrawings.find((d) => d && typeof d === 'object' && d.id === draggingAnchorRef.current?.drawingId)
-        if (sel) {
+        try {
+          const drag = draggingAnchorRef.current
+          if (!drag || !Number.isInteger(drag.pointIndex)) return
+          const safeDrawings = Array.isArray(drawings) ? drawings : []
+          const sel = safeDrawings.find(
+            (d) => d && typeof d === 'object' && d.id === drag.drawingId && Array.isArray(d.points)
+          )
+          if (!sel || !Array.isArray(sel.points) || sel.points.length === 0) return
+          if (sel.points.some((point) => !point || typeof point !== 'object' || !Number.isFinite(Number(point.time)) || !Number.isFinite(Number(point.price)))) return
+
+          const curPoint = snapToCandle({ time: xToTime(x), price: yToPrice(y) })
           const nextPts = [...sel.points]
           if (sel.type === 'risk-reward') {
-            const ptIdx = draggingAnchorRef.current.pointIndex
+            const ptIdx = drag.pointIndex
+            if (ptIdx < 0 || ptIdx > 3 || (ptIdx === 1 && !nextPts[1])) return
             if (ptIdx === 0) {
               const oldEntry = nextPts[0].price
               const deltaP = curPoint.price - oldEntry
@@ -2779,24 +2821,40 @@ export const Mt5Canvas = memo(
               nextPts[1] = { ...nextPts[1], time: curPoint.time }
             }
           } else {
-            nextPts[draggingAnchorRef.current.pointIndex] = curPoint
+            if (drag.pointIndex < 0 || drag.pointIndex >= nextPts.length) return
+            nextPts[drag.pointIndex] = curPoint
           }
           onUpdateDrawing(sel.id, { points: nextPts })
+        } catch {
+          draggingAnchorRef.current = null
         }
         return
       }
 
       // 7. Dragging Drawing Body (Moving entire object)
       if (draggingDrawingBodyRef.current) {
-        const { drawingId, startX, startY, initialPoints } = draggingDrawingBodyRef.current
-        const deltaPrice = yToPrice(y) - yToPrice(startY)
-        const deltaTime = xToTime(x) - xToTime(startX)
-
-        const shifted = initialPoints.map((p) => ({
-          time: p.time + deltaTime,
-          price: parseFloat((p.price + deltaPrice).toFixed(digits)),
-        }))
-        onUpdateDrawing(drawingId, { points: shifted })
+        try {
+          const drag = draggingDrawingBodyRef.current
+          const initialPoints = drag && Array.isArray(drag.initialPoints) ? drag.initialPoints : []
+          if (
+            !drag ||
+            !Array.isArray(drag.initialPoints) ||
+            !initialPoints.length ||
+            initialPoints.some((point) => !point || typeof point !== 'object' || !Number.isFinite(Number(point.time)) || !Number.isFinite(Number(point.price)))
+          ) {
+            draggingDrawingBodyRef.current = null
+            return
+          }
+          const deltaPrice = yToPrice(y) - yToPrice(drag.startY)
+          const deltaTime = xToTime(x) - xToTime(drag.startX)
+          const shifted = initialPoints.map((point) => ({
+            time: point.time + deltaTime,
+            price: parseFloat((point.price + deltaPrice).toFixed(digits)),
+          }))
+          onUpdateDrawing(drag.drawingId, { points: shifted })
+        } catch {
+          draggingDrawingBodyRef.current = null
+        }
         return
       }
 
@@ -2854,9 +2912,17 @@ export const Mt5Canvas = memo(
 
       // 2. Finalize Pending order modification
       if (draggingPendingRef.current) {
-        const ord = draggingPendingRef.current.order
-        const finalPrice = draggingPendingRef.current.currentPrice || draggingPendingPreview?.price || toNum(ord.target_price)
-        handlePendingDrop(ord, finalPrice)
+        try {
+          const drag = draggingPendingRef.current
+          const ord = drag && typeof drag === 'object' ? drag.order : null
+          const finalPrice = drag?.currentPrice ?? draggingPendingPreview?.price ?? toNum(ord?.target_price)
+          if (ord && typeof ord === 'object' && Number.isFinite(Number(finalPrice))) {
+            handlePendingDrop(ord, Number(finalPrice))
+          }
+        } catch {
+          draggingPendingRef.current = null
+          setDraggingPendingPreview(null)
+        }
       }
 
       // 3. Finalize Drawing in Progress
@@ -3321,10 +3387,16 @@ export const Mt5Canvas = memo(
 
         if (touchStateRef.current.isDraggingPending) {
           touchStateRef.current.isDraggingPending = false
-          if (draggingPendingRef.current) {
-            const ord = draggingPendingRef.current.order
-            const finalPrice = draggingPendingRef.current.currentPrice
-            handlePendingDrop(ord, finalPrice)
+          try {
+            const drag = draggingPendingRef.current
+            const ord = drag && typeof drag === 'object' ? drag.order : null
+            const finalPrice = drag?.currentPrice
+            if (ord && typeof ord === 'object' && Number.isFinite(Number(finalPrice))) {
+              handlePendingDrop(ord, Number(finalPrice))
+            }
+          } catch {
+            draggingPendingRef.current = null
+            setDraggingPendingPreview(null)
           }
           return
         }
