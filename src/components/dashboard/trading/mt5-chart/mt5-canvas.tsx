@@ -2968,120 +2968,124 @@ export const Mt5Canvas = memo(
             const safePositions = Array.isArray(positionsRef.current) ? positionsRef.current : []
             const symPositions = safePositions.filter((p) => p && typeof p === 'object' && p.symbol === symbol)
             for (const pos of symPositions) {
-              if (!pos || typeof pos !== 'object') continue
-              const openPrice = toNum(pos.open_price)
-              const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
-              const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
-              const yEntry = priceToY(openPrice)
-              const ySl = slPrice > 0 ? priceToY(slPrice) : -999
-              const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
-              const isBuy = pos.type === 'buy'
-              const badgeRight = chartW - 8
-              const entryBadgeW = 140 + digits * 8 + 36
-              const badgeX = badgeRight - entryBadgeW
+              try {
+                if (!pos || typeof pos !== 'object') continue
+                const openPrice = toNum(pos.open_price)
+                const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
+                const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
+                const yEntry = priceToY(openPrice)
+                const ySl = slPrice > 0 ? priceToY(slPrice) : -999
+                const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
+                const isBuy = pos.type === 'buy'
+                const badgeRight = chartW - 8
+                const entryBadgeW = 140 + digits * 8 + 36
+                const badgeX = badgeRight - entryBadgeW
 
-              // (a) Quick tap to close position [x] button on chart
-              if (Math.abs(y - yEntry) < 20 && x >= badgeRight - 38 && x <= badgeRight + 12) {
-                api.close(pos.id).then((r) => {
-                  if (r.ok && r.data.success) {
-                    playOrderSuccessSound()
-                    toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
-                    invalidateFxsim('/positions')
-                    invalidateFxsim('/account')
-                    onChanged?.()
+                // (a) Quick tap to close position [x] button on chart
+                if (Math.abs(y - yEntry) < 20 && x >= badgeRight - 38 && x <= badgeRight + 12) {
+                  api.close(pos.id).then((r) => {
+                    if (r.ok && r.data.success) {
+                      playOrderSuccessSound()
+                      toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
+                      invalidateFxsim('/positions')
+                      invalidateFxsim('/account')
+                      onChanged?.()
+                    }
+                  })
+                  return
+                }
+
+                // (b) Touch [+ Drag SL] handle (Left of right-aligned badge)
+                const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
+                const slHandleX = badgeX - 78
+                if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 22 && x >= slHandleX - 14 && x <= slHandleX + 85) {
+                  touchStateRef.current.isDragging = false
+                  touchStateRef.current.isDraggingSlTp = true
+                  draggingSlTpRef.current = {
+                    posId: pos.id,
+                    type: 'new_sl',
+                    currentPrice: openPrice,
+                    initialPrice: openPrice,
+                    pos,
                   }
-                })
-                return
-              }
-
-              // (b) Touch [+ Drag SL] handle (Left of right-aligned badge)
-              const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
-              const slHandleX = badgeX - 78
-              if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 22 && x >= slHandleX - 14 && x <= slHandleX + 85) {
-                touchStateRef.current.isDragging = false
-                touchStateRef.current.isDraggingSlTp = true
-                draggingSlTpRef.current = {
-                  posId: pos.id,
-                  type: 'new_sl',
-                  currentPrice: openPrice,
-                  initialPrice: openPrice,
-                  pos,
+                  if (e.cancelable) e.preventDefault()
+                  return
                 }
-                if (e.cancelable) e.preventDefault()
-                return
-              }
 
-              // (c) Touch [+ Drag TP] handle (Left of right-aligned badge)
-              const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
-              const tpHandleX = badgeX - 156
-              if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 22 && x >= tpHandleX - 14 && x <= tpHandleX + 85) {
-                touchStateRef.current.isDragging = false
-                touchStateRef.current.isDraggingSlTp = true
-                draggingSlTpRef.current = {
-                  posId: pos.id,
-                  type: 'new_tp',
-                  currentPrice: openPrice,
-                  initialPrice: openPrice,
-                  pos,
-                }
-                if (e.cancelable) e.preventDefault()
-                return
-              }
-
-              // (d) Tap [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
-              if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 20 && x >= chartW - 32 && x <= chartW + 6) {
-                api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
-                  if (r.ok && r.data.success) {
-                    playOrderSuccessSound()
-                    toast.success(`Removed Stop Loss from #${pos.id}`)
-                    invalidateFxsim('/positions')
-                    onChanged?.()
+                // (c) Touch [+ Drag TP] handle (Left of right-aligned badge)
+                const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
+                const tpHandleX = badgeX - 156
+                if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 22 && x >= tpHandleX - 14 && x <= tpHandleX + 85) {
+                  touchStateRef.current.isDragging = false
+                  touchStateRef.current.isDraggingSlTp = true
+                  draggingSlTpRef.current = {
+                    posId: pos.id,
+                    type: 'new_tp',
+                    currentPrice: openPrice,
+                    initialPrice: openPrice,
+                    pos,
                   }
-                })
-                return
-              }
+                  if (e.cancelable) e.preventDefault()
+                  return
+                }
 
-              // (e) Tap [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
-              if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 20 && x >= chartW - 32 && x <= chartW + 6) {
-                api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
-                  if (r.ok && r.data.success) {
-                    playOrderSuccessSound()
-                    toast.success(`Removed Take Profit from #${pos.id}`)
-                    invalidateFxsim('/positions')
-                    onChanged?.()
+                // (d) Tap [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
+                if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 20 && x >= chartW - 32 && x <= chartW + 6) {
+                  api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
+                    if (r.ok && r.data.success) {
+                      playOrderSuccessSound()
+                      toast.success(`Removed Stop Loss from #${pos.id}`)
+                      invalidateFxsim('/positions')
+                      onChanged?.()
+                    }
+                  })
+                  return
+                }
+
+                // (e) Tap [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
+                if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 20 && x >= chartW - 32 && x <= chartW + 6) {
+                  api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
+                    if (r.ok && r.data.success) {
+                      playOrderSuccessSound()
+                      toast.success(`Removed Take Profit from #${pos.id}`)
+                      invalidateFxsim('/positions')
+                      onChanged?.()
+                    }
+                  })
+                  return
+                }
+
+                // (f) Touch & Drag existing SL Line or SL badge (below line)
+                if (slPrice > 0 && (Math.abs(y - ySl) < 18 || (y >= ySl - 4 && y <= ySl + 28 && x >= badgeRight - 220 && x <= chartW - 30))) {
+                  touchStateRef.current.isDragging = false
+                  touchStateRef.current.isDraggingSlTp = true
+                  draggingSlTpRef.current = {
+                    posId: pos.id,
+                    type: 'sl',
+                    currentPrice: slPrice,
+                    initialPrice: slPrice,
+                    pos,
                   }
-                })
-                return
-              }
-
-              // (f) Touch & Drag existing SL Line or SL badge (below line)
-              if (slPrice > 0 && (Math.abs(y - ySl) < 18 || (y >= ySl - 4 && y <= ySl + 28 && x >= badgeRight - 220 && x <= chartW - 30))) {
-                touchStateRef.current.isDragging = false
-                touchStateRef.current.isDraggingSlTp = true
-                draggingSlTpRef.current = {
-                  posId: pos.id,
-                  type: 'sl',
-                  currentPrice: slPrice,
-                  initialPrice: slPrice,
-                  pos,
+                  if (e.cancelable) e.preventDefault()
+                  return
                 }
-                if (e.cancelable) e.preventDefault()
-                return
-              }
 
-              // (g) Touch & Drag existing TP Line or TP badge (above line)
-              if (tpPrice > 0 && (Math.abs(y - yTp) < 18 || (y >= yTp - 28 && y <= yTp + 4 && x >= badgeRight - 220 && x <= chartW - 30))) {
-                touchStateRef.current.isDragging = false
-                touchStateRef.current.isDraggingSlTp = true
-                draggingSlTpRef.current = {
-                  posId: pos.id,
-                  type: 'tp',
-                  currentPrice: tpPrice,
-                  initialPrice: tpPrice,
-                  pos,
+                // (g) Touch & Drag existing TP Line or TP badge (above line)
+                if (tpPrice > 0 && (Math.abs(y - yTp) < 18 || (y >= yTp - 28 && y <= yTp + 4 && x >= badgeRight - 220 && x <= chartW - 30))) {
+                  touchStateRef.current.isDragging = false
+                  touchStateRef.current.isDraggingSlTp = true
+                  draggingSlTpRef.current = {
+                    posId: pos.id,
+                    type: 'tp',
+                    currentPrice: tpPrice,
+                    initialPrice: tpPrice,
+                    pos,
+                  }
+                  if (e.cancelable) e.preventDefault()
+                  return
                 }
-                if (e.cancelable) e.preventDefault()
-                return
+              } catch {
+                continue
               }
             }
 
@@ -3094,14 +3098,18 @@ export const Mt5Canvas = memo(
             let closestTouchCancel: PendingOrder | null = null
             let minTouchCancelDist = 18
             for (const ord of symPending) {
-              if (!ord || typeof ord !== 'object') continue
-              const tgtPrice = toNum(ord.target_price)
-              if (tgtPrice <= 0) continue
-              const yTgt = priceToY(tgtPrice)
-              const dY = Math.abs(y - yTgt)
-              if (dY < minTouchCancelDist && x >= ordBadgeRight - 36 && x <= ordBadgeRight + 12) {
-                minTouchCancelDist = dY
-                closestTouchCancel = ord
+              try {
+                if (!ord || typeof ord !== 'object') continue
+                const tgtPrice = toNum(ord.target_price)
+                if (tgtPrice <= 0) continue
+                const yTgt = priceToY(tgtPrice)
+                const dY = Math.abs(y - yTgt)
+                if (dY < minTouchCancelDist && x >= ordBadgeRight - 36 && x <= ordBadgeRight + 12) {
+                  minTouchCancelDist = dY
+                  closestTouchCancel = ord
+                }
+              } catch {
+                continue
               }
             }
             if (closestTouchCancel) {
@@ -3123,14 +3131,18 @@ export const Mt5Canvas = memo(
             let closestTouchDrag: PendingOrder | null = null
             let minTouchDragDist = 18
             for (const ord of symPending) {
-              if (!ord || typeof ord !== 'object') continue
-              const tgtPrice = toNum(ord.target_price)
-              if (tgtPrice <= 0) continue
-              const yTgt = priceToY(tgtPrice)
-              const dY = Math.abs(y - yTgt)
-              if (dY < minTouchDragDist && x < chartW) {
-                minTouchDragDist = dY
-                closestTouchDrag = ord
+              try {
+                if (!ord || typeof ord !== 'object') continue
+                const tgtPrice = toNum(ord.target_price)
+                if (tgtPrice <= 0) continue
+                const yTgt = priceToY(tgtPrice)
+                const dY = Math.abs(y - yTgt)
+                if (dY < minTouchDragDist && x < chartW) {
+                  minTouchDragDist = dY
+                  closestTouchDrag = ord
+                }
+              } catch {
+                continue
               }
             }
             if (closestTouchDrag) {
