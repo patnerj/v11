@@ -2512,89 +2512,96 @@ export const Mt5Canvas = memo(
 
       // 8. Select tool: Geometric Hit-Testing to select drawing on canvas
       let hitDrawing: DrawingObject | null = null
-      for (const d of drawings) {
-        if (!d.visible || d.points.length === 0) continue
+      const safeDrawingsList = Array.isArray(drawings) ? drawings : []
+      for (const d of safeDrawingsList) {
+        if (!d || typeof d !== 'object' || !d.visible || !Array.isArray(d.points) || d.points.length === 0) continue
 
-        if (d.type === 'hline') {
-          if (Math.abs(y - priceToY(d.points[0].price)) < 8) {
-            hitDrawing = d
-            break
+        try {
+          if (d.type === 'hline') {
+            if (d.points[0] && Math.abs(y - priceToY(d.points[0].price)) < 8) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'vline') {
+            if (d.points[0] && Math.abs(x - timeToX(d.points[0].time)) < 8) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'trendline' && d.points.length >= 2 && d.points[0] && d.points[1]) {
+            const x0 = timeToX(d.points[0].time)
+            const y0 = priceToY(d.points[0].price)
+            const x1 = timeToX(d.points[1].time)
+            const y1 = priceToY(d.points[1].price)
+            const dist = d.extendRight ? distToRay(x, y, x0, y0, x1, y1) : distToSegment(x, y, x0, y0, x1, y1)
+            if (dist < 8) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'channel' && d.points.length >= 2 && d.points[0] && d.points[1]) {
+            const x0 = timeToX(d.points[0].time)
+            const y0 = priceToY(d.points[0].price)
+            const x1 = timeToX(d.points[1].time)
+            const y1 = priceToY(d.points[1].price)
+            const cH = d.channelWidth !== undefined ? priceToY(d.points[0].price - d.channelWidth) - y0 : 40
+            if (distToSegment(x, y, x0, y0, x1, y1) < 8 || distToSegment(x, y, x0, y0 + cH, x1, y1 + cH) < 8) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'fibonacci' && d.points.length >= 2 && d.points[0] && d.points[1]) {
+            const p0 = d.points[0].price
+            const diff = d.points[1].price - p0
+            const x0 = timeToX(d.points[0].time)
+            const x1 = timeToX(d.points[1].time)
+            const leftX = Math.min(x0, x1)
+            const rightX = d.extendRight ? chartW : Math.max(x0, x1)
+            const lvls = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
+            const isHit = (x >= leftX - 10 && x <= rightX + 10) && lvls.some((l) => Math.abs(y - priceToY(p0 + diff * l)) < 6)
+            if (isHit) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'rectangle' && d.points.length >= 2 && d.points[0] && d.points[1]) {
+            const x0 = timeToX(d.points[0].time)
+            const y0 = priceToY(d.points[0].price)
+            const x1 = timeToX(d.points[1].time)
+            const y1 = priceToY(d.points[1].price)
+            const minX = Math.min(x0, x1)
+            const maxX = d.extendRight ? chartW : Math.max(x0, x1)
+            const minY = Math.min(y0, y1)
+            const maxY = Math.max(y0, y1)
+            if (x >= minX - 6 && x <= maxX + 6 && y >= minY - 6 && y <= maxY + 6) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'risk-reward' && d.points.length >= 2 && d.points[0] && d.points[1]) {
+            const x0 = timeToX(d.points[0].time)
+            const x1 = d.points[1] ? timeToX(d.points[1].time) : x0 + 15 * candleWidth
+            const leftX = Math.min(x0, x1)
+            const rightX = leftX + Math.max(70, Math.abs(x1 - x0))
+            const yEntry = priceToY(d.points[0].price)
+            const ySl = priceToY(d.points[1].price)
+            const riskDist = Math.abs(d.points[0].price - d.points[1].price)
+            const isL = d.isLong !== undefined ? d.isLong : d.points[0].price >= d.points[1].price
+            const tpPrice = d.points[2] ? d.points[2].price : (isL ? d.points[0].price + riskDist * 2 : d.points[0].price - riskDist * 2)
+            const yTp = priceToY(tpPrice)
+            const topY = Math.min(yEntry, ySl, yTp)
+            const botY = Math.max(yEntry, ySl, yTp)
+            if (x >= leftX - 6 && x <= rightX + 6 && y >= topY - 6 && y <= botY + 6) {
+              hitDrawing = d
+              break
+            }
+          } else if (d.type === 'text') {
+            if (d.points[0]) {
+              const ptX = timeToX(d.points[0].time)
+              const ptY = priceToY(d.points[0].price)
+              if (Math.abs(x - ptX) < 60 && Math.abs(y - ptY) < 15) {
+                hitDrawing = d
+                break
+              }
+            }
           }
-        } else if (d.type === 'vline') {
-          if (Math.abs(x - timeToX(d.points[0].time)) < 8) {
-            hitDrawing = d
-            break
-          }
-        } else if (d.type === 'trendline' && d.points.length >= 2) {
-          const x0 = timeToX(d.points[0].time)
-          const y0 = priceToY(d.points[0].price)
-          const x1 = timeToX(d.points[1].time)
-          const y1 = priceToY(d.points[1].price)
-          const dist = d.extendRight ? distToRay(x, y, x0, y0, x1, y1) : distToSegment(x, y, x0, y0, x1, y1)
-          if (dist < 8) {
-            hitDrawing = d
-            break
-          }
-        } else if (d.type === 'channel' && d.points.length >= 2) {
-          const x0 = timeToX(d.points[0].time)
-          const y0 = priceToY(d.points[0].price)
-          const x1 = timeToX(d.points[1].time)
-          const y1 = priceToY(d.points[1].price)
-          const cH = d.channelWidth !== undefined ? priceToY(d.points[0].price - d.channelWidth) - y0 : 40
-          if (distToSegment(x, y, x0, y0, x1, y1) < 8 || distToSegment(x, y, x0, y0 + cH, x1, y1 + cH) < 8) {
-            hitDrawing = d
-            break
-          }
-        } else if (d.type === 'fibonacci' && d.points.length >= 2) {
-          const p0 = d.points[0].price
-          const diff = d.points[1].price - p0
-          const x0 = timeToX(d.points[0].time)
-          const x1 = timeToX(d.points[1].time)
-          const leftX = Math.min(x0, x1)
-          const rightX = d.extendRight ? chartW : Math.max(x0, x1)
-          const lvls = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
-          const isHit = (x >= leftX - 10 && x <= rightX + 10) && lvls.some((l) => Math.abs(y - priceToY(p0 + diff * l)) < 6)
-          if (isHit) {
-            hitDrawing = d
-            break
-          }
-        } else if (d.type === 'rectangle' && d.points.length >= 2) {
-          const x0 = timeToX(d.points[0].time)
-          const y0 = priceToY(d.points[0].price)
-          const x1 = timeToX(d.points[1].time)
-          const y1 = priceToY(d.points[1].price)
-          const minX = Math.min(x0, x1)
-          const maxX = d.extendRight ? chartW : Math.max(x0, x1)
-          const minY = Math.min(y0, y1)
-          const maxY = Math.max(y0, y1)
-          if (x >= minX - 6 && x <= maxX + 6 && y >= minY - 6 && y <= maxY + 6) {
-            hitDrawing = d
-            break
-          }
-        } else if (d.type === 'risk-reward' && d.points.length >= 2) {
-          const x0 = timeToX(d.points[0].time)
-          const x1 = d.points[1] ? timeToX(d.points[1].time) : x0 + 15 * candleWidth
-          const leftX = Math.min(x0, x1)
-          const rightX = leftX + Math.max(70, Math.abs(x1 - x0))
-          const yEntry = priceToY(d.points[0].price)
-          const ySl = priceToY(d.points[1].price)
-          const riskDist = Math.abs(d.points[0].price - d.points[1].price)
-          const isL = d.isLong !== undefined ? d.isLong : d.points[0].price >= d.points[1].price
-          const tpPrice = d.points[2] ? d.points[2].price : (isL ? d.points[0].price + riskDist * 2 : d.points[0].price - riskDist * 2)
-          const yTp = priceToY(tpPrice)
-          const topY = Math.min(yEntry, ySl, yTp)
-          const botY = Math.max(yEntry, ySl, yTp)
-          if (x >= leftX - 6 && x <= rightX + 6 && y >= topY - 6 && y <= botY + 6) {
-            hitDrawing = d
-            break
-          }
-        } else if (d.type === 'text') {
-          const ptX = timeToX(d.points[0].time)
-          const ptY = priceToY(d.points[0].price)
-          if (Math.abs(x - ptX) < 60 && Math.abs(y - ptY) < 15) {
-            hitDrawing = d
-            break
-          }
+        } catch {
+          continue
         }
       }
 
