@@ -2249,113 +2249,117 @@ export const Mt5Canvas = memo(
         const safePositions = Array.isArray(positions) ? positions : []
         const symPositions = safePositions.filter((p) => p && typeof p === 'object' && p.symbol === symbol)
         for (const pos of symPositions) {
-          if (!pos || typeof pos !== 'object') continue
-          const openPrice = toNum(pos.open_price)
-          const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
-          const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
+          try {
+            if (!pos || typeof pos !== 'object') continue
+            const openPrice = toNum(pos.open_price)
+            const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
+            const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
 
-          const yEntry = priceToY(openPrice)
-          const ySl = slPrice > 0 ? priceToY(slPrice) : -999
-          const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
+            const yEntry = priceToY(openPrice)
+            const ySl = slPrice > 0 ? priceToY(slPrice) : -999
+            const yTp = tpPrice > 0 ? priceToY(tpPrice) : -999
 
-          const isBuy = pos.type === 'buy'
-          const badgeRight = chartW - 8
-          const entryBadgeW = 140 + digits * 8 + 36
-          const badgeX = badgeRight - entryBadgeW
+            const isBuy = pos.type === 'buy'
+            const badgeRight = chartW - 8
+            const entryBadgeW = 140 + digits * 8 + 36
+            const badgeX = badgeRight - entryBadgeW
 
-          // (a) Click [x] Close on Entry Line (Right-aligned badge)
-          if (Math.abs(y - yEntry) < 12 && x >= badgeRight - 22 && x <= badgeRight + 4) {
-            api.close(pos.id).then((r) => {
-              if (r.ok && r.data.success) {
-                playOrderSuccessSound()
-                toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
-                invalidateFxsim('/positions')
-                invalidateFxsim('/account')
-                onChanged?.()
-              } else {
-                playOrderLossThumpSound()
-                toast.error('Failed to close position')
+            // (a) Click [x] Close on Entry Line (Right-aligned badge)
+            if (Math.abs(y - yEntry) < 12 && x >= badgeRight - 22 && x <= badgeRight + 4) {
+              api.close(pos.id).then((r) => {
+                if (r.ok && r.data.success) {
+                  playOrderSuccessSound()
+                  toast.success(`Position #${pos.id} closed @ ${fmtPrice(yToPrice(y), digits)}`)
+                  invalidateFxsim('/positions')
+                  invalidateFxsim('/account')
+                  onChanged?.()
+                } else {
+                  playOrderLossThumpSound()
+                  toast.error('Failed to close position')
+                }
+              })
+              return
+            }
+
+            // (b) Click [+ Drag SL] handle (Left of right-aligned badge)
+            const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
+            const slHandleX = badgeX - 78
+            if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 12 && x >= slHandleX - 4 && x <= slHandleX + 76) {
+              draggingSlTpRef.current = {
+                posId: pos.id,
+                type: 'new_sl',
+                currentPrice: openPrice,
+                initialPrice: openPrice,
+                pos,
               }
-            })
-            return
-          }
-
-          // (b) Click [+ Drag SL] handle (Left of right-aligned badge)
-          const slHandleY = isBuy ? yEntry + 22 : yEntry - 22
-          const slHandleX = badgeX - 78
-          if ((!pos.sl || toNum(pos.sl) === 0) && Math.abs(y - slHandleY) < 12 && x >= slHandleX - 4 && x <= slHandleX + 76) {
-            draggingSlTpRef.current = {
-              posId: pos.id,
-              type: 'new_sl',
-              currentPrice: openPrice,
-              initialPrice: openPrice,
-              pos,
+              return
             }
-            return
-          }
 
-          // (c) Click [+ Drag TP] handle (Left of right-aligned badge)
-          const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
-          const tpHandleX = badgeX - 156
-          if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 12 && x >= tpHandleX - 4 && x <= tpHandleX + 76) {
-            draggingSlTpRef.current = {
-              posId: pos.id,
-              type: 'new_tp',
-              currentPrice: openPrice,
-              initialPrice: openPrice,
-              pos,
-            }
-            return
-          }
-
-          // (d) Click [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
-          if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
-            api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
-              if (r.ok && r.data.success) {
-                playOrderSuccessSound()
-                toast.success(`Removed Stop Loss from #${pos.id}`)
-                invalidateFxsim('/positions')
-                onChanged?.()
+            // (c) Click [+ Drag TP] handle (Left of right-aligned badge)
+            const tpHandleY = isBuy ? yEntry - 22 : yEntry + 22
+            const tpHandleX = badgeX - 156
+            if ((!pos.tp || toNum(pos.tp) === 0) && Math.abs(y - tpHandleY) < 12 && x >= tpHandleX - 4 && x <= tpHandleX + 76) {
+              draggingSlTpRef.current = {
+                posId: pos.id,
+                type: 'new_tp',
+                currentPrice: openPrice,
+                initialPrice: openPrice,
+                pos,
               }
-            })
-            return
-          }
+              return
+            }
 
-          // (e) Click [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
-          if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
-            api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
-              if (r.ok && r.data.success) {
-                playOrderSuccessSound()
-                toast.success(`Removed Take Profit from #${pos.id}`)
-                invalidateFxsim('/positions')
-                onChanged?.()
+            // (d) Click [x] Remove SL (Right-aligned [x] on SL badge, positioned below line)
+            if (slPrice > 0 && Math.abs(y - (ySl + 12)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
+              api.sltp(pos.id, null, pos.tp !== null ? toNum(pos.tp) : null).then((r) => {
+                if (r.ok && r.data.success) {
+                  playOrderSuccessSound()
+                  toast.success(`Removed Stop Loss from #${pos.id}`)
+                  invalidateFxsim('/positions')
+                  onChanged?.()
+                }
+              })
+              return
+            }
+
+            // (e) Click [x] Remove TP (Right-aligned [x] on TP badge, positioned above line)
+            if (tpPrice > 0 && Math.abs(y - (yTp - 14)) < 12 && x >= chartW - 28 && x <= chartW + 2) {
+              api.sltp(pos.id, pos.sl !== null ? toNum(pos.sl) : null, null).then((r) => {
+                if (r.ok && r.data.success) {
+                  playOrderSuccessSound()
+                  toast.success(`Removed Take Profit from #${pos.id}`)
+                  invalidateFxsim('/positions')
+                  onChanged?.()
+                }
+              })
+              return
+            }
+
+            // (f) Drag existing SL Line or SL badge (below line)
+            if (slPrice > 0 && (Math.abs(y - ySl) < 12 || (y >= ySl - 2 && y <= ySl + 26 && x >= badgeRight - 220)) && x < chartW - 28) {
+              draggingSlTpRef.current = {
+                posId: pos.id,
+                type: 'sl',
+                currentPrice: slPrice,
+                initialPrice: slPrice,
+                pos,
               }
-            })
-            return
-          }
-
-          // (f) Drag existing SL Line or SL badge (below line)
-          if (slPrice > 0 && (Math.abs(y - ySl) < 12 || (y >= ySl - 2 && y <= ySl + 26 && x >= badgeRight - 220)) && x < chartW - 28) {
-            draggingSlTpRef.current = {
-              posId: pos.id,
-              type: 'sl',
-              currentPrice: slPrice,
-              initialPrice: slPrice,
-              pos,
+              return
             }
-            return
-          }
 
-          // (g) Drag existing TP Line or TP badge (above line)
-          if (tpPrice > 0 && (Math.abs(y - yTp) < 12 || (y >= yTp - 2 && y <= yTp + 2 && x >= badgeRight - 220)) && x < chartW - 28) {
-            draggingSlTpRef.current = {
-              posId: pos.id,
-              type: 'tp',
-              currentPrice: tpPrice,
-              initialPrice: tpPrice,
-              pos,
+            // (g) Drag existing TP Line or TP badge (above line)
+            if (tpPrice > 0 && (Math.abs(y - yTp) < 12 || (y >= yTp - 2 && y <= yTp + 2 && x >= badgeRight - 220)) && x < chartW - 28) {
+              draggingSlTpRef.current = {
+                posId: pos.id,
+                type: 'tp',
+                currentPrice: tpPrice,
+                initialPrice: tpPrice,
+                pos,
+              }
+              return
             }
-            return
+          } catch {
+            continue
           }
         }
 
@@ -2367,14 +2371,18 @@ export const Mt5Canvas = memo(
         let closestCancel: PendingOrder | null = null
         let minCancelDist = 12
         for (const ord of symPending) {
-          if (!ord || typeof ord !== 'object') continue
-          const tgtPrice = toNum(ord.target_price)
-          if (tgtPrice <= 0) continue
-          const yTgt = priceToY(tgtPrice)
-          const dY = Math.abs(y - yTgt)
-          if (dY < minCancelDist && x >= chartW - 28 && x <= chartW + 2) {
-            minCancelDist = dY
-            closestCancel = ord
+          try {
+            if (!ord || typeof ord !== 'object') continue
+            const tgtPrice = toNum(ord.target_price)
+            if (tgtPrice <= 0) continue
+            const yTgt = priceToY(tgtPrice)
+            const dY = Math.abs(y - yTgt)
+            if (dY < minCancelDist && x >= chartW - 28 && x <= chartW + 2) {
+              minCancelDist = dY
+              closestCancel = ord
+            }
+          } catch {
+            continue
           }
         }
         if (closestCancel) {
@@ -2396,14 +2404,18 @@ export const Mt5Canvas = memo(
         let closestDrag: PendingOrder | null = null
         let minDragDist = 10
         for (const ord of symPending) {
-          if (!ord || typeof ord !== 'object') continue
-          const tgtPrice = toNum(ord.target_price)
-          if (tgtPrice <= 0) continue
-          const yTgt = priceToY(tgtPrice)
-          const dY = Math.abs(y - yTgt)
-          if (dY < minDragDist && x < chartW) {
-            minDragDist = dY
-            closestDrag = ord
+          try {
+            if (!ord || typeof ord !== 'object') continue
+            const tgtPrice = toNum(ord.target_price)
+            if (tgtPrice <= 0) continue
+            const yTgt = priceToY(tgtPrice)
+            const dY = Math.abs(y - yTgt)
+            if (dY < minDragDist && x < chartW) {
+              minDragDist = dY
+              closestDrag = ord
+            }
+          } catch {
+            continue
           }
         }
         if (closestDrag) {
@@ -2514,9 +2526,8 @@ export const Mt5Canvas = memo(
       let hitDrawing: DrawingObject | null = null
       const safeDrawingsList = Array.isArray(drawings) ? drawings : []
       for (const d of safeDrawingsList) {
-        if (!d || typeof d !== 'object' || !d.visible || !Array.isArray(d.points) || d.points.length === 0) continue
-
         try {
+          if (!d || typeof d !== 'object' || !d.visible || !Array.isArray(d.points) || d.points.length === 0) continue
           if (d.type === 'hline') {
             if (d.points[0] && Math.abs(y - priceToY(d.points[0].price)) < 8) {
               hitDrawing = d
