@@ -991,8 +991,14 @@ export const Mt5Canvas = memo(
       }
 
       // 8. Vector Drawings (Persistent annotations using continuous coordinates)
-      const allDrawingsToRender = [...drawings]
-      if (drawingInProgressRef.current) allDrawingsToRender.push(drawingInProgressRef.current)
+      const safeDrawings = Array.isArray(drawings) ? drawings : []
+      const allDrawingsToRender: any[] = []
+      for (const d of safeDrawings) {
+        if (d && typeof d === 'object') allDrawingsToRender.push(d)
+      }
+      if (drawingInProgressRef.current && typeof drawingInProgressRef.current === 'object') {
+        allDrawingsToRender.push(drawingInProgressRef.current)
+      }
 
       for (const d of allDrawingsToRender) {
         try {
@@ -1438,8 +1444,14 @@ export const Mt5Canvas = memo(
 
       // 12. Interactive On-Chart Trade & Pending Order Lines (Drag-and-Drop SL/TP)
       const showTradePositions = indicators.tradeLevels?.showPositions ?? true
-      const symPositions = showTradePositions ? positions.filter((p) => p.symbol === symbol) : []
-      const symPending = showTradePositions ? pendingOrders.filter((o) => o.symbol === symbol && o.status === 'pending') : []
+      const safePositions = Array.isArray(positions) ? positions : []
+      const safePending = Array.isArray(pendingOrders) ? pendingOrders : []
+      const symPositions = showTradePositions
+        ? safePositions.filter((p) => p && typeof p === 'object' && p.symbol === symbol)
+        : []
+      const symPending = showTradePositions
+        ? safePending.filter((o) => o && typeof o === 'object' && o.symbol === symbol && o.status === 'pending')
+        : []
 
       const symMeta = getSymbolMeta(symbol)
       const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0))
