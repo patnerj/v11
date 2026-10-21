@@ -995,10 +995,11 @@ export const Mt5Canvas = memo(
       if (drawingInProgressRef.current) allDrawingsToRender.push(drawingInProgressRef.current)
 
       for (const d of allDrawingsToRender) {
-        if (!d.visible || d.points.length === 0) continue
-
-        ctx.save()
         try {
+          if (!d || !d.visible || !Array.isArray(d.points) || d.points.length === 0) continue
+
+          ctx.save()
+          try {
         ctx.strokeStyle = d.color
         ctx.lineWidth = d.lineWidth
         if (d.lineStyle === 'dashed') ctx.setLineDash([6, 4])
@@ -1279,10 +1280,11 @@ export const Mt5Canvas = memo(
             }
           }
         }
+          } finally {
+            ctx.restore()
+          }
         } catch (err) {
           console.warn('[MT5Canvas] Drawing error:', err)
-        } finally {
-          ctx.restore()
         }
       }
 
@@ -1443,14 +1445,16 @@ export const Mt5Canvas = memo(
       const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0))
 
       for (const pos of symPositions) {
-        const openPrice = toNum(pos.open_price)
-        const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
-        const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
-        const livePnl = calculateLivePositionPnL(pos as any, activePrices, symMeta.contractSize)
-        const isBuy = pos.type === 'buy'
-
-        ctx.save()
         try {
+          if (!pos) continue
+          const openPrice = toNum(pos.open_price)
+          const slPrice = pos.sl !== null ? toNum(pos.sl) : 0
+          const tpPrice = pos.tp !== null ? toNum(pos.tp) : 0
+          const livePnl = calculateLivePositionPnL(pos as any, activePrices, symMeta.contractSize)
+          const isBuy = pos.type === 'buy'
+
+          ctx.save()
+          try {
         // (a) Entry Line (Dashed)
         const yEntry = priceToY(openPrice)
         ctx.strokeStyle = isBuy ? '#38BDF8' : '#F43F5E'
@@ -1651,20 +1655,25 @@ export const Mt5Canvas = memo(
           ctx.textAlign = 'center'
           ctx.fillText(`TP ${fmtPrice(activeTpPrice, digits)}`, chartW + PRICE_AXIS_WIDTH / 2, yTp + 4)
         }
-      } finally {
-        ctx.restore()
+          } finally {
+            ctx.restore()
+          }
+        } catch (err) {
+          console.warn('[MT5Canvas] Position item render error:', err)
+        }
       }
-    }
 
       // Pending Orders Rendering (Right-aligned before price axis)
       for (const ord of symPending) {
-        const activeTgtPrice =
-          draggingPendingPreview?.ordId === ord.id ? draggingPendingPreview.price : toNum(ord.target_price)
-        if (activeTgtPrice <= 0) continue
-        const yTgt = priceToY(activeTgtPrice)
-
-        ctx.save()
         try {
+          if (!ord) continue
+          const activeTgtPrice =
+            draggingPendingPreview?.ordId === ord.id ? draggingPendingPreview.price : toNum(ord.target_price)
+          if (activeTgtPrice <= 0) continue
+          const yTgt = priceToY(activeTgtPrice)
+
+          ctx.save()
+          try {
           ctx.strokeStyle = '#F59E0B'
           ctx.lineWidth = 1.5
           ctx.setLineDash([4, 4])
@@ -1734,7 +1743,10 @@ export const Mt5Canvas = memo(
         } finally {
           ctx.restore()
         }
+      } catch (err) {
+        console.warn('[MT5Canvas] Pending order item render error:', err)
       }
+    }
 
       // 10. Real-time Bid & Ask Lines with Live Spread Badge
       const showBidAsk = indicators.tradeLevels?.showBidAsk ?? true
