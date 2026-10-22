@@ -48,12 +48,12 @@ export function Logo({
     : branding.logo_url
   const name = branding.brand_name || 'Prop Firm'
 
-  const isDefaultMassFundedVector =
+  const isDefaultInstitutionalVector =
     !imageUrl ||
     imageUrl.endsWith('/branding/brand_logo.svg') ||
     imageUrl.endsWith('/branding/login_logo.svg')
 
-  if (isDefaultMassFundedVector && name.toLowerCase() === 'massfunded') {
+  if (isDefaultInstitutionalVector && (name.toLowerCase() === 'alphacapital' || name.toLowerCase() === 'institutional' || name.toLowerCase() === 'massfunded')) {
     const gradId = variant === 'login' ? 'mfEmeraldGradLogin' : 'mfEmeraldGradMain'
     const textGradId = variant === 'login' ? 'mfTextGradLogin' : 'mfTextGradMain'
     return (
@@ -104,7 +104,7 @@ export function Logo({
             `}</style>
           </defs>
 
-          {/* MassFunded M Emblem */}
+          {/* Institutional Emblem */}
           <g transform="translate(10, 20)">
             <rect
               width="110"
@@ -136,7 +136,7 @@ export function Logo({
                 letterSpacing="-1"
                 className="mf-brand-title transition-colors duration-200"
               >
-                Mass<tspan fill={`url(#${textGradId})`}>Funded</tspan>
+                Alpha<tspan fill={`url(#${textGradId})`}>Capital</tspan>
               </text>
               <text
                 x="145"

@@ -31,7 +31,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
   const getTemplateLabel = (id: LandingTemplateId) => {
     if (id === 'ftmo') return 'Industry Titan (FTMO Style)'
     if (id === 'neon') return 'Cyber Neon (FundedNext Style)'
-    if (id === 'terminal') return 'Institutional Pro (MassFunded)'
+    if (id === 'terminal') return 'Institutional Pro (Terminal Style)'
     return 'Classic Builder'
   }
 
@@ -125,7 +125,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 </div>
               </button>
 
-              {/* Template 3: Pro Terminal (MassFunded Style) */}
+              {/* Template 3: Pro Terminal (Institutional Style) */}
               <button
                 onClick={() => handleSelect('terminal')}
                 className={cn(
@@ -142,7 +142,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                     {currentTemplate === 'terminal' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
                   </div>
                   <div className="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-3xs font-semibold my-0.5">
-                    MassFunded Style
+                    Terminal Pro Style
                   </div>
                   <p className="text-2xs text-text-muted mt-0.5 leading-relaxed">
                     Institutional matrix style with live WebTrader preview frame &amp; comparison matrix.
