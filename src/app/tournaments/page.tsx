@@ -13,12 +13,13 @@ export default function PublicTournamentsPage() {
   const [tournaments, setTournaments] = useState<Competition[]>([])
   const [pendingOrders, setPendingOrders] = useState<Map<number, PaymentOrder>>(new Map())
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<'live' | 'past'>('live')
 
   useEffect(() => {
     const fetchTournaments = async () => {
       try {
         const [res, ord] = await Promise.all([
-          api.tournaments.list(),
+          api.tournaments.list({ status: 'all' }),
           api.paymentMyOrders(true).catch(() => ({ ok: false as const, data: [] as PaymentOrder[] }))
         ])
         if (res.ok) {
@@ -234,39 +235,96 @@ export default function PublicTournamentsPage() {
           </div>
         ) : (
           <>
-            {activeTournaments.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-8 w-1 bg-accent rounded-full" />
-                  <h2 className="text-2xl font-bold text-text">Live Tournaments</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {activeTournaments.map(t => renderCard(t, true))}
-                </div>
-              </section>
-            )}
+            {/* Live & Upcoming Arenas vs Past Tournaments & Winners Toggle Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className={`h-8 w-1.5 rounded-full ${viewMode === 'live' ? 'bg-accent' : 'bg-amber-400'}`} />
+                <h2 className="text-2xl font-extrabold text-text">
+                  {viewMode === 'live' ? 'Live & Upcoming Arenas' : 'Past Tournaments & Winners'}
+                </h2>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface-muted border border-border text-text-muted">
+                  {viewMode === 'live' ? `${activeTournaments.length + upcomingTournaments.length} Arenas` : `${completedTournaments.length} Concluded`}
+                </span>
+              </div>
 
-            {upcomingTournaments.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-8 w-1 bg-info rounded-full" />
-                  <h2 className="text-2xl font-bold text-text">Upcoming Challenges</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {upcomingTournaments.map(t => renderCard(t, false))}
-                </div>
-              </section>
-            )}
+              <div className="flex items-center gap-2">
+                {viewMode === 'live' ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('past')}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all shadow-xs"
+                  >
+                    <Trophy className="h-4 w-4 text-amber-400" />
+                    <span>Past Tournaments & Winners</span>
+                    {completedTournaments.length > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 text-3xs font-extrabold">
+                        {completedTournaments.length}
+                      </span>
+                    )}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('live')}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-accent bg-accent/10 hover:bg-accent/20 border border-accent/30 transition-all shadow-xs"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5 rotate-180" />
+                    <span>Back to Live & Upcoming</span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-accent/20 text-accent text-3xs font-extrabold">
+                      {activeTournaments.length + upcomingTournaments.length}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
 
-            {completedTournaments.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-8 w-1 bg-border rounded-full" />
-                  <h2 className="text-2xl font-bold text-text">Past Tournaments</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75 grayscale hover:grayscale-0 transition-all duration-300">
-                  {completedTournaments.map(t => renderCard(t, false))}
-                </div>
+            {viewMode === 'live' ? (
+              <div className="space-y-12">
+                {activeTournaments.length > 0 && (
+                  <section>
+                    <div className="flex items-center gap-2 mb-4 text-sm font-bold text-text uppercase tracking-wider">
+                      <span className="h-2 w-2 rounded-full bg-accent animate-pulse" /> Live Now
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {activeTournaments.map(t => renderCard(t, true))}
+                    </div>
+                  </section>
+                )}
+
+                {upcomingTournaments.length > 0 && (
+                  <section>
+                    <div className="flex items-center gap-2 mb-4 text-sm font-bold text-text uppercase tracking-wider text-text-muted">
+                      <Clock className="h-3.5 w-3.5 text-info" /> Pre-Registration / Upcoming
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {upcomingTournaments.map(t => renderCard(t, false))}
+                    </div>
+                  </section>
+                )}
+
+                {activeTournaments.length === 0 && upcomingTournaments.length === 0 && (
+                  <div className="text-center py-16 space-y-3 bg-surface rounded-2xl border border-border p-8">
+                    <Trophy className="h-10 w-10 mx-auto text-text-faint" />
+                    <p className="font-semibold text-text">No active or upcoming tournaments</p>
+                    <button onClick={() => setViewMode('past')} className="text-xs text-amber-400 hover:underline">
+                      View Past Champions & Winners →
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <section className="space-y-6">
+                {completedTournaments.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {completedTournaments.map(t => renderCard(t, false))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16 space-y-3 bg-surface rounded-2xl border border-border p-8">
+                    <Trophy className="h-10 w-10 mx-auto text-amber-400/50" />
+                    <p className="font-semibold text-text">No past tournaments recorded yet</p>
+                  </div>
+                )}
               </section>
             )}
           </>

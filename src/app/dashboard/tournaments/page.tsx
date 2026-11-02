@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Trophy, Users, Calendar, ArrowRight, Loader2, Wallet, CheckCircle2, Clock, BookOpen, ShieldAlert, ShieldCheck, Zap, Sparkles, AlertTriangle, Info, Activity } from 'lucide-react'
+import { Trophy, Users, Calendar, ArrowRight, ArrowLeft, Loader2, Wallet, CheckCircle2, Clock, BookOpen, ShieldAlert, ShieldCheck, Zap, Sparkles, AlertTriangle, Info, Activity, Award, Medal } from 'lucide-react'
 import { api } from '@/lib/api'
 import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices } from '@/store/prices'
@@ -84,8 +84,10 @@ export default function DashboardTournamentsPage() {
 
   const { data: tournaments = [], isLoading } = useQuery({
     queryKey: ['tournaments-public'],
-    queryFn: () => api.tournaments.list().then(r => (r.ok && Array.isArray(r.data) ? r.data : [])),
+    queryFn: () => api.tournaments.list({ status: 'all' }).then(r => (r.ok && Array.isArray(r.data) ? r.data : [])),
   })
+
+  const [viewMode, setViewMode] = useState<'live' | 'past'>('live')
 
   const { data: mine = [] } = useQuery({
     queryKey: ['tournaments-mine'],
@@ -185,7 +187,8 @@ export default function DashboardTournamentsPage() {
   }, [])
 
   const live = safeTournaments.filter(t => (t.status ?? '') === 'active')
-  const upcoming = safeTournaments.filter(t => (t.status ?? '') !== 'active')
+  const upcoming = safeTournaments.filter(t => (t.status ?? '') === 'upcoming')
+  const completed = safeTournaments.filter(t => (t.status ?? '') === 'completed')
 
   // Live user rank logic (GAP-NEW-01: Ingest real rank from participant/tournament data e.g. p.rank ?? t.my_rank ?? null)
   const myLiveRank = useMemo<number | null>(() => {
@@ -219,6 +222,162 @@ export default function DashboardTournamentsPage() {
     if (pendingOrder) return <Badge tone="warn" size="sm"><Clock className="h-3 w-3 mr-1 inline" />Payment Pending</Badge>
     if ((t.status ?? '') === 'active') return <Badge tone="accent" size="sm" pulsing>Live now</Badge>
     return <Badge tone="neutral" size="sm">{t.status || 'Upcoming'}</Badge>
+  }
+
+  // Top 3 Winners Subcomponent for Past Tournaments
+  const PastTournamentWinners = ({ tournamentId }: { tournamentId: number }) => {
+    const { data: winners = [], isLoading } = useQuery({
+      queryKey: ['past-winners', tournamentId],
+      queryFn: async () => {
+        const res = await api.tournaments.leaderboard(tournamentId)
+        if (res.ok) {
+          const list = Array.isArray(res.data) ? res.data : (res.data as any)?.leaderboard || []
+          return list.slice(0, 3)
+        }
+        return []
+      },
+      staleTime: 60_000,
+    })
+
+    if (isLoading) {
+      return (
+        <div className="rounded-xl bg-bg-subtle/50 border border-border-subtle p-3 space-y-2">
+          <div className="h-3 w-32 bg-surface-muted rounded animate-pulse" />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
+            <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
+            <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
+          </div>
+        </div>
+      )
+    }
+
+    if (!winners || winners.length === 0) {
+      return (
+        <div className="rounded-xl bg-bg-subtle/40 border border-border-subtle p-3 text-xs text-text-muted flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-amber-400 shrink-0" />
+          <span>Final certified winners being tabulated</span>
+        </div>
+      )
+    }
+
+    const tiers = [
+      { badge: '🥇 1st Place', color: 'border-amber-400/40 bg-amber-500/10 text-amber-300' },
+      { badge: '🥈 2nd Place', color: 'border-slate-300/40 bg-slate-300/10 text-slate-200' },
+      { badge: '🥉 3rd Place', color: 'border-amber-600/40 bg-amber-600/10 text-amber-200' },
+    ]
+
+    return (
+      <div className="rounded-xl bg-bg-subtle/60 border border-border-subtle/80 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-3xs uppercase tracking-widest text-amber-400 font-extrabold flex items-center gap-1.5">
+            <Trophy className="h-3.5 w-3.5 text-amber-400" />
+            Official Tournament Winners
+          </span>
+          <span className="text-3xs text-text-muted">Certified Final</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {winners.map((w: any, idx: number) => {
+            const name = w.display_name || w.user_login || `Trader #${idx + 1}`
+            const roi = Number(w.roi_pct ?? 0)
+            const t = tiers[idx] || tiers[2]
+            return (
+              <div key={idx} className={cn('p-2 rounded-lg border text-xs flex flex-col justify-between gap-1 shadow-xs', t.color)}>
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-bold text-3xs">{t.badge}</span>
+                  <span className="font-extrabold tabular text-success text-2xs">+{roi.toFixed(1)}%</span>
+                </div>
+                <div className="font-bold text-text truncate text-xs" title={name}>
+                  {name}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  const PastTournamentCard = ({ t }: { t: Competition }) => {
+    const tid = Number(t.id)
+    const participants = toNum(t.current_participants)
+    const maxP = toNum(t.max_participants)
+
+    return (
+      <Card className="overflow-hidden border-border-subtle hover:border-amber-500/40 transition-all bg-surface/80">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                <Trophy className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-text truncate text-lg">{t.title || `Tournament #${t.id}`}</h3>
+            </div>
+            <Badge tone="neutral" size="sm">Completed</Badge>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+              <div className="text-2xs uppercase tracking-wider text-text-muted">Starting</div>
+              <div className="text-sm font-bold tabular text-text mt-0.5">
+                {fmtUSD(toNum(t.starting_balance), { decimals: 0 })}
+              </div>
+            </div>
+            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+              <div className="text-2xs uppercase tracking-wider text-text-muted">Prize pool</div>
+              <div className="text-sm font-bold tabular text-amber-400 mt-0.5 truncate">
+                {t.prize_pool || '—'}
+              </div>
+            </div>
+            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+              <div className="text-2xs uppercase tracking-wider text-text-muted flex items-center gap-1">
+                <Users className="h-3 w-3" /> Traders
+              </div>
+              <div className="text-sm font-bold tabular text-text mt-0.5">
+                {participants.toLocaleString()}{maxP > 0 ? ` / ${maxP.toLocaleString()}` : ''}
+              </div>
+            </div>
+          </div>
+
+          {/* Top 3 Certified Winners Podium Showcase */}
+          <PastTournamentWinners tournamentId={tid} />
+
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/50">
+            <div className="text-xs text-text-muted">
+              {safeFormatDate(t.end_date) && (
+                <span>Concluded <strong className="text-text font-medium">{safeFormatDate(t.end_date)}</strong></span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2.5 text-2xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border border-accent/20 rounded-md gap-1"
+                onClick={() => setViewingRules(t)}
+              >
+                <BookOpen className="h-3 w-3" /> Rules
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2.5 text-2xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 rounded-md gap-1"
+                onClick={() => setViewingPrizes(t)}
+              >
+                <Trophy className="h-3 w-3" /> Prizes
+              </Button>
+            </div>
+          </div>
+
+          <Button asChild variant="outline" className="w-full border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-semibold gap-1.5">
+            <a href={`/tournaments/${tid}`} target="_blank" rel="noreferrer">
+              View Full Standings & Final Results <ArrowRight className="h-4 w-4 ml-1" />
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   const TournamentCard = ({ t }: { t: Competition }) => {
@@ -418,36 +577,110 @@ export default function DashboardTournamentsPage() {
             thirdPrize="$2,500 + $25K Account"
           />
 
-          {live.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                <span className="h-4 w-1 bg-accent rounded-full inline-block" /> Live now
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {live.map(t => <TournamentCard key={t.id} t={t} />)}
-              </div>
+          {/* Main Tournament Arena Header with View Toggle on Right Side */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border-subtle/60">
+            <div className="flex items-center gap-2.5">
+              <span className={cn('h-5 w-1.5 rounded-full inline-block', viewMode === 'live' ? 'bg-accent' : 'bg-amber-400')} />
+              <h2 className="text-base sm:text-lg font-bold text-text uppercase tracking-wider">
+                {viewMode === 'live' ? 'Live & Upcoming Arenas' : 'Past Tournaments & Winners'}
+              </h2>
+              <Badge tone={viewMode === 'live' ? 'accent' : 'warn'} size="sm">
+                {viewMode === 'live' 
+                  ? `${live.length} Live · ${upcoming.length} Upcoming`
+                  : `${completed.length} Completed`}
+              </Badge>
             </div>
-          )}
 
-          {upcoming.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                <span className="h-4 w-1 bg-warn rounded-full inline-block" /> Upcoming
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {upcoming.map(t => <TournamentCard key={t.id} t={t} />)}
-              </div>
+            {/* Right-side button to view Past with Winners or Return */}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              {viewMode === 'live' ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode('past')}
+                  className="h-8 px-3 text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/30 rounded-lg gap-1.5 shadow-xs transition-all"
+                >
+                  <Trophy className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Past Tournaments & Winners</span>
+                  {completed.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-2xs font-bold tabular">
+                      {completed.length}
+                    </span>
+                  )}
+                  <ArrowRight className="h-3.5 w-3.5 ml-0.5" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode('live')}
+                  className="h-8 px-3 text-xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border border-accent/30 rounded-lg gap-1.5 shadow-xs transition-all"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-0.5" />
+                  <span>Back to Live & Upcoming</span>
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-accent/20 text-accent text-2xs font-bold tabular">
+                    {live.length + upcoming.length}
+                  </span>
+                </Button>
+              )}
             </div>
-          )}
+          </div>
 
-          {tournaments.length === 0 && (
-            <Card>
-              <CardContent className="py-16 text-center space-y-3">
-                <Trophy className="h-10 w-10 mx-auto text-text-faint" />
-                <p className="font-semibold text-text">No tournaments right now</p>
-                <p className="text-sm text-text-muted">New tournaments appear here the moment they go live.</p>
-              </CardContent>
-            </Card>
+          {viewMode === 'live' ? (
+            <div className="space-y-6">
+              {live.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2 text-text-muted">
+                    <span className="h-3 w-1 bg-accent rounded-full inline-block" /> Currently Active ({live.length})
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {live.map(t => <TournamentCard key={t.id} t={t} />)}
+                  </div>
+                </div>
+              )}
+
+              {upcoming.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2 text-text-muted">
+                    <span className="h-3 w-1 bg-info rounded-full inline-block" /> Pre-Registration / Upcoming ({upcoming.length})
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {upcoming.map(t => <TournamentCard key={t.id} t={t} />)}
+                  </div>
+                </div>
+              )}
+
+              {live.length === 0 && upcoming.length === 0 && (
+                <Card>
+                  <CardContent className="py-16 text-center space-y-3">
+                    <Trophy className="h-10 w-10 mx-auto text-text-faint" />
+                    <p className="font-semibold text-text">No active or upcoming tournaments</p>
+                    <p className="text-sm text-text-muted">Check out Past Tournaments to view previous champions and winners.</p>
+                    <Button variant="outline" size="sm" onClick={() => setViewMode('past')} className="text-amber-400 border-amber-400/30">
+                      View Past Tournaments & Winners
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {completed.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {completed.map(t => <PastTournamentCard key={t.id} t={t} />)}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-16 text-center space-y-3">
+                    <Trophy className="h-10 w-10 mx-auto text-amber-400/50" />
+                    <p className="font-semibold text-text">No past tournaments recorded yet</p>
+                    <p className="text-sm text-text-muted">Completed tournaments and their hall of fame winners will appear here.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </>
       )}
@@ -485,8 +718,8 @@ export default function DashboardTournamentsPage() {
       {viewingRules && (() => {
         const rules = parseRules(viewingRules.rules_json)
         const isTrailing = (rules.drawdown_type || 'trailing') === 'trailing'
-        const trailingDD = rules.trailing_dd || rules.max_dd || 5
-        const dailyDD = rules.daily_dd || 5
+        const trailingDD = rules.trailing_dd || rules.max_dd || 6
+        const dailyDD = rules.daily_dd || 3
         const maxDD = rules.max_dd || trailingDD
         const leverage = rules.leverage || 100
         const minDays = rules.min_days || 0

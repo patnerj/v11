@@ -272,12 +272,13 @@ export default function PublicTournamentArena() {
                       <th className="px-6 py-4 font-semibold">Trader</th>
                       <th className="px-6 py-4 font-semibold text-right">Return</th>
                       <th className="px-6 py-4 font-semibold text-right">Balance</th>
+                      <th className="px-6 py-4 font-semibold text-right">Drawdown (Max 6%)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
                     {leaderboard.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-6 py-12 text-center text-text-muted">
+                        <td colSpan={5} className="px-6 py-12 text-center text-text-muted">
                           No standings available yet. The arena is waiting.
                         </td>
                       </tr>
@@ -290,6 +291,9 @@ export default function PublicTournamentArena() {
                         const currentVal = Number(row.current_equity ?? 0)
                         const rankNum = row.rank || index + 1
                         
+                        const ddReached = Number(row.max_dd_reached ?? 0)
+                        const isDisqualified = row.status === 'disqualified' || ddReached >= 6.0
+
                         return (
                           <tr key={index} className={`transition-colors hover:bg-surface-muted/20 ${isTop3 ? 'bg-accent/5' : ''}`}>
                             <td className="px-6 py-4">
@@ -320,6 +324,17 @@ export default function PublicTournamentArena() {
                             <td className="px-6 py-4 text-right tabular font-medium text-text">
                               ${currentVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
+                            <td className="px-6 py-4 text-right">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold tabular ${
+                                isDisqualified
+                                  ? 'bg-destructive/15 text-destructive border border-destructive/30'
+                                  : ddReached >= 3.0
+                                  ? 'bg-warn/15 text-warn border border-warn/30'
+                                  : 'bg-surface-muted text-text-muted border border-border/40'
+                              }`}>
+                                {isDisqualified ? 'Breached (6.0%)' : `${ddReached.toFixed(2)}% / 6%`}
+                              </span>
+                            </td>
                           </tr>
                         )
                       })
@@ -348,13 +363,26 @@ export default function PublicTournamentArena() {
                 </li>
                 <li className="flex gap-3">
                   <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                  <p>Standard drawdown rules apply (Daily: 5%, Max: 10%). Hitting limits disqualifies the account.</p>
+                  <p>Standard drawdown rules apply: <strong className="text-text">Daily: 3%</strong>, <strong className="text-text">Max: 6%</strong>. Hitting limits disqualifies the account.</p>
                 </li>
                 <li className="flex gap-3">
                   <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
                   <p>EA and News Trading are permitted.</p>
                 </li>
               </ul>
+
+              <div className="grid grid-cols-2 gap-2.5 pt-4 mt-2 border-t border-border/40 text-center">
+                <div className="bg-surface-muted/60 p-3 rounded-xl border border-border/50">
+                  <div className="text-3xs uppercase tracking-wider text-text-muted font-medium">Daily Drawdown</div>
+                  <div className="text-base font-bold text-warn tabular mt-1">3.0%</div>
+                  <div className="text-3xs text-text-faint mt-0.5">Disqualifies on breach</div>
+                </div>
+                <div className="bg-surface-muted/60 p-3 rounded-xl border border-border/50">
+                  <div className="text-3xs uppercase tracking-wider text-text-muted font-medium">Max Drawdown</div>
+                  <div className="text-base font-bold text-amber-400 tabular mt-1">6.0%</div>
+                  <div className="text-3xs text-text-faint mt-0.5">Maximum limit</div>
+                </div>
+              </div>
             </div>
           </div>
 
