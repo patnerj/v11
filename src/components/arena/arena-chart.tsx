@@ -52,14 +52,7 @@ export const ArenaChart = memo(function ArenaChart({
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [chartEngine, setChartEngine] = useState<'mt5' | 'tv'>(() => {
-    if (typeof window === 'undefined') return 'mt5'
-    try {
-      return (localStorage.getItem('fxsim:arena:chart_engine') as 'mt5' | 'tv') || 'mt5'
-    } catch {
-      return 'mt5'
-    }
-  })
+  const [chartEngine, setChartEngine] = useState<'mt5' | 'tv'>('tv')
 
   const handleEngineChange = (engine: 'mt5' | 'tv') => {
     setChartEngine(engine)
@@ -227,37 +220,7 @@ export const ArenaChart = memo(function ArenaChart({
             </div>
           )}
 
-          {/* Dual-Mode Chart Engine Switcher */}
-          <div className="inline-flex items-center bg-surface dark:bg-bg-subtle p-0.5 rounded-lg border border-border shadow-xs">
-            <button
-              type="button"
-              onClick={() => handleEngineChange('mt5')}
-              className={cn(
-                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
-                chartEngine === 'mt5'
-                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
-                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
-              )}
-              title="Switch to MT5 Pro Native Canvas Chart"
-            >
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>MT5 Pro</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleEngineChange('tv')}
-              className={cn(
-                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
-                chartEngine === 'tv'
-                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
-                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
-              )}
-              title="Switch to TradingView Chart"
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span>TradingView</span>
-            </button>
-          </div>
+          {/* Dual-Mode Chart Engine Switcher hidden pending $300 add-on unlock */}
         </div>
       </div>
 

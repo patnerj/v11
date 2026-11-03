@@ -52,8 +52,8 @@ function loadOneClick(): boolean {
 }
 
 function loadChartEngine(): 'mt5' | 'tradingview' {
-  const val = storageGet(STORAGE_KEYS.chartEngine)
-  return val === 'tradingview' ? 'tradingview' : 'mt5'
+  // MT5 Pro Chart gated behind $300 add-on fee; default strictly to TradingView
+  return 'tradingview'
 }
 
 function loadActive(): string {
@@ -104,10 +104,10 @@ export const useTerminal = create<TerminalState>((set, get) => ({
   },
   symbolPositionsCount: 0,
   setSymbolPositionsCount: (count) => set({ symbolPositionsCount: count }),
-  chartEngine: loadChartEngine(),
+  chartEngine: 'tradingview',
   setChartEngine: (engine) => {
-    storageSet(STORAGE_KEYS.chartEngine, engine)
-    set({ chartEngine: engine })
+    storageSet(STORAGE_KEYS.chartEngine, 'tradingview')
+    set({ chartEngine: 'tradingview' })
   },
 
   setActive: (sym) => { saveActive(sym); set({ active: sym }) },

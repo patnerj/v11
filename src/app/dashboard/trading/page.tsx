@@ -482,37 +482,7 @@ function DesktopLayout({
           <AccountSwitcher entries={switchEntries} metrics={metrics} showChartControls={chartEngine === 'tradingview'} />
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {/* Dual-Mode Chart Engine Switcher */}
-          <div className="inline-flex items-center bg-surface/90 dark:bg-bg-subtle/90 p-0.5 rounded-lg border border-border shadow-xs">
-            <button
-              type="button"
-              onClick={() => setChartEngine('mt5')}
-              className={cn(
-                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
-                chartEngine === 'mt5'
-                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
-                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
-              )}
-              title="Switch to MT5 Pro Native Canvas Chart"
-            >
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>MT5 Pro Chart</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setChartEngine('tradingview')}
-              className={cn(
-                "h-7 px-3 rounded-md text-terminal-label font-medium flex items-center gap-1.5 transition-all cursor-pointer select-none",
-                chartEngine === 'tradingview'
-                  ? "bg-accent text-accent-fg shadow-xs font-semibold"
-                  : "text-text-muted hover:text-text hover:bg-surface-muted/50"
-              )}
-              title="Switch to TradingView Chart"
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span>TradingView</span>
-            </button>
-          </div>
+          {/* Dual-Mode Chart Engine Switcher hidden pending $300 add-on unlock */}
           <SoundToggle compact className="shrink-0" />
         </div>
       </div>
@@ -575,11 +545,7 @@ function DesktopLayout({
             <Panel defaultSize="70%" minSize="30%">
               <section className="rounded-lg border border-border bg-surface overflow-hidden flex flex-col h-full min-h-0">
                 <SectionErrorBoundary sectionName="ChartPanel">
-                  {chartEngine === 'mt5' ? (
-                    <Mt5ChartPanel positions={positions} pendingOrders={pending} plan={plan || metrics?.plan} onChanged={onChanged} />
-                  ) : (
-                    <ChartPanel positions={positions} plan={plan || metrics?.plan} onChanged={onChanged} />
-                  )}
+                  <ChartPanel positions={positions} plan={plan || metrics?.plan} onChanged={onChanged} />
                 </SectionErrorBoundary>
               </section>
             </Panel>
@@ -851,48 +817,14 @@ function MobileLayout({
           <div className="flex-1 min-w-0">
             <AccountSwitcher entries={switchEntries} metrics={metrics} compact />
           </div>
-          {/* Mobile Chart Engine Switcher */}
-          <div className="inline-flex items-center bg-surface p-0.5 rounded-lg border border-border shadow-xs shrink-0">
-            <button
-              type="button"
-              onClick={() => setChartEngine('mt5')}
-              className={cn(
-                "px-2 py-0.5 rounded text-terminal-micro font-semibold flex items-center gap-1 transition-all cursor-pointer",
-                chartEngine === 'mt5'
-                  ? "bg-accent text-accent-fg shadow-xs font-bold"
-                  : "text-text-muted hover:text-text"
-              )}
-              title="Switch to MT5 Pro Native Canvas Chart"
-            >
-              <Zap className="w-3 h-3 fill-current" />
-              <span>MT5</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setChartEngine('tradingview')}
-              className={cn(
-                "px-2 py-0.5 rounded text-terminal-micro font-semibold flex items-center gap-1 transition-all cursor-pointer",
-                chartEngine === 'tradingview'
-                  ? "bg-accent text-accent-fg shadow-xs font-bold"
-                  : "text-text-muted hover:text-text"
-              )}
-              title="Switch to TradingView Chart"
-            >
-              <BarChart3 className="w-3 h-3" />
-              <span>TV</span>
-            </button>
-          </div>
+          {/* Mobile Chart Engine Switcher hidden pending $300 add-on unlock */}
         </div>
       )}
 
       {/* Chart — fills remaining space; respects chartEngine (MT5 Pro / TradingView) */}
       <div className="flex-1 mx-1 rounded-lg border border-border overflow-hidden min-h-0">
         <SectionErrorBoundary sectionName="ChartPanel">
-          {chartEngine === 'mt5' ? (
-            <Mt5ChartPanel compact positions={positions} pendingOrders={pending} plan={plan || metrics?.plan} onChanged={onChanged} />
-          ) : (
-            <ChartPanel compact positions={positions} plan={plan || metrics?.plan} onOpenWatchlist={() => setSheet('watchlist')} onChanged={onChanged} />
-          )}
+          <ChartPanel compact positions={positions} plan={plan || metrics?.plan} onOpenWatchlist={() => setSheet('watchlist')} onChanged={onChanged} />
         </SectionErrorBoundary>
       </div>
 

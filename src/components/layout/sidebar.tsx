@@ -29,7 +29,7 @@ export interface NavItem {
 const NAV: NavItem[] = [
   { href: '/dashboard',                label: 'Overview',     icon: LayoutDashboard, queryKey: ['overview'] },
   { href: '/dashboard/trading',        label: 'Trade',         icon: CandlestickChart, badge: 'LIVE', queryKey: ['account'] },
-  { href: '/dashboard/mt5',            label: 'MT5 Web',      icon: Zap, badge: 'PRO', queryKey: ['account'] },
+  // { href: '/dashboard/mt5',            label: 'MT5 Web',      icon: Zap, badge: 'PRO', queryKey: ['account'] }, // Hidden pending $300 add-on unlock
   { href: '/dashboard/challenges',     label: 'Challenges',   icon: Trophy, queryKey: ['challenges'] },
   { href: '/dashboard/tournaments',    label: 'Tournaments',  icon: Trophy, badge: 'WIN', queryKey: ['tournaments'] },
   // The stake-money 1v1 PvP Arena shipped with no entry point anywhere a
@@ -202,7 +202,7 @@ function SidebarBody({
           return Array.isArray(raw) ? raw : (raw as any)?.trades || []
         },
       })
-    } else if (item.href === '/dashboard/trading' || item.href === '/dashboard/mt5') {
+    } else if (item.href === '/dashboard/trading') {
       queryClient.prefetchQuery({
         queryKey: ['account'],
         queryFn: async () => {
