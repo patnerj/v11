@@ -114,6 +114,7 @@ export interface KycInfo {
   status:        KycStatus
   doc_type?:     string
   country?:      string
+  phone?:        string
   admin_note?:   string | null
   submitted_at?: string | null
   reviewed_at?:  string | null

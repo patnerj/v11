@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { useAuth } from '@/store/auth'
 import { useKycQuery } from '@/hooks/useApi'
 import { fmtDate } from '@/lib/format'
 import type { KycStatus } from '@/types/api'
@@ -12,13 +13,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/ui/page-header'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import {
   ShieldCheck, IdCard, ScanFace, FileText, UploadCloud, X, CheckCircle2,
   Clock, AlertCircle, Loader2, FileCheck2, Lock, Wallet, Camera,
-  Sparkles, Check, ArrowRight, ShieldAlert, FileX, Info, ExternalLink
+  Sparkles, Check, ArrowRight, ShieldAlert, FileX, Info, ExternalLink, RefreshCw
 } from 'lucide-react'
 
-type DocKey = 'id_doc' | 'id_doc_back' | 'selfie' | 'address_doc'
+type DocKey = 'id_doc' | 'id_doc_back' | 'selfie'
 interface DocSpec { 
   key: DocKey
   title: string
@@ -46,15 +48,8 @@ const DOCS: DocSpec[] = [
     key: 'selfie',      
     title: 'Biometric Facial Selfie', 
     subtitle: 'Live photo of your face holding ID',
-    hint: 'Good lighting, center face directly in frame, eyes clearly visible, no sunglasses or headwear.',       
+    hint: 'Good lighting, facing camera directly, no sunglasses or headwear.',       
     icon: ScanFace 
-  },
-  { 
-    key: 'address_doc',      
-    title: 'Proof of Address (POA)', 
-    subtitle: 'Utility bill, bank statement, or tax letter (issued within 90 days)',
-    hint: 'Must clearly show your full legal name, residential address, and issue date.',       
-    icon: FileText 
   },
 ]
 
@@ -138,12 +133,14 @@ function ModernUploadTile({
   uploading,
   capture,
   accept,
+  existingOnFile,
   onPick,
   onClear,
 }: {
   spec: DocSpec
   file: File | null
   preview: string | null
+  existingOnFile?: boolean
   uploading: boolean
   capture?: 'user' | 'environment' | boolean
   accept?: string
@@ -177,6 +174,8 @@ function ModernUploadTile({
           ? 'border-emerald-500/40 bg-surface shadow-[0_0_20px_rgba(16,185,129,0.06)]'
           : drag
           ? 'border-cyan-500 bg-cyan-500/5 shadow-[0_0_25px_rgba(6,182,212,0.15)]'
+          : existingOnFile
+          ? 'border-emerald-500/30 bg-surface'
           : 'border-border bg-surface hover:border-cyan-500/40'
       }`}
     >
@@ -185,21 +184,25 @@ function ModernUploadTile({
         <div className="flex items-center gap-3">
           <div
             className={`h-10 w-10 rounded-xl flex items-center justify-center border shrink-0 transition-colors ${
-              file
+              file || existingOnFile
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                 : 'bg-surface-muted text-cyan-400 border-border'
             }`}
           >
-            {file ? <FileCheck2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+            {file || existingOnFile ? <FileCheck2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
           </div>
           <div>
             <div className="text-sm font-bold text-text flex items-center gap-2">
               {spec.title}
-              {file && (
+              {file ? (
                 <Badge tone="success" size="sm" className="tabular font-semibold text-2xs">
                   Uploaded
                 </Badge>
-              )}
+              ) : existingOnFile ? (
+                <Badge tone="info" size="sm" className="tabular font-semibold text-2xs">
+                  On File
+                </Badge>
+              ) : null}
             </div>
             <div className="text-xs text-text-muted">{spec.subtitle}</div>
           </div>
@@ -224,6 +227,8 @@ function ModernUploadTile({
           className={`w-full rounded-xl border border-dashed p-6 flex flex-col items-center justify-center gap-2.5 text-center transition-all ${
             drag
               ? 'border-cyan-400 bg-cyan-500/10 text-cyan-300'
+              : existingOnFile
+              ? 'border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-400 text-text-muted hover:text-text'
               : 'border-border bg-surface-muted/50 hover:border-cyan-500/50 hover:bg-surface-muted text-text-muted hover:text-text'
           }`}
         >
@@ -232,7 +237,10 @@ function ModernUploadTile({
           </div>
           <div>
             <p className="text-xs font-semibold text-text">
-              Click to upload <span className="text-text-muted font-normal">or drag & drop</span>
+              {existingOnFile ? 'Document on record' : 'Click to upload'}{' '}
+              <span className="text-text-muted font-normal">
+                {existingOnFile ? '(click or drop to replace)' : 'or drag & drop'}
+              </span>
             </p>
             <p className="text-2xs text-text-muted mt-0.5">{spec.hint}</p>
           </div>
@@ -298,23 +306,39 @@ function ModernUploadTile({
 }
 
 export default function KycPage() {
-  const { data: kyc, isPending, refetch } = useKycQuery()
+  const { data: kyc, isPending, isError, refetch } = useKycQuery()
+  const user = useAuth((s) => s.user)
   const loading = isPending && !kyc
+
+  const status: KycStatus = (kyc?.status as KycStatus) ?? 'not_started'
+  const showForm = status === 'not_started' || status === 'rejected'
 
   const [docType, setDocType] = useState<'national_id' | 'passport' | 'drivers_license'>('national_id')
   const [country, setCountry] = useState('United States')
+  const [phone, setPhone] = useState('')
+  const initializedRef = useRef(false)
+  const initializedPhoneRef = initializedRef
+
+  useEffect(() => {
+    if (!initializedRef.current) {
+      if (kyc?.country) setCountry(kyc.country)
+      const initialPhone = kyc?.phone || user?.phone
+      if (initialPhone) {
+        setPhone(initialPhone)
+        initializedRef.current = true
+      }
+    }
+  }, [kyc, user])
 
   const [files, setFiles] = useState<Record<DocKey, File | null>>({
     id_doc: null,
     id_doc_back: null,
     selfie: null,
-    address_doc: null,
   })
   const [previews, setPreviews] = useState<Record<DocKey, string | null>>({
     id_doc: null,
     id_doc_back: null,
     selfie: null,
-    address_doc: null,
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -340,9 +364,16 @@ export default function KycPage() {
 
   const isBackDocRequired = docType !== 'passport'
   const visibleDocs = DOCS.filter(d => isBackDocRequired || d.key !== 'id_doc_back')
-  const uploadedCount = visibleDocs.filter(d => !!files[d.key]).length
+
+  const isDocSatisfied = (key: DocKey) => {
+    if (files[key]) return true
+    if (status === 'rejected' && (kyc?.docs as any)?.[key]) return true
+    return false
+  }
+
+  const uploadedCount = visibleDocs.filter(d => isDocSatisfied(d.key)).length
   const totalRequired = visibleDocs.length
-  const allReady = !!(files.id_doc && (isBackDocRequired ? files.id_doc_back : true) && files.selfie) && country.trim().length > 0
+  const allReady = (isDocSatisfied('id_doc') && (isBackDocRequired ? isDocSatisfied('id_doc_back') : true) && isDocSatisfied('selfie')) && country.trim().length > 0
 
   const handleDocTypeChange = (newType: 'national_id' | 'passport' | 'drivers_license') => {
     setDocType(newType)
@@ -357,35 +388,45 @@ export default function KycPage() {
       return
     }
     if (!allReady) {
-      toast.error(isBackDocRequired ? 'Please select all required identity documents.' : 'Please select your passport photo page and biometric selfie.')
+      toast.error(isBackDocRequired ? 'Please provide all 3 required identity documents.' : 'Please provide your passport photo page and biometric selfie.')
       return
     }
     setSubmitting(true)
     const form = new FormData()
     form.append('doc_type', docType)
     form.append('country', country.trim())
-    form.append('id_doc', files.id_doc!)
+    if (phone.trim()) {
+      form.append('phone', phone.trim())
+    }
+    if (files.id_doc) {
+      form.append('id_doc', files.id_doc)
+    }
     if (isBackDocRequired && files.id_doc_back) {
       form.append('id_doc_back', files.id_doc_back)
     }
-    form.append('selfie', files.selfie!)
-    if (files.address_doc) {
-      form.append('address_doc', files.address_doc)
+    if (files.selfie) {
+      form.append('selfie', files.selfie)
     }
     const res = await api.kycSubmit(form)
     setSubmitting(false)
     if (res.ok && res.data.success) {
       toast.success('KYC documents submitted successfully for compliance review!')
-      setFiles({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
-      setPreviews({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
+      const trimmedPhone = phone.trim()
+      if (trimmedPhone) {
+        const currentUser = useAuth.getState().user
+        if (currentUser) {
+          useAuth.setState({ user: { ...currentUser, phone: trimmedPhone } })
+        }
+      }
+      setFiles({ id_doc: null, id_doc_back: null, selfie: null })
+      setPreviews({ id_doc: null, id_doc_back: null, selfie: null })
       refetch()
     } else {
       toast.error(res.ok ? res.data.message || 'Submission failed' : res.error)
     }
   }
 
-  const status = kyc?.status ?? 'not_started'
-  const showForm = status === 'not_started' || status === 'rejected'
+  // status & showForm declared at top of component to eliminate TDZ ReferenceError
 
   return (
     <div className="w-full space-y-8 pb-16">
@@ -398,7 +439,23 @@ export default function KycPage() {
       />
 
       <div className="max-w-6xl mx-auto w-full space-y-6">
-        {loading ? (
+        {isError && !kyc ? (
+          <Card className="border-red-500/30 bg-red-950/10 p-8 text-center max-w-xl mx-auto space-y-4">
+            <div className="h-12 w-12 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 inline-flex items-center justify-center">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-text">Unable to Load KYC Status</h3>
+              <p className="text-xs text-text-muted mt-1">
+                We couldn't fetch your verification records from the compliance server. Please try again.
+              </p>
+            </div>
+            <Button onClick={() => refetch()} variant="outline" size="sm" className="gap-2 font-semibold">
+              <RefreshCw className="h-4 w-4" />
+              Retry Verification
+            </Button>
+          </Card>
+        ) : loading ? (
           <Card className="border-border bg-surface">
             <CardContent className="p-8">
               <Skeleton className="h-48 w-full" />
@@ -406,11 +463,12 @@ export default function KycPage() {
           </Card>
         ) : (
           <>
-            {/* Status Progress Stepper */}
-            <ModernStepper status={status} />
+            <SectionErrorBoundary sectionName="KYC Verification Status">
+              {/* Status Progress Stepper */}
+              <ModernStepper status={status} />
 
-            {/* Approved State Banner */}
-            {status === 'approved' && (
+              {/* Approved State Banner */}
+              {status === 'approved' && (
               <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
                 <Card className="border-emerald-500/40 bg-emerald-950/20 backdrop-blur-sm overflow-hidden relative">
                   <div className="absolute top-0 right-0 h-40 w-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -540,16 +598,18 @@ export default function KycPage() {
                 </div>
               </motion.div>
             )}
+            </SectionErrorBoundary>
 
             {/* Submission Form Grid */}
             {showForm && (
+              <SectionErrorBoundary sectionName="KYC Submission Form">
               <div className="grid lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left Side: 3 Document Upload Slots */}
                 <div className="lg:col-span-7 space-y-4">
                   
-                  {/* Doc Type & Country Selectors */}
-                  <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-xl border border-border bg-surface">
+                  {/* Doc Type, Country & Phone Selectors */}
+                  <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl border border-border bg-surface">
                     <div>
                       <label className="text-xs font-semibold text-text-muted block mb-1.5">Document Type</label>
                       <select 
@@ -569,10 +629,28 @@ export default function KycPage() {
                       <input 
                         type="text" 
                         value={country} 
-                        onChange={(e) => setCountry(e.target.value)}
+                        onChange={(e) => {
+                          initializedRef.current = true
+                          setCountry(e.target.value)
+                        }}
                         placeholder="e.g. United States, United Kingdom"
                         required
                         className="w-full h-9 rounded-lg bg-surface-muted border border-border px-3 text-xs text-text focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-text-muted block mb-1.5">
+                        Phone (WhatsApp)
+                      </label>
+                      <input 
+                        type="tel" 
+                        value={phone} 
+                        onChange={(e) => {
+                          initializedRef.current = true
+                          setPhone(e.target.value)
+                        }}
+                        placeholder="+1 (555) 000-0000"
+                        className="w-full h-9 rounded-lg bg-surface-muted border border-border px-3 text-xs text-text focus:outline-none focus:border-cyan-500 tabular-nums"
                       />
                     </div>
                   </div>
@@ -593,6 +671,7 @@ export default function KycPage() {
                         spec={d}
                         file={files[d.key]}
                         preview={previews[d.key]}
+                        existingOnFile={status === 'rejected' && Boolean((kyc?.docs as any)?.[d.key])}
                         uploading={submitting}
                         capture={d.key === 'selfie' ? 'user' : undefined}
                         accept={d.key === 'selfie' ? 'image/*' : undefined}
@@ -715,6 +794,7 @@ export default function KycPage() {
                 </div>
 
               </div>
+              </SectionErrorBoundary>
             )}
           </>
         )}
