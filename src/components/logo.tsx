@@ -136,7 +136,13 @@ export function Logo({
                 letterSpacing="-1"
                 className="mf-brand-title transition-colors duration-200"
               >
-                Alpha<tspan fill={`url(#${textGradId})`}>Capital</tspan>
+                {name.toLowerCase() === 'massfunded' ? (
+                  <>Mass<tspan fill={`url(#${textGradId})`}>Funded</tspan></>
+                ) : name.toLowerCase() === 'alphacapital' ? (
+                  <>Alpha<tspan fill={`url(#${textGradId})`}>Capital</tspan></>
+                ) : (
+                  <>{name}</>
+                )}
               </text>
               <text
                 x="145"
