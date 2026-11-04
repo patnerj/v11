@@ -19,6 +19,7 @@ import { playOrderCloseSound, playOrderProfitChimeSound, playOrderLossThumpSound
 import { SocialProfitShareModal, type ShareTradeData } from '@/components/dashboard/trading/social-profit-share-modal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ClosePositionModal } from '@/components/dashboard/trading/close-position-modal'
+import { ModifySltpModal } from '@/components/dashboard/trading/modify-sltp-modal'
 
 function normalizePositions(data: unknown): Position[] {
   if (Array.isArray(data)) return data
@@ -47,6 +48,7 @@ export const PositionsTable = memo(function PositionsTable({ positions: rawPosit
   // Binance-style single position close modal state
   const [closingPosition, setClosingPosition] = useState<Position | null>(null)
   const [isClosingSingle, setIsClosingSingle] = useState(false)
+  const [modifyingPosition, setModifyingPosition] = useState<Position | null>(null)
 
   const handleConfirmSingleClose = useCallback(async () => {
     if (!closingPosition || isClosingSingle) return
@@ -390,6 +392,7 @@ export const PositionsTable = memo(function PositionsTable({ positions: rawPosit
                 onShare={setShareTrade}
                 onRequestClose={setClosingPosition}
                 onViewChart={onViewChart}
+                onRequestModify={setModifyingPosition}
               />
             ))}
           </tbody>
@@ -410,6 +413,13 @@ export const PositionsTable = memo(function PositionsTable({ positions: rawPosit
         loading={isClosingSingle}
       />
 
+      <ModifySltpModal
+        open={Boolean(modifyingPosition)}
+        position={modifyingPosition}
+        onClose={() => setModifyingPosition(null)}
+        onSuccess={onChanged}
+      />
+
       <ConfirmDialog
         isOpen={isCloseAllConfirmOpen}
         onCancel={() => setIsCloseAllConfirmOpen(false)}
@@ -424,8 +434,8 @@ export const PositionsTable = memo(function PositionsTable({ positions: rawPosit
   )
 })
 
-function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, onViewChart }: {
-  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void; onRequestClose?: (pos: Position) => void; onViewChart?: (symbol: string) => void
+function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, onViewChart, onRequestModify }: {
+  pos: Position; index: number; onChanged?: () => void; compact?: boolean; onShare?: (trade: ShareTradeData) => void; onRequestClose?: (pos: Position) => void; onViewChart?: (symbol: string) => void; onRequestModify?: (pos: Position) => void
 }) {
   const getMeta = useTerminal((s) => s.getMeta)
   const meta    = getMeta(pos.symbol)
@@ -686,24 +696,38 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, 
         )}
       >
         <Td>
-          <div className="flex items-center gap-1.5">
-            {onViewChart ? (
-              <button
-                type="button"
-                onClick={() => onViewChart(pos.symbol)}
-                className="font-semibold terminal-num text-text hover:text-accent hover:underline cursor-pointer transition-colors text-left"
-                title={`View ${pos.symbol} on chart`}
-              >
-                {pos.symbol}
-              </button>
-            ) : (
-              <span className="font-semibold terminal-num">{pos.symbol}</span>
-            )}
-            {pos.isOptimistic && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                In-Flight
-              </span>
-            )}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              {onViewChart ? (
+                <button
+                  type="button"
+                  onClick={() => onViewChart(pos.symbol)}
+                  className="font-semibold terminal-num text-text hover:text-accent hover:underline cursor-pointer transition-colors text-left"
+                  title={`View ${pos.symbol} on chart`}
+                >
+                  {pos.symbol}
+                </button>
+              ) : (
+                <span className="font-semibold terminal-num">{pos.symbol}</span>
+              )}
+              {pos.isOptimistic && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                  In-Flight
+                </span>
+              )}
+            </div>
+            {/* Mobile SL/TP Clickable Indicator */}
+            <button
+              type="button"
+              onClick={() => onRequestModify?.(pos)}
+              className="md:hidden text-3xs terminal-num text-text-muted hover:text-accent text-left flex items-center gap-1 mt-0.5 cursor-pointer"
+              title="Tap to modify Stop Loss / Take Profit"
+            >
+              <span className={pos.sl ? "text-rose-400" : "text-text-muted"}>SL: {pos.sl ? fmtPrice(pos.sl, digits) : '—'}</span>
+              <span className="text-text-faint">/</span>
+              <span className={pos.tp ? "text-emerald-400" : "text-text-muted"}>TP: {pos.tp ? fmtPrice(pos.tp, digits) : '—'}</span>
+              <Pencil className="h-2 w-2 text-accent opacity-70" />
+            </button>
           </div>
         </Td>
         <Td>
@@ -810,6 +834,14 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, 
                 >
                   <Share2 className="h-3.5 w-3.5 text-accent" />
                   <span>Flex Trade</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={busy}
+                  onClick={() => onRequestModify?.(pos)}
+                  className="gap-2 text-terminal-body font-normal"
+                >
+                  <Pencil className="h-3.5 w-3.5 text-accent" />
+                  <span>Modify SL / TP</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={busy}

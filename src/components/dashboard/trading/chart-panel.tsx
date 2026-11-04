@@ -12,6 +12,7 @@ import type { Position } from '@/types/api'
 import { toast } from 'sonner'
 import { useIsDarkTheme } from '@/hooks/use-theme-attribute'
 import { ScalperExecutionHeader } from './scalper-execution-header'
+import { ChartTpSlOverlay } from './chart-tp-sl-overlay'
 
 interface Props {
   compact?: boolean
@@ -355,6 +356,23 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
           <span>Exit Fullscreen</span>
         </button>
       )}
+
+      {/* Institutional MT5 Position & Risk Bar (Docked directly under header when positions exist) */}
+      <ChartTpSlOverlay
+        symbol={active}
+        positions={symPositions}
+        pendingOrders={symPending}
+        digits={digits}
+        pipSize={pipSize(active, digits)}
+        contractSize={toNum(meta?.contract_size) || 100000}
+        currentBid={bid || 0}
+        currentAsk={ask || 0}
+        isSlRequired={isSlRequired}
+        chartHostRef={chartHostRef}
+        compact={compact}
+        onChanged={onChanged}
+        isVisible={true}
+      />
 
       {/* Chart host */}
       <div ref={chartHostRef} className="relative flex-1 min-h-0" style={{ touchAction: 'pan-y' }}>
