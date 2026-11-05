@@ -16,6 +16,11 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
 
+  // Demo portal boundary guard (Rule 151)
+  const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true'
+
+  if (!isDemoPortal) return null
+
   const handleSelect = (tpl: LandingTemplateId) => {
     // Persist to cookie for 30 days
     document.cookie = `fxsim_landing_template=${tpl}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`

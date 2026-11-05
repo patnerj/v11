@@ -54,7 +54,7 @@ export interface ChallengeBlueprintPreset {
   config: Partial<ChallengePlan>
 }
 
-export const CHALLENGE_BLUEPRINTS: ChallengeBlueprintPreset[] = [
+const CHALLENGE_BLUEPRINTS: ChallengeBlueprintPreset[] = [
   {
     id: 'ftmo_2step',
     name: 'Standard 2-Step',

@@ -62,7 +62,7 @@ const getCachedPageSchema = cache(async () => {
 });
 
 interface PageProps {
-  searchParams?: Promise<{ template?: string }> | { template?: string };
+  searchParams?: Promise<{ template?: string }>;
 }
 
 export default async function HomePage(props: PageProps) {
@@ -76,25 +76,29 @@ export default async function HomePage(props: PageProps) {
     cookieTemplate = cookieStore.get('fxsim_landing_template')?.value || '';
   } catch {}
 
+  const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true';
+
   // Determine active template:
-  // Priority: URL query (?template=ftmo, titan, terminal, massfunded, classic) -> cookie -> default ('classic')
+  // On non-demo production properties (e.g. massfunded.org), strictly enforce authentic default layout
   let activeTemplate: LandingTemplateId = 'classic';
-  if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
-    activeTemplate = 'ftmo';
-  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(queryTemplate)) {
-    activeTemplate = 'neon';
-  } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
-    activeTemplate = 'terminal';
-  } else if (queryTemplate === 'classic') {
-    activeTemplate = 'classic';
-  } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
-    activeTemplate = 'ftmo';
-  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(cookieTemplate)) {
-    activeTemplate = 'neon';
-  } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
-    activeTemplate = 'terminal';
-  } else if (cookieTemplate === 'classic') {
-    activeTemplate = 'classic';
+  if (isDemoPortal) {
+    if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
+      activeTemplate = 'ftmo';
+    } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(queryTemplate)) {
+      activeTemplate = 'neon';
+    } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
+      activeTemplate = 'terminal';
+    } else if (queryTemplate === 'classic') {
+      activeTemplate = 'classic';
+    } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
+      activeTemplate = 'ftmo';
+    } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(cookieTemplate)) {
+      activeTemplate = 'neon';
+    } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
+      activeTemplate = 'terminal';
+    } else if (cookieTemplate === 'classic') {
+      activeTemplate = 'classic';
+    }
   }
 
   return (
@@ -116,13 +120,15 @@ export default async function HomePage(props: PageProps) {
       </main>
       <MarketingFooter />
 
-      {/* Floating 1-Click Template Switcher */}
-      <Suspense fallback={null}>
-        <TemplateSwitcher currentTemplate={activeTemplate} />
-      </Suspense>
+      {/* Floating 1-Click Template Switcher (Demo showcase only) */}
+      {isDemoPortal && (
+        <Suspense fallback={null}>
+          <TemplateSwitcher currentTemplate={activeTemplate} />
+        </Suspense>
+      )}
 
-      {/* Floating Promo Popup */}
-      <FloatingPromoPopup />
+      {/* Floating Promo Popup (Demo showcase only) */}
+      {isDemoPortal && <FloatingPromoPopup />}
     </div>
   );
 }

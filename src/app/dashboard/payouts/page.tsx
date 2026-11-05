@@ -782,7 +782,7 @@ function PayoutOrdersList() {
   )
 }
 
-export function PayoutCertificateModal({
+function PayoutCertificateModal({
   onClose,
   traderName = 'Trader',
   amount = 0,

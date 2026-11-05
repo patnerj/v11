@@ -26,8 +26,12 @@ export function FloatingPromoPopup() {
     }
   }, [])
 
-  // Suppress on high-focus user journeys (Rule 86.1)
+  // Demo portal boundary guard (Rule 151)
+  const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true'
+
+  // Suppress on non-demo portals and high-focus user journeys (Rule 86.1)
   if (
+    !isDemoPortal ||
     !mounted ||
     dismissed ||
     !pathname ||

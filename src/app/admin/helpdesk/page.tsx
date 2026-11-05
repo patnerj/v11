@@ -33,7 +33,7 @@ export interface MacroTemplate {
   render: (traderName: string, brandName: string) => string
 }
 
-export const CANNED_MACROS: MacroTemplate[] = [
+const CANNED_MACROS: MacroTemplate[] = [
   {
     id: 'mt5',
     title: 'MT5 Credentials & Bridge Setup',
