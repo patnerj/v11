@@ -125,7 +125,7 @@ export const PhasePassCelebrationModal = memo(function PhasePassCelebrationModal
           </div>
 
           <DialogTitle className="text-xl sm:text-2xl font-black text-text tracking-tight">
-            Congratulations, Trader! 🎉
+            Congratulations, Trader
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-text-muted mt-1 max-w-sm mx-auto">
             You have successfully passed <strong className="text-emerald-400">{planName}</strong> with 100% adherence to all drawdown and discipline rules.

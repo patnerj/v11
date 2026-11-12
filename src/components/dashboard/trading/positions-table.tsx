@@ -310,7 +310,15 @@ export const PositionsTable = memo(function PositionsTable({ positions: rawPosit
           <tbody>
             <tr>
               <td colSpan={9} className="py-6 text-center text-terminal-micro text-text-muted font-normal select-none">
-                No open positions. Use Order Ticket or 1-Click to place trades.
+                <div>No open positions. Use Order Ticket or 1-Click to place trades.</div>
+                <div className="mt-2.5">
+                  <a
+                    href="/dashboard/history"
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-accent hover:text-accent-hover bg-accent/10 border border-accent/20 text-terminal-micro font-semibold transition-colors"
+                  >
+                    View Closed Trades & History →
+                  </a>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -471,23 +479,36 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, 
   const contract = toNum(meta?.contract_size) || symMeta.contractSize
   const openPx = toNum(pos.open_price)
 
+  // Live price tick subscription & real-time PnL calculation
+  const tick = usePrices((s) => s.prices[pos.symbol])
+  const allPrices = usePrices((s) => s.prices)
+  const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 0 && (pos as any).source === 'mt5')
+
+  const currentPx = isMt5Synced && toNum(pos.current_price) > 0
+    ? toNum(pos.current_price)
+    : pos.type === 'buy'
+      ? (toNum(tick?.bid) || toNum(pos.current_price))
+      : (toNum(tick?.ask) || toNum(pos.current_price))
+
   const slDraftMetrics = useMemo(() => {
     if (!slDraftNum || openPx <= 0) return null
     const diff = Math.abs(slDraftNum - openPx)
     if (diff <= 0) return null
     const pips = pSize > 0 ? diff / pSize : diff
-    const loss = diff * contract * toNum(pos.lot_size)
+    const conv = quoteToUsdRate(pos.symbol, currentPx || openPx, allPrices)
+    const loss = diff * contract * toNum(pos.lot_size) * conv
     return { diff, pips, loss }
-  }, [slDraftNum, openPx, pSize, contract, pos.lot_size])
+  }, [slDraftNum, openPx, pSize, contract, pos.lot_size, pos.symbol, currentPx, allPrices])
 
   const tpDraftMetrics = useMemo(() => {
     if (!tpDraftNum || openPx <= 0) return null
     const diff = Math.abs(tpDraftNum - openPx)
     if (diff <= 0) return null
     const pips = pSize > 0 ? diff / pSize : diff
-    const profit = diff * contract * toNum(pos.lot_size)
+    const conv = quoteToUsdRate(pos.symbol, currentPx || openPx, allPrices)
+    const profit = diff * contract * toNum(pos.lot_size) * conv
     return { diff, pips, profit }
-  }, [tpDraftNum, openPx, pSize, contract, pos.lot_size])
+  }, [tpDraftNum, openPx, pSize, contract, pos.lot_size, pos.symbol, currentPx, allPrices])
 
   // Ref-managed 3s countdown hook for 2-tap close with visual countdown (3s... 2s... 1s)
   // and timeout cleanup on unmount/re-click.
@@ -540,17 +561,6 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, 
       setBusy(false)
     }
   }, [pos.id, slDraft, tpDraft, onChanged])
-
-  // Live price tick subscription & real-time PnL calculation
-  const tick = usePrices((s) => s.prices[pos.symbol])
-  const allPrices = usePrices((s) => s.prices)
-  const isMt5Synced = Boolean(pos.order_id && Number(pos.order_id) > 0 && (pos as any).source === 'mt5')
-
-  const currentPx = isMt5Synced && toNum(pos.current_price) > 0
-    ? toNum(pos.current_price)
-    : pos.type === 'buy'
-      ? (toNum(tick?.bid) || toNum(pos.current_price))
-      : (toNum(tick?.ask) || toNum(pos.current_price))
 
   const handleRowBreakeven = useCallback(async () => {
     const isBuy = pos.type === 'buy'
@@ -671,18 +681,8 @@ function PositionRow({ pos, index, onChanged, compact, onShare, onRequestClose, 
   }, [pos.id, pos.lot_size, pos.symbol, partialLots, onChanged])
 
   const pnl = useMemo(() => {
-    if (isMt5Synced) {
-      return toNum(pos.pnl) + toNum(pos.swap) - toNum(pos.commission)
-    }
-    if (tick && currentPx > 0 && toNum(pos.open_price) > 0) {
-      const openPx = toNum(pos.open_price)
-      const diff = pos.type === 'buy' ? currentPx - openPx : openPx - currentPx
-      const contractSize = toNum(meta?.contract_size) || getSymbolMeta(pos.symbol).contractSize
-      const calcPnl = diff * contractSize * toNum(pos.lot_size)
-      return calcPnl * quoteToUsdRate(pos.symbol, currentPx, allPrices) + toNum(pos.swap) - toNum(pos.commission)
-    }
-    return toNum(pos.pnl)
-  }, [isMt5Synced, pos.pnl, tick, currentPx, pos.open_price, pos.type, meta?.contract_size, pos.lot_size, pos.swap, pos.commission, pos.symbol, allPrices])
+    return calculateLivePositionPnL(pos, allPrices, contract)
+  }, [pos, allPrices, contract])
 
   return (
     <>

@@ -57,10 +57,6 @@ export default function DashboardOverview() {
     if (user?.is_admin && !isImpersonating) router.replace('/admin')
   }, [user?.is_admin, isImpersonating, router])
 
-  if (user?.is_admin && !isImpersonating) {
-    return <Skeleton className="h-96 w-full" />
-  }
-
   const { data: account, isPending: isPendingAccount } = useAccountQuery()
   const { data: rawChallenges, isPending: isPendingChallenges } = useChallengeMyQuery()
   const { data: myTournaments = [] } = useQuery({
@@ -152,7 +148,7 @@ export default function DashboardOverview() {
       : `Phase ${active.phase}`)
     : ''
 
-  if (user?.is_admin && !isImpersonating) return null
+  if (user?.is_admin && !isImpersonating) return <Skeleton className="h-96 w-full" />
 
   return (
     <div className="space-y-6">

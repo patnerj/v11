@@ -35,7 +35,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
     ? "Pass our low-target evaluation or trade directly with instant funding. Keep up to 90% of your profits with institutional Pepperstone spreads and bi-weekly crypto payouts."
     : puckProps.subtitle
   const badgeText = (!puckProps?.badge || puckProps.badge.includes("Now accepting traders worldwide") || puckProps.badge.includes("Scale up to $2,000,000"))
-    ? "⚡ Institutional Funding • Scale to $2M"
+    ? "Institutional Funding • Scale to $2M"
     : puckProps.badge
 
   return (
@@ -225,17 +225,17 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs mb-2">
                     <span className="text-text-muted font-medium text-2xs sm:text-xs">Funded Trader #61583264</span>
                     <Badge tone="accent" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-3xs sm:text-2xs py-0 px-2 font-semibold shrink-0">
-                      🛡️ FUNDED ELITE
+                      FUNDED ELITE
                     </Badge>
                   </div>
                   <div className="flex items-baseline justify-between gap-2">
                     <div>
                       <div className="text-2xs sm:text-2xs text-text-muted">Account Equity</div>
-                      <div className="text-xl sm:text-2xl font-bold font-mono text-text">$109,640.50</div>
+                      <div className="text-xl sm:text-2xl font-bold font-mono tabular-nums terminal-num text-text">$109,640.50</div>
                     </div>
                     <div className="text-right">
                       <div className="text-2xs sm:text-2xs text-text-muted">Floating Profit</div>
-                      <div className="text-base sm:text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
+                      <div className="text-base sm:text-lg font-bold font-mono tabular-nums terminal-num text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
                         <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         +$9,640.50
                       </div>
@@ -256,7 +256,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                       <span className="text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+0.42%</span>
                     </div>
                     <div className="text-right flex items-center gap-2 sm:gap-3">
-                      <span className="text-text font-semibold">1.08452</span>
+                      <span className="text-text font-semibold tabular-nums terminal-num">1.08452</span>
                       <span className="text-3xs sm:text-2xs text-text-muted">0.1 pip</span>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                       <span className="text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+2.85%</span>
                     </div>
                     <div className="text-right flex items-center gap-2 sm:gap-3">
-                      <span className="text-text font-semibold">$84,920.00</span>
+                      <span className="text-text font-semibold tabular-nums terminal-num">$84,920.00</span>
                       <span className="text-3xs sm:text-2xs text-text-muted">Raw</span>
                     </div>
                   </div>
@@ -278,7 +278,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                       <span className="text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-semibold">+1.18%</span>
                     </div>
                     <div className="text-right flex items-center gap-2 sm:gap-3">
-                      <span className="text-text font-semibold">$2,654.80</span>
+                      <span className="text-text font-semibold tabular-nums terminal-num">$2,654.80</span>
                       <span className="text-3xs sm:text-2xs text-text-muted">0.8 pip</span>
                     </div>
                   </div>
@@ -288,7 +288,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border/60 grid grid-cols-2 gap-2 sm:gap-3 text-xs">
                   <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 min-w-0">
                     <div className="text-3xs sm:text-2xs text-text-muted truncate">Daily DD Buffer</div>
-                    <div className="font-bold text-emerald-600 dark:text-emerald-400 text-2xs sm:text-xs mt-0.5 truncate">0.8% / 5.0% (Safe)</div>
+                    <div className="font-bold tabular-nums terminal-num text-emerald-600 dark:text-emerald-400 text-2xs sm:text-xs mt-0.5 truncate">0.8% / 5.0% (Safe)</div>
                     <div className="w-full bg-border-subtle h-1.5 rounded-full mt-1.5 overflow-hidden">
                       <div className="bg-emerald-500 dark:bg-emerald-400 h-full w-[16%]" />
                     </div>
@@ -296,7 +296,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
 
                   <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 min-w-0">
                     <div className="text-3xs sm:text-2xs text-text-muted truncate">Next Bi-Weekly Payout</div>
-                    <div className="font-bold text-text text-2xs sm:text-xs mt-0.5 truncate">80% · $7,712.40</div>
+                    <div className="font-bold tabular-nums terminal-num text-text text-2xs sm:text-xs mt-0.5 truncate">80% · $7,712.40</div>
                     <div className="w-full bg-border-subtle h-1.5 rounded-full mt-1.5 overflow-hidden">
                       <div className="bg-emerald-500 dark:bg-emerald-400 h-full w-[100%]" />
                     </div>
@@ -309,7 +309,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">Instant USDT Payout Disbursal SLA</span>
                   </div>
-                  <span className="font-mono text-text-muted shrink-0">⚡ &lt; 24h</span>
+                  <span className="font-mono text-text-muted shrink-0">&lt; 24h</span>
                 </div>
               </div>
             </motion.div>

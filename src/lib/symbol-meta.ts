@@ -153,15 +153,15 @@ const TV_SYMBOLS: Record<string, string> = {
   EURJPY: 'PEPPERSTONE:EURJPY', GBPJPY: 'PEPPERSTONE:GBPJPY',
   // Metals — Pepperstone institutional feeds
   XAUUSD: 'PEPPERSTONE:XAUUSD', XAGUSD: 'PEPPERSTONE:XAGUSD',
-  // Energy
-  USOIL: 'PEPPERSTONE:USOIL', XBRUSD: 'PEPPERSTONE:UKOIL',
+  // Energy — TradingView official CFD feeds (universal public embed)
+  USOIL: 'TVC:USOIL', XBRUSD: 'TVC:UKOIL', UKOIL: 'TVC:UKOIL',
   // Forex cross pairs — Pepperstone institutional feeds
   EURAUD: 'PEPPERSTONE:EURAUD', EURNZD: 'PEPPERSTONE:EURNZD', EURCAD: 'PEPPERSTONE:EURCAD',
   GBPAUD: 'PEPPERSTONE:GBPAUD', GBPCAD: 'PEPPERSTONE:GBPCAD', GBPCHF: 'PEPPERSTONE:GBPCHF',
   AUDJPY: 'PEPPERSTONE:AUDJPY', AUDCAD: 'PEPPERSTONE:AUDCAD', AUDCHF: 'PEPPERSTONE:AUDCHF',
   NZDJPY: 'PEPPERSTONE:NZDJPY', CADJPY: 'PEPPERSTONE:CADJPY', CHFJPY: 'PEPPERSTONE:CHFJPY',
-  // Crypto — Pepperstone institutional feeds
-  BTCUSD: 'PEPPERSTONE:BTCUSD', ETHUSD: 'PEPPERSTONE:ETHUSD',
+  // Crypto — Binance universal public feeds (100% public, free TradingView embed support worldwide)
+  BTCUSD: 'BINANCE:BTCUSDT', ETHUSD: 'BINANCE:ETHUSDT', SOLUSD: 'BINANCE:SOLUSDT',
   // Indices — Pepperstone institutional feeds
   US30:   'PEPPERSTONE:US30',
   NAS100: 'PEPPERSTONE:NAS100',
@@ -183,7 +183,7 @@ function tvHeuristic(sym: string, category?: SymbolCategory): string {
   switch (cat) {
     case 'forex':  return `PEPPERSTONE:${s}`
     case 'metal':  return `PEPPERSTONE:${s}`
-    case 'crypto': return `PEPPERSTONE:${s}`
+    case 'crypto': return `BINANCE:${s.endsWith('USDT') ? s : s.replace(/USD$/, 'USDT')}`
     case 'index':
     case 'energy': return `PEPPERSTONE:${s}`
     default:       return `PEPPERSTONE:${s}`

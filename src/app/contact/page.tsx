@@ -395,7 +395,7 @@ export default function ContactPage() {
                   <div className="text-2xs text-text-muted mt-1 leading-snug">Payout certificates &amp; daily updates</div>
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-2xs font-mono text-pink-500 font-semibold">
-                  <span>@yourswebsitemaker</span>
+                  <span>{instagramUrl && instagramUrl !== '#' ? instagramUrl.replace(/^https?:\/\/(www\.)?instagram\.com\//i, '@').replace(/\/$/, '') : `@${brand.toLowerCase().replace(/\s+/g, '')}`}</span>
                   <ExternalLink className="h-3 w-3" />
                 </div>
               </a>

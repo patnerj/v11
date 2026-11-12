@@ -455,7 +455,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     (settings as any)?.site_url ||
-    'https://your-domain.com'
+    'https://demo.launchapropfirm.com'
   ).replace(/\/$/, '')
 
   const brandName = (settings as any)?.brand_name || process.env.NEXT_PUBLIC_BRAND_NAME || 'Prop Firm'
@@ -475,7 +475,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         logo: logoUrl,
         sameAs: [
           (settings as any)?.youtube_url,
-          (settings as any)?.instagram_url || 'https://www.instagram.com/yourswebsitemaker/',
+          (settings as any)?.instagram_url,
           (settings as any)?.tiktok_url,
           (settings as any)?.facebook_url,
           (settings as any)?.discord_url,

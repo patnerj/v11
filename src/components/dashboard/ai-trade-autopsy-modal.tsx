@@ -9,6 +9,7 @@ import type { AiTradeAutopsy } from '@/types/api'
 import { toNum, fmtUSD, toBool } from '@/lib/format'
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 import { Button } from '@/components/ui/button'
+import { AiMessageContent } from '@/components/dashboard/zenith-ai-copilot'
 
 interface AiTradeAutopsyModalProps {
   autopsy: AiTradeAutopsy | null
@@ -160,9 +161,9 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
               <Sparkles className="w-3.5 h-3.5" />
               Execution Summary
             </div>
-            <p className="text-xs text-text/90 bg-surface-muted/40 p-3.5 rounded-xl border border-border-subtle leading-relaxed font-sans">
-              {autopsy.autopsy_summary || (autopsy as any).ai_tactical_summary || 'No execution summary available.'}
-            </p>
+            <div className="text-xs text-text/90 bg-surface-muted/40 p-3.5 rounded-xl border border-border-subtle leading-relaxed font-sans">
+              <AiMessageContent content={String(autopsy.autopsy_summary || (autopsy as any).ai_tactical_summary || 'No execution summary available.')} />
+            </div>
           </div>
 
           {/* Section 2: Tactical Feedback */}
@@ -172,9 +173,9 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
                 <Target className="w-3.5 h-3.5" />
                 Tactical & Technical Feedback
               </div>
-              <p className="text-xs text-text/90 bg-surface-muted/40 p-3.5 rounded-xl border border-border-subtle leading-relaxed font-sans">
-                {autopsy.tactical_flaws || autopsy.tactical_notes}
-              </p>
+              <div className="text-xs text-text/90 bg-surface-muted/40 p-3.5 rounded-xl border border-border-subtle leading-relaxed font-sans">
+                <AiMessageContent content={String(autopsy.tactical_flaws || autopsy.tactical_notes || '')} />
+              </div>
             </div>
           )}
 
@@ -185,9 +186,9 @@ function AiTradeAutopsyModalContent({ autopsy, onClose }: { autopsy: AiTradeAuto
                 <Brain className="w-3.5 h-3.5" />
                 AI Performance Coach Advice
               </div>
-              <p className="text-xs text-text/90 bg-surface-muted/40 p-3.5 rounded-xl border border-border-subtle leading-relaxed font-sans">
-                {autopsy.psychology_notes || autopsy.coach_advice}
-              </p>
+              <div className="text-xs text-text/90 bg-surface-muted/40 p-3.5 rounded-xl border border-border-subtle leading-relaxed font-sans">
+                <AiMessageContent content={String(autopsy.psychology_notes || autopsy.coach_advice || '')} />
+              </div>
             </div>
           )}
         </div>

@@ -20,6 +20,7 @@ import {
 import { CalendarHeatmap } from '@/components/dashboard/calendar-heatmap'
 import { EquityDrawdownOverlayChart } from '@/components/dashboard/equity-drawdown-overlay-chart'
 import { MarketSessionMatrix } from '@/components/dashboard/market-session-matrix'
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary'
 
 export default function AnalyticsPage() {
   const isDark = useIsDarkTheme()
@@ -132,10 +133,11 @@ export default function AnalyticsPage() {
     drawdown: d.drawdown_pct
   }))
 
-  const rrData = (adv?.rr_list || []).map((rr, i) => ({
+  const rrData = (Array.isArray(adv?.rr_list) ? adv.rr_list : []).map((rr, i) => ({
     trade: `T${i + 1}`,
     rr: rr
   }))
+  const safeFullTrades = Array.isArray(full.trades) ? full.trades : []
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444']
   const chartTextColor = theme === 'dark' ? '#888' : '#666'
@@ -167,28 +169,32 @@ export default function AnalyticsPage() {
       </StatGrid>
 
       {/* Equity vs Drawdown Floor Curve Overlay in Analytics */}
-      <EquityDrawdownOverlayChart
-        trades={full.trades}
-        startingBalance={toNum(full.challenge?.starting_balance || (full as any)?.starting_balance || 100000)}
-        maxDdPct={toNum(full.max_drawdown_pct || 10)}
-        currentEquity={toNum(full.account?.equity || (full as any)?.equity)}
-        currentBalance={toNum(full.account?.balance || (full as any)?.balance)}
-      />
+      <SectionErrorBoundary sectionName="Equity & Drawdown Curve">
+        <EquityDrawdownOverlayChart
+          trades={safeFullTrades}
+          startingBalance={toNum(full.challenge?.starting_balance || (full as any)?.starting_balance || 100000)}
+          maxDdPct={toNum(full.max_drawdown_pct || 10)}
+          currentEquity={toNum(full.account?.equity || (full as any)?.equity)}
+          currentBalance={toNum(full.account?.balance || (full as any)?.balance)}
+        />
+      </SectionErrorBoundary>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-text-muted" /> Activity Heatmap (90 Days)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {full.trades && full.trades.length > 0 ? (
-            <CalendarHeatmap trades={full.trades} />
-          ) : (
-            <div className="h-32 flex items-center justify-center text-text-muted">Not enough trade history</div>
-          )}
-        </CardContent>
-      </Card>
+      <SectionErrorBoundary sectionName="Activity Heatmap">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-text-muted" /> Activity Heatmap (90 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {safeFullTrades.length > 0 ? (
+              <CalendarHeatmap trades={safeFullTrades} />
+            ) : (
+              <div className="h-32 flex items-center justify-center text-text-muted">Not enough trade history</div>
+            )}
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>

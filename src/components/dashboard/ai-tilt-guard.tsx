@@ -83,7 +83,7 @@ export function AiTiltGuard() {
   return (
     <AnimatePresence>
       {isTilted && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md w-full">
+        <div className="fixed bottom-20 sm:bottom-6 inset-x-4 sm:left-auto sm:right-6 z-50 sm:max-w-md w-auto sm:w-full">
           <motion.div
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

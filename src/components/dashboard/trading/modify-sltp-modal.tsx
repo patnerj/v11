@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fmtPrice, fmtUSD, fmtLots, toNum } from '@/lib/format'
 import { symbolDigits, pipSize, getSymbolMeta } from '@/lib/symbol-meta'
+import { quoteToUsdRate } from '@/lib/order-math'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
 import { api } from '@/lib/api'
@@ -81,25 +82,28 @@ export const ModifySltpModal = memo(function ModifySltpModal({
 
   const slNum = sl.trim() ? toNum(sl) : null
   const tpNum = tp.trim() ? toNum(tp) : null
+  const allPrices = usePrices((s) => s.prices)
 
   const slMetrics = useMemo(() => {
     if (!slNum || openPx <= 0 || !position) return null
     const diff = Math.abs(slNum - openPx)
     if (diff <= 0) return null
     const pips = pSize > 0 ? diff / pSize : diff
-    const loss = diff * contract * toNum(position.lot_size)
+    const conv = quoteToUsdRate(position.symbol, currentPx || openPx, allPrices)
+    const loss = diff * contract * toNum(position.lot_size) * conv
     const isTrailingStop = position.type === 'buy' ? slNum > openPx : slNum < openPx
     return { diff, pips, loss, isTrailingStop }
-  }, [slNum, openPx, pSize, contract, position])
+  }, [slNum, openPx, pSize, contract, position, currentPx, allPrices])
 
   const tpMetrics = useMemo(() => {
     if (!tpNum || openPx <= 0 || !position) return null
     const diff = Math.abs(tpNum - openPx)
     if (diff <= 0) return null
     const pips = pSize > 0 ? diff / pSize : diff
-    const profit = diff * contract * toNum(position.lot_size)
+    const conv = quoteToUsdRate(position.symbol, currentPx || openPx, allPrices)
+    const profit = diff * contract * toNum(position.lot_size) * conv
     return { diff, pips, profit }
-  }, [tpNum, openPx, pSize, contract, position])
+  }, [tpNum, openPx, pSize, contract, position, currentPx, allPrices])
 
   const handleSetBreakeven = useCallback(() => {
     if (!position || openPx <= 0) return

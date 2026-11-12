@@ -134,9 +134,14 @@ function RegisterForm() {
       setError('Password must be at least 8 characters.')
       return
     }
+    const cleanPhone = phone ? phone.trim() : ''
+    const phoneDigits = cleanPhone.replace(/\D/g, '')
+    if (!cleanPhone || phoneDigits.length < 7) {
+      setError('Phone number is required to register (minimum 7 digits).')
+      return
+    }
     setLoading(true)
     setError(null)
-    const cleanPhone = phone && phone.replace(/\D/g, '').length >= 7 ? phone.trim() : undefined
     const res = await signup(username, email, password, ref || undefined, cleanPhone)
     setLoading(false)
     if (res.ok) {
@@ -309,13 +314,14 @@ function RegisterForm() {
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone">Phone Number <span className="text-danger font-bold">*</span></Label>
               <span className="text-2xs text-text-muted">WhatsApp / SMS (with country code)</span>
             </div>
             <CountryPhoneInput
               id="phone"
               value={phone}
               onChange={(val) => setPhone(val)}
+              required
             />
           </div>
 

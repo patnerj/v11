@@ -11,8 +11,10 @@ import { MarketingHeader } from '@/components/marketing/header'
 import { MarketingFooter } from '@/components/marketing/footer'
 import { TournamentPodium } from '@/components/tournaments/tournament-podium'
 import { ArenaChart } from '@/components/arena/arena-chart'
+import { useBranding } from '@/store/branding'
 
 export default function PublicTournamentArena() {
+  const brandName = useBranding((s) => s.branding.brand_name) || process.env.NEXT_PUBLIC_BRAND_NAME || 'Trading Firm'
   const params = useParams()
   const router = useRouter()
   const id = Number(params.id)
@@ -236,7 +238,7 @@ export default function PublicTournamentArena() {
               Tournament Live Market Action
             </h3>
             <span className="text-xs text-text-muted">
-              Live quotes and dual-mode interactive charting powered by AlphaCapital Engine
+              Live quotes and dual-mode interactive charting powered by {brandName} Engine
             </span>
           </div>
           <ArenaChart 

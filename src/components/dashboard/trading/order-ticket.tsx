@@ -381,11 +381,16 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
 
     try {
       const tCtx = usePrices.getState().tradingContext
-      const ctxParams = tCtx
-        ? tCtx.kind === 'tournament'
-          ? { tournament_id: tCtx.tournamentId }
-          : tCtx.accountId ? { account_id: tCtx.accountId } : {}
-        : {}
+      const currentAcc = usePrices.getState().account
+      const activeAccId = tCtx?.kind === 'challenge' ? tCtx.accountId : (currentAcc && 'id' in currentAcc ? (currentAcc as any).id : 0)
+
+      const ctxParams: Record<string, number> = {}
+      if (tCtx?.kind === 'tournament') {
+        ctxParams.tournament_id = tCtx.tournamentId
+      }
+      if (activeAccId > 0) {
+        ctxParams.account_id = activeAccId
+      }
       const res = await api.open({
         symbol:   active,
         type:     side,
@@ -400,14 +405,16 @@ export const OrderTicket = memo(function OrderTicket({ compact, account, plan, c
           navigator.vibrate([200, 100, 200])
         }
         toast.success(`${side.toUpperCase()} ${lotN} ${active} opened`)
-        removeOptimisticPosition(optId)
+        invalidateFxsim('/positions')
+        invalidateFxsim('/account')
         if (onChanged) {
-          onChanged()
+          await onChanged()
         } else {
-          refreshUser()
-          invalidateFxsim('/positions')
-          invalidateFxsim('/account')
+          await refreshUser()
         }
+        setTimeout(() => {
+          removeOptimisticPosition(optId)
+        }, 3500)
         setSl(''); setTp('')
         onSubmitted?.()
       } else {

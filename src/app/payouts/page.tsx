@@ -67,22 +67,22 @@ export default function PayoutsPage() {
           {/* SLA Highlights Bar */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-16">
             <div className="p-6 rounded-2xl bg-surface border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono mb-1">&lt; 24h</div>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums terminal-num mb-1">&lt; 24h</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Processing SLA</div>
               <div className="text-2xs text-text-muted mt-1">Guaranteed execution</div>
             </div>
             <div className="p-6 rounded-2xl bg-surface border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400 font-mono mb-1">0%</div>
+              <div className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400 font-mono tabular-nums terminal-num mb-1">0%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Withdrawal Fee</div>
               <div className="text-2xs text-text-muted mt-1">We absorb network costs</div>
             </div>
             <div className="p-6 rounded-2xl bg-surface border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono mb-1">100%</div>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums terminal-num mb-1">100%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Evaluation Fee Refund</div>
               <div className="text-2xs text-text-muted mt-1">Returned on 1st payout</div>
             </div>
             <div className="p-6 rounded-2xl bg-surface border border-border shadow-card backdrop-blur-md text-center">
-              <div className="text-3xl sm:text-4xl font-black text-cyan-600 dark:text-cyan-400 font-mono mb-1">Up to 90%</div>
+              <div className="text-3xl sm:text-4xl font-black text-cyan-600 dark:text-cyan-400 font-mono tabular-nums terminal-num mb-1">Up to 90%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Trader Profit Split</div>
               <div className="text-2xs text-text-muted mt-1">Progressive scaling</div>
             </div>
@@ -153,7 +153,7 @@ export default function PayoutsPage() {
                 <h2 className="text-2xl font-bold text-text">Verified Trader Disbursals</h2>
               </div>
               <div className="text-right">
-                <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">$4,250,000+</div>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums terminal-num">$4,250,000+</div>
                 <div className="text-2xs text-text-muted">Total Capital Disbursed to Date</div>
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function PayoutsPage() {
                   </div>
 
                   <div className="flex items-center gap-6">
-                    <div className="text-emerald-600 dark:text-emerald-400 font-bold text-sm sm:text-base">{p.amount}</div>
+                    <div className="text-emerald-600 dark:text-emerald-400 font-bold tabular-nums terminal-num text-sm sm:text-base">{p.amount}</div>
                     <span className="text-text-muted text-2xs">{p.time}</span>
                   </div>
                 </div>

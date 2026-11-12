@@ -132,7 +132,7 @@ export function EmailSettingsPanel() {
               id="sm-sec"
               value={d.secure}
               onChange={(e) => set('secure', e.target.value)}
-              className="w-full h-9 rounded-md bg-surface border border-border-subtle px-3 text-sm focus-ring"
+              className="w-full h-9 rounded-md bg-surface text-text border border-border px-3 text-sm focus-ring"
             >
               <option value="tls">TLS (recommended, port 587)</option>
               <option value="ssl">SSL (port 465)</option>

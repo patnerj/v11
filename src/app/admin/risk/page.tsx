@@ -209,8 +209,9 @@ export default function RiskManagementHubPage() {
 
   // Algorithmic Rule Violations Dataset (Dynamic from API)
   const violationAlerts: ViolationAlertRow[] = useMemo(() => {
-    const rawList = alertsData?.alerts || (Array.isArray(alertsData) ? alertsData : (alertsData?.breaches || []))
-    if (rawList && rawList.length > 0) {
+    const rawCandidate = alertsData?.alerts || (Array.isArray(alertsData) ? alertsData : (alertsData?.breaches || []))
+    const rawList = Array.isArray(rawCandidate) ? rawCandidate : []
+    if (rawList.length > 0) {
       return rawList.map((a: any, idx: number) => ({
         id: a.id || idx + 1,
         trader_name: a.trader_name || a.username || a.display_name || `Trader #${a.user_id || idx + 1}`,
@@ -393,7 +394,7 @@ export default function RiskManagementHubPage() {
     }
   ]
 
-  const clusters = syndicatesData?.clusters || []
+  const clusters = Array.isArray(syndicatesData?.clusters) ? syndicatesData.clusters : []
   const filteredClusters = useMemo(() => {
     return clusters.filter((c: SyndicateCluster) => {
       if (syndicateStatusFilter !== 'all' && c.status !== syndicateStatusFilter) return false

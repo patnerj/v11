@@ -50,8 +50,8 @@ export function PayoutTicker() {
   const current = payouts[currentIndex];
 
   return (
-    <div className="w-full bg-indigo-600/10 border-y border-indigo-500/20 py-3 overflow-hidden flex items-center justify-center">
-      <div className="container px-4 sm:px-6 flex items-center justify-center space-x-2 text-sm sm:text-base font-medium">
+    <div className="mt-14 md:mt-16 w-full bg-emerald-500/10 border-y border-emerald-500/20 py-2.5 overflow-hidden flex items-center justify-center relative z-20">
+      <div className="container px-4 sm:px-6 flex items-center justify-center space-x-2 text-xs sm:text-sm font-medium">
         <span className="text-text-muted">Recent Payouts:</span>
         <AnimatePresence mode="wait">
           <motion.div
@@ -62,8 +62,8 @@ export function PayoutTicker() {
             transition={{ duration: 0.3 }}
             className="flex items-center space-x-2"
           >
-            <span className="text-white font-semibold">{current.name}</span>
-            <span className="text-emerald-400 font-bold">{fmtUSD(current.amount)}</span>
+            <span className="text-text font-semibold">{current.name}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono tabular-nums terminal-num">{fmtUSD(current.amount)}</span>
           </motion.div>
         </AnimatePresence>
       </div>

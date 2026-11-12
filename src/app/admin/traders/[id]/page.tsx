@@ -204,7 +204,8 @@ export default function Trader360ProfilePage() {
       ? Boolean(Number(challenge.custom_weekend_holding))
       : Boolean(challenge?.weekend_holding ?? false)
 
-    const tradesList = (traderApiData?.trades || []).filter((t: any) => {
+    const rawTrades = Array.isArray(traderApiData?.trades) ? traderApiData.trades : []
+    const tradesList = rawTrades.filter((t: any) => {
       if (challenge?.fxsim_account_id) {
         return Number(t.account_id) === Number(challenge.fxsim_account_id)
       }
@@ -515,9 +516,11 @@ export default function Trader360ProfilePage() {
   ]
 
   const txData: TxHistoryRow[] = useMemo(() => {
-    if (traderApiData?.payouts?.length || traderApiData?.payments?.length) {
+    const payoutsArr = Array.isArray(traderApiData?.payouts) ? traderApiData.payouts : []
+    const paymentsArr = Array.isArray(traderApiData?.payments) ? traderApiData.payments : []
+    if (payoutsArr.length || paymentsArr.length) {
       const rows: TxHistoryRow[] = []
-      traderApiData.payouts?.forEach((p: any) => {
+      payoutsArr.forEach((p: any) => {
         rows.push({
           id: `#PAY-${p.id}`,
           type: 'Profit Split Withdrawal',
@@ -527,7 +530,7 @@ export default function Trader360ProfilePage() {
           date: p.requested_at ? new Date(p.requested_at).toLocaleDateString() : 'Recent',
         })
       })
-      traderApiData.payments?.forEach((p: any) => {
+      paymentsArr.forEach((p: any) => {
         rows.push({
           id: `#ORD-${p.id}`,
           type: 'Challenge Purchase',
@@ -1302,7 +1305,7 @@ export default function Trader360ProfilePage() {
           </Card>
 
           {/* Hard Breach Violations (if any) */}
-          {traderApiData?.breaches && traderApiData.breaches.length > 0 && (
+          {Array.isArray(traderApiData?.breaches) && traderApiData.breaches.length > 0 && (
             <Card className="bg-surface border-red-500/30">
               <CardHeader className="border-b border-red-500/20 pb-3 flex flex-row items-center justify-between">
                 <div>

@@ -91,7 +91,7 @@ export const MarketWatch = memo(function MarketWatch({ compact, onPick, showBidA
 
       {/* Column Headers for MT5 Quotes mode */}
       {showBidAsk && (
-        <div className="shrink-0 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 flex items-center justify-between text-[10px] uppercase tracking-wider text-text-muted font-semibold">
+        <div className="shrink-0 px-3 py-1.5 border-b border-border-subtle bg-bg-subtle/30 flex items-center justify-between text-terminal-label uppercase tracking-wider text-text-muted font-semibold">
           <span>Symbol / Spread</span>
           <div className="flex items-center gap-7 pr-1">
             <span className="w-16 text-right">Bid</span>
@@ -220,7 +220,7 @@ const WatchRow = memo(function WatchRow({
         <div className="flex flex-col min-w-0">
           <span className="text-xs font-bold truncate text-text font-sans">{sym}</span>
           {showBidAsk ? (
-            <span className="text-[10px] tabular-nums text-text-muted font-sans">
+            <span className="text-terminal-body tabular-nums text-text-muted font-sans">
               {bid && ask ? `Spread: ${Math.round(spread / pipSize(sym) * 10) / 10} pts` : ''}
             </span>
           ) : null}
@@ -235,7 +235,7 @@ const WatchRow = memo(function WatchRow({
               'text-xs font-bold tabular-nums font-mono flex items-center gap-0.5',
               flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text'
             )}>
-              {flash && <span aria-hidden className="text-[9px]">{flash === 'up' ? '▲' : '▼'}</span>}
+              {flash && <span aria-hidden className="text-terminal-micro">{flash === 'up' ? '▲' : '▼'}</span>}
               {bid ? fmtPrice(bid, digits) : '—'}
             </span>
           </div>
@@ -254,13 +254,13 @@ const WatchRow = memo(function WatchRow({
             'relative z-10 pointer-events-none text-xs font-medium tabular-nums whitespace-nowrap inline-flex items-center gap-0.5 justify-end font-sans',
             flash === 'up' ? 'text-success' : flash === 'down' ? 'text-danger' : 'text-text',
           )}>
-            {flash && <span aria-hidden className="text-[10px]">{flash === 'up' ? '▲' : '▼'}</span>}
+            {flash && <span aria-hidden className="text-terminal-micro">{flash === 'up' ? '▲' : '▼'}</span>}
             {bid ? fmtPrice(bid, digits) : <span className="text-text-faint">—</span>}
           </span>
 
           {/* Spread (only in non-compact) */}
           {!compact && (
-            <span className="relative z-10 pointer-events-none text-[11px] tabular-nums text-text-muted whitespace-nowrap min-w-[42px] text-right font-sans">
+            <span className="relative z-10 pointer-events-none text-terminal-body tabular-nums text-text-muted whitespace-nowrap min-w-[42px] text-right font-sans">
               {bid && ask ? `${Math.round(spread / pipSize(sym) * 10) / 10}p` : ''}
             </span>
           )}

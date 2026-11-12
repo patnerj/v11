@@ -26,12 +26,14 @@ export function FloatingPromoPopup() {
     }
   }, [])
 
-  // Demo portal boundary guard (Rule 151)
+  // Demo portal boundary guard (Rule 151.4)
   const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true'
+  const isDemoHost = typeof window !== 'undefined' && window.location.hostname.includes('launchapropfirm.com')
 
   // Suppress on non-demo portals and high-focus user journeys (Rule 86.1)
   if (
     !isDemoPortal ||
+    !isDemoHost ||
     !mounted ||
     dismissed ||
     !pathname ||
@@ -86,7 +88,7 @@ export function FloatingPromoPopup() {
               onClick={() => setMobileExpanded(true)}
               className="flex items-center gap-1.5 text-xs font-black text-text cursor-pointer select-none"
             >
-              <span className="text-emerald-500 dark:text-emerald-400">🚀</span>
+              <Tag className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
               <span>30% OFF</span>
               <span className="text-text-muted font-normal text-2xs">· Tap to view</span>
             </button>
@@ -132,8 +134,9 @@ export function FloatingPromoPopup() {
 
           {/* Top Row: Badge + Close / Minimize Button */}
           <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-2xs uppercase tracking-wider shadow-sm">
-              <span>🚀 30% OFF</span>
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-2xs uppercase tracking-wider shadow-sm">
+              <Tag className="h-3 w-3 inline mr-1" />
+              <span>30% OFF</span>
             </div>
 
             <div className="flex items-center gap-1">

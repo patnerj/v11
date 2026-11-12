@@ -76,7 +76,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
   return tokens.length > 0 ? tokens : [text]
 }
 
-function AiMessageContent({ content, isUser }: { content: string; isUser: boolean }) {
+export function AiMessageContent({ content, isUser = false }: { content: string; isUser?: boolean }) {
   if (isUser) {
     return <p className="whitespace-pre-wrap leading-relaxed text-xs">{content}</p>
   }
@@ -432,6 +432,7 @@ export function ZenithAiCopilot() {
 
       if (res.ok && res.data) {
         let cleanText = (res.data.reply || '')
+          .replace(/AlphaCapital/gi, brandName)
           .replace(/LaunchAPropFirm/gi, brandName)
           .replace(/PropFirm System/gi, brandName)
           .replace(/Zenith AI/gi, `${brandName} AI`)

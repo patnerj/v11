@@ -124,7 +124,13 @@ export const usePrices = create<PriceState>((set, get) => {
 
           const shouldPollPrices = !get().connected || get().source !== 'ws'
 
-          const tParams = buildContextParams(get().tradingContext)
+          const curAcc = get().account
+          const activeAccId = curAcc && 'id' in curAcc ? (curAcc as any).id : undefined
+          const baseParams = buildContextParams(get().tradingContext) || {}
+          const tParams = {
+            ...baseParams,
+            ...(activeAccId && !baseParams.account_id ? { account_id: activeAccId } : {})
+          }
           const [acc, pos, pen] = await Promise.all([
             api.account(tParams),
             api.positions(tParams),
@@ -139,9 +145,15 @@ export const usePrices = create<PriceState>((set, get) => {
           const patch: Partial<PriceState> = {}
           if (acc.ok) patch.account = toAccount(acc)
           if (pos.ok) {
-            patch.positions = Array.isArray(pos.data) ? pos.data : []
-            // If real position arrives, clear out optimistic ones with same symbol/side approx matching?
-            // Actually, we'll just let usePlaceOrder remove it by ID once api.open resolves.
+            const serverPos = Array.isArray(pos.data) ? pos.data : []
+            patch.positions = serverPos
+            if (serverPos.length > 0) {
+              set((s) => ({
+                optimisticPositions: s.optimisticPositions.filter(
+                  (o) => !serverPos.some((sp) => sp.symbol === o.symbol && sp.type === o.type)
+                )
+              }))
+            }
           }
           if (pen.ok) patch.pending = Array.isArray(pen.data) ? pen.data : []
 
@@ -309,7 +321,13 @@ export const usePrices = create<PriceState>((set, get) => {
     get: (symbol) => get().prices[symbol],
 
     refresh: async () => {
-      const tParams = buildContextParams(get().tradingContext)
+      const curAcc = get().account
+      const activeAccId = curAcc && 'id' in curAcc ? (curAcc as any).id : undefined
+      const baseParams = buildContextParams(get().tradingContext) || {}
+      const tParams = {
+        ...baseParams,
+        ...(activeAccId && !baseParams.account_id ? { account_id: activeAccId } : {})
+      }
       const [acc, pos, pen] = await Promise.all([
         api.account(tParams),
         api.positions(tParams),
@@ -318,8 +336,15 @@ export const usePrices = create<PriceState>((set, get) => {
       const patch: Partial<PriceState> = {}
       if (acc.ok) patch.account = toAccount(acc)
       if (pos.ok) {
-        patch.positions = Array.isArray(pos.data) ? pos.data : []
-        set({ optimisticPositions: [] })
+        const serverPos = Array.isArray(pos.data) ? pos.data : []
+        patch.positions = serverPos
+        if (serverPos.length > 0) {
+          set((s) => ({
+            optimisticPositions: s.optimisticPositions.filter(
+              (o) => !serverPos.some((sp) => sp.symbol === o.symbol && sp.type === o.type)
+            )
+          }))
+        }
       }
       if (pen.ok) patch.pending = Array.isArray(pen.data) ? pen.data : []
       stableSet(patch)

@@ -55,7 +55,7 @@ export function CommandPalette() {
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="dark p-0 overflow-hidden max-w-xl bg-[#070C14] text-slate-100 border border-emerald-500/30 shadow-[0_0_50px_-10px_rgba(16,185,129,0.2)] backdrop-blur-2xl ring-1 ring-emerald-500/20">
+        <DialogContent data-theme="midnight-obsidian" className="dark p-0 overflow-hidden max-w-xl bg-[#070C14] text-slate-100 border border-emerald-500/30 shadow-[0_0_50px_-10px_rgba(16,185,129,0.2)] backdrop-blur-2xl ring-1 ring-emerald-500/20">
           <div className="flex items-center border-b border-emerald-500/20 bg-[#0D1522] px-4">
             <Search className="h-5 w-5 text-emerald-400 shrink-0" />
             <input

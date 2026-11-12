@@ -74,6 +74,333 @@ function parseRules(raw: unknown): {
   return {}
 }
 
+// Hoisted module-scope subcomponents (prevents unmount/remount on 1s timer tick)
+function PastTournamentWinners({ tournamentId }: { tournamentId: number }) {
+  const { data: winners = [], isLoading } = useQuery({
+    queryKey: ['past-winners', tournamentId],
+    queryFn: async () => {
+      const res = await api.tournaments.leaderboard(tournamentId)
+      if (res.ok) {
+        const list = Array.isArray(res.data) ? res.data : (res.data as any)?.leaderboard || []
+        return list.slice(0, 3)
+      }
+      return []
+    },
+    staleTime: 60_000,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl bg-bg-subtle/50 border border-border-subtle p-3 space-y-2">
+        <div className="h-3 w-32 bg-surface-muted rounded animate-pulse" />
+        <div className="grid grid-cols-3 gap-2">
+          <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
+          <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
+          <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!winners || winners.length === 0) {
+    return (
+      <div className="rounded-xl bg-bg-subtle/40 border border-border-subtle p-3 text-xs text-text-muted flex items-center gap-2">
+        <Trophy className="h-4 w-4 text-amber-400 shrink-0" />
+        <span>Final certified winners being tabulated</span>
+      </div>
+    )
+  }
+
+  const tiers = [
+    { badge: '1st Place', color: 'border-amber-400/40 bg-amber-500/10 text-amber-300' },
+    { badge: '2nd Place', color: 'border-slate-300/40 bg-slate-300/10 text-slate-200' },
+    { badge: '3rd Place', color: 'border-amber-600/40 bg-amber-600/10 text-amber-200' },
+  ]
+
+  return (
+    <div className="rounded-xl bg-bg-subtle/60 border border-border-subtle/80 p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-3xs uppercase tracking-widest text-amber-400 font-extrabold flex items-center gap-1.5">
+          <Trophy className="h-3.5 w-3.5 text-amber-400" />
+          Official Tournament Winners
+        </span>
+        <span className="text-3xs text-text-muted">Certified Final</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {winners.map((w: any, idx: number) => {
+          const name = w.display_name || w.user_login || `Trader #${idx + 1}`
+          const roi = Number(w.roi_pct ?? 0)
+          const t = tiers[idx] || tiers[2]
+          return (
+            <div key={idx} className={cn('p-2 rounded-lg border text-xs flex flex-col justify-between gap-1 shadow-xs', t.color)}>
+              <div className="flex items-center justify-between gap-1">
+                <span className="font-bold text-3xs">{t.badge}</span>
+                <span className="font-extrabold tabular text-success text-2xs">+{roi.toFixed(1)}%</span>
+              </div>
+              <div className="font-bold text-text truncate text-xs" title={name}>
+                {name}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function PastTournamentCard({
+  t,
+  onViewRules,
+  onViewPrizes,
+}: {
+  t: Competition
+  onViewRules: (t: Competition) => void
+  onViewPrizes: (t: Competition) => void
+}) {
+  const tid = Number(t.id)
+  const participants = toNum(t.current_participants)
+  const maxP = toNum(t.max_participants)
+
+  return (
+    <Card className="overflow-hidden border-border-subtle hover:border-amber-500/40 transition-all bg-surface/80">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+              <Trophy className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-text truncate text-lg">{t.title || `Tournament #${t.id}`}</h3>
+          </div>
+          <Badge tone="neutral" size="sm">Completed</Badge>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+            <div className="text-2xs uppercase tracking-wider text-text-muted">Starting</div>
+            <div className="text-sm font-bold tabular text-text mt-0.5">
+              {fmtUSD(toNum(t.starting_balance), { decimals: 0 })}
+            </div>
+          </div>
+          <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+            <div className="text-2xs uppercase tracking-wider text-text-muted">Prize pool</div>
+            <div className="text-sm font-bold tabular text-amber-400 mt-0.5 truncate">
+              {t.prize_pool || '—'}
+            </div>
+          </div>
+          <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+            <div className="text-2xs uppercase tracking-wider text-text-muted flex items-center gap-1">
+              <Users className="h-3 w-3" /> Traders
+            </div>
+            <div className="text-sm font-bold tabular text-text mt-0.5">
+              {participants.toLocaleString()}{maxP > 0 ? ` / ${maxP.toLocaleString()}` : ''}
+            </div>
+          </div>
+        </div>
+
+        <PastTournamentWinners tournamentId={tid} />
+
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/50">
+          <div className="text-xs text-text-muted">
+            {safeFormatDate(t.end_date) && (
+              <span>Concluded <strong className="text-text font-medium">{safeFormatDate(t.end_date)}</strong></span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-2xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border border-accent/20 rounded-md gap-1"
+              onClick={() => onViewRules(t)}
+            >
+              <BookOpen className="h-3 w-3" /> Rules
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-2xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 rounded-md gap-1"
+              onClick={() => onViewPrizes(t)}
+            >
+              <Trophy className="h-3 w-3" /> Prizes
+            </Button>
+          </div>
+        </div>
+
+        <Button asChild variant="outline" className="w-full border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-semibold gap-1.5">
+          <a href={`/tournaments/${tid}`} target="_blank" rel="noreferrer">
+            View Full Standings & Final Results <ArrowRight className="h-4 w-4 ml-1" />
+          </a>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TournamentCard({
+  t,
+  joinedIds,
+  pendingOrdersByTournament,
+  joining,
+  onJoin,
+  onViewRules,
+  onViewPrizes,
+  onViewChart,
+}: {
+  t: Competition
+  joinedIds: Set<number>
+  pendingOrdersByTournament: Map<number, PaymentOrder>
+  joining: number | null
+  onJoin: (t: Competition) => void
+  onViewRules: (t: Competition) => void
+  onViewPrizes: (t: Competition) => void
+  onViewChart: (t: Competition) => void
+}) {
+  const tid = Number(t.id)
+  const joined = joinedIds.has(tid)
+  const pendingOrder = pendingOrdersByTournament.get(tid)
+  const participants = toNum(t.current_participants)
+  const maxP = toNum(t.max_participants)
+
+  const badge = joined ? (
+    <Badge tone="success" size="sm"><CheckCircle2 className="h-3 w-3 mr-1 inline" />Joined</Badge>
+  ) : pendingOrder ? (
+    <Badge tone="warn" size="sm"><Clock className="h-3 w-3 mr-1 inline" />Payment Pending</Badge>
+  ) : (t.status ?? '') === 'active' ? (
+    <Badge tone="accent" size="sm" pulsing>Live now</Badge>
+  ) : (
+    <Badge tone="neutral" size="sm">{t.status || 'Upcoming'}</Badge>
+  )
+
+  return (
+    <Card className={cn('overflow-hidden transition-all', joined ? 'border-success/30' : pendingOrder ? 'border-warn/40' : 'hover:border-accent/40')}>
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
+              <Trophy className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-text truncate text-lg">{t.title || `Tournament #${t.id}`}</h3>
+          </div>
+          {badge}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+            <div className="text-2xs uppercase tracking-wider text-text-muted">Starting</div>
+            <div className="text-sm font-bold tabular text-text mt-0.5">
+              {fmtUSD(toNum(t.starting_balance), { decimals: 0 })}
+            </div>
+          </div>
+          <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+            <div className="text-2xs uppercase tracking-wider text-text-muted">Prize pool</div>
+            <div className="text-sm font-bold tabular text-success mt-0.5 truncate">
+              {t.prize_pool || '—'}
+            </div>
+          </div>
+          <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
+            <div className="text-2xs uppercase tracking-wider text-text-muted flex items-center gap-1">
+              <Users className="h-3 w-3" /> Traders
+            </div>
+            <div className="text-sm font-bold tabular text-text mt-0.5">
+              {participants.toLocaleString()}{maxP > 0 ? ` / ${maxP.toLocaleString()}` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/50">
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-text-muted">
+            {safeFormatDate(t.start_date) && (
+              <div className="flex items-center gap-1.5 text-accent font-medium">
+                <Calendar className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  Starts <strong className="text-text font-bold">{safeFormatDate(t.start_date)}</strong>
+                </span>
+              </div>
+            )}
+            {safeFormatDate(t.start_date) && safeFormatDate(t.end_date) && (
+              <span className="text-text-faint hidden sm:inline">·</span>
+            )}
+            {safeFormatDate(t.end_date) && (
+              <div className="flex items-center gap-1.5 text-text-muted">
+                {!safeFormatDate(t.start_date) && <Calendar className="h-3.5 w-3.5 text-text-faint shrink-0" />}
+                <span>
+                  Ends <strong className="text-text font-medium">{safeFormatDate(t.end_date)}</strong>
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-2xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border border-accent/20 rounded-md gap-1"
+              onClick={() => onViewRules(t)}
+            >
+              <BookOpen className="h-3 w-3" /> Rules
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-2xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 rounded-md gap-1"
+              onClick={() => onViewPrizes(t)}
+            >
+              <Trophy className="h-3 w-3" /> Prizes
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-2xs font-semibold text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 border border-cyan-400/20 rounded-md gap-1"
+              onClick={() => onViewChart(t)}
+            >
+              <Activity className="h-3 w-3" /> Chart
+            </Button>
+          </div>
+        </div>
+
+        {joined ? (
+          <Button asChild variant="outline" className="w-full border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-semibold">
+            <Link
+              href={`/dashboard/trading?tournament=${tid}`}
+              onClick={async () => {
+                try {
+                  await usePrices.getState().setTradingContext({
+                    kind: 'tournament',
+                    tournamentId: tid,
+                    title: t.title || `Tournament #${t.id}`,
+                  })
+                } catch {}
+              }}
+            >
+              Trade in terminal <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
+          </Button>
+        ) : pendingOrder ? (
+          <Button asChild variant="outline" className="w-full border-warn/40 hover:bg-warn/10 text-warn font-semibold">
+            <Link href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}>
+              Payment Pending — Complete / View <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            className="w-full"
+            disabled={joining !== null || !['upcoming', 'active'].includes(t.status ?? '')}
+            loading={joining === tid}
+            onClick={() => onJoin(t)}
+          >
+            {toNum(t.entry_fee) > 0
+              ? `${t.status === 'upcoming' ? 'Register' : 'Join'} — $${toNum(t.entry_fee)} entry`
+              : (t.status === 'upcoming' ? 'Register free' : 'Join free')}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function DashboardTournamentsPage() {
   const router = useRouter()
   const qc = useQueryClient()
@@ -216,305 +543,6 @@ export default function DashboardTournamentsPage() {
     return 'Unranked'
   }, [myLiveRank, safeMine])
 
-  const statusBadge = (t: Competition, pendingOrder?: PaymentOrder) => {
-    const tid = Number(t.id)
-    if (joinedIds.has(tid)) return <Badge tone="success" size="sm"><CheckCircle2 className="h-3 w-3 mr-1 inline" />Joined</Badge>
-    if (pendingOrder) return <Badge tone="warn" size="sm"><Clock className="h-3 w-3 mr-1 inline" />Payment Pending</Badge>
-    if ((t.status ?? '') === 'active') return <Badge tone="accent" size="sm" pulsing>Live now</Badge>
-    return <Badge tone="neutral" size="sm">{t.status || 'Upcoming'}</Badge>
-  }
-
-  // Top 3 Winners Subcomponent for Past Tournaments
-  const PastTournamentWinners = ({ tournamentId }: { tournamentId: number }) => {
-    const { data: winners = [], isLoading } = useQuery({
-      queryKey: ['past-winners', tournamentId],
-      queryFn: async () => {
-        const res = await api.tournaments.leaderboard(tournamentId)
-        if (res.ok) {
-          const list = Array.isArray(res.data) ? res.data : (res.data as any)?.leaderboard || []
-          return list.slice(0, 3)
-        }
-        return []
-      },
-      staleTime: 60_000,
-    })
-
-    if (isLoading) {
-      return (
-        <div className="rounded-xl bg-bg-subtle/50 border border-border-subtle p-3 space-y-2">
-          <div className="h-3 w-32 bg-surface-muted rounded animate-pulse" />
-          <div className="grid grid-cols-3 gap-2">
-            <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
-            <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
-            <div className="h-12 bg-surface-muted rounded-lg animate-pulse" />
-          </div>
-        </div>
-      )
-    }
-
-    if (!winners || winners.length === 0) {
-      return (
-        <div className="rounded-xl bg-bg-subtle/40 border border-border-subtle p-3 text-xs text-text-muted flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-amber-400 shrink-0" />
-          <span>Final certified winners being tabulated</span>
-        </div>
-      )
-    }
-
-    const tiers = [
-      { badge: '🥇 1st Place', color: 'border-amber-400/40 bg-amber-500/10 text-amber-300' },
-      { badge: '🥈 2nd Place', color: 'border-slate-300/40 bg-slate-300/10 text-slate-200' },
-      { badge: '🥉 3rd Place', color: 'border-amber-600/40 bg-amber-600/10 text-amber-200' },
-    ]
-
-    return (
-      <div className="rounded-xl bg-bg-subtle/60 border border-border-subtle/80 p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-3xs uppercase tracking-widest text-amber-400 font-extrabold flex items-center gap-1.5">
-            <Trophy className="h-3.5 w-3.5 text-amber-400" />
-            Official Tournament Winners
-          </span>
-          <span className="text-3xs text-text-muted">Certified Final</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {winners.map((w: any, idx: number) => {
-            const name = w.display_name || w.user_login || `Trader #${idx + 1}`
-            const roi = Number(w.roi_pct ?? 0)
-            const t = tiers[idx] || tiers[2]
-            return (
-              <div key={idx} className={cn('p-2 rounded-lg border text-xs flex flex-col justify-between gap-1 shadow-xs', t.color)}>
-                <div className="flex items-center justify-between gap-1">
-                  <span className="font-bold text-3xs">{t.badge}</span>
-                  <span className="font-extrabold tabular text-success text-2xs">+{roi.toFixed(1)}%</span>
-                </div>
-                <div className="font-bold text-text truncate text-xs" title={name}>
-                  {name}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-
-  const PastTournamentCard = ({ t }: { t: Competition }) => {
-    const tid = Number(t.id)
-    const participants = toNum(t.current_participants)
-    const maxP = toNum(t.max_participants)
-
-    return (
-      <Card className="overflow-hidden border-border-subtle hover:border-amber-500/40 transition-all bg-surface/80">
-        <CardContent className="p-5 space-y-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-                <Trophy className="h-5 w-5" />
-              </div>
-              <h3 className="font-bold text-text truncate text-lg">{t.title || `Tournament #${t.id}`}</h3>
-            </div>
-            <Badge tone="neutral" size="sm">Completed</Badge>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
-              <div className="text-2xs uppercase tracking-wider text-text-muted">Starting</div>
-              <div className="text-sm font-bold tabular text-text mt-0.5">
-                {fmtUSD(toNum(t.starting_balance), { decimals: 0 })}
-              </div>
-            </div>
-            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
-              <div className="text-2xs uppercase tracking-wider text-text-muted">Prize pool</div>
-              <div className="text-sm font-bold tabular text-amber-400 mt-0.5 truncate">
-                {t.prize_pool || '—'}
-              </div>
-            </div>
-            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
-              <div className="text-2xs uppercase tracking-wider text-text-muted flex items-center gap-1">
-                <Users className="h-3 w-3" /> Traders
-              </div>
-              <div className="text-sm font-bold tabular text-text mt-0.5">
-                {participants.toLocaleString()}{maxP > 0 ? ` / ${maxP.toLocaleString()}` : ''}
-              </div>
-            </div>
-          </div>
-
-          {/* Top 3 Certified Winners Podium Showcase */}
-          <PastTournamentWinners tournamentId={tid} />
-
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/50">
-            <div className="text-xs text-text-muted">
-              {safeFormatDate(t.end_date) && (
-                <span>Concluded <strong className="text-text font-medium">{safeFormatDate(t.end_date)}</strong></span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-2xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border border-accent/20 rounded-md gap-1"
-                onClick={() => setViewingRules(t)}
-              >
-                <BookOpen className="h-3 w-3" /> Rules
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-2xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 rounded-md gap-1"
-                onClick={() => setViewingPrizes(t)}
-              >
-                <Trophy className="h-3 w-3" /> Prizes
-              </Button>
-            </div>
-          </div>
-
-          <Button asChild variant="outline" className="w-full border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-semibold gap-1.5">
-            <a href={`/tournaments/${tid}`} target="_blank" rel="noreferrer">
-              View Full Standings & Final Results <ArrowRight className="h-4 w-4 ml-1" />
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const TournamentCard = ({ t }: { t: Competition }) => {
-    const tid = Number(t.id)
-    const joined = joinedIds.has(tid)
-    const pendingOrder = pendingOrdersByTournament.get(tid)
-    const participants = toNum(t.current_participants)
-    const maxP = toNum(t.max_participants)
-    return (
-      <Card className={cn('overflow-hidden transition-all', joined ? 'border-success/30' : pendingOrder ? 'border-warn/40' : 'hover:border-accent/40')}>
-        <CardContent className="p-5 space-y-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
-                <Trophy className="h-5 w-5" />
-              </div>
-              <h3 className="font-bold text-text truncate text-lg">{t.title || `Tournament #${t.id}`}</h3>
-            </div>
-            {statusBadge(t, pendingOrder)}
-          </div>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
-              <div className="text-2xs uppercase tracking-wider text-text-muted">Starting</div>
-              <div className="text-sm font-bold tabular text-text mt-0.5">
-                {fmtUSD(toNum(t.starting_balance), { decimals: 0 })}
-              </div>
-            </div>
-            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
-              <div className="text-2xs uppercase tracking-wider text-text-muted">Prize pool</div>
-              <div className="text-sm font-bold tabular text-success mt-0.5 truncate">
-                {t.prize_pool || '—'}
-              </div>
-            </div>
-            <div className="rounded-lg bg-bg-subtle/60 border border-border-subtle p-2.5">
-              <div className="text-2xs uppercase tracking-wider text-text-muted flex items-center gap-1">
-                <Users className="h-3 w-3" /> Traders
-              </div>
-              <div className="text-sm font-bold tabular text-text mt-0.5">
-                {participants.toLocaleString()}{maxP > 0 ? ` / ${maxP.toLocaleString()}` : ''}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/50">
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-text-muted">
-              {safeFormatDate(t.start_date) && (
-                <div className="flex items-center gap-1.5 text-accent font-medium">
-                  <Calendar className="h-3.5 w-3.5 shrink-0" />
-                  <span>
-                    Starts <strong className="text-text font-bold">{safeFormatDate(t.start_date)}</strong>
-                  </span>
-                </div>
-              )}
-              {safeFormatDate(t.start_date) && safeFormatDate(t.end_date) && (
-                <span className="text-text-faint hidden sm:inline">·</span>
-              )}
-              {safeFormatDate(t.end_date) && (
-                <div className="flex items-center gap-1.5 text-text-muted">
-                  {!safeFormatDate(t.start_date) && <Calendar className="h-3.5 w-3.5 text-text-faint shrink-0" />}
-                  <span>
-                    Ends <strong className="text-text font-medium">{safeFormatDate(t.end_date)}</strong>
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-2xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border border-accent/20 rounded-md gap-1"
-                onClick={() => setViewingRules(t)}
-              >
-                <BookOpen className="h-3 w-3" /> Rules
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-2xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 rounded-md gap-1"
-                onClick={() => setViewingPrizes(t)}
-              >
-                <Trophy className="h-3 w-3" /> Prizes
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-2xs font-semibold text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 border border-cyan-400/20 rounded-md gap-1"
-                onClick={() => setViewingChart(t)}
-              >
-                <Activity className="h-3 w-3" /> Chart
-              </Button>
-            </div>
-          </div>
-
-          {joined ? (
-            <Button asChild variant="outline" className="w-full border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-semibold">
-              <Link
-                href={`/dashboard/trading?tournament=${tid}`}
-                onClick={async () => {
-                  try {
-                    await usePrices.getState().setTradingContext({
-                      kind: 'tournament',
-                      tournamentId: tid,
-                      title: t.title || `Tournament #${t.id}`,
-                    })
-                  } catch {}
-                }}
-              >
-                Trade in terminal <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
-          ) : pendingOrder ? (
-            <Button asChild variant="outline" className="w-full border-warn/40 hover:bg-warn/10 text-warn font-semibold">
-              <Link href={`/checkout?tournament=${tid}&order=${pendingOrder.id}`}>
-                Payment Pending — Complete / View <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
-          ) : (
-            <Button
-              className="w-full"
-              disabled={joining !== null || !['upcoming', 'active'].includes(t.status ?? '')}
-              loading={joining === tid}
-              onClick={() => join(t)}
-            >
-              {toNum(t.entry_fee) > 0
-                ? `${t.status === 'upcoming' ? 'Register' : 'Join'} — $${toNum(t.entry_fee)} entry`
-                : (t.status === 'upcoming' ? 'Register free' : 'Join free')}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6 w-full pb-16">
       {/* Hero stats */}
@@ -636,7 +664,19 @@ export default function DashboardTournamentsPage() {
                     <span className="h-3 w-1 bg-accent rounded-full inline-block" /> Currently Active ({live.length})
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {live.map(t => <TournamentCard key={t.id} t={t} />)}
+                    {live.map(t => (
+                      <TournamentCard
+                        key={t.id}
+                        t={t}
+                        joinedIds={joinedIds}
+                        pendingOrdersByTournament={pendingOrdersByTournament}
+                        joining={joining}
+                        onJoin={join}
+                        onViewRules={setViewingRules}
+                        onViewPrizes={setViewingPrizes}
+                        onViewChart={setViewingChart}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -647,7 +687,19 @@ export default function DashboardTournamentsPage() {
                     <span className="h-3 w-1 bg-info rounded-full inline-block" /> Pre-Registration / Upcoming ({upcoming.length})
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {upcoming.map(t => <TournamentCard key={t.id} t={t} />)}
+                    {upcoming.map(t => (
+                      <TournamentCard
+                        key={t.id}
+                        t={t}
+                        joinedIds={joinedIds}
+                        pendingOrdersByTournament={pendingOrdersByTournament}
+                        joining={joining}
+                        onJoin={join}
+                        onViewRules={setViewingRules}
+                        onViewPrizes={setViewingPrizes}
+                        onViewChart={setViewingChart}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -669,7 +721,14 @@ export default function DashboardTournamentsPage() {
             <div className="space-y-4">
               {completed.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {completed.map(t => <PastTournamentCard key={t.id} t={t} />)}
+                  {completed.map(t => (
+                    <PastTournamentCard
+                      key={t.id}
+                      t={t}
+                      onViewRules={setViewingRules}
+                      onViewPrizes={setViewingPrizes}
+                    />
+                  ))}
                 </div>
               ) : (
                 <Card>
@@ -685,13 +744,13 @@ export default function DashboardTournamentsPage() {
         </>
       )}
 
-      {mine.length > 0 && (
+      {safeMine.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-text uppercase tracking-wider flex items-center gap-2">
             <span className="h-4 w-1 bg-success rounded-full inline-block" /> My Tournaments
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {mine.map((m) => (
+            {safeMine.map((m) => (
               <Card key={m.tournament_id}>
                 <CardContent className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">

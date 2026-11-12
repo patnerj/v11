@@ -20,7 +20,7 @@ import {
   Sparkles, Check, ArrowRight, ShieldAlert, FileX, Info, ExternalLink, RefreshCw
 } from 'lucide-react'
 
-type DocKey = 'id_doc' | 'id_doc_back' | 'selfie'
+type DocKey = 'id_doc' | 'id_doc_back' | 'selfie' | 'address_doc'
 interface DocSpec { 
   key: DocKey
   title: string
@@ -50,6 +50,13 @@ const DOCS: DocSpec[] = [
     subtitle: 'Live photo of your face holding ID',
     hint: 'Good lighting, facing camera directly, no sunglasses or headwear.',       
     icon: ScanFace 
+  },
+  { 
+    key: 'address_doc',      
+    title: 'Proof of Address (POA)', 
+    subtitle: 'Utility bill, bank statement, or council tax (<90 days)',
+    hint: 'Must clearly show your full name, residential address, and issue date within last 3 months.',       
+    icon: FileText 
   },
 ]
 
@@ -334,11 +341,13 @@ export default function KycPage() {
     id_doc: null,
     id_doc_back: null,
     selfie: null,
+    address_doc: null,
   })
   const [previews, setPreviews] = useState<Record<DocKey, string | null>>({
     id_doc: null,
     id_doc_back: null,
     selfie: null,
+    address_doc: null,
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -373,7 +382,12 @@ export default function KycPage() {
 
   const uploadedCount = visibleDocs.filter(d => isDocSatisfied(d.key)).length
   const totalRequired = visibleDocs.length
-  const allReady = (isDocSatisfied('id_doc') && (isBackDocRequired ? isDocSatisfied('id_doc_back') : true) && isDocSatisfied('selfie')) && country.trim().length > 0
+  const allReady = (
+    isDocSatisfied('id_doc') &&
+    (isBackDocRequired ? isDocSatisfied('id_doc_back') : true) &&
+    isDocSatisfied('selfie') &&
+    isDocSatisfied('address_doc')
+  ) && country.trim().length > 0
 
   const handleDocTypeChange = (newType: 'national_id' | 'passport' | 'drivers_license') => {
     setDocType(newType)
@@ -388,7 +402,7 @@ export default function KycPage() {
       return
     }
     if (!allReady) {
-      toast.error(isBackDocRequired ? 'Please provide all 3 required identity documents.' : 'Please provide your passport photo page and biometric selfie.')
+      toast.error(isBackDocRequired ? 'Please provide all 4 required identity and address documents.' : 'Please provide your passport, biometric selfie, and proof of address.')
       return
     }
     setSubmitting(true)
@@ -407,6 +421,9 @@ export default function KycPage() {
     if (files.selfie) {
       form.append('selfie', files.selfie)
     }
+    if (files.address_doc) {
+      form.append('address_doc', files.address_doc)
+    }
     const res = await api.kycSubmit(form)
     setSubmitting(false)
     if (res.ok && res.data.success) {
@@ -418,8 +435,8 @@ export default function KycPage() {
           useAuth.setState({ user: { ...currentUser, phone: trimmedPhone } })
         }
       }
-      setFiles({ id_doc: null, id_doc_back: null, selfie: null })
-      setPreviews({ id_doc: null, id_doc_back: null, selfie: null })
+      setFiles({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
+      setPreviews({ id_doc: null, id_doc_back: null, selfie: null, address_doc: null })
       refetch()
     } else {
       toast.error(res.ok ? res.data.message || 'Submission failed' : res.error)
@@ -544,7 +561,7 @@ export default function KycPage() {
                             <span className="text-xs uppercase tracking-wider text-gray-400 block mb-3 font-semibold">
                               Received & Audited Files ({uploadedCount} of {DOCS.length})
                             </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                               {DOCS.map((d) => {
                                 const uploaded = isDocUploaded(d.key);
                                 return (

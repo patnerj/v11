@@ -15,8 +15,8 @@ export interface PageSeoConfig {
 
 export const DEFAULT_SEO_PAGES: Record<string, PageSeoConfig> = {
   '/': {
-    title: 'AlphaCapital — Trade Up to $200,000 in Funded Capital',
-    description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with AlphaCapital.',
+    title: '',
+    description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.',
     primary_keyword: 'Prop Firm',
     secondary_keywords: ['Funded Trading Account', 'Forex Prop Firm', 'Instant Funding MT5', 'Proprietary Trading Firm'],
     search_intent: 'Commercial',
@@ -185,8 +185,8 @@ export async function getPageSeoMetadata(
   const branding = await fetchServerBranding()
   const brandName = branding?.brand_name && branding.brand_name.toLowerCase() !== 'propfirm system'
     ? branding.brand_name
-    : (process.env.NEXT_PUBLIC_BRAND_NAME || 'AlphaCapital')
-  const siteUrl = branding?.frontend_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://alphacapital.com'
+    : (process.env.NEXT_PUBLIC_BRAND_NAME || 'Trading Firm')
+  const siteUrl = branding?.frontend_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://massfunded.org'
   const ogImage = branding?.og_image_url || '/og-image.png'
 
   const serverPages = branding?.seo_pages || {}
@@ -275,7 +275,7 @@ export function generateOrganizationSchema(
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: supportEmail || 'support@alphacapital.com'
+      email: supportEmail || 'support@example.com'
     }
   }
 }
@@ -308,10 +308,10 @@ export async function getPageJsonLd(pathname: string) {
   const branding = await fetchServerBranding()
   const brandName = branding?.brand_name && branding.brand_name.toLowerCase() !== 'propfirm system'
     ? branding.brand_name
-    : (process.env.NEXT_PUBLIC_BRAND_NAME || 'AlphaCapital')
-  const siteUrl = branding?.frontend_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://alphacapital.com'
+    : (process.env.NEXT_PUBLIC_BRAND_NAME || 'Trading Firm')
+  const siteUrl = branding?.frontend_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://massfunded.org'
   const logoUrl = branding?.logo_url || '/branding/brand_logo.svg'
-  const supportEmail = branding?.support_email || 'support@alphacapital.com'
+  const supportEmail = branding?.support_email || 'support@example.com'
 
   const serverPages = branding?.seo_pages || {}
   const pageConfig: PageSeoConfig = {

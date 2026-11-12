@@ -36,9 +36,9 @@ interface SeoFormState {
 }
 
 const DEFAULT_SEO_STATE: SeoFormState = {
-  meta_title: 'AlphaCapital — Trade Up to $200,000 in Funded Capital',
-  meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with AlphaCapital.',
-  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge, AlphaCapital',
+  meta_title: 'Trade Up to $200,000 in Funded Capital',
+  meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.',
+  meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge',
   robots_indexing: true,
   google_site_verification: '',
   bing_site_verification: '',
@@ -84,8 +84,8 @@ export default function AdminSeoPage() {
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [aiResult, setAiResult] = useState<any>(null)
 
-  const siteOrigin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com')
-  const siteHost = typeof window !== 'undefined' ? window.location.host : 'your-domain.com'
+  const siteOrigin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://demo.launchapropfirm.com')
+  const siteHost = typeof window !== 'undefined' ? window.location.host : 'demo.launchapropfirm.com'
 
   // Load current values from API
   useEffect(() => {
@@ -344,7 +344,7 @@ export default function AdminSeoPage() {
   if (hasSecKws) healthScore += 5
   if (hasFaqs) healthScore += 5
 
-  const brandName = branding.brand_name || 'AlphaCapital'
+  const brandName = branding.brand_name || process.env.NEXT_PUBLIC_BRAND_NAME || 'Trading Firm'
   const finalDisplayTitle = deduplicateBrandTitle(activeTitle || `${brandName} — Trade Up to $200,000`, brandName)
 
   return (
@@ -658,7 +658,7 @@ export default function AdminSeoPage() {
                       id="page_title"
                       value={activePageConfig.title || ''}
                       onChange={(e) => handlePageFieldChange('title', e.target.value)}
-                      placeholder={`e.g. ${activePath === '/' ? 'AlphaCapital — Trade Up to $200,000' : 'Evaluation Plans & Pricing | AlphaCapital'}`}
+                      placeholder={`e.g. ${activePath === '/' ? `${brandName} — Trade Up to $200,000` : `Evaluation Plans & Pricing | ${brandName}`}`}
                       className="border-slate-300 dark:border-border text-slate-900 dark:text-foreground"
                     />
                     <p className="text-2xs text-slate-500 dark:text-muted-foreground">
@@ -1158,7 +1158,7 @@ export default function AdminSeoPage() {
                       id="meta_title"
                       value={form.meta_title}
                       onChange={(e) => handleChange('meta_title', e.target.value)}
-                      placeholder="e.g. AlphaCapital — Trade Up to $200,000 in Funded Capital"
+                      placeholder={`e.g. ${brandName} — Trade Up to $200,000 in Funded Capital`}
                       className="border-slate-300 dark:border-border text-slate-900 dark:text-foreground"
                     />
                     <p className="text-2xs text-slate-500 dark:text-muted-foreground">
@@ -1189,7 +1189,7 @@ export default function AdminSeoPage() {
                       rows={3}
                       value={form.meta_description}
                       onChange={(e) => handleChange('meta_description', e.target.value)}
-                      placeholder="e.g. Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with AlphaCapital."
+                      placeholder={`e.g. Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits with ${brandName}.`}
                       className="resize-none border-slate-300 dark:border-border text-slate-900 dark:text-foreground"
                     />
                     <p className="text-2xs text-slate-500 dark:text-muted-foreground">
@@ -1241,7 +1241,7 @@ export default function AdminSeoPage() {
                     2. If a page has not been customized individually, Next.js falls back to the <strong className="text-slate-800 dark:text-foreground">Global Search Engine Metadata Defaults</strong> configured here.
                   </p>
                   <p>
-                    3. Brand suffix deduplication ensures your brand name is never duplicated in search results (`About Us | AlphaCapital | AlphaCapital`).
+                    3. Brand suffix deduplication ensures your brand name is never duplicated in search results (`About Us | ${brandName}`).
                   </p>
                 </CardContent>
               </Card>

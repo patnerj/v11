@@ -45,13 +45,46 @@ function getDocHeaders() {
   return headers
 }
 
+async function fetchDocBlob(relativePath: string): Promise<Blob> {
+  const fullUrl = relativePath.startsWith('http') ? relativePath : apiUrl(relativePath)
+  let res: Response | null = null
+  try {
+    res = await fetch(fullUrl, { credentials: 'include', headers: getDocHeaders() })
+  } catch {}
+
+  if (!res || !res.ok) {
+    const match = relativePath.match(/\/admin\/kyc\/(\d+)\/doc\/([^/]+)/)
+    if (match) {
+      const [, kycId, docType] = match
+      const session = getSession()
+      const token = session.bearer || ''
+      try {
+        res = await fetch(`/api/kyc-doc?id=${encodeURIComponent(kycId)}&type=${encodeURIComponent(docType)}`, {
+          cache: 'no-store',
+          headers: token ? { 'X-FXSIM-Token': token, 'Authorization': `Bearer ${token}` } : {},
+        })
+      } catch {}
+    }
+  }
+
+  if (!res || !res.ok) throw new Error(String(res?.status || 500))
+  return await res.blob()
+}
+
 async function openDoc(relativePath: string) {
   try {
-    const res = await fetch(apiUrl(relativePath), { credentials: 'include', headers: getDocHeaders() })
-    if (!res.ok) throw new Error(String(res.status))
-    const blob = await res.blob()
+    const blob = await fetchDocBlob(relativePath)
     const obj = URL.createObjectURL(blob)
-    window.open(obj, '_blank', 'noopener')
+    const win = window.open(obj, '_blank', 'noopener')
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      const a = document.createElement('a')
+      a.href = obj
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    }
     setTimeout(() => URL.revokeObjectURL(obj), 60_000)
   } catch {
     toast.error('Could not open document')
@@ -60,9 +93,7 @@ async function openDoc(relativePath: string) {
 
 async function downloadDoc(relativePath: string, label: string) {
   try {
-    const res = await fetch(apiUrl(relativePath), { credentials: 'include', headers: getDocHeaders() })
-    if (!res.ok) throw new Error(String(res.status))
-    const blob = await res.blob()
+    const blob = await fetchDocBlob(relativePath)
     const type = blob.type || ''
     const ext = type.includes('pdf') ? 'pdf' : type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : type.includes('jpeg') || type.includes('jpg') ? 'jpg' : 'bin'
     const obj = URL.createObjectURL(blob)
@@ -168,9 +199,7 @@ function ReviewDialog({ row, onClose, onDone }: { row: AdminKycRow; onClose: () 
     if (preview && preview.key === key) { URL.revokeObjectURL(preview.url); setPreview(null); return }
     setPreviewLoading(key)
     try {
-      const res = await fetch(url, { credentials: 'include', headers: getDocHeaders() })
-      if (!res.ok) throw new Error(String(res.status))
-      const blob = await res.blob()
+      const blob = await fetchDocBlob(url)
       if (preview) URL.revokeObjectURL(preview.url)
       setPreview({ key, url: URL.createObjectURL(blob), isPdf: blob.type === 'application/pdf' || url.toLowerCase().endsWith('.pdf') })
     } catch { toast.error('Could not load document') }

@@ -527,6 +527,10 @@ function CheckoutInner() {
                 }
                 const urlCoupon = params.get('coupon')
                 if (urlCoupon) returnParams.set('coupon', urlCoupon)
+                const urlAddons = params.get('addons')
+                if (urlAddons) returnParams.set('addons', urlAddons)
+                const urlRef = params.get('ref')
+                if (urlRef) returnParams.set('ref', urlRef)
                 const returnTo = `/checkout?${returnParams.toString()}`
                 return (
                   <>
@@ -556,8 +560,8 @@ function CheckoutInner() {
     <div className="min-h-screen flex flex-col bg-bg text-text selection:bg-accent/20">
       <MarketingHeader />
       
-      <main className="flex-1 flex items-center justify-center py-20 px-4">
-        <div className="w-full max-w-lg bg-surface border border-border shadow-2xl shadow-accent/5 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+      <main className="flex-1 flex items-center justify-center py-20 px-3 sm:px-4">
+        <div className="w-full max-w-lg bg-surface border border-border shadow-2xl shadow-accent/5 rounded-2xl p-4 sm:p-8 relative overflow-hidden">
           {/* Subtle glow effect behind checkout container */}
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-accent/0 via-accent/50 to-accent/0" />
           
@@ -626,16 +630,16 @@ function ReviewStep({
           {!couponInfo ? (
             <div>
               <Label htmlFor="coupon_code" className="sr-only">Coupon Code</Label>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 w-full min-w-0">
                 <input
                   id="coupon_code"
                   name="coupon_code"
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                   onKeyDown={(e) => { if (e.key === 'Enter') applyCoupon() }}
-                  placeholder="Have a coupon code?"
+                  placeholder="Coupon code"
                   aria-label="Coupon Code"
-                  className="flex-1 h-11 rounded-lg bg-bg border border-border px-4 text-sm uppercase tracking-wide focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
+                  className="flex-1 min-w-0 w-full h-11 rounded-lg bg-bg border border-border px-3 sm:px-4 text-xs sm:text-sm uppercase tracking-wide focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                 />
                 <Button 
                   variant="secondary" 
@@ -644,7 +648,7 @@ function ReviewStep({
                   isSubmitting={couponBusy}
                   isPending={couponBusy}
                   disabled={couponBusy || !coupon.trim()} 
-                  className="h-11 px-6"
+                  className="h-11 px-3.5 sm:px-6 shrink-0 text-xs sm:text-sm font-medium"
                 >
                   {couponBusy ? (
                     <>
@@ -897,7 +901,7 @@ function ManualStep({
       </div>
 
       {isBinance ? (
-        <BinancePayBlock amountDue={amountDue} binanceId={config?.binance_id || '345482171'} binanceQrUrl={config?.binance_qr_url} />
+        <BinancePayBlock amountDue={amountDue} binanceId={config?.binance_id || 'DEMO-MERCHANT-ID'} binanceQrUrl={config?.binance_qr_url} />
       ) : (
         <CryptoPayBlock config={config} />
       )}
@@ -1085,7 +1089,7 @@ function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: nu
             <div>
               <div className="text-sm font-bold text-text flex items-center gap-2">
                 Binance Pay Transfer
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="text-2xs uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
                   0% Fee
                 </span>
               </div>
@@ -1110,11 +1114,11 @@ function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: nu
               alt="Scan with Binance App to pay" 
               className="w-36 h-auto rounded-lg object-contain mx-auto"
             />
-            <div className="text-[10px] font-medium text-gray-500 mt-1.5">
+            <div className="text-2xs font-medium text-gray-500 mt-1.5">
               Scan with Binance App (0% Fee)
             </div>
             {(!binanceQrUrl || binanceQrUrl === '/branding/binance_pay_qr.png') && (
-              <p className="text-[9px] text-amber-600 dark:text-amber-400/90 mt-1 max-w-[150px] leading-tight mx-auto">
+              <p className="text-3xs text-amber-600 dark:text-amber-400/90 mt-1 max-w-[150px] leading-tight mx-auto">
                 Demo QR shown — configure live Merchant QR in Admin → Payments.
               </p>
             )}
@@ -1125,7 +1129,7 @@ function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: nu
             <div>
               <div className="text-xs uppercase font-bold tracking-wider text-text-muted mb-1.5 flex items-center justify-between">
                 <span>Official Binance ID</span>
-                <span className="text-[10px] text-amber-400 font-semibold font-mono">Verified ID</span>
+                <span className="text-2xs text-amber-400 font-semibold font-mono">Verified ID</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 font-mono text-base font-bold text-text bg-bg px-3.5 py-2.5 rounded-xl border border-border shadow-inner tracking-wider select-all">
@@ -1151,10 +1155,10 @@ function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: nu
             {/* Step-by-Step Instructions */}
             <div className="p-3 rounded-xl bg-bg-subtle/80 border border-border-subtle text-xs space-y-2">
               <div className="font-semibold text-text flex items-center gap-1.5">
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-[10px] text-amber-400 font-bold">!</span>
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-2xs text-amber-400 font-bold">!</span>
                 How to Pay via Binance:
               </div>
-              <ol className="list-decimal list-inside space-y-1 text-text-muted text-[11px] leading-relaxed">
+              <ol className="list-decimal list-inside space-y-1 text-text-muted text-xs leading-relaxed">
                 <li>Open Binance App &rarr; Tap <strong className="text-text">Pay</strong> icon on homepage.</li>
                 <li>Tap <strong className="text-text">Scan</strong> to scan QR code, OR tap <strong className="text-text">Send</strong> and paste Binance ID: <span className="font-mono text-text font-bold">{binanceId}</span>.</li>
                 <li>Enter payable amount: <span className="text-amber-400 font-bold font-mono">${Number(amountDue).toFixed(2)} USDT</span>.</li>

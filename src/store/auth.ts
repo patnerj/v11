@@ -283,6 +283,9 @@ export const useAuth = create<AuthState>((set, get) => ({
         localStorage.setItem('fxsim:notification_preferences', JSON.stringify(updated))
       } catch {}
     }
+    try {
+      await api.preferences.save(updated)
+    } catch {}
   },
 }))
 

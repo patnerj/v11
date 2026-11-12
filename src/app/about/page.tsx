@@ -60,22 +60,22 @@ export default function AboutPage() {
           {/* Key Metrics Bar */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-20">
             <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 tracking-tight whitespace-nowrap mb-1">$50,000,000+</div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 tabular-nums terminal-num tracking-tight whitespace-nowrap mb-1">$50,000,000+</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Capital Allocation Pool</div>
               <div className="text-2xs text-text-muted mt-1">Institutional risk reserves</div>
             </div>
             <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
-              <div className="text-2xl sm:text-3xl font-black text-teal-500 dark:text-teal-400 tracking-tight whitespace-nowrap mb-1">14ms</div>
+              <div className="text-2xl sm:text-3xl font-black text-teal-500 dark:text-teal-400 tabular-nums terminal-num tracking-tight whitespace-nowrap mb-1">14ms</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Bridge Latency</div>
               <div className="text-2xs text-text-muted mt-1">Equinix LD4 direct fiber</div>
             </div>
             <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 tracking-tight whitespace-nowrap mb-1">100%</div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-500 dark:text-emerald-400 tabular-nums terminal-num tracking-tight whitespace-nowrap mb-1">100%</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Payout SLA Fulfillment</div>
               <div className="text-2xs text-text-muted mt-1">Guaranteed under 24 hours</div>
             </div>
             <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border shadow-card backdrop-blur-md text-center flex flex-col justify-center overflow-hidden">
-              <div className="text-2xl sm:text-3xl font-black text-cyan-500 dark:text-cyan-400 tracking-tight whitespace-nowrap mb-1">120+</div>
+              <div className="text-2xl sm:text-3xl font-black text-cyan-500 dark:text-cyan-400 tabular-nums terminal-num tracking-tight whitespace-nowrap mb-1">120+</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Countries Supported</div>
               <div className="text-2xs text-text-muted mt-1">Worldwide trader network</div>
             </div>

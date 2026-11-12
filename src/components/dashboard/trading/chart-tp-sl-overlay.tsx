@@ -8,6 +8,7 @@ import { invalidateFxsim } from '@/lib/fxsim'
 import { usePrices } from '@/store/prices'
 import { fmtPrice, fmtUSD, fmtLots, toNum, pnlClass } from '@/lib/format'
 import { getSymbolMeta } from '@/lib/symbol-meta'
+import { quoteToUsdRate, calculateLivePositionPnL } from '@/lib/order-math'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 import { playOrderCloseSound, playSltpUpdatedSound } from '@/lib/sound'
@@ -78,6 +79,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
 
   const draftSlNum = draftSl.trim() ? toNum(draftSl) : null
   const draftTpNum = draftTp.trim() ? toNum(draftTp) : null
+  const allPrices = usePrices((s) => s.prices)
 
   const draftSlMetrics = useMemo(() => {
     if (!draftSlNum || !activePos) return null
@@ -85,9 +87,11 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
     const diff = Math.abs(draftSlNum - openPx)
     if (diff <= 0) return null
     const pips = pSize > 0 ? diff / pSize : diff
-    const loss = diff * contract * toNum(activePos.lot_size)
+    const curPx = activePos.type === 'buy' ? (currentBid || openPx) : (currentAsk || openPx)
+    const conv = quoteToUsdRate(activePos.symbol, curPx, allPrices)
+    const loss = diff * contract * toNum(activePos.lot_size) * conv
     return { diff, pips, loss }
-  }, [draftSlNum, activePos, pSize, contract])
+  }, [draftSlNum, activePos, pSize, contract, currentBid, currentAsk, allPrices])
 
   const draftTpMetrics = useMemo(() => {
     if (!draftTpNum || !activePos) return null
@@ -95,9 +99,11 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
     const diff = Math.abs(draftTpNum - openPx)
     if (diff <= 0) return null
     const pips = pSize > 0 ? diff / pSize : diff
-    const profit = diff * contract * toNum(activePos.lot_size)
+    const curPx = activePos.type === 'buy' ? (currentBid || openPx) : (currentAsk || openPx)
+    const conv = quoteToUsdRate(activePos.symbol, curPx, allPrices)
+    const profit = diff * contract * toNum(activePos.lot_size) * conv
     return { diff, pips, profit }
-  }, [draftTpNum, activePos, pSize, contract])
+  }, [draftTpNum, activePos, pSize, contract, currentBid, currentAsk, allPrices])
 
   // Open inline editor for a position
   const startEdit = useCallback((p: Position) => {
@@ -217,6 +223,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
       const res = await api.pendingCancel(orderId)
       if (res.ok && res.data.success) {
         toast.success(`Cancelled pending order #${orderId}`)
+        invalidateFxsim('/pending-order/my')
         invalidateFxsim('/positions')
         usePrices.getState().refresh()
         onChanged?.()
@@ -246,18 +253,51 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
     return null
   }
 
-  // Net metrics
-  const totalNetPnl = positions.reduce((acc, pos) => {
-    const openPx = toNum(pos.open_price)
-    const lots = toNum(pos.lot_size)
-    const isBuy = pos.type === 'buy'
-    const curPx = isBuy ? (currentBid || openPx) : (currentAsk || openPx)
-    const diff = isBuy ? curPx - openPx : openPx - curPx
-    return acc + diff * contract * lots
+  // Net metrics (Rule 114: Unified Live Tick PnL & Quote-to-USD parity)
+  const totalNetPnl = positions.reduce((acc, p) => {
+    return acc + calculateLivePositionPnL(p, allPrices, contract)
   }, 0)
 
   const pos = activePos || positions[0]
-  if (!pos) return null
+  if (!pos) {
+    // Rule 152.1: If only pending orders exist on this symbol, still render the pending order strip
+    return (
+      <div className="shrink-0 bg-surface/95 border-b border-border-subtle backdrop-blur-md z-20 select-none transition-all px-3 py-1.5 flex flex-col gap-1.5 shadow-sm">
+        {pendingOrders.map((ord) => {
+          const targetPx = toNum(ord.target_price)
+          const ordSlPx = toNum(ord.sl)
+          const ordTpPx = toNum(ord.tp)
+          const ordLots = toNum(ord.lot_size)
+          const ordTypeLabel = String((ord as any).order_type || ord.type || 'buy_limit').replace(/_/g, ' ').toUpperCase()
+          return (
+            <div
+              key={ord.id}
+              className="flex items-center justify-between gap-2 rounded bg-surface-muted/40 border border-border-subtle px-2 py-0.5 text-terminal-body terminal-num"
+            >
+              <div className="flex items-center gap-2">
+                <span className="px-1.5 py-0.2 rounded text-terminal-micro font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                  <Clock className="h-2.5 w-2.5" />
+                  {ordTypeLabel} <span className="terminal-num">{fmtLots(ordLots)}</span>
+                </span>
+                <span className="text-text-muted">
+                  #{ord.id} @ <span className="text-text font-semibold terminal-num">{fmtPrice(targetPx, digits)}</span>
+                </span>
+                {ordSlPx > 0 && <span className="text-rose-400">SL: {fmtPrice(ordSlPx, digits)}</span>}
+                {ordTpPx > 0 && <span className="text-emerald-400">TP: {fmtPrice(ordTpPx, digits)}</span>}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCancelPending(ord.id)}
+                className="px-1.5 py-0.5 rounded text-terminal-micro font-semibold bg-danger/15 hover:bg-danger text-rose-300 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
+              >
+                <X className="h-2.5 w-2.5" /> Cancel
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   const openPx = toNum(pos.open_price)
   const slPx = toNum(pos.sl)
@@ -265,23 +305,24 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
   const lots = toNum(pos.lot_size)
   const isBuy = pos.type === 'buy'
   const curPx = isBuy ? (currentBid || openPx) : (currentAsk || openPx)
+  const posConv = quoteToUsdRate(pos.symbol, curPx, allPrices)
 
   // Live Floating Metrics
   const liveDiff = isBuy ? curPx - openPx : openPx - curPx
-  const livePnl = liveDiff * contract * lots
+  const livePnl = calculateLivePositionPnL(pos, allPrices, contract)
   const livePips = liveDiff / pSize
 
   // TP Metrics
   const hasTp = tpPx > 0
   const tpDiff = hasTp ? (isBuy ? tpPx - openPx : openPx - tpPx) : 0
   const tpPips = hasTp ? tpDiff / pSize : 0
-  const tpReward = hasTp ? tpDiff * contract * lots : 0
+  const tpReward = hasTp ? tpDiff * contract * lots * posConv : 0
 
   // SL Metrics
   const hasSl = slPx > 0
   const slDiff = hasSl ? (isBuy ? openPx - slPx : slPx - openPx) : 0
   const slPips = hasSl ? slDiff / pSize : 0
-  const slRisk = hasSl ? slDiff * contract * lots : 0
+  const slRisk = hasSl ? slDiff * contract * lots * posConv : 0
 
   const canBE = isBuy ? curPx > openPx : curPx < openPx
 
@@ -598,7 +639,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
             <div className="flex items-center gap-2">
               <span className="px-1.5 py-0.2 rounded text-terminal-micro font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
                 <Clock className="h-2.5 w-2.5" />
-                {ord.type.toUpperCase()} <span className="terminal-num">{fmtLots(lots)}</span>
+                {String((ord as any).order_type || ord.type || 'buy_limit').replace(/_/g, ' ').toUpperCase()} <span className="terminal-num">{fmtLots(lots)}</span>
               </span>
               <span className="text-text-muted">
                 #{ord.id} @ <span className="text-text font-semibold terminal-num">{fmtPrice(targetPx, digits)}</span>

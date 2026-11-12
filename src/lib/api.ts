@@ -246,10 +246,10 @@ export const api = {
   admin: {
     competitions: {
       list: () => fxsim<import('../types/api').Competition[]>('/admin/competitions', { cache: 5_000 }),
-      get: (id: number) => fxsim<import('../types/api').Competition>(`/admin/competitions/${id}`),
-      create: (data: Partial<import('../types/api').Competition>) => fxsim<{ success: boolean; id: number }>('/admin/competitions', { method: 'POST', body: data }),
-      update: (id: number, data: Partial<import('../types/api').Competition>) => fxsim<{ success: boolean }>(`/admin/competitions/${id}`, { method: 'PUT', body: data }),
-      delete: (id: number) => fxsim<{ success: boolean }>(`/admin/competitions/${id}`, { method: 'DELETE' }),
+      get: (id: number) => fxsim<import('../types/api').Competition>(`/admin/tournaments/${id}`),
+      create: (data: Partial<import('../types/api').Competition>) => fxsim<{ success: boolean; id: number }>('/admin/tournaments/save', { method: 'POST', body: data }),
+      update: (id: number, data: Partial<import('../types/api').Competition>) => fxsim<{ success: boolean }>('/admin/tournaments/save', { method: 'POST', body: { ...data, id } }),
+      delete: (id: number) => fxsim<{ success: boolean }>(`/admin/tournaments/${id}`, { method: 'DELETE' }),
     },
     tournaments: {
       list: (params?: { status?: string; search?: string }) =>
@@ -305,12 +305,12 @@ export const api = {
     },
     stats:        ()                 => fxsim<AdminStats>('/admin/stats',                                { cache: 10_000 }),
     users:        (search?: string, page?: number, limit?: number)  => fxsim<{ data: AdminUserRow[]; total: number; page: number; pages: number; limit: number }>('/admin/users',                            { query: { search, page, limit }, cache: 5_000 }),
-    kycList:      (status?: string)  => fxsim<AdminKycRow[]>('/admin/kyc',                                { query: { status }, cache: 5_000 }),
+    kycList:      (status?: string)  => fxsim<AdminKycRow[]>('/admin/kyc',                                { query: { status }, cache: 5_000, timeout: 20_000 }),
     kycReview:    (id: number, action: 'approve' | 'reject', note?: string, force_override?: boolean) =>
-      fxsim<{ success: boolean; status?: string; message?: string; error?: string }>(`/admin/kyc/${id}/review`, { body: { action, note, force_override } }),
-    payoutsList:  (status?: string)  => fxsim<AdminPayoutRow[]>('/admin/payouts',                         { query: { status }, cache: 5_000 }),
+      fxsim<{ success: boolean; status?: string; message?: string; error?: string }>(`/admin/kyc/${id}/review`, { body: { action, note, force_override }, timeout: 45_000 }),
+    payoutsList:  (status?: string)  => fxsim<AdminPayoutRow[]>('/admin/payouts',                         { query: { status }, cache: 5_000, timeout: 20_000 }),
     payoutStatus: (id: number, status: string, note: string, extra?: { tx_reference?: string; proof_url?: string }) =>
-      fxsim<{ success: boolean; status?: string; message?: string }>(`/admin/payouts/${id}/status`, { body: { status, note, ...(extra || {}) }, retries: 0 }),
+      fxsim<{ success: boolean; status?: string; message?: string }>(`/admin/payouts/${id}/status`, { body: { status, note, ...(extra || {}) }, retries: 0, timeout: 45_000 }),
     challenges:   (params?: { user_ids?: string | number[]; page?: number; limit?: number; search?: string; status?: string }) =>
       fxsim<{ challenges: ChallengeAccount[]; total?: number; page?: number; pages?: number; limit?: number; pending_payouts: unknown[] }>('/admin/challenges', { query: params as any, cache: 8_000 }),
     trades:       (params?: number | { challenge_id?: number; account_id?: number; page?: number; limit?: number }) => {
@@ -323,13 +323,13 @@ export const api = {
       fxsim<{ success: true }>(`/admin/pending-orders/${id}/reject`, { body: { reason } }),
 
     adjustBalance: (userId: number, accountId: number, amount: number, note: string) =>
-      fxsim<{ success: true; new_balance: number }>('/admin/adjust-balance', { body: { user_id: userId, account_id: accountId, amount, note }, retries: 0 }),
+      fxsim<{ success: true; new_balance: number }>('/admin/adjust-balance', { body: { user_id: userId, account_id: accountId, amount, note }, retries: 0, timeout: 30_000 }),
     walletAdjust: (userId: number, amount: number, note: string) =>
-      fxsim<{ success: true; wallet_balance: number }>('/admin/wallet/adjust', { body: { user_id: userId, amount, note }, retries: 0 }),
+      fxsim<{ success: true; wallet_balance: number }>('/admin/wallet/adjust', { body: { user_id: userId, amount, note }, retries: 0, timeout: 30_000 }),
     setStatus:    (userId: number, status: string) =>
-      fxsim<{ success: boolean; message?: string }>('/admin/set-status', { body: { user_id: userId, status } }),
+      fxsim<{ success: boolean; message?: string }>('/admin/set-status', { body: { user_id: userId, status }, timeout: 25_000 }),
     overrideRule: (userId: number, payload: any) =>
-      fxsim<{ success: boolean; message?: string }>(`/admin/user/${userId}/override`, { body: payload }),
+      fxsim<{ success: boolean; message?: string }>(`/admin/user/${userId}/override`, { body: payload, timeout: 25_000 }),
     getTrader360: (userId: number) =>
       fxsim<{ success: boolean; data?: any; message?: string }>(`/admin/trader/${userId}/360`, { cache: 3_000 }),
     userDetail:   (userId: number) => fxsim<AdminUserDetail>(`/admin/user/${userId}`, { cache: 3_000 }),
@@ -338,17 +338,17 @@ export const api = {
     riskAlerts: () => fxsim<AdminRiskAlerts>('/admin/risk/alerts', { cache: 5_000 }),
     riskExposure: () => fxsim<import('../types/api').RiskExposureItem[]>('/admin/risk/exposure', { cache: 5_000 }),
     riskForceClose: (userIdOrAccount: { user_id?: number; account_id?: number | string }) =>
-      fxsim<{ success: boolean; message: string; closed_count?: number }>('/admin/risk/force-close', { body: userIdOrAccount }),
+      fxsim<{ success: boolean; message: string; closed_count?: number }>('/admin/risk/force-close', { body: userIdOrAccount, timeout: 30_000 }),
     riskFlagTrader: (data: { user_id: number; reason?: string }) =>
       fxsim<{ success: boolean; message: string }>('/admin/risk/flag', { body: data }),
     bulkPayouts:  (ids: number[], status: string, note?: string, tx_reference?: string) =>
-      fxsim<{ success: boolean; processed: number; failed: number; errors?: { id: number; message: string }[] }>('/admin/bulk/payouts', { body: { ids, status, note, tx_reference }, retries: 0 }),
+      fxsim<{ success: boolean; processed: number; failed: number; errors?: { id: number; message: string }[] }>('/admin/bulk/payouts', { body: { ids, status, note, tx_reference }, retries: 0, timeout: 60_000 }),
     bulkKyc:      (ids: number[], action: 'approve' | 'reject', note?: string) =>
-      fxsim<{ success: boolean; processed: number; failed: number }>('/admin/bulk/kyc', { body: { ids, action, note } }),
+      fxsim<{ success: boolean; processed: number; failed: number }>('/admin/bulk/kyc', { body: { ids, action, note }, timeout: 60_000 }),
     saveUserNote: (userId: number, note: string) =>
       fxsim<{ success: boolean }>(`/admin/user/${userId}/note`, { body: { note } }),
     createManualChallenge: (data: { email?: string; user_id?: number; plan_id?: number; starting_balance?: number; initial_phase?: 'phase2' | 'funded' }) =>
-      fxsim<{ success: boolean; challenge_id: number; account_id: number; message: string }>('/admin/challenges/create-manual', { body: data }),
+      fxsim<{ success: boolean; challenge_id: number; account_id: number; message: string }>('/admin/challenges/create-manual', { body: data, timeout: 45_000 }),
 
     plansList:    ()                 => fxsim<ChallengePlan[]>('/admin/plans',                           { cache: 0 }),
     planSave:     (data: Partial<ChallengePlan> & Record<string, any>) =>
@@ -542,7 +542,13 @@ export const api = {
       fxsim<{ success: boolean; temp_password?: string; message: string }>(`/admin/user/${userId}/reset-password`, { body: { password } }),
 
     userDelete: (userId: number) =>
-      fxsim<{ success: boolean; message: string }>(`/admin/user/${userId}`, { method: 'DELETE' }),
+      fxsim<{ success: boolean; message: string }>(`/admin/user/${userId}/delete`, { method: 'DELETE' }),
+
+    mt5Sync: (data?: { user_ids?: number[] }) =>
+      fxsim<{ success: boolean; message?: string }>('/admin/force-prices', { method: 'POST', body: data || {} }),
+
+    sendNotification: (data: { user_id: number; title?: string; message: string }) =>
+      fxsim<{ success: boolean; message: string }>(`/admin/user/${data.user_id}/notify`, { body: { message: data.message, title: data.title } }),
 
     positionClose: (positionId: number) =>
       fxsim<{ success: boolean; pnl: number; message: string }>(`/admin/position/${positionId}/close`, { method: 'POST' }),
@@ -610,6 +616,8 @@ export const api = {
       fxsim<{ success: boolean; events: NewsEvent[] }>('/admin/news-events', { cache: 5_000 }),
     newsEventAdd: (data: Partial<NewsEvent>) =>
       fxsim<{ success: boolean; id?: number }>('/admin/news-events', { body: data }),
+    newsEventDelete: (id: number) =>
+      fxsim<{ success: boolean }>(`/admin/news-events/${id}`, { method: 'DELETE' }),
 
     // ── Automated Scaling Plan Engine ────────────────────────────────────────
     scalingRulesGet: () =>

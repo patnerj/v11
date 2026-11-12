@@ -145,13 +145,18 @@ export function ChallengeDrawer({
     }
     setIsEmailing(true)
     try {
-      await new Promise(r => setTimeout(r, 600))
+      const res = await api.admin.sendNotification({
+        user_id: Number(challenge.user_id),
+        title: emailSubject.trim(),
+        message: emailBody.trim(),
+      })
+      if (!res.ok) throw new Error(res.error || 'Failed to dispatch alert')
       toast.success(`Email alert dispatched to Trader #${challenge.user_id}!`)
       setEmailSubject('')
       setEmailBody('')
       setActiveTab('overview')
     } catch (e: any) {
-      toast.error('Failed to dispatch email')
+      toast.error(e?.message || 'Failed to dispatch email')
     } finally {
       setIsEmailing(false)
     }
@@ -220,7 +225,7 @@ export function ChallengeDrawer({
                 : "border-transparent text-text-muted hover:text-text"
             )}
           >
-            Recent Trades (8)
+            Recent Trades ({tradesList.length})
           </button>
           <button
             onClick={() => setActiveTab('actions')}

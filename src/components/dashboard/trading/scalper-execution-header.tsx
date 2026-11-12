@@ -29,6 +29,20 @@ interface ScalperExecutionHeaderProps {
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
 
+function getDefaultSlPips(sym: string): string {
+  const upper = sym.toUpperCase()
+  if (upper.includes('BTC') || upper.includes('ETH') || upper.includes('SOL') || upper.endsWith('USDT')) {
+    return '400' // $400 movement on BTC (~0.5%)
+  }
+  if (upper.includes('XAU') || upper.includes('GOLD')) {
+    return '100' // $10.00 movement on Gold
+  }
+  if (upper.includes('XAG') || upper.includes('SILVER')) {
+    return '50'
+  }
+  return '30'
+}
+
 export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
   symbol,
   bid,
@@ -42,7 +56,11 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
   dragHandleProps,
 }: ScalperExecutionHeaderProps) {
   const [lot, setLot] = useState('1.00')
-  const [slPips, setSlPips] = useState('30')
+  const [slPips, setSlPips] = useState(() => getDefaultSlPips(symbol))
+
+  useEffect(() => {
+    setSlPips(getDefaultSlPips(symbol))
+  }, [symbol])
   const [busy, setBusy] = useState<'buy' | 'sell' | null>(null)
   const [marketOpen, setMarketOpen] = useState(() => isMarketOpen(symbol))
 
@@ -151,11 +169,16 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
 
       try {
         const tCtx = usePrices.getState().tradingContext
-        const ctxParams = tCtx
-          ? tCtx.kind === 'tournament'
-            ? { tournament_id: tCtx.tournamentId }
-            : tCtx.accountId ? { account_id: tCtx.accountId } : {}
-          : {}
+        const currentAcc = usePrices.getState().account
+        const activeAccId = tCtx?.kind === 'challenge' ? tCtx.accountId : (currentAcc && 'id' in currentAcc ? (currentAcc as any).id : 0)
+
+        const ctxParams: Record<string, number> = {}
+        if (tCtx?.kind === 'tournament') {
+          ctxParams.tournament_id = tCtx.tournamentId
+        }
+        if (activeAccId > 0) {
+          ctxParams.account_id = activeAccId
+        }
 
         const res = await api.open({
           symbol,
@@ -170,10 +193,14 @@ export const ScalperExecutionHeader = memo(function ScalperExecutionHeader({
           toast.success(
             `Executed ${side.toUpperCase()} ${lotNum} ${symbol} @ ${fmtPrice(execPrice, digits)}`
           )
-          usePrices.getState().removeOptimisticPosition(optId)
           invalidateFxsim('/positions')
           invalidateFxsim('/account')
-          onChanged?.()
+          if (onChanged) {
+            await onChanged()
+          }
+          setTimeout(() => {
+            usePrices.getState().removeOptimisticPosition(optId)
+          }, 3500)
         } else {
           usePrices.getState().removeOptimisticPosition(optId)
           playOrderLossThumpSound()

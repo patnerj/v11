@@ -1133,7 +1133,7 @@ export default function AdminCommandCenter() {
           </div>
 
           {/* Action 2: Review KYC Queue */}
-          <Link href="/admin/traders" className="group block">
+          <Link href="/admin/kyc" className="group block">
             <Card className="bg-surface border-border hover:border-blue-500/60 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-200 h-full">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="h-11 w-11 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-500/20 transition-all shadow-md shadow-blue-500/10">

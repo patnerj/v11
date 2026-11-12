@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { useBranding } from "@/store/branding";
 import { cn } from "@/lib/cn";
+import { AiMessageContent } from "@/components/dashboard/zenith-ai-copilot";
 
 interface CategoryMeta {
   id: string;
@@ -696,7 +697,11 @@ export function TraderSupport() {
                                 : 'bg-muted/70 dark:bg-surface border border-border dark:border-surface-muted text-foreground dark:text-gray-100 rounded-tl-none'
                           }`}
                         >
-                          <p className="whitespace-pre-wrap font-sans">{msg.message}</p>
+                          {isAi ? (
+                            <AiMessageContent content={msg.message} />
+                          ) : (
+                            <p className="whitespace-pre-wrap font-sans">{msg.message}</p>
+                          )}
                         </div>
                       </motion.div>
                     );

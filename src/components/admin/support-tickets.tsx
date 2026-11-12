@@ -177,7 +177,7 @@ export function AdminSupportTickets() {
               <textarea
                 ref={replyTextareaRef}
                 autoFocus
-                className="w-full rounded-xl border border-border-strong bg-surface-muted p-4 pr-14 text-sm focus-ring min-h-[100px] resize-none"
+                className="w-full rounded-xl border border-border bg-surface text-text p-4 pr-14 text-sm focus-ring min-h-[100px] resize-none"
                 placeholder="Type your reply here..."
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}

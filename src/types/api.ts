@@ -777,6 +777,9 @@ export interface AdminUserRow {
   kyc_status?:       string
   plan_name?:        string
   starting_balance?: number | string
+  phone?:            string
+  billing_phone?:    string
+  fxsim_phone?:      string
 }
 
 export interface AdminRisk {

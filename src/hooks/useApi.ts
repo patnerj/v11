@@ -63,7 +63,13 @@ export function useChallengeMetricsQuery(challengeId?: number) {
 }
 
 export function usePositionsQuery() {
-  return useApiQuery(['positions'], () => api.positions(), { interval: LIVE_INTERVAL });
+  const ctx = usePrices((s) => s.tradingContext);
+  const pParams = buildContextParams(ctx);
+  return useApiQuery(
+    ['positions', pParams?.account_id ?? pParams?.tournament_id ?? 'latest'],
+    () => api.positions(pParams),
+    { interval: LIVE_INTERVAL },
+  );
 }
 
 // Disambiguated query key to avoid collision with infinite scroll history page

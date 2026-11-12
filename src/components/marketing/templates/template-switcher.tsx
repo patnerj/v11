@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Layers, Check, ChevronDown, Monitor, LayoutTemplate, Award, Zap } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -15,11 +15,16 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
+  const [isDemoHost, setIsDemoHost] = useState(false)
 
-  // Demo portal boundary guard (Rule 151)
+  useEffect(() => {
+    setIsDemoHost(window.location.hostname.includes('launchapropfirm.com'))
+  }, [])
+
+  // Demo portal boundary guard (Rule 151.4)
   const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true'
 
-  if (!isDemoPortal) return null
+  if (!isDemoPortal || !isDemoHost) return null
 
   const handleSelect = (tpl: LandingTemplateId) => {
     // Persist to cookie for 30 days

@@ -47,7 +47,7 @@ export default function PaymentsHubPage() {
     manual_crypto_enabled: true,
     manual_bank_enabled: true,
     binance_enabled: true,
-    binance_id: '345482171',
+    binance_id: '',
     binance_qr_url: '/branding/binance_pay_qr.png',
   })
 
@@ -688,8 +688,8 @@ export default function PaymentsHubPage() {
                     <Label className="text-xs font-semibold text-text">Official Binance Pay ID</Label>
                     <Input
                       type="text"
-                      placeholder="345482171"
-                      value={gatewayForm.binance_id ?? '345482171'}
+                      placeholder="Configure Merchant Binance ID"
+                      value={gatewayForm.binance_id ?? ''}
                       onChange={(e) => setGatewayForm({ ...gatewayForm, binance_id: e.target.value })}
                       className="font-mono text-xs"
                     />

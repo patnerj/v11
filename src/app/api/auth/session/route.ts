@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   let verified: { id?: number; is_admin?: boolean } | null = null
   try {
     const res = await fetch(`${base}/auth/me`, {
-      headers: { 'X-FXSIM-Token': token, 'X-FXSIM-Session-Verify': '1' },
+      headers: { 'Authorization': `Bearer ${token}`, 'X-FXSIM-Token': token, 'X-FXSIM-Session-Verify': '1' },
       cache: 'no-store',
       signal: AbortSignal.timeout(10_000),
     })

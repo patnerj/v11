@@ -92,7 +92,7 @@ const DEFAULTS: Record<string, string> = {
   facebook_pixel_id: '',
   google_site_verification: '',
   youtube_url: '#',
-  instagram_url: 'https://www.instagram.com/yourswebsitemaker/',
+  instagram_url: '#',
   tiktok_url: '#',
   facebook_url: '#',
   discord_url: '#',
@@ -151,7 +151,7 @@ export function BrandingCenter() {
       facebook_pixel_id: vals.facebook_pixel_id ?? '',
       google_site_verification: vals.google_site_verification ?? '',
       youtube_url: vals.youtube_url ?? '#',
-      instagram_url: vals.instagram_url ?? 'https://www.instagram.com/yourswebsitemaker/',
+      instagram_url: vals.instagram_url ?? '#',
       tiktok_url: vals.tiktok_url ?? '#',
       facebook_url: vals.facebook_url ?? '#',
       discord_url: vals.discord_url ?? '#',
@@ -602,7 +602,7 @@ export function BrandingCenter() {
                   id="bc-developer"
                   value={vals.developer_url ?? ''}
                   onChange={(e) => set('developer_url', e.target.value.trim())}
-                  placeholder="https://your-domain.com"
+                  placeholder="https://demo.launchapropfirm.com"
                   className="text-xs border-accent/40"
                 />
               </div>

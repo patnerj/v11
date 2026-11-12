@@ -3,6 +3,7 @@
 import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { motion, useDragControls } from 'framer-motion'
 import { Maximize2, Minimize2, Info, PencilRuler } from 'lucide-react'
+import { cn } from '@/lib/cn'
 import { useTerminal } from '@/store/terminal'
 import { usePrices } from '@/store/prices'
 import { tvSymbol, tvInterval, symbolDigits, parseTvMap, pipSize } from '@/lib/symbol-meta'
@@ -80,6 +81,26 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const [ready, setReady]   = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [fullscreen, setFs] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
+
+  const toggleMaximize = useCallback(() => {
+    setIsMaximized((prev) => {
+      const next = !prev
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 150)
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 400)
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!isMaximized) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMaximized(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isMaximized])
 
   // Admin chart-symbol overrides (Settings → Trading Feed), via the branding store.
   const rawTvMap = useBranding((s) => s.branding.tv_symbol_map)
@@ -197,6 +218,8 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
         containerRef.current.innerHTML = ''
         try {
           widgetRef.current = buildWidget(containerRef.current, resolved, !mobileDrawRef.current)
+          requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 300)
           setReady(true)
         } catch (e) { setError((e as Error).message || 'Chart failed to load') }
         return
@@ -316,9 +339,51 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
   const mid = bid && ask ? (bid + ask) / 2 : 0
 
   return (
-    <div ref={wrapRef} className="flex flex-col h-full min-h-0 bg-surface relative">
+    <div
+      ref={wrapRef}
+      className={cn(
+        "flex flex-col bg-surface relative min-h-0",
+        isMaximized
+          ? "fixed inset-0 z-50 w-screen h-[100dvh] bg-surface"
+          : "h-full"
+      )}
+    >
+      {/* Mobile Maximize Header (Full-viewport overlay mode) */}
+      {isMaximized && (
+        <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-surface-muted/95 backdrop-blur-md z-30">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-terminal-title font-bold terminal-num text-accent">{active}</span>
+            <button
+              onClick={onOpenWatchlist}
+              className="text-terminal-micro text-text-muted hover:text-text underline cursor-pointer"
+            >
+              change symbol
+            </button>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={toggleMobileDraw}
+              className={`h-7 px-2.5 inline-flex items-center gap-1 rounded text-terminal-micro border transition-colors ${mobileDraw ? 'text-accent border-accent/40 bg-accent/10' : 'text-text-muted border-border hover:text-text'}`}
+              aria-label="Toggle drawing tools"
+            >
+              <PencilRuler className="h-3.5 w-3.5" />
+              <span>Draw</span>
+            </button>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              className="h-7 px-3 inline-flex items-center gap-1.5 rounded-lg bg-accent text-accent-contrast font-bold text-terminal-micro shadow-sm hover:bg-accent-hover cursor-pointer"
+              title="Close Fullscreen View"
+            >
+              <Minimize2 className="h-3.5 w-3.5" />
+              <span>Close Fullscreen</span>
+            </button>
+          </div>
+        </div>
+      )}
       {/* Mobile-only compact tap bar (on mobile viewports only) */}
-      {compact && (
+      {compact && !isMaximized && (
         <div className="shrink-0 flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-border-subtle bg-bg-subtle/40">
           <button
             onClick={onOpenWatchlist}
@@ -333,14 +398,26 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
             <span className="text-terminal-micro text-accent underline ml-1">change</span>
           </button>
 
-          <button
-            onClick={toggleMobileDraw}
-            className={`shrink-0 h-6 px-2 inline-flex items-center gap-1 rounded text-terminal-micro focus-ring ${mobileDraw ? 'text-accent bg-accent/10' : 'text-text-muted hover:text-text'}`}
-            aria-pressed={mobileDraw}
-            aria-label="Toggle drawing tools"
-          >
-            <PencilRuler className="h-3 w-3" /> Draw
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={toggleMobileDraw}
+              className={`h-6 px-2 inline-flex items-center gap-1 rounded text-terminal-micro focus-ring ${mobileDraw ? 'text-accent bg-accent/10' : 'text-text-muted hover:text-text'}`}
+              aria-pressed={mobileDraw}
+              aria-label="Toggle drawing tools"
+            >
+              <PencilRuler className="h-3 w-3" /> Draw
+            </button>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              className="h-6 px-2.5 inline-flex items-center gap-1 rounded text-terminal-micro border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 focus-ring font-semibold transition-colors cursor-pointer"
+              title="Maximize / Expand Chart"
+              aria-label="Maximize Chart"
+            >
+              <Maximize2 className="h-3 w-3" /> Expand
+            </button>
+          </div>
         </div>
       )}
 
@@ -375,7 +452,14 @@ export const ChartPanel = memo(function ChartPanel({ compact, positions, onOpenW
       />
 
       {/* Chart host */}
-      <div ref={chartHostRef} className="relative flex-1 min-h-0" style={{ touchAction: 'pan-y' }}>
+      <div
+        ref={chartHostRef}
+        className={cn(
+          "relative flex-1 min-h-0",
+          compact && !isMaximized && "min-h-[260px] xs:min-h-[300px]"
+        )}
+        style={{ touchAction: 'pan-y' }}
+      >
         {!ready && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface z-[1]">
             <motion.div

@@ -109,9 +109,9 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
   }, [currentModelPlans, selectedSize]);
 
   const getModelBadge = (modelName: string) => {
-    if (modelName === "2-Step") return "⭐ Most Popular";
-    if (modelName === "1-Step") return "⚡ Rapid 1-Phase";
-    if (modelName === "Instant Funding") return "🚀 No Evaluation";
+    if (modelName === "2-Step") return "Most Popular";
+    if (modelName === "1-Step") return "Rapid 1-Phase";
+    if (modelName === "Instant Funding") return "No Evaluation";
     return "Classic";
   };
 

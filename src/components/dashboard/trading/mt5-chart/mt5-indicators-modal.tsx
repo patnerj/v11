@@ -209,7 +209,7 @@ export const Mt5IndicatorsModal = memo(function Mt5IndicatorsModal({
                       )}
                     >
                       <span className="font-medium">{t.label}</span>
-                      <span className="text-[10px] font-normal text-text-muted mt-0.5">{t.desc}</span>
+                      <span className="text-2xs font-normal text-text-muted mt-0.5">{t.desc}</span>
                     </button>
                   ))}
                 </div>

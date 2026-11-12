@@ -210,22 +210,13 @@ export default function TradingTerminalPage() {
   const allPrices = usePrices((s) => s.prices)
   const getMeta = useTerminal((s) => s.getMeta)
 
-  // Aggregate open PnL — drives AccountStrip's "P&L" tile
+  // Aggregate open PnL — drives AccountStrip's "P&L" tile (Rule 114: Unified Live Tick PnL)
   const openPnL = useMemo(() => {
     if (!positions || positions.length === 0) return 0
     return positions.reduce((s, p) => {
-      const isMt5 = Boolean(p.order_id && Number(p.order_id) > 0 && (p as any).source === 'mt5')
-      const tick = allPrices[p.symbol]
-      const curPx = p.type === 'buy' ? (toNum(tick?.bid) || toNum(p.current_price)) : (toNum(tick?.ask) || toNum(p.current_price))
-      const openPx = toNum(p.open_price)
-      if (!isMt5 && curPx > 0 && openPx > 0) {
-        const meta = getMeta(p.symbol)
-        const diff = p.type === 'buy' ? curPx - openPx : openPx - curPx
-        const cSize = toNum(meta?.contract_size) || getSymbolMeta(p.symbol).contractSize
-        const calcPnl = diff * cSize * toNum(p.lot_size) * quoteToUsdRate(p.symbol, curPx, allPrices) + toNum(p.swap) - toNum(p.commission)
-        return s + calcPnl
-      }
-      return s + (isMt5 ? toNum(p.pnl) + toNum(p.swap) - toNum(p.commission) : toNum(p.pnl))
+      const meta = getMeta(p.symbol)
+      const cSize = toNum(meta?.contract_size) || getSymbolMeta(p.symbol).contractSize
+      return s + calculateLivePositionPnL(p, allPrices, cSize)
     }, 0)
   }, [positions, allPrices, getMeta])
 

@@ -251,16 +251,16 @@ export default function PvpArenaLobbyPage() {
 
   const allMatches: PvpMatch[] = useMemo(() => {
     if (!lobbyData) return []
-    const w = lobbyData.waiting || []
-    const a = lobbyData.active || []
-    const c = lobbyData.completed || []
+    const w = Array.isArray(lobbyData.waiting) ? lobbyData.waiting : []
+    const a = Array.isArray(lobbyData.active) ? lobbyData.active : []
+    const c = Array.isArray(lobbyData.completed) ? lobbyData.completed : []
     return [...a, ...w, ...c]
   }, [lobbyData])
 
   const filteredMatches = useMemo(() => {
-    if (filterTab === 'waiting') return lobbyData?.waiting || []
-    if (filterTab === 'active') return lobbyData?.active || []
-    if (filterTab === 'completed') return lobbyData?.completed || []
+    if (filterTab === 'waiting') return Array.isArray(lobbyData?.waiting) ? lobbyData.waiting : []
+    if (filterTab === 'active') return Array.isArray(lobbyData?.active) ? lobbyData.active : []
+    if (filterTab === 'completed') return Array.isArray(lobbyData?.completed) ? lobbyData.completed : []
     return allMatches
   }, [filterTab, lobbyData, allMatches])
 
@@ -285,7 +285,8 @@ export default function PvpArenaLobbyPage() {
   const practiceChips = lobbyData?.practice_balance ?? 1000
   const cashBalance = walletData?.wallet?.balance ?? walletData?.balance ?? lobbyData?.cash_balance ?? 0
   const walletMode = walletData?.wallet_mode || 'demo'
-  const availablePerksCount = (perksData?.perks || []).filter(p => p.status === 'available').length
+  const safePerks = useMemo(() => (Array.isArray(perksData?.perks) ? perksData.perks : []), [perksData?.perks])
+  const availablePerksCount = safePerks.filter(p => p.status === 'available').length
 
   const getPerkName = (type: string) => {
     switch (type) {
@@ -1394,14 +1395,14 @@ export default function PvpArenaLobbyPage() {
 
           {/* Perks List */}
           <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-            {(perksData?.perks || []).length === 0 ? (
+            {safePerks.length === 0 ? (
               <div className="text-center py-8 text-text-muted">
                 <Gift className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No perks in your inventory yet.</p>
                 <p className="text-2xs mt-1">Win a Mode 3 Perk Duel in the arena to unlock Free Retries and Drawdown Buffers!</p>
               </div>
             ) : (
-              (perksData?.perks || []).map((perk) => {
+              safePerks.map((perk) => {
                 const isAvailable = perk.status === 'available'
                 return (
                   <div 

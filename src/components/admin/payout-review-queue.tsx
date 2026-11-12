@@ -165,7 +165,7 @@ export function PayoutReviewQueue() {
               onChange={(e) => setBulkNote(e.target.value)}
               rows={3}
               placeholder={bulkAction === 'rejected' ? 'Reason (sent with each rejection)…' : 'Optional note…'}
-              className="w-full rounded-md bg-surface-muted border border-border-subtle px-3 py-2 text-sm resize-y focus-ring"
+              className="w-full rounded-md bg-surface text-text border border-border px-3 py-2 text-sm resize-y focus-ring"
             />
             <DialogFooter>
               <Button variant="ghost" onClick={() => setBulkAction(null)}>Cancel</Button>

@@ -94,17 +94,20 @@ function KycDocViewer({
             headers,
             cache: 'no-store',
           })
-        } catch {
-          // Fallback: If browser blocked direct fetch, try same-origin proxy
-          // (token forwarded via header — never the URL)
+        } catch {}
+
+        // Fallback: If direct fetch failed or returned non-ok, try same-origin proxy
+        if ((!res || !res.ok) && token) {
           const match = docPath.match(/\/admin\/kyc\/(\d+)\/doc\/([^/]+)/)
-          if (match && token) {
+          if (match) {
             const [, kycId, docType] = match
             const proxyUrl = `/api/kyc-doc?id=${encodeURIComponent(kycId)}&type=${encodeURIComponent(docType)}`
-            res = await fetch(proxyUrl, {
-              cache: 'no-store',
-              headers: { 'X-FXSIM-Token': token, 'Authorization': `Bearer ${token}` },
-            })
+            try {
+              res = await fetch(proxyUrl, {
+                cache: 'no-store',
+                headers: { 'X-FXSIM-Token': token, 'Authorization': `Bearer ${token}` },
+              })
+            } catch {}
           }
         }
 
@@ -441,6 +444,8 @@ export default function KycHubPage() {
       } else {
         await reviewMutation.mutateAsync({ id, action: 'reject', note: rejectionNote })
       }
+    } catch {
+      // Handled by reviewMutation.onError
     } finally {
       setIsActionLoading(false)
     }

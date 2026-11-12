@@ -87,10 +87,8 @@ export function StatCard({
             </div>
           )}
         </div>
-        <div className={cn('text-2xl sm:text-3xl font-extrabold tracking-tight tabular truncate relative z-10 text-text/30 animate-pulse', valueClass)}>
-          ...
-        </div>
-        {displaySub && <div className="text-2xs text-text-muted mt-1 tabular relative z-10 opacity-0">{displaySub}</div>}
+        <Skeleton className="h-8 w-32 rounded-lg my-0.5 relative z-10" />
+        {displaySub && <Skeleton className="h-3.5 w-24 rounded mt-1.5 relative z-10" />}
       </Card>
     )
   }

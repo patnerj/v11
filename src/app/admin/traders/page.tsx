@@ -62,6 +62,54 @@ function formatExactMoney(val: number | string | undefined | null) {
   }).format(num)
 }
 
+function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]) {
+  const csvLines = [
+    headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(','),
+    ...rows.map(row => row.join(','))
+  ]
+  const csvString = '\uFEFF' + csvLines.join('\r\n')
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.setAttribute('href', url)
+  link.setAttribute('download', filename)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+function extractTraderPhone(u: any, c?: any): string {
+  const candidates = [
+    c?.phone,
+    c?.billing_phone,
+    c?.fxsim_phone,
+    u?.phone,
+    u?.billing_phone,
+    u?.fxsim_phone,
+    u?.telephone,
+    u?.mobile,
+    u?.user_phone,
+    u?.contact_phone,
+    u?.whatsapp,
+  ]
+  for (const val of candidates) {
+    if (val && typeof val === 'string' && val.trim() !== '' && val.trim() !== '—' && val.trim() !== 'null' && val.trim() !== 'undefined') {
+      return val.trim()
+    }
+  }
+  return '—'
+}
+
+function formatPhoneForCsv(phone?: string): string {
+  const clean = String(phone || '').trim()
+  if (!clean || clean === '—' || clean === 'null' || clean === 'undefined') {
+    return '"—"'
+  }
+  // Standard Excel CSV formula notation: ="..." ensures numbers with '+' or leading '0' are treated strictly as text (avoiding scientific notation like 9.23E+11)
+  return `"=""${clean.replace(/"/g, '""')}"""`
+}
+
 export interface TraderRowItem {
   id: number
   user_id: number
@@ -102,6 +150,7 @@ export default function TradersHubPage() {
   const [quickTab, setQuickTab] = useState<'all' | 'funded' | 'evaluation' | 'breached' | 'kyc_pending'>('all')
   const [selectedTraderIds, setSelectedTraderIds] = useState<(string | number)[]>([])
   const [isBulkSyncing, setIsBulkSyncing] = useState(false)
+  const [isExportingAll, setIsExportingAll] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
 
@@ -231,7 +280,7 @@ export default function TradersHubPage() {
             username: u.user_login || c.username || `trader_${uid}`,
             email: u.user_email || c.user_email || '—',
             account_id: c.fxsim_account_id ? String(c.fxsim_account_id) : (c.account_id && String(c.account_id) !== String(c.id) ? String(c.account_id) : ''),
-            plan_name: c.plan_name || '$100K Stellar 2-Step',
+            plan_name: c.plan_name || (c.starting_balance ? `$${Number(c.starting_balance).toLocaleString()} Challenge` : 'Standard Evaluation'),
             phase: phaseNum,
             phase_name: isFunded ? 'Funded Pro' : `Phase ${phaseNum}`,
             status: rowStatus,
@@ -240,6 +289,7 @@ export default function TradersHubPage() {
             starting_balance: startingBal,
             kyc_status: (c.kyc_status || u.kyc_status || 'unverified') as any,
             created_at: c.created_at || u.user_registered || new Date().toISOString(),
+            phone: extractTraderPhone(u, c),
             profit_split: Number(c.custom_profit_split || c.funded_profit_split || 80),
             max_daily_loss: Number(c.custom_daily_dd || c.max_daily_loss_pct || 5),
             max_total_loss: Number(c.custom_max_dd || c.max_total_loss_pct || 10),
@@ -262,6 +312,7 @@ export default function TradersHubPage() {
           name: u.user_login || `Trader #${uid}`,
           username: u.user_login || `trader_${uid}`,
           email: u.user_email || '—',
+          phone: extractTraderPhone(u),
           account_id: u.account_id && String(u.account_id) !== '0' && String(u.account_id) !== String(uid) ? String(u.account_id) : '',
           plan_name: u.plan_name || (hasChallengeId ? 'Active Challenge' : 'No Active Challenge'),
           phase: 0,
@@ -302,10 +353,15 @@ export default function TradersHubPage() {
       // 1. Search filter
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase().trim()
+        const cleanDigits = query.replace(/\D/g, '')
+        const traderPhoneDigits = (trader.phone || '').replace(/\D/g, '')
         const matchesName = trader.name.toLowerCase().includes(query)
         const matchesEmail = trader.email.toLowerCase().includes(query)
         const matchesAccount = String(trader.account_id).toLowerCase().includes(query)
-        if (!matchesName && !matchesEmail && !matchesAccount) return false
+        const matchesPhone = (trader.phone || '').toLowerCase().includes(query) ||
+          (cleanDigits.length >= 3 && traderPhoneDigits.includes(cleanDigits.replace(/^0+/, '')))
+        const matchesId = String(trader.user_id).includes(query) || (trader.challenge_id && String(trader.challenge_id).includes(query))
+        if (!matchesName && !matchesEmail && !matchesAccount && !matchesPhone && !matchesId) return false
       }
 
       // 2. Quick Status Pill Tab filter (Option 2)
@@ -362,17 +418,13 @@ export default function TradersHubPage() {
     }
   }
 
-  // Export CSV Handler
-  const handleExportCSV = () => {
-    if (filteredTraders.length === 0) {
-      toast.error('No trader records found to export.')
-      return
-    }
-
+  // Unified helper to export an array of TraderRowItem to CSV
+  const exportTraderRowsToCsv = (items: TraderRowItem[], filename: string) => {
     const headers = [
       'Trader ID',
       'Name',
       'Email',
+      'Phone Number',
       'Account ID',
       'Plan Name',
       'Phase',
@@ -384,31 +436,44 @@ export default function TradersHubPage() {
       'Registered Date',
     ]
 
-    const rows = filteredTraders.map((t) => [
+    const rows = items.map((t) => [
       t.user_id,
-      `"${t.name.replace(/"/g, '""')}"`,
-      `"${t.email}"`,
-      `"#USR-${t.user_id}${t.id ? ' #CH-' + t.id : ''}${t.account_id ? ' #ACC-' + t.account_id : ''}"`,
-      `"${t.plan_name}"`,
-      t.phase_name || `Phase ${t.phase}`,
-      t.status,
+      `"${String(t.name || '').replace(/"/g, '""')}"`,
+      `"${String(t.email || '—').replace(/"/g, '""')}"`,
+      formatPhoneForCsv(t.phone),
+      `"${t.account_id ? String(t.account_id).replace(/"/g, '""') : (t.id ? `#CH-${t.id}` : '—')}"`,
+      `"${String(t.plan_name || 'No Active Challenge').replace(/"/g, '""')}"`,
+      `"${String(t.phase_name || (t.phase ? `Phase ${t.phase}` : 'Registered')).replace(/"/g, '""')}"`,
+      `"${String(t.status || 'registered').replace(/"/g, '""')}"`,
       toNum(t.balance).toFixed(2),
       toNum(t.equity).toFixed(2),
-      t.kyc_status,
+      `"${String(t.kyc_status || 'unverified').replace(/"/g, '""')}"`,
       t.profit_split ?? 80,
-      `"${new Date(t.created_at).toLocaleDateString()}"`,
+      `"${t.created_at && !isNaN(new Date(t.created_at).getTime()) ? new Date(t.created_at).toLocaleDateString() : '—'}"`,
     ])
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `propfirm_traders_export_${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    downloadCsv(filename, headers, rows)
+  }
 
-    toast.success(`Exported ${filteredTraders.length} trader records to CSV`)
+  // Export CSV Handler
+  const handleExportCSV = async () => {
+    if (filteredTraders.length === 0) {
+      toast.error('No trader records found to export.')
+      return
+    }
+
+    // If client-side filters reduced the view and all records were in memory
+    if ((!usersData?.total || usersData.total <= pageSize) && filteredTraders.length > 0) {
+      exportTraderRowsToCsv(filteredTraders, `propfirm_traders_export_${new Date().toISOString().slice(0, 10)}.csv`)
+      toast.success(`Exported ${filteredTraders.length} trader records to CSV`)
+      return
+    }
+
+    // If additional records exist on server, fetch all matching the active filters
+    await handleExportAllTradersCSV({
+      searchQuery: searchTerm.trim() || undefined,
+      applyFilters: true,
+    })
   }
 
   // Export Selected CSV Handler (Option 2)
@@ -419,58 +484,213 @@ export default function TradersHubPage() {
       return
     }
 
-    const headers = [
-      'Trader ID',
-      'Name',
-      'Email',
-      'Account ID',
-      'Plan Name',
-      'Phase',
-      'Status',
-      'Balance',
-      'Equity',
-      'KYC Status',
-      'Profit Split %',
-      'Registered At',
-    ]
-
-    const rows = selectedRows.map(t => [
-      t.user_id,
-      `"${t.name.replace(/"/g, '""')}"`,
-      `"${t.email}"`,
-      `"#USR-${t.user_id}${t.id ? ' #CH-' + t.id : ''}${t.account_id ? ' #ACC-' + t.account_id : ''}"`,
-      `"${t.plan_name}"`,
-      t.phase_name || `Phase ${t.phase}`,
-      t.status,
-      toNum(t.balance).toFixed(2),
-      toNum(t.equity).toFixed(2),
-      t.kyc_status,
-      t.profit_split ?? 80,
-      `"${new Date(t.created_at).toLocaleDateString()}"`,
-    ])
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `selected_traders_export_${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
+    exportTraderRowsToCsv(selectedRows, `selected_traders_export_${new Date().toISOString().slice(0, 10)}.csv`)
     toast.success(`Exported ${selectedRows.length} selected trader records to CSV`)
+  }
+
+  // Export All Traders CSV Handler (fetches full directory from server)
+  const handleExportAllTradersCSV = async (options?: { searchQuery?: string; applyFilters?: boolean } | string) => {
+    const searchQuery = typeof options === 'string' ? options : options?.searchQuery
+    const applyFilters = typeof options === 'object' ? !!options?.applyFilters : false
+
+    setIsExportingAll(true)
+    const toastId = toast.loading('Fetching complete traders directory...')
+    try {
+      const res = await api.admin.users(searchQuery, 1, 10000)
+      if (!res.ok) {
+        toast.error((!res.ok ? res.error : 'Failed to fetch traders') || 'Failed to fetch traders', { id: toastId })
+        return
+      }
+
+      let allUsers: any[] = Array.isArray(res.data) ? res.data : (res.data?.data || [])
+      const totalPages = res.data?.pages || 1
+      if (totalPages > 1 && allUsers.length < (res.data?.total || 0)) {
+        const remainingPagePromises = []
+        for (let p = 2; p <= totalPages; p++) {
+          remainingPagePromises.push(api.admin.users(searchQuery, p, 10000))
+        }
+        const pagesRes = await Promise.all(remainingPagePromises)
+        for (const pRes of pagesRes) {
+          if (pRes.ok) {
+            const pageData = Array.isArray(pRes.data) ? pRes.data : (pRes.data?.data || [])
+            allUsers = allUsers.concat(pageData)
+          }
+        }
+      }
+
+      if (allUsers.length === 0) {
+        toast.error('No trader records found.', { id: toastId })
+        return
+      }
+
+      // Fetch challenges to associate accounts & plans
+      let allChallenges: any[] = []
+      try {
+        const cRes = await api.admin.challenges({ limit: 10000 })
+        if (cRes.ok && cRes.data?.challenges) {
+          allChallenges = cRes.data.challenges
+        }
+      } catch {
+        // Safe fallback if challenges endpoint fails
+      }
+
+      const challengesByUser = new Map<number, any[]>()
+      for (const c of allChallenges) {
+        const uid = Number(c.user_id)
+        if (!uid || isNaN(uid) || uid <= 0) continue
+        if (!challengesByUser.has(uid)) challengesByUser.set(uid, [])
+        challengesByUser.get(uid)!.push(c)
+      }
+
+      const headers = [
+        'Trader ID',
+        'Name',
+        'Email',
+        'Phone Number',
+        'Account ID',
+        'Plan Name',
+        'Phase',
+        'Status',
+        'Balance ($)',
+        'Equity ($)',
+        'KYC Status',
+        'Profit Split (%)',
+        'Registered Date',
+      ]
+
+      const rows: (string | number)[][] = []
+
+      for (const u of allUsers) {
+        const uid = Number(u.user_id || (u as any).id)
+        const userChallenges = challengesByUser.get(uid) || []
+        const name = (u.user_login || `Trader #${uid}`).replace(/"/g, '""')
+        const email = (u.user_email || '—').replace(/"/g, '""')
+        const regDate = u.user_registered && !isNaN(new Date(u.user_registered).getTime()) ? new Date(u.user_registered).toLocaleDateString() : '—'
+
+        if (userChallenges.length > 0) {
+          for (const c of userChallenges) {
+            const rowPhone = extractTraderPhone(u, c)
+            const startingBal = Number(c.starting_balance || 100000)
+            const currentBal = Number(c.current_balance || c.balance || startingBal)
+            const currentEq = Number(c.equity || currentBal)
+            const phaseNum = Number(c.phase || 1)
+            const isFunded = c.status === 'funded' || phaseNum === 3
+            const phaseName = isFunded ? 'Funded Pro' : `Phase ${phaseNum}`
+            const accId = c.fxsim_account_id ? String(c.fxsim_account_id) : (c.account_id && String(c.account_id) !== String(c.id) ? String(c.account_id) : `#CH-${c.id}`)
+            const plan = (c.plan_name || (c.starting_balance ? `$${Number(c.starting_balance).toLocaleString()} Challenge` : 'Standard Evaluation')).replace(/"/g, '""')
+            const status = c.status || (isFunded ? 'funded' : 'active')
+            const kyc = c.kyc_status || u.kyc_status || 'unverified'
+            const profitSplit = Number(c.custom_profit_split || c.funded_profit_split || 80)
+
+            if (applyFilters) {
+              if (quickTab === 'funded' && status !== 'funded' && phaseNum !== 3) continue
+              if (quickTab === 'evaluation' && ((phaseNum !== 1 && phaseNum !== 2) || status === 'violated' || status === 'failed' || status === 'banned')) continue
+              if (quickTab === 'breached' && status !== 'violated' && status !== 'failed') continue
+              if (quickTab === 'kyc_pending' && kyc !== 'pending') continue
+
+              if (statusFilter !== 'all') {
+                if (statusFilter === 'phase1' && (phaseNum !== 1 || status === 'violated' || status === 'banned')) continue
+                if (statusFilter === 'phase2' && (phaseNum !== 2 || status === 'violated' || status === 'banned')) continue
+                if (statusFilter === 'funded' && status !== 'funded' && phaseNum !== 3) continue
+                if (statusFilter === 'violated' && status !== 'violated' && status !== 'failed') continue
+                if (statusFilter === 'banned' && status !== 'banned' && status !== 'suspended') continue
+                if (statusFilter === 'registered' && phaseNum !== 0 && status !== 'registered') continue
+              }
+
+              if (kycFilter !== 'all') {
+                if (kyc !== kycFilter) continue
+              }
+            }
+
+            rows.push([
+              uid,
+              `"${name}"`,
+              `"${email}"`,
+              formatPhoneForCsv(rowPhone),
+              `"${accId}"`,
+              `"${plan}"`,
+              `"${phaseName}"`,
+              `"${status}"`,
+              toNum(currentBal).toFixed(2),
+              toNum(currentEq).toFixed(2),
+              `"${kyc}"`,
+              profitSplit,
+              `"${regDate}"`,
+            ])
+          }
+        } else {
+          const rowPhone = extractTraderPhone(u)
+          const currentBal = Number(u.balance || 0)
+          const currentEq = Number(u.equity || 0)
+          const accId = u.account_id && String(u.account_id) !== '0' && String(u.account_id) !== String(uid) ? String(u.account_id) : '—'
+          const plan = (u.plan_name || 'No Active Challenge').replace(/"/g, '""')
+          const status = u.status === 'banned' ? 'banned' : (u.status === 'no_account' ? 'registered' : (u.status || 'registered'))
+          const kyc = u.kyc_status || 'unverified'
+
+          if (applyFilters) {
+            if (quickTab === 'funded' || quickTab === 'evaluation' || quickTab === 'breached') continue
+            if (quickTab === 'kyc_pending' && kyc !== 'pending') continue
+
+            if (statusFilter !== 'all') {
+              if (statusFilter === 'phase1' || statusFilter === 'phase2' || statusFilter === 'funded' || statusFilter === 'violated') continue
+              if (statusFilter === 'banned' && status !== 'banned') continue
+              if (statusFilter === 'registered' && status !== 'registered') continue
+            }
+
+            if (kycFilter !== 'all') {
+              if (kyc !== kycFilter) continue
+            }
+          }
+
+          rows.push([
+            uid,
+            `"${name}"`,
+            `"${email}"`,
+            formatPhoneForCsv(rowPhone),
+            `"${accId}"`,
+            `"${plan}"`,
+            `"Registered"`,
+            `"${status}"`,
+            toNum(currentBal).toFixed(2),
+            toNum(currentEq).toFixed(2),
+            `"${kyc}"`,
+            80,
+            `"${regDate}"`,
+          ])
+        }
+      }
+
+      if (rows.length === 0) {
+        toast.error('No trader records matching current filters to export.', { id: toastId })
+        return
+      }
+
+      const filename = applyFilters
+        ? `propfirm_traders_export_${new Date().toISOString().slice(0, 10)}.csv`
+        : (searchQuery
+            ? `traders_search_${encodeURIComponent(searchQuery)}_${new Date().toISOString().slice(0, 10)}.csv`
+            : `all_traders_export_${new Date().toISOString().slice(0, 10)}.csv`)
+      downloadCsv(filename, headers, rows)
+      toast.success(`Exported ${rows.length} trader records to CSV!`, { id: toastId })
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to export traders to CSV', { id: toastId })
+    } finally {
+      setIsExportingAll(false)
+    }
   }
 
   // Bulk Re-sync MT5 Telemetry Handler (Option 2)
   const handleBulkResync = async () => {
     if (selectedTraderIds.length === 0) return
     setIsBulkSyncing(true)
+    const toastId = toast.loading(`Triggering MT5 telemetry re-sync for ${selectedTraderIds.length} trader account(s)...`)
     try {
-      toast.info(`Triggering MT5 telemetry re-sync for ${selectedTraderIds.length} trader account(s)...`)
-      await new Promise(r => setTimeout(r, 650))
-      toast.success(`Successfully re-calibrated MT5 telemetry for ${selectedTraderIds.length} account(s)!`)
-      refetchUsers()
+      await api.admin.mt5Sync?.({ user_ids: selectedTraderIds.map(Number) })
+      await refetchUsers()
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+      toast.success(`Successfully re-calibrated MT5 telemetry for ${selectedTraderIds.length} account(s)!`, { id: toastId })
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to re-sync MT5 telemetry', { id: toastId })
     } finally {
       setIsBulkSyncing(false)
     }
@@ -522,7 +742,7 @@ export default function TradersHubPage() {
               </Link>
               <div className="flex items-center gap-1.5 text-xs text-text-muted">
                 <span className="truncate">{row.email}</span>
-                {row.phone && (
+                {row.phone && row.phone !== '—' && (
                   (() => {
                     const waUrl = getWhatsAppUrl(row.phone)
                     return waUrl ? (
@@ -818,6 +1038,17 @@ export default function TradersHubPage() {
             </Button>
 
             <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleExportAllTradersCSV()}
+              disabled={isExportingAll}
+              className="border-border text-text hover:bg-surface-muted gap-2 h-8.5 text-xs font-semibold"
+            >
+              <Download className="h-3.5 w-3.5 text-cyan-500" />
+              {isExportingAll ? 'Exporting All...' : 'Export All Traders (CSV)'}
+            </Button>
+
+            <Button 
               variant="primary" 
               size="sm" 
               className="gap-2 h-8.5 text-xs font-semibold shadow-accent/20"
@@ -968,7 +1199,7 @@ export default function TradersHubPage() {
             </CardDescription>
           </div>
           <span className="text-xs font-mono text-text-muted">
-            Showing {filteredTraders.length} of {allTraders.length} records
+            Showing {filteredTraders.length} of {usersData?.total ?? allTraders.length} records
           </span>
         </CardHeader>
 

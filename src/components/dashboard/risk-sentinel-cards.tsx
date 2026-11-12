@@ -95,7 +95,7 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
                   Risk Sentinel · Daily Limit
                 </span>
                 <h3 className="text-terminal-title font-semibold text-text truncate">
-                  🛡️ Daily DD Cushion
+                  Daily DD Cushion
                 </h3>
               </div>
             </div>
@@ -183,7 +183,7 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
                 "terminal-num font-semibold truncate",
                 dailyTone === 'safe' ? "text-emerald-400" : dailyTone === 'warn' ? "text-amber-400" : "text-rose-400"
               )}>
-                {dailyTone === 'safe' ? 'Protected 🛡️' : dailyTone === 'warn' ? 'Cautious ⚠️' : 'Critical 🚨'}
+                {dailyTone === 'safe' ? 'Protected' : dailyTone === 'warn' ? 'Cautious' : 'Critical'}
               </span>
             </div>
           </div>
@@ -227,7 +227,7 @@ export const RiskSentinelCards = memo(function RiskSentinelCards({
                   {isTrailing ? 'Trailing DD Floor' : 'Max Drawdown Floor'}
                 </span>
                 <h3 className="text-terminal-title font-semibold text-text truncate">
-                  🛡️ Max DD Floor
+                  Max DD Floor
                 </h3>
               </div>
             </div>
