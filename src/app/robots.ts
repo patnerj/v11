@@ -7,6 +7,18 @@ export default function robots(): MetadataRoute.Robots {
     'https://demo.launchapropfirm.com'
   ).replace(/\/$/, '')
 
+  if (baseUrl.includes('demo.launchapropfirm.com')) {
+    return {
+      rules: [
+        {
+          userAgent: '*',
+          disallow: '/',
+        },
+      ],
+      host: baseUrl,
+    }
+  }
+
   return {
     rules: [
       {

@@ -127,11 +127,11 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: siteUrl,
     } : undefined,
     robots: {
-      index: robotsIndexing !== 'noindex',
-      follow: robotsIndexing !== 'noindex',
+      index: !siteUrl.includes('demo.launchapropfirm.com') && robotsIndexing !== 'noindex',
+      follow: !siteUrl.includes('demo.launchapropfirm.com') && robotsIndexing !== 'noindex',
       googleBot: {
-        index: robotsIndexing !== 'noindex',
-        follow: robotsIndexing !== 'noindex',
+        index: !siteUrl.includes('demo.launchapropfirm.com') && robotsIndexing !== 'noindex',
+        follow: !siteUrl.includes('demo.launchapropfirm.com') && robotsIndexing !== 'noindex',
         'max-video-preview': -1,
         'max-image-preview': 'large',
         'max-snippet': -1,
@@ -773,6 +773,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ` }} suppressHydrationWarning />
       </head>
       <body className="min-h-screen antialiased font-sans" style={{ fontFamily: 'var(--font-sans), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }} suppressHydrationWarning>
+        {/* Sandbox Demonstration Environment Banner */}
+        <div data-nosnippet="" className="sticky top-0 z-[100001] w-full bg-amber-500/95 px-3 py-1.5 text-center text-[11px] font-semibold tracking-wide text-black shadow-md backdrop-blur-sm">
+          <span>SANDBOX DEMONSTRATION ENVIRONMENT — All metrics, payouts ($4.25M+), and trader accounts shown are simulated sample data demonstrating the LaunchPropFirm software template.</span>
+        </div>
         <Providers>{children}</Providers>
         <LiveChat />
         <CommandPalette />
