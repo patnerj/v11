@@ -16,7 +16,7 @@ export function PayoutsSection({ puckProps }: { puckProps?: any }) {
     : puckProps.description
   
   const items = puckProps?.items || [
-    { itemText: 'Bi-weekly payout cycle — regular, predictable withdrawals' },
+    { itemText: 'Bi-weekly payout cycle: regular, predictable withdrawals' },
     { itemText: 'Crypto (USDT TRC-20, ERC-20, BTC) & Bank Wire supported' },
     { itemText: '100% Evaluation Fee Refund included with your very first payout' },
     { itemText: 'Profit split up to 90% with progressive scaling milestones' },

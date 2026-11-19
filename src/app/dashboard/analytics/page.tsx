@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
   const statsParams = buildContextParams(tradingCtx)
 
   const { data, isPending } = useQuery({
-    queryKey: ['analyticsData', statsParams?.account_id ?? statsParams?.tournament_id ?? 0],
+    queryKey: ['analyticsData', tradingCtx?.kind ?? 'account', statsParams?.account_id ?? statsParams?.tournament_id ?? 0],
     queryFn: async () => {
       const [fRes, aRes] = await Promise.all([
         api.statsFull(statsParams),

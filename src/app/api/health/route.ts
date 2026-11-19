@@ -29,7 +29,7 @@ export async function GET() {
       market_feed: {
         name: 'Live ECN Market Data Feeds',
         status: 'operational',
-        location: 'Pepperstone ECN Raw Feed',
+        location: 'Tier-1 Institutional ECN Feed',
         base_latency_ms: 4,
         uptime_pct: 100.0,
       },

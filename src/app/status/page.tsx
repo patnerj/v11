@@ -65,7 +65,7 @@ const SERVICES: ServiceComponent[] = [
     latency: '4ms',
     uptime: '100.0%',
     status: 'operational',
-    location: 'Pepperstone ECN Raw Feed',
+    location: 'Tier-1 Institutional ECN Feed',
     icon: BarChart3
   },
   {
@@ -169,7 +169,7 @@ export default function StatusPage() {
           latency: `${Math.max(2, Math.round(rtt * 0.15))}ms`,
           uptime: `${nodes.market_feed?.uptime_pct ?? 100.0}%`,
           status: isUp && nodes.market_feed?.status !== 'degraded' ? 'operational' : 'degraded',
-          location: nodes.market_feed?.location || 'Pepperstone ECN Raw Feed',
+          location: nodes.market_feed?.location || 'Tier-1 Institutional ECN Feed',
           icon: BarChart3
         },
         {
@@ -441,7 +441,7 @@ export default function StatusPage() {
                 </div>
                 <h3 className="text-lg font-bold text-text mb-1">Institutional Relations</h3>
                 <p className="text-xs text-text-muted mb-5 leading-relaxed">
-                  For capital allocations ($100K–$2M+), enterprise partnerships, and senior infrastructure escalations.
+                  For capital allocations ($100K-$2M+), enterprise partnerships, and senior infrastructure escalations.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button 

@@ -64,7 +64,7 @@ export default function PublicCertificatePage({ params }: { params: Promise<{ co
 
   return (
     <div className="min-h-screen bg-bg py-8 px-4 print:bg-white print:p-0">
-      {/* Action bar — hidden when printing */}
+      {/* Action bar : hidden when printing */}
       <div className="max-w-3xl mx-auto mb-5 flex items-center justify-end gap-2 print:hidden">
         <Button variant="outline" size="sm" onClick={copyLink}><LinkIcon className="h-4 w-4" /> Copy Link</Button>
         <Button variant="outline" size="sm" onClick={downloadPng} loading={downloadingPng}><Download className="h-4 w-4" /> Download PNG</Button>

@@ -115,6 +115,10 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
   // Save modified SL/TP
   const handleSave = useCallback(async (p: Position) => {
     if (isSaving) return
+    if ((p as any).isOptimistic || !p.id || p.id <= 0) {
+      toast.warning('Please wait for position confirmation before modifying SL/TP.')
+      return
+    }
 
     const nextSl = draftSl.trim() ? toNum(draftSl) : null
     const nextTp = draftTp.trim() ? toNum(draftTp) : null
@@ -169,6 +173,11 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
 
   // 1-Click Break-Even action
   const handleBreakEven = useCallback(async (p: Position) => {
+    if ((p as any).isOptimistic || !p.id || p.id <= 0) {
+      toast.warning('Please wait for position confirmation before setting Break-Even.')
+      return
+    }
+
     const openPx = toNum(p.open_price)
     const curPx = p.type === 'buy' ? currentBid : currentAsk
     const inProfit = p.type === 'buy' ? curPx > openPx : curPx < openPx
@@ -198,6 +207,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
 
   // 1-Click Close Position
   const handleClose = useCallback(async (p: Position) => {
+    if ((p as any).isOptimistic || !p.id || p.id <= 0) return
     try {
       const res = await api.close(p.id)
       if (res.ok && res.data.success) {
@@ -219,6 +229,7 @@ export const ChartTpSlOverlay = memo(function ChartTpSlOverlay({
 
   // 1-Click Cancel Pending Order
   const handleCancelPending = useCallback(async (orderId: number) => {
+    if (!orderId || orderId <= 0) return
     try {
       const res = await api.pendingCancel(orderId)
       if (res.ok && res.data.success) {

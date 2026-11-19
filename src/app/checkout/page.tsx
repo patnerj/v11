@@ -1018,7 +1018,7 @@ function SuccessStep({ tournamentId, gateway }: { tournamentId?: number; gateway
         <h2 className="text-3xl font-bold tracking-tight">Order Submitted!</h2>
         <p className="text-text-muted mt-3 max-w-sm mx-auto leading-relaxed">
           {isBinance
-            ? "We've received your Binance Pay order details. Our treasury team will verify the TxID and provision your trading account within 15–30 minutes."
+            ? "We've received your Binance Pay order details. Our treasury team will verify the TxID and provision your trading account within 15-30 minutes."
             : "We've received your payment proof. You'll be notified via email within 24 hours once it's approved and your challenge account is provisioned."}
         </p>
       </div>
@@ -1119,7 +1119,7 @@ function BinancePayBlock({ amountDue, binanceId, binanceQrUrl }: { amountDue: nu
             </div>
             {(!binanceQrUrl || binanceQrUrl === '/branding/binance_pay_qr.png') && (
               <p className="text-3xs text-amber-600 dark:text-amber-400/90 mt-1 max-w-[150px] leading-tight mx-auto">
-                Demo QR shown — configure live Merchant QR in Admin → Payments.
+                Demo QR shown: configure live Merchant QR in Admin → Payments.
               </p>
             )}
           </div>

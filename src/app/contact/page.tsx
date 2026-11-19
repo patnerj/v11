@@ -146,7 +146,7 @@ export default function ContactPage() {
               Connect With <span className="bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">{brand}</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
-              Direct communication lines to our 24/7 technical desk and executive management. Zero synthetic bots — talk directly to prop firm decision makers.
+              Direct communication lines to our 24/7 technical desk and executive management. Zero synthetic bots: talk directly to prop firm decision makers.
             </p>
           </div>
 

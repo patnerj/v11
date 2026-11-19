@@ -91,7 +91,7 @@ export function LivePriceTicker() {
               ? FEATURED.slice(0, 8).map((s) => (
                   <div key={s} className="p-5">
                     <div className="text-xs text-text-muted font-medium">{s}</div>
-                    <div className="text-sm text-text-faint mt-2 tabular">—</div>
+                    <div className="text-sm text-text-faint mt-2 tabular">-</div>
                   </div>
                 ))
               : symbols.map((sym) => <TickerCell key={sym} row={rows[sym]} />)}

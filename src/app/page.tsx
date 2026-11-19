@@ -76,29 +76,26 @@ export default async function HomePage(props: PageProps) {
     cookieTemplate = cookieStore.get('fxsim_landing_template')?.value || '';
   } catch {}
 
-  const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true';
+  const isDemoPortal = true;
 
   // Determine active template:
-  // On non-demo production properties (e.g. massfunded.org), strictly enforce authentic default layout
   let activeTemplate: LandingTemplateId = 'classic';
-  if (isDemoPortal) {
-    if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
-      activeTemplate = 'ftmo';
-    } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(queryTemplate)) {
-      activeTemplate = 'neon';
-    } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
-      activeTemplate = 'terminal';
-    } else if (queryTemplate === 'classic') {
-      activeTemplate = 'classic';
-    } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
-      activeTemplate = 'ftmo';
-    } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(cookieTemplate)) {
-      activeTemplate = 'neon';
-    } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
-      activeTemplate = 'terminal';
-    } else if (cookieTemplate === 'classic') {
-      activeTemplate = 'classic';
-    }
+  if (['ftmo', 'titan', 'industry'].includes(queryTemplate)) {
+    activeTemplate = 'ftmo';
+  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(queryTemplate)) {
+    activeTemplate = 'neon';
+  } else if (['terminal', 'massfunded', 'pro'].includes(queryTemplate)) {
+    activeTemplate = 'terminal';
+  } else if (queryTemplate === 'classic') {
+    activeTemplate = 'classic';
+  } else if (['ftmo', 'titan', 'industry'].includes(cookieTemplate)) {
+    activeTemplate = 'ftmo';
+  } else if (['neon', 'cyber', 'fundednext', 'challenger'].includes(cookieTemplate)) {
+    activeTemplate = 'neon';
+  } else if (['terminal', 'massfunded', 'pro'].includes(cookieTemplate)) {
+    activeTemplate = 'terminal';
+  } else if (cookieTemplate === 'classic') {
+    activeTemplate = 'classic';
   }
 
   return (

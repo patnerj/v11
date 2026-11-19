@@ -58,7 +58,7 @@ export function buildCertificateSvg(
   const H = 1080
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <title>${brand} — ${kind} Certificate — ${trader}</title>
+  <title>${brand} : ${kind} Certificate : ${trader}</title>
   <desc>Official certified credential for ${trader} (${verificationId})</desc>
   <metadata>
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -247,7 +247,7 @@ export function buildPayoutCertificateSvg(
   const H = 1080
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <title>${brand} — Profit Disbursement Certificate — ${trader}</title>
+  <title>${brand} : Profit Disbursement Certificate : ${trader}</title>
   <desc>Official certified payout disbursement credential for ${trader} (${verificationId})</desc>
   <metadata>
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">

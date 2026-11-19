@@ -180,7 +180,7 @@ export default function PublicTournamentArena() {
                     onClick={() => router.push(`/checkout?tournament=${id}&order=${pendingOrder.id}`)}
                     className="w-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-base"
                   >
-                    Payment Pending — Complete / View
+                    Payment Pending : Complete / View
                     <ArrowRight className="h-5 w-5" />
                   </button>
                 </div>

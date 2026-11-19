@@ -74,7 +74,7 @@ const COMPARISONS = [
   {
     feature: 'Execution Spreads & Bridge',
     us: 'Raw Institutional 0.0 Pips • 14ms LD4 Direct',
-    others: 'Retail Markups (1.5–3.0 pips with execution delay)',
+    others: 'Retail Markups (1.5-3.0 pips with execution delay)',
     better: true
   },
   {
@@ -206,7 +206,7 @@ export function TemplateTerminal() {
               <div className="flex items-center gap-4 text-text-muted text-2xs">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Pepperstone-Live (LD4)
+                  Institutional-Live (LD4)
                 </span>
                 <span>Latency: 14ms</span>
                 <span className="font-bold text-emerald-500">Live Quoting</span>

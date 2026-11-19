@@ -351,14 +351,16 @@ export async function fxsim<T = unknown>(
   }
 
   if (method === 'GET' && !opts.force) {
-    const promise = doRequest().then((value) => {
-      if (value.ok && (opts.cache ?? 0) > 0) {
+    let promise: Promise<ApiResult<T>>
+    promise = doRequest().then((value) => {
+      // Rule 168.3: Guard against cache re-poisoning if invalidated while in-flight
+      if (value.ok && (opts.cache ?? 0) > 0 && inflight.get(key) === promise) {
         cache.set(key, { at: Date.now(), ttl: opts.cache!, value })
       }
-      inflight.delete(key)
+      if (inflight.get(key) === promise) inflight.delete(key)
       return value
     }).catch((e) => {
-      inflight.delete(key)
+      if (inflight.get(key) === promise) inflight.delete(key)
       throw e
     })
     inflight.set(key, promise as Promise<ApiResult<unknown>>)

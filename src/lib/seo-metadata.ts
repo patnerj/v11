@@ -163,7 +163,7 @@ export const fetchServerBranding = cache(async () => {
  * Deduplicate brand name in meta titles to prevent "Title | Brand | Brand" bug.
  */
 export function deduplicateBrandTitle(rawTitle: string, brandName: string): string {
-  if (!rawTitle) return `${brandName} — Trade Up to $200,000 in Funded Capital`
+  if (!rawTitle) return `${brandName} : Trade Up to $200,000 in Funded Capital`
   let title = rawTitle.trim()
   const escapedBrand = brandName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const trailingRegex = new RegExp(`(\\s*[|\\-–—]\\s*${escapedBrand})+\\s*$`, 'i')
@@ -196,7 +196,7 @@ export async function getPageSeoMetadata(
     ...(serverPages[pathname] || {})
   }
 
-  const rawTitle = pageConfig.title || `${brandName} — Trade Up to $200,000 in Funded Capital`
+  const rawTitle = pageConfig.title || `${brandName} : Trade Up to $200,000 in Funded Capital`
   const finalTitle = deduplicateBrandTitle(rawTitle, brandName)
   const finalDesc = pageConfig.description || `${brandName} Proprietary Trading Platform.`
 

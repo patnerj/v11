@@ -79,7 +79,7 @@ const SUPPORT_TOPICS = [
 const QUICK_FIXES = [
   {
     q: 'How do I connect to MetaTrader 5 with my evaluation credentials?',
-    a: 'Use server "Pepperstone-Demo" with your assigned MT5 Login ID and Master Password provided in your Trader Dashboard. Ensure "Algo Trading" is enabled in MT5 if executing via WebTrader reverse copier.'
+    a: 'Use server "Institutional-Demo" with your assigned MT5 Login ID and Master Password provided in your Trader Dashboard. Ensure "Algo Trading" is enabled in MT5 if executing via WebTrader reverse copier.'
   },
   {
     q: 'How does our evaluation calculate drawdown differently from other prop firms?',
@@ -158,7 +158,7 @@ export default function SupportPage() {
               </div>
 
               <p className="text-sm text-text-muted mb-8 leading-relaxed">
-                Direct channel for bi-weekly profit split withdrawals, institutional scale-up requests ($100K–$2,000,000+), and identity verification.
+                Direct channel for bi-weekly profit split withdrawals, institutional scale-up requests ($100K-$2,000,000+), and identity verification.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

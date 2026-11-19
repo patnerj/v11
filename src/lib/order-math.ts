@@ -1,10 +1,10 @@
 /**
- * Pure order-ticket math — no store/React access, fully unit-testable.
+ * Pure order-ticket math: no store/React access, fully unit-testable.
  * Extracted from order-ticket.tsx.
  */
 
 import type { PricesMap, PriceTick } from '@/types/api'
-import { getSymbolMeta, type SymbolMetaInfo } from './symbol-meta'
+import { getSymbolMeta, pipSize, type SymbolMetaInfo } from './symbol-meta'
 
 export { getSymbolMeta, type SymbolMetaInfo }
 export interface LotBounds { minLot: number; maxLot: number }
@@ -46,6 +46,91 @@ export function quoteToUsdRate(symbol: string, closePx: number, prices: Record<s
   const direct = mid(quote + 'USD'); if (direct > 0) return direct
   const inv = mid('USD' + quote); if (inv > 0) return 1 / inv
   return QUOTE_USD_FALLBACK[quote] ?? 1
+}
+
+export function calcPipValueUsd(
+  symbol: string,
+  contractSize: number,
+  lotSize: number,
+  price: number,
+  prices: Record<string, Px | undefined> = {},
+): number {
+  return contractSize * pipSize(symbol) * lotSize * quoteToUsdRate(symbol, price, prices)
+}
+
+export function calcMarginUsd(args: {
+  symbol: string
+  lots: number
+  contractSize: number
+  leverage: number
+  price: number
+  prices?: Record<string, Px | undefined>
+}): number {
+  const { symbol, lots, contractSize, leverage, price, prices = {} } = args
+  if (!leverage || leverage <= 0) return 0
+  const baseMargin = (lots * contractSize) / Math.max(1, leverage)
+  const sym = (symbol || '').toUpperCase()
+
+  const mid = (k: string, fallback: number): number => {
+    const p = prices?.[k]
+    if (!p) return fallback
+    const m = Number(p.mid) || (Number(p.bid) + Number(p.ask)) / 2
+    return Number.isFinite(m) && m > 0 ? m : fallback
+  }
+
+  // Indices & Commodities
+  if (['US30', 'NAS100', 'SPX500', 'USOIL', 'UKOIL', 'XBRUSD'].includes(sym)) {
+    return baseMargin * price
+  }
+  if (sym === 'GER40') {
+    return baseMargin * price * mid('EURUSD', 1.085)
+  }
+  if (sym === 'UK100') {
+    return baseMargin * price * mid('GBPUSD', 1.27)
+  }
+
+  // Crypto & Metals priced in USD
+  if (
+    ['BTCUSD', 'ETHUSD', 'SOLUSD', 'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XAUUSD', 'XAGUSD'].includes(sym) ||
+    sym.includes('BTC') || sym.includes('ETH') || sym.includes('SOL') || sym.includes('XAU') || sym.includes('XAG')
+  ) {
+    return baseMargin * price
+  }
+
+  // Standard Forex pairs
+  if (/^[A-Z]{6}$/.test(sym)) {
+    const baseCcy = sym.slice(0, 3)
+    const quoteCcy = sym.slice(3, 6)
+
+    if (baseCcy === 'USD') {
+      return baseMargin
+    }
+    if (quoteCcy === 'USD') {
+      return baseMargin * price
+    }
+    if (baseCcy === 'EUR') {
+      return baseMargin * mid('EURUSD', 1.085)
+    }
+    if (baseCcy === 'GBP') {
+      return baseMargin * mid('GBPUSD', 1.27)
+    }
+    if (baseCcy === 'AUD') {
+      return baseMargin * mid('AUDUSD', 0.65)
+    }
+    if (baseCcy === 'NZD') {
+      return baseMargin * mid('NZDUSD', 0.605)
+    }
+    if (baseCcy === 'CAD') {
+      const usdcad = mid('USDCAD', 1.36)
+      return usdcad > 0 ? (baseMargin / usdcad) : baseMargin
+    }
+    if (baseCcy === 'CHF') {
+      const usdchf = mid('USDCHF', 0.90)
+      return usdchf > 0 ? (baseMargin / usdchf) : baseMargin
+    }
+  }
+
+  return baseMargin * (price > 0 ? price : 1.0)
 }
 
 /** Position size (lots) that risks `riskPct`% of balance across the SL distance. */

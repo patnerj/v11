@@ -69,7 +69,7 @@ export default function PayoutsPage() {
             <div className="p-6 rounded-2xl bg-surface border border-border shadow-card backdrop-blur-md text-center">
               <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums terminal-num mb-1">&lt; 24h</div>
               <div className="text-xs font-semibold text-text uppercase tracking-wider">Processing SLA</div>
-              <div className="text-2xs text-text-muted mt-1">Guaranteed execution</div>
+              <div className="text-2xs text-text-muted mt-1">Average 4-8 hours (24h SLA)</div>
             </div>
             <div className="p-6 rounded-2xl bg-surface border border-border shadow-card backdrop-blur-md text-center">
               <div className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400 font-mono tabular-nums terminal-num mb-1">0%</div>

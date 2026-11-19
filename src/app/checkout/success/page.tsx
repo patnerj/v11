@@ -57,12 +57,12 @@ function CheckoutSuccessInner() {
     ;(async () => {
       for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
         if (cancelled) return
-        const res = await api.paymentMyOrders(true) // force — bypass the 10s cache or polling is illusory
+        const res = await api.paymentMyOrders(true) // force : bypass the 10s cache or polling is illusory
         if (!res.ok) {
           if (attempt === POLL_ATTEMPTS - 1) { setPhase('error'); return }
         } else {
           const orders: PaymentOrder[] = Array.isArray(res.data) ? res.data : []
-          // Was orders.some(status === 'approved') — matched ANY historical
+          // Was orders.some(status === 'approved') : matched ANY historical
           // approved order regardless of age, so a trader who already owns
           // one challenge and then abandons/fails a SECOND purchase (back
           // button, bookmark, a gateway redirect with no ?status=cancel)
@@ -129,9 +129,9 @@ function CheckoutSuccessInner() {
         <div className="h-12 w-12 rounded-full bg-warn-muted text-warn flex items-center justify-center">
           <Clock className="h-6 w-6" />
         </div>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight">Payment received — pending confirmation</h1>
+        <h1 className="mt-4 text-2xl font-bold tracking-tight">Payment received : pending confirmation</h1>
         <p className="mt-2 text-sm text-text-muted max-w-md mx-auto">
-          Your order is in our queue. Crypto/manual payments are confirmed after verification — you&apos;ll get an email as soon as your challenge is activated. You can track the status from your dashboard.
+          Your order is in our queue. Crypto/manual payments are confirmed after verification: you&apos;ll get an email as soon as your challenge is activated. You can track the status from your dashboard.
         </p>
         <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
           <Button asChild><Link href="/dashboard">Go to dashboard <ArrowRight className="h-4 w-4" /></Link></Button>
@@ -157,7 +157,7 @@ function CheckoutSuccessInner() {
     )
   }
 
-  // success — verified against an 'approved' order via the API
+  // success: verified against an 'approved' order via the API
   return (
     <Shell>
       <motion.div
@@ -170,7 +170,7 @@ function CheckoutSuccessInner() {
       </motion.div>
       <h1 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight">Payment confirmed</h1>
       <p className="mt-2 text-sm text-text-muted max-w-md mx-auto">
-        Your challenge is being activated. You&apos;ll receive an email when it&apos;s ready — usually within a few seconds.
+        Your challenge is being activated. You&apos;ll receive an email when it&apos;s ready: usually within a few seconds.
       </p>
       <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
         <Button asChild size="lg">

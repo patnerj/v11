@@ -27,6 +27,7 @@ import { AccountSwitcher, buildSwitchEntries, type SwitchEntry } from '@/compone
 import { TournamentWarningBanner } from '@/components/dashboard/trading/tournament-banner'
 import { NewsRestrictBanner } from '@/components/dashboard/trading/news-restrict-banner'
 import { SoundToggle } from '@/components/dashboard/trading/sound-toggle'
+import { AccountStrip } from '@/components/dashboard/trading/account-strip'
 import { MobileBottomSheet }  from '@/components/dashboard/trading/mobile-bottom-sheet'
 import { PhasePassCelebrationModal } from '@/components/dashboard/PhasePassCelebrationModal'
 import { ConfirmDialog }     from '@/components/ui/ConfirmDialog'
@@ -477,6 +478,14 @@ function DesktopLayout({
           <SoundToggle compact className="shrink-0" />
         </div>
       </div>
+
+      {/* Live Drawdown Headroom HUD (Pillar 4 Institutional Upgrade) */}
+      {account && (
+        <div className="shrink-0">
+          <AccountStrip account={account} openPnL={openPnL} metrics={metrics} />
+        </div>
+      )}
+
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0 w-full rounded-lg">
         {/* Left: market watch */}
         <Panel
@@ -802,13 +811,15 @@ function MobileLayout({
         </div>
       )}
 
-      {/* Account switcher — Challenge ↔ Tournament trading context + Mobile Chart Engine Switcher */}
+      {/* Account switcher — Challenge ↔ Tournament trading context + Drawdown Headroom HUD */}
       {account && (
-        <div className="px-1 pt-1 shrink-0 flex items-center justify-between gap-1.5">
-          <div className="flex-1 min-w-0">
-            <AccountSwitcher entries={switchEntries} metrics={metrics} compact />
+        <div className="px-1 pt-1 shrink-0 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex-1 min-w-0">
+              <AccountSwitcher entries={switchEntries} metrics={metrics} compact />
+            </div>
           </div>
-          {/* Mobile Chart Engine Switcher hidden pending $300 add-on unlock */}
+          <AccountStrip account={account} openPnL={openPnL} metrics={metrics} compact />
         </div>
       )}
 

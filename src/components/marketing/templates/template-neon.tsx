@@ -64,12 +64,12 @@ const CURRENCIES: { key: CurrencyKey; symbol: string; rate: number }[] = [
   { key: 'GBP', symbol: '£', rate: 0.79 },
 ]
 
-// ── FundedNext Challenge Models Definition ────────────────────────────────────
+// ── Institutional Challenge Models Definition ────────────────────────────────────
 export type ChallengeModelId =
-  | 'Stellar 2-Step'
-  | 'Stellar 1-Step'
-  | 'Stellar Lite'
-  | 'Stellar Instant'
+  | 'Standard 2-Step'
+  | 'Speed 1-Step'
+  | 'Starter 2-Step'
+  | 'Direct Funding'
 
 interface ModelConfig {
   id: ChallengeModelId
@@ -104,9 +104,9 @@ interface ModelConfig {
 }
 
 const CHALLENGE_MODELS: Record<ChallengeModelId, ModelConfig> = {
-  'Stellar 2-Step': {
-    id: 'Stellar 2-Step',
-    title: 'Stellar 2-Step',
+  'Standard 2-Step': {
+    id: 'Standard 2-Step',
+    title: 'Standard 2-Step',
     subtitle: 'News Trading Allowed | Refund on 1st Reward',
     phases: 2,
     p1TargetPct: 8,
@@ -138,9 +138,9 @@ const CHALLENGE_MODELS: Record<ChallengeModelId, ModelConfig> = {
       200000: 1099.99,
     },
   },
-  'Stellar 1-Step': {
-    id: 'Stellar 1-Step',
-    title: 'Stellar 1-Step',
+  'Speed 1-Step': {
+    id: 'Speed 1-Step',
+    title: 'Speed 1-Step',
     subtitle: 'News Trading Allowed | Reward Every 5 Business Days',
     phases: 1,
     p1TargetPct: 10,
@@ -172,9 +172,9 @@ const CHALLENGE_MODELS: Record<ChallengeModelId, ModelConfig> = {
       200000: 1149.0,
     },
   },
-  'Stellar Lite': {
-    id: 'Stellar Lite',
-    title: 'Stellar Lite',
+  'Starter 2-Step': {
+    id: 'Starter 2-Step',
+    title: 'Starter 2-Step',
     subtitle: 'Most Affordable 2 Step | News Trading Allowed',
     phases: 2,
     p1TargetPct: 8,
@@ -206,9 +206,9 @@ const CHALLENGE_MODELS: Record<ChallengeModelId, ModelConfig> = {
       200000: 629.0,
     },
   },
-  'Stellar Instant': {
-    id: 'Stellar Instant',
-    title: 'Stellar Instant',
+  'Direct Funding': {
+    id: 'Direct Funding',
+    title: 'Direct Funding',
     subtitle: 'No Daily Loss Limit | No Consistency Rule',
     phases: 0,
     p1TargetPct: null,
@@ -249,7 +249,7 @@ const RECENT_PAYOUTS = [
     country: 'United Arab Emirates',
     flag: '🇦🇪',
     amount: 38450,
-    model: 'Stellar 2-Step',
+    model: 'Standard 2-Step',
     method: 'USDT (TRC-20)',
     timeAgo: '12m ago',
   },
@@ -258,7 +258,7 @@ const RECENT_PAYOUTS = [
     country: 'Germany',
     flag: '🇩🇪',
     amount: 24190,
-    model: 'Stellar 1-Step',
+    model: 'Speed 1-Step',
     method: 'Bank Wire',
     timeAgo: '28m ago',
   },
@@ -267,7 +267,7 @@ const RECENT_PAYOUTS = [
     country: 'Spain',
     flag: '🇪🇸',
     amount: 31520,
-    model: 'Stellar 2-Step',
+    model: 'Standard 2-Step',
     method: 'USDT (ERC-20)',
     timeAgo: '41m ago',
   },
@@ -276,7 +276,7 @@ const RECENT_PAYOUTS = [
     country: 'United Kingdom',
     flag: '🇬🇧',
     amount: 19800,
-    model: 'Stellar Lite',
+    model: 'Starter 2-Step',
     method: 'Bank Wire',
     timeAgo: '1h ago',
   },
@@ -285,7 +285,7 @@ const RECENT_PAYOUTS = [
     country: 'Canada',
     flag: '🇨🇦',
     amount: 14600,
-    model: 'Stellar 1-Step',
+    model: 'Speed 1-Step',
     method: 'USDT (TRC-20)',
     timeAgo: '1h 24m ago',
   },
@@ -294,7 +294,7 @@ const RECENT_PAYOUTS = [
     country: 'Japan',
     flag: '🇯🇵',
     amount: 42300,
-    model: 'Stellar 2-Step',
+    model: 'Standard 2-Step',
     method: 'USDT (TRC-20)',
     timeAgo: '2h ago',
   },
@@ -307,7 +307,7 @@ const TESTIMONIALS = [
     location: 'Dubai, UAE',
     flag: '🇦🇪',
     payout: '$52,180',
-    model: 'Stellar 2-Step ($200K)',
+    model: 'Standard 2-Step ($200K)',
     quote:
       'The 15% profit bonus during Phase 1 and 2 was credited directly to my wallet on my first withdrawal. No other firm in the world gives you a bonus from your demo phase!',
     rating: 5,
@@ -317,7 +317,7 @@ const TESTIMONIALS = [
     location: 'Frankfurt, Germany',
     flag: '🇩🇪',
     payout: '$38,940',
-    model: 'Stellar 1-Step ($100K)',
+    model: 'Speed 1-Step ($100K)',
     quote:
       'Balance-Based daily drawdown is a lifesaver. On other firms I lost accounts because of trailing equity spikes. Here, 00:00 balance is fixed. 100% fair and transparent.',
     rating: 5,
@@ -327,7 +327,7 @@ const TESTIMONIALS = [
     location: 'Madrid, Spain',
     flag: '🇪🇸',
     payout: '$29,400',
-    model: 'Stellar 2-Step ($100K)',
+    model: 'Standard 2-Step ($100K)',
     quote:
       'No time limit allowed me to wait for high-probability swing setups during CPI news. Passed Phase 1 in 14 days and Phase 2 in 8 days. Payout received in 4 hours.',
     rating: 5,
@@ -350,7 +350,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I trade high-impact news and hold trades over the weekend?',
-    a: 'Yes. On all Stellar models, weekend swing holding and news trading are 100% permitted. You have complete freedom to trade your natural market edge across Forex, Commodities, Indices, and Crypto.',
+    a: 'Yes. On all evaluation models, weekend swing holding and news trading are 100% permitted. You have complete freedom to trade your natural market edge across Forex, Commodities, Indices, and Crypto.',
   },
   {
     q: 'How fast are payouts processed, and what methods are supported?',
@@ -364,12 +364,12 @@ const FAQ_ITEMS = [
 
 export function TemplateNeon() {
   const brandName = useBranding((s) => s.branding.brand_name) || 'Prop Firm'
-  const brandTagline = useBranding((s) => s.branding.brand_tagline) || 'Next-Gen Cyber Proprietary Firm'
+  const brandTagline = useBranding((s) => s.branding.brand_tagline) || 'Institutional Cyber Proprietary Firm'
   const supportEmail = useBranding((s) => s.branding.support_email) || 'support@example.com'
 
   // Model & Selection States
   const [selectedMarket, setSelectedMarket] = useState<'CFDs' | 'Futures'>('CFDs')
-  const [selectedModel, setSelectedModel] = useState<ChallengeModelId>('Stellar 2-Step')
+  const [selectedModel, setSelectedModel] = useState<ChallengeModelId>('Standard 2-Step')
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyKey>('USD')
   const [selectedSize, setSelectedSize] = useState<number>(6000)
   const [showPercentage, setShowPercentage] = useState<boolean>(true)
@@ -426,7 +426,7 @@ export function TemplateNeon() {
     setWithdrawalDays(currentModelConfig.firstWithdrawalDefault)
   }, [selectedModel, currentModelConfig.firstWithdrawalDefault])
 
-  // Average reward calculation (FundedNext benchmark: $296.55 for $6K, scaling up)
+  // Average reward calculation (Institutional benchmark: $296.55 for $6K, scaling up)
   const avgReward = useMemo(() => {
     const scaleFactor = selectedSize / 6000
     const baseReward = 296.55
@@ -503,7 +503,7 @@ export function TemplateNeon() {
   return (
     <div className="w-full min-h-screen bg-bg text-text transition-colors duration-200 overflow-x-hidden font-sans selection:bg-[#635BFF] selection:text-white">
 
-      {/* ── 1. EXACT FUNDEDNEXT HERO SECTION ─────────────────────────────── */}
+      {/* ── 1. CYBER HERO SECTION ─────────────────────────────── */}
       <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 overflow-hidden">
         
         {/* Ambient background glow */}
@@ -511,7 +511,7 @@ export function TemplateNeon() {
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
 
-          {/* FundedNext Onyx Rounded Canvas Card */}
+          {/* Onyx Rounded Canvas Card */}
           <div className="dark relative rounded-3xl sm:rounded-[2.5rem] bg-[#07070a] border border-white/10 shadow-2xl overflow-hidden py-14 sm:py-20 px-4 sm:px-12 text-center text-white">
 
             {/* Subtle top spotlight flare */}
@@ -719,7 +719,7 @@ export function TemplateNeon() {
         </div>
       </section>
 
-      {/* ── 3. EXACT FUNDEDNEXT MODEL SELECTOR & OBJECTIVES SECTION ──────── */}
+      {/* ── 3. MODEL SELECTOR & OBJECTIVES SECTION ──────── */}
       <section id="challenge-models" className="scroll-mt-28 sm:scroll-mt-36 py-20 sm:py-28 relative">
         <span id="pricing" className="block relative -top-32 invisible pointer-events-none" />
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
@@ -782,7 +782,7 @@ export function TemplateNeon() {
               </a>
 
               <button
-                onClick={() => setSelectedModel('Stellar 2-Step')}
+                onClick={() => setSelectedModel('Standard 2-Step')}
                 className="px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-xs font-semibold text-text transition-colors flex items-center gap-2 cursor-pointer"
               >
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#635BFF]" />
@@ -1600,7 +1600,7 @@ export function TemplateNeon() {
               Frequently Asked Questions
             </h2>
             <p className="mt-3 text-xs sm:text-sm text-text-muted">
-              Everything you need to know about our Stellar evaluation models, 15% challenge profit bonus, and daily drawdown math.
+              Everything you need to know about our institutional evaluation models, 15% challenge profit bonus, and daily drawdown math.
             </p>
           </div>
 

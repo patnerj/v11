@@ -28,7 +28,7 @@ const SECTIONS: Section[] = [
       },
       { 
         q: 'Is there a minimum or maximum time limit to pass?',
-        a: 'There are ZERO maximum time limits on our evaluation phases—you can trade at your own rhythm without calendar rush. A minimum of 5 active trading days is required in each phase to verify disciplined risk management.' 
+        a: 'There are ZERO maximum time limits on our evaluation phases. You can trade at your own rhythm without calendar rush, and there are zero minimum trading days required (you can pass in as little as 1 day once your target is achieved).' 
       },
     ],
   },
@@ -83,7 +83,7 @@ const SECTIONS: Section[] = [
       },
       { 
         q: 'What spreads and execution latency do you provide?',
-        a: 'Our execution infrastructure connects directly to Tier-1 institutional liquidity feeds (Pepperstone) hosted in London Equinix LD4, providing raw institutional spreads starting from 0.0 pips and an ultra-low 14ms execution bridge.' 
+        a: 'Our execution infrastructure connects directly to Tier-1 institutional liquidity feeds hosted in London Equinix LD4, providing raw institutional spreads starting from 0.0 pips and an ultra-low 14ms execution bridge.' 
       },
     ],
   },

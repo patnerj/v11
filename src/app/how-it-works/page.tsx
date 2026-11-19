@@ -64,7 +64,7 @@ export default function HowItWorksPage() {
                 STAGE 01
               </div>
               <div className="space-y-4 pt-2">
-                <h3 className="text-2xl font-bold text-text">Phase 1: Student</h3>
+                <h3 className="text-2xl font-bold text-text">Phase 1: Challenge Evaluation</h3>
                 <p className="text-sm text-text-muted leading-relaxed">
                   Demonstrate your risk management discipline by reaching an <strong>8% profit target</strong> while respecting daily and static maximum drawdown thresholds.
                 </p>
@@ -89,7 +89,7 @@ export default function HowItWorksPage() {
               </div>
               <div className="pt-6">
                 <span className="text-xs text-emerald-500 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4" /> Min 5 Trading Days
+                  <CheckCircle2 className="h-4 w-4" /> 0 Minimum Trading Days (Pass in 1 Day)
                 </span>
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function HowItWorksPage() {
                 STAGE 02
               </div>
               <div className="space-y-4 pt-2">
-                <h3 className="text-2xl font-bold text-text">Phase 2: Practitioner</h3>
+                <h3 className="text-2xl font-bold text-text">Phase 2: Verification</h3>
                 <p className="text-sm text-text-muted leading-relaxed">
                   Confirm your statistical edge with a lower <strong>5% profit target</strong>. Once met without breaches, your funded live contract is issued immediately.
                 </p>
@@ -136,7 +136,7 @@ export default function HowItWorksPage() {
                 STAGE 03
               </div>
               <div className="space-y-4 pt-2">
-                <h3 className="text-2xl font-bold text-text">Funded Trader Master</h3>
+                <h3 className="text-2xl font-bold text-text">Phase 3: Funded Trader</h3>
                 <p className="text-sm text-text-muted leading-relaxed">
                   Trade institutional capital. Keep <strong>up to 90% of your profits</strong>, withdraw bi-weekly, and receive a <strong>100% refund of your evaluation fee</strong>.
                 </p>
@@ -206,7 +206,7 @@ export default function HowItWorksPage() {
                   On competitor firms, if your equity touches <strong>$110,000</strong>, the drawdown floor is dragged up to <strong>$100,000</strong>.
                 </p>
                 <p className="text-xs text-text-muted leading-relaxed">
-                  If your trade pulls back to $99,990, <em>YOU ARE BREACHED INSTANTLY</em>—even though your account was never below the initial starting capital! We consider this predatory and forbid it.
+                  If your trade pulls back to $99,990, <em>YOU ARE BREACHED INSTANTLY</em>: even though your account was never below the initial starting capital! We consider this predatory and forbid it.
                 </p>
               </div>
             </div>
@@ -251,7 +251,7 @@ export default function HowItWorksPage() {
               Start Your Evaluation Today
             </h2>
             <p className="text-sm text-text-muted max-w-xl mx-auto">
-              Select your preferred capital tier from $10,000 to $200,000 with institutional Pepperstone raw spreads.
+              Select your preferred capital tier from $10,000 to $200,000 with institutional raw spreads.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button asChild className="h-12 px-8 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-glow-sm">

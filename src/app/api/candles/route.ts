@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { pipSize as getSymbolPip } from '@/lib/symbol-meta'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 60
@@ -176,18 +177,6 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: false, error: 'Feed unavailable' }, { status: 502 })
-}
-
-function getSymbolPip(sym: string): number {
-  const s = sym.toUpperCase()
-  if (s.includes('JPY')) return 0.01
-  if (s.includes('XAU') || s.includes('GOLD')) return 0.01
-  if (s.includes('XAG') || s.includes('SILVER')) return 0.001
-  if (s.includes('USOIL') || s.includes('UKOIL') || s.includes('OIL') || s.includes('BRENT') || s.includes('WTI')) return 0.01
-  if (s.includes('US30') || s.includes('DJI') || s.includes('GER40') || s.includes('DAX') || s.includes('UK100') || s.includes('FTSE')) return 1.0
-  if (s.includes('US500') || s.includes('SPX') || s.includes('NAS100') || s.includes('NDX')) return 0.1
-  if (s.includes('BTC') || s.includes('ETH') || s.includes('SOL')) return 0.1
-  return 0.0001
 }
 
 function aggregateH1ToH4(h1Candles: any[]): any[] {

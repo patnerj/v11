@@ -135,7 +135,7 @@ export default function LeaderboardPage() {
               {rows?.length === 0 && (
                 <div className="text-center py-16">
                   <Calendar className="h-8 w-8 text-text-faint mx-auto mb-3" />
-                  <p className="text-sm text-text-muted">No funded traders yet — be the first to top this board.</p>
+                  <p className="text-sm text-text-muted">No funded traders yet: be the first to top this board.</p>
                 </div>
               )}
               {error && (

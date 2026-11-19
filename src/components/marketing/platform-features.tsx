@@ -75,7 +75,7 @@ export function PlatformFeatures({ puckProps }: { puckProps?: any }) {
                 Static Drawdown (Zero Trailing Floor Traps)
               </h3>
               <p className="text-xs sm:text-sm md:text-base text-text-muted leading-relaxed max-w-xl">
-                Unlike predatory prop firms that drag your loss limit upwards during open floating profits—locking you into instant breach on natural market pullbacks—our evaluation relies strictly on a static balance floor. Your floating profits are always protected.
+                Unlike predatory prop firms that drag your loss limit upwards during open floating profits (locking you into instant breach on natural market pullbacks), our evaluation relies strictly on a static balance floor. Your floating profits are always protected.
               </p>
             </div>
 

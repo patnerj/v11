@@ -58,7 +58,7 @@ const DEFAULTS: Branding = {
   facebook_url: '',
   discord_url: '',
   developer_url: '',
-  meta_title: 'Funded Trading Platform — Trade Up to $200,000 in Capital',
+  meta_title: 'Funded Trading Platform : Trade Up to $200,000 in Capital',
   meta_description: 'Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.',
   meta_keywords: 'Prop Firm, Proprietary Trading, Funded Account, Forex Prop Firm, Crypto Prop Firm, Trading Challenge',
   google_site_verification: '',

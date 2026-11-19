@@ -33,7 +33,7 @@ interface PriceState {
   get:   (symbol: string) => PriceTick | undefined
   refresh: () => Promise<boolean>
   refreshUser: () => Promise<void>
-  /** Wipe ALL user data (logout) — shared-computer leak prevention. */
+  /** Wipe ALL user data (logout) - shared-computer leak prevention. */
   reset: () => void
   /** Switch trading context and immediately re-fetch everything. */
   setTradingContext: (ctx: TradingContext) => Promise<void>
@@ -51,6 +51,7 @@ let refCount     = 0
 const POLL_MS = 4000
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 let reconnectAttempts = 0
+let contextEpoch = 0
 
 export function buildContextParams(ctx: TradingContext): { account_id?: number; tournament_id?: number } | undefined {
   if (!ctx) return undefined
@@ -67,7 +68,14 @@ function clearPoll() {
   }
 }
 function closeStream() {
-  if (stream) { stream.close(); stream = null }
+  if (stream) {
+    stream.onopen = null
+    stream.onmessage = null
+    stream.onerror = null
+    stream.onclose = null
+    stream.close()
+    stream = null
+  }
 }
 
 /** Narrow an /account response to a real Account (or null for no-challenge). */
@@ -124,24 +132,29 @@ export const usePrices = create<PriceState>((set, get) => {
 
           const shouldPollPrices = !get().connected || get().source !== 'ws'
 
+          const reqEpoch = contextEpoch
           const curAcc = get().account
           const activeAccId = curAcc && 'id' in curAcc ? (curAcc as any).id : undefined
-          const baseParams = buildContextParams(get().tradingContext) || {}
+          const tCtx = get().tradingContext
+          const baseParams = buildContextParams(tCtx) || {}
+          const isTournament = tCtx?.kind === 'tournament'
           const tParams = {
             ...baseParams,
-            ...(activeAccId && !baseParams.account_id ? { account_id: activeAccId } : {})
+            ...(activeAccId && !baseParams.account_id && !isTournament ? { account_id: activeAccId } : {})
           }
           const [acc, pos, pen] = await Promise.all([
             api.account(tParams),
             api.positions(tParams),
             api.pendingMine(tParams),
           ])
+          // Rule 168: Drop out-of-order responses if trading context switched during fetch
+          if (reqEpoch !== contextEpoch) return
 
           // Only overwrite from SUCCESSFUL responses. On a network failure we
           // keep the last-known account/positions/pending so a transient drop
           // never nulls the account (which would falsely trip the "challenge
           // ended" lock screen). A real no-challenge is an OK response that
-          // toAccount() maps to null — that still updates.
+          // toAccount() maps to null - that still updates.
           const patch: Partial<PriceState> = {}
           if (acc.ok) patch.account = toAccount(acc)
           if (pos.ok) {
@@ -173,7 +186,7 @@ export const usePrices = create<PriceState>((set, get) => {
           consecutiveFailures = allFailed ? consecutiveFailures + 1 : 0
 
           if (allFailed) {
-            // WS is nominally "ws" but every user fetch failed — we're offline.
+            // WS is nominally "ws" but every user fetch failed - we're offline.
             patch.connected = false
           }
 
@@ -321,18 +334,24 @@ export const usePrices = create<PriceState>((set, get) => {
     get: (symbol) => get().prices[symbol],
 
     refresh: async () => {
+      const reqEpoch = contextEpoch
       const curAcc = get().account
       const activeAccId = curAcc && 'id' in curAcc ? (curAcc as any).id : undefined
-      const baseParams = buildContextParams(get().tradingContext) || {}
+      const tCtx = get().tradingContext
+      const baseParams = buildContextParams(tCtx) || {}
+      const isTournament = tCtx?.kind === 'tournament'
       const tParams = {
         ...baseParams,
-        ...(activeAccId && !baseParams.account_id ? { account_id: activeAccId } : {})
+        ...(activeAccId && !baseParams.account_id && !isTournament ? { account_id: activeAccId } : {})
       }
       const [acc, pos, pen] = await Promise.all([
         api.account(tParams),
         api.positions(tParams),
         api.pendingMine(tParams),
       ])
+      // Rule 168: Drop out-of-order responses if trading context switched during fetch
+      if (reqEpoch !== contextEpoch) return false
+
       const patch: Partial<PriceState> = {}
       if (acc.ok) patch.account = toAccount(acc)
       if (pos.ok) {
@@ -356,7 +375,8 @@ export const usePrices = create<PriceState>((set, get) => {
     setTradingContext: async (ctx) => {
       const prev = get().tradingContext
       if (JSON.stringify(prev) === JSON.stringify(ctx)) return
-      // contextSwitching keeps the UI on the loading spinner — without it the
+      contextEpoch++
+      // contextSwitching keeps the UI on the loading spinner: without it the
       // nulled account briefly renders the "challenge ended / frozen" screen.
       set({
         tradingContext: ctx,
@@ -376,7 +396,7 @@ export const usePrices = create<PriceState>((set, get) => {
       }
     },
 
-    /** Wipe ALL user data on logout — the next login on a shared computer must
+    /** Wipe ALL user data on logout: the next login on a shared computer must
      *  never see the previous user's balance/positions/optimistic rows. */
     reset: () => {
       set({

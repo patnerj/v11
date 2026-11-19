@@ -132,10 +132,10 @@ const TRUSTPILOT_REVIEWS = [
 
 // ── Platform Badges & Authority Proof ─────────────────────────────────────────
 const AUTHORITY_BRANDS = [
-  { name: 'EY Entrepreneur Of The Year', subtitle: 'Global Winner' },
-  { name: 'Forbes', subtitle: 'Featured in Business' },
-  { name: 'Deloitte Fast 50', subtitle: 'Top Tier FinTech' },
-  { name: 'Finance Magnates', subtitle: 'FinTech Innovation' },
+  { name: 'Tier-1 Liquidity', subtitle: 'Deep Institutional Depth' },
+  { name: 'Sub-15ms Bridge', subtitle: 'London Equinix LD4' },
+  { name: 'Real-Time Sentinel', subtitle: 'Automated Risk Engine' },
+  { name: 'Multi-Rail Clearing', subtitle: 'Crypto & Wire Settlement' },
 ]
 
 export function TemplateFtmo() {
@@ -226,14 +226,14 @@ export function TemplateFtmo() {
 
         <div className="container max-w-7xl mx-auto px-4 relative z-10">
           
-          {/* Eyebrow Pill Badge: Modern Prop Trading — Since 2015 */}
+          {/* Eyebrow Pill Badge: Modern Prop Trading : Tier-1 Infrastructure */}
           <div className="text-center mb-7">
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-surface-secondary/80 dark:bg-slate-900/90 border border-border dark:border-slate-800 text-xs font-semibold text-text-muted dark:text-slate-300 backdrop-blur-md shadow-sm"
             >
-              <span>Modern Prop Trading — Since 2015</span>
+              <span>Modern Prop Trading : Tier-1 Infrastructure</span>
             </motion.div>
           </div>
 
@@ -406,9 +406,9 @@ export function TemplateFtmo() {
           {/* Authority Badges & Social Proof Strip (ftmo_ref_hero.png) */}
           <div className="mt-14 pt-8 border-t border-border/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-text-muted dark:text-slate-400">
             <div className="flex items-center gap-6">
-              <span className="font-bold uppercase tracking-wider text-text dark:text-slate-300">EY Entrepreneur Of The Year</span>
+              <span className="font-bold uppercase tracking-wider text-text dark:text-slate-300">Tier-1 Liquidity</span>
               <span className="text-border dark:text-slate-800">|</span>
-              <span className="font-bold uppercase tracking-wider text-text dark:text-slate-300">Forbes</span>
+              <span className="font-bold uppercase tracking-wider text-text dark:text-slate-300">Equinix LD4</span>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-text dark:text-slate-300 font-medium">
               <span className="flex items-center gap-1.5">
@@ -905,7 +905,7 @@ export function TemplateFtmo() {
                     </div>
                   ) : (
                     <div className="col-span-3 text-center text-text-muted/60 dark:text-slate-600">
-                      —
+                      -
                     </div>
                   )}
                   {/* Account Column with subtle blue highlight */}
@@ -932,7 +932,7 @@ export function TemplateFtmo() {
                       {showNumbers ? formatCurrencyVal(sizeUSD * (p1TargetPct / 100)) : `${p1TargetPct}%`}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white terminal-num">
-                      {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (p2TargetPct / 100)) : `${p2TargetPct}%`)}
+                      {selectedModel === '1-Step' ? '-' : (showNumbers ? formatCurrencyVal(sizeUSD * (p2TargetPct / 100)) : `${p2TargetPct}%`)}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white bg-blue-500/10 dark:bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-500/20 dark:border-blue-900/30">
                       Unlimited
@@ -949,7 +949,7 @@ export function TemplateFtmo() {
                       {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white terminal-num">
-                      {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`)}
+                      {selectedModel === '1-Step' ? '-' : (showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`)}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white terminal-num bg-blue-500/10 dark:bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-500/20 dark:border-blue-900/30">
                       {showNumbers ? formatCurrencyVal(sizeUSD * (dailyDDPct / 100)) : `${dailyDDPct}%`}
@@ -966,7 +966,7 @@ export function TemplateFtmo() {
                       {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white terminal-num">
-                      {selectedModel === '1-Step' ? '—' : (showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`)}
+                      {selectedModel === '1-Step' ? '-' : (showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`)}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white terminal-num bg-blue-500/10 dark:bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-500/20 dark:border-blue-900/30">
                       {showNumbers ? formatCurrencyVal(sizeUSD * (maxDDPct / 100)) : `${maxDDPct}%`}
@@ -983,7 +983,7 @@ export function TemplateFtmo() {
                       {minTradingDays} days
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white">
-                      {selectedModel === '1-Step' ? '—' : `${minTradingDays} days`}
+                      {selectedModel === '1-Step' ? '-' : `${minTradingDays} days`}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white bg-blue-500/10 dark:bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-500/20 dark:border-blue-900/30">
                       Unlimited
@@ -1000,7 +1000,7 @@ export function TemplateFtmo() {
                       Unlimited
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white">
-                      {selectedModel === '1-Step' ? '—' : 'Unlimited'}
+                      {selectedModel === '1-Step' ? '-' : 'Unlimited'}
                     </div>
                     <div className="col-span-3 text-center font-bold text-text dark:text-white bg-blue-500/10 dark:bg-blue-950/20 -my-3.5 py-3.5 border-l border-blue-500/20 dark:border-blue-900/30">
                       Unlimited
@@ -1153,7 +1153,7 @@ export function TemplateFtmo() {
               <ArrowRight className="h-4 w-4" />
             </div>
 
-            {/* Step 2: FTMO Account */}
+            {/* Step 2: Funded Account */}
             <div className="w-full md:w-1/3 rounded-3xl p-6 sm:p-8 bg-gradient-to-b from-emerald-50/70 dark:from-emerald-900/60 via-surface dark:via-slate-950 to-surface dark:to-slate-950 border border-emerald-500/30 flex flex-col justify-between min-h-[440px] relative overflow-hidden shadow-lg">
               <div>
                 <div className="h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-white flex items-center justify-center mb-4">
@@ -1454,10 +1454,10 @@ export function TemplateFtmo() {
           {/* Secondary Authority Logos Strip (ftmo_ref_cta.png) */}
           <div className="mt-10 pt-8 border-t border-border dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-6">
             <div className="flex flex-wrap items-center gap-6 text-text-muted dark:text-slate-400 text-xs font-bold uppercase">
-              <span>Deloitte Fast 50</span>
-              <span>Forbes</span>
-              <span>Finance Magnates</span>
-              <span>EY Entrepreneur Of The Year</span>
+              <span>Tier-1 Liquidity</span>
+              <span>Equinix LD4</span>
+              <span>Multi-Currency Clearing</span>
+              <span>Automated Risk Sentinel</span>
             </div>
             <div className="text-xs text-text-muted dark:text-slate-400 flex items-center gap-2">
               <span className="font-bold text-text dark:text-white">Excellent</span>

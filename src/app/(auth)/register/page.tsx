@@ -199,7 +199,7 @@ function RegisterForm() {
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>I've Verified My Email — Unlock Dashboard</span>
+                  <span>I've Verified My Email : Unlock Dashboard</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -280,7 +280,7 @@ function RegisterForm() {
         {ref && (
           <div className="mb-4 sm:mb-5 flex items-center justify-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 shadow-sm shadow-emerald-500/5">
             <Sparkles className="h-4 w-4 shrink-0 text-emerald-400 animate-pulse" />
-            <span>🎁 Referred by: <strong className="font-mono font-bold text-white bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">{ref}</strong> — You'll get a special discount!</span>
+            <span>🎁 Referred by: <strong className="font-mono font-bold text-white bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">{ref}</strong> : You'll get a special discount!</span>
           </div>
         )}
 

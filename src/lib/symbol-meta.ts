@@ -74,29 +74,8 @@ export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): Sym
     contractSize = 1000
   }
 
-  // 3. Pip Size (Smallest price unit users think in)
-  let pSize = 0.0001
-  if (cat === 'crypto' || sym.startsWith('BTC') || sym.startsWith('ETH')) {
-    pSize = 1
-  } else if (sym.includes('SOL') || sym.startsWith('LTC') || sym.startsWith('XRP')) {
-    pSize = 0.1
-  } else if (sym === 'XAUUSD') {
-    pSize = 0.1
-  } else if (sym === 'XAGUSD') {
-    pSize = 0.01
-  } else if (cat === 'index' || /^(US\d|NAS\d|GER\d|UK\d|SPX|DJI|JPN)/.test(sym)) {
-    pSize = 0.1
-  } else if (sym === 'USOIL' || sym === 'UKOIL') {
-    pSize = 0.01
-  } else if (digits === 3 || sym.includes('JPY')) {
-    pSize = 0.01
-  } else if (digits === 2) {
-    pSize = 0.01
-  } else if (digits === 1) {
-    pSize = 0.1
-  } else {
-    pSize = 0.0001
-  }
+  // 3. Pip Size (Delegated to canonical pipSize single source of truth)
+  const pSize = pipSize(sym, digits)
 
   return {
     symbol: sym,
@@ -116,17 +95,18 @@ export function getSymbolMeta(symbol: string, fallback?: SymbolMeta | null): Sym
  * Indices:       0.1
  */
 export function pipSize(sym: string, digits?: number): number {
-  const s = (sym || '').toUpperCase()
-  if (s === 'BTCUSD' || s === 'ETHUSD' || s.startsWith('BTC') || s.startsWith('ETH')) return 1
-  if (s.includes('SOL') || s.startsWith('LTC') || s.startsWith('XRP')) return 0.1
-  if (s === 'XAUUSD') return 0.1
-  if (s === 'XAGUSD') return 0.01
-  if (/^(US\d|NAS\d|GER\d|UK\d|SPX|DJI)/.test(s)) return 0.1
-  if (s === 'USOIL' || s === 'UKOIL') return 0.01
+  const s = (sym || '').toUpperCase().trim()
+  // Rule 168.1: Multi-asset pip size normalization
+  if (/^(US30|NAS100|SPX500|US500|GER40|UK100|DJI|DAX|FTSE|JPN225|AUS200)/.test(s)) return 1.0
+  if (s === 'USOIL' || s === 'UKOIL' || s === 'XBRUSD') return 0.01
+  if (s.includes('JPY')) return 0.01
+  if (s.includes('XAU')) return 0.01
+  if (s.includes('XAG')) return 0.001
+  if (s.includes('BTC') || s.includes('ETH')) return 0.1
+  if (s.includes('SOL') || s.startsWith('LTC') || s.startsWith('XRP')) return 0.01
   const d = digits ?? symbolDigits(sym)
   if (d === 5) return 0.0001
-  if (d === 3) return 0.01
-  if (d === 2) return 0.01
+  if (d === 3 || d === 2) return 0.01
   if (d === 1) return 0.1
   return Math.pow(10, -d)
 }
@@ -213,7 +193,7 @@ export function parseTvMap(raw: string | undefined | null): Record<string, strin
       for (const [k, v] of Object.entries(obj)) if (typeof v === 'string' && v.trim()) out[k.toUpperCase()] = v.trim()
       return out
     }
-  } catch { /* malformed JSON — ignore, cascade continues */ }
+  } catch { /* malformed JSON: ignore, cascade continues */ }
   return {}
 }
 

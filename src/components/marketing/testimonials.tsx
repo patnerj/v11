@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Quote, TrendingUp } from 'lucide-react'
 
-/* Default stories are intentionally empty — operators add real, verified
+/* Default stories are intentionally empty: operators add real, verified
    trader testimonials via the page builder or by editing this array.
    Fake testimonials with fabricated names and P&L numbers have been removed
    to avoid regulatory risk (FTC / ASA compliance). */

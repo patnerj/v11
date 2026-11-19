@@ -32,7 +32,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
   const title = isDefaultOrOld ? "Funded by Professionals." : rawTitle
   const highlight = isDefaultOrOld ? "Built for Serious Traders." : (rawHighlight || "Built for Serious Traders.")
   const subtitle = (!puckProps?.subtitle || puckProps.subtitle.includes("Pass our two-phase evaluation, get funded with up to $200,000"))
-    ? "Pass our low-target evaluation or trade directly with instant funding. Keep up to 90% of your profits with institutional Pepperstone spreads and bi-weekly crypto payouts."
+    ? "Pass our low-target evaluation or trade directly with instant funding. Keep up to 90% of your profits with institutional raw spreads and bi-weekly crypto payouts."
     : puckProps.subtitle
   const badgeText = (!puckProps?.badge || puckProps.badge.includes("Now accepting traders worldwide") || puckProps.badge.includes("Scale up to $2,000,000"))
     ? "Institutional Funding • Scale to $2M"
@@ -108,7 +108,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
                   <div className="text-2xs sm:text-xs font-semibold text-text truncate sm:whitespace-normal leading-tight">0.0 Pips Raw Spreads</div>
-                  <div className="text-3xs sm:text-2xs text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Pepperstone Tier-1 Feeds</div>
+                  <div className="text-3xs sm:text-2xs text-text-muted truncate sm:whitespace-normal leading-tight mt-0.5">Tier-1 Institutional Feeds</div>
                 </div>
               </div>
 
@@ -215,7 +215,7 @@ export function Hero({ puckProps }: { puckProps?: { title?: string, highlight?: 
                   </div>
                   <div className="flex items-center gap-1 sm:gap-1.5 text-3xs sm:text-2xs text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-1.5 py-0.5 sm:px-2 rounded-full border border-emerald-500/20 font-semibold shrink-0">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                    <span>Pepperstone Live</span>
+                    <span>Institutional Live</span>
                     <span className="hidden xs:inline">(14ms)</span>
                   </div>
                 </div>

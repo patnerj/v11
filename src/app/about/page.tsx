@@ -46,10 +46,10 @@ export default function AboutPage() {
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 mb-4 shadow-glow-sm"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Next-Gen Proprietary Trading Infrastructure</span>
+              <span>Institutional Proprietary Trading Infrastructure</span>
             </motion.div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tightest leading-[1.08] text-text">
-              Empowering Traders With <br />
+              Backing Disciplined Traders With <br />
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Institutional Capital</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
@@ -115,7 +115,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-lg font-bold text-text">MT5 &amp; WebTrader Freedom</h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  Trade using your favorite Expert Advisors (EAs), algorithmic bots, and macroeconomic news strategies on institutional Pepperstone feeds with 0.0 pip raw spreads.
+                  Trade using your favorite Expert Advisors (EAs), algorithmic bots, and macroeconomic news strategies on institutional feeds with 0.0 pip raw spreads.
                 </p>
               </div>
             </div>

@@ -219,7 +219,7 @@ export default function PvpArenaLobbyPage() {
     },
     onSuccess: (data: any) => {
       if (data?.pending) {
-        toast.success('🛡️ Withdrawal request submitted — pending review.')
+        toast.success('🛡️ Withdrawal request submitted - pending review.')
       } else {
         toast.success(`💸 Withdrawn $${withdrawAmount.toFixed(2)} USDC from Arena Wallet!`)
       }

@@ -64,7 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const rawApi = process.env.FXSIM_API_URL || process.env.LOCAL_WP_BACKEND_URL || (process.env.NEXT_PUBLIC_API_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_API_URL : '') || 'http://127.0.0.1/wp-json/fxsim/v1'
   const apiPath = rawApi.endsWith('/wp-json/fxsim/v1') ? rawApi : `${rawApi.replace(/\/$/, '')}/wp-json/fxsim/v1`
   if (!apiPath) return {
-    title:       { default: `${brandName} — Trade Up to $200,000 in Funded Capital`, template: `%s | ${brandName}` },
+    title:       { default: `${brandName} : Trade Up to $200,000 in Funded Capital`, template: `%s | ${brandName}` },
     description: `${brandTagline}. Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.`,
   }
 
@@ -91,7 +91,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ''
   ).replace(/\/$/, '')
 
-  const pageTitle = customMetaTitle || `${brandName} — Trade Up to $200,000 in Funded Capital`
+  const pageTitle = customMetaTitle || `${brandName} : Trade Up to $200,000 in Funded Capital`
   const pageDescription = customMetaDescription || `${brandTagline}. Pass the evaluation, trade live institutional liquidity, and keep up to 90% of your profits.`
   const rawGoogleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || googleSiteVerification || ''
   const googleVerification = rawGoogleVerification
@@ -151,7 +151,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${brandName} — The Funded Trader Platform`,
+          alt: `${brandName} : The Funded Trader Platform`,
           type: 'image/png',
         },
       ],
@@ -775,7 +775,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen antialiased font-sans" style={{ fontFamily: 'var(--font-sans), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }} suppressHydrationWarning>
         {/* Sandbox Demonstration Environment Banner */}
         <div data-nosnippet="" className="sticky top-0 z-[100001] w-full bg-amber-500/95 px-3 py-1.5 text-center text-[11px] font-semibold tracking-wide text-black shadow-md backdrop-blur-sm">
-          <span>SANDBOX DEMONSTRATION ENVIRONMENT — All metrics, payouts ($4.25M+), and trader accounts shown are simulated sample data demonstrating the LaunchPropFirm software template.</span>
+          <span>SANDBOX DEMONSTRATION ENVIRONMENT : All metrics, payouts ($4.25M+), and trader accounts shown are simulated sample data demonstrating the LaunchPropFirm software template.</span>
         </div>
         <Providers>{children}</Providers>
         <LiveChat />

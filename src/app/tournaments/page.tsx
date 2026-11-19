@@ -196,7 +196,7 @@ export default function PublicTournamentsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Unlike /challenges, /leaderboard, and /faq, this page had no site
-          header or footer — a visitor landing here had no navigation back to
+          header or footer: a visitor landing here had no navigation back to
           the rest of the site except the browser back button. */}
       <MarketingHeader />
       {/* Hero Section with Rule 86.2 Top Clearance for Fixed Navigation */}
@@ -231,7 +231,7 @@ export default function PublicTournamentsPage() {
           <div className="text-center py-20 text-text-muted animate-pulse">Loading arenas...</div>
         ) : safeTournaments.length === 0 ? (
           <div className="text-center py-20 text-text-muted">
-            No tournaments are open right now — check back soon.
+            No tournaments are open right now: check back soon.
           </div>
         ) : (
           <>

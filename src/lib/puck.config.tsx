@@ -85,10 +85,10 @@ export const config: Config<Props> = {
         subtitle: { type: "textarea" },
       },
       defaultProps: {
-        badge: "⚡ Next-Gen Institutional Funding • Scale up to $2,000,000",
+        badge: "⚡ Institutional Funding • Scale up to $2,000,000",
         title: "Funded by Professionals.",
         highlight: "Built for Serious Traders.",
-        subtitle: "Pass our low-target evaluation or trade directly with instant funding. Keep up to 90% of your profits with institutional Pepperstone spreads and bi-weekly crypto payouts.",
+        subtitle: "Pass our low-target evaluation or trade directly with instant funding. Keep up to 90% of your profits with institutional raw spreads and bi-weekly crypto payouts.",
       },
       render: ({ title, highlight, subtitle, badge }) => (
         <Hero puckProps={{ title, highlight, subtitle, badge }} />
@@ -156,7 +156,7 @@ export const config: Config<Props> = {
             n: '01',
             title: 'Select Your Capital Tier',
             body: 'Choose from $10,000 up to $200,000 account size. Clear evaluation targets (8% Phase 1, 5% Phase 2) with zero calendar time limits.',
-            items: [{itemText: 'Zero Time Pressure'}, {itemText: 'Raw Pepperstone Spreads'}, {itemText: '1:100 Leverage'}],
+            items: [{itemText: 'Zero Time Pressure'}, {itemText: 'Raw Institutional Spreads'}, {itemText: '1:100 Leverage'}],
           },
           {
             n: '02',
@@ -208,7 +208,7 @@ export const config: Config<Props> = {
           { title: 'Bi-Weekly Payouts',      body: 'Guaranteed 24-hour disbursal via USDT TRC-20, ERC-20, BTC or Wire.' },
           { title: 'PvP Trading Arena',      body: 'Compete in 1v1 trading duels and monthly firm tournaments for cash & accounts.' },
           { title: 'AI Discipline Copilot',  body: 'Real-time danger zone alerts, lot sizing guidance, and trading journal metrics.' },
-          { title: 'Raw 0.0 Pip Spreads',    body: 'Institutional Pepperstone liquidity with zero markup on major pairs.' },
+          { title: 'Raw 0.0 Pip Spreads',    body: 'Tier-1 Institutional liquidity with zero markup on major pairs.' },
           { title: 'EAs & News Permitted',   body: 'Complete strategic freedom without restrictive holding windows.' },
           { title: '100% Fee Refund',        body: 'Full evaluation fee returned with your very first successful profit withdrawal.' },
         ]
@@ -236,7 +236,7 @@ export const config: Config<Props> = {
         titleAccent: "Under 24 Hours",
         description: "Request your first withdrawal 14 days after receiving your funded account, and bi-weekly thereafter. Zero withdrawal fees, flexible crypto and wire rails, and a 100% evaluation fee refund on your first payout.",
         items: [
-          { itemText: 'Bi-weekly payout cycle — regular, predictable withdrawals' },
+          { itemText: 'Bi-weekly payout cycle : regular, predictable withdrawals' },
           { itemText: 'Crypto (USDT TRC-20, ERC-20, BTC) & Bank Wire supported' },
           { itemText: '100% Evaluation Fee Refund included with your very first payout' },
           { itemText: 'Profit split up to 90% with progressive scaling milestones' },

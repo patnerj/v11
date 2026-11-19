@@ -10,7 +10,7 @@ const DEFAULT_STEPS = [
     icon: Rocket,
     title: 'Select Your Capital Tier',
     body: 'Choose from $10,000 up to $200,000 account size. Clear evaluation targets (8% Phase 1, 5% Phase 2) with zero calendar time limits.',
-    badges: ['Zero Time Pressure', 'Raw Pepperstone Spreads', '1:100 Leverage'],
+    badges: ['Zero Time Pressure', 'Raw Institutional Spreads', '1:100 Leverage'],
   },
   {
     n: '02',

@@ -234,7 +234,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                     <div className="text-3xs sm:text-2xs font-medium text-text-muted uppercase tracking-wider mb-0.5 sm:mb-1 truncate">
                       Size
                     </div>
-                    <div className={`text-sm sm:text-lg xl:text-xl font-black font-mono tracking-tight ${isActive ? "text-emerald-400" : "text-text"}`}>
+                    <div className={`text-sm sm:text-lg xl:text-xl font-bold tracking-tight tabular-nums ${isActive ? "text-emerald-500 dark:text-emerald-400 font-extrabold" : "text-text"}`}>
                       {fmtUSD(size, { decimals: 0 })}
                     </div>
                   </button>
@@ -480,7 +480,7 @@ export function ChallengesPreview({ onSelectPlan, puckProps }: { onSelectPlan?: 
                           </li>
                           <li className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                            <span>1:100 Institutional Pepperstone leverage</span>
+                            <span>1:100 Institutional Prime leverage</span>
                           </li>
                           <li className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />

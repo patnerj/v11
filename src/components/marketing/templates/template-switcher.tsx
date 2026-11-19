@@ -15,16 +15,6 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
-  const [isDemoHost, setIsDemoHost] = useState(false)
-
-  useEffect(() => {
-    setIsDemoHost(window.location.hostname.includes('launchapropfirm.com'))
-  }, [])
-
-  // Demo portal boundary guard (Rule 151.4)
-  const isDemoPortal = process.env.NEXT_PUBLIC_ENABLE_TEMPLATE_SWITCHER === 'true'
-
-  if (!isDemoPortal || !isDemoHost) return null
 
   const handleSelect = (tpl: LandingTemplateId) => {
     // Persist to cookie for 30 days
@@ -39,15 +29,15 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
   }
 
   const getTemplateLabel = (id: LandingTemplateId) => {
-    if (id === 'ftmo') return 'Industry Titan (FTMO Style)'
-    if (id === 'neon') return 'Cyber Neon (FundedNext Style)'
+    if (id === 'ftmo') return 'Titan Standard (Tier-1 Clean)'
+    if (id === 'neon') return 'Neon Pulse (Cyber Violet)'
     if (id === 'terminal') return 'Institutional Pro (Terminal Style)'
     return 'Classic Builder'
   }
 
   const getShortTemplateLabel = (id: LandingTemplateId) => {
-    if (id === 'ftmo') return 'FTMO Style'
-    if (id === 'neon') return 'FundedNext'
+    if (id === 'ftmo') return 'Titan Standard'
+    if (id === 'neon') return 'Neon Pulse'
     if (id === 'terminal') return 'Terminal'
     return 'Classic'
   }
@@ -85,7 +75,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
             </div>
 
             <div className="p-1 space-y-1">
-              {/* Template 1: The Industry Titan (FTMO Style) */}
+              {/* Template 1: Titan Standard */}
               <button
                 onClick={() => handleSelect('ftmo')}
                 className={cn(
@@ -98,11 +88,11 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 <Award className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-text">Template 1: Industry Titan</span>
+                    <span className="font-bold text-text">Template 1: Titan Standard</span>
                     {currentTemplate === 'ftmo' && <Check className="h-3.5 w-3.5 text-blue-500" />}
                   </div>
                   <div className="inline-block px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono text-3xs font-semibold my-0.5">
-                    FTMO Style • Market Standard
+                    Titan Standard • Institutional Tier-1
                   </div>
                   <p className="text-2xs text-text-muted mt-0.5 leading-relaxed">
                     Official trading objectives matrix, 1-Step &amp; 2-Step switchers, trust proof, &amp; trader stories.
@@ -110,7 +100,7 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 </div>
               </button>
 
-              {/* Template 2: Cyber Neon Challenger (FundedNext Style) */}
+              {/* Template 2: Cyber Neon Challenger */}
               <button
                 onClick={() => handleSelect('neon')}
                 className={cn(
@@ -123,14 +113,14 @@ export function TemplateSwitcher({ currentTemplate }: TemplateSwitcherProps) {
                 <Zap className="h-4 w-4 text-violet-500 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-text">Template 2: Cyber Neon</span>
+                    <span className="font-bold text-text">Template 2: Neon Pulse</span>
                     {currentTemplate === 'neon' && <Check className="h-3.5 w-3.5 text-violet-500" />}
                   </div>
                   <div className="inline-block px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-600 dark:text-violet-400 font-mono text-3xs font-semibold my-0.5">
-                    FundedNext Style • Cyber Violet
+                    Neon Pulse • Cyber Violet
                   </div>
                   <p className="text-2xs text-text-muted mt-0.5 leading-relaxed">
-                    Stellar 2-Step &amp; 1-Step models, 15% challenge profit bonus, balance-based DD, &amp; live payouts ticker.
+                    Standard 2-Step &amp; Speed 1-Step models, 15% challenge profit bonus, balance-based DD, &amp; live payouts ticker.
                   </p>
                 </div>
               </button>

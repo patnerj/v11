@@ -107,7 +107,7 @@ export const timeAgo = (iso: string | number): string => {
 }
 
 export const fmtDate = (iso: string, withTime = false) => {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = new Date(iso)
   if (!Number.isFinite(d.getTime())) return iso
   if (withTime) {

@@ -24,7 +24,7 @@ async function establishSessionSafe(token: string, remember = true): Promise<boo
     return false
   }
   if (result === 'legacy') {
-    console.warn('[auth] FXSIM_SESSION_SECRET not configured — signed sessions inactive.')
+    console.warn('[auth] FXSIM_SESSION_SECRET not configured : signed sessions inactive.')
   }
   return true
 }

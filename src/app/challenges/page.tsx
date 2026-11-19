@@ -37,7 +37,7 @@ function ChallengesPageInner() {
 
   useEffect(() => {
     if (params.get('stripe') === 'cancelled') {
-      toast.info('Checkout cancelled — no payment was taken.')
+      toast.info('Checkout cancelled - no payment was taken.')
       if (typeof window !== 'undefined') window.history.replaceState({}, '', '/challenges')
     }
   }, [params])
